@@ -899,6 +899,9 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
         case PacketID::WindDirection:
             updateWindDisplay(cro::Util::Net::decompressVec3(evt.packet.as<std::array<std::int16_t, 3u>>()));
             break;
+        case PacketID::SetHole:
+            setCurrentHole(evt.packet.as<std::uint8_t>());
+            break;
         }
         break;
     case cro::NetEvent::ClientDisconnect:
@@ -920,7 +923,13 @@ void GolfState::removeClient(std::uint8_t clientID)
 
 void GolfState::setCurrentHole(std::uint32_t hole)
 {
-    CRO_ASSERT(hole < m_holeData.size(), "");
+    //CRO_ASSERT(hole < m_holeData.size(), "");
+    if (hole >= m_holeData.size())
+    {
+        m_sharedData.errorMessage = "Server requested hole\nnot found";
+        requestStackPush(States::Golf::Error);
+        return;
+    }
 
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().setHidden(true);
     m_currentHole = hole;
@@ -929,7 +938,9 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     glm::vec2 size(m_holeData[m_currentHole].map.getSize());
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setOrigin({ -size.x / 2.f, 0.f, size.y / 2.f });
 
-    setCameraPosition(m_holeData[m_currentHole].tee, CameraStrokeHeight, CameraStrokeOffset); //TODO is this not overriden by setting the active player?
+    setCameraPosition(m_holeData[m_currentHole].tee, CameraStrokeHeight, CameraStrokeOffset);
+
+    m_currentPlayer.position = m_holeData[m_currentHole].tee;
 
     //TODO some sort of 'loading' effect of the terrain - maybe a shader on the buffer sprite?
 }

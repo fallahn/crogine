@@ -157,11 +157,14 @@ void BallSystem::process(float dt)
                     //TODO we could also test to see which side of the hole the ball
                     //currently is and add some 'side spin' to the velocity.
 
+                    //add wind - TODO cap this because the 'wind' can blow a ball
+                    //indefinitely
+                    //ball.velocity += m_windDirection * m_windStrength * 0.2f * dt;
+
                     //add friction
                     ball.velocity *= 0.99f;
 
-                    //add wind
-                    //ball.velocity += m_windDirection * m_windStrength * 0.2f * dt;
+
 
                     //add slope from map
                 }

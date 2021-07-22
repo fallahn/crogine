@@ -38,6 +38,9 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
+
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Network.hpp>
@@ -284,9 +287,38 @@ void GameState::setNextHole()
     if (m_currentHole < m_holeData.size())
     {
         //reset player positions/strokes
+        for (auto& player : m_playerInfo)
+        {
+            player.position = m_holeData[m_currentHole].tee;
+            player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[m_currentHole].pin);
+            player.stroke = 0;
+            player.terrain = TerrainID::Fairway;
+
+            player.ballEntity.getComponent<Ball>().terrain = TerrainID::Fairway;
+            player.ballEntity.getComponent<Ball>().velocity = glm::vec3(0.f);
+            player.ballEntity.getComponent<cro::Transform>().setPosition(player.position);
+        }
 
         //tell clients to set up next hole
+        m_sharedData.host.broadcastPacket(PacketID::SetHole, m_currentHole, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
+        //create an ent which waits some time before setting next player active
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(3.f);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            auto& t = e.getComponent<cro::Callback>().getUserData<float>();
+            t -= dt;
+            if (t < 0)
+            {
+                setNextPlayer();
+                e.getComponent<cro::Callback>().active = false;
+                m_scene.destroyEntity(e);
+            }
+        };
     }
     else
     {
@@ -430,6 +462,7 @@ void GameState::initScene()
 
 
     auto& mb = m_sharedData.messageBus;
+    m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<BallSystem>(mb).setHoleData(m_holeData[0]);
 }
 

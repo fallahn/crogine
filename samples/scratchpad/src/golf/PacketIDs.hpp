@@ -52,6 +52,7 @@ namespace PacketID
         StateChange, //< uint8 state ID
         LobbyUpdate, //< ConnectionData array
         SetPlayer, //< ActivePlayer struct
+        SetHole, //uint8 hole
 
         ActorAnimation, //< Tell player sprite to play the given anim with uint8 ID
         ActorUpdate, //< ActorInfo - ball interpolation
