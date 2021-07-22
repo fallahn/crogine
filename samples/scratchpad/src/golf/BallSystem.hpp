@@ -45,7 +45,7 @@ struct Ball final
     static constexpr float Radius = 0.0043f;
     enum class State
     {
-        Idle, Flight, Putt, Paused
+        Idle, Flight, Putt, Paused, Reset
     }state = State::Idle;
 
     std::uint8_t terrain = TerrainID::Fairway;
@@ -63,7 +63,7 @@ public:
 
     glm::vec3 getWindDirection() const;
 
-    void setCollisionMap(const cro::Image&);
+    void setHoleData(const struct HoleData&);
 
 private:
 
@@ -84,8 +84,9 @@ private:
     float m_windInterpTime;
     float m_currentWindInterpTime;
 
-    const cro::Image* m_collisionMap;
+    const HoleData* m_holeData;
 
     void doCollision(cro::Entity);
     void updateWind();
+    std::uint8_t getTerrain(glm::vec3);
 };

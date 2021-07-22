@@ -29,6 +29,7 @@ source distribution.
 
 #include "BallSystem.hpp"
 #include "Terrain.hpp"
+#include "HoleData.hpp"
 #include "server/ServerMessages.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -69,7 +70,7 @@ BallSystem::BallSystem(cro::MessageBus& mb)
     m_windStrength          (0.f),
     m_windStrengthSrc       (m_windStrength),
     m_windStrengthTarget    (0.1f),
-    m_collisionMap          (nullptr)
+    m_holeData              (nullptr)
 {
     requireComponent<cro::Transform>();
     requireComponent<Ball>();
@@ -118,6 +119,45 @@ void BallSystem::process(float dt)
         case Ball::State::Putt:
             //if current surface is green, test distance to pin
             break;
+        case Ball::State::Reset:
+        {
+            //move towards hole util we find non-water
+            auto& tx = entity.getComponent<cro::Transform>();
+
+            std::uint8_t terrain = TerrainID::Water;
+            auto ballPos = tx.getPosition();
+            auto dir = glm::normalize(m_holeData->pin - ballPos);
+            for (auto i = 0; i < 100; ++i) //max 100m
+            {
+                ballPos += dir;
+                terrain = getTerrain(ballPos);
+
+                if (terrain != TerrainID::Water)
+                {
+                    tx.setPosition(ballPos);
+                    break;
+                }
+            }
+
+            //if for some reason we never got out the water, put the ball back at the start
+            if (terrain == TerrainID::Water)
+            {
+                terrain = TerrainID::Fairway;
+                tx.setPosition(m_holeData->tee);
+            }
+
+            //raise message to say player should be penalised
+            auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
+            msg->type = BallEvent::Foul;
+            msg->terrain = terrain;
+            msg->position = tx.getPosition();
+
+            //set ball to reset / correct terrain
+            ball.delay = 2.f;
+            ball.terrain = terrain;
+            ball.state = Ball::State::Paused;
+        }
+            break;
         case Ball::State::Paused:
         {
             ball.delay -= dt;
@@ -146,9 +186,9 @@ glm::vec3 BallSystem::getWindDirection() const
     return { m_windDirection.x, m_windStrength, m_windDirection.z };
 }
 
-void BallSystem::setCollisionMap(const cro::Image& map)
+void BallSystem::setHoleData(const HoleData& holeData)
 {
-    m_collisionMap = &map;
+    m_holeData = &holeData;
 }
 
 //private
@@ -163,17 +203,7 @@ void BallSystem::doCollision(cro::Entity entity)
 
         auto& ball = entity.getComponent<Ball>();
 
-        auto size = m_collisionMap->getSize();
-        std::uint32_t x = std::max(0u, std::min(size.x, static_cast<std::uint32_t>(std::floor(pos.x))));
-        std::uint32_t y = std::max(0u, std::min(size.y, static_cast<std::uint32_t>(std::floor(-pos.z))));
-
-        CRO_ASSERT(m_collisionMap->getFormat() == cro::ImageFormat::RGBA, "expected RGBA format");
-
-        auto index = ((y * size.x) + x) * 4;
-
-        //R,G are slope vector, B is terrain * 10
-        std::uint8_t terrain = m_collisionMap->getPixelData()[index + 2] / 10;
-        terrain = std::min(static_cast<std::uint8_t>(TerrainID::Water), terrain);
+        auto terrain = getTerrain(pos);
 
         //TODO get normal from map info - potentially refactor so we have full surface normal
         //and terrain shifted to alpha channel
@@ -202,7 +232,7 @@ void BallSystem::doCollision(cro::Entity entity)
         //stop the ball if velocity low enough
         if (glm::length2(ball.velocity) < 0.01f)
         {
-            ball.state = Ball::State::Paused;
+            ball.state = terrain == TerrainID::Water ? Ball::State::Reset : Ball::State::Paused;
             ball.delay = 2.f;
             ball.terrain = terrain;
         }
@@ -246,4 +276,21 @@ void BallSystem::updateWind()
 
         resetInterp();
     }
+}
+
+std::uint8_t BallSystem::getTerrain(glm::vec3 pos)
+{
+    auto size = m_holeData->map.getSize();
+    std::uint32_t x = std::max(0u, std::min(size.x, static_cast<std::uint32_t>(std::floor(pos.x))));
+    std::uint32_t y = std::max(0u, std::min(size.y, static_cast<std::uint32_t>(std::floor(-pos.z))));
+
+    CRO_ASSERT(m_holeData->map.getFormat() == cro::ImageFormat::RGBA, "expected RGBA format");
+
+    auto index = ((y * size.x) + x) * 4;
+
+    //R,G are slope vector, B is terrain * 10
+    std::uint8_t terrain = m_holeData->map.getPixelData()[index + 2] / 10;
+    terrain = std::min(static_cast<std::uint8_t>(TerrainID::Water), terrain);
+
+    return terrain;
 }

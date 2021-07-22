@@ -391,7 +391,7 @@ void GameState::initScene()
 
 
     auto& mb = m_sharedData.messageBus;
-    m_scene.addSystem<BallSystem>(mb).setCollisionMap(m_holeData[0].map);
+    m_scene.addSystem<BallSystem>(mb).setHoleData(m_holeData[0]);
 }
 
 void GameState::buildWorld()

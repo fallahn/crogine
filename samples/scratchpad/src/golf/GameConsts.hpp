@@ -33,7 +33,7 @@ source distribution.
 
 #include <cstdint>
 
-static constexpr float CameraHeight = 2.5f;
+static constexpr float CameraHeight = 2.8f;
 static constexpr float CameraOffset = 5.f;
 static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
 

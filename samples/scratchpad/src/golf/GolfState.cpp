@@ -85,7 +85,7 @@ namespace
         const float ratio = size.x / size.y;
 
         const float width = std::min(400.f, std::max(300.f, ViewportHeight * ratio));
-        return { width, ViewportHeight };
+        return { /*width*/400.f, ViewportHeight };
     }
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);

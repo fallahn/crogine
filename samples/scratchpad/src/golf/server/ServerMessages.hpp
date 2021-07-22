@@ -54,6 +54,7 @@ struct BallEvent final
     enum
     {
         Landed,
+        Foul,
         TurnEnded
     }type = Landed;
     std::int32_t terrain = -1;
