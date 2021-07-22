@@ -36,11 +36,11 @@ source distribution.
 
 struct Club final
 {
-    std::string name;
-    std::string distance;
-    float power = 0.f;
-    float angle = 0.f;
-    const float target = 0.f;
+    std::string name; //displayed in UI
+    std::string distance; //displayed in UI
+    float power = 0.f; //magnitude of impulse applied to reach target
+    float angle = 0.f; //pitch of shot (should be positive)
+    const float target = 0.f; //the max (approx) distance when hit with 100% power
 
     Club(const std::string& n, const std::string d, float p, float a, float t)
         : name(n), distance(d), power(p), angle(a * cro::Util::Const::degToRad), target(t) {}
@@ -52,16 +52,18 @@ struct ClubID final
     {
         Driver, ThreeWood,
         FiveIron, NineIron,
-        PitchWedge, Putter
+        PitchWedge, Putter,
+
+        Count
     };
 };
 
-static const std::array Clubs =
+static const std::array<Club, ClubID::Count> Clubs =
 {
     Club("Driver", "220m", 46.5f, 45.f, 220.f),
     Club("3 Wood", "180m", 42.02f, 45.f, 180.f),
     Club("5 Iron", "140m", 37.35f, 40.f, 140.f),
     Club("9 Iron", "100m", 31.56f, 40.f, 100.f),
     Club("Pitch Wedge", "10m", 16.1f, 60.f, 10.f),
-    Club("Putter", "40m", 10.f, 4.f, 40.f)
+    Club("Putter", "5m", 3.f, 0.f, 3.f)
 };

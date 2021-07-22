@@ -55,7 +55,8 @@ struct BallEvent final
     {
         Landed,
         Foul,
-        TurnEnded
+        TurnEnded,
+        Holed
     }type = Landed;
     std::int32_t terrain = -1;
     glm::vec3 position = glm::vec3(0.f);

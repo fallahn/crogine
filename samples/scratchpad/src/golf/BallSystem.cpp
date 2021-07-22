@@ -30,6 +30,7 @@ source distribution.
 #include "BallSystem.hpp"
 #include "Terrain.hpp"
 #include "HoleData.hpp"
+#include "GameConsts.hpp"
 #include "server/ServerMessages.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -56,6 +57,8 @@ namespace
         auto diff = b - a;
         return a + (diff * t);
     }
+
+    static constexpr float MinBallDistance = HoleRadius * HoleRadius;
 }
 
 BallSystem::BallSystem(cro::MessageBus& mb)
@@ -117,7 +120,67 @@ void BallSystem::process(float dt)
         }
         break;
         case Ball::State::Putt:
-            //test distance to pin
+            
+            ball.delay -= dt;
+            if (ball.delay < 0)
+            {
+                auto& tx = entity.getComponent<cro::Transform>();
+                auto position = tx.getPosition();
+
+                //test distance to pin
+                auto len2 = glm::length2(position - m_holeData->pin);
+                if (len2 < MinBallDistance)
+                {
+                    //this is some fudgy non-physics.
+                    //if we're here then the ball is over the hole, so add some
+                    //gravity to the ball height. If the ball falls low enough
+                    //during this time we'll put it in the hole
+                    ball.velocity += Gravity * dt;
+                }
+                else
+                {
+                    //else if the ball has registered some depth it must have crossed
+                    //over the hole so reset the depth and slow it down as if it
+                    //bumped the far edge
+                    if (position.y < 0)
+                    {
+                        position.y = 0.f;
+                        tx.setPosition(position);
+
+                        //these are all just a wild stab
+                        //destined for some tweaking
+                        ball.velocity *= 0.3f;
+                        ball.velocity.y += 1.f;
+                    }
+
+
+                    //TODO we could also test to see which side of the hole the ball
+                    //currently is and add some 'side spin' to the velocity.
+
+                    //add friction
+                    ball.velocity *= 0.99f;
+
+                    //add wind
+                    //ball.velocity += m_windDirection * m_windStrength * 0.2f * dt;
+
+                    //add slope from map
+                }
+
+                //move by velocity
+                tx.move(ball.velocity * dt);
+
+                ball.terrain = getTerrain(tx.getPosition());
+
+                //if we've slowed down or fallen more than the
+                //ball's diameter (radius??) stop the ball
+                if (glm::length2(ball.velocity) < 0.01f
+                    || (position.y < -(Ball::Radius * 2.f)))
+                {
+                    ball.velocity = glm::vec3(0.f);
+                    ball.state = ball.terrain == TerrainID::Water ? Ball::State::Reset : Ball::State::Paused;
+                    ball.delay = 2.f;
+                }
+            }
             break;
         case Ball::State::Reset:
         {
@@ -169,9 +232,19 @@ void BallSystem::process(float dt)
             {
                 //send message to report status
                 auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
-                msg->type = BallEvent::TurnEnded;
                 msg->terrain = ball.terrain;
                 msg->position = entity.getComponent<cro::Transform>().getPosition();
+
+                if (msg->position.y < 0)
+                {
+                    //we're in the hole
+                    msg->type = BallEvent::Holed;
+                }
+                else
+                {
+                    msg->type = BallEvent::TurnEnded;
+                }
+
 
                 ball.state = Ball::State::Idle;
                 updateWind(); //is a bit less random but at least stops the wind
@@ -239,6 +312,7 @@ void BallSystem::doCollision(cro::Entity entity)
             ball.state = terrain == TerrainID::Water ? Ball::State::Reset : Ball::State::Paused;
             ball.delay = 2.f;
             ball.terrain = terrain;
+            ball.velocity = glm::vec3(0.f);
         }
     }
 }

@@ -78,6 +78,7 @@ namespace sv
         void handlePlayerInput(const cro::NetEvent::Packet&);
 
         void setNextPlayer();
+        void setNextHole();
 
         bool validateMap();
         void initScene();

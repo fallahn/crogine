@@ -47,6 +47,7 @@ static constexpr float BallPointSize = 1.5f;
 
 static constexpr float MaxHook = -0.25f;
 static constexpr float KnotsPerMetre = 1.94384f;
+static constexpr float HoleRadius = 0.053f;
 
 //ui components are layed out as a normalised value
 //relative to the window size.

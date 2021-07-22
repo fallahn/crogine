@@ -100,12 +100,23 @@ void GameState::handleMessage(const cro::Message& msg)
     }
     else if (msg.id == sv::MessageID::BallMessage)
     {
+        //TODO update player scores.
         const auto& data = msg.getData<BallEvent>();
         if (data.type == BallEvent::TurnEnded)
         {
             m_playerInfo[0].position = data.position;
             m_playerInfo[0].distanceToHole = glm::length(data.position - m_holeData[m_currentHole].pin);
             m_playerInfo[0].terrain = data.terrain;
+            setNextPlayer();
+        }
+        else if (data.type == BallEvent::Holed)
+        {
+            //set the player as being on the pin so
+            //they shouldn't be picked as next player
+            m_playerInfo[0].position = m_holeData[m_currentHole].pin;
+            m_playerInfo[0].distanceToHole = 0.f;
+            m_playerInfo[0].terrain = data.terrain;
+
             setNextPlayer();
         }
     }
@@ -253,8 +264,34 @@ void GameState::setNextPlayer()
 
     ActivePlayer player = m_playerInfo[0]; //deliberate slice.
 
-    m_sharedData.host.broadcastPacket(PacketID::SetPlayer, player, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-    m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, m_animIDs[AnimID::Idle], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    if (m_playerInfo[0].distanceToHole == 0)
+    {
+        //we must all be in a hole so move on
+        //to next hole
+        setNextHole();
+    }
+    else
+    {
+        //go to next player
+        m_sharedData.host.broadcastPacket(PacketID::SetPlayer, player, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, m_animIDs[AnimID::Idle], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
+}
+
+void GameState::setNextHole()
+{
+    m_currentHole++;
+    if (m_currentHole < m_holeData.size())
+    {
+        //reset player positions/strokes
+
+        //tell clients to set up next hole
+
+    }
+    else
+    {
+        //end of game baby!
+    }
 }
 
 bool GameState::validateMap()

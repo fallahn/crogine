@@ -533,14 +533,17 @@ void GolfState::buildScene()
     }
 
 
-    //TODO replace this with custom plane / reflection rendering (see islands demo)
-    /*cro::ModelDefinition md(m_resources);
+    //TODO custom plane / reflection rendering (see islands demo)
+
+    //quality holing
+    cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/quad.cmt");
 
     cro::Entity ent = m_gameScene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 150.f, 0.1f, -100.f });
+    ent.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
+    ent.getComponent<cro::Transform>().move(glm::vec3(0.f, 0.001f, 0.f));
     ent.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
-    md.createModel(ent);*/
+    md.createModel(ent);
 
 
     //displays the stroke direction
@@ -970,21 +973,26 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::FlagSprite;
-    cmd.action = [&, flag](cro::Entity e, float)
+    cmd.action = [&, flag, currLength](cro::Entity e, float)
     {
         e.getComponent<cro::Sprite>() = m_sprites[flag];
-        //TODO scale the sprite based on the distance to its cutoff?
-        //rememberthe view will actually be static so we won't see the size animating
         auto pos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(m_holeData[m_currentHole].pin, m_renderTexture.getSize());
         e.getComponent<cro::Transform>().setPosition(pos);
+
+        if (currLength < 2.f)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        }
+        else
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+        }
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
-    //LogI << "player set to " << (int)player.client << ", " << (int)player.player << ", at: " << player.position << std::endl;
-    
     m_currentPlayer = player;
 
     cro::Command cmd;

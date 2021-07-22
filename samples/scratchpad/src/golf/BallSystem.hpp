@@ -42,7 +42,7 @@ namespace cro
 
 struct Ball final
 {
-    static constexpr float Radius = 0.0043f;
+    static constexpr float Radius = 0.00215f;
     enum class State
     {
         Idle, Flight, Putt, Paused, Reset

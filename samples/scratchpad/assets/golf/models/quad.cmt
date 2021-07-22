@@ -1,12 +1,10 @@
 model quad
 {
     mesh = quad
-    size = 300,200
+    size = 0.1,0.1
 
     material Unlit
     {
-        diffuse = "assets/golf/images/test.png"
-        colour = 1,1,1,0.5
-        blendmode = "alpha"
+        colour = 0,0,0,1
     }
 }
