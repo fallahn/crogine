@@ -133,7 +133,7 @@ private:
     void removeClient(std::uint8_t);
 
     void setCurrentHole(std::uint32_t);
-    void setCameraPosition(glm::vec3);
+    void setCameraPosition(glm::vec3, float, float);
     void setCurrentPlayer(const ActivePlayer&);
     void hitBall();
 

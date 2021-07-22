@@ -227,12 +227,14 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
     if (m_playerInfo[0].client == input.clientID
         && m_playerInfo[0].player == input.playerID)
     {
-        m_playerInfo[0].ballEntity.getComponent<Ball>().velocity = input.impulse;
-        m_playerInfo[0].ballEntity.getComponent<Ball>().state = Ball::State::Flight;
+        auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
+
+        ball.velocity = input.impulse;
+        ball.state = ball.terrain == TerrainID::Green ? Ball::State::Putt : Ball::State::Flight;
         //this is a kludge to wait for the anim before hitting the ball
         //Ideally we want to read the frame data from the sprite sheet
         //as well as account for a frame of interp delay on the client
-        m_playerInfo[0].ballEntity.getComponent<Ball>().delay = 0.32f;
+        ball.delay = 0.32f;
 
         m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, m_animIDs[AnimID::Swing], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
@@ -418,6 +420,19 @@ void GameState::doServerCommand(const cro::NetEvent& evt)
         //this fakes the ball getting closer to the hole
         m_playerInfo[0].distanceToHole *= 0.99f;
         setNextPlayer();
+        break;
+    case ServerCommand::GotoGreen:
+        //set ball to greeen position
+        //set ball state to paused to trigger updates
+    {
+        auto pos = m_playerInfo[0].position - m_holeData[m_currentHole].pin;
+        pos = glm::normalize(pos) * 6.f;
+
+        m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(pos + m_holeData[m_currentHole].pin);
+        m_playerInfo[0].ballEntity.getComponent<Ball>().terrain = TerrainID::Green;
+        m_playerInfo[0].ballEntity.getComponent<Ball>().state = Ball::State::Paused;
+    }
+
         break;
     }
 #endif

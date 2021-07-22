@@ -78,6 +78,7 @@ namespace ServerCommand
     enum
     {
         NextHole,
-        NextPlayer
+        NextPlayer,
+        GotoGreen
     };
 }

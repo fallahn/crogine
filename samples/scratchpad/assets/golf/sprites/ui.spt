@@ -4,7 +4,7 @@ spritesheet ui
 
     sprite flag01
     {
-        bounds = 0,16,32,64
+        bounds = 15,16,16,64
     }
 
     sprite flag02

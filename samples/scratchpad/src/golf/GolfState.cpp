@@ -89,6 +89,15 @@ namespace
     }
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
+
+    //used to set the camera target
+    struct TargetInfo final
+    {
+        float targetHeight = CameraStrokeHeight;
+        float targetOffset = CameraStrokeOffset;
+        float currentHeight = 0.f;
+        float currentOffset = 0.f;
+    };
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -124,6 +133,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
                 auto hook = m_inputParser.getHook();
                 ImGui::Text("Hook: %3.3f", hook);*/
+
+                float height = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getPosition().y;
+                ImGui::Text("Cam height: %3.3f", height);
 
                 auto club = Clubs[getClub()];
                 ImGui::Text("Club: %s", club);
@@ -173,6 +185,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_F3:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextPlayer), cro::NetFlag::Reliable);
+            break;
+        case SDLK_F4:
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::GotoGreen), cro::NetFlag::Reliable);
             break;
         }
     }
@@ -589,6 +604,10 @@ void GolfState::buildScene()
     cam.resizeCallback = updateView;
     updateView(cam);
 
+    //used by transition callback to interp camera
+    m_gameScene.getActiveCamera().addComponent<TargetInfo>();
+
+
     setCurrentHole(0);
     buildUI(); //put this here because we don't want to do this if the map data didn't load
 
@@ -907,19 +926,24 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     glm::vec2 size(m_holeData[m_currentHole].map.getSize());
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setOrigin({ -size.x / 2.f, 0.f, size.y / 2.f });
 
-    setCameraPosition(m_holeData[m_currentHole].tee); //TODO is this not overriden by setting the active player?
+    setCameraPosition(m_holeData[m_currentHole].tee, CameraStrokeHeight, CameraStrokeOffset); //TODO is this not overriden by setting the active player?
+
+    //TODO some sort of 'loading' effect of the terrain - maybe a shader on the buffer sprite?
 }
 
-void GolfState::setCameraPosition(glm::vec3 position)
+void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)
 {
     auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({ position.x, CameraHeight, position.z });
+    camEnt.getComponent<cro::Transform>().setPosition({ position.x, height, position.z });
     auto target = m_holeData[m_currentHole].pin;
-    auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), glm::vec3(target.x, CameraHeight, target.z), cro::Transform::Y_AXIS);
+    auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), glm::vec3(target.x, height, target.z), cro::Transform::Y_AXIS);
     camEnt.getComponent<cro::Transform>().setRotation(glm::inverse(lookat));
 
     auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
-    camEnt.getComponent<cro::Transform>().move(offset * CameraOffset);
+    camEnt.getComponent<cro::Transform>().move(offset * viewOffset);
+
+    camEnt.getComponent<TargetInfo>().currentHeight = height;
+    camEnt.getComponent<TargetInfo>().currentOffset = viewOffset;
 
     //calc which one of the flag sprites to use based on distance
     const auto maxLength = glm::length(m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee) * 0.75f;
@@ -1003,9 +1027,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     //TODO apply the correct sprite to the player entity
     cmd.targetFlags = CommandID::UI::PlayerSprite;
-    cmd.action = [](cro::Entity e, float)
+    cmd.action = [player](cro::Entity e, float)
     {
-        e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+        if (player.terrain != TerrainID::Green)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+        }
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
@@ -1055,6 +1082,16 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
+    if (playerData.terrain == TerrainID::Green)
+    {
+        m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetHeight = CameraPuttHeight;
+        m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetOffset = CameraPuttOffset;
+    }
+    else
+    {
+        m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetHeight = CameraStrokeHeight;
+        m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetOffset = CameraStrokeOffset;
+    }
 
     //creates an entity which calls setCamPosition() in an
     //interpolated manner until we reach the dest,
@@ -1075,20 +1112,27 @@ void GolfState::createTransition(const ActivePlayer& playerData)
         auto pinDir = m_holeData[m_currentHole].pin - currPos;
         m_camRotation = std::atan2(-pinDir.z, pinDir.x);
 
+        auto targetInfo = m_gameScene.getActiveCamera().getComponent<TargetInfo>();
+
         if (glm::length2(travel) < 0.01f)
         {
             //we're there
             setCurrentPlayer(playerData);
-            setCameraPosition(playerData.position);
+            setCameraPosition(playerData.position, targetInfo.targetHeight, targetInfo.targetOffset);
 
             e.getComponent<cro::Callback>().active = false;
             m_gameScene.destroyEntity(e);
         }
         else
         {
+            auto height = targetInfo.targetHeight - targetInfo.currentHeight;
+            auto offset = targetInfo.targetOffset - targetInfo.currentOffset;
+
             static constexpr float Speed = 4.f;
             e.getComponent<cro::Transform>().move(travel * Speed * dt);
-            setCameraPosition(e.getComponent<cro::Transform>().getPosition());
+            setCameraPosition(e.getComponent<cro::Transform>().getPosition(), 
+                targetInfo.currentHeight + (height * Speed * dt), 
+                targetInfo.currentOffset + (offset * Speed * dt));
         }
     };
 }

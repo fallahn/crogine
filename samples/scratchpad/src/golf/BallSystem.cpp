@@ -117,45 +117,49 @@ void BallSystem::process(float dt)
         }
         break;
         case Ball::State::Putt:
-            //if current surface is green, test distance to pin
+            //test distance to pin
             break;
         case Ball::State::Reset:
         {
-            //move towards hole util we find non-water
-            auto& tx = entity.getComponent<cro::Transform>();
-
-            std::uint8_t terrain = TerrainID::Water;
-            auto ballPos = tx.getPosition();
-            auto dir = glm::normalize(m_holeData->pin - ballPos);
-            for (auto i = 0; i < 100; ++i) //max 100m
+            ball.delay -= dt;
+            if (ball.delay < 0)
             {
-                ballPos += dir;
-                terrain = getTerrain(ballPos);
+                //move towards hole util we find non-water
+                auto& tx = entity.getComponent<cro::Transform>();
 
-                if (terrain != TerrainID::Water)
+                std::uint8_t terrain = TerrainID::Water;
+                auto ballPos = tx.getPosition();
+                auto dir = glm::normalize(m_holeData->pin - ballPos);
+                for (auto i = 0; i < 100; ++i) //max 100m
                 {
-                    tx.setPosition(ballPos);
-                    break;
+                    ballPos += dir;
+                    terrain = getTerrain(ballPos);
+
+                    if (terrain != TerrainID::Water)
+                    {
+                        tx.setPosition(ballPos);
+                        break;
+                    }
                 }
+
+                //if for some reason we never got out the water, put the ball back at the start
+                if (terrain == TerrainID::Water)
+                {
+                    terrain = TerrainID::Fairway;
+                    tx.setPosition(m_holeData->tee);
+                }
+
+                //raise message to say player should be penalised
+                auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
+                msg->type = BallEvent::Foul;
+                msg->terrain = terrain;
+                msg->position = tx.getPosition();
+
+                //set ball to reset / correct terrain
+                ball.delay = 0.5f;
+                ball.terrain = terrain;
+                ball.state = Ball::State::Paused;
             }
-
-            //if for some reason we never got out the water, put the ball back at the start
-            if (terrain == TerrainID::Water)
-            {
-                terrain = TerrainID::Fairway;
-                tx.setPosition(m_holeData->tee);
-            }
-
-            //raise message to say player should be penalised
-            auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
-            msg->type = BallEvent::Foul;
-            msg->terrain = terrain;
-            msg->position = tx.getPosition();
-
-            //set ball to reset / correct terrain
-            ball.delay = 2.f;
-            ball.terrain = terrain;
-            ball.state = Ball::State::Paused;
         }
             break;
         case Ball::State::Paused:

@@ -33,8 +33,10 @@ source distribution.
 
 #include <cstdint>
 
-static constexpr float CameraHeight = 2.8f;
-static constexpr float CameraOffset = 5.f;
+static constexpr float CameraStrokeHeight = 2.8f;
+static constexpr float CameraPuttHeight = 0.4f;
+static constexpr float CameraStrokeOffset = 5.f;
+static constexpr float CameraPuttOffset = 0.8f;
 static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
 
 //maintain a viewport height of 225, with the

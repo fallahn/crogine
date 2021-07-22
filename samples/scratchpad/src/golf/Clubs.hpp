@@ -62,6 +62,6 @@ static const std::array Clubs =
     Club("3 Wood", "180m", 42.02f, 45.f, 180.f),
     Club("5 Iron", "140m", 37.35f, 40.f, 140.f),
     Club("9 Iron", "100m", 31.56f, 40.f, 100.f),
-    Club("Pitch Wedge", "80m", 30.1f, 60.f, 80.f),
+    Club("Pitch Wedge", "10m", 16.1f, 60.f, 10.f),
     Club("Putter", "40m", 10.f, 4.f, 40.f)
 };
