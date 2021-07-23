@@ -64,8 +64,7 @@ namespace
 GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State    (stack, context),
     m_sharedData    (sd),
-    m_scene         (context.appInstance.getMessageBus()),
-    m_hosting       (false)
+    m_scene         (context.appInstance.getMessageBus())
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -97,6 +96,40 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
             m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
         };
         m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+        cro::String buttonString;
+        cro::String connectionString;
+
+        if (m_sharedData.hosting)
+        {
+            buttonString = "Start";
+            connectionString = "Hosting on: localhost:" + std::to_string(ConstVal::GamePort);
+
+            //auto ready up if host
+            m_sharedData.clientConnection.netClient.sendPacket(
+                PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
+                cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+        else
+        {
+            buttonString = "Ready";
+            connectionString = "Connected to: " + m_sharedData.targetIP + ":" + std::to_string(ConstVal::GamePort);
+        }
+
+
+        cmd.targetFlags = MenuCommandID::ReadyButton;
+        cmd.action = [buttonString](cro::Entity e, float)
+        {
+            e.getComponent<cro::Text>().setString(buttonString);
+        };
+        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+        cmd.targetFlags = MenuCommandID::ServerInfo;
+        cmd.action = [connectionString](cro::Entity e, float)
+        {
+            e.getComponent<cro::Text>().setString(connectionString);
+        };
+        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     }
     else
     {
@@ -105,6 +138,7 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
         {
             cd.playerCount = 0;
         }
+        m_sharedData.hosting = false;
     }
 }
 

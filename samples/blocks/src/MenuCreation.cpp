@@ -378,7 +378,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
     //box background
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ glm::vec2(cro::DefaultSceneSize) / 2.f });
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y / 2.f, -0.01f));
     entity.addComponent<cro::Sprite>().setTexture(m_textureResource.get("assets/images/textbox.png"));
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });

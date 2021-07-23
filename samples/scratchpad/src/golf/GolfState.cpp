@@ -189,6 +189,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F4:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::GotoGreen), cro::NetFlag::Reliable);
             break;
+        case SDLK_F6:
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), cro::NetFlag::Reliable);
+            break;
         }
     }
 
@@ -924,6 +927,16 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                 player.holeScores[su.hole] = su.stroke;
             }
         }
+            break;
+        case PacketID::GameEnd:
+            LOG("Show countdown!", cro::Logger::Type::Info);
+            break;
+        case PacketID::StateChange:
+            if (evt.packet.as<std::uint8_t>() == sv::StateID::Lobby)
+            {
+                requestStackClear();
+                requestStackPush(States::Golf::Menu);
+            }
             break;
         }
         break;

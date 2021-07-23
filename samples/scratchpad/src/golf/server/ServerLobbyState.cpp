@@ -89,6 +89,10 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
             m_sharedData.host.broadcastPacket(PacketID::MapInfo, evt.packet.getData(), evt.packet.getSize(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
         }
             break;
+        case PacketID::RequestGameStart:
+            //TODO assert this came from the host
+            m_returnValue = StateID::Game;
+            break;
         }
     }
 }

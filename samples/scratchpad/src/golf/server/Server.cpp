@@ -147,23 +147,13 @@ void Server::run()
                 //remove from client list
                 removeClient(evt);
             }
-            else if (evt.type == cro::NetEvent::PacketReceived)
+            /*else if (evt.type == cro::NetEvent::PacketReceived)
             {
                 switch (evt.packet.getID())
                 {
                 default: break;
-                case PacketID::RequestGameStart:
-                    if (m_currentState->stateID() == sv::StateID::Lobby)
-                    {
-                        //TODO assert sender is host
-                        m_currentState = std::make_unique<sv::GameState>(m_sharedData);
-                        nextState = sv::StateID::Game;
-
-                        m_sharedData.host.broadcastPacket(PacketID::StateChange, std::uint8_t(nextState), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    }
-                    break;
                 }
-            }
+            }*/
         }
 
         //network broadcasts
@@ -196,6 +186,8 @@ void Server::run()
                 break;
             }
 
+            m_sharedData.host.broadcastPacket(PacketID::StateChange, std::uint8_t(nextState), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            
             //mitigate large DT which may have built up while new state was loading.
             netFrameClock.restart();
         }

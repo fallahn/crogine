@@ -48,9 +48,10 @@ namespace MenuCommandID
 {
     enum
     {
-        RootNode = 0x1,
+        RootNode    = 0x1,
         ReadyButton = 0x2,
-        LobbyList = 0x4
+        LobbyList   = 0x4,
+        ServerInfo  = 0x8
     };
 }
 
@@ -97,7 +98,6 @@ private:
     cro::TextureResource m_textureResource;
 
     cro::Font m_font;
-    bool m_hosting;
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
     enum MenuID

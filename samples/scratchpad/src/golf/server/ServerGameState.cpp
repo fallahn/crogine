@@ -124,7 +124,7 @@ void GameState::handleMessage(const cro::Message& msg)
         }
         else if (data.type == BallEvent::Foul)
         {
-            m_playerInfo[0].stroke++; //penalty stroke.
+            m_playerInfo[0].holeScore[m_currentHole]++; //penalty stroke.
         }
     }
 
@@ -254,7 +254,7 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
         //as well as account for a frame of interp delay on the client
         ball.delay = 0.32f;
 
-        m_playerInfo[0].stroke++;
+        m_playerInfo[0].holeScore[m_currentHole]++;
 
         m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, m_animIDs[AnimID::Swing], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
@@ -267,7 +267,7 @@ void GameState::setNextPlayer()
     su.client = m_playerInfo[0].client;
     su.player = m_playerInfo[0].player;
     su.score = m_playerInfo[0].score;
-    su.stroke = m_playerInfo[0].stroke;
+    su.stroke = m_playerInfo[0].holeScore[m_currentHole];
     su.hole = m_currentHole;
     m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
@@ -296,6 +296,20 @@ void GameState::setNextPlayer()
 
 void GameState::setNextHole()
 {
+    //broadcast all scores to make sure everyone is up to date
+    for (auto& player : m_playerInfo)
+    {
+        player.score += player.holeScore[m_currentHole];
+
+        ScoreUpdate su;
+        su.client = player.client;
+        su.player = player.player;
+        su.hole = m_currentHole;
+        su.score = player.score;
+        su.stroke = player.holeScore[m_currentHole];
+    }
+
+
     m_currentHole++;
     if (m_currentHole < m_holeData.size())
     {
@@ -304,8 +318,6 @@ void GameState::setNextHole()
         {
             player.position = m_holeData[m_currentHole].tee;
             player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[m_currentHole].pin);
-            player.score += player.stroke;
-            player.stroke = 0;
             player.terrain = TerrainID::Fairway;
 
             player.ballEntity.getComponent<Ball>().terrain = TerrainID::Fairway;
@@ -340,6 +352,24 @@ void GameState::setNextHole()
     else
     {
         //end of game baby!
+        m_sharedData.host.broadcastPacket(PacketID::GameEnd, std::uint8_t(10), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        //create a timer ent which returns to lobby on time out
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(10.f);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            auto& remain = e.getComponent<cro::Callback>().getUserData<float>();
+            remain -= dt;
+            if (remain < 0)
+            {
+                m_returnValue = StateID::Lobby;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
     }
 }
 
@@ -491,6 +521,9 @@ void GameState::buildWorld()
         player.ballEntity = m_scene.createEntity();
         player.ballEntity.addComponent<cro::Transform>().setPosition(player.position);
         player.ballEntity.addComponent<Ball>();
+
+        player.holeScore.resize(m_holeData.size());
+        std::fill(player.holeScore.begin(), player.holeScore.end(), 0);
     }
 }
 
@@ -520,6 +553,29 @@ void GameState::doServerCommand(const cro::NetEvent& evt)
         m_playerInfo[0].ballEntity.getComponent<Ball>().state = Ball::State::Paused;
     }
 
+        break;
+    case ServerCommand::EndGame:
+    {
+        //end of game baby!
+        m_sharedData.host.broadcastPacket(PacketID::GameEnd, std::uint8_t(10), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        //create a timer ent which returns to lobby on time out
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(10.f);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            auto& remain = e.getComponent<cro::Callback>().getUserData<float>();
+            remain -= dt;
+            if (remain < 0)
+            {
+                m_returnValue = StateID::Lobby;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
+    }
         break;
     }
 #endif

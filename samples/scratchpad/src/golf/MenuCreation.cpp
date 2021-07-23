@@ -113,7 +113,7 @@ void GolfMenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter,
             {
                 if (activated(evt))
                 {
-                    m_hosting = true;
+                    m_sharedData.hosting = true;
                     parent.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Avatar]);
                     m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Avatar);
                 }
@@ -136,7 +136,7 @@ void GolfMenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter,
             {
                 if (activated(evt))
                 {
-                    m_hosting = false;
+                    m_sharedData.hosting = false;
                     parent.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Avatar]);
                     m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Avatar);
                 }
@@ -265,7 +265,7 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
                 {
                     applyTextEdit();
 
-                    if (m_hosting)
+                    if (m_sharedData.hosting)
                     {
                         if (!m_sharedData.clientConnection.connected)
                         {
@@ -293,7 +293,15 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
                                 };
                                 m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
+                                cmd.targetFlags = MenuCommandID::ServerInfo;
+                                cmd.action = [](cro::Entity e, float)
+                                {
+                                    e.getComponent<cro::Text>().setString("Hosting on: localhost:" + std::to_string(ConstVal::GamePort));
+                                };
+                                m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
                                 //send the selected map/course
+                                //TODO this should be sent from lobby menu so host can change the selected course
                                 auto data = serialiseString(m_sharedData.mapDirectory);
                                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
                             }
@@ -348,7 +356,7 @@ void GolfMenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter,
 
     //box background
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ glm::vec2(cro::DefaultSceneSize) / 2.f });
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y / 2.f, -0.01f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>().setTexture(m_textureResource.get("assets/golf/images/textbox.png"));
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -438,6 +446,13 @@ void GolfMenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter,
                             e.getComponent<cro::Text>().setString("Ready");
                         };
                         m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                        cmd.targetFlags = MenuCommandID::ServerInfo;
+                        cmd.action = [&](cro::Entity e, float)
+                        {
+                            e.getComponent<cro::Text>().setString("Connected to: " + m_sharedData.targetIP + ":" + std::to_string(ConstVal::GamePort));
+                        };
+                        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                     }
                 }
             });
@@ -522,9 +537,10 @@ void GolfMenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter
 
                     parent.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
                     m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
-                    if (m_hosting)
+                    if (m_sharedData.hosting)
                     {
                         m_sharedData.serverInstance.stop();
+                        m_sharedData.hosting = false;
                     }
                 }
             });
@@ -548,7 +564,7 @@ void GolfMenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter
             {
                 if (activated(evt))
                 {
-                    if (m_hosting)
+                    if (m_sharedData.hosting)
                     {
                         //check all members ready
                         bool ready = true;
@@ -578,6 +594,16 @@ void GolfMenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter
                 }
             });
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f, 0.f });
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    //server info message
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 20.f, 1080.f - 20.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::ServerInfo;
+    entity.addComponent<cro::Text>(m_font).setString("Connected to");
+    entity.getComponent<cro::Text>().setCharacterSize(SmallTextSize);
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::White);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 }
 

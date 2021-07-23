@@ -54,6 +54,7 @@ namespace PacketID
         SetPlayer, //< ActivePlayer struct
         SetHole, //< uint8 hole
         ScoreUpdate, //< ScoreUpdate struct
+        GameEnd, //< uint8 seconds. tells clients to show scoreboard/countdown to lobby
 
         ActorAnimation, //< Tell player sprite to play the given anim with uint8 ID
         ActorUpdate, //< ActorInfo - ball interpolation
@@ -81,6 +82,7 @@ namespace ServerCommand
     {
         NextHole,
         NextPlayer,
-        GotoGreen
+        GotoGreen,
+        EndGame
     };
 }

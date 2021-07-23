@@ -87,4 +87,6 @@ struct SharedStateData final
 
     //printed by the error state
     std::string errorMessage;
+
+    bool hosting = false;
 };
