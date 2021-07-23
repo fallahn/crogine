@@ -129,18 +129,20 @@ void BallSystem::process(float dt)
 
                 //test distance to pin
                 auto len2 = glm::length2(position - m_holeData->pin);
-                if (len2 < MinBallDistance)
+                if (len2 < MinBallDistance
+                    || position.y > 0)
                 {
+                    //over hole or in the air
+
                     //this is some fudgy non-physics.
-                    //if we're here then the ball is over the hole, so add some
-                    //gravity to the ball height. If the ball falls low enough
-                    //during this time we'll put it in the hole
+                    //if the ball falls low enough when
+                    //over the hole we'll put it in.
                     ball.velocity += Gravity * dt;
                 }
-                else
+                else //we're on the green so roll
                 {
-                    //else if the ball has registered some depth it must have crossed
-                    //over the hole so reset the depth and slow it down as if it
+                    //if the ball has registered some depth but is not over
+                    //the hole reset the depth and slow it down as if it
                     //bumped the far edge
                     if (position.y < 0)
                     {
@@ -150,28 +152,30 @@ void BallSystem::process(float dt)
                         //these are all just a wild stab
                         //destined for some tweaking
                         ball.velocity *= 0.3f;
-                        ball.velocity.y += 1.f;
+                        ball.velocity.y += 0.05f;
                     }
-
 
                     //TODO we could also test to see which side of the hole the ball
                     //currently is and add some 'side spin' to the velocity.
 
-                    //add wind - TODO cap this because the 'wind' can blow a ball
-                    //indefinitely
-                    //ball.velocity += m_windDirection * m_windStrength * 0.2f * dt;
+
+
+                    //add wind - adding less wind the morethe ball travels in the
+                    //wind direction means we don't get blown forever
+                    float windAmount = 1.f - glm::dot(m_windDirection, glm::normalize(ball.velocity));
+                    ball.velocity += m_windDirection * m_windStrength * 0.04f * windAmount * dt;
 
                     //add friction
                     ball.velocity *= 0.99f;
 
 
-
                     //add slope from map
+
+
                 }
 
                 //move by velocity
                 tx.move(ball.velocity * dt);
-
                 ball.terrain = getTerrain(tx.getPosition());
 
                 //if we've slowed down or fallen more than the
@@ -299,12 +303,23 @@ void BallSystem::doCollision(cro::Entity entity)
             ball.velocity = glm::vec3(0.f);
             break;
         case TerrainID::Fairway:
-        case TerrainID::Green:
-            ball.velocity *= 0.2f;
+            ball.velocity *= 0.35f;
             ball.velocity = glm::reflect(ball.velocity, normal);
             break;
+        case TerrainID::Green:
+            ball.velocity *= 0.45f;
+            ball.velocity = glm::reflect(ball.velocity, normal);
+
+            //if low bounce start rolling
+            if (ball.velocity.y < 0.3f)
+            {
+                ball.velocity.y = 0.f;
+                ball.state = Ball::State::Putt;
+            }
+
+            break;
         case TerrainID::Rough:
-            ball.velocity *= 0.05f;
+            ball.velocity *= 0.15f;
             ball.velocity = glm::reflect(ball.velocity, normal);
             break;
         }

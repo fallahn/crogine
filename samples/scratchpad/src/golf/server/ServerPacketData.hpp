@@ -57,3 +57,12 @@ struct ActorInfo final
     glm::vec3 position = glm::vec3(0.f);
     std::int32_t timestamp = 0;
 };
+
+struct ScoreUpdate final
+{
+    std::uint8_t client = 4;
+    std::uint8_t player = 4;
+    std::uint8_t stroke = 0;
+    std::uint8_t hole = 0;
+    std::uint8_t score = 0;
+};

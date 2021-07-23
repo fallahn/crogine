@@ -42,6 +42,9 @@ struct PlayerData final
 {
     cro::String name;
     std::uint32_t avatarFlags = 0;
+
+    std::vector<std::uint8_t> holeScores;
+    std::uint8_t score = 0;
 };
 
 struct ConnectionData final

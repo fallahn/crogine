@@ -103,7 +103,7 @@ void GameState::handleMessage(const cro::Message& msg)
     }
     else if (msg.id == sv::MessageID::BallMessage)
     {
-        //TODO update player scores.
+        //TODO update player scores on client.
         const auto& data = msg.getData<BallEvent>();
         if (data.type == BallEvent::TurnEnded)
         {
@@ -121,6 +121,10 @@ void GameState::handleMessage(const cro::Message& msg)
             m_playerInfo[0].terrain = data.terrain;
 
             setNextPlayer();
+        }
+        else if (data.type == BallEvent::Foul)
+        {
+            m_playerInfo[0].stroke++; //penalty stroke.
         }
     }
 
@@ -250,13 +254,22 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
         //as well as account for a frame of interp delay on the client
         ball.delay = 0.32f;
 
+        m_playerInfo[0].stroke++;
+
         m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, m_animIDs[AnimID::Swing], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 }
 
 void GameState::setNextPlayer()
 {
-    //TODO broadcast current player's score first?
+    //broadcast current player's score first
+    ScoreUpdate su;
+    su.client = m_playerInfo[0].client;
+    su.player = m_playerInfo[0].player;
+    su.score = m_playerInfo[0].score;
+    su.stroke = m_playerInfo[0].stroke;
+    su.hole = m_currentHole;
+    m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     //sort players by distance
     std::sort(m_playerInfo.begin(), m_playerInfo.end(),
@@ -291,6 +304,7 @@ void GameState::setNextHole()
         {
             player.position = m_holeData[m_currentHole].tee;
             player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[m_currentHole].pin);
+            player.score += player.stroke;
             player.stroke = 0;
             player.terrain = TerrainID::Fairway;
 
@@ -298,6 +312,9 @@ void GameState::setNextHole()
             player.ballEntity.getComponent<Ball>().velocity = glm::vec3(0.f);
             player.ballEntity.getComponent<cro::Transform>().setPosition(player.position);
         }
+
+        //tell the local ball system which hole we're on
+        m_scene.getSystem<BallSystem>().setHoleData(m_holeData[m_currentHole]);
 
         //tell clients to set up next hole
         m_sharedData.host.broadcastPacket(PacketID::SetHole, m_currentHole, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);

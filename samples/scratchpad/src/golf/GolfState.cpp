@@ -367,9 +367,6 @@ void GolfState::loadAssets()
 
 
 
-
-
-
     //load the map data
     bool error = false;
     auto mapDir = m_sharedData.mapDirectory.toAnsiString();
@@ -494,6 +491,20 @@ void GolfState::loadAssets()
         m_sharedData.errorMessage = "Failed to load course data";
         requestStackPush(States::Golf::Error);
     }
+
+
+    //reserve the slots for each hole score
+    for (auto& client : m_sharedData.connectionData)
+    {
+        for (auto& player : client.playerData)
+        {
+            player.score = 0;
+            player.holeScores.clear();
+            player.holeScores.resize(holeStrings.size());
+            std::fill(player.holeScores.begin(), player.holeScores.end(), 0);
+        }
+    }
+
 
 #ifdef CRO_DEBUG_
     m_debugTexture.create(300, 200);
@@ -901,6 +912,18 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             break;
         case PacketID::SetHole:
             setCurrentHole(evt.packet.as<std::uint8_t>());
+            break;
+        case PacketID::ScoreUpdate:
+        {
+            auto su = evt.packet.as<ScoreUpdate>();
+            auto& player = m_sharedData.connectionData[su.client].playerData[su.player];
+            
+            if (su.hole < player.holeScores.size())
+            {
+                player.score = su.score;
+                player.holeScores[su.hole] = su.stroke;
+            }
+        }
             break;
         }
         break;
