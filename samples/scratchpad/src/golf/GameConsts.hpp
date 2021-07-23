@@ -55,7 +55,6 @@ struct UIElement final
 {
     glm::vec2 position = glm::vec2(0.f);
 };
-static constexpr glm::vec2 PlayerNamePosition(0.1f, 0.1f);
 static constexpr glm::vec2 PowerbarPosition(0.5f, 0.1f);
-static constexpr glm::vec2 WindPosition(0.11f, 0.9f);
 static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);
+static constexpr glm::vec2 HoleInfoPosition(0.65f, 0.32f);

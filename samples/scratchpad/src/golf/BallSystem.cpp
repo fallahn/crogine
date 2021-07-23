@@ -184,7 +184,17 @@ void BallSystem::process(float dt)
                     || (position.y < -(Ball::Radius * 2.f)))
                 {
                     ball.velocity = glm::vec3(0.f);
-                    ball.state = ball.terrain == TerrainID::Water ? Ball::State::Reset : Ball::State::Paused;
+                    
+                    if (ball.terrain == TerrainID::Water
+                        || ball.terrain == TerrainID::Scrub)
+                    {
+                        ball.state = Ball::State::Reset;
+                    }
+                    else
+                    {
+                        ball.state = Ball::State::Paused;
+                    }
+
                     ball.delay = 2.f;
                 }
             }
@@ -205,7 +215,8 @@ void BallSystem::process(float dt)
                     ballPos += dir;
                     terrain = getTerrain(ballPos);
 
-                    if (terrain != TerrainID::Water)
+                    if (terrain != TerrainID::Water
+                        && terrain != TerrainID::Scrub)
                     {
                         tx.setPosition(ballPos);
                         break;
@@ -213,7 +224,8 @@ void BallSystem::process(float dt)
                 }
 
                 //if for some reason we never got out the water, put the ball back at the start
-                if (terrain == TerrainID::Water)
+                if (terrain == TerrainID::Water
+                    || terrain == TerrainID::Scrub)
                 {
                     terrain = TerrainID::Fairway;
                     tx.setPosition(m_holeData->tee);
@@ -300,6 +312,7 @@ void BallSystem::doCollision(cro::Entity entity)
         default: break;
         case TerrainID::Bunker:
         case TerrainID::Water:
+        case TerrainID::Scrub:
             ball.velocity = glm::vec3(0.f);
             break;
         case TerrainID::Fairway:
@@ -327,7 +340,15 @@ void BallSystem::doCollision(cro::Entity entity)
         //stop the ball if velocity low enough
         if (glm::length2(ball.velocity) < 0.01f)
         {
-            ball.state = terrain == TerrainID::Water ? Ball::State::Reset : Ball::State::Paused;
+            if (terrain == TerrainID::Water
+                || terrain == TerrainID::Scrub)
+            {
+                ball.state = Ball::State::Reset;
+            }
+            else
+            {
+                ball.state = Ball::State::Paused;
+            }
             ball.delay = 2.f;
             ball.terrain = terrain;
             ball.velocity = glm::vec3(0.f);

@@ -47,7 +47,9 @@ struct CommandID final
             Root         = 0x8,
             PlayerSprite = 0x10,
             WindSock     = 0x20,
-            WindString   = 0x40
+            WindString   = 0x40,
+            HoleNumber   = 0x80,
+            PinDistance  = 0x100
         };
     };
 };

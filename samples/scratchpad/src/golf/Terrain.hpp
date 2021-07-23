@@ -34,13 +34,13 @@ source distribution.
 
 struct TerrainID final
 {
-    //these values a re multiplied by 10 in the colours blue channel
+    //these values a re multiplied by 10 in the colour's blue channel
     //just cos it makes its a tiiiny bit easier to see in the image
     enum
     {
         Rough, Fairway,
         Green, Bunker,
-        Water,
+        Water, Scrub,
 
         Count
     };
@@ -48,5 +48,5 @@ struct TerrainID final
 
 static const std::array<std::string, TerrainID::Count> TerrainStrings =
 {
-    "Rough", "Fairway", "Green", "Bunker", "Water"
+    "Rough", "Fairway", "Green", "Bunker", "Water", "Scrub"
 };

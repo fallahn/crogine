@@ -321,7 +321,7 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::Player02] = spriteSheet.getSprite("male");
 
 
-    m_resources.fonts.load(FontID::UI, "assets/fonts/VeraMono.ttf");
+    m_resources.fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
 
     //ball resources - ball is rendered as a single point
     glCheck(glPointSize(BallPointSize));
@@ -735,45 +735,103 @@ void GolfState::buildUI()
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //club/hole info
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(WindPosition * windowSize);
+    entity.addComponent<cro::Transform>().setPosition(HoleInfoPosition * windowSize);
+    entity.addComponent<UIElement>().position = HoleInfoPosition;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    auto colour = cro::Colour(0.f, 0.f, 0.f, 0.5f);
+    entity.addComponent<cro::Drawable2D>().getVertexData() = 
+    {
+        cro::Vertex2D(glm::vec2(0.f, 160.f), colour), //TODO remove all these magic numbers
+        cro::Vertex2D(glm::vec2(0.f), colour),
+        cro::Vertex2D(glm::vec2(134.f, 160.f), colour),
+        cro::Vertex2D(glm::vec2(134.f, 0.f), colour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    auto infoEnt = entity;
+
+
+    auto& font = m_resources.fonts.get(FontID::UI);
+
+    //player's name
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 150.f));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerName;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //hole number
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 132.f));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::HoleNumber;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //hole distance
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 120.f));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PinDistance;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //club info
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 108.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].name);
+    };
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //current stroke
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 82.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        auto stroke = std::to_string(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole]);
+        e.getComponent<cro::Text>().setString("Stroke: " + stroke);
+    };
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //TODO current terrain
+
+
+
+    //wind indicator
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(67.f)); //TODO de-magicfy this and make it half the size of the background
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindIndicator];
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::WindSock;
-    entity.addComponent<UIElement>().position = WindPosition;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindSock;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
-    auto windsock = entity;
+    entity.getComponent<cro::Transform>().move(glm::vec2(0.f, -bounds.height));
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto camDir = m_holeData[0].pin - m_currentPlayer.position;
     m_camRotation = std::atan2(-camDir.z, camDir.y);
 
-    auto& font = m_resources.fonts.get(FontID::UI);
-
     //wind strength
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(67.f, 10.f)); //TODO same as indicator
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindString;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [windsock](cro::Entity e, float)
-    {
-        //TODO this might be better as a UI element because an increased
-        //font scale means the text needs to move lower
-        e.getComponent<cro::Transform>().setPosition(windsock.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -36.f, 0.001f));
-        e.getComponent<cro::Transform>().setScale(windsock.getComponent<cro::Transform>().getScale());
-    };
-
-    //player's name
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(PlayerNamePosition * windowSize);
-    entity.addComponent<UIElement>().position = PlayerNamePosition;
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerName | CommandID::UI::UIElement;
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
 
@@ -1042,12 +1100,34 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
     m_currentPlayer = player;
 
+    //TODO we could move much of the UI stuff to its
+    //own class or function to encapsulate betterererer
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::PlayerName;
     cmd.action =
         [&](cro::Entity e, float)
     {
         e.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+
+    cmd.targetFlags = CommandID::UI::PinDistance;
+    cmd.action =
+        [&](cro::Entity e, float)
+    {
+        //TODO if we're on the green convert to cm
+        std::int32_t distance = static_cast<std::int32_t>(glm::length(player.position - m_holeData[m_currentHole].pin));
+        e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+
+    cmd.targetFlags = CommandID::UI::HoleNumber;
+    cmd.action =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Text>().setString("Hole: " + std::to_string(m_currentHole + 1));
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -1116,6 +1196,11 @@ void GolfState::hitBall()
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, update, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_inputParser.setActive(false);
+
+
+    //increase the local stroke count so that the UI is updated
+    //the server will set the actual value
+    m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole]++;
 }
 
 void GolfState::createTransition(const ActivePlayer& playerData)
