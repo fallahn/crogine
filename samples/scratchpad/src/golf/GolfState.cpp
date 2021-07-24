@@ -85,7 +85,7 @@ namespace
         const float ratio = size.x / size.y;
 
         const float width = std::min(400.f, std::max(300.f, ViewportHeight * ratio));
-        return { /*width*/400.f, ViewportHeight };
+        return { /*width*/356.f, ViewportHeight };
     }
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
@@ -843,7 +843,7 @@ void GolfState::buildUI()
 
         auto vpSize = calcVPSize();
 
-        auto viewScale = glm::vec2(std::floor(size.x / vpSize.x));
+        auto viewScale = glm::vec2(std::floor(size.y / vpSize.y));
         courseEnt.getComponent<cro::Transform>().setScale(viewScale);
         courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -0.1f));
         courseEnt.getComponent<cro::Transform>().setOrigin(vpSize / 2.f);
