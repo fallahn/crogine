@@ -38,8 +38,8 @@ source distribution.
 struct ActivePlayer
 {
     glm::vec3 position = glm::vec3(0.f);
-    std::uint8_t client = 4;
-    std::uint8_t player = 4;
+    std::uint8_t client = 0;
+    std::uint8_t player = 0;
     std::uint8_t terrain = TerrainID::Fairway;
 };
 
@@ -60,8 +60,8 @@ struct ActorInfo final
 
 struct ScoreUpdate final
 {
-    std::uint8_t client = 4;
-    std::uint8_t player = 4;
+    std::uint8_t client = 0;
+    std::uint8_t player = 0;
     std::uint8_t stroke = 0;
     std::uint8_t hole = 0;
     std::uint8_t score = 0;

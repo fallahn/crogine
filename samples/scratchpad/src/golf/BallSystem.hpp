@@ -88,5 +88,5 @@ private:
 
     void doCollision(cro::Entity);
     void updateWind();
-    std::uint8_t getTerrain(glm::vec3);
+    std::pair<std::uint8_t, glm::vec3> getTerrain(glm::vec3);
 };

@@ -78,8 +78,6 @@ void GameState::handleMessage(const cro::Message& msg)
         if (data.type == ConnectionEvent::Disconnected)
         {
             //disconnect notification packet is sent in Server
-
-            //TODO send update? switch to next player? Client already knows so can clear up anyway?
             bool setNewPlayer = (data.clientID == m_playerInfo[0].client);
 
             //remove the player data
@@ -95,9 +93,17 @@ void GameState::handleMessage(const cro::Message& msg)
                 }),
                 m_playerInfo.end());
 
-            if (setNewPlayer)
+            if (!m_playerInfo.empty())
             {
-                setNextPlayer();
+                if (setNewPlayer)
+                {
+                    setNextPlayer();
+                }
+            }
+            else
+            {
+                //we should quit this state? If no one is
+                //connected we could be on our way out anyway
             }
         }
     }
@@ -443,6 +449,9 @@ bool GameState::validateMap()
                     LogE << "Server: hole map requires RGBA format" << std::endl;
                     return false;
                 }
+
+                loadNormalMap(holeData, holeProp.getValue<std::string>());
+
                 propCount++;
             }
             else if (name == "pin")
@@ -477,6 +486,44 @@ bool GameState::validateMap()
     }
 
     return true;
+}
+
+void GameState::loadNormalMap(HoleData& holeData, const std::string& path)
+{
+    auto size = holeData.map.getSize();
+    holeData.normalMap.resize(size.x * size.y, glm::vec3(0.f, 1.f, 0.f));
+
+    auto extension = cro::FileSystem::getFileExtension(path);
+    auto filePath = path.substr(0, path.length() - extension.length());
+
+    filePath += "n" + extension;
+    
+    cro::Image img;
+    if (img.loadFromFile(filePath))
+    {
+        std::size_t stride = 0;
+        if (img.getFormat() == cro::ImageFormat::RGB)
+        {
+            stride = 3;
+        }
+        else if (img.getFormat() == cro::ImageFormat::RGBA)
+        {
+            stride = 4;
+        }
+
+        if (stride != 0)
+        {
+            auto pixels = img.getPixelData();
+            for (auto i = 0u, j = 0u; i < holeData.normalMap.size(); ++i, j += stride)
+            {
+                holeData.normalMap[i] = { pixels[j], pixels[j + 2], -pixels[j + 1] };
+                holeData.normalMap[i] /= 255.f;
+                holeData.normalMap[i] *= 2.f;
+                holeData.normalMap[i] -= 1.f;
+                holeData.normalMap[i] = glm::normalize(holeData.normalMap[i]);
+            }
+        }
+    }
 }
 
 void GameState::initScene()

@@ -31,6 +31,7 @@ source distribution.
 #define STBI_ONLY_PNG
 #define STBI_ONLY_BMP
 #define STBI_ONLY_HDR
+#define STBI_ONLY_TGA
 #define STB_IMAGE_IMPLEMENTATION
 #ifdef CRO_DEBUG_
 #define STBI_FAILURE_USERMSG

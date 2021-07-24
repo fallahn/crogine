@@ -127,6 +127,8 @@ void BallSystem::process(float dt)
                 auto& tx = entity.getComponent<cro::Transform>();
                 auto position = tx.getPosition();
 
+                auto [terrain, normal] = getTerrain(tx.getPosition());
+
                 //test distance to pin
                 auto len2 = glm::length2(position - m_holeData->pin);
                 if (len2 < MinBallDistance
@@ -165,18 +167,19 @@ void BallSystem::process(float dt)
                     float windAmount = 1.f - glm::dot(m_windDirection, glm::normalize(ball.velocity));
                     ball.velocity += m_windDirection * m_windStrength * 0.04f * windAmount * dt;
 
+                    //add slope from normal map
+                    //glm::vec3 slope(normal.x, normal.y, 0.f); //TODO - calc this properly ;)
+                    //float slopeAmount = 1.f - glm::dot(glm::normalize(slope), glm::normalize(ball.velocity));
+                    //ball.velocity += slope * 0.04f * slopeAmount * dt;
+
+
                     //add friction
                     ball.velocity *= 0.99f;
-
-
-                    //add slope from map
-
-
                 }
 
                 //move by velocity
                 tx.move(ball.velocity * dt);
-                ball.terrain = getTerrain(tx.getPosition());
+                ball.terrain = terrain;
 
                 //if we've slowed down or fallen more than the
                 //ball's diameter (radius??) stop the ball
@@ -213,7 +216,7 @@ void BallSystem::process(float dt)
                 for (auto i = 0; i < 100; ++i) //max 100m
                 {
                     ballPos += dir;
-                    terrain = getTerrain(ballPos);
+                    terrain = getTerrain(ballPos).first;
 
                     if (terrain != TerrainID::Water
                         && terrain != TerrainID::Scrub)
@@ -299,12 +302,7 @@ void BallSystem::doCollision(cro::Entity entity)
 
         auto& ball = entity.getComponent<Ball>();
 
-        auto terrain = getTerrain(pos);
-
-        //TODO get normal from map info - potentially refactor so we have full surface normal
-        //and terrain shifted to alpha channel
-        glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
-
+        auto [terrain, normal] = getTerrain(pos);
 
         //apply dampening based on terrain (or splash)
         switch (terrain)
@@ -321,15 +319,18 @@ void BallSystem::doCollision(cro::Entity entity)
             break;
         case TerrainID::Green:
             ball.velocity *= 0.45f;
-            ball.velocity = glm::reflect(ball.velocity, normal);
 
             //if low bounce start rolling
-            if (ball.velocity.y < 0.3f)
+            if (ball.velocity.y < 0.01f)
             {
                 ball.velocity.y = 0.f;
+                ball.velocity *= 0.5f;
                 ball.state = Ball::State::Putt;
             }
-
+            else //bounce
+            {
+                ball.velocity = glm::reflect(ball.velocity, normal);
+            }
             break;
         case TerrainID::Rough:
             ball.velocity *= 0.15f;
@@ -395,7 +396,7 @@ void BallSystem::updateWind()
     }
 }
 
-std::uint8_t BallSystem::getTerrain(glm::vec3 pos)
+std::pair<std::uint8_t, glm::vec3> BallSystem::getTerrain(glm::vec3 pos)
 {
     auto size = m_holeData->map.getSize();
     std::uint32_t x = std::max(0u, std::min(size.x, static_cast<std::uint32_t>(std::floor(pos.x))));
@@ -403,11 +404,11 @@ std::uint8_t BallSystem::getTerrain(glm::vec3 pos)
 
     CRO_ASSERT(m_holeData->map.getFormat() == cro::ImageFormat::RGBA, "expected RGBA format");
 
-    auto index = ((y * size.x) + x) * 4;
+    auto index = ((y * size.x) + x);
 
-    //R,G are slope vector, B is terrain * 10
-    std::uint8_t terrain = m_holeData->map.getPixelData()[index + 2] / 10;
+    //R is terrain * 10
+    std::uint8_t terrain = m_holeData->map.getPixelData()[index * 4] / 10;
     terrain = std::min(static_cast<std::uint8_t>(TerrainID::Water), terrain);
 
-    return terrain;
+    return std::make_pair(terrain, m_holeData->normalMap[index]);
 }

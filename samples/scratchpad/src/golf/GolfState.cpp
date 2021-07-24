@@ -142,7 +142,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
                 ImGui::Text("Terrain: %s", TerrainStrings[m_currentPlayer.terrain]);
 
-                ImGui::Image(m_debugTexture.getTexture(), { 300.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::Image(m_debugTexture.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                 if (ImGui::Button("Save Image"))
                 {
@@ -510,7 +510,7 @@ void GolfState::loadAssets()
 
 
 #ifdef CRO_DEBUG_
-    m_debugTexture.create(300, 200);
+    m_debugTexture.create(320, 200);
 
     //debug material for wireframes
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
@@ -636,7 +636,7 @@ void GolfState::buildScene()
     m_debugCam.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 0.f });
     m_debugCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& dCam = m_debugCam.addComponent<cro::Camera>();
-    dCam.setOrthographic(0.f, 300.f, 0.f, 200.f, -0.1f, 20.f);
+    dCam.setOrthographic(0.f, 320.f, 0.f, 200.f, -0.1f, 20.f);
     dCam.viewport = { 0.f, 0.f, 1.f, 1.f };
 #endif
 }
@@ -787,7 +787,7 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].name);
+        e.getComponent<cro::Text>().setString(Clubs[getClub()].name);
     };
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

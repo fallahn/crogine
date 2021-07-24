@@ -81,6 +81,7 @@ namespace sv
         void setNextHole();
 
         bool validateMap();
+        void loadNormalMap(HoleData&, const std::string&);
         void initScene();
         void buildWorld();
 
