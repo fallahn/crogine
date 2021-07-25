@@ -83,9 +83,9 @@ namespace
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         const float ratio = size.x / size.y;
+        static constexpr float Widescreen = 16.f / 9.f;
 
-        const float width = std::min(400.f, std::max(300.f, ViewportHeight * ratio));
-        return { /*width*/356.f, ViewportHeight };
+        return { ViewportWidth, ratio < Widescreen ? 300.f : 360.f };
     }
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
@@ -757,7 +757,6 @@ void GolfState::buildUI()
     //player's name
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 150.f));
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerName;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
@@ -766,7 +765,6 @@ void GolfState::buildUI()
     //hole number
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 132.f));
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::HoleNumber;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
@@ -775,7 +773,6 @@ void GolfState::buildUI()
     //hole distance
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 120.f));
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PinDistance;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
@@ -784,7 +781,6 @@ void GolfState::buildUI()
     //club info
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 108.f));
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
     entity.addComponent<cro::Callback>().active = true;
@@ -798,7 +794,6 @@ void GolfState::buildUI()
     //current stroke
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 82.f));
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
     entity.addComponent<cro::Callback>().active = true;
@@ -814,7 +809,6 @@ void GolfState::buildUI()
     //current terrain
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 56.f));
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
     entity.addComponent<cro::Callback>().active = true;
