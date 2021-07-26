@@ -46,7 +46,24 @@ source distribution.
 namespace
 {
     glm::vec2 viewScale(1.f); //tracks the current scale of the output
+    std::size_t scoreColumnCount = 2;
 
+    constexpr float ColumnWidth = 20.f;
+    constexpr float ColumnHeight = 276.f;
+    constexpr std::array ColumnPositions =
+    {
+        glm::vec2(10.f, ColumnHeight),
+        glm::vec2(ColumnWidth * 6.f, ColumnHeight),
+        glm::vec2(ColumnWidth * 7.f, ColumnHeight),
+        glm::vec2(ColumnWidth * 8.f, ColumnHeight),
+        glm::vec2(ColumnWidth * 9.f, ColumnHeight),
+        glm::vec2(ColumnWidth * 10.f, ColumnHeight),
+        glm::vec2(ColumnWidth * 11.f, ColumnHeight),
+        glm::vec2(ColumnWidth * 12.f, ColumnHeight),
+        glm::vec2(ColumnWidth * 13.f, ColumnHeight),
+        glm::vec2(ColumnWidth * 14.f, ColumnHeight),
+        glm::vec2(ColumnWidth * 17.f, ColumnHeight),
+    };
 }
 
 void GolfState::buildUI()
@@ -261,7 +278,7 @@ void GolfState::buildUI()
 
 
 
-
+    createScoreboard();
 
 
 
@@ -365,4 +382,144 @@ void GolfState::showCountdown(std::uint8_t seconds)
         e.getComponent<cro::Text>().setString("Return to lobby in: " + std::to_string(sec));
     };
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+}
+
+void GolfState::createScoreboard()
+{
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(UIHiddenPosition);
+    entity.addComponent<UIElement>().position = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().depth = 0.22f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::Scoreboard;
+    //TODO some sort of background sprite
+    entity.addComponent<cro::Drawable2D>();
+
+    cro::Colour c(1.f, 0.5f, 0.1f, 0.5f);
+    entity.getComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(0.f, 300.f), c),
+        cro::Vertex2D(glm::vec2(0.f), c),
+        cro::Vertex2D(glm::vec2(400.f, 300.f), c),
+        cro::Vertex2D(glm::vec2(400.f, 0.f), c)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ 200.f, 150.f });
+
+    auto bgEnt = entity;
+    auto& font = m_resources.fonts.get(FontID::UI);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 200.f, 290.f, 0.02f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("LEADERS");
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setCharacterSize(8);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //this is a kludge to store the vector on the ent without
+    //creating a whole new component type for a single item
+    bgEnt.addComponent<cro::Callback>().setUserData<std::vector<cro::Entity>>();
+
+    scoreColumnCount = 11;// std::min(m_holeData.size() + scoreColumnCount, std::size_t(11));
+
+    auto& ents = bgEnt.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
+    ents.resize(scoreColumnCount); //title and total
+    std::int32_t i = 0;
+    for (auto& e : ents)
+    {
+        e = m_uiScene.createEntity();
+        e.addComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions[i], 0.02f));
+        e.addComponent<cro::Drawable2D>();
+        e.addComponent<cro::Text>(font).setCharacterSize(8);
+        e.getComponent<cro::Text>().setVerticalSpacing(6.f);
+
+        bgEnt.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+        i++;
+    }
+}
+
+void GolfState::updateScoreboard()
+{
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::Scoreboard;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        auto& ents = e.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
+        /*std::uint32_t playerCount = 0;
+        for (const auto& client : m_sharedData.connectionData)
+        {
+            playerCount += client.playerCount;
+        }
+
+        auto holeCount = m_holeData.size();*/
+        auto playerCount = 16;
+        auto holeCount = 18;
+
+
+        std::size_t page2 = 0;
+        if (holeCount > scoreColumnCount)
+        {
+            page2 = std::min(std::size_t(9), holeCount - scoreColumnCount);
+        }
+
+        //name column
+        std::string nameString = "HOLE\nPAR";
+        for (auto i = 0; i < playerCount; ++i)
+        {
+            nameString += "\nPlayer" + std::to_string(i);
+        }
+        if (page2)
+        {
+            nameString += "\n\nHOLE\nPAR";
+            for (auto i = 0; i < playerCount; ++i)
+            {
+                nameString += "\nPlayer" + std::to_string(i);
+            }
+        }
+        ents[0].getComponent<cro::Text>().setString(nameString);
+
+        //score columns
+        for (auto i = 1u; i < ents.size() - 1; ++i)
+        {
+            std::string scoreString = std::to_string(i) + "\n0";
+
+            for (auto j = 0; j < playerCount; ++j)
+            {
+                scoreString += "\n0";
+            }
+
+            if (page2)
+            {
+                scoreString += "\n\n" + std::to_string(i + 9) + "\n0";
+                for (auto j = 0; j < playerCount; ++j)
+                {
+                    scoreString += "\n0";
+                }
+            }
+
+            ents[i].getComponent<cro::Text>().setString(scoreString);
+        }
+
+        //total column
+        std::string totalString = "TOTAL\n0";
+
+        for (auto i = 0; i < playerCount; ++i)
+        {
+            totalString += "\n0";
+        }
+
+        if (page2)
+        {
+            totalString += "\n\nTOTAL\n0";
+            for (auto i = 0; i < playerCount; ++i)
+            {
+                totalString += "\n0";
+            }
+        }
+
+        ents.back().getComponent<cro::Text>().setString(totalString);
+
+
+        //TODO add a scrollbar if local bounds is taller than scoreboard
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }

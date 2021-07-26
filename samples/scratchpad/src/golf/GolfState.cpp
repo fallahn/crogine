@@ -159,6 +159,18 @@ bool GolfState::handleEvent(const cro::Event& evt)
         return true;
     }
 
+    const auto toggleScores = [&](bool visible)
+    {
+        auto pos = visible ? glm::vec2(cro::App::getWindow().getSize()) / 2.f : UIHiddenPosition;
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::Scoreboard;
+        cmd.action = [pos](cro::Entity e, float)
+        {
+            e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.22f));
+        };
+        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    };
+
     if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
@@ -172,6 +184,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE:
             hitBall();
             break;*/
+        case SDLK_TAB:
+            toggleScores(false);
+            break;
 #ifdef CRO_DEBUG_
         case SDLK_F2:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextHole), cro::NetFlag::Reliable);
@@ -191,6 +206,38 @@ bool GolfState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
+    else if (evt.type == SDL_KEYDOWN)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_TAB:
+            toggleScores(true);
+            break;
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    {
+        switch (evt.cbutton.button)
+        {
+        default: break;
+        case SDL_CONTROLLER_BUTTON_BACK:
+            toggleScores(true);
+            break;
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    {
+        switch (evt.cbutton.button)
+        {
+        default: break;
+        case SDL_CONTROLLER_BUTTON_BACK:
+            toggleScores(false);
+            break;
+        }
+    }
+
+
 
     m_inputParser.handleEvent(evt);
 
@@ -793,6 +840,8 @@ void GolfState::removeClient(std::uint8_t clientID)
 
 void GolfState::setCurrentHole(std::uint32_t hole)
 {
+    updateScoreboard();
+
     //CRO_ASSERT(hole < m_holeData.size(), "");
     if (hole >= m_holeData.size())
     {
@@ -896,6 +945,8 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    updateScoreboard();
+
     m_currentPlayer = player;
 
     //TODO we could move much of the UI stuff to its
@@ -971,11 +1022,15 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     //TODO apply the correct sprite to the player entity
     cmd.targetFlags = CommandID::UI::PlayerSprite;
-    cmd.action = [player](cro::Entity e, float)
+    cmd.action = [&,player](cro::Entity e, float)
     {
         if (player.terrain != TerrainID::Green)
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+
+            const auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+            auto pos = camera.coordsToPixel(player.position, m_renderTexture.getSize());
+            e.getComponent<cro::Transform>().setPosition(pos);
         }
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
@@ -1066,22 +1121,11 @@ void GolfState::createTransition(const ActivePlayer& playerData)
         if (glm::length2(travel) < 0.005f)
         {
             //we're there
-            setCurrentPlayer(playerData);
             setCameraPosition(playerData.position, targetInfo.targetHeight, targetInfo.targetOffset);
+            setCurrentPlayer(playerData);
 
             e.getComponent<cro::Callback>().active = false;
             m_gameScene.destroyEntity(e);
-
-            //update avatar position
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::UI::PlayerSprite;
-            cmd.action = [&](cro::Entity ent, float)
-            {
-                const auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-                auto pos = camera.coordsToPixel(m_currentPlayer.position, m_renderTexture.getSize());
-                ent.getComponent<cro::Transform>().setPosition(pos);
-            };
-            m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
         }
         else
         {

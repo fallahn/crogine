@@ -50,7 +50,8 @@ struct CommandID final
             WindSock     = 0x20,
             WindString   = 0x40,
             HoleNumber   = 0x80,
-            PinDistance  = 0x100
+            PinDistance  = 0x100,
+            Scoreboard   = 0x200
         };
     };
 };
