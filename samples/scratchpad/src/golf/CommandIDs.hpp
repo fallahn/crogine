@@ -34,7 +34,8 @@ struct CommandID final
     enum
     {
         Ball            = 0x1,
-        StrokeIndicator = 0x2
+        StrokeIndicator = 0x2,
+        Flag            = 0x4
     };
 
     struct UI final

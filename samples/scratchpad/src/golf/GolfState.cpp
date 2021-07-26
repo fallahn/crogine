@@ -47,6 +47,7 @@ source distribution.
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -523,6 +524,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
+    m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
@@ -555,6 +557,15 @@ void GolfState::buildScene()
     ent.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
     md.createModel(ent);
 
+    md.loadFromFile("assets/golf/models/flag.cmt");
+    ent = m_gameScene.createEntity();
+    ent.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
+    ent.addComponent<cro::CommandTarget>().ID = CommandID::Flag;
+    md.createModel(ent);
+    if (md.hasSkeleton())
+    {
+        ent.getComponent<cro::Skeleton>().play(0);
+    }
 
     //displays the stroke direction
     auto pos = m_holeData[0].tee;
@@ -801,15 +812,36 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
     m_currentPlayer.position = m_holeData[m_currentHole].tee;
 
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Flag;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
     //TODO some sort of 'loading' effect of the terrain - maybe a shader on the buffer sprite?
 }
 
 void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)
 {
+    static constexpr float MinDist = 6.f;
+    static constexpr float MaxDist = 270.f;
+    static constexpr float DistDiff = MaxDist - MinDist;
+    float heightMultiplier = 1.f; //goes to -1.f at max dist
+
     auto camEnt = m_gameScene.getActiveCamera();
     camEnt.getComponent<cro::Transform>().setPosition({ position.x, height, position.z });
-    auto target = m_holeData[m_currentHole].pin;
-    auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), glm::vec3(target.x, height, target.z), cro::Transform::Y_AXIS);
+    auto target = m_holeData[m_currentHole].pin - position;
+
+    auto dist = glm::length(target);
+    float distNorm = std::min(1.f, (dist - MinDist) / DistDiff);
+    heightMultiplier -= (2.f * distNorm);
+
+    target *= 1.f - ((1.f - 0.08f) * distNorm);
+    target += position;
+
+    auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), glm::vec3(target.x, height * heightMultiplier, target.z), cro::Transform::Y_AXIS);
     camEnt.getComponent<cro::Transform>().setRotation(glm::inverse(lookat));
 
     auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
@@ -849,7 +881,8 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
         auto pos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(m_holeData[m_currentHole].pin, m_renderTexture.getSize());
         e.getComponent<cro::Transform>().setPosition(pos);
 
-        if (currLength < 2.f)
+        //if (currLength < 2.f)
+        if (flag == SpriteID::Flag01)
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         }
@@ -881,9 +914,20 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.action =
         [&](cro::Entity e, float)
     {
-        //TODO if we're on the green convert to cm
-        std::int32_t distance = static_cast<std::int32_t>(glm::length(player.position - m_holeData[m_currentHole].pin));
-        e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
+        //if we're on the green convert to cm
+        float ballDist = glm::length(player.position - m_holeData[m_currentHole].pin);
+        std::int32_t distance = 0;
+
+        if (ballDist > 5)
+        {
+            distance = static_cast<std::int32_t>(ballDist);
+            e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
+        }
+        else
+        {
+            distance = static_cast<std::int32_t>(ballDist * 100.f);
+            e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "cm");
+        }
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -1019,7 +1063,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
         auto targetInfo = m_gameScene.getActiveCamera().getComponent<TargetInfo>();
 
-        if (glm::length2(travel) < 0.01f)
+        if (glm::length2(travel) < 0.005f)
         {
             //we're there
             setCurrentPlayer(playerData);
@@ -1027,6 +1071,17 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
             e.getComponent<cro::Callback>().active = false;
             m_gameScene.destroyEntity(e);
+
+            //update avatar position
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::PlayerSprite;
+            cmd.action = [&](cro::Entity ent, float)
+            {
+                const auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+                auto pos = camera.coordsToPixel(m_currentPlayer.position, m_renderTexture.getSize());
+                ent.getComponent<cro::Transform>().setPosition(pos);
+            };
+            m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
         }
         else
         {
@@ -1044,17 +1099,18 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
 void GolfState::updateWindDisplay(glm::vec3 direction)
 {
+    float rotation = std::atan2(-direction.z, direction.x);
+
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::WindSock;
-    cmd.action = [&, direction](cro::Entity e, float dt)
+    cmd.action = [&, rotation](cro::Entity e, float dt)
     {
-        float rotation = std::atan2(-direction.z, direction.x);
-        rotation -= m_camRotation;
-        //e.getComponent<cro::Transform>().setRotation(rotation);
+        auto r = rotation - m_camRotation;
+        //e.getComponent<cro::Transform>().setRotation(r);
 
         //this is smoother but uses a horrible static var
         static float currRotation = 0.f;
-        currRotation += (rotation - currRotation) * dt;
+        currRotation += (r - currRotation) * dt;
         e.getComponent<cro::Transform>().setRotation(currRotation);
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
@@ -1069,6 +1125,13 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
         e.getComponent<cro::Text>().setString(ss.str());
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::Flag;
+    cmd.action = [rotation](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
 
 std::int32_t GolfState::getClub() const
