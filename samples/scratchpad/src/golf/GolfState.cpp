@@ -79,15 +79,6 @@ namespace
     std::int32_t debugMaterial = -1;
     glm::vec3 ballpos = glm::vec3(0.f);
 
-    glm::vec2 calcVPSize()
-    {
-        glm::vec2 size(cro::App::getWindow().getSize());
-        const float ratio = size.x / size.y;
-        static constexpr float Widescreen = 16.f / 9.f;
-
-        return { ViewportWidth, ratio < Widescreen ? 300.f : 360.f };
-    }
-
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
     //used to set the camera target
@@ -180,6 +171,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE:
             hitBall();
             break;*/
+#ifdef CRO_DEBUG_
         case SDLK_F2:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextHole), cro::NetFlag::Reliable);
             break;
@@ -192,6 +184,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F6:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), cro::NetFlag::Reliable);
             break;
+        case SDLK_F7:
+            showCountdown(10);
+            break;
+#endif
         }
     }
 
@@ -641,263 +637,6 @@ void GolfState::buildScene()
 #endif
 }
 
-void GolfState::buildUI()
-{
-    if (m_holeData.empty())
-    {
-        return;
-    }
-
-    //draws the background using the render texture
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_renderTexture.getTexture());
-    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
-    auto courseEnt = entity;
-
-
-    auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-    camera.updateMatrices(m_gameScene.getActiveCamera().getComponent<cro::Transform>());
-    auto pos = camera.coordsToPixel(m_holeData[0].tee, m_renderTexture.getSize());
-
-    //player sprite - TODO apply avatar customisation
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(pos);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Player01];
-    entity.addComponent<cro::SpriteAnimation>();
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width * 0.78f, 0.f));
-    courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto playerEnt = entity;
-    m_currentPlayer.position = m_holeData[0].tee;
-
-    //flag sprite. TODO make this less crap
-    //this is updated by a command sent when the 3D camera is positioned
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Flag01];
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::FlagSprite;
-    courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    
-
-
-    //info panel background
-    auto windowSize = glm::vec2(cro::App::getWindow().getSize());
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(HoleInfoPosition * windowSize);
-    entity.addComponent<UIElement>().position = HoleInfoPosition;
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    auto colour = cro::Colour(0.f, 0.f, 0.f, 0.5f);
-    entity.addComponent<cro::Drawable2D>().getVertexData() = 
-    {
-        cro::Vertex2D(glm::vec2(0.f, 160.f), colour), //TODO remove all these magic numbers
-        cro::Vertex2D(glm::vec2(0.f), colour),
-        cro::Vertex2D(glm::vec2(134.f, 160.f), colour),
-        cro::Vertex2D(glm::vec2(134.f, 0.f), colour)
-    };
-    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-    auto infoEnt = entity;
-
-    
-
-    auto& font = m_resources.fonts.get(FontID::UI);
-
-    //player's name
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 150.f));
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerName;
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //hole number
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 132.f));
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::HoleNumber;
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //hole distance
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 120.f));
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PinDistance;
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //club info
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 108.f));
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        e.getComponent<cro::Text>().setString(Clubs[getClub()].name);
-    };
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //current stroke
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 96.f));
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        auto stroke = std::to_string(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole]);
-        e.getComponent<cro::Text>().setString("Stroke: " + stroke);
-    };
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-    //current terrain
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 84.f));
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        e.getComponent<cro::Text>().setString(TerrainStrings[m_currentPlayer.terrain]);
-    };
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-    //wind indicator
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(67.f, 82.f)); //TODO de-magicfy this and make it half the size of the background
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindIndicator];
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindSock;
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
-    entity.getComponent<cro::Transform>().move(glm::vec2(0.f, -bounds.height));
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    auto camDir = m_holeData[0].pin - m_currentPlayer.position;
-    m_camRotation = std::atan2(-camDir.z, camDir.y);
-
-    //wind strength
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(67.f, 30.f)); //TODO same as indicator
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindString;
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-
-
-
-
-
-    //root used to show/hide input UI
-    auto rootNode = m_uiScene.createEntity();
-    rootNode.addComponent<cro::Transform>().setPosition(UIHiddenPosition);
-    rootNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::Root;
-    infoEnt.getComponent<cro::Transform>().addChild(rootNode.getComponent<cro::Transform>());
-
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(67.f, 10.f, 0.02f)); //TODO demagify - this is 50% panel width
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBar];
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
-    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //power bar
-    auto barEnt = entity;
-    auto barCentre = bounds.width / 2.f;
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(5.f, 0.f)); //TODO expel the magic number!!
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBarInner];
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, bounds](cro::Entity e, float)
-    {
-        auto crop = bounds;
-        crop.width *= m_inputParser.getPower();
-        e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
-    };
-    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //hook/slice indicator
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(barCentre, 8.f, 0.1f)); //TODO expel the magic number!!
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, barCentre](cro::Entity e, float)
-    {
-        glm::vec3 pos(barCentre + (barCentre * m_inputParser.getHook()), 8.f, 0.1f);
-        e.getComponent<cro::Transform>().setPosition(pos);
-    };
-    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-
-
-
-
-
-
-
-
-
-    auto updateView = [&, playerEnt, courseEnt, rootNode](cro::Camera& cam) mutable
-    {
-        auto size = glm::vec2(cro::App::getWindow().getSize());
-        cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.5f, 1.f);
-        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-
-        auto vpSize = calcVPSize();
-
-        auto viewScale = glm::vec2(std::floor(size.y / vpSize.y));
-        courseEnt.getComponent<cro::Transform>().setScale(viewScale);
-        courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -0.1f));
-        courseEnt.getComponent<cro::Transform>().setOrigin(vpSize / 2.f);
-        courseEnt.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, vpSize.x, vpSize.y });
-
-        //update avatar position
-        const auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-        auto pos = camera.coordsToPixel(m_currentPlayer.position, m_renderTexture.getSize());
-        playerEnt.getComponent<cro::Transform>().setPosition(pos);
-
-
-        //send command to UIElements and reposition (and potentially rescale)
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::UI::UIElement;
-        cmd.action = [size, viewScale](cro::Entity e, float)
-        {
-            auto pos = size * e.getComponent<UIElement>().position;
-            e.getComponent<cro::Transform>().setPosition(pos);
-            e.getComponent<cro::Transform>().setScale(viewScale);
-        };
-        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-    };
-
-    auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
-    cam.resizeCallback = updateView;
-    updateView(cam);
-}
-
 void GolfState::spawnBall(const ActorInfo& info)
 {
     //render the ball as a point so no perspective is applied to the scale
@@ -1013,7 +752,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
         }
             break;
         case PacketID::GameEnd:
-            LOG("Show countdown!", cro::Logger::Type::Info);
+            showCountdown(evt.packet.as<std::uint8_t>());
             break;
         case PacketID::StateChange:
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Lobby)

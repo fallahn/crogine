@@ -39,10 +39,6 @@ static constexpr float CameraStrokeOffset = 5.f;
 static constexpr float CameraPuttOffset = 0.8f;
 static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
 
-//maintain a viewport height of 225, with the
-//width either 300 or 400 depending on the ratio
-//of the window
-static constexpr float ViewportWidth = 640.f;
 static constexpr float BallPointSize = 1.5f;
 
 static constexpr float MaxHook = -0.25f;
@@ -54,7 +50,7 @@ static constexpr float HoleRadius = 0.053f;
 struct UIElement final
 {
     glm::vec2 position = glm::vec2(0.f);
+    float depth = 0.f;
 };
-static constexpr glm::vec2 PowerbarPosition(0.5f, 0.1f);
 static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);
 static constexpr glm::vec2 HoleInfoPosition(0.65f, 0.32f);

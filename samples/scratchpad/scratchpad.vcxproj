@@ -233,6 +233,7 @@
     <ClCompile Include="src\golf\ErrorState.cpp" />
     <ClCompile Include="src\golf\GolfState.cpp" />
     <ClCompile Include="src\golf\GolfInputParser.cpp" />
+    <ClCompile Include="src\golf\GolfStateUI.cpp" />
     <ClCompile Include="src\golf\InterpolationComponent.cpp" />
     <ClCompile Include="src\golf\InterpolationSystem.cpp" />
     <ClCompile Include="src\golf\MenuCreation.cpp" />

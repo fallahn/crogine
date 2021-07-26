@@ -45,6 +45,16 @@ source distribution.
 
 #include <array>
 
+static inline glm::vec2 calcVPSize()
+{
+    glm::vec2 size(cro::App::getWindow().getSize());
+    const float ratio = size.x / size.y;
+    static constexpr float Widescreen = 16.f / 9.f;
+    static constexpr float ViewportWidth = 640.f;
+
+    return { ViewportWidth, ratio < Widescreen ? 300.f : 360.f };
+}
+
 namespace cro
 {
     struct NetEvent;
@@ -80,7 +90,37 @@ private:
     std::uint32_t m_currentHole;
     ActivePlayer m_currentPlayer;
 
-    //UI stuffs
+
+
+
+
+    struct BallResource final
+    {
+        std::int32_t materialID = -1;
+        std::size_t ballMeshID = 0;
+        std::size_t shadowMeshID = 0;
+    }m_ballResources;
+
+    void loadAssets();
+    void addSystems();
+    void buildScene();
+
+    void spawnBall(const struct ActorInfo&);
+
+    void handleNetEvent(const cro::NetEvent&);
+    void removeClient(std::uint8_t);
+
+    void setCurrentHole(std::uint32_t);
+    void setCameraPosition(glm::vec3, float, float);
+    void setCurrentPlayer(const ActivePlayer&);
+    void hitBall();
+
+    void createTransition(const ActivePlayer&);
+    void updateWindDisplay(glm::vec3);
+    std::int32_t getClub() const;
+
+
+    //UI stuffs - foundin GolfStateUI.cpp
     struct SpriteID final
     {
         enum
@@ -113,33 +153,8 @@ private:
     float m_camRotation; //used to offset the rotation of the wind indicator
     //-----------
 
-
-
-    struct BallResource final
-    {
-        std::int32_t materialID = -1;
-        std::size_t ballMeshID = 0;
-        std::size_t shadowMeshID = 0;
-    }m_ballResources;
-
-    void loadAssets();
-    void addSystems();
-    void buildScene();
     void buildUI();
-
-    void spawnBall(const struct ActorInfo&);
-
-    void handleNetEvent(const cro::NetEvent&);
-    void removeClient(std::uint8_t);
-
-    void setCurrentHole(std::uint32_t);
-    void setCameraPosition(glm::vec3, float, float);
-    void setCurrentPlayer(const ActivePlayer&);
-    void hitBall();
-
-    void createTransition(const ActivePlayer&);
-    void updateWindDisplay(glm::vec3);
-    std::int32_t getClub() const;
+    void showCountdown(std::uint8_t);
 
 #ifdef CRO_DEBUG_
     cro::Entity m_debugCam;
