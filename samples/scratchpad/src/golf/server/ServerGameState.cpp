@@ -50,7 +50,7 @@ using namespace sv;
 
 namespace
 {
-
+    const std::uint8_t MaxStrokes = 6;
 }
 
 GameState::GameState(SharedData& sd)
@@ -109,12 +109,21 @@ void GameState::handleMessage(const cro::Message& msg)
     }
     else if (msg.id == sv::MessageID::BallMessage)
     {
-        //TODO update player scores on client.
         const auto& data = msg.getData<BallEvent>();
         if (data.type == BallEvent::TurnEnded)
         {
-            m_playerInfo[0].position = data.position;
-            m_playerInfo[0].distanceToHole = glm::length(data.position - m_holeData[m_currentHole].pin);
+            //check if we reached max strokes
+            if (m_playerInfo[0].holeScore[m_currentHole] >= MaxStrokes)
+            {
+                //set the player as having holed the ball
+                m_playerInfo[0].position = m_holeData[m_currentHole].pin;
+                m_playerInfo[0].distanceToHole = 0.f;
+            }
+            else
+            {
+                m_playerInfo[0].position = data.position;
+                m_playerInfo[0].distanceToHole = glm::length(data.position - m_holeData[m_currentHole].pin);
+            }
             m_playerInfo[0].terrain = data.terrain;
             setNextPlayer();
         }
@@ -131,6 +140,14 @@ void GameState::handleMessage(const cro::Message& msg)
         else if (data.type == BallEvent::Foul)
         {
             m_playerInfo[0].holeScore[m_currentHole]++; //penalty stroke.
+
+            if (m_playerInfo[0].holeScore[m_currentHole] >= MaxStrokes)
+            {
+                //set the player as having holed the ball
+                m_playerInfo[0].position = m_holeData[m_currentHole].pin;
+                m_playerInfo[0].distanceToHole = 0.f;
+                m_playerInfo[0].terrain = TerrainID::Green;
+            }
         }
     }
 

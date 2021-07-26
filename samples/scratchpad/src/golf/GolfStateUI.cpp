@@ -333,6 +333,16 @@ void GolfState::showCountdown(std::uint8_t seconds)
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
+    //show the scores
+    cmd.targetFlags = CommandID::UI::Scoreboard;
+    cmd.action = [](cro::Entity e, float)
+    {
+        glm::vec2 size(cro::App::getWindow().getSize());
+        e.getComponent<cro::Transform>().setPosition(size / 2.f);
+        e.getComponent<UIElement>().position = { 0.5f, 0.5f };
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
     constexpr glm::vec2 position(0.5f, 0.5f);
     constexpr glm::vec2 size(400.f, 300.f);
 
@@ -347,7 +357,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
 
     //TODO replace this with some sort of graphic?
-    //We'll probably be showing scoreboard here.
+    //some kind of 'badge' to fit over the scores
     cro::Colour c(0.f, 0.f, 0.f, 0.6f);
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
@@ -362,7 +372,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
     auto bgEnt = entity;
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ size.x / 2.f, 20.f, 0.01f });
+    entity.addComponent<cro::Transform>().setPosition({ size.x / 2.f, 20.f, 0.23f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -388,7 +398,7 @@ void GolfState::createScoreboard()
 {
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(UIHiddenPosition);
-    entity.addComponent<UIElement>().position = { 0.5f, 0.5f };
+    entity.addComponent<UIElement>().position = { -1.f, -1.f };
     entity.getComponent<UIElement>().depth = 0.22f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::Scoreboard;
     //TODO some sort of background sprite
@@ -596,7 +606,6 @@ void GolfState::updateScoreboard()
         }
 
         ents.back().getComponent<cro::Text>().setString(totalString);
-
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
