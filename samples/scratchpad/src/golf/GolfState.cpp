@@ -684,58 +684,11 @@ void GolfState::buildUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::FlagSprite;
     courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //root used to show/hide input UI
-    auto rootNode = m_uiScene.createEntity();
-    rootNode.addComponent<cro::Transform>().setPosition(UIHiddenPosition);
-    rootNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::Root;
+    
 
+
+    //info panel background
     auto windowSize = glm::vec2(cro::App::getWindow().getSize());
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(PowerbarPosition * windowSize);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBar];
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().position = PowerbarPosition;
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
-    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //power bar
-    auto barEnt = entity;
-    auto barCentre = bounds.width / 2.f;
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(5.f, 0.f)); //TODO expel the magic number!!
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBarInner];
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, bounds](cro::Entity e, float)
-    {
-        auto crop = bounds;
-        crop.width *= m_inputParser.getPower();
-        e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
-    };
-    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //hook/slice indicator
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(barCentre, 8.f, 0.1f)); //TODO expel the magic number!!
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, barCentre](cro::Entity e, float)
-    {
-        glm::vec3 pos(barCentre + (barCentre * m_inputParser.getHook()), 8.f, 0.1f);
-        e.getComponent<cro::Transform>().setPosition(pos);
-    };
-    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-    //club/hole info
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(HoleInfoPosition * windowSize);
     entity.addComponent<UIElement>().position = HoleInfoPosition;
@@ -751,6 +704,7 @@ void GolfState::buildUI()
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     auto infoEnt = entity;
 
+    
 
     auto& font = m_resources.fonts.get(FontID::UI);
 
@@ -793,7 +747,7 @@ void GolfState::buildUI()
 
     //current stroke
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 82.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 96.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
     entity.addComponent<cro::Callback>().active = true;
@@ -808,7 +762,7 @@ void GolfState::buildUI()
 
     //current terrain
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 56.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(10.f, 84.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
     entity.addComponent<cro::Callback>().active = true;
@@ -822,7 +776,7 @@ void GolfState::buildUI()
 
     //wind indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(67.f)); //TODO de-magicfy this and make it half the size of the background
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(67.f, 82.f)); //TODO de-magicfy this and make it half the size of the background
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindIndicator];
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindSock;
@@ -836,7 +790,7 @@ void GolfState::buildUI()
 
     //wind strength
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(67.f, 10.f)); //TODO same as indicator
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(67.f, 30.f)); //TODO same as indicator
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindString;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
@@ -845,10 +799,72 @@ void GolfState::buildUI()
 
 
 
+
+
+
+
+    //root used to show/hide input UI
+    auto rootNode = m_uiScene.createEntity();
+    rootNode.addComponent<cro::Transform>().setPosition(UIHiddenPosition);
+    rootNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::Root;
+    infoEnt.getComponent<cro::Transform>().addChild(rootNode.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(67.f, 10.f, 0.02f)); //TODO demagify - this is 50% panel width
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBar];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //power bar
+    auto barEnt = entity;
+    auto barCentre = bounds.width / 2.f;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(5.f, 0.f)); //TODO expel the magic number!!
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBarInner];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float)
+    {
+        auto crop = bounds;
+        crop.width *= m_inputParser.getPower();
+        e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+    };
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //hook/slice indicator
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(barCentre, 8.f, 0.1f)); //TODO expel the magic number!!
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, barCentre](cro::Entity e, float)
+    {
+        glm::vec3 pos(barCentre + (barCentre * m_inputParser.getHook()), 8.f, 0.1f);
+        e.getComponent<cro::Transform>().setPosition(pos);
+    };
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
+
+
+
+
+
+
+
     auto updateView = [&, playerEnt, courseEnt, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(cro::App::getWindow().getSize());
-        cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.1f, 1.f);
+        cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.5f, 1.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         auto vpSize = calcVPSize();
