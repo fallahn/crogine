@@ -455,6 +455,7 @@ void GolfState::createScoreboard()
         scrollEnt.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         i++;
     }
+    ents.back().getComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions.back(), 0.02f));
 
     //use the callback to crop the text
     //TODO only activate this when score board is visible
@@ -480,36 +481,63 @@ void GolfState::updateScoreboard()
     cmd.targetFlags = CommandID::UI::Scoreboard;
     cmd.action = [&](cro::Entity e, float)
     {
+        struct ScoreEntry final
+        {
+            cro::String name;
+            std::vector<std::uint8_t> holes;
+            std::uint32_t total = 0;
+        };
+
+        std::vector<ScoreEntry> scores;
+
         auto& ents = e.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
         std::uint32_t playerCount = 0;
         for (const auto& client : m_sharedData.connectionData)
         {
             playerCount += client.playerCount;
+
+            for (auto i = 0u; i < client.playerCount; ++i)
+            {
+                auto& entry = scores.emplace_back();
+                entry.name = client.playerData[i].name;
+                for (auto s : client.playerData[i].holeScores)
+                {
+                    entry.holes.push_back(s);
+                    entry.total += s;
+                }
+            }
         }
 
         auto holeCount = m_holeData.size();
         /*auto playerCount = 16;
         auto holeCount = 18;*/
 
+        std::sort(scores.begin(), scores.end(),
+            [](const ScoreEntry& a, const ScoreEntry& b)
+            {
+                return a.total < b.total;
+            });
+
 
         std::size_t page2 = 0;
+        static constexpr std::size_t MaxCols = 9;
         if (holeCount > scoreColumnCount)
         {
-            page2 = std::min(std::size_t(9), holeCount - scoreColumnCount);
+            page2 = std::min(MaxCols, holeCount - scoreColumnCount);
         }
 
         //name column
-        std::string nameString = "HOLE\nPAR";
+        cro::String nameString = "HOLE\nPAR";
         for (auto i = 0u; i < playerCount; ++i)
         {
-            nameString += "\nPlayer" + std::to_string(i);
+            nameString += "\n" + scores[i].name;
         }
         if (page2)
         {
             nameString += "\n\nHOLE\nPAR";
             for (auto i = 0u; i < playerCount; ++i)
             {
-                nameString += "\nPlayer" + std::to_string(i);
+                nameString += "\n" + scores[i].name;
             }
         }
         ents[0].getComponent<cro::Text>().setString(nameString);
@@ -517,19 +545,19 @@ void GolfState::updateScoreboard()
         //score columns
         for (auto i = 1u; i < ents.size() - 1; ++i)
         {
-            std::string scoreString = std::to_string(i) + "\n0";
+            std::string scoreString = std::to_string(i) + "\n" + std::to_string(m_holeData[i - 1].par);
 
             for (auto j = 0u; j < playerCount; ++j)
             {
-                scoreString += "\n0";
+                scoreString += "\n" + std::to_string(scores[j].holes[i - 1]);
             }
 
             if (page2)
             {
-                scoreString += "\n\n" + std::to_string(i + 9) + "\n0";
+                scoreString += "\n\n" + std::to_string(i + MaxCols) + "\n" + std::to_string(m_holeData[i + MaxCols - 1].par);
                 for (auto j = 0u; j < playerCount; ++j)
                 {
-                    scoreString += "\n0";
+                    scoreString += "\n" + std::to_string(scores[j].holes[i + MaxCols - 1]);
                 }
             }
 
@@ -537,19 +565,33 @@ void GolfState::updateScoreboard()
         }
 
         //total column
-        std::string totalString = "TOTAL\n0";
+        std::int32_t par = 0;
+        for (auto i = 0u; i < MaxCols && i < m_holeData.size(); ++i)
+        {
+            par += m_holeData[i].par;
+        }
+
+        std::string totalString = "TOTAL\n" + std::to_string(par);
 
         for (auto i = 0u; i < playerCount; ++i)
         {
-            totalString += "\n0";
+            //TODO this should only total the front 9
+            //if page2 > 0
+            totalString += "\n" + std::to_string(scores[i].total);
         }
 
         if (page2)
         {
-            totalString += "\n\nTOTAL\n0";
+            par = 0;
+            for (auto i = MaxCols; i < m_holeData.size(); ++i)
+            {
+                par += m_holeData[i].par;
+            }
+
+            totalString += "\n\nTOTAL\n" + std::to_string(par);
             for (auto i = 0u; i < playerCount; ++i)
             {
-                totalString += "\n0";
+                totalString += "\n" + std::to_string(scores[i + MaxCols].total);;
             }
         }
 
