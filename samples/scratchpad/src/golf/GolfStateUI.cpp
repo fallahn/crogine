@@ -445,7 +445,7 @@ void GolfState::createScoreboard()
     };
     bgEnt.getComponent<cro::Transform>().addChild(scrollEnt.getComponent<cro::Transform>());
 
-    //these can the text components on them, the callback updates scroll cropping
+    //these have the text components on them, the callback updates scroll cropping
     bgEnt.addComponent<cro::Callback>().setUserData<std::vector<cro::Entity>>();
 
     //scoreColumnCount = 11;
@@ -461,6 +461,7 @@ void GolfState::createScoreboard()
         e.addComponent<cro::Drawable2D>();
         e.addComponent<cro::Text>(font).setCharacterSize(8);
         e.getComponent<cro::Text>().setVerticalSpacing(6.f);
+        e.getComponent<cro::Text>().setFillColour(LeaderboardText);
 
         scrollEnt.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         i++;
@@ -500,8 +501,8 @@ void GolfState::updateScoreboard()
 
         std::vector<ScoreEntry> scores;
 
-        auto& ents = e.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
         std::uint32_t playerCount = 0;
+        auto holeCount = m_holeData.size();
         for (const auto& client : m_sharedData.connectionData)
         {
             playerCount += client.playerCount;
@@ -518,10 +519,24 @@ void GolfState::updateScoreboard()
             }
         }
 
-        auto holeCount = m_holeData.size();
-        /*auto playerCount = 16;
-        auto holeCount = 18;*/
 
+
+        //auto playerCount = 16u;
+        //auto holeCount = 18u;
+
+        ////dummy data for layout testing
+        //for (auto i = 0u; i < playerCount; ++i)
+        //{
+        //    auto& entry = scores.emplace_back();
+        //    entry.name = "Player " + std::to_string(i);
+        //    for (auto j = 0u; j < holeCount; ++j)
+        //    {
+        //        entry.holes.push_back(j);
+        //    }
+        //}
+
+
+        auto& ents = e.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
         std::sort(scores.begin(), scores.end(),
             [](const ScoreEntry& a, const ScoreEntry& b)
             {

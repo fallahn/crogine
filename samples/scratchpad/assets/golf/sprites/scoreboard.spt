@@ -1,0 +1,14 @@
+spritesheet scoreboard
+{
+    src = "assets/golf/images/score_background.png"
+
+    sprite border
+    {
+        bounds = 388,0,400,300
+    }
+
+    sprite background
+    {
+        bounds = 0,0,388,532
+    }
+}

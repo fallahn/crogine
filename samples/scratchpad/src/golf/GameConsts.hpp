@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include <crogine/graphics/Colour.hpp>
 #include <crogine/util/Constants.hpp>
 
 #include <cstdint>
@@ -54,3 +55,5 @@ struct UIElement final
 };
 static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);
 static constexpr glm::vec2 HoleInfoPosition(0.65f, 0.32f);
+
+static const cro::Colour LeaderboardText(0x1a1e2dff);
