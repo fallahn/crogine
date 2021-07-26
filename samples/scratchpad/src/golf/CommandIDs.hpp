@@ -51,7 +51,8 @@ struct CommandID final
             WindString   = 0x40,
             HoleNumber   = 0x80,
             PinDistance  = 0x100,
-            Scoreboard   = 0x200
+            Scoreboard   = 0x200,
+            ScoreScroll  = 0x400
         };
     };
 };

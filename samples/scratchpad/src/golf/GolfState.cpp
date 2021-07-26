@@ -171,6 +171,18 @@ bool GolfState::handleEvent(const cro::Event& evt)
         m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     };
 
+    const auto scrollScores = [&](std::int32_t step)
+    {
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::ScoreScroll;
+        cmd.action = [step](cro::Entity e, float)
+        {
+            e.getComponent<cro::Callback>().getUserData<std::int32_t>() = step;
+            e.getComponent<cro::Callback>().active = true;
+        };
+        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    };
+
     if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
@@ -213,6 +225,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
         default: break;
         case SDLK_TAB:
             toggleScores(true);
+            break;
+        case SDLK_UP:
+            scrollScores(1);
+            break;
+        case SDLK_DOWN:
+            scrollScores(-1);
             break;
         }
     }

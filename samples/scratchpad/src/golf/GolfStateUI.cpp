@@ -415,11 +415,31 @@ void GolfState::createScoreboard()
     entity.getComponent<cro::Text>().setCharacterSize(8);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //this is a kludge to store the vector on the ent without
-    //creating a whole new component type for a single item
+    auto scrollEnt = m_uiScene.createEntity();
+    scrollEnt.addComponent<cro::Transform>();
+    scrollEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::ScoreScroll;
+    scrollEnt.addComponent<cro::Callback>().setUserData<std::int32_t>(0);
+    scrollEnt.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+    {
+        auto& steps = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+        static constexpr float StepSize = 16.f;
+
+        auto move = steps * StepSize;
+        auto pos = e.getComponent<cro::Transform>().getPosition();
+        pos.y = std::min(300.f, std::max(0.f, pos.y + move));
+
+        e.getComponent<cro::Transform>().setPosition(pos);
+        e.getComponent<cro::Callback>().active = false;
+        steps = 0;
+    };
+    bgEnt.getComponent<cro::Transform>().addChild(scrollEnt.getComponent<cro::Transform>());
+
+    //these can the text components on them, the callback updates scroll cropping
     bgEnt.addComponent<cro::Callback>().setUserData<std::vector<cro::Entity>>();
 
-    scoreColumnCount = 11;// std::min(m_holeData.size() + scoreColumnCount, std::size_t(11));
+    //scoreColumnCount = 11;
+    scoreColumnCount = std::min(m_holeData.size() + scoreColumnCount, std::size_t(11));
 
     auto& ents = bgEnt.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
     ents.resize(scoreColumnCount); //title and total
@@ -432,9 +452,26 @@ void GolfState::createScoreboard()
         e.addComponent<cro::Text>(font).setCharacterSize(8);
         e.getComponent<cro::Text>().setVerticalSpacing(6.f);
 
-        bgEnt.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+        scrollEnt.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         i++;
     }
+
+    //use the callback to crop the text
+    //TODO only activate this when score board is visible
+    bgEnt.getComponent<cro::Callback>().active = true;
+    bgEnt.getComponent<cro::Callback>().function =
+        [scrollEnt](cro::Entity e, float)
+    {
+        auto top = scrollEnt.getComponent<cro::Transform>().getPosition().y;
+
+        cro::FloatRect crop(0.f, -top, 400.f, -256.f);
+
+        auto& ents = e.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
+        for (auto ent : ents)
+        {
+            ent.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+        }
+    };
 }
 
 void GolfState::updateScoreboard()
@@ -444,15 +481,15 @@ void GolfState::updateScoreboard()
     cmd.action = [&](cro::Entity e, float)
     {
         auto& ents = e.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
-        /*std::uint32_t playerCount = 0;
+        std::uint32_t playerCount = 0;
         for (const auto& client : m_sharedData.connectionData)
         {
             playerCount += client.playerCount;
         }
 
-        auto holeCount = m_holeData.size();*/
-        auto playerCount = 16;
-        auto holeCount = 18;
+        auto holeCount = m_holeData.size();
+        /*auto playerCount = 16;
+        auto holeCount = 18;*/
 
 
         std::size_t page2 = 0;
@@ -463,14 +500,14 @@ void GolfState::updateScoreboard()
 
         //name column
         std::string nameString = "HOLE\nPAR";
-        for (auto i = 0; i < playerCount; ++i)
+        for (auto i = 0u; i < playerCount; ++i)
         {
             nameString += "\nPlayer" + std::to_string(i);
         }
         if (page2)
         {
             nameString += "\n\nHOLE\nPAR";
-            for (auto i = 0; i < playerCount; ++i)
+            for (auto i = 0u; i < playerCount; ++i)
             {
                 nameString += "\nPlayer" + std::to_string(i);
             }
@@ -482,7 +519,7 @@ void GolfState::updateScoreboard()
         {
             std::string scoreString = std::to_string(i) + "\n0";
 
-            for (auto j = 0; j < playerCount; ++j)
+            for (auto j = 0u; j < playerCount; ++j)
             {
                 scoreString += "\n0";
             }
@@ -490,7 +527,7 @@ void GolfState::updateScoreboard()
             if (page2)
             {
                 scoreString += "\n\n" + std::to_string(i + 9) + "\n0";
-                for (auto j = 0; j < playerCount; ++j)
+                for (auto j = 0u; j < playerCount; ++j)
                 {
                     scoreString += "\n0";
                 }
@@ -502,7 +539,7 @@ void GolfState::updateScoreboard()
         //total column
         std::string totalString = "TOTAL\n0";
 
-        for (auto i = 0; i < playerCount; ++i)
+        for (auto i = 0u; i < playerCount; ++i)
         {
             totalString += "\n0";
         }
@@ -510,7 +547,7 @@ void GolfState::updateScoreboard()
         if (page2)
         {
             totalString += "\n\nTOTAL\n0";
-            for (auto i = 0; i < playerCount; ++i)
+            for (auto i = 0u; i < playerCount; ++i)
             {
                 totalString += "\n0";
             }
@@ -518,8 +555,6 @@ void GolfState::updateScoreboard()
 
         ents.back().getComponent<cro::Text>().setString(totalString);
 
-
-        //TODO add a scrollbar if local bounds is taller than scoreboard
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
