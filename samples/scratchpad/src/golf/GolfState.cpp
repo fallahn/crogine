@@ -100,7 +100,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_inputParser   (sd.inputBinding, context.appInstance.getMessageBus()),
     m_wantsGameState(true),
     m_currentHole   (0),
-    m_camRotation   (0.f)
+    m_camRotation   (0.f),
+    m_roundEnded    (false)
 {
     context.mainWindow.loadResources([this]() {
         loadAssets();

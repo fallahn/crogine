@@ -37,3 +37,5 @@ static const std::uint32_t SmallTextSize = 30;
 
 static const cro::Colour TextNormalColour(0.9f, 0.58f, 0.1f);
 static const cro::Colour TextHighlightColour(0.99f, 0.08f, 0.1f);
+static const cro::Colour LeaderboardTextDark(0x1a1e2dff);
+static const cro::Colour LeaderboardTextLight(0xfff8e1ff);

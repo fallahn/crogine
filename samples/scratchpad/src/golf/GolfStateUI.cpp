@@ -32,6 +32,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "SharedStateData.hpp"
 #include "Clubs.hpp"
+#include "MenuConsts.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -42,6 +43,7 @@ source distribution.
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 
+#include <crogine/graphics/SpriteSheet.hpp>
 
 namespace
 {
@@ -324,6 +326,8 @@ void GolfState::buildUI()
 
 void GolfState::showCountdown(std::uint8_t seconds)
 {
+    m_roundEnded = true;
+
     //hide any input
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::Root;
@@ -334,48 +338,16 @@ void GolfState::showCountdown(std::uint8_t seconds)
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
     //show the scores
-    cmd.targetFlags = CommandID::UI::Scoreboard;
-    cmd.action = [](cro::Entity e, float)
-    {
-        glm::vec2 size(cro::App::getWindow().getSize());
-        e.getComponent<cro::Transform>().setPosition(size / 2.f);
-        e.getComponent<UIElement>().position = { 0.5f, 0.5f };
-    };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
-    constexpr glm::vec2 position(0.5f, 0.5f);
-    constexpr glm::vec2 size(400.f, 300.f);
-
-    glm::vec2 windowSize(cro::App::getWindow().getSize());
-
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(windowSize * position);
-    entity.getComponent<cro::Transform>().setScale(viewScale);
-    entity.getComponent<cro::Transform>().setOrigin(size / 2.f);
-    entity.addComponent<UIElement>().position = position;
-    entity.getComponent<UIElement>().depth = 0.21f;
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-
-    //TODO replace this with some sort of graphic?
-    //some kind of 'badge' to fit over the scores
-    cro::Colour c(0.f, 0.f, 0.f, 0.6f);
-    entity.addComponent<cro::Drawable2D>().getVertexData() =
-    {
-        cro::Vertex2D(glm::vec2(0.f, size.y), c),
-        cro::Vertex2D(glm::vec2(0.f), c),
-        cro::Vertex2D(size, c),
-        cro::Vertex2D(glm::vec2(size.x, 0.f), c)
-    };
-    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    showScoreboard(true);
 
     auto& font = m_resources.fonts.get(FontID::UI);
 
-    auto bgEnt = entity;
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ size.x / 2.f, 20.f, 0.23f });
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 200.f, 10.f, 0.23f }); //attaches to scoreboard which is fixed size
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::uint8_t>>(1.f, seconds);
     entity.getComponent<cro::Callback>().function =
@@ -391,27 +363,31 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
         e.getComponent<cro::Text>().setString("Return to lobby in: " + std::to_string(sec));
     };
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //attach to the scoreboard
+    cmd.targetFlags = CommandID::UI::Scoreboard;
+    cmd.action =
+        [entity](cro::Entity e, float) mutable
+    {
+        e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
 
 void GolfState::createScoreboard()
 {
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
+
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(UIHiddenPosition);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::Scoreboard;
     //TODO some sort of background sprite
     entity.addComponent<cro::Drawable2D>();
 
-    cro::Colour c(1.f, 0.5f, 0.1f, 0.5f);
-    entity.getComponent<cro::Drawable2D>().getVertexData() =
-    {
-        cro::Vertex2D(glm::vec2(0.f, 300.f), c),
-        cro::Vertex2D(glm::vec2(0.f), c),
-        cro::Vertex2D(glm::vec2(400.f, 300.f), c),
-        cro::Vertex2D(glm::vec2(400.f, 0.f), c)
-    };
-    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ 200.f, 150.f });
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("border");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
 
     auto bgEnt = entity;
     auto& font = m_resources.fonts.get(FontID::UI);
@@ -421,26 +397,49 @@ void GolfState::createScoreboard()
     entity.addComponent<cro::Text>(font).setString("LEADERS");
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setCharacterSize(8);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.getComponent<cro::Transform>().setOrigin({ -6.f, 253.f});
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    cro::FloatRect bgCrop({ 0.f, bounds.height - 266.f, 389.f, 266.f });
+    entity.addComponent<cro::Drawable2D>().setCroppingArea(bgCrop);
 
     auto scrollEnt = m_uiScene.createEntity();
     scrollEnt.addComponent<cro::Transform>();
     scrollEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::ScoreScroll;
-    scrollEnt.addComponent<cro::Callback>().setUserData<std::int32_t>(0);
+    scrollEnt.addComponent<cro::Callback>().setUserData<std::int32_t>(0); //set to the number of steps to scroll
     scrollEnt.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float)
+        [bgEnt, entity, bgCrop](cro::Entity e, float) mutable
     {
         auto& steps = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
-        static constexpr float StepSize = 16.f;
+        static constexpr float StepSize = 14.f;
+        static constexpr float MaxMove = StepSize * 19.f;
 
         auto move = steps * StepSize;
         auto pos = e.getComponent<cro::Transform>().getPosition();
-        pos.y = std::min(300.f, std::max(0.f, pos.y + move));
+        pos.y = std::min(MaxMove, std::max(0.f, pos.y + move));
 
         e.getComponent<cro::Transform>().setPosition(pos);
         e.getComponent<cro::Callback>().active = false;
         steps = 0;
+
+        //update the cropping
+        cro::FloatRect crop(0.f, -pos.y, 400.f, -256.f);
+
+        auto& ents = bgEnt.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
+        for (auto ent : ents)
+        {
+            ent.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+        }
+        crop = bgCrop;
+        crop.bottom -= pos.y;
+        entity.getComponent<cro::Drawable2D>().setCroppingArea(crop);
     };
+    scrollEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     bgEnt.getComponent<cro::Transform>().addChild(scrollEnt.getComponent<cro::Transform>());
 
     //these have the text components on them, the callback updates scroll cropping
@@ -459,27 +458,17 @@ void GolfState::createScoreboard()
         e.addComponent<cro::Drawable2D>();
         e.addComponent<cro::Text>(font).setCharacterSize(8);
         e.getComponent<cro::Text>().setVerticalSpacing(6.f);
-        e.getComponent<cro::Text>().setFillColour(LeaderboardText);
+        e.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
 
         scrollEnt.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         i++;
     }
     ents.back().getComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions.back(), 0.02f));
 
-    //use the callback to crop the text
+    //use the callback to keep the board centred/scaled
     bgEnt.getComponent<cro::Callback>().function =
-        [scrollEnt](cro::Entity e, float)
+        [](cro::Entity e, float)
     {
-        auto top = scrollEnt.getComponent<cro::Transform>().getPosition().y;
-
-        cro::FloatRect crop(0.f, -top, 400.f, -256.f);
-
-        auto& ents = e.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
-        for (auto ent : ents)
-        {
-            ent.getComponent<cro::Drawable2D>().setCroppingArea(crop);
-        }
-
         //always centre when visible
         auto pos = glm::vec2(cro::App::getWindow().getSize()) / 2.f;
         e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.22f));
@@ -651,6 +640,12 @@ void GolfState::updateScoreboard()
 
 void GolfState::showScoreboard(bool visible)
 {
+    //don't hide if the round finished
+    if (m_roundEnded)
+    {
+        visible = true;
+    }
+
     auto pos = visible ? glm::vec2(cro::App::getWindow().getSize()) / 2.f : UIHiddenPosition;
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::Scoreboard;
@@ -658,6 +653,22 @@ void GolfState::showScoreboard(bool visible)
     {
         e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.22f));
         e.getComponent<cro::Callback>().active = visible;
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+
+    std::int32_t step = -19;
+    if (m_currentHole > 8)
+    {
+        //scroll to lower part of the board
+        step = 19;
+    }
+
+    cmd.targetFlags = CommandID::UI::ScoreScroll;
+    cmd.action = [step](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().getUserData<std::int32_t>() = step;
+        e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }

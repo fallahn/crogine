@@ -151,14 +151,14 @@ private:
         };
     };
     float m_camRotation; //used to offset the rotation of the wind indicator
-    //-----------
+    bool m_roundEnded;
 
     void buildUI();
     void showCountdown(std::uint8_t);
     void createScoreboard();
     void updateScoreboard();
     void showScoreboard(bool);
-
+    //-----------
 #ifdef CRO_DEBUG_
     cro::Entity m_debugCam;
     cro::RenderTexture m_debugTexture;
