@@ -37,7 +37,7 @@ source distribution.
 
 namespace
 {
-    constexpr float RotationSpeed = 3.f;
+    constexpr float RotationSpeed = 2.2f;
     constexpr float MaxRotation = 0.25f;
     constexpr std::int16_t DeadZone = 8000;
 
@@ -284,13 +284,13 @@ namespace golf
                 if ((m_prevFlags & InputFlag::PrevClub) == 0
                     && (m_inputFlags & InputFlag::PrevClub))
                 {
-                    m_currentClub = (m_currentClub + ClubID::NineIron) % ClubID::PitchWedge;
+                    m_currentClub = (m_currentClub + ClubID::PitchWedge) % ClubID::Putter;
                 }
 
                 if ((m_prevFlags & InputFlag::NextClub) == 0
                     && (m_inputFlags & InputFlag::NextClub))
                 {
-                    m_currentClub = (m_currentClub + 1) % ClubID::PitchWedge;
+                    m_currentClub = (m_currentClub + 1) % ClubID::Putter;
                 }
             }
             break;

@@ -91,8 +91,15 @@ private:
     ActivePlayer m_currentPlayer;
 
 
-
-
+    struct ModelID final
+    {
+        enum
+        {
+            Ball,
+            Count
+        };
+    };
+    std::array<std::unique_ptr<cro::ModelDefinition>, ModelID::Count> m_modelDefs = {};
 
     struct BallResource final
     {
@@ -120,15 +127,11 @@ private:
     std::int32_t getClub() const;
 
 
-    //UI stuffs - foundin GolfStateUI.cpp
+    //UI stuffs - found in GolfStateUI.cpp
     struct SpriteID final
     {
         enum
         {
-            Flag01,
-            Flag02,
-            Flag03,
-            Flag04,
             PowerBar,
             PowerBarInner,
             HookBar,

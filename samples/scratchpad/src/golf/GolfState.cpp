@@ -29,6 +29,7 @@ source distribution.
 
 #include "GolfState.hpp"
 #include "GameConsts.hpp"
+#include "MenuConsts.hpp"
 #include "CommandIDs.hpp"
 #include "PacketIDs.hpp"
 #include "SharedStateData.hpp"
@@ -362,13 +363,16 @@ void GolfState::loadAssets()
     auto vpSize = calcVPSize();
     m_renderTexture.create(static_cast<std::uint32_t>(vpSize.x) , static_cast<std::uint32_t>(vpSize.y));
 
+    //model definitions
+    for (auto& md : m_modelDefs)
+    {
+        md = std::make_unique<cro::ModelDefinition>(m_resources);
+    }
+    m_modelDefs[ModelID::Ball]->loadFromFile("assets/golf/models/ball.cmt");
+
     //UI stuffs
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
-    m_sprites[SpriteID::Flag01] = spriteSheet.getSprite("flag01");
-    m_sprites[SpriteID::Flag02] = spriteSheet.getSprite("flag02");
-    m_sprites[SpriteID::Flag03] = spriteSheet.getSprite("flag03");
-    m_sprites[SpriteID::Flag04] = spriteSheet.getSprite("flag04");
     m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar");
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
@@ -382,6 +386,7 @@ void GolfState::loadAssets()
     m_resources.fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
 
     //ball resources - ball is rendered as a single point
+    //at a distance, and as a model when closer
     glCheck(glPointSize(BallPointSize));
 
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
@@ -392,7 +397,7 @@ void GolfState::loadAssets()
     auto* meshData = &m_resources.meshes.getMesh(m_ballResources.ballMeshID);
     std::vector<float> verts =
     {
-        0.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f,
+        0.f, 0.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f
     };
     std::vector<std::uint32_t> indices =
     {
@@ -612,26 +617,28 @@ void GolfState::buildScene()
     cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/quad.cmt");
 
-    cro::Entity ent = m_gameScene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
-    ent.getComponent<cro::Transform>().move(glm::vec3(0.f, 0.001f, 0.f));
-    ent.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
-    md.createModel(ent);
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
+    entity.getComponent<cro::Transform>().move(glm::vec3(0.f, 0.001f, 0.f));
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
+    md.createModel(entity);
 
     md.loadFromFile("assets/golf/models/flag.cmt");
-    ent = m_gameScene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
-    ent.addComponent<cro::CommandTarget>().ID = CommandID::Flag;
-    md.createModel(ent);
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Flag;
+    md.createModel(entity);
     if (md.hasSkeleton())
     {
-        ent.getComponent<cro::Skeleton>().play(0);
+        entity.getComponent<cro::Skeleton>().play(0);
     }
+
+    auto flagEntity = entity;
 
     //displays the stroke direction
     auto pos = m_holeData[0].tee;
     pos.y += 0.01f;
-    auto entity = m_gameScene.createEntity();
+    entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -644,7 +651,7 @@ void GolfState::buildScene()
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     auto material = m_resources.materials.get(debugMaterial);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    auto& meshData = entity.getComponent<cro::Model>().getMeshData();
+    auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
 
     std::vector<float> verts =
     {
@@ -656,22 +663,47 @@ void GolfState::buildScene()
         0,1
     };
 
-    auto vertStride = (meshData.vertexSize / sizeof(float));
-    meshData.vertexCount = verts.size() / vertStride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, verts.data(), GL_STATIC_DRAW));
+    auto vertStride = (meshData->vertexSize / sizeof(float));
+    meshData->vertexCount = verts.size() / vertStride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    auto& sub = meshData.indexData[0];
-    sub.indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sub.ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sub.indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     entity.getComponent<cro::Model>().setHidden(true);
 
 
+    //draw the flag pole as a single line which can be
+    //see from a distance
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+    entity = m_gameScene.createEntity();
+    flagEntity.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
 
+    meshData = &entity.getComponent<cro::Model>().getMeshData();
+    verts =
+    {
+        0.f, 0.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+        0.f, 2.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f
+    };
+    meshData->vertexCount = verts.size() / vertStride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
+    //update the 3D view
     auto updateView = [&](cro::Camera& cam)
     {
         auto vpSize = calcVPSize();
@@ -716,6 +748,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(info.position);
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.003f, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<InterpolationComponent>().setID(info.serverID);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.ballMeshID), material);
@@ -731,10 +764,16 @@ void GolfState::spawnBall(const ActorInfo& info)
         [ballEnt](cro::Entity e, float)
     {
         auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
-        ballPos.y = 0.f;
+        ballPos.y = 0.003f; //just to prevent z-fighting
         e.getComponent<cro::Transform>().setPosition(ballPos);
     };
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.shadowMeshID), material);
+
+    //adding a ball model means we see something a bit more reasonable when close up
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    m_modelDefs[ModelID::Ball]->createModel(entity);
+    ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void GolfState::handleNetEvent(const cro::NetEvent& evt)
@@ -934,49 +973,6 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
     camEnt.getComponent<TargetInfo>().currentHeight = height;
     camEnt.getComponent<TargetInfo>().currentOffset = viewOffset;
-
-    //calc which one of the flag sprites to use based on distance
-    const auto maxLength = glm::length(m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee) * 0.75f;
-    const auto currLength = glm::length(m_holeData[m_currentHole].pin - position);
-
-    const std::int32_t size = static_cast<std::int32_t>(maxLength / currLength);
-    std::int32_t flag = SpriteID::Flag01; //largest
-    switch (size)
-    {
-    case 0:
-        flag = SpriteID::Flag04;
-        break;
-    case 1:
-        flag = SpriteID::Flag03;
-        break;
-    case 2:
-        flag = SpriteID::Flag02;
-        break;
-    case 3:
-    default: break;
-        flag = SpriteID::Flag01;
-        break;
-    }
-
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::UI::FlagSprite;
-    cmd.action = [&, flag, currLength](cro::Entity e, float)
-    {
-        e.getComponent<cro::Sprite>() = m_sprites[flag];
-        auto pos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(m_holeData[m_currentHole].pin, m_renderTexture.getSize());
-        e.getComponent<cro::Transform>().setPosition(pos);
-
-        //if (currLength < 2.f)
-        if (flag == SpriteID::Flag01)
-        {
-            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-        }
-        else
-        {
-            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-        }
-    };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)

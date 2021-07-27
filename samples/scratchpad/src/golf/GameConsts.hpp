@@ -40,7 +40,7 @@ static constexpr float CameraStrokeOffset = 5.f;
 static constexpr float CameraPuttOffset = 0.8f;
 static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
 
-static constexpr float BallPointSize = 1.5f;
+static constexpr float BallPointSize = 1.4f;
 
 static constexpr float MaxHook = -0.25f;
 static constexpr float KnotsPerMetre = 1.94384f;

@@ -102,17 +102,6 @@ void GolfState::buildUI()
     auto playerEnt = entity;
     m_currentPlayer.position = m_holeData[0].tee;
 
-    //flag sprite. TODO make this less crap
-    //this is updated by a command sent when the 3D camera is positioned
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Flag01];
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::FlagSprite;
-    courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-
 
     //info panel background
     auto windowSize = glm::vec2(cro::App::getWindow().getSize());

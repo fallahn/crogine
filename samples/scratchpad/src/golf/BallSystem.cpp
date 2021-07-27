@@ -174,7 +174,7 @@ void BallSystem::process(float dt)
 
 
                     //add friction
-                    ball.velocity *= 0.99f;
+                    ball.velocity *= 0.985f;
                 }
 
                 //move by velocity
@@ -184,7 +184,7 @@ void BallSystem::process(float dt)
                 //if we've slowed down or fallen more than the
                 //ball's diameter (radius??) stop the ball
                 if (glm::length2(ball.velocity) < 0.01f
-                    || (position.y < -(Ball::Radius * 2.f)))
+                    || (position.y < -(Ball::Radius * 1.5f)))
                 {
                     ball.velocity = glm::vec3(0.f);
                     
