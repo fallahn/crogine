@@ -148,13 +148,11 @@ void BallSystem::process(float dt)
                     //bumped the far edge
                     if (position.y < 0)
                     {
-                        position.y = 0.f;
-                        tx.setPosition(position);
-
                         //these are all just a wild stab
-                        //destined for some tweaking
-                        ball.velocity *= 0.3f;
-                        ball.velocity.y += 0.05f;
+                        //destined for some tweaking - basically puts the ball back along its vector
+                        //towards the hole while maintaining gravity.
+                        ball.velocity *= -1.f;
+                        ball.velocity.y *= -1.f;
                     }
 
                     //TODO we could also test to see which side of the hole the ball

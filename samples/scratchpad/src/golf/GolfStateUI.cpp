@@ -629,6 +629,12 @@ void GolfState::updateScoreboard()
 
 void GolfState::showScoreboard(bool visible)
 {
+    if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+    {
+        //disable the input while the score is shown
+        m_inputParser.setActive(!visible);
+    }
+
     //don't hide if the round finished
     if (m_roundEnded)
     {

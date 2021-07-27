@@ -1118,6 +1118,14 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
+    //hide stroke indicator
+    cmd.targetFlags = CommandID::StrokeIndicator;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Model>().setHidden(true);
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
     if (playerData.terrain == TerrainID::Green)
     {
         m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetHeight = CameraPuttHeight;

@@ -341,7 +341,7 @@ namespace golf
         while (Clubs[m_currentClub].target < dist
             && m_currentClub != ClubID::Driver)
         {
-            m_currentClub = (m_currentClub + ClubID::NineIron) % ClubID::PitchWedge;
+            m_currentClub = (m_currentClub + ClubID::PitchWedge) % ClubID::Putter;
         }
     }
 
