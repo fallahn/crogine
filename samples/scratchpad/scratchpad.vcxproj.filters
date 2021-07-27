@@ -64,6 +64,9 @@
     <Filter Include="Source Files\golf\client\systems">
       <UniqueIdentifier>{f887ea67-27ad-4323-ab5c-67764d76bc6a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf\client\shaders">
+      <UniqueIdentifier>{f1004cbe-0ee0-4d66-8188-73de37f48b53}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -287,5 +290,10 @@
     <ClInclude Include="src\golf\Terrain.hpp">
       <Filter>Header Files\golf\shared</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\golf\WaterShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

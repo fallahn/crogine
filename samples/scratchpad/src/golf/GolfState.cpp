@@ -62,6 +62,7 @@ source distribution.
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/graphics/CircleMeshBuilder.hpp>
 
 #include <crogine/network/NetClient.hpp>
 
@@ -77,8 +78,9 @@ source distribution.
 
 namespace
 {
+#include "WaterShader.inl"
+
     glm::vec3 debugPos = glm::vec3(0.f);
-    std::int32_t debugMaterial = -1;
     glm::vec3 ballpos = glm::vec3(0.f);
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
@@ -90,7 +92,10 @@ namespace
         float targetOffset = CameraStrokeOffset;
         float currentHeight = 0.f;
         float currentOffset = 0.f;
+
+        cro::Entity waterPlane;
     };
+    constexpr float WaterLevel = -0.01f;
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -137,6 +142,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::Text("Terrain: %s", TerrainStrings[m_currentPlayer.terrain]);
 
                 ImGui::Image(m_debugTexture.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                 if (ImGui::Button("Save Image"))
                 {
@@ -341,6 +347,24 @@ bool GolfState::simulate(float dt)
 
 void GolfState::render()
 {
+    //render reflections first
+    auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    //cam.renderFlags = NoPlanes | NoRefract;
+    auto oldVP = cam.viewport;
+
+    cam.viewport = { 0.f,0.f,1.f,1.f };
+
+    cam.setActivePass(cro::Camera::Pass::Reflection);
+    cam.reflectionBuffer.clear(cro::Colour::Red);
+    m_gameScene.render(cam.reflectionBuffer);
+    cam.reflectionBuffer.display();
+
+    //cam.renderFlags = NoPlanes | PlayerPlanes[i] | NoReflect | NoRefract;
+    cam.setActivePass(cro::Camera::Pass::Final);
+    cam.viewport = oldVP;
+
+
+    //then render scene
     m_renderTexture.clear();
     m_gameScene.render(m_renderTexture);
     m_renderTexture.display();
@@ -572,14 +596,19 @@ void GolfState::loadAssets()
     }
 
 
+    //load materials
+    std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
+
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]).blendMode = cro::Material::BlendMode::Alpha;
+
+    auto waterShaderID = 1234;
+    m_resources.shaders.loadFromString(waterShaderID, WaterVertex, WaterFragment);
+    m_materialIDs[MaterialID::Water] = m_resources.materials.add(m_resources.shaders.get(waterShaderID));
+
 #ifdef CRO_DEBUG_
     m_debugTexture.create(320, 200);
-
-    //debug material for wireframes
-    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
-    debugMaterial = m_resources.materials.add(m_resources.shaders.get(shaderID));
-    m_resources.materials.get(debugMaterial).blendMode = cro::Material::BlendMode::Alpha;
-
 #endif
 }
 
@@ -610,8 +639,6 @@ void GolfState::buildScene()
         return;
     }
 
-
-    //TODO custom plane / reflection rendering (see islands demo)
 
     //quality holing
     cro::ModelDefinition md(m_resources);
@@ -649,7 +676,7 @@ void GolfState::buildScene()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
 
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
-    auto material = m_resources.materials.get(debugMaterial);
+    auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
 
@@ -703,6 +730,19 @@ void GolfState::buildScene()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
 
+
+    //attach a water plane to the camera
+    //this is updated when positioning the camera
+    meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(150.f, 30));
+    auto waterEnt = m_gameScene.createEntity();
+    waterEnt.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
+    waterEnt.getComponent<cro::Transform>().move({ 0.f, 0.f, -30.f });
+    waterEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
+    waterEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::Water]));
+    m_gameScene.setWaterLevel(WaterLevel);
+
+
+
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
     {
@@ -717,13 +757,15 @@ void GolfState::buildScene()
         }
     };
 
-    auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    auto camEnt = m_gameScene.getActiveCamera();
+    auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     updateView(cam);
 
     //used by transition callback to interp camera
-    m_gameScene.getActiveCamera().addComponent<TargetInfo>();
-
+    camEnt.addComponent<TargetInfo>().waterPlane = waterEnt;
+    cam.reflectionBuffer.create(1024, 1024);
+    //TODO set shadow map
 
     setCurrentHole(0);
     buildUI(); //put this here because we don't want to do this if the map data didn't load
@@ -973,6 +1015,7 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
     camEnt.getComponent<TargetInfo>().currentHeight = height;
     camEnt.getComponent<TargetInfo>().currentOffset = viewOffset;
+    camEnt.getComponent<TargetInfo>().waterPlane.getComponent<cro::Transform>().setPosition({ target.x, WaterLevel, target.z });
 }
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)

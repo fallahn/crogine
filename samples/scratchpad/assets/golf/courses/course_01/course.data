@@ -1,6 +1,6 @@
 course course_01
 {
-    skybox = "assets/images/skybox/sky.ccm"
+    skybox = "assets/golf/images/skybox/spring/sky.ccm"
 
     description = "This is a test course. Why not have a play?"
 

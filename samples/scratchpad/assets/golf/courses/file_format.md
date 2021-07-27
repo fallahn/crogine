@@ -30,6 +30,8 @@ Hole files describe which models/assets make up the hole hole, as well as the po
         par = 3 //par for this hole.
     }
 
-The map file contains metadata about the hole stored as an image. The image is stored with a scale of one pixel per metre. In other words each pixel represents one metre square on the course grid. The XY coordinates of the image, starting at the bottom left, are mapped to the X, -Z coordinates of the 3D world. The red and green channels represent the XZ axis of the slope normal for the current grid square. This is used to update the ball physics as if the ground was sloped/uneven. The ball will roll along this slope, or bounce accordingly to its reflection.
+The map file contains metadata about the hole stored as an image. The image is stored with a scale of one pixel per metre. In other words each pixel represents one metre square on the course grid. The XY coordinates of the image, starting at the bottom left, are mapped to the X, -Z coordinates of the 3D world.
 
-The blue channel of the map file stores a value representing the current terrain type. Terrains such as rough, fairway, green, bunker or water affect the ball's behaviour. The format for this is yet to be finalised.
+The red channel of the map file stores a value representing the current terrain type. Terrains such as rough, fairway, green, bunker or water affect the ball's behaviour. The format for this is yet to be finalised.
+
+Surface normals for a hole can be stored in an image containing a normal map. When a hole is loaded the directory is automatically searched for a file with the same name as the map, appended with an n. For example `01.png` would use a normal map called `01n.png`. If a normal map is not fund all normals are assumed to be vertical. The normals in the normal map are used to describe the surface of the course, and affect how the ball bounces and rolls across the hole, without having to model the terrain accordingly.

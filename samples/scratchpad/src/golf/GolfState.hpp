@@ -90,6 +90,17 @@ private:
     std::uint32_t m_currentHole;
     ActivePlayer m_currentPlayer;
 
+    struct MaterialID final
+    {
+        enum
+        {
+            WireFrame,
+            Water,
+
+            Count
+        };
+    };
+    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
     struct ModelID final
     {

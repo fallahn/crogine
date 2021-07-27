@@ -297,6 +297,9 @@
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="src\golf\WaterShader.inl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
