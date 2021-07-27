@@ -398,9 +398,7 @@ void GolfState::createScoreboard()
 {
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(UIHiddenPosition);
-    entity.addComponent<UIElement>().position = { -1.f, -1.f };
-    entity.getComponent<UIElement>().depth = 0.22f;
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::Scoreboard;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::Scoreboard;
     //TODO some sort of background sprite
     entity.addComponent<cro::Drawable2D>();
 
@@ -469,8 +467,6 @@ void GolfState::createScoreboard()
     ents.back().getComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions.back(), 0.02f));
 
     //use the callback to crop the text
-    //TODO only activate this when score board is visible
-    bgEnt.getComponent<cro::Callback>().active = true;
     bgEnt.getComponent<cro::Callback>().function =
         [scrollEnt](cro::Entity e, float)
     {
@@ -482,6 +478,34 @@ void GolfState::createScoreboard()
         for (auto ent : ents)
         {
             ent.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+        }
+
+        //always centre when visible
+        auto pos = glm::vec2(cro::App::getWindow().getSize()) / 2.f;
+        e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.22f));
+        e.getComponent<cro::Transform>().setScale(viewScale);
+    };
+
+    updateScoreboard();
+    showScoreboard(true);
+
+    //when starting the game some players might not realise
+    //they can just close the scores, so create a timeout ent here
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(5.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+        ct -= dt;
+
+        if (ct < 0)
+        {
+            showScoreboard(false);
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
         }
     };
 }
@@ -621,6 +645,19 @@ void GolfState::updateScoreboard()
         }
 
         ents.back().getComponent<cro::Text>().setString(totalString);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+}
+
+void GolfState::showScoreboard(bool visible)
+{
+    auto pos = visible ? glm::vec2(cro::App::getWindow().getSize()) / 2.f : UIHiddenPosition;
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::Scoreboard;
+    cmd.action = [visible, pos](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.22f));
+        e.getComponent<cro::Callback>().active = visible;
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }

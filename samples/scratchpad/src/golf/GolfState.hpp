@@ -157,6 +157,7 @@ private:
     void showCountdown(std::uint8_t);
     void createScoreboard();
     void updateScoreboard();
+    void showScoreboard(bool);
 
 #ifdef CRO_DEBUG_
     cro::Entity m_debugCam;

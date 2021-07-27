@@ -159,17 +159,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    const auto toggleScores = [&](bool visible)
-    {
-        auto pos = visible ? glm::vec2(cro::App::getWindow().getSize()) / 2.f : UIHiddenPosition;
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::UI::Scoreboard;
-        cmd.action = [pos](cro::Entity e, float)
-        {
-            e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.22f));
-        };
-        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-    };
 
     const auto scrollScores = [&](std::int32_t step)
     {
@@ -197,7 +186,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             hitBall();
             break;*/
         case SDLK_TAB:
-            toggleScores(false);
+            showScoreboard(false);
             break;
 #ifdef CRO_DEBUG_
         case SDLK_F2:
@@ -224,13 +213,16 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_TAB:
-            toggleScores(true);
+            showScoreboard(true);
             break;
         case SDLK_UP:
             scrollScores(1);
             break;
         case SDLK_DOWN:
             scrollScores(-1);
+            break;
+        case SDLK_RETURN:
+            showScoreboard(false);
             break;
         }
     }
@@ -240,7 +232,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDL_CONTROLLER_BUTTON_BACK:
-            toggleScores(true);
+            showScoreboard(true);
+            break;
+        case SDL_CONTROLLER_BUTTON_B:
+            showScoreboard(false);
             break;
         }
     }
@@ -250,7 +245,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDL_CONTROLLER_BUTTON_BACK:
-            toggleScores(false);
+            showScoreboard(false);
             break;
         }
     }
@@ -859,6 +854,7 @@ void GolfState::removeClient(std::uint8_t clientID)
 void GolfState::setCurrentHole(std::uint32_t hole)
 {
     updateScoreboard();
+    showScoreboard(true);
 
     //CRO_ASSERT(hole < m_holeData.size(), "");
     if (hole >= m_holeData.size())
