@@ -856,6 +856,27 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     updateScoreboard();
     showScoreboard(true);
 
+    //fallback timeout for scoreboard
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(5.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+        ct -= dt;
+
+        if (ct < 0)
+        {
+            showScoreboard(false);
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        }
+    };
+
+
+
     //CRO_ASSERT(hole < m_holeData.size(), "");
     if (hole >= m_holeData.size())
     {

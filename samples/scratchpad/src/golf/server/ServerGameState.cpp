@@ -51,6 +51,7 @@ using namespace sv;
 namespace
 {
     const std::uint8_t MaxStrokes = 6;
+    const cro::Time TurnTime = cro::seconds(30.f);
 }
 
 GameState::GameState(SharedData& sd)
@@ -207,6 +208,19 @@ void GameState::netBroadcast()
 
 std::int32_t GameState::process(float dt)
 {
+    if (m_gameStarted)
+    {
+        //check the turn timer and skip player if they AFK'd
+        if (m_turnTimer.elapsed() > TurnTime)
+        {
+            m_playerInfo[0].holeScore[m_currentHole] = MaxStrokes;
+            m_playerInfo[0].position = m_holeData[m_currentHole].pin;
+            m_playerInfo[0].distanceToHole = 0.f;
+            m_playerInfo[0].terrain = TerrainID::Green;
+            setNextPlayer(); //resets the timer
+        }
+    }
+
     m_scene.simulate(dt);
     return m_returnValue;
 }
@@ -280,6 +294,8 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
         m_playerInfo[0].holeScore[m_currentHole]++;
 
         m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, m_animIDs[AnimID::Swing], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        m_turnTimer.restart(); //don't time out mid-shot...
     }
 }
 
@@ -315,6 +331,8 @@ void GameState::setNextPlayer()
         m_sharedData.host.broadcastPacket(PacketID::SetPlayer, player, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, m_animIDs[AnimID::Idle], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
+
+    m_turnTimer.restart();
 }
 
 void GameState::setNextHole()
@@ -370,6 +388,10 @@ void GameState::setNextHole()
                 e.getComponent<cro::Callback>().active = false;
                 m_scene.destroyEntity(e);
             }
+
+            //make sure to keep resetting this to prevent unfairly
+            //truncating the next player's turn
+            m_turnTimer.restart();
         };
     }
     else
@@ -393,6 +415,8 @@ void GameState::setNextHole()
                 e.getComponent<cro::Callback>().active = false;
             }
         };
+
+        m_gameStarted = false;
     }
 }
 
