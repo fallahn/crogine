@@ -337,6 +337,16 @@ bool GolfState::simulate(float dt)
         requestStackPush(States::Golf::Error);
     }
 
+    //update time uniforms
+    static float elapsed = dt;
+    elapsed += dt;
+
+    glUseProgram(m_waterShader.shaderID);
+    glUniform1f(m_waterShader.timeUniform, elapsed * 15.f);
+    //glUseProgram(0);
+
+
+
     m_inputParser.update(dt);
 
     m_gameScene.simulate(dt);
@@ -607,6 +617,9 @@ void GolfState::loadAssets()
     m_resources.shaders.loadFromString(waterShaderID, WaterVertex, WaterFragment);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(m_resources.shaders.get(waterShaderID));
 
+
+    m_waterShader.shaderID = m_resources.shaders.get(waterShaderID).getGLHandle();
+    m_waterShader.timeUniform = m_resources.shaders.get(waterShaderID).getUniformMap().at("u_time");
 #ifdef CRO_DEBUG_
     m_debugTexture.create(320, 200);
 #endif
@@ -642,16 +655,9 @@ void GolfState::buildScene()
 
     //quality holing
     cro::ModelDefinition md(m_resources);
-    md.loadFromFile("assets/golf/models/quad.cmt");
+    md.loadFromFile("assets/golf/models/flag.cmt");
 
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
-    entity.getComponent<cro::Transform>().move(glm::vec3(0.f, 0.001f, 0.f));
-    entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
-    md.createModel(entity);
-
-    md.loadFromFile("assets/golf/models/flag.cmt");
-    entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Flag;
     md.createModel(entity);
@@ -661,6 +667,13 @@ void GolfState::buildScene()
     }
 
     auto flagEntity = entity;
+
+    md.loadFromFile("assets/golf/models/quad.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().move(glm::vec3(0.f, 0.001f, 0.f));
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
+    md.createModel(entity);
+    flagEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //displays the stroke direction
     auto pos = m_holeData[0].tee;

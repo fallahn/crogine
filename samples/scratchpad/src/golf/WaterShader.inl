@@ -72,6 +72,7 @@ static const std::string WaterFragment = R"(
     uniform vec4 u_lightColour;
 
     uniform vec3 u_cameraWorldPosition;
+    uniform float u_time;
 
     VARYING_IN vec3 v_normal;
 
@@ -145,6 +146,9 @@ static const std::string WaterFragment = R"(
 
         //reflection
         vec2 reflectCoords = v_reflectionPosition.xy / v_reflectionPosition.w / 2.0 + 0.5;
+
+        reflectCoords.x += sin(u_time + (gl_FragCoord.z * 225.0)) * 0.001;
+
         vec4 reflectColour = TEXTURE(u_reflectionMap, reflectCoords);
 
         vec3 normal = normalize(v_normal);

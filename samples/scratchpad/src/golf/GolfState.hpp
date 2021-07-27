@@ -112,6 +112,12 @@ private:
     };
     std::array<std::unique_ptr<cro::ModelDefinition>, ModelID::Count> m_modelDefs = {};
 
+    struct WaterShader final
+    {
+        std::uint32_t shaderID = 0;
+        std::int32_t timeUniform = 0;
+    }m_waterShader;
+
     struct BallResource final
     {
         std::int32_t materialID = -1;
