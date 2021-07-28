@@ -407,7 +407,7 @@ std::pair<std::uint8_t, glm::vec3> BallSystem::getTerrain(glm::vec3 pos) const
 
     //R is terrain * 10
     std::uint8_t terrain = m_mapData.getPixelData()[index * 4] / 10;
-    terrain = std::min(static_cast<std::uint8_t>(TerrainID::Water), terrain);
+    terrain = std::min(static_cast<std::uint8_t>(TerrainID::Scrub), terrain);
 
     return std::make_pair(terrain, m_holeData->normalMap[index]);
 }

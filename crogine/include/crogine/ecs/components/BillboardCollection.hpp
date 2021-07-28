@@ -90,6 +90,17 @@ namespace cro
             m_dirty = true;
         }
 
+        /*!
+        \brief Set the BillboardCollection with a pre-defined set of Billboards
+        This overwrites any existing billboard data by *swapping* with the incoming
+        data.
+        */
+        void setBillboards(std::vector<Billboard>& billboards)
+        {
+            m_billboards.swap(billboards);
+            m_dirty = true;
+        }
+
     private:
         bool m_dirty = false;
         std::vector<Billboard> m_billboards;

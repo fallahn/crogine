@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "HoleData.hpp"
 #include "GolfInputParser.hpp"
+#include "TerrainBuilder.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -91,6 +92,8 @@ private:
     std::uint32_t m_currentHole;
     ActivePlayer m_currentPlayer;
 
+    TerrainBuilder m_terrainBuilder;
+
     struct MaterialID final
     {
         enum
@@ -109,7 +112,7 @@ private:
         {
             Ball,
             BallShadow,
-            Billboard,
+
             Count
         };
     };
@@ -145,8 +148,6 @@ private:
     void createTransition(const ActivePlayer&);
     void updateWindDisplay(glm::vec3);
     std::int32_t getClub() const;
-
-    void updateFlora();
 
 
     //UI stuffs - found in GolfStateUI.cpp

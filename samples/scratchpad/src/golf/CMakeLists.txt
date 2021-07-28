@@ -8,6 +8,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/InterpolationComponent.cpp
   ${PROJECT_DIR}/golf/InterpolationSystem.cpp
   ${PROJECT_DIR}/golf/SharedStateData.cpp
+  ${PROJECT_DIR}/golf/TerrainBuilder.cpp
 
   ${PROJECT_DIR}/golf/server/Server.cpp
   ${PROJECT_DIR}/golf/server/ServerGameState.cpp

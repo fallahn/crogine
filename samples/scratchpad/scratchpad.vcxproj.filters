@@ -144,6 +144,9 @@
     <ClCompile Include="src\golf\GolfStateUI.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\TerrainBuilder.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -227,9 +230,6 @@
     <ClInclude Include="src\golf\server\ServerState.hpp">
       <Filter>Header Files\golf\server</Filter>
     </ClInclude>
-    <ClInclude Include="src\golf\PacketIDs.hpp">
-      <Filter>Header Files\golf</Filter>
-    </ClInclude>
     <ClInclude Include="src\golf\CommonConsts.hpp">
       <Filter>Header Files\golf</Filter>
     </ClInclude>
@@ -289,6 +289,15 @@
     </ClInclude>
     <ClInclude Include="src\golf\Terrain.hpp">
       <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\TerrainBuilder.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PacketIDs.hpp">
+      <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PoissonDisk.hpp">
+      <Filter>Header Files\golf</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

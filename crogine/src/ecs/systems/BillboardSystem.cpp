@@ -59,7 +59,7 @@ void BillboardSystem::process(float)
 
             //boundingbox
             meshData.boundingBox[0] = glm::vec3(std::numeric_limits<float>::max());
-            meshData.boundingBox[1] = glm::vec3(std::numeric_limits<float>::min());
+            meshData.boundingBox[1] = glm::vec3(std::numeric_limits<float>::lowest());
 
             const auto& quads = bbc.m_billboards;
             for (const auto& quad : quads)

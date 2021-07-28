@@ -109,6 +109,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_inputParser   (sd.inputBinding, context.appInstance.getMessageBus()),
     m_wantsGameState(true),
     m_currentHole   (0),
+    m_terrainBuilder(m_holeData),
     m_camRotation   (0.f),
     m_roundEnded    (false)
 {
@@ -419,7 +420,6 @@ void GolfState::loadAssets()
     }
     m_modelDefs[ModelID::Ball]->loadFromFile("assets/golf/models/ball.cmt");
     m_modelDefs[ModelID::BallShadow]->loadFromFile("assets/golf/models/ball_shadow.cmt");
-    m_modelDefs[ModelID::Billboard]->loadFromFile("assets/golf/models/grass.cmt");
 
     //UI stuffs
     cro::SpriteSheet spriteSheet;
@@ -806,14 +806,12 @@ void GolfState::buildScene()
     camEnt.addComponent<TargetInfo>().waterPlane = waterEnt;
     cam.reflectionBuffer.create(1024, 1024);
 
-    auto sunEnt = m_gameScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.797f);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.72f);
+    m_terrainBuilder.create(m_resources, m_gameScene);
 
     setCurrentHole(0);
     buildUI(); //put this here because we don't want to do this if the map data didn't load
 
-    updateFlora();
+
 #ifdef CRO_DEBUG_
     setupDebug();
 #endif
@@ -979,7 +977,6 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     updateScoreboard();
     showScoreboard(true);
 
-
     //CRO_ASSERT(hole < m_holeData.size(), "");
     if (hole >= m_holeData.size())
     {
@@ -987,6 +984,8 @@ void GolfState::setCurrentHole(std::uint32_t hole)
         requestStackPush(States::Golf::Error);
         return;
     }
+
+    m_terrainBuilder.update(hole);
 
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().setHidden(true);
     m_currentHole = hole;
@@ -1291,30 +1290,6 @@ std::int32_t GolfState::getClub() const
     default: return m_inputParser.getClub();
     case TerrainID::Bunker: return ClubID::PitchWedge;
     case TerrainID::Green: return ClubID::Putter;
-    }
-}
-
-void GolfState::updateFlora()
-{
-    //TODO this will be replaced with a system for morphing holes
-    //when height mapping is complete
-
-    //TODO merge billboard textures into single atlas
-    //prob use a tex tfile to describe subrects / size
-
-    cro::Billboard board;
-    board.size = { 1.f, 0.2f };
-    //board.colour = cro::Colour::Green;
-
-    auto bbEnt = m_gameScene.createEntity();
-    bbEnt.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
-    m_modelDefs[ModelID::Billboard]->createModel(bbEnt);
-
-    for (auto i = 0u; i < 46u; ++i)
-    {
-        bbEnt.getComponent<cro::BillboardCollection>().addBillboard(board);
-        board.position.x -= 1.3f;
-        board.position.z = static_cast<float>(cro::Util::Random::value(-2, 2));
     }
 }
 
