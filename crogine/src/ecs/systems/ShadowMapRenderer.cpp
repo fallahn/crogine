@@ -105,7 +105,8 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
         //only covers the first 3rd of the frustum...
         //we'd implement the rest as cascaded shadows
-        float farPlane = camera.m_farPlane / 3.f; 
+        float farPlane = camera.m_farPlane / 3.f;
+        //float farPlane = camera.m_farPlane;
         float xNear = camera.m_nearPlane * tanHalfFOVX;
         float xFar = farPlane * tanHalfFOVX;
         float yNear = camera.m_nearPlane * tanHalfFOVY;

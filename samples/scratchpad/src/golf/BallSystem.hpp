@@ -57,7 +57,7 @@ struct Ball final
 class BallSystem final : public cro::System
 {
 public:
-    explicit BallSystem(cro::MessageBus&);
+    BallSystem(cro::MessageBus&, const cro::Image&);
 
     void process(float) override;
 
@@ -66,6 +66,8 @@ public:
     void setHoleData(const struct HoleData&);
 
 private:
+
+    const cro::Image& m_mapData;
 
     cro::Clock m_windDirClock;
     cro::Clock m_windStrengthClock;
@@ -88,5 +90,5 @@ private:
 
     void doCollision(cro::Entity);
     void updateWind();
-    std::pair<std::uint8_t, glm::vec3> getTerrain(glm::vec3);
+    std::pair<std::uint8_t, glm::vec3> getTerrain(glm::vec3) const;
 };

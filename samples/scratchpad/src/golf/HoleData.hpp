@@ -30,8 +30,6 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/Entity.hpp>
-#include <crogine/graphics/Image.hpp>
-
 #include <crogine/detail/glm/vec3.hpp>
 
 struct HoleData final
@@ -39,7 +37,7 @@ struct HoleData final
     glm::vec3 tee = glm::vec3(0.f);
     glm::vec3 pin = glm::vec3(0.f);
     std::int32_t par = 0;
-    cro::Image map;
+    std::string mapPath;
     std::vector<glm::vec3> normalMap;
     cro::Entity modelEntity;
 };

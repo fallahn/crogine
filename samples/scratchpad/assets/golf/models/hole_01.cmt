@@ -10,6 +10,7 @@ model golf_course
         smooth = true
         repeat = true
         vertex_coloured = true
+        rx_shadows = true
         blendmode = "none"
 
     }

@@ -61,8 +61,9 @@ namespace
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
 }
 
-BallSystem::BallSystem(cro::MessageBus& mb)
+BallSystem::BallSystem(cro::MessageBus& mb, const cro::Image& mapData)
     : cro::System           (mb, typeid(BallSystem)),
+    m_mapData               (mapData),
     m_windDirTime           (cro::seconds(0.f)),
     m_windStrengthTime      (cro::seconds(1.f)),
     m_windInterpTime        (1.f),
@@ -394,18 +395,18 @@ void BallSystem::updateWind()
     }
 }
 
-std::pair<std::uint8_t, glm::vec3> BallSystem::getTerrain(glm::vec3 pos)
+std::pair<std::uint8_t, glm::vec3> BallSystem::getTerrain(glm::vec3 pos) const
 {
-    auto size = m_holeData->map.getSize();
+    auto size = m_mapData.getSize();
     std::uint32_t x = std::max(0u, std::min(size.x, static_cast<std::uint32_t>(std::floor(pos.x))));
     std::uint32_t y = std::max(0u, std::min(size.y, static_cast<std::uint32_t>(std::floor(-pos.z))));
 
-    CRO_ASSERT(m_holeData->map.getFormat() == cro::ImageFormat::RGBA, "expected RGBA format");
+    CRO_ASSERT(m_mapData.getFormat() == cro::ImageFormat::RGBA, "expected RGBA format");
 
     auto index = ((y * size.x) + x);
 
     //R is terrain * 10
-    std::uint8_t terrain = m_holeData->map.getPixelData()[index * 4] / 10;
+    std::uint8_t terrain = m_mapData.getPixelData()[index * 4] / 10;
     terrain = std::min(static_cast<std::uint8_t>(TerrainID::Water), terrain);
 
     return std::make_pair(terrain, m_holeData->normalMap[index]);

@@ -377,6 +377,9 @@ void GameState::setNextHole()
     m_currentHole++;
     if (m_currentHole < m_holeData.size())
     {
+        //make sure to load current data
+        m_currentMap.loadFromFile(m_holeData[m_currentHole].mapPath);
+
         //reset player positions/strokes
         for (auto& player : m_playerInfo)
         {
@@ -504,17 +507,18 @@ bool GameState::validateMap()
             const auto& name = holeProp.getName();
             if (name == "map")
             {
-                if (!holeData.map.loadFromFile(holeProp.getValue<std::string>()))
+                if (!m_currentMap.loadFromFile(holeProp.getValue<std::string>()))
                 {
                     return false;
                 }
-                if (holeData.map.getFormat() != cro::ImageFormat::RGBA)
+                if (m_currentMap.getFormat() != cro::ImageFormat::RGBA)
                 {
                     LogE << "Server: hole map requires RGBA format" << std::endl;
                     return false;
                 }
 
                 loadNormalMap(holeData, holeProp.getValue<std::string>());
+                holeData.mapPath = holeProp.getValue<std::string>();
 
                 propCount++;
             }
@@ -554,7 +558,7 @@ bool GameState::validateMap()
 
 void GameState::loadNormalMap(HoleData& holeData, const std::string& path)
 {
-    auto size = holeData.map.getSize();
+    auto size = m_currentMap.getSize();
     holeData.normalMap.resize(size.x * size.y, glm::vec3(0.f, 1.f, 0.f));
 
     auto extension = cro::FileSystem::getFileExtension(path);
@@ -565,7 +569,7 @@ void GameState::loadNormalMap(HoleData& holeData, const std::string& path)
     cro::Image img;
     if (img.loadFromFile(filePath))
     {
-        std::size_t stride = 0;
+        std::uint32_t stride = 0;
         if (img.getFormat() == cro::ImageFormat::RGB)
         {
             stride = 3;
@@ -621,7 +625,7 @@ void GameState::initScene()
 
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
-    m_scene.addSystem<BallSystem>(mb).setHoleData(m_holeData[0]);
+    m_scene.addSystem<BallSystem>(mb, m_currentMap).setHoleData(m_holeData[0]);
 }
 
 void GameState::buildWorld()

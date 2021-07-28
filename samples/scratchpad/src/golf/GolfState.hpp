@@ -86,6 +86,7 @@ private:
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_renderTexture;
 
+    cro::Image m_currentMap;
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;
     ActivePlayer m_currentPlayer;
@@ -182,5 +183,7 @@ private:
 #ifdef CRO_DEBUG_
     cro::Entity m_debugCam;
     cro::RenderTexture m_debugTexture;
+
+    void setupDebug();
 #endif
 };
