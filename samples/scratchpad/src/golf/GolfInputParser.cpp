@@ -59,7 +59,7 @@ namespace golf
         m_power             (0.f),
         m_hook              (0.5f),
         m_powerbarDirection (1.f),
-        m_active            (true),
+        m_active            (false),
         m_state             (State::Aim),
         m_currentClub       (ClubID::Driver)
     {
@@ -285,12 +285,18 @@ namespace golf
                     && (m_inputFlags & InputFlag::PrevClub))
                 {
                     m_currentClub = (m_currentClub + ClubID::PitchWedge) % ClubID::Putter;
+
+                    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+                    msg->type = GolfEvent::ClubChanged;
                 }
 
                 if ((m_prevFlags & InputFlag::NextClub) == 0
                     && (m_inputFlags & InputFlag::NextClub))
                 {
                     m_currentClub = (m_currentClub + 1) % ClubID::Putter;
+
+                    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+                    msg->type = GolfEvent::ClubChanged;
                 }
             }
             break;
@@ -325,8 +331,8 @@ namespace golf
                     m_powerbarDirection = 1.f;
                     //setActive(false); //can't set this false here because it resets the values before we read them...
 
-                    auto* msg = m_messageBus.post<GameEvent>(MessageID::GameMessage);
-                    msg->type = GameEvent::HitBall;
+                    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+                    msg->type = GolfEvent::HitBall;
                 }
                 break;
             }
@@ -343,6 +349,9 @@ namespace golf
         {
             m_currentClub = (m_currentClub + ClubID::PitchWedge) % ClubID::Putter;
         }
+
+        auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+        msg->type = GolfEvent::ClubChanged;
     }
 
     void InputParser::rotate(float rotation)

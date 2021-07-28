@@ -267,7 +267,30 @@ void GameState::sendInitialGameState(std::uint8_t clientID)
 
         //send command to set clients to first player
         //this also tells the client to stop requesting state
-        setNextPlayer();
+        //setNextPlayer();
+
+        //create an ent which waits some time before setting next player active
+        //this is just so players have a chance to view the score board
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(3.f);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            auto& t = e.getComponent<cro::Callback>().getUserData<float>();
+            t -= dt;
+            if (t < 0)
+            {
+                setNextPlayer();
+                e.getComponent<cro::Callback>().active = false;
+                m_scene.destroyEntity(e);
+            }
+
+            //make sure to keep resetting this to prevent unfairly
+            //truncating the next player's turn
+            m_turnTimer.restart();
+        };
     }
 }
 

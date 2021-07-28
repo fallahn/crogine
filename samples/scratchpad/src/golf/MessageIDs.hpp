@@ -40,14 +40,15 @@ namespace MessageID
 {
     enum
     {
-        GameMessage = cro::Message::Count
+        GolfMessage = 400//cro::Message::Count
     };
 }
 
-struct GameEvent final
+struct GolfEvent final
 {
     enum
     {
-        HitBall
+        HitBall,
+        ClubChanged
     }type = HitBall;
 };
