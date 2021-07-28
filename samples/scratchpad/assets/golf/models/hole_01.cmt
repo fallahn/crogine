@@ -6,11 +6,11 @@ model golf_course
     material Unlit
     {
         name = "Untitled"
-        colour = 1.000000,0.999990,1.000000,1.000000
+        colour = 1.000000,1.0,1.000000,1.000000
         smooth = true
         repeat = true
         vertex_coloured = true
-        rx_shadows = true
+        rx_shadows = false
         blendmode = "none"
 
     }

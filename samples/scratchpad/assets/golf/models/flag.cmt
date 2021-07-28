@@ -1,12 +1,12 @@
 model flag
 {
     mesh = "assets/golf/models/flag.cmb"
-    cast_shadows = true
+    cast_shadows = false
 
     material Unlit
     {
         name = "Untitled"
-        colour = 1.000000,0.999990,1.000000,1.000000
+        colour = 1.000000,1.0,1.000000,1.000000
         smooth = true
         repeat = true
         vertex_coloured = true

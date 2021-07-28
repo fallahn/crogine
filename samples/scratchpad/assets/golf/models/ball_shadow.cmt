@@ -1,16 +1,16 @@
-model ball
+model ball_shadow
 {
-    mesh = "assets/golf/models/ball.cmb"
+    mesh = "assets/golf/models/ball_shadow.cmb"
     cast_shadows = false
 
     material Unlit
     {
         name = "Untitled"
-        colour = 1.000000,1.0,1.000000,1.000000
+        colour = 0.000000,0.000000,0.000000,0.125490
         smooth = true
         repeat = true
         vertex_coloured = true
-        blendmode = "none"
+        blendmode = "alpha"
 
     }
 }

@@ -35,7 +35,8 @@ struct CommandID final
     {
         Ball            = 0x1,
         StrokeIndicator = 0x2,
-        Flag            = 0x4
+        Flag            = 0x4,
+        Hole            = 0x8
     };
 
     struct UI final

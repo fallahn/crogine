@@ -108,6 +108,8 @@ private:
         enum
         {
             Ball,
+            BallShadow,
+            Billboard,
             Count
         };
     };
@@ -143,6 +145,8 @@ private:
     void createTransition(const ActivePlayer&);
     void updateWindDisplay(glm::vec3);
     std::int32_t getClub() const;
+
+    void updateFlora();
 
 
     //UI stuffs - found in GolfStateUI.cpp

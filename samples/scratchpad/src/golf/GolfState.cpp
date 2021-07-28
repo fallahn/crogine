@@ -49,7 +49,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
-#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
+#include <crogine/ecs/systems/BillboardSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -60,6 +60,7 @@ source distribution.
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/BillboardCollection.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
@@ -71,6 +72,7 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Matrix.hpp>
 #include <crogine/util/Network.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include "../ErrorCheck.hpp"
@@ -416,6 +418,8 @@ void GolfState::loadAssets()
         md = std::make_unique<cro::ModelDefinition>(m_resources);
     }
     m_modelDefs[ModelID::Ball]->loadFromFile("assets/golf/models/ball.cmt");
+    m_modelDefs[ModelID::BallShadow]->loadFromFile("assets/golf/models/ball_shadow.cmt");
+    m_modelDefs[ModelID::Billboard]->loadFromFile("assets/golf/models/grass.cmt");
 
     //UI stuffs
     cro::SpriteSheet spriteSheet;
@@ -647,7 +651,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
+    m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
@@ -670,10 +674,16 @@ void GolfState::buildScene()
 
     //quality holing
     cro::ModelDefinition md(m_resources);
-    md.loadFromFile("assets/golf/models/flag.cmt");
-
+    md.loadFromFile("assets/golf/models/cup.cmt");
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
+    entity.addComponent<cro::Transform>();
+    md.createModel(entity);
+
+    auto holeEntity = entity;
+
+    md.loadFromFile("assets/golf/models/flag.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Flag;
     md.createModel(entity);
     if (md.hasSkeleton())
@@ -682,13 +692,6 @@ void GolfState::buildScene()
     }
 
     auto flagEntity = entity;
-
-    md.loadFromFile("assets/golf/models/quad.cmt");
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().move(glm::vec3(0.f, 0.001f, 0.f));
-    entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
-    md.createModel(entity);
-    flagEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //displays the stroke direction
     auto pos = m_holeData[0].tee;
@@ -734,17 +737,26 @@ void GolfState::buildScene()
 
 
     //draw the flag pole as a single line which can be
-    //see from a distance
+    //see from a distance - hole and model are also attached to this
     meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     entity = m_gameScene.createEntity();
-    flagEntity.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Hole;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
+    entity.getComponent<cro::Transform>().addChild(holeEntity.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(flagEntity.getComponent<cro::Transform>());
 
     meshData = &entity.getComponent<cro::Model>().getMeshData();
     verts =
     {
+        0.f, 2.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
         0.f, 0.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
-        0.f, 2.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f
+        0.f,  0.001f,  0.f,    0.f, 0.f, 0.f, 0.5f,
+        1.4f, 0.001f, 1.4f,    0.f, 0.f, 0.f, 0.01f,
+    };
+    indices =
+    {
+        0,1,2,3
     };
     meshData->vertexCount = verts.size() / vertStride;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
@@ -793,7 +805,6 @@ void GolfState::buildScene()
     //used by transition callback to interp camera
     camEnt.addComponent<TargetInfo>().waterPlane = waterEnt;
     cam.reflectionBuffer.create(1024, 1024);
-    cam.shadowMapBuffer.create(2048, 2048);
 
     auto sunEnt = m_gameScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.797f);
@@ -802,7 +813,7 @@ void GolfState::buildScene()
     setCurrentHole(0);
     buildUI(); //put this here because we don't want to do this if the map data didn't load
 
-
+    updateFlora();
 #ifdef CRO_DEBUG_
     setupDebug();
 #endif
@@ -835,6 +846,11 @@ void GolfState::spawnBall(const ActorInfo& info)
         e.getComponent<cro::Transform>().setPosition(ballPos);
     };
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.shadowMeshID), material);
+
+    auto shadowEnt = entity;
+    entity = m_gameScene.createEntity();
+    shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
+    m_modelDefs[ModelID::BallShadow]->createModel(entity);
 
     //adding a ball model means we see something a bit more reasonable when close up
     entity = m_gameScene.createEntity();
@@ -985,7 +1001,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     m_currentPlayer.position = m_holeData[m_currentHole].tee;
 
     cro::Command cmd;
-    cmd.targetFlags = CommandID::Flag;
+    cmd.targetFlags = CommandID::Hole;
     cmd.action = [&](cro::Entity e, float)
     {
         e.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
@@ -1146,6 +1162,15 @@ void GolfState::hitBall()
     //increase the local stroke count so that the UI is updated
     //the server will set the actual value
     m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole]++;
+
+    //hide the indicator
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::StrokeIndicator;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Model>().setHidden(true);
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
 
 void GolfState::createTransition(const ActivePlayer& playerData)
@@ -1166,14 +1191,6 @@ void GolfState::createTransition(const ActivePlayer& playerData)
         e.getComponent<cro::Transform>().setPosition(UIHiddenPosition);
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
-    //hide stroke indicator
-    cmd.targetFlags = CommandID::StrokeIndicator;
-    cmd.action = [](cro::Entity e, float)
-    {
-        e.getComponent<cro::Model>().setHidden(true);
-    };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
     if (playerData.terrain == TerrainID::Green)
     {
@@ -1274,6 +1291,30 @@ std::int32_t GolfState::getClub() const
     default: return m_inputParser.getClub();
     case TerrainID::Bunker: return ClubID::PitchWedge;
     case TerrainID::Green: return ClubID::Putter;
+    }
+}
+
+void GolfState::updateFlora()
+{
+    //TODO this will be replaced with a system for morphing holes
+    //when height mapping is complete
+
+    //TODO merge billboard textures into single atlas
+    //prob use a tex tfile to describe subrects / size
+
+    cro::Billboard board;
+    board.size = { 1.f, 0.2f };
+    //board.colour = cro::Colour::Green;
+
+    auto bbEnt = m_gameScene.createEntity();
+    bbEnt.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
+    m_modelDefs[ModelID::Billboard]->createModel(bbEnt);
+
+    for (auto i = 0u; i < 46u; ++i)
+    {
+        bbEnt.getComponent<cro::BillboardCollection>().addBillboard(board);
+        board.position.x -= 1.3f;
+        board.position.z = static_cast<float>(cro::Util::Random::value(-2, 2));
     }
 }
 

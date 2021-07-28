@@ -1,0 +1,10 @@
+model grass
+{
+    mesh = billboard
+
+    material Unlit
+    {
+        diffuse = "assets/golf/images/grass01.png"
+        alpha_clip = 0.2
+    }
+}
