@@ -68,13 +68,40 @@ private:
     const std::vector<HoleData>& m_holeData;
     std::size_t m_currentHole;
 
+    struct BillboardID final
+    {
+        enum
+        {
+            Grass01,
+            Pine,
+            Birch,
+            Willow,
+
+            Count
+        };
+    };
+    std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
+
     std::vector<cro::Billboard> m_billboardBuffer;
     std::array<cro::Entity, 2u> m_billboardEntities = {};
+
+    struct Vertex final
+    {
+        glm::vec3 position = glm::vec3(0.f);
+        glm::vec4 colour = glm::vec4(1.f);
+        glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
+
+        //these actually get attached to tan/bitan attribs in the shader
+        //but we'll use them as morph targets
+        glm::vec3 targetPosition = glm::vec3(0.f);
+        glm::vec3 targetNormal = glm::vec3(0.f, 1.f, 0.f);
+    };
+    std::vector<Vertex> m_terrainBuffer;
 
     std::atomic_bool m_threadRunning;
     std::atomic_bool m_wantsUpdate;
     std::unique_ptr<std::thread> m_thread;
 
     void threadFunc();
-    std::pair<std::uint8_t, std::uint8_t> readMap(const cro::Image&, float x, float y) const;
+    std::pair<std::uint8_t, float> readMap(const cro::Image&, float x, float y) const;
 };

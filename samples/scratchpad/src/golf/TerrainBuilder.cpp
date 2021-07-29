@@ -36,19 +36,26 @@ source distribution.
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
+
+#include <crogine/util/Random.hpp>
 
 #include <chrono>
 
 namespace
 {
     //params for poisson disk samples
-    constexpr float GrassDensity = 1.7f; //radius for PD sampler
-    constexpr float WillowDensity = 3.8f;
-    constexpr float PineDensity = 2.5f;
+    constexpr float GrassDensity = 4.7f; //radius for PD sampler
+    constexpr float TreeDensity = 3.8f;
 
-    //TODO for grass board we could shrink the area sllightly as we prefer trees further away
+    //TODO for grass board we could shrink the area slightly as we prefer trees further away
     constexpr std::array MinBounds = { 0.f, 0.f };
     constexpr std::array MaxBounds = { 320.f, 200.f };
+
+    constexpr glm::uvec2 Size(320, 200);
+    constexpr float PixelPerMetre = 32.f; //used for scaling billboards
+
+    constexpr float MaxHeight = 9.f;
 }
 
 TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
@@ -75,7 +82,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 {
     //create billboard entities
     cro::ModelDefinition modelDef(resources);
-    modelDef.loadFromFile("assets/golf/models/grass.cmt");
+    modelDef.loadFromFile("assets/golf/models/shrubbery.cmt");
 
     for (auto& entity : m_billboardEntities)
     {
@@ -91,6 +98,25 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         }
     }
 
+    //load the billboard rects from a sprite sheet and convert to templates
+    const auto convertSprite = [](const cro::Sprite& sprite)
+    {
+        auto bounds = sprite.getTextureRect();
+        auto texSize = glm::vec2(sprite.getTexture()->getSize());
+
+        cro::Billboard bb;
+        bb.size = { bounds.width / PixelPerMetre, bounds.height / PixelPerMetre };
+        bb.textureRect = { bounds.left / texSize.x, bounds.bottom / texSize.y, bounds.width / texSize.x, bounds.height / texSize.y };
+        bb.origin = { bb.size.x / 2.f, 0.f };
+        return bb;
+    };
+    
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", resources.textures);
+    m_billboardTemplates[BillboardID::Grass01] = convertSprite(spriteSheet.getSprite("grass01"));
+    m_billboardTemplates[BillboardID::Pine] = convertSprite(spriteSheet.getSprite("pine"));
+    m_billboardTemplates[BillboardID::Willow] = convertSprite(spriteSheet.getSprite("willow"));
+    m_billboardTemplates[BillboardID::Birch] = convertSprite(spriteSheet.getSprite("birch"));
 
 
     //TODO create a mesh for the height map
@@ -116,7 +142,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
         m_billboardEntities[holeIndex % 2].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
         m_billboardEntities[holeIndex % 2].getComponent<cro::Transform>().setPosition(glm::vec3(0.f));
 
-        //TODO set the other ent to hide
+        //TODO set the other ent to hide - saves on drawing something not visible
         m_billboardEntities[(holeIndex + 1) % 2].getComponent<cro::Transform>().setPosition(glm::vec3(0.f, -100.f, 0.f));
 
         //TODO swap the height data buffers and upload to scene
@@ -144,25 +170,33 @@ void TerrainBuilder::threadFunc()
             {
                 //recreate the distribution(s)
                 auto grass = pd::PoissonDiskSampling(GrassDensity, MinBounds, MaxBounds, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
-                auto willow = pd::PoissonDiskSampling(WillowDensity, MinBounds, MaxBounds);
-                auto pine = pd::PoissonDiskSampling(PineDensity, MinBounds, MaxBounds);
+                auto trees = pd::PoissonDiskSampling(TreeDensity, MinBounds, MaxBounds);
 
                 //filter distribution by map area
                 m_billboardBuffer.clear();
                 for (auto [x, y] : grass)
                 {
-                    //TODO also apply height
                     auto [terrain, height] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Rough
                         || terrain == TerrainID::Scrub)
                     {
-                        auto& bb = m_billboardBuffer.emplace_back();
-                        bb.position = { x, 0.f, -y };
-                        bb.size = { 1.f, 0.375f };
-                        bb.origin = { 0.5f, 0.f };
+                        auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[BillboardID::Grass01]);
+                        bb.position = { x, height, -y };
                     }
                 }
-                //TODO combine billboard textures and load subrects
+                
+                for (auto [x, y] : trees)
+                {
+                    auto [terrain, height] = readMap(mapImage, x, y);
+                    if (terrain == TerrainID::Scrub)
+                    {
+                        float scale = static_cast<float>(cro::Util::Random::value(9, 11)) / 10.f;
+
+                        auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Pine, BillboardID::Birch)]);
+                        bb.position = { x, height, -y };
+                        bb.size *= scale;
+                    }
+                }
                 
 
 
@@ -178,7 +212,7 @@ void TerrainBuilder::threadFunc()
     }
 }
 
-std::pair<std::uint8_t, std::uint8_t> TerrainBuilder::readMap(const cro::Image& img, float px, float py) const
+std::pair<std::uint8_t, float> TerrainBuilder::readMap(const cro::Image& img, float px, float py) const
 {
     std::uint32_t x = static_cast<std::uint32_t>(std::min(MaxBounds[0], std::max(0.f, std::floor(px))));
     std::uint32_t y = static_cast<std::uint32_t>(std::min(MaxBounds[1], std::max(0.f, std::floor(py))));
@@ -195,7 +229,8 @@ std::pair<std::uint8_t, std::uint8_t> TerrainBuilder::readMap(const cro::Image& 
     std::uint8_t terrain = img.getPixelData()[index] / 10;
     terrain = std::min(static_cast<std::uint8_t>(TerrainID::Scrub), terrain);
 
-    auto height = img.getPixelData()[index + 1];
+    auto height = static_cast<float>(img.getPixelData()[index + 1]) / 255.f;
+    height *= MaxHeight;
 
     return { terrain, height };
 }
