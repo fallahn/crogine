@@ -97,6 +97,7 @@ private:
         glm::vec3 targetNormal = glm::vec3(0.f, 1.f, 0.f);
     };
     std::vector<Vertex> m_terrainBuffer;
+    std::uint32_t m_terrainVBO;
 
     std::atomic_bool m_threadRunning;
     std::atomic_bool m_wantsUpdate;

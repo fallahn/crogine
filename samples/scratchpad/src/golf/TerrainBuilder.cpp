@@ -39,8 +39,11 @@ source distribution.
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/graphics/DynamicMeshBuilder.hpp>
 
 #include <crogine/util/Random.hpp>
+
+#include "../ErrorCheck.hpp"
 
 #include <chrono>
 
@@ -58,6 +61,7 @@ namespace
     constexpr float PixelPerMetre = 32.f; //used for scaling billboards
 
     constexpr float MaxHeight = 9.f;
+    constexpr std::size_t QuadsPerMetre = 2;
 
     //callback for swapping shrub ents
     struct ShrubTransition final
@@ -95,6 +99,8 @@ namespace
 
 TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
     : m_holeData    (hd),
+    m_terrainBuffer ((Size.x * Size.y) / QuadsPerMetre),
+    m_terrainVBO    (0),
     m_threadRunning (false),
     m_wantsUpdate   (false),
     m_currentHole   (0)
@@ -160,7 +166,62 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_billboardTemplates[BillboardID::Birch] = convertSprite(spriteSheet.getSprite("birch"));
 
 
-    //TODO create a mesh for the height map
+    //create a mesh for the height map - this is actually one quad short
+    //top and left - but hey you didn't notice until you read this did you? :)
+    for (auto i = 0u; i < m_terrainBuffer.size(); ++i)
+    {
+        std::size_t x = i % (Size.x / QuadsPerMetre);
+        std::size_t y = i / (Size.x / QuadsPerMetre);
+
+        m_terrainBuffer[i].position = { static_cast<float>(x * QuadsPerMetre), 0.f, -static_cast<float>(y * QuadsPerMetre) };
+        m_terrainBuffer[i].targetPosition = m_terrainBuffer[i].position;
+    }
+
+    constexpr auto xCount = static_cast<std::uint32_t>(Size.x / QuadsPerMetre);
+    constexpr auto yCount = static_cast<std::uint32_t>(Size.y / QuadsPerMetre);
+    std::vector<std::uint32_t> indices;
+
+    for (auto y = 0u; y < yCount - 1; y++)
+    {
+        if (y > 0)
+        {
+            indices.push_back(y * xCount);
+        }
+
+        for (auto x = 0u; x < xCount; x++)
+        {
+            indices.push_back(((y + 1) * xCount) + x);
+            indices.push_back((y * xCount) + x);
+        }
+
+        if (y < yCount - 2)
+        {
+            indices.push_back(((y + 1) * xCount) + (xCount - 1));
+        }
+    }
+
+
+    //TODO use a custom material for morphage
+    auto shaderID = resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    auto materialID = resources.materials.add(resources.shaders.get(shaderID));
+    auto flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal |
+        cro::VertexProperty::Tangent | cro::VertexProperty::Bitangent; //use tan/bitan slots to store target position/normal
+    auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_TRIANGLE_STRIP));
+
+    auto entity = scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -0.01f, 0.f });
+    entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
+
+    auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
+    meshData->vertexCount = static_cast<std::uint32_t>(m_terrainBuffer.size());
+    m_terrainVBO = meshData->vbo;
+    //vert data is uploaded to vbo via update()
+
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
 
     //launch the thread - wants update is initially true
@@ -186,8 +247,11 @@ void TerrainBuilder::update(std::size_t holeIndex)
         m_billboardEntities[(holeIndex + 1) % 2].getComponent<cro::Callback>().setUserData<std::pair<float, cro::Entity>>(-MaxHeight, m_billboardEntities[holeIndex % 2]);
         m_billboardEntities[(holeIndex + 1) % 2].getComponent<cro::Callback>().active = true;
 
-        //TODO upload terrain data
-
+        //upload terrain data
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_terrainVBO));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_STATIC_DRAW));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+        //TODO trigger morph animation
 
 
         //signal to the thread we want to update the buffers
@@ -242,6 +306,11 @@ void TerrainBuilder::threadFunc()
 
 
                 //TODO update vertex data for scrub terrain mesh
+                //for each vert copy the target to the current (as this is where we should be)
+                //then update the target with the new map height at that position
+                //reset the transition uniform
+
+                //TODO include normal calc in here
             }
 
             m_wantsUpdate = false;

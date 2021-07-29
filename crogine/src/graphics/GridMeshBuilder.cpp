@@ -92,19 +92,19 @@ Mesh::Data GridMeshBuilder::build() const
     {
         if (y > 0) 
         {
-            indices.push_back(y * yCount);
+            indices.push_back(y * xCount);
         }
 
         for (auto x = 0u; x < xCount; x++)
         {
-            indices.push_back(((y + 1) * yCount) + x);
-            indices.push_back((y * yCount) + x);
+            indices.push_back(((y + 1) * xCount) + x);
+            indices.push_back((y * xCount) + x);
             
         }
 
         if (y < yCount - 2)
         {
-            indices.push_back(((y + 1) * yCount) + (xCount - 1));
+            indices.push_back(((y + 1) * xCount) + (xCount - 1));
         }
     }
 
