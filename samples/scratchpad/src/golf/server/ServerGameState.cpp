@@ -328,7 +328,7 @@ void GameState::setNextPlayer()
     ScoreUpdate su;
     su.client = m_playerInfo[0].client;
     su.player = m_playerInfo[0].player;
-    su.score = m_playerInfo[0].score;
+    su.score = m_playerInfo[0].totalScore;
     su.stroke = m_playerInfo[0].holeScore[m_currentHole];
     su.hole = m_currentHole;
     m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -363,13 +363,13 @@ void GameState::setNextHole()
     //broadcast all scores to make sure everyone is up to date
     for (auto& player : m_playerInfo)
     {
-        player.score += player.holeScore[m_currentHole];
+        player.totalScore += player.holeScore[m_currentHole];
 
         ScoreUpdate su;
         su.client = player.client;
         su.player = player.player;
         su.hole = m_currentHole;
-        su.score = player.score;
+        su.score = player.totalScore;
         su.stroke = player.holeScore[m_currentHole];
     }
 
@@ -649,7 +649,14 @@ void GameState::doServerCommand(const cro::NetEvent& evt)
     {
     default: break;
     case ServerCommand::NextHole:
-
+        for (auto& p : m_playerInfo)
+        {
+            p.position = m_holeData[m_currentHole].pin;
+            p.distanceToHole = 0.f;
+            p.holeScore[m_currentHole] = MaxStrokes;
+            p.totalScore += MaxStrokes;
+        }
+        setNextPlayer();
         break;
     case ServerCommand::NextPlayer:
         //this fakes the ball getting closer to the hole

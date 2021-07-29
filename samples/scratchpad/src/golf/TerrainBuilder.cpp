@@ -33,6 +33,8 @@ source distribution.
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/Model.hpp>
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -56,6 +58,39 @@ namespace
     constexpr float PixelPerMetre = 32.f; //used for scaling billboards
 
     constexpr float MaxHeight = 9.f;
+
+    //callback for swapping shrub ents
+    struct ShrubTransition final
+    {
+        void operator()(cro::Entity e, float dt)
+        {
+            auto [dest, other] = e.getComponent<cro::Callback>().getUserData<std::pair<float, cro::Entity>>();
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+            auto diff = dest - pos.y;
+
+            constexpr float Speed = 5.f;
+
+            pos.y += diff * Speed * dt;
+            pos.y = std::min(0.f, std::max(-MaxHeight, pos.y));
+
+            e.getComponent<cro::Transform>().setPosition(pos);
+
+            if (std::abs(diff) < 0.001f)
+            {
+                pos.y = dest;
+                e.getComponent<cro::Transform>().setPosition(pos);
+                e.getComponent<cro::Callback>().active = false;
+
+                if (pos.y < 0)
+                {
+                    e.getComponent<cro::Model>().setHidden(true);
+
+                    other.getComponent<cro::Callback>().active = true;
+                    other.getComponent<cro::Model>().setHidden(false);
+                }
+            }
+        }
+    };
 }
 
 TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
@@ -87,7 +122,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     for (auto& entity : m_billboardEntities)
     {
         entity = scene.createEntity();
-        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -MaxHeight, 0.f });
         modelDef.createModel(entity);
         //if the model def failed to load for some reason this will be
         //missing, so we'll add it here just to stop the thread exploding
@@ -95,6 +130,12 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         if (!entity.hasComponent<cro::BillboardCollection>())
         {
             entity.addComponent<cro::BillboardCollection>();
+        }
+
+        if (entity.hasComponent<cro::Model>())
+        {
+            entity.getComponent<cro::Model>().setHidden(true);
+            entity.addComponent<cro::Callback>().function = ShrubTransition();
         }
     }
 
@@ -140,10 +181,12 @@ void TerrainBuilder::update(std::size_t holeIndex)
     {
         //update the billboard data
         m_billboardEntities[holeIndex % 2].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
-        m_billboardEntities[holeIndex % 2].getComponent<cro::Transform>().setPosition(glm::vec3(0.f));
+        m_billboardEntities[holeIndex % 2].getComponent<cro::Callback>().setUserData<std::pair<float, cro::Entity>>(0.f, cro::Entity());
+        //m_billboardEntities[holeIndex % 2].getComponent<cro::Callback>().active = true;
+        //m_billboardEntities[holeIndex % 2].getComponent<cro::Model>().setHidden(false);
 
-        //TODO set the other ent to hide - saves on drawing something not visible
-        m_billboardEntities[(holeIndex + 1) % 2].getComponent<cro::Transform>().setPosition(glm::vec3(0.f, -100.f, 0.f));
+        m_billboardEntities[(holeIndex + 1) % 2].getComponent<cro::Callback>().setUserData<std::pair<float, cro::Entity>>(-MaxHeight, m_billboardEntities[holeIndex % 2]);
+        m_billboardEntities[(holeIndex + 1) % 2].getComponent<cro::Callback>().active = true;
 
         //TODO swap the height data buffers and upload to scene
 

@@ -48,7 +48,7 @@ struct PlayerStatus final : public ActivePlayer
     cro::Entity ballEntity;
     float distanceToHole = 0.f; //used for sorting
     std::vector<std::uint8_t> holeScore;
-    std::uint8_t score = 0;
+    std::uint8_t totalScore = 0;
 };
 
 struct ActorInfo final
