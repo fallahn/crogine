@@ -121,51 +121,6 @@ TerrainBuilder::~TerrainBuilder()
 //public
 void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scene)
 {
-    //create billboard entities
-    cro::ModelDefinition modelDef(resources);
-    modelDef.loadFromFile("assets/golf/models/shrubbery.cmt");
-
-    for (auto& entity : m_billboardEntities)
-    {
-        entity = scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, -MaxHeight, 0.f });
-        modelDef.createModel(entity);
-        //if the model def failed to load for some reason this will be
-        //missing, so we'll add it here just to stop the thread exploding
-        //if it can't find the component
-        if (!entity.hasComponent<cro::BillboardCollection>())
-        {
-            entity.addComponent<cro::BillboardCollection>();
-        }
-
-        if (entity.hasComponent<cro::Model>())
-        {
-            entity.getComponent<cro::Model>().setHidden(true);
-            entity.addComponent<cro::Callback>().function = ShrubTransition();
-        }
-    }
-
-    //load the billboard rects from a sprite sheet and convert to templates
-    const auto convertSprite = [](const cro::Sprite& sprite)
-    {
-        auto bounds = sprite.getTextureRect();
-        auto texSize = glm::vec2(sprite.getTexture()->getSize());
-
-        cro::Billboard bb;
-        bb.size = { bounds.width / PixelPerMetre, bounds.height / PixelPerMetre };
-        bb.textureRect = { bounds.left / texSize.x, bounds.bottom / texSize.y, bounds.width / texSize.x, bounds.height / texSize.y };
-        bb.origin = { bb.size.x / 2.f, 0.f };
-        return bb;
-    };
-    
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", resources.textures);
-    m_billboardTemplates[BillboardID::Grass01] = convertSprite(spriteSheet.getSprite("grass01"));
-    m_billboardTemplates[BillboardID::Pine] = convertSprite(spriteSheet.getSprite("pine"));
-    m_billboardTemplates[BillboardID::Willow] = convertSprite(spriteSheet.getSprite("willow"));
-    m_billboardTemplates[BillboardID::Birch] = convertSprite(spriteSheet.getSprite("birch"));
-
-
     //create a mesh for the height map - this is actually one quad short
     //top and left - but hey you didn't notice until you read this did you? :)
     for (auto i = 0u; i < m_terrainBuffer.size(); ++i)
@@ -223,7 +178,58 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
+    //parent the shrubbery so they always stay the same relative height
+    auto meshEnt = entity;
 
+
+    //create billboard entities
+    cro::ModelDefinition modelDef(resources);
+    modelDef.loadFromFile("assets/golf/models/shrubbery.cmt");
+
+    for (auto& entity : m_billboardEntities)
+    {
+        entity = scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -MaxHeight, 0.f });
+        modelDef.createModel(entity);
+        //if the model def failed to load for some reason this will be
+        //missing, so we'll add it here just to stop the thread exploding
+        //if it can't find the component
+        if (!entity.hasComponent<cro::BillboardCollection>())
+        {
+            entity.addComponent<cro::BillboardCollection>();
+        }
+
+        if (entity.hasComponent<cro::Model>())
+        {
+            entity.getComponent<cro::Model>().setHidden(true);
+            entity.addComponent<cro::Callback>().function = ShrubTransition();
+
+            meshEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        }
+    }
+
+    //load the billboard rects from a sprite sheet and convert to templates
+    const auto convertSprite = [](const cro::Sprite& sprite)
+    {
+        auto bounds = sprite.getTextureRect();
+        auto texSize = glm::vec2(sprite.getTexture()->getSize());
+
+        cro::Billboard bb;
+        bb.size = { bounds.width / PixelPerMetre, bounds.height / PixelPerMetre };
+        bb.textureRect = { bounds.left / texSize.x, bounds.bottom / texSize.y, bounds.width / texSize.x, bounds.height / texSize.y };
+        bb.origin = { bb.size.x / 2.f, 0.f };
+        return bb;
+    };
+    
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", resources.textures);
+    m_billboardTemplates[BillboardID::Grass01] = convertSprite(spriteSheet.getSprite("grass01"));
+    m_billboardTemplates[BillboardID::Pine] = convertSprite(spriteSheet.getSprite("pine"));
+    m_billboardTemplates[BillboardID::Willow] = convertSprite(spriteSheet.getSprite("willow"));
+    m_billboardTemplates[BillboardID::Birch] = convertSprite(spriteSheet.getSprite("birch"));
+
+
+ 
     //launch the thread - wants update is initially true
     //so we should create the first layout right away
     m_wantsUpdate = m_holeData.size() > m_currentHole;
@@ -251,7 +257,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_terrainVBO));
         glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-        //TODO trigger morph animation
+        //TODO trigger morph animation/reset morph anim
 
 
         //signal to the thread we want to update the buffers
@@ -283,7 +289,7 @@ void TerrainBuilder::threadFunc()
                 {
                     auto [terrain, height] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Rough
-                        || terrain == TerrainID::Scrub)
+                        /*|| terrain == TerrainID::Scrub*/)
                     {
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[BillboardID::Grass01]);
                         bb.position = { x, height, -y };
@@ -308,7 +314,6 @@ void TerrainBuilder::threadFunc()
                 //TODO update vertex data for scrub terrain mesh
                 //for each vert copy the target to the current (as this is where we should be)
                 //then update the target with the new map height at that position
-                //reset the transition uniform
 
                 //TODO include normal calc in here
             }

@@ -649,14 +649,17 @@ void GameState::doServerCommand(const cro::NetEvent& evt)
     {
     default: break;
     case ServerCommand::NextHole:
-        for (auto& p : m_playerInfo)
+        if (m_currentHole < m_holeData.size() - 1)
         {
-            p.position = m_holeData[m_currentHole].pin;
-            p.distanceToHole = 0.f;
-            p.holeScore[m_currentHole] = MaxStrokes;
-            p.totalScore += MaxStrokes;
+            for (auto& p : m_playerInfo)
+            {
+                p.position = m_holeData[m_currentHole].pin;
+                p.distanceToHole = 0.f;
+                p.holeScore[m_currentHole] = MaxStrokes;
+                p.totalScore += MaxStrokes;
+            }
+            setNextPlayer();
         }
-        setNextPlayer();
         break;
     case ServerCommand::NextPlayer:
         //this fakes the ball getting closer to the hole

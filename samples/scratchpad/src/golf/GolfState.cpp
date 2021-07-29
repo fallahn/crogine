@@ -995,7 +995,54 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     glm::vec2 size(m_currentMap.getSize());
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setOrigin({ -size.x / 2.f, 0.f, size.y / 2.f });
 
-    setCameraPosition(m_holeData[m_currentHole].tee, CameraStrokeHeight, CameraStrokeOffset);
+
+    //creates an entity which calls setCamPosition() in an
+    //interpolated manner until we reach the dest,
+    //at which point the ent destroys itself
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(m_currentPlayer.position);
+    entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().setUserData<ActivePlayer>(playerData);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto currPos = e.getComponent<cro::Transform>().getPosition();
+        auto travel = m_holeData[m_currentHole].tee - currPos;
+
+        //TODO we may also have to interp this from the prev pin to the newe one
+        auto pinDir = m_holeData[m_currentHole].pin - currPos;
+        m_camRotation = std::atan2(-pinDir.z, pinDir.x);
+
+        auto targetInfo = m_gameScene.getActiveCamera().getComponent<TargetInfo>();
+
+        if (glm::length2(travel) < 0.005f)
+        {
+            //we're there
+            setCameraPosition(m_holeData[m_currentHole].tee, targetInfo.targetHeight, targetInfo.targetOffset);
+
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+        else
+        {
+            auto height = targetInfo.targetHeight - targetInfo.currentHeight;
+            auto offset = targetInfo.targetOffset - targetInfo.currentOffset;
+
+            static constexpr float Speed = 4.f;
+            e.getComponent<cro::Transform>().move(travel * Speed * dt);
+            setCameraPosition(e.getComponent<cro::Transform>().getPosition(),
+                targetInfo.currentHeight + (height * Speed * dt),
+                targetInfo.currentOffset + (offset * Speed * dt));
+        }
+    };
+
+    //make sure we have the correct target position
+    m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetHeight = CameraStrokeHeight;
+    m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetOffset = CameraStrokeOffset;
+
+
+
+
 
     m_currentPlayer.position = m_holeData[m_currentHole].tee;
 
@@ -1008,6 +1055,8 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
     //TODO some sort of 'loading' effect of the terrain - maybe a shader on the buffer sprite?
+
+
 }
 
 void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)
