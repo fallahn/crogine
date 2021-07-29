@@ -182,13 +182,11 @@ void TerrainBuilder::update(std::size_t holeIndex)
         //update the billboard data
         m_billboardEntities[holeIndex % 2].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
         m_billboardEntities[holeIndex % 2].getComponent<cro::Callback>().setUserData<std::pair<float, cro::Entity>>(0.f, cro::Entity());
-        //m_billboardEntities[holeIndex % 2].getComponent<cro::Callback>().active = true;
-        //m_billboardEntities[holeIndex % 2].getComponent<cro::Model>().setHidden(false);
 
         m_billboardEntities[(holeIndex + 1) % 2].getComponent<cro::Callback>().setUserData<std::pair<float, cro::Entity>>(-MaxHeight, m_billboardEntities[holeIndex % 2]);
         m_billboardEntities[(holeIndex + 1) % 2].getComponent<cro::Callback>().active = true;
 
-        //TODO swap the height data buffers and upload to scene
+        //TODO upload terrain data
 
 
 
