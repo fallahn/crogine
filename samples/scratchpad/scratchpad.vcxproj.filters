@@ -236,9 +236,6 @@
     <ClInclude Include="src\golf\ClientPacketData.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
-    <ClInclude Include="src\golf\MenuConsts.hpp">
-      <Filter>Header Files\golf\client\states</Filter>
-    </ClInclude>
     <ClInclude Include="src\golf\GolfMenuState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
@@ -298,6 +295,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\PoissonDisk.hpp">
       <Filter>Header Files\golf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\MenuConsts.hpp">
+      <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

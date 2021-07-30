@@ -178,6 +178,7 @@ private:
     };
     float m_camRotation; //used to offset the rotation of the wind indicator
     bool m_roundEnded;
+    glm::vec2 m_viewScale;
 
     void buildUI();
     void showCountdown(std::uint8_t);

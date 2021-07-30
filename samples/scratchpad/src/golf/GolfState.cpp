@@ -98,7 +98,7 @@ namespace
 
         cro::Entity waterPlane;
     };
-    constexpr float WaterLevel = -0.05f;
+    constexpr float WaterLevel = -0.02f;
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -111,7 +111,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_currentHole   (0),
     m_terrainBuilder(m_holeData),
     m_camRotation   (0.f),
-    m_roundEnded    (false)
+    m_roundEnded    (false),
+    m_viewScale     (1.f)
 {
     context.mainWindow.loadResources([this]() {
         loadAssets();
@@ -513,6 +514,11 @@ void GolfState::loadAssets()
         else if (name == "skybox")
         {
             m_gameScene.setCubemap(prop.getValue<std::string>());
+
+            //disable smoothing for super-pixels
+            glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_gameScene.getCubemap().textureID));
+            glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+            glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
         }
     }
 
@@ -808,6 +814,8 @@ void GolfState::buildScene()
 
     m_terrainBuilder.create(m_resources, m_gameScene);
 
+    m_currentPlayer.position = m_holeData[m_currentHole].tee; //prevents the initial camera movement
+
     setCurrentHole(0);
     buildUI(); //put this here because we don't want to do this if the map data didn't load
 
@@ -1002,7 +1010,6 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(m_currentPlayer.position);
     entity.addComponent<cro::Callback>().active = true;
-    //entity.getComponent<cro::Callback>().setUserData<ActivePlayer>(playerData);
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
@@ -1041,9 +1048,6 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetOffset = CameraStrokeOffset;
 
 
-
-
-
     m_currentPlayer.position = m_holeData[m_currentHole].tee;
 
     cro::Command cmd;
@@ -1066,8 +1070,6 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     static constexpr float DistDiff = MaxDist - MinDist;
     float heightMultiplier = 1.f; //goes to -1.f at max dist
 
-    auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({ position.x, height, position.z });
     auto target = m_holeData[m_currentHole].pin - position;
 
     auto dist = glm::length(target);
@@ -1076,6 +1078,10 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
     target *= 1.f - ((1.f - 0.08f) * distNorm);
     target += position;
+
+
+    auto camEnt = m_gameScene.getActiveCamera();
+    camEnt.getComponent<cro::Transform>().setPosition({ position.x, height, position.z });
 
     auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), glm::vec3(target.x, height * heightMultiplier, target.z), cro::Transform::Y_AXIS);
     camEnt.getComponent<cro::Transform>().setRotation(glm::inverse(lookat));
@@ -1142,9 +1148,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
     
     cmd.targetFlags = CommandID::UI::Root;
-    cmd.action = [localPlayer](cro::Entity e, float)
+    cmd.action = [&,localPlayer](cro::Entity e, float)
     {
-        auto uiPos = localPlayer ? glm::vec2(0.f) : UIHiddenPosition;
+        float sizeX = static_cast<float>(cro::App::getWindow().getSize().x);
+        sizeX /= m_viewScale.x;
+
+        auto uiPos = localPlayer ? glm::vec2(sizeX / 2.f, UIBarHeight / 2.f) : UIHiddenPosition;
         e.getComponent<cro::Transform>().setPosition(uiPos);
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);

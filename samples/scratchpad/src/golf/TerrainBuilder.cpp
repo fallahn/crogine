@@ -58,10 +58,11 @@ namespace
     constexpr std::array MaxBounds = { 320.f, 200.f };
 
     constexpr glm::uvec2 Size(320, 200);
-    constexpr float PixelPerMetre = 32.f; //used for scaling billboards
+    constexpr float PixelPerMetre = 32.f; //64.f; //used for scaling billboards
 
     constexpr float MaxHeight = 9.f;
     constexpr std::size_t QuadsPerMetre = 2;
+    constexpr float TerrainOffset = -0.05f;
 
     //callback for swapping shrub ents
     struct ShrubTransition final
@@ -164,7 +165,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_TRIANGLE_STRIP));
 
     auto entity = scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, -0.01f, 0.f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, TerrainOffset, 0.f });
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
 
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
@@ -288,8 +289,7 @@ void TerrainBuilder::threadFunc()
                 for (auto [x, y] : grass)
                 {
                     auto [terrain, height] = readMap(mapImage, x, y);
-                    if (terrain == TerrainID::Rough
-                        /*|| terrain == TerrainID::Scrub*/)
+                    if (terrain == TerrainID::Rough)
                     {
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[BillboardID::Grass01]);
                         bb.position = { x, height, -y };
@@ -311,11 +311,23 @@ void TerrainBuilder::threadFunc()
                 
 
 
-                //TODO update vertex data for scrub terrain mesh
-                //for each vert copy the target to the current (as this is where we should be)
-                //then update the target with the new map height at that position
+                //update vertex data for scrub terrain mesh
+                for (auto i = 0u; i < m_terrainBuffer.size(); ++i)
+                {
+                    //for each vert copy the target to the current (as this is where we should be)
+                    //then update the target with the new map height at that position
+                    std::size_t x = i % (Size.x / QuadsPerMetre);
+                    std::size_t y = i / (Size.x / QuadsPerMetre);
 
-                //TODO include normal calc in here
+                    auto height = readMap(mapImage, x, y).second;
+                    /*m_terrainBuffer[i].position = m_terrainBuffer[i].targetPosition;
+                    m_terrainBuffer[i].normal = m_terrainBuffer[i].targetNormal;
+                    m_terrainBuffer[i].targetPosition.y = height;*/
+
+                    //TODO include normal calc in here
+
+                    //m_terrainBuffer[i].position.y = height;
+                } 
             }
 
             m_wantsUpdate = false;

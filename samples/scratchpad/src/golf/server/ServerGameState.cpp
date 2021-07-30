@@ -50,8 +50,8 @@ using namespace sv;
 
 namespace
 {
-    const std::uint8_t MaxStrokes = 6;
-    const cro::Time TurnTime = cro::seconds(30.f);
+    const std::uint8_t MaxStrokes = 12;
+    const cro::Time TurnTime = cro::seconds(90.f);
 }
 
 GameState::GameState(SharedData& sd)

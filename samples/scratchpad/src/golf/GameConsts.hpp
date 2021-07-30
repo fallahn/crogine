@@ -34,9 +34,9 @@ source distribution.
 
 #include <cstdint>
 
-static constexpr float CameraStrokeHeight = 2.8f;
-static constexpr float CameraPuttHeight = 0.4f;
-static constexpr float CameraStrokeOffset = 5.f;
+static constexpr float CameraStrokeHeight = 2.6f;
+static constexpr float CameraPuttHeight = 0.3f;
+static constexpr float CameraStrokeOffset = 5.1f;
 static constexpr float CameraPuttOffset = 0.8f;
 static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
 
@@ -45,13 +45,3 @@ static constexpr float BallPointSize = 1.4f;
 static constexpr float MaxHook = -0.25f;
 static constexpr float KnotsPerMetre = 1.94384f;
 static constexpr float HoleRadius = 0.053f;
-
-//ui components are laid out as a normalised value
-//relative to the window size.
-struct UIElement final
-{
-    glm::vec2 position = glm::vec2(0.f);
-    float depth = 0.f;
-};
-static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);
-static constexpr glm::vec2 HoleInfoPosition(0.65f, 0.32f);

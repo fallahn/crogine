@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/detail/glm/vec2.hpp>
 
 static const std::uint32_t LargeTextSize = 120;
 static const std::uint32_t MediumTextSize = 50;
@@ -39,3 +40,15 @@ static const cro::Colour TextNormalColour(0.9f, 0.58f, 0.1f);
 static const cro::Colour TextHighlightColour(0.99f, 0.08f, 0.1f);
 static const cro::Colour LeaderboardTextDark(0x1a1e2dff);
 static const cro::Colour LeaderboardTextLight(0xfff8e1ff);
+
+static constexpr float UIBarHeight = 16.f;
+static constexpr float UITextPosV = 12.f;
+
+//ui components are laid out as a normalised value
+//relative to the window size.
+struct UIElement final
+{
+    glm::vec2 position = glm::vec2(0.f);
+    float depth = 0.f;
+};
+static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);
