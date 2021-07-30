@@ -30,6 +30,7 @@ source distribution.
 #include "TerrainBuilder.hpp"
 #include "PoissonDisk.hpp"
 #include "Terrain.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -41,7 +42,10 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 
+#include <crogine/gui/Gui.hpp>
+
 #include <crogine/util/Random.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 #include "../ErrorCheck.hpp"
 
@@ -49,6 +53,8 @@ source distribution.
 
 namespace
 {
+#include "TerrainShader.inl"
+
     //params for poisson disk samples
     constexpr float GrassDensity = 4.7f; //radius for PD sampler
     constexpr float TreeDensity = 3.8f;
@@ -60,8 +66,8 @@ namespace
     constexpr glm::uvec2 Size(320, 200);
     constexpr float PixelPerMetre = 32.f; //64.f; //used for scaling billboards
 
-    constexpr float MaxHeight = 9.f;
-    constexpr std::size_t QuadsPerMetre = 2;
+    constexpr float MaxHeight = 3.5f;
+    constexpr std::uint32_t QuadsPerMetre = 2;
     constexpr float TerrainOffset = -0.05f;
 
     //callback for swapping shrub ents
@@ -96,6 +102,8 @@ namespace
             }
         }
     };
+
+    cro::Entity debugEnt;
 }
 
 TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
@@ -106,7 +114,23 @@ TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
     m_wantsUpdate   (false),
     m_currentHole   (0)
 {
+#ifdef CRO_DEBUG_
+    registerWindow([]() 
+        {
+            if (ImGui::Begin("Terrain"))
+            {
+                auto pos = debugEnt.getComponent<cro::Transform>().getPosition();
+                if (ImGui::SliderFloat("Height", &pos.y, -10.f, 10.f))
+                {
+                    debugEnt.getComponent<cro::Transform>().setPosition(pos);
+                }
 
+                auto visible = debugEnt.getComponent<cro::Model>().isVisible();
+                ImGui::Text("Visible: %s", visible ? "yes" : "no");
+            }
+            ImGui::End();        
+        });
+#endif
 }
 
 TerrainBuilder::~TerrainBuilder()
@@ -157,9 +181,9 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     }
 
 
-    //TODO use a custom material for morphage
-    auto shaderID = resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
-    auto materialID = resources.materials.add(resources.shaders.get(shaderID));
+    //use a custom material for morphage
+    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertex, TerrainFragment);
+    auto materialID = resources.materials.add(resources.shaders.get(ShaderID::Terrain));
     auto flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal |
         cro::VertexProperty::Tangent | cro::VertexProperty::Bitangent; //use tan/bitan slots to store target position/normal
     auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_TRIANGLE_STRIP));
@@ -170,6 +194,10 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
     meshData->vertexCount = static_cast<std::uint32_t>(m_terrainBuffer.size());
+    meshData->boundingBox[0] = glm::vec3(0.f, -10.f, 0.f);
+    meshData->boundingBox[1] = glm::vec3(320.f, 10.f, -200.f);
+    meshData->boundingSphere.centre = { 160.f, 0.f, -100.f };
+    meshData->boundingSphere.radius = glm::length(meshData->boundingSphere.centre);
     m_terrainVBO = meshData->vbo;
     //vert data is uploaded to vbo via update()
 
@@ -181,7 +209,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     //parent the shrubbery so they always stay the same relative height
     auto meshEnt = entity;
-
+    debugEnt = entity;
 
     //create billboard entities
     cro::ModelDefinition modelDef(resources);
@@ -289,7 +317,8 @@ void TerrainBuilder::threadFunc()
                 for (auto [x, y] : grass)
                 {
                     auto [terrain, height] = readMap(mapImage, x, y);
-                    if (terrain == TerrainID::Rough)
+                    if (terrain == TerrainID::Rough
+                        && height > WaterHeight)
                     {
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[BillboardID::Grass01]);
                         bb.position = { x, height, -y };
@@ -299,7 +328,8 @@ void TerrainBuilder::threadFunc()
                 for (auto [x, y] : trees)
                 {
                     auto [terrain, height] = readMap(mapImage, x, y);
-                    if (terrain == TerrainID::Scrub)
+                    if (terrain == TerrainID::Scrub
+                        && height > WaterHeight)
                     {
                         float scale = static_cast<float>(cro::Util::Random::value(9, 11)) / 10.f;
 
@@ -309,24 +339,41 @@ void TerrainBuilder::threadFunc()
                     }
                 }
                 
+                const auto heightAt = [&](std::uint32_t x, std::uint32_t y)
+                {
+                    x = std::min(Size.x, std::max(0u, x));
+                    y = std::min(Size.y, std::max(0u, y));
 
+                    auto index = y * Size.x + x;
+                    index *= 4;
+                    return (static_cast<float>(mapImage.getPixelData()[index + 1]) / 255.f) * MaxHeight;
+                };
 
                 //update vertex data for scrub terrain mesh
                 for (auto i = 0u; i < m_terrainBuffer.size(); ++i)
                 {
                     //for each vert copy the target to the current (as this is where we should be)
                     //then update the target with the new map height at that position
-                    std::size_t x = i % (Size.x / QuadsPerMetre);
-                    std::size_t y = i / (Size.x / QuadsPerMetre);
+                    std::uint32_t x = i % (Size.x / QuadsPerMetre) * QuadsPerMetre;
+                    std::uint32_t y = i / (Size.x / QuadsPerMetre) * QuadsPerMetre;
 
-                    auto height = readMap(mapImage, x, y).second;
+                    auto height = heightAt(x, y);
+
+                    //normal calc
+                    auto l = heightAt(x - 1, y);
+                    auto r = heightAt(x + 1, y);
+                    auto u = heightAt(x, y + 1);
+                    auto d = heightAt(x, y - 1);
+
+                    glm::vec3 normal = { l - r, d - u, 2.f };
+                    normal = glm::normalize(normal);
+
+                    m_terrainBuffer[i].position.y = height;
+                    m_terrainBuffer[i].normal = normal;
+
                     /*m_terrainBuffer[i].position = m_terrainBuffer[i].targetPosition;
                     m_terrainBuffer[i].normal = m_terrainBuffer[i].targetNormal;
                     m_terrainBuffer[i].targetPosition.y = height;*/
-
-                    //TODO include normal calc in here
-
-                    //m_terrainBuffer[i].position.y = height;
                 } 
             }
 

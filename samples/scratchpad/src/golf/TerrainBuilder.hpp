@@ -31,6 +31,7 @@ source distribution.
 
 #include "HoleData.hpp"
 
+#include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/components/BillboardCollection.hpp>
 
@@ -47,7 +48,7 @@ namespace cro
     class Image;
 }
 
-class TerrainBuilder final
+class TerrainBuilder final : public cro::GuiClient
 {
 public:
     explicit TerrainBuilder(const std::vector<HoleData>&);

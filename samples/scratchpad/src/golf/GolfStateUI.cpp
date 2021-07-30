@@ -313,7 +313,7 @@ void GolfState::buildUI()
         infoEnt.getComponent<cro::Drawable2D>().updateLocalBounds();
         infoEnt.getComponent<cro::Transform>().setScale(m_viewScale);
 
-        windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(40.f, uiSize.y - 80.f));
+        windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(40.f, /*uiSize.y - 80.f*/26.f));
 
         //send command to UIElements and reposition
         cro::Command cmd;

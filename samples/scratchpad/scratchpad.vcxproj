@@ -301,6 +301,7 @@
     <ClInclude Include="src\StateIDs.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\golf\TerrainShader.inl" />
     <None Include="src\golf\WaterShader.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

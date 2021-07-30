@@ -45,3 +45,43 @@ static constexpr float BallPointSize = 1.4f;
 static constexpr float MaxHook = -0.25f;
 static constexpr float KnotsPerMetre = 1.94384f;
 static constexpr float HoleRadius = 0.053f;
+
+struct ShaderID final
+{
+    enum
+    {
+        Water = 100,
+        Terrain
+    };
+};
+
+//TODO use this for interpolating slop height on a height map
+static inline float readHeightmap(glm::vec3 position, const std::vector<float>& heightmap)
+{
+    auto lerp = [](float a, float b, float t) constexpr
+    {
+        return a + t * (b - a);
+    };
+
+    //const auto getHeightAt = [&](std::int32_t x, std::int32_t y)
+    //{
+    //    //heightmap is flipped relative to the world innit
+    //    x = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, x));
+    //    y = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, y));
+    //    return heightmap[(IslandTileCount - y) * IslandTileCount + x];
+    //};
+
+    //float posX = position.x / TileSize;
+    //float posY = position.z / TileSize;
+
+    //float intpart = 0.f;
+    //auto modX = std::modf(posX, &intpart) / TileSize;
+    //auto modY = std::modf(posY, &intpart) / TileSize; //normalise this for lerpitude
+
+    //std::int32_t x = static_cast<std::int32_t>(posX);
+    //std::int32_t y = static_cast<std::int32_t>(posY);
+
+    //float topLine = lerp(getHeightAt(x, y), getHeightAt(x + 1, y), modX);
+    //float botLine = lerp(getHeightAt(x, y + 1), getHeightAt(x + 1, y + 1), modX);
+    //return lerp(topLine, botLine, modY) * IslandHeight;
+}

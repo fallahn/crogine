@@ -304,5 +304,8 @@
     <None Include="src\golf\WaterShader.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
+    <None Include="src\golf\TerrainShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

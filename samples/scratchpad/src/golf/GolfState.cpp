@@ -397,11 +397,11 @@ void GolfState::render()
     m_renderTexture.display();
 
 #ifdef CRO_DEBUG_
-    auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
+    /*auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
     m_debugTexture.clear(cro::Colour::Magenta);
     m_gameScene.render(m_debugTexture);
     m_debugTexture.display();
-    m_gameScene.setActiveCamera(oldCam);
+    m_gameScene.setActiveCamera(oldCam);*/
 #endif
 
     m_uiScene.render(cro::App::getWindow());
@@ -637,13 +637,12 @@ void GolfState::loadAssets()
     m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]).blendMode = cro::Material::BlendMode::Alpha;
 
-    auto waterShaderID = 1234;
-    m_resources.shaders.loadFromString(waterShaderID, WaterVertex, WaterFragment);
-    m_materialIDs[MaterialID::Water] = m_resources.materials.add(m_resources.shaders.get(waterShaderID));
+    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
+    m_materialIDs[MaterialID::Water] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Water));
 
 
-    m_waterShader.shaderID = m_resources.shaders.get(waterShaderID).getGLHandle();
-    m_waterShader.timeUniform = m_resources.shaders.get(waterShaderID).getUniformMap().at("u_time");
+    m_waterShader.shaderID = m_resources.shaders.get(ShaderID::Water).getGLHandle();
+    m_waterShader.timeUniform = m_resources.shaders.get(ShaderID::Water).getUniformMap().at("u_time");
 #ifdef CRO_DEBUG_
     m_debugTexture.create(320, 200);
 #endif
@@ -820,6 +819,11 @@ void GolfState::buildScene()
     buildUI(); //put this here because we don't want to do this if the map data didn't load
 
 
+    auto sunEnt = m_gameScene.getSunlight();
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.797f);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.72f);
+
+
 #ifdef CRO_DEBUG_
     setupDebug();
 #endif
@@ -857,6 +861,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity = m_gameScene.createEntity();
     shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
     m_modelDefs[ModelID::BallShadow]->createModel(entity);
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(1.1f));
 
     //adding a ball model means we see something a bit more reasonable when close up
     entity = m_gameScene.createEntity();
