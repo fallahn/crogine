@@ -272,7 +272,7 @@ void BatcatState::createScene()
     //billboard ent
     cro::Billboard board;
     board.size = { 2.f, 5.f };
-    board.colour = cro::Colour::Green;
+    //board.colour = cro::Colour::Green;
 
     auto bbEnt = m_scene.createEntity();
     bbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 6.f });

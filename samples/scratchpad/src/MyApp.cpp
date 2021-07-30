@@ -107,6 +107,7 @@ bool MyApp::initialise()
 
 #ifdef CRO_DEBUG_
     m_stateStack.pushState(States::Golf::Menu);
+    //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
 #endif

@@ -46,6 +46,7 @@ namespace cro::Shaders::Billboard
         uniform mat4 u_viewProjectionMatrix;
 
         uniform vec4 u_clipPlane;
+        uniform vec3 u_cameraWorldPosition;
 
         #if defined (LOCK_SCALE)
         uniform vec2 u_screenSize;
@@ -112,6 +113,9 @@ namespace cro::Shaders::Billboard
 
             #if defined (VERTEX_COLOUR)
                 v_colour = a_colour;
+                const float fadeDistance = 12.0; //TODO make this a uniform
+                v_colour.a = clamp(pow(length(position - u_cameraWorldPosition) / fadeDistance, 5.0), 0.0, 1.0);
+
             #endif
             #if defined (TEXTURED)
                 v_texCoord0 = a_texCoord0;

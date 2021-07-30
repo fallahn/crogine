@@ -388,6 +388,11 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool useDeferredShad
             flags |= ShaderResource::BuiltInFlags::LockScale;
         }
 
+        if (m_billboard)
+        {
+            flags |= ShaderResource::BuiltInFlags::VertexColour;
+        }
+
         //load the material then check properties again for material properties
         auto shaderID = m_resources.shaders.loadBuiltIn(shaderType, flags);
         auto matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
