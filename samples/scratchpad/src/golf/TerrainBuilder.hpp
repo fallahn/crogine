@@ -89,7 +89,7 @@ private:
     struct Vertex final
     {
         glm::vec3 position = glm::vec3(0.f);
-        glm::vec4 colour = glm::vec4(1.f);
+        glm::vec4 colour = glm::vec4(0.1f, 0.117f, 0.176f, 1.f);
         glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
 
         //these actually get attached to tan/bitan attribs in the shader
@@ -98,12 +98,19 @@ private:
         glm::vec3 targetNormal = glm::vec3(0.f, 1.f, 0.f);
     };
     std::vector<Vertex> m_terrainBuffer;
-    std::uint32_t m_terrainVBO;
+
+    struct TerrainProperties final
+    {
+        std::uint32_t vbo = 0;
+        std::uint32_t shaderID = 0;
+        std::int32_t morphUniform = -1;
+        float morphTime = 0.f;
+    }m_terrainProperties;
+    cro::Entity m_terrainEntity;
 
     std::atomic_bool m_threadRunning;
     std::atomic_bool m_wantsUpdate;
     std::unique_ptr<std::thread> m_thread;
 
     void threadFunc();
-    std::pair<std::uint8_t, float> readMap(const cro::Image&, float x, float y) const;
 };

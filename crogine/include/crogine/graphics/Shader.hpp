@@ -96,6 +96,12 @@ namespace cro
         */
         const std::unordered_map<std::string, std::int32_t>& getUniformMap() const;
 
+        /*!
+        \brief Returns the uniform ID of the given string if it exists, else returns -1
+        \param uniformName A string containing the name of the requested uniform
+        */
+        std::int32_t getUniformID(const std::string& uniformName) const;
+
     private:
         std::uint32_t m_handle;
         std::array<std::int32_t, Mesh::Attribute::Total> m_attribMap;

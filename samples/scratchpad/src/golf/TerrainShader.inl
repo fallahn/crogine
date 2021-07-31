@@ -43,16 +43,27 @@ static const std::string TerrainVertex = R"(
     uniform mat4 u_viewMatrix;
     uniform mat4 u_viewProjectionMatrix;
 
+    uniform vec4 u_clipPlane;
+    uniform float u_morphTime;
+
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec4 v_colour;
 
+    vec3 lerp(vec3 a, vec3 b, float t)
+    {
+        return a + ((b - a) * t);
+    }
+
     void main()
     {
-        vec4 position = u_worldMatrix * a_position;
+        vec4 position = u_worldMatrix * vec4(lerp(a_position.xyz, a_tangent, u_morphTime), 1.0);
         gl_Position = u_viewProjectionMatrix * position;
 
-        v_normal = u_normalMatrix * a_normal;
+        //this should be a slerp really but lerp is good enough for low spec shenanigans
+        v_normal = u_normalMatrix * lerp(a_normal, a_bitangent, u_morphTime);
         v_colour = a_colour;
+
+        gl_ClipDistance[0] = dot(position, u_clipPlane);
     })";
 
 static const std::string TerrainFragment = R"(

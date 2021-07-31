@@ -29,14 +29,17 @@ source distribution.
 
 #pragma once
 
+#include "Terrain.hpp"
+
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/graphics/Image.hpp>
 #include <crogine/util/Constants.hpp>
 
 #include <cstdint>
 
-static constexpr float CameraStrokeHeight = 2.6f;
+static constexpr float CameraStrokeHeight = 3.2f;// 2.6f;
 static constexpr float CameraPuttHeight = 0.3f;
-static constexpr float CameraStrokeOffset = 5.1f;
+static constexpr float CameraStrokeOffset = 7.f;// 5.1f;
 static constexpr float CameraPuttOffset = 0.8f;
 static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
 
@@ -46,6 +49,10 @@ static constexpr float MaxHook = -0.25f;
 static constexpr float KnotsPerMetre = 1.94384f;
 static constexpr float HoleRadius = 0.053f;
 
+static constexpr float WaterLevel = -0.02f;
+static constexpr float TerrainLevel = WaterLevel - 0.03f;
+static constexpr float MaxTerrainHeight = 3.5f;
+
 struct ShaderID final
 {
     enum
@@ -54,6 +61,37 @@ struct ShaderID final
         Terrain
     };
 };
+
+static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, float px, float py)
+{
+    auto size = img.getSize();
+
+    std::uint32_t x = std::min(size.x, std::max(0u, static_cast<std::uint32_t>(std::floor(px))));
+    std::uint32_t y = std::min(size.y, std::max(0u, static_cast<std::uint32_t>(std::floor(py))));
+
+    std::uint32_t stride = 4;
+    //TODO we should have already asserted the format is RGBA elsewhere...
+    if (img.getFormat() == cro::ImageFormat::RGB)
+    {
+        stride = 3;
+    }
+
+    auto index = (y * size.x + x) * stride;
+
+    std::uint8_t terrain = img.getPixelData()[index] / 10;
+    terrain = std::min(static_cast<std::uint8_t>(TerrainID::Scrub), terrain);
+
+    auto height = static_cast<float>(img.getPixelData()[index + 1]) / 255.f;
+    height *= MaxTerrainHeight;
+
+    switch (terrain)
+    {
+    default:
+        return { terrain, height };
+    case TerrainID::Scrub:
+        return height > -(TerrainLevel - WaterLevel) ? std::make_pair(terrain, height) : std::make_pair(TerrainID::Water, height);
+    }
+}
 
 //TODO use this for interpolating slop height on a height map
 static inline float readHeightmap(glm::vec3 position, const std::vector<float>& heightmap)

@@ -489,7 +489,8 @@ void GolfState::createScoreboard()
     {
         //always centre when visible
 #ifdef CRO_DEBUG_
-        auto pos = UIHiddenPosition;// glm::vec2(cro::App::getWindow().getSize()) / 2.f;
+        //auto pos = UIHiddenPosition;
+        auto pos = glm::vec2(cro::App::getWindow().getSize()) / 2.f;
 #else
         auto pos = glm::vec2(cro::App::getWindow().getSize()) / 2.f;
 #endif

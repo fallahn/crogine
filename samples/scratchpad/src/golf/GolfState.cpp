@@ -98,7 +98,6 @@ namespace
 
         cro::Entity waterPlane;
     };
-    constexpr float WaterLevel = -0.02f;
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -397,11 +396,11 @@ void GolfState::render()
     m_renderTexture.display();
 
 #ifdef CRO_DEBUG_
-    /*auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
+    auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
     m_debugTexture.clear(cro::Colour::Magenta);
     m_gameScene.render(m_debugTexture);
     m_debugTexture.display();
-    m_gameScene.setActiveCamera(oldCam);*/
+    m_gameScene.setActiveCamera(oldCam);
 #endif
 
     m_uiScene.render(cro::App::getWindow());
@@ -861,7 +860,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity = m_gameScene.createEntity();
     shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
     m_modelDefs[ModelID::BallShadow]->createModel(entity);
-    entity.getComponent<cro::Transform>().setScale(glm::vec3(1.1f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));
 
     //adding a ball model means we see something a bit more reasonable when close up
     entity = m_gameScene.createEntity();

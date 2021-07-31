@@ -275,6 +275,15 @@ const std::unordered_map<std::string, std::int32_t>& Shader::getUniformMap() con
     return m_uniformMap;
 }
 
+std::int32_t Shader::getUniformID(const std::string& name) const
+{
+    if (m_uniformMap.count(name) != 0)
+    {
+        return m_uniformMap.at(name);
+    }
+    return - 1;
+}
+
 //private
 bool Shader::fillAttribMap()
 {
