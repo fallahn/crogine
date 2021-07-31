@@ -40,7 +40,6 @@ static const std::string TerrainVertex = R"(
 
     uniform mat3 u_normalMatrix;
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewMatrix;
     uniform mat4 u_viewProjectionMatrix;
 
     uniform vec4 u_clipPlane;
@@ -66,7 +65,32 @@ static const std::string TerrainVertex = R"(
         gl_ClipDistance[0] = dot(position, u_clipPlane);
     })";
 
-static const std::string TerrainFragment = R"(
+static const std::string CelVertex = R"(
+    ATTRIBUTE vec4 a_position;
+    ATTRIBUTE vec4 a_colour;
+    ATTRIBUTE vec3 a_normal;
+
+    uniform mat3 u_normalMatrix;
+    uniform mat4 u_worldMatrix;
+    uniform mat4 u_viewProjectionMatrix;
+
+    uniform vec4 u_clipPlane;
+
+    VARYING_OUT vec3 v_normal;
+    VARYING_OUT vec4 v_colour;
+
+    void main()
+    {
+        vec4 position = u_worldMatrix * a_position;
+        gl_Position = u_viewProjectionMatrix * position;
+
+        v_normal = u_normalMatrix * a_normal;
+        v_colour = a_colour;
+
+        gl_ClipDistance[0] = dot(position, u_clipPlane);
+    })";
+
+static const std::string CelFragment = R"(
     uniform vec3 u_lightDirection;
 
     VARYING_IN vec3 v_normal;
@@ -81,9 +105,10 @@ static const std::string TerrainFragment = R"(
         float amount = dot(normalize(v_normal), normalize(-u_lightDirection));
         vec4 colour = v_colour;
 
-        int index = int(step(0.5, amount) + step(0.75, amount));
+        //int index = int(step(0.5, amount) + step(0.75, amount));
 
-        colour.rgb *= Steps[index];
+        amount = (0.2 * step(0.1, amount)) + 0.8;
+        colour.rgb *= amount;//Steps[index];
 
-        FRAG_OUT = colour;
+        FRAG_OUT = vec4(colour.rgb, 1.0);
     })";

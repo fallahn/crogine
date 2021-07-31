@@ -100,6 +100,7 @@ private:
         {
             WireFrame,
             Water,
+            Cel,
 
             Count
         };

@@ -58,7 +58,8 @@ struct ShaderID final
     enum
     {
         Water = 100,
-        Terrain
+        Terrain,
+        Cel
     };
 };
 

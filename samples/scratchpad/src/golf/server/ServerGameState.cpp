@@ -584,11 +584,12 @@ void GameState::loadNormalMap(HoleData& holeData, const std::string& path)
             auto pixels = img.getPixelData();
             for (auto i = 0u, j = 0u; i < holeData.normalMap.size(); ++i, j += stride)
             {
-                holeData.normalMap[i] = { pixels[j], pixels[j + 2], -pixels[j + 1] };
+                holeData.normalMap[i] = { pixels[j], pixels[j + 2], pixels[j + 1] };
                 holeData.normalMap[i] /= 255.f;
                 holeData.normalMap[i] *= 2.f;
                 holeData.normalMap[i] -= 1.f;
                 holeData.normalMap[i] = glm::normalize(holeData.normalMap[i]);
+                holeData.normalMap[i].z *= -1.f;
             }
         }
     }

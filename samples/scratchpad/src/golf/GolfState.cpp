@@ -82,6 +82,7 @@ source distribution.
 namespace
 {
 #include "WaterShader.inl"
+#include "TerrainShader.inl"
 
     glm::vec3 debugPos = glm::vec3(0.f);
     glm::vec3 ballpos = glm::vec3(0.f);
@@ -436,6 +437,7 @@ void GolfState::loadAssets()
 
     m_resources.fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
 
+
     //ball resources - ball is rendered as a single point
     //at a distance, and as a model when closer
     glCheck(glPointSize(BallPointSize));
@@ -632,6 +634,11 @@ void GolfState::loadAssets()
     //load materials
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
 
+    //cel shaded material
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertex, CelFragment);
+    auto& shader = m_resources.shaders.get(ShaderID::Cel);
+    m_materialIDs[MaterialID::Cel] = m_resources.materials.add(shader);
+
     shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
     m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]).blendMode = cro::Material::BlendMode::Alpha;
@@ -819,8 +826,8 @@ void GolfState::buildScene()
 
 
     auto sunEnt = m_gameScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.797f);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.72f);
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -0.967f);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -1.5f);
 
 
 #ifdef CRO_DEBUG_
@@ -866,6 +873,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
     m_modelDefs[ModelID::Ball]->createModel(entity);
+    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 

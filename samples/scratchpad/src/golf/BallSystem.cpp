@@ -320,7 +320,7 @@ void BallSystem::doCollision(cro::Entity entity)
             ball.velocity *= 0.45f;
 
             //if low bounce start rolling
-            if (ball.velocity.y < 0.01f)
+            if (ball.velocity.y > -0.001f)
             {
                 ball.velocity.y = 0.f;
                 ball.velocity *= 0.5f;

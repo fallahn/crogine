@@ -186,7 +186,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
 
     //use a custom material for morphage
-    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertex, TerrainFragment);
+    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertex, CelFragment);
     const auto& shader = resources.shaders.get(ShaderID::Terrain);
     m_terrainProperties.morphUniform = shader.getUniformID("u_morphTime");
     m_terrainProperties.shaderID = shader.getGLHandle();

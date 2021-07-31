@@ -112,8 +112,8 @@ bool MyApp::initialise()
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Crogine Editor");
 
-    //m_stateStack.pushState(States::WorldEditor);
-    m_stateStack.pushState(States::ModelViewer);
+    m_stateStack.pushState(States::WorldEditor);
+    //m_stateStack.pushState(States::ModelViewer);
     //m_stateStack.pushState(States::ParticleEditor);
     //m_stateStack.pushState(States::LayoutEditor);
 
