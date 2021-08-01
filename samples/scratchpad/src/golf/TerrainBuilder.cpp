@@ -55,8 +55,8 @@ namespace
 #include "TerrainShader.inl"
 
     //params for poisson disk samples
-    constexpr float GrassDensity = 4.7f; //radius for PD sampler
-    constexpr float TreeDensity = 3.8f;
+    constexpr float GrassDensity = 1.7f; //radius for PD sampler
+    constexpr float TreeDensity = 4.8f;
 
     //TODO for grass board we could shrink the area slightly as we prefer trees further away
     constexpr std::array MinBounds = { 0.f, 0.f };
@@ -272,6 +272,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", resources.textures);
     m_billboardTemplates[BillboardID::Grass01] = convertSprite(spriteSheet.getSprite("grass01"));
+    m_billboardTemplates[BillboardID::Grass02] = convertSprite(spriteSheet.getSprite("grass02"));
     m_billboardTemplates[BillboardID::Pine] = convertSprite(spriteSheet.getSprite("pine"));
     m_billboardTemplates[BillboardID::Willow] = convertSprite(spriteSheet.getSprite("willow"));
     m_billboardTemplates[BillboardID::Birch] = convertSprite(spriteSheet.getSprite("birch"));
@@ -342,8 +343,11 @@ void TerrainBuilder::threadFunc()
                     auto [terrain, height] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Rough)
                     {
-                        auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[BillboardID::Grass01]);
+                        float scale = static_cast<float>(cro::Util::Random::value(9, 11)) / 10.f;
+
+                        auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                         bb.position = { x, height, -y };
+                        bb.size *= scale;
                     }
                 }
                 
@@ -354,7 +358,7 @@ void TerrainBuilder::threadFunc()
                     {
                         float scale = static_cast<float>(cro::Util::Random::value(9, 11)) / 10.f;
 
-                        auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Pine, BillboardID::Birch)]);
+                        auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Pine, BillboardID::Willow)]);
                         bb.position = { x, height, -y };
                         bb.size *= scale;
                     }

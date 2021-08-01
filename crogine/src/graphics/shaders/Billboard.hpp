@@ -87,12 +87,12 @@ namespace cro::Shaders::Billboard
             //TODO setting these as uniforms is more efficient, but also more faff.
             vec3 camRight = vec3(u_viewMatrix[0][0], u_viewMatrix[1][0], u_viewMatrix[2][0]);
 #if defined(LOCK_ROTATION)
-            vec3 camUp = vec3(0.0, 1.0, 0.0);
+            vec3 camUp = vec3(0.0, -u_clipPlane.y, 0.0);
 #else
-            vec3 camUp = vec3(u_viewMatrix[0][1], u_viewMatrix[1][1], u_viewMatrix[2][1]);
+            vec3 camUp = vec3(u_viewMatrix[0][1], u_viewMatrix[1][1] * -u_clipPlane.y, u_viewMatrix[2][1]);
 #endif
             position = position + camRight * a_position.x
-                                + camUp * a_position.y;
+                                + camUp * a_position.y; //TODO we want to offset this by size.y but only if drawing reflected.
 
             gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
 
@@ -119,6 +119,8 @@ namespace cro::Shaders::Billboard
 
                 v_colour.a = pow(clamp(distance / nearFadeDistance, 0.0, 1.0), 5.0);
                 v_colour.a *= 1.0 - clamp((distance - farFadeDistance) / nearFadeDistance, 0.0, 1.0);
+
+                v_colour.rgb *= (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 
             #endif
             #if defined (TEXTURED)

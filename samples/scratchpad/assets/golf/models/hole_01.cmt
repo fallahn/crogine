@@ -1,4 +1,4 @@
-model golf_course
+model hole_01
 {
     mesh = "assets/golf/models/hole_01.cmb"
     cast_shadows = false
@@ -6,11 +6,20 @@ model golf_course
     material Unlit
     {
         name = "Untitled"
-        colour = 1.000000,1.0,1.000000,1.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        blendmode = "none"
+        diffuse = "assets/golf/images/stripes.png"
+
+    }
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
         repeat = true
         vertex_coloured = true
-        rx_shadows = false
         blendmode = "none"
 
     }

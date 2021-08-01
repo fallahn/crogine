@@ -14,7 +14,12 @@ spritesheet shrubbery
 
     sprite grass01
     {
-        bounds = 112,176,64,24
+        bounds = 112,176,32,24
+    }
+
+    sprite grass02
+    {
+        bounds = 144,176,32,24
     }
 
     sprite birch

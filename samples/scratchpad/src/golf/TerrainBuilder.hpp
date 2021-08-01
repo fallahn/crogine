@@ -74,6 +74,7 @@ private:
         enum
         {
             Grass01,
+            Grass02,
             Pine,
             Birch,
             Willow,
@@ -89,7 +90,8 @@ private:
     struct Vertex final
     {
         glm::vec3 position = glm::vec3(0.f);
-        glm::vec4 colour = glm::vec4(0.1f, 0.117f, 0.176f, 1.f);
+        //glm::vec4 colour = glm::vec4(0.1f, 0.117f, 0.176f, 1.f);
+        glm::vec4 colour = glm::vec4(0.1568f, 0.305f, 0.2627f, 1.f);
         glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
 
         //these actually get attached to tan/bitan attribs in the shader
