@@ -113,8 +113,12 @@ namespace cro::Shaders::Billboard
 
             #if defined (VERTEX_COLOUR)
                 v_colour = a_colour;
-                const float fadeDistance = 12.0; //TODO make this a uniform
-                v_colour.a = clamp(pow(length(position - u_cameraWorldPosition) / fadeDistance, 5.0), 0.0, 1.0);
+                const float nearFadeDistance = 12.0; //TODO make this a uniform
+                const float farFadeDistance = 150.f;
+                float distance = length(position - u_cameraWorldPosition);
+
+                v_colour.a = pow(clamp(distance / nearFadeDistance, 0.0, 1.0), 5.0);
+                v_colour.a *= 1.0 - clamp((distance - farFadeDistance) / nearFadeDistance, 0.0, 1.0);
 
             #endif
             #if defined (TEXTURED)

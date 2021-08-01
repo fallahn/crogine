@@ -1,0 +1,25 @@
+model tee_balls
+{
+    mesh = "assets/golf/models/tee_balls.cmb"
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,0.999990,1.000000,1.000000
+        smooth = true
+        repeat = true
+        vertex_coloured = true
+        blendmode = "none"
+
+    }
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 0.227451,0.227451,0.227451,0.439216
+        smooth = true
+        repeat = true
+        blendmode = "alpha"
+
+    }
+}

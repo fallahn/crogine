@@ -65,7 +65,9 @@ namespace
     constexpr glm::uvec2 Size(320, 200);
     constexpr float PixelPerMetre = 32.f; //64.f; //used for scaling billboards
 
-    constexpr std::uint32_t QuadsPerMetre = 2;
+    constexpr std::uint32_t QuadsPerMetre = 1;
+
+    constexpr float MaxShrubOffset = MaxTerrainHeight + 7.5f;
 
     //callback for swapping shrub ents
     struct ShrubTransition final
@@ -79,7 +81,7 @@ namespace
             constexpr float Speed = 5.f;
 
             pos.y += diff * Speed * dt;
-            pos.y = std::min(0.f, std::max(-MaxTerrainHeight, pos.y));
+            pos.y = std::min(0.f, std::max(-MaxShrubOffset, pos.y));
 
             e.getComponent<cro::Transform>().setPosition(pos);
 
@@ -163,13 +165,14 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     constexpr auto xCount = static_cast<std::uint32_t>(Size.x / QuadsPerMetre);
     constexpr auto yCount = static_cast<std::uint32_t>(Size.y / QuadsPerMetre);
-    std::vector<std::uint32_t> indices;
+    std::vector<std::uint32_t> indices(xCount * yCount * 6);
 
-    for (auto y = 0u; y < yCount - 1; y++)
+
+    for (auto y = 0u; y < yCount - 1; ++y)
     {
         if (y > 0)
         {
-            indices.push_back(y * xCount);
+            indices.push_back((y + 1) * xCount);
         }
 
         for (auto x = 0u; x < xCount; x++)
@@ -180,7 +183,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
         if (y < yCount - 2)
         {
-            indices.push_back(((y + 1) * xCount) + (xCount - 1));
+            indices.push_back((y * xCount) + (xCount - 1));
         }
     }
 
@@ -295,7 +298,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
         m_billboardEntities[holeIndex % 2].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
         m_billboardEntities[holeIndex % 2].getComponent<cro::Callback>().setUserData<std::pair<float, cro::Entity>>(0.f, cro::Entity());
 
-        m_billboardEntities[(holeIndex + 1) % 2].getComponent<cro::Callback>().setUserData<std::pair<float, cro::Entity>>(-MaxTerrainHeight, m_billboardEntities[holeIndex % 2]);
+        m_billboardEntities[(holeIndex + 1) % 2].getComponent<cro::Callback>().setUserData<std::pair<float, cro::Entity>>(-MaxShrubOffset, m_billboardEntities[holeIndex % 2]);
         m_billboardEntities[(holeIndex + 1) % 2].getComponent<cro::Callback>().active = true;
 
         //upload terrain data

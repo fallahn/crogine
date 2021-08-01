@@ -146,8 +146,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
                 ImGui::Text("Terrain: %s", TerrainStrings[m_currentPlayer.terrain]);
 
-                ImGui::Image(m_debugTexture.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                //ImGui::Image(m_debugTexture.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                 if (ImGui::Button("Save Image"))
@@ -793,6 +793,20 @@ void GolfState::buildScene()
     m_gameScene.setWaterLevel(WaterLevel);
 
 
+    //tee marker
+    md.loadFromFile("assets/golf/models/tee_balls.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Tee;
+    md.createModel(entity);
+    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+
+    auto pinDir = m_holeData[m_currentHole].pin - m_holeData[0].tee;
+    m_camRotation = std::atan2(-pinDir.z, pinDir.x);
+    entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
+    //TODO add callback for hole transition
+    
+
 
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
@@ -1028,7 +1042,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
         auto currPos = e.getComponent<cro::Transform>().getPosition();
         auto travel = m_holeData[m_currentHole].tee - currPos;
 
-        //TODO we may also have to interp this from the prev pin to the newe one
+        //TODO we may also have to interp this from the prev pin to the new one
         auto pinDir = m_holeData[m_currentHole].pin - currPos;
         m_camRotation = std::atan2(-pinDir.z, pinDir.x);
 
@@ -1066,7 +1080,16 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     cmd.targetFlags = CommandID::Hole;
     cmd.action = [&](cro::Entity e, float)
     {
+        //TODO trigger a transition callback instead
         e.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::Tee;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        //TODO trigger a transition callback instead
+        e.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].tee);
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
