@@ -52,6 +52,8 @@ struct Ball final
 
     glm::vec3 velocity = glm::vec3(0.f);
     float delay = 0.f;
+
+    glm::vec3 startPoint = glm::vec3(0.f);
 };
 
 class BallSystem final : public cro::System

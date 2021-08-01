@@ -314,6 +314,8 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
         //as well as account for a frame of interp delay on the client
         ball.delay = 0.32f;
 
+        ball.startPoint = m_playerInfo[0].ballEntity.getComponent<cro::Transform>().getPosition();
+
         m_playerInfo[0].holeScore[m_currentHole]++;
 
         m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, m_animIDs[AnimID::Swing], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
