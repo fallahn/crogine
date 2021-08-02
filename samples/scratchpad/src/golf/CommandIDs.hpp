@@ -44,17 +44,18 @@ struct CommandID final
     {
         enum
         {
-            //FlagSprite   = 0x1,
-            PlayerName   = 0x2,
-            UIElement    = 0x4, //has its position updated on UI layout
-            Root         = 0x8,
-            PlayerSprite = 0x10,
-            WindSock     = 0x20,
-            WindString   = 0x40,
-            HoleNumber   = 0x80,
-            PinDistance  = 0x100,
-            Scoreboard   = 0x200,
-            ScoreScroll  = 0x400
+            //FlagSprite           = 0x1,
+            PlayerName           = 0x2,
+            UIElement            = 0x4, //has its position updated on UI layout
+            Root                 = 0x8,
+            PlayerSprite         = 0x10,
+            WindSock             = 0x20,
+            WindString           = 0x40,
+            HoleNumber           = 0x80,
+            PinDistance          = 0x100,
+            Scoreboard           = 0x200,
+            ScoreScroll          = 0x400,
+            ScoreboardController = 0x800
         };
     };
 };

@@ -408,13 +408,38 @@ void GolfState::createScoreboard()
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
 
+    auto size = glm::vec2(cro::App::getWindow().getSize());
+    size.x /= 2.f;
+    size.y -= size.y / 2.f;
+
+    auto rootEnt = m_uiScene.createEntity();
+    rootEnt.addComponent<cro::Transform>().setPosition(size);
+    rootEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::ScoreboardController;
+    //use the callback to keep the board centred/scaled
+    rootEnt.addComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        static constexpr float Speed = 10.f;
+
+        auto size = glm::vec2(cro::App::getWindow().getSize());
+        auto target = glm::vec3(size / 2.f, 0.22f);
+        target.y -= e.getComponent<cro::Callback>().getUserData<std::int32_t>() * size.y;
+
+        auto pos = e.getComponent<cro::Transform>().getPosition();
+        pos += (target - pos) * dt * Speed;
+
+        e.getComponent<cro::Transform>().setPosition(pos);
+        e.getComponent<cro::Transform>().setScale(m_viewScale);
+    };
+
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(UIHiddenPosition);
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::Scoreboard;
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::Scoreboard;
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("border");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto bgEnt = entity;
     auto& font = m_resources.fonts.get(FontID::UI);
@@ -491,23 +516,6 @@ void GolfState::createScoreboard()
         i++;
     }
     ents.back().getComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions.back(), 0.02f));
-
-    //use the callback to keep the board centred/scaled
-    bgEnt.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        //TODO have this interp to target position and disable when at target point
-
-        //always centre when visible
-#ifdef CRO_DEBUG_
-        //auto pos = UIHiddenPosition;
-        auto pos = glm::vec2(cro::App::getWindow().getSize()) / 2.f;
-#else
-        auto pos = glm::vec2(cro::App::getWindow().getSize()) / 2.f;
-#endif
-        e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.22f));
-        e.getComponent<cro::Transform>().setScale(m_viewScale);
-    };
 
     updateScoreboard();
     showScoreboard(true);
@@ -666,14 +674,15 @@ void GolfState::showScoreboard(bool visible)
         visible = true;
     }
 
-    auto pos = visible ? glm::vec2(cro::App::getWindow().getSize()) / 2.f : UIHiddenPosition;
+
+    auto target = visible ? 0 : 1; //when 1 board is moved 1x screen size from centre
+
     cro::Command cmd;
-    cmd.targetFlags = CommandID::UI::Scoreboard;
-    cmd.action = [visible, pos](cro::Entity e, float)
+    cmd.targetFlags = CommandID::UI::ScoreboardController;
+    cmd.action = [target](cro::Entity e, float)
     {
-        //TODO change this to a target position then always set active
-        e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.22f));
-        e.getComponent<cro::Callback>().active = visible;
+        e.getComponent<cro::Callback>().active = true;
+        e.getComponent<cro::Callback>().setUserData<std::int32_t>(target);
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 

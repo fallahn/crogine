@@ -230,10 +230,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
             showScoreboard(true);
             break;
         case SDLK_UP:
-            scrollScores(1);
+            scrollScores(-1);
             break;
         case SDLK_DOWN:
-            scrollScores(-1);
+            scrollScores(1);
             break;
         case SDLK_RETURN:
             showScoreboard(false);
