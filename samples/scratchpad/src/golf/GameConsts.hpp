@@ -65,10 +65,10 @@ struct ShaderID final
 
 static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, float px, float py)
 {
-    auto size = img.getSize();
-
-    std::uint32_t x = std::min(size.x, std::max(0u, static_cast<std::uint32_t>(std::floor(px))));
-    std::uint32_t y = std::min(size.y, std::max(0u, static_cast<std::uint32_t>(std::floor(py))));
+    auto size = glm::vec2(img.getSize());
+    //I forget why our coords a re float - but this makes for horrible casts :(
+    std::uint32_t x = static_cast<std::uint32_t>(std::min(size.x, std::max(0.f, std::floor(px))));
+    std::uint32_t y = static_cast<std::uint32_t>(std::min(size.y, std::max(0.f, std::floor(py))));
 
     std::uint32_t stride = 4;
     //TODO we should have already asserted the format is RGBA elsewhere...
@@ -77,7 +77,7 @@ static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, floa
         stride = 3;
     }
 
-    auto index = (y * size.x + x) * stride;
+    auto index = (y * static_cast<std::uint32_t>(size.x) + x) * stride;
 
     std::uint8_t terrain = img.getPixelData()[index] / 10;
     terrain = std::min(static_cast<std::uint8_t>(TerrainID::Scrub), terrain);

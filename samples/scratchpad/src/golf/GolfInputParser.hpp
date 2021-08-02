@@ -47,7 +47,7 @@ namespace golf
         InputParser(InputBinding, cro::MessageBus&);
 
         void handleEvent(const cro::Event&);
-        void setHoleDirection(glm::vec3);
+        void setHoleDirection(glm::vec3, bool);
         float getYaw() const;
 
         float getPower() const; //0-1 multiplied by selected club

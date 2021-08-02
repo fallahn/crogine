@@ -719,6 +719,7 @@ void GolfState::buildScene()
 
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
+    material.blendMode = cro::Material::BlendMode::Alpha;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
 
@@ -945,6 +946,30 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                 ballpos = update.position;
             };
             m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+            //if (update.clientID == m_currentPlayer.client)
+            //{
+            //    //this is the active ball so update the UI
+            //    cmd.targetFlags = CommandID::UI::PinDistance;
+            //    cmd.action = [&, update](cro::Entity e, float)
+            //    {
+            //        //if we're on the green convert to cm
+            //        float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
+            //        std::int32_t distance = 0;
+
+            //        if (ballDist > 5)
+            //        {
+            //            distance = static_cast<std::int32_t>(ballDist);
+            //            e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
+            //        }
+            //        else
+            //        {
+            //            distance = static_cast<std::int32_t>(ballDist * 100.f);
+            //            e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "cm");
+            //        }
+            //    };
+            //    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            //}
         }
             break;
         case PacketID::ActorAnimation:
@@ -1134,8 +1159,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     updateScoreboard();
     showScoreboard(false);
 
-    m_currentPlayer = player;
-
     //TODO we could move much of the UI stuff to its
     //own class or function to encapsulate betterererer
     cro::Command cmd;
@@ -1207,7 +1230,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     //if client is ours activate input/set initial stroke direction
     m_inputParser.setActive(localPlayer);
-    m_inputParser.setHoleDirection(m_holeData[m_currentHole].pin - player.position);
+    m_inputParser.setHoleDirection(m_holeData[m_currentHole].pin - player.position, m_currentPlayer != player); // this also selects the nearest club
 
     //TODO apply the correct sprite to the player entity
     cmd.targetFlags = CommandID::UI::PlayerSprite;
@@ -1223,6 +1246,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         }
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    m_currentPlayer = player;
 }
 
 void GolfState::hitBall()
@@ -1316,7 +1341,9 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
         auto targetInfo = m_gameScene.getActiveCamera().getComponent<TargetInfo>();
 
-        if (glm::length2(travel) < 0.005f)
+        float minTravel = playerData.terrain == TerrainID::Green ? 0.000001f : 0.005f;
+
+        if (glm::length2(travel) < minTravel)
         {
             //we're there
             setCameraPosition(playerData.position, targetInfo.targetHeight, targetInfo.targetOffset);

@@ -204,7 +204,7 @@ namespace golf
         }
     }
 
-    void InputParser::setHoleDirection(glm::vec3 dir)
+    void InputParser::setHoleDirection(glm::vec3 dir, bool selectClub)
     {
         //this assumes that dir is a vector from the player to
         //the hole - otherwise the club selection will be wrong.
@@ -212,7 +212,11 @@ namespace golf
         if (auto len2 = glm::length2(dir); len2 > 0)
         {
             auto length = std::sqrt(len2);
-            setClub(length);
+            
+            if (selectClub)
+            {
+                setClub(length);
+            }
 
             auto direction = dir / length;
             m_holeDirection = std::atan2(-direction.z, direction.x);

@@ -43,6 +43,16 @@ struct ActivePlayer
     std::uint8_t terrain = TerrainID::Fairway;
 };
 
+static inline bool operator == (const ActivePlayer& a, const ActivePlayer& b)
+{
+    return (a.client == b.client) && (a.player == b.player);
+}
+
+static inline bool operator != (const ActivePlayer& a, const ActivePlayer& b)
+{
+    return !(a == b);
+}
+
 struct PlayerStatus final : public ActivePlayer
 {
     cro::Entity ballEntity;
@@ -56,6 +66,7 @@ struct ActorInfo final
     std::uint32_t serverID = 0;
     glm::vec3 position = glm::vec3(0.f);
     std::int32_t timestamp = 0;
+    std::uint8_t clientID = 0;
 };
 
 struct ScoreUpdate final
