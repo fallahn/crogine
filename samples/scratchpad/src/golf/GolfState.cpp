@@ -928,49 +928,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             spawnBall(evt.packet.as<ActorInfo>());
             break;
         case PacketID::ActorUpdate:
-        {
-            auto update = evt.packet.as<ActorInfo>();
-
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::Ball;
-            cmd.action = [update](cro::Entity e, float)
-            {
-                if (e.isValid())
-                {
-                    auto& interp = e.getComponent<InterpolationComponent>();
-                    if (interp.getID() == update.serverID)
-                    {
-                        interp.setTarget({ update.position, {1.f,0.f,0.f,0.f}, update.timestamp });
-                    }
-                }
-                ballpos = update.position;
-            };
-            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
-            //if (update.clientID == m_currentPlayer.client)
-            //{
-            //    //this is the active ball so update the UI
-            //    cmd.targetFlags = CommandID::UI::PinDistance;
-            //    cmd.action = [&, update](cro::Entity e, float)
-            //    {
-            //        //if we're on the green convert to cm
-            //        float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
-            //        std::int32_t distance = 0;
-
-            //        if (ballDist > 5)
-            //        {
-            //            distance = static_cast<std::int32_t>(ballDist);
-            //            e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
-            //        }
-            //        else
-            //        {
-            //            distance = static_cast<std::int32_t>(ballDist * 100.f);
-            //            e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "cm");
-            //        }
-            //    };
-            //    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-            //}
-        }
+            updateActor( evt.packet.as<ActorInfo>());            
             break;
         case PacketID::ActorAnimation:
         {
@@ -1288,6 +1246,49 @@ void GolfState::hitBall()
         e.getComponent<cro::Model>().setHidden(true);
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+}
+
+void GolfState::updateActor(const ActorInfo& update)
+{
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Ball;
+    cmd.action = [update](cro::Entity e, float)
+    {
+        if (e.isValid())
+        {
+            auto& interp = e.getComponent<InterpolationComponent>();
+            if (interp.getID() == update.serverID)
+            {
+                interp.setTarget({ update.position, {1.f,0.f,0.f,0.f}, update.timestamp });
+            }
+        }
+        ballpos = update.position;
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    if (update == m_currentPlayer)
+    {
+        //this is the active ball so update the UI
+        cmd.targetFlags = CommandID::UI::PinDistance;
+        cmd.action = [&, update](cro::Entity e, float)
+        {
+            //if we're on the green convert to cm
+            float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
+            std::int32_t distance = 0;
+
+            if (ballDist > 5)
+            {
+                distance = static_cast<std::int32_t>(ballDist);
+                e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
+            }
+            else
+            {
+                distance = static_cast<std::int32_t>(ballDist * 100.f);
+                e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "cm");
+            }
+        };
+        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    }
 }
 
 void GolfState::createTransition(const ActivePlayer& playerData)

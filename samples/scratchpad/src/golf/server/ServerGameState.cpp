@@ -200,6 +200,7 @@ void GameState::netBroadcast()
             info.position = ball.getComponent<cro::Transform>().getPosition();
             info.timestamp = timestamp;
             info.clientID = player.client;
+            info.playerID = player.player;
             m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Unreliable);
         }
     }

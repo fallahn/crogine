@@ -44,6 +44,7 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Easings.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
 #include "../ErrorCheck.hpp"
@@ -69,36 +70,46 @@ namespace
 
     constexpr float MaxShrubOffset = MaxTerrainHeight + 7.5f;
 
+    //calback data
+    struct SwapData final
+    {
+        static constexpr float TransitionTime = 2.f;
+        float currentTime = 0.f;
+        float start = -MaxShrubOffset;
+        float destination = 0.f;
+        cro::Entity otherEnt;
+    };
+
     //callback for swapping shrub ents
     struct ShrubTransition final
     {
         void operator()(cro::Entity e, float dt)
         {
-            auto [dest, other] = e.getComponent<cro::Callback>().getUserData<std::pair<float, cro::Entity>>();
+            auto& swapData = e.getComponent<cro::Callback>().getUserData<SwapData>();
             auto pos = e.getComponent<cro::Transform>().getPosition();
-            auto diff = dest - pos.y;
 
             constexpr float Speed = 5.f;
+            swapData.currentTime = std::min(SwapData::TransitionTime, swapData.currentTime + dt);
 
-            pos.y += diff * Speed * dt;
+            pos.y = swapData.start + ((swapData.destination - swapData.start) * cro::Util::Easing::easeInOutQuint(swapData.currentTime / SwapData::TransitionTime));
             pos.y = std::min(0.f, std::max(-MaxShrubOffset, pos.y));
 
             e.getComponent<cro::Transform>().setPosition(pos);
 
-            if (std::abs(diff) < 0.001f)
+            if (swapData.currentTime == SwapData::TransitionTime)
             {
-                pos.y = dest;
+                pos.y = swapData.destination;
                 e.getComponent<cro::Transform>().setPosition(pos);
                 e.getComponent<cro::Callback>().active = false;
 
-                if (pos.y < 0)
+                if (swapData.otherEnt.isValid())
                 {
                     e.getComponent<cro::Model>().setHidden(true);
 
-                    other.getComponent<cro::Callback>().active = true;
-                    other.getComponent<cro::Model>().setHidden(false);
+                    swapData.otherEnt.getComponent<cro::Callback>().active = true;
+                    swapData.otherEnt.getComponent<cro::Model>().setHidden(false);
 
-                    terrainEntity.getComponent<cro::Callback>().active = true;
+                    terrainEntity.getComponent<cro::Callback>().active = true; //starts terrain morph
                 }
             }
         }
@@ -206,6 +217,11 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         m_terrainProperties.morphTime = std::min(1.f, m_terrainProperties.morphTime + dt);
         glCheck(glUseProgram(m_terrainProperties.shaderID));
         glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
+
+        if (m_terrainProperties.morphTime == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+        }
     };
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
 
@@ -229,12 +245,14 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     //create billboard entities
     cro::ModelDefinition modelDef(resources);
-    modelDef.loadFromFile("assets/golf/models/shrubbery.cmt");
 
     for (auto& entity : m_billboardEntities)
     {
+        //reload the the model def each time to ensure unique VBOs
+        modelDef.loadFromFile("assets/golf/models/shrubbery.cmt");
+
         entity = scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, -MaxTerrainHeight, 0.f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -MaxShrubOffset, 0.f });
         modelDef.createModel(entity);
         //if the model def failed to load for some reason this will be
         //missing, so we'll add it here just to stop the thread exploding
@@ -295,12 +313,23 @@ void TerrainBuilder::update(std::size_t holeIndex)
 
     if (holeIndex == m_currentHole)
     {
-        //update the billboard data
-        m_billboardEntities[holeIndex % 2].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
-        m_billboardEntities[holeIndex % 2].getComponent<cro::Callback>().setUserData<std::pair<float, cro::Entity>>(0.f, cro::Entity());
+        auto first = (holeIndex + 1) % 2;
+        auto second = holeIndex % 2;
 
-        m_billboardEntities[(holeIndex + 1) % 2].getComponent<cro::Callback>().setUserData<std::pair<float, cro::Entity>>(-MaxShrubOffset, m_billboardEntities[holeIndex % 2]);
-        m_billboardEntities[(holeIndex + 1) % 2].getComponent<cro::Callback>().active = true;
+        //update the billboard data
+        SwapData swapData;
+        swapData.start = m_billboardEntities[first].getComponent<cro::Transform>().getPosition().y;
+        swapData.destination = 0.f;
+        swapData.currentTime = 0.f;
+        m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
+        m_billboardEntities[first].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
+
+        swapData.start = m_billboardEntities[second].getComponent<cro::Transform>().getPosition().y;
+        swapData.destination = -MaxShrubOffset;
+        swapData.otherEnt = m_billboardEntities[first];
+        swapData.currentTime = 0.f;
+        m_billboardEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
+        m_billboardEntities[second].getComponent<cro::Callback>().active = true;
 
         //upload terrain data
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_terrainProperties.vbo));
@@ -359,7 +388,7 @@ void TerrainBuilder::threadFunc()
                         float scale = static_cast<float>(cro::Util::Random::value(9, 11)) / 10.f;
 
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Pine, BillboardID::Willow)]);
-                        bb.position = { x, height, -y };
+                        bb.position = { x, height - 0.02f, -y }; //small vertical offset to stop floating billboards
                         bb.size *= scale;
                     }
                 }

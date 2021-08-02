@@ -136,6 +136,10 @@ namespace cro
         Note that this may also add Skeleton components, ShadowCast components
         or BillboardCollection components necessary for a complete material, but 
         not components such as Transform, which still need to be added manually.
+        As this ensures mesh data is recycled for each model that uses it, Billboard
+        collections created with this function WILL ALL HAVE THE SAME MESH. If unique
+        meshes are desired for each BillboardCollection then the model definition will
+        need to be reloaded each time.
         \param entity A valid entity with a Transform component to which the Model
         component should be attached
         */

@@ -145,6 +145,7 @@ private:
     void setCameraPosition(glm::vec3, float, float);
     void setCurrentPlayer(const ActivePlayer&);
     void hitBall();
+    void updateActor(const ActorInfo&);
 
     void createTransition(const ActivePlayer&);
     void updateWindDisplay(glm::vec3);

@@ -614,6 +614,7 @@ bool ModelDefinition::createModel(Entity entity)
         if (m_billboard)
         {
             entity.addComponent<BillboardCollection>();
+            LOG("Multiple billboards created from the same definition will share the same mesh data!", cro::Logger::Type::Warning);
         }
 
         if (hasSkeleton())

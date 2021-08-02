@@ -67,7 +67,13 @@ struct ActorInfo final
     glm::vec3 position = glm::vec3(0.f);
     std::int32_t timestamp = 0;
     std::uint8_t clientID = 0;
+    std::uint8_t playerID = 0;
 };
+
+static inline bool operator == (const ActorInfo& actor, const ActivePlayer& player)
+{
+    return (player.player == actor.playerID && player.client == actor.clientID);
+}
 
 struct ScoreUpdate final
 {
