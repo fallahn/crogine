@@ -192,7 +192,7 @@ void GolfState::buildUI()
 
     //wind strength
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();// .setPosition(glm::vec2(60.f, 130.f));
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindString;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
@@ -202,10 +202,21 @@ void GolfState::buildUI()
 
     //wind indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 52.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 20.f));
+    entity.addComponent<cro::Drawable2D>().setVertexData( 
+    {
+        cro::Vertex2D(glm::vec2(-1.f, 12.f), LeaderboardTextLight),
+        cro::Vertex2D(glm::vec2(-1.f, 0.f), LeaderboardTextLight),
+        cro::Vertex2D(glm::vec2(1.f, 12.f), LeaderboardTextLight),
+        cro::Vertex2D(glm::vec2(1.f, 0.f), LeaderboardTextLight)
+    });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindSock;
+    windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 52.f, -0.01f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindIndicator];
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindSock;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
     entity.getComponent<cro::Transform>().move(glm::vec2(0.f, -bounds.height));
@@ -400,9 +411,7 @@ void GolfState::createScoreboard()
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(UIHiddenPosition);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::Scoreboard;
-    //TODO some sort of background sprite
     entity.addComponent<cro::Drawable2D>();
-
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("border");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
@@ -487,6 +496,8 @@ void GolfState::createScoreboard()
     bgEnt.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
+        //TODO have this interp to target position and disable when at target point
+
         //always centre when visible
 #ifdef CRO_DEBUG_
         //auto pos = UIHiddenPosition;
@@ -660,6 +671,7 @@ void GolfState::showScoreboard(bool visible)
     cmd.targetFlags = CommandID::UI::Scoreboard;
     cmd.action = [visible, pos](cro::Entity e, float)
     {
+        //TODO change this to a target position then always set active
         e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.22f));
         e.getComponent<cro::Callback>().active = visible;
     };
