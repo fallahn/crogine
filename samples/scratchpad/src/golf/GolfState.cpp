@@ -251,6 +251,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDL_CONTROLLER_BUTTON_B:
             showScoreboard(false);
             break;
+        case SDL_CONTROLLER_BUTTON_DPAD_UP:
+            scrollScores(-1);
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+            scrollScores(1);
+            break;
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -263,7 +269,17 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-
+    else if (evt.type == SDL_MOUSEWHEEL)
+    {
+        if (evt.wheel.y > 0)
+        {
+            scrollScores(-1);
+        }
+        else if (evt.wheel.y < 0)
+        {
+            scrollScores(1);
+        }
+    }
 
 
     m_inputParser.handleEvent(evt);
