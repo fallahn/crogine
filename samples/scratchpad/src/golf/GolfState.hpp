@@ -119,6 +119,7 @@ private:
     };
     std::array<std::unique_ptr<cro::ModelDefinition>, ModelID::Count> m_modelDefs = {};
 
+
     struct WaterShader final
     {
         std::uint32_t shaderID = 0;

@@ -1020,8 +1020,14 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
     m_terrainBuilder.update(hole);
 
+
+    //TODO model transition animation here
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().setHidden(true);
     m_currentHole = hole;
+
+
+
+
 
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().setHidden(false);
     m_currentMap.loadFromFile(m_holeData[m_currentHole].mapPath);
@@ -1031,27 +1037,89 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
     //creates an entity which calls setCamPosition() in an
     //interpolated manner until we reach the dest,
-    //at which point the ent destroys itself
+    //at which point the ent destroys itself - also interps the position of the tee/flag
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(m_currentPlayer.position);
     entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<glm::vec3>(m_currentPlayer.position);
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, hole](cro::Entity e, float dt)
     {
         auto currPos = e.getComponent<cro::Transform>().getPosition();
         auto travel = m_holeData[m_currentHole].tee - currPos;
 
-        //TODO we may also have to interp this from the prev pin to the new one
-        auto pinDir = m_holeData[m_currentHole].pin - currPos;
-        m_camRotation = std::atan2(-pinDir.z, pinDir.x);
+        //if we're moving on to any other than the first hole, interp the
+        //tee and hole position based on how close to the tee the camera is
+        if (hole > 0)
+        {
+            auto startPos = e.getComponent<cro::Callback>().getUserData<glm::vec3>();
+            auto totalDist = glm::length(m_holeData[m_currentHole].tee - startPos);
+            auto currentDist = glm::length(travel);
+
+            float percent = (totalDist - currentDist) / totalDist;
+            percent = std::min(1.f, std::max(0.f, percent));
+
+            auto pinMove = m_holeData[m_currentHole].pin - m_holeData[m_currentHole - 1].pin;
+            auto pinPos = m_holeData[m_currentHole - 1].pin + (pinMove * percent);
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Hole;
+            cmd.action = [pinPos](cro::Entity e, float)
+            {
+                e.getComponent<cro::Transform>().setPosition(pinPos);
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+
+            auto teeMove = m_holeData[m_currentHole].tee - m_holeData[m_currentHole - 1].tee;
+            auto teePos = m_holeData[m_currentHole - 1].tee + (teeMove * percent);
+
+            cmd.targetFlags = CommandID::Tee;
+            cmd.action = [teePos, pinPos](cro::Entity e, float)
+            {
+                e.getComponent<cro::Transform>().setPosition(teePos);
+
+                auto pinDir = pinPos - teePos;
+                auto rotation = std::atan2(-pinDir.z, pinDir.x);
+                e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+            auto pinDir = pinPos - currPos;
+            m_camRotation = std::atan2(-pinDir.z, pinDir.x);
+        }
+        else
+        {
+            auto pinDir = m_holeData[m_currentHole].pin - currPos;
+            m_camRotation = std::atan2(-pinDir.z, pinDir.x);
+        }
+        
 
         auto targetInfo = m_gameScene.getActiveCamera().getComponent<TargetInfo>();
 
-        if (glm::length2(travel) < 0.005f)
+        if (glm::length2(travel) < 0.0001f)
         {
             //we're there
             setCameraPosition(m_holeData[m_currentHole].tee, targetInfo.targetHeight, targetInfo.targetOffset);
 
+            //set tee / flag
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Hole;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                e.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+            cmd.targetFlags = CommandID::Tee;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                e.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].tee);
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+
+            //remove the transition ent
             e.getComponent<cro::Callback>().active = false;
             m_gameScene.destroyEntity(e);
         }
@@ -1074,27 +1142,6 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
 
     m_currentPlayer.position = m_holeData[m_currentHole].tee;
-
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::Hole;
-    cmd.action = [&](cro::Entity e, float)
-    {
-        //TODO trigger a transition callback instead
-        e.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
-    };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
-    cmd.targetFlags = CommandID::Tee;
-    cmd.action = [&](cro::Entity e, float)
-    {
-        //TODO trigger a transition callback instead
-        e.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].tee);
-    };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
-    //TODO some sort of 'loading' effect of the terrain - maybe a shader on the buffer sprite?
-
-
 }
 
 void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)
