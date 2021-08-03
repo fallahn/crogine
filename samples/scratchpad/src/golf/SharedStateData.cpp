@@ -10,6 +10,10 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
     for (auto i = 0u; i < playerCount; ++i)
     {
         sizes[i] = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, playerData[i].name.size() * sizeof(std::uint32_t)));
+
+        sizes[i] += sizeof(playerData[i].avatarFlags);
+        sizes[i] += sizeof(playerData[i].skinID);
+
         totalSize += sizes[i];
     }
 
@@ -24,8 +28,16 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
     std::size_t offset = 6;
     for (auto i = 0u; i < sizes.size() && offset < buffer.size(); ++i)
     {
-        std::memcpy(&buffer[offset], playerData[i].name.data(), sizes[i]);
-        offset += sizes[i];
+        std::memcpy(&buffer[offset], playerData[i].avatarFlags.data(), sizeof(playerData[i].avatarFlags));
+        offset += sizeof(playerData[i].avatarFlags);
+
+        std::memcpy(&buffer[offset], &playerData[i].skinID, sizeof(playerData[i].skinID));
+        offset += sizeof(playerData[i].skinID);
+
+        //do string last as its not fixed size
+        auto stringSize = playerData[i].name.size() * sizeof(std::uint32_t);
+        std::memcpy(&buffer[offset], playerData[i].name.data(), stringSize);
+        offset += stringSize;
     }
 
     return buffer;
@@ -56,11 +68,11 @@ bool ConnectionData::deserialise(const cro::NetEvent::Packet& packet)
     std::size_t totalSize = 0;
     for (auto size : sizes)
     {
-        if (size % sizeof(std::uint32_t) != 0
+        /*if (size % sizeof(std::uint32_t) != 0
             || size > ConstVal::MaxStringDataSize)
         {
             return false;
-        }
+        }*/
         totalSize += size;
     }
 
@@ -79,14 +91,35 @@ bool ConnectionData::deserialise(const cro::NetEvent::Packet& packet)
     }
 
 
-    //read strings
+    //read player data
     for (auto i = 0u; i < playerCount; ++i)
     {
-        std::vector<std::uint32_t> buffer(sizes[i] / sizeof(std::uint32_t));
-        std::memcpy(buffer.data(), static_cast<const std::uint8_t*>(packet.getData()) + offset, sizes[i]);
+        auto* ptr = static_cast<const std::uint8_t*>(packet.getData());
+        auto stringSize = sizes[i];
+
+        std::memcpy(&playerData[i].avatarFlags, ptr + offset, sizeof(playerData[i].avatarFlags));
+        offset += sizeof(playerData[i].avatarFlags);
+        stringSize -= sizeof(playerData[i].avatarFlags);
+
+        std::memcpy(&playerData[i].skinID, ptr + offset, sizeof(playerData[i].skinID));
+        offset += sizeof(playerData[i].skinID);
+        stringSize -= sizeof(playerData[i].skinID);
+        
+
+
+        //check remaining size is valid
+        if (stringSize % sizeof(std::uint32_t) != 0
+            || stringSize > ConstVal::MaxStringDataSize)
+        {
+            return false;
+        }
+
+
+        std::vector<std::uint32_t> buffer(stringSize / sizeof(std::uint32_t));
+        std::memcpy(buffer.data(), ptr + offset, stringSize);
 
         playerData[i].name = cro::String::fromUtf32(buffer.begin(), buffer.end());
-        offset += sizes[i];
+        offset += stringSize;
     }
 
     return true;

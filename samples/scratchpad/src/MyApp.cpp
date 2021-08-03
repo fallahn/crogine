@@ -97,9 +97,8 @@ bool MyApp::initialise()
     getWindow().setTitle("Scratchpad Browser");
 
     //TODO we only want to do this if launching the golf game
-    m_sharedGolfData.localPlayer.playerData[0].name = "Ralph";
-    m_sharedGolfData.localPlayer.playerData[1].name = "Stacy";
-    m_sharedGolfData.localPlayer.playerCount = 2;
+    m_sharedGolfData.localPlayer.playerData[0].name = "Player 1";
+    m_sharedGolfData.localPlayer.playerCount = 1;
     m_sharedGolfData.targetIP = "255.255.255.255";
     m_sharedGolfData.mapDirectory = "course_01";
 

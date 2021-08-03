@@ -92,7 +92,7 @@ namespace cro::Shaders::Billboard
             vec3 camUp = vec3(u_viewMatrix[0][1], u_viewMatrix[1][1] * -u_clipPlane.y, u_viewMatrix[2][1]);
 #endif
             position = position + camRight * a_position.x
-                                + camUp * a_position.y; //TODO we want to offset this by size.y but only if drawing reflected.
+                                + camUp * a_position.y;
 
             gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
 

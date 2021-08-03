@@ -189,6 +189,7 @@ private:
     void updateScoreboard();
     void showScoreboard(bool);
     //-----------
+
 #ifdef CRO_DEBUG_
     cro::Entity m_debugCam;
     cro::RenderTexture m_debugTexture;

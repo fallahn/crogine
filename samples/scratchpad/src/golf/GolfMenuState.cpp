@@ -85,7 +85,7 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
     //we returned from a previous game
     if (sd.clientConnection.connected)
     {
-        updateLobbyStrings();
+        updateLobbyAvatars();
 
         //switch to lobby view
         cro::Command cmd;
@@ -452,7 +452,7 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
             break;
         case PacketID::ClientDisconnected:
             m_sharedData.connectionData[evt.packet.as<std::uint8_t>()].playerCount = 0;
-            updateLobbyStrings();
+            updateLobbyAvatars();
             break;
         case PacketID::LobbyReady:
         {

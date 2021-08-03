@@ -51,7 +51,8 @@ namespace MenuCommandID
         RootNode    = 0x1,
         ReadyButton = 0x2,
         LobbyList   = 0x4,
-        ServerInfo  = 0x8
+        AvatarList  = 0x8,
+        ServerInfo  = 0x10
     };
 }
 
@@ -125,8 +126,9 @@ private:
 
     void handleTextEdit(const cro::Event&);
     void applyTextEdit();
+    void updateLocalAvatars();
     void updateLobbyData(const cro::NetEvent&);
-    void updateLobbyStrings();
+    void updateLobbyAvatars();
 
     void handleNetEvent(const cro::NetEvent&);
     void updateView(cro::Camera&);

@@ -66,10 +66,6 @@ static const std::string WaterFragment = R"(
     OUTPUT
 
     uniform sampler2D u_reflectionMap;
-    uniform sampler2D u_shadowMap;
-
-    uniform vec3 u_lightDirection;
-    uniform vec4 u_lightColour;
 
     uniform vec3 u_cameraWorldPosition;
     uniform float u_time;
@@ -78,76 +74,28 @@ static const std::string WaterFragment = R"(
 
     VARYING_IN vec3 v_worldPosition;
     VARYING_IN vec4 v_reflectionPosition;
-    VARYING_IN LOW vec4 v_lightWorldPosition;
 
 
     const vec3 WaterColour = vec3(0.02, 0.078, 0.578);
     //const vec3 WaterColour = vec3(0.2, 0.278, 0.278);
     //const vec3 WaterColour = vec3(0.137, 0.267, 0.53);
 
-    vec3 diffuseColour = WaterColour;
-    vec3 eyeDirection = vec3(0.0);
+//float rand(float n){return fract(sin(n) * 43758.5453123);}
+//
+//vec2 noise(vec2 pos)
+//{
+//    return vec2(rand(pos.x), rand(pos.y));
+//}
 
-    vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
-    {
-        float diffuseAmount = max(dot(normal, lightDirection), 0.0);
-
-        vec3 mixedColour = diffuseColour.rgb * lightDiffuse * diffuseAmount * falloff;
-
-        vec3 halfVec = normalize(eyeDirection + lightDirection);
-        float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
-        vec3 specularColour = lightSpecular * vec3(pow(specularAngle, (254.0 + 1.0))) * falloff;
-
-        return clamp(mixedColour + specularColour, 0.0, 1.0);
-    }
-
-    const vec2 kernel[16] = vec2[](
-        vec2(-0.94201624, -0.39906216),
-        vec2(0.94558609, -0.76890725),
-        vec2(-0.094184101, -0.92938870),
-        vec2(0.34495938, 0.29387760),
-        vec2(-0.91588581, 0.45771432),
-        vec2(-0.81544232, -0.87912464),
-        vec2(-0.38277543, 0.27676845),
-        vec2(0.97484398, 0.75648379),
-        vec2(0.44323325, -0.97511554),
-        vec2(0.53742981, -0.47373420),
-        vec2(-0.26496911, -0.41893023),
-        vec2(0.79197514, 0.19090188),
-        vec2(-0.24188840, 0.99706507),
-        vec2(-0.81409955, 0.91437590),
-        vec2(0.19984126, 0.78641367),
-        vec2(0.14383161, -0.14100790)
-    );
-    const int filterSize = 3;
-    float shadowAmount(vec4 lightWorldPos, float intensity)
-    {
-        vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
-        projectionCoords = projectionCoords * 0.5 + 0.5;
-
-        if(projectionCoords.z > 1.0) return 1.0;
-
-        float shadow = 0.0;
-        vec2 texelSize = 1.0 / textureSize(u_shadowMap, 0).xy;
-        for(int x = 0; x < filterSize; ++x)
-        {
-            for(int y = 0; y < filterSize; ++y)
-            {
-                float pcfDepth = TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize).r;
-                shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
-            }
-        }
-        return 1.0 - ((shadow / 9.0) *  clamp(intensity, 0.0, 1.0));
-    }
 
     void main()
     {
-        eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+        vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
 
         //reflection
         vec2 reflectCoords = v_reflectionPosition.xy / v_reflectionPosition.w / 2.0 + 0.5;
 
-        reflectCoords.x += sin(u_time + (gl_FragCoord.z * 225.0)) * 0.001;
+        reflectCoords.x += sin(u_time + (gl_FragCoord.z * 325.0)) * 0.0005;
 
         vec4 reflectColour = TEXTURE(u_reflectionMap, reflectCoords);
 
@@ -159,7 +107,10 @@ static const std::string WaterFragment = R"(
 
         vec3 blendedColour = mix(reflectColour.rgb, WaterColour.rgb, fresnel);
    
-        
+        /*vec2 sparkle = vec2(cos(u_time * 0.5), sin(u_time * 0.5));
+        float sparkleAmount = dot(normalize(noise(gl_FragCoord.xy)), sparkle);
+        sparkleAmount = step(0.999, sparkleAmount);
+        blendedColour.rgb += sparkleAmount;*/
+
         FRAG_OUT = vec4(blendedColour, 1.0);
-        //FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition, dot(lightDir, normal));
     })";

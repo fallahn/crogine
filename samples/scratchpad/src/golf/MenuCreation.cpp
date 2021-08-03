@@ -204,8 +204,7 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-    //name text - TODO currently we've hardcorded 2 players
-    //eventually we ewant this menu to be able to add/remove players
+    //name text
     cro::String names;
     for (auto i = 0u; i < m_sharedData.localPlayer.playerCount; ++i)
     {
@@ -218,7 +217,9 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.addComponent<cro::Text>(m_font).setString(names);
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::AvatarList;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
+
 
     //back
     entity = m_scene.createEntity();
@@ -233,7 +234,7 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_scene.getSystem<cro::UISystem>().addCallback(
-            [&,parent](cro::Entity, const cro::ButtonEvent& evt) mutable
+            [&, parent](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -244,6 +245,73 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
+
+
+    //add player button
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 1920.f / 2.f, 120.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(m_font).setString("Add Player");
+    entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    auto bounds = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::Transform>().move({ -360.f, 0.f });
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::Avatar);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_scene.getSystem<cro::UISystem>().addCallback(
+            [&, parent](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    applyTextEdit();
+                    if (m_sharedData.localPlayer.playerCount < m_sharedData.localPlayer.MaxPlayers)
+                    {
+                        auto index = m_sharedData.localPlayer.playerCount;
+                        
+                        m_sharedData.localPlayer.playerData[index].name = "Player " + std::to_string(index + 1);
+                        m_sharedData.localPlayer.playerCount++;
+
+                        updateLocalAvatars();
+                    }
+                }
+            });
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    //remove player button
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 1920.f / 2.f, 120.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(m_font).setString("Remove Player");
+    entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    bounds = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::Transform>().move({ 10.f, 0.f });
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(GroupID::Avatar);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_scene.getSystem<cro::UISystem>().addCallback(
+            [&, parent](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    applyTextEdit();
+                    
+                    if (m_sharedData.localPlayer.playerCount > 1)
+                    {
+                        m_sharedData.localPlayer.playerCount--;
+                        updateLocalAvatars();
+                    }
+                }
+            });
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+
+
     //continue
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 1920.f - 80.f, 120.f });
@@ -252,7 +320,7 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
-    auto bounds = cro::Text::getLocalBounds(entity);
+    bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(GroupID::Avatar);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
@@ -616,6 +684,32 @@ void GolfMenuState::createOptionsMenu(cro::Entity parent, std::uint32_t, std::ui
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
 }
 
+void GolfMenuState::updateLocalAvatars()
+{
+    cro::Command cmd;
+    cmd.targetFlags = MenuCommandID::AvatarList;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        cro::String str;
+
+        if (m_sharedData.localPlayer.playerCount > 0)
+        {
+            str += m_sharedData.localPlayer.playerData[0].name;
+            for (auto i = 1u; i < m_sharedData.localPlayer.playerCount; ++i)
+            {
+                str += "\n" + m_sharedData.localPlayer.playerData[i].name;
+            }
+            str += "\n";
+        }
+
+        if (!str.empty())
+        {
+            e.getComponent<cro::Text>().setString(str);
+        }
+    };
+    m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+}
+
 void GolfMenuState::updateLobbyData(const cro::NetEvent& evt)
 {
     ConnectionData cd;
@@ -624,11 +718,14 @@ void GolfMenuState::updateLobbyData(const cro::NetEvent& evt)
         m_sharedData.connectionData[cd.connectionID] = cd;
     }
 
-    updateLobbyStrings();
+    updateLobbyAvatars();
 }
 
-void GolfMenuState::updateLobbyStrings()
+void GolfMenuState::updateLobbyAvatars()
 {
+    //TODO detect only the avatars which changed
+    //so we don't needlessly update textures
+
     cro::Command cmd;
     cmd.targetFlags = MenuCommandID::LobbyList;
     cmd.action = [&](cro::Entity e, float)

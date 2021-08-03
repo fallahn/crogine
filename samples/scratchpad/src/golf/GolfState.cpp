@@ -1027,10 +1027,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
     m_terrainBuilder.update(hole);
 
-
-    //TODO model transition animation here
-    //m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().setHidden(true);
-
+    //create hole model transition
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().active = true;
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().setUserData<float>(0.f);
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().function =
@@ -1073,12 +1070,9 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
     m_currentHole = hole;
 
-    //m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().setHidden(false);
-
-
+    //map collision data
     m_currentMap.loadFromFile(m_holeData[m_currentHole].mapPath);
     glm::vec2 size(m_currentMap.getSize());
-    //m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setOrigin({ -size.x / 2.f, 0.f, size.y / 2.f });
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setPosition({ size.x / 2.f, 0.f, -size.y / 2.f });
 
 

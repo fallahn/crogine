@@ -41,7 +41,8 @@ source distribution.
 struct PlayerData final
 {
     cro::String name;
-    std::uint32_t avatarFlags = 0;
+    std::array<std::uint8_t, 4u> avatarFlags = {}; //indexs into colour pairs
+    std::uint8_t skinID = 0; //currently male, female can be extended
 
     std::vector<std::uint8_t> holeScores;
     std::uint8_t score = 0;
