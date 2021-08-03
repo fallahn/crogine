@@ -138,6 +138,12 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 auto hook = m_inputParser.getHook();
                 ImGui::Text("Hook: %3.3f", hook);*/
 
+                static float scale = 1.f;
+                if (ImGui::SliderFloat("Rot", &scale, 0.f, 1.f))
+                {
+                    m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
+                }
+
                 float height = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getPosition().y;
                 ImGui::Text("Cam height: %3.3f", height);
 
@@ -607,6 +613,7 @@ void GolfState::loadAssets()
                 {
                     holeData.modelEntity = m_gameScene.createEntity();
                     holeData.modelEntity.addComponent<cro::Transform>();
+                    holeData.modelEntity.addComponent<cro::Callback>();
                     modelDef.createModel(holeData.modelEntity);
                     holeData.modelEntity.getComponent<cro::Model>().setHidden(true);
                     propCount++;
@@ -1022,17 +1029,57 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
 
     //TODO model transition animation here
-    m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().setHidden(true);
+    //m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().setHidden(true);
+
+    m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().active = true;
+    m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
+        progress = std::min(1.f, progress + dt);
+
+        float scale = 1.f - progress;
+        e.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
+
+        if (progress == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            e.getComponent<cro::Model>().setHidden(true);
+
+            //index should be updated by now (as this is a callback)
+            //so we're actually targetting the next hole entity
+            auto entity = m_holeData[m_currentHole].modelEntity;
+            entity.getComponent<cro::Model>().setHidden(false);
+            entity.getComponent<cro::Transform>().setScale({ 0.f, 1.f, 0.f });
+            entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+            entity.getComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity ent, float dt)
+            {
+                auto& progress = ent.getComponent<cro::Callback>().getUserData<float>();
+                progress = std::min(1.f, progress + dt);
+
+                float scale = progress;
+                ent.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
+
+                if (progress == 1)
+                {
+                    ent.getComponent<cro::Callback>().active = false;
+                }
+            };
+        }
+    };
+
     m_currentHole = hole;
 
+    //m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().setHidden(false);
 
 
-
-
-    m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().setHidden(false);
     m_currentMap.loadFromFile(m_holeData[m_currentHole].mapPath);
     glm::vec2 size(m_currentMap.getSize());
-    m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setOrigin({ -size.x / 2.f, 0.f, size.y / 2.f });
+    //m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setOrigin({ -size.x / 2.f, 0.f, size.y / 2.f });
+    m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setPosition({ size.x / 2.f, 0.f, -size.y / 2.f });
 
 
     //creates an entity which calls setCamPosition() in an
