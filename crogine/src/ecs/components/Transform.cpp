@@ -503,7 +503,7 @@ void Transform::increaseDepth()
 
 void Transform::decreaseDepth()
 {
-    m_depth--;
+    if(m_depth > 0) m_depth--; //this is a hack, we should never call this if we're at 0 already
     for (auto& c : m_children)
     {
         c->decreaseDepth();

@@ -64,7 +64,8 @@ namespace
 GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State    (stack, context),
     m_sharedData    (sd),
-    m_scene         (context.appInstance.getMessageBus())
+    m_scene         (context.appInstance.getMessageBus()),
+    m_viewScale     (2.f)
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -155,6 +156,14 @@ bool GolfMenuState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
+#ifdef CRO_DEBUG_
+        case SDLK_F2:
+            showPlayerConfig(true, 0);
+            break;
+        case SDLK_F3:
+            showPlayerConfig(false, 0);
+            break;
+#endif
         case SDLK_1:
 
             break;
@@ -381,7 +390,7 @@ void GolfMenuState::createScene()
     createJoinMenu(entity, mouseEnterCallback, mouseExitCallback);
     createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
     createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
-
+    createPlayerConfigMenu();
 
     //set a custom camera so the scene doesn't overwrite the viewport
     //with the default view when resizing the window
@@ -410,11 +419,11 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
             {
                 //update local player data
                 m_sharedData.clientConnection.connectionID = evt.packet.as<std::uint8_t>();
-                m_sharedData.localPlayer.connectionID = evt.packet.as<std::uint8_t>();
-                m_sharedData.connectionData[m_sharedData.clientConnection.connectionID] = m_sharedData.localPlayer;
+                m_sharedData.localConnectionData.connectionID = evt.packet.as<std::uint8_t>();
+                m_sharedData.connectionData[m_sharedData.clientConnection.connectionID] = m_sharedData.localConnectionData;
 
                 //send player details to server (name, skin)
-                auto buffer = m_sharedData.localPlayer.serialise();
+                auto buffer = m_sharedData.localConnectionData.serialise();
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                 //switch to lobby view
@@ -476,12 +485,17 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
 void GolfMenuState::updateView(cro::Camera& cam)
 {
     glm::vec2 size(cro::App::getWindow().getSize());
+    auto windowSize = size;
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
     cam.setOrthographic(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
     cam.viewport.bottom = (1.f - size.y) / 2.f;
     cam.viewport.height = size.y;
+
+    auto vpSize = calcVPSize();
+
+    m_viewScale = glm::vec2(std::floor(windowSize.y / vpSize.y));
 }
 
 void GolfMenuState::handleTextEdit(const cro::Event& evt)

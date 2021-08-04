@@ -29,12 +29,23 @@ source distribution.
 
 #pragma once
 
+#include <crogine/core/App.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
 #include <cstdint>
 #include <cstddef>
 #include <array>
 #include <string>
+
+static inline glm::vec2 calcVPSize()
+{
+    glm::vec2 size(cro::App::getWindow().getSize());
+    const float ratio = size.x / size.y;
+    static constexpr float Widescreen = 16.f / 9.f;
+    static constexpr float ViewportWidth = 640.f;
+
+    return { ViewportWidth, ratio < Widescreen ? 300.f : 360.f };
+}
 
 namespace ConstVal
 {

@@ -48,11 +48,11 @@ namespace MenuCommandID
 {
     enum
     {
-        RootNode    = 0x1,
-        ReadyButton = 0x2,
-        LobbyList   = 0x4,
-        AvatarList  = 0x8,
-        ServerInfo  = 0x10
+        RootNode     = 0x1,
+        ReadyButton  = 0x2,
+        LobbyList    = 0x4,
+        ServerInfo   = 0x8,
+        PlayerConfig = 0x10
     };
 }
 
@@ -64,7 +64,8 @@ namespace GroupID
         Avatar,
         Join,
         Lobby,
-        Options
+        Options,
+        PlayerConfig
     };
 }
 
@@ -103,16 +104,23 @@ private:
 
     enum MenuID
     {
-        Main, Avatar, Join, Lobby, Options, Count
+        Main, Avatar, Join, Lobby, Options, PlayerConfig, Count
     };
 
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
+
+    
+    std::array<cro::Entity, MenuID::Count> m_menuEntities = {};
+    
+    std::vector<cro::Entity> m_avatarListEntities;
 
     struct TextEdit final
     {
         cro::String* string = nullptr;
         cro::Entity entity;
     }m_textEdit;
+
+    glm::vec2 m_viewScale;
 
     void addSystems();
     void loadAssets();
@@ -123,12 +131,15 @@ private:
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createOptionsMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createPlayerConfigMenu();
 
     void handleTextEdit(const cro::Event&);
     void applyTextEdit();
-    void updateLocalAvatars();
+    void updateLocalAvatars(std::uint32_t, std::uint32_t);
     void updateLobbyData(const cro::NetEvent&);
     void updateLobbyAvatars();
+
+    void showPlayerConfig(bool, std::uint8_t);
 
     void handleNetEvent(const cro::NetEvent&);
     void updateView(cro::Camera&);

@@ -33,6 +33,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "Clubs.hpp"
 #include "MenuConsts.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -120,6 +121,7 @@ void GolfState::buildUI()
     entity.addComponent<UIElement>().position = { 0.01f, 0.f };
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole number
@@ -129,6 +131,7 @@ void GolfState::buildUI()
     entity.addComponent<UIElement>().position = { 0.21f, 0.f };
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole distance
@@ -138,6 +141,7 @@ void GolfState::buildUI()
     entity.addComponent<UIElement>().position = { 0.5f, 1.f };
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -148,6 +152,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().position = { 0.01f, 1.f };
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -163,6 +168,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().position = { 0.68f, 0.f };
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -180,6 +186,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().position = { 0.76f, 1.f };
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -196,6 +203,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindString;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto windEnt = entity;
@@ -444,7 +452,7 @@ void GolfState::createScoreboard()
     auto bgEnt = entity;
     auto& font = m_resources.fonts.get(FontID::UI);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 200.f, 290.f, 0.02f });
+    entity.addComponent<cro::Transform>().setPosition({ 200.f, 293.f, 0.02f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("LEADERS");
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);

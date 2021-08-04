@@ -78,7 +78,7 @@ struct SharedStateData final
     std::array<ConnectionData, 4u> connectionData = {};
 
     //our local player data
-    ConnectionData localPlayer;
+    ConnectionData localConnectionData;
     cro::String targetIP;
 
     //sent to server if hosting else rx'd from server

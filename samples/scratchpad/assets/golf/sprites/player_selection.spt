@@ -1,0 +1,29 @@
+spritesheet player_selection
+{
+    src = "assets/golf/images/player_selection.png"
+
+    sprite background
+    {
+        bounds = 0,0,208,208
+    }
+
+    sprite name_highlight
+    {
+        bounds = 208,0,98,17
+    }
+
+    sprite button_highlight
+    {
+        bounds = 208,17,57,17
+    }
+
+    sprite arrow_left
+    {
+        bounds = 272,17,16,15
+    }
+
+    sprite arrow_right
+    {
+        bounds = 288,17,16,15
+    }
+}

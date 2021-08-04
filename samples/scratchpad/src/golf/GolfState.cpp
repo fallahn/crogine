@@ -1329,7 +1329,7 @@ void GolfState::hitBall()
     impulse *= Clubs[getClub()].power * m_inputParser.getPower();
 
     InputUpdate update;
-    update.clientID = m_sharedData.localPlayer.connectionID;
+    update.clientID = m_sharedData.localConnectionData.connectionID;
     update.playerID = m_currentPlayer.player;
     update.impulse = impulse;
 
