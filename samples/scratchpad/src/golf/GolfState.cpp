@@ -1183,6 +1183,12 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
 
     m_currentPlayer.position = m_holeData[m_currentHole].tee;
+
+
+    //this is called by setNextPlayer, but doing it here ensures that
+    //each player starts a new hole on a driver
+    m_inputParser.setHoleDirection(m_holeData[m_currentHole].pin - m_currentPlayer.position, true);
+    m_currentPlayer.terrain = TerrainID::Fairway;
 }
 
 void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)

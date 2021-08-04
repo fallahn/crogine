@@ -189,13 +189,7 @@ bool GolfMenuState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYDOWN)
     {
-        switch (evt.key.keysym.sym)
-        {
-        default: break;
-        case SDLK_BACKSPACE:
-            handleTextEdit(evt);
-            break;
-        }
+        handleTextEdit(evt);
     }
     else if (evt.type == SDL_TEXTINPUT)
     {
@@ -508,11 +502,21 @@ void GolfMenuState::handleTextEdit(const cro::Event& evt)
 
     if (evt.type == SDL_KEYDOWN)
     {
-        //assuming we're only handling backspace...
-        if (!m_textEdit.string->empty())
+        switch (evt.key.keysym.sym)
         {
-            m_textEdit.string->erase(m_textEdit.string->size() - 1);
+        default: break;
+        case SDLK_BACKSPACE:
+            if (!m_textEdit.string->empty())
+            {
+                m_textEdit.string->erase(m_textEdit.string->size() - 1);
+            }
+            break;
+        //case SDLK_RETURN:
+        //case SDLK_RETURN2:
+            //applyTextEdit();
+            //return;
         }
+        
     }
     else if (evt.type == SDL_TEXTINPUT)
     {

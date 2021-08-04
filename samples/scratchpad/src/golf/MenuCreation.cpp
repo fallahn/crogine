@@ -70,7 +70,7 @@ namespace
             return true;
         case SDL_KEYUP:
         case SDL_KEYDOWN:
-            return (evt.key.keysym.sym == SDLK_SPACE || evt.key.keysym.sym == SDLK_RETURN);
+            return (evt.key.keysym.sym == SDLK_RETURN2 || evt.key.keysym.sym == SDLK_RETURN);
         }
     }
 }
@@ -108,7 +108,7 @@ void GolfMenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter,
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(m_font).setString("Host");
     entity.getComponent<cro::Text>().setCharacterSize(MediumTextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
     entity.getComponent<cro::UIInput>().setGroup(GroupID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
@@ -777,6 +777,13 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     //I need to finish the layout editor :3
     entity = createButton({ 74.f, 159.f }, "name_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
+    //    m_scene.getSystem<cro::UISystem>().addCallback(
+    //        [&](cro::Entity e) 
+    //        {
+    //            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    //            applyTextEdit();
+    //        });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_scene.getSystem<cro::UISystem>().addCallback(
             [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
@@ -800,7 +807,6 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    //textEnt.getComponent<cro::Drawable2D>().setCroppingArea(entity.getComponent<cro::Sprite>().getTextureBounds());
 
 
     //c1 left
