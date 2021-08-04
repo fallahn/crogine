@@ -32,12 +32,13 @@ source distribution.
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
-static const std::uint32_t LargeTextSize = 120;
-static const std::uint32_t MediumTextSize = 50;
-static const std::uint32_t SmallTextSize = 30;
+static const std::uint32_t LargeTextSize = 64;
+static const std::uint32_t MediumTextSize = 32;
+static const std::uint32_t SmallTextSize = 16;
 
-static const cro::Colour TextNormalColour(0.9f, 0.58f, 0.1f);
-static const cro::Colour TextHighlightColour(0.99f, 0.08f, 0.1f);
+static const cro::Colour TextNormalColour(0xfff8e1ff);
+static const cro::Colour TextEditColour(0x6eb39dff);
+static const cro::Colour TextHighlightColour(0xb83530ff);
 static const cro::Colour LeaderboardTextDark(0x1a1e2dff);
 static const cro::Colour LeaderboardTextLight(0xfff8e1ff);
 

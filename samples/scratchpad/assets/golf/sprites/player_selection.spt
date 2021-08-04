@@ -9,7 +9,7 @@ spritesheet player_selection
 
     sprite name_highlight
     {
-        bounds = 208,0,98,17
+        bounds = 208,0,104,17
     }
 
     sprite button_highlight

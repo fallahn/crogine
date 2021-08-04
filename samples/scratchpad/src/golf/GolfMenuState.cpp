@@ -78,6 +78,7 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
     });
 
     context.mainWindow.setMouseCaptured(false);
+    context.mainWindow.setTitle("Lotec Golf");
     //context.appInstance.setClearColour(cro::Colour(0.2f, 0.2f, 0.26f));
 
     sd.clientConnection.ready = false;
@@ -250,7 +251,7 @@ void GolfMenuState::addSystems()
 
 void GolfMenuState::loadAssets()
 {
-    m_font.loadFromFile("assets/fonts/VeraMono.ttf");
+    m_font.loadFromFile("assets/golf/fonts/IBM_CGA.ttf");
 }
 
 void GolfMenuState::createScene()
@@ -390,7 +391,7 @@ void GolfMenuState::createScene()
     createJoinMenu(entity, mouseEnterCallback, mouseExitCallback);
     createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
     createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createPlayerConfigMenu();
+    createPlayerConfigMenu(mouseEnterCallback, mouseExitCallback);
 
     //set a custom camera so the scene doesn't overwrite the viewport
     //with the default view when resizing the window
@@ -489,7 +490,7 @@ void GolfMenuState::updateView(cro::Camera& cam)
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
-    cam.setOrthographic(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
+    cam.setOrthographic(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -20.f, 10.f);
     cam.viewport.bottom = (1.f - size.y) / 2.f;
     cam.viewport.height = size.y;
 
@@ -515,8 +516,8 @@ void GolfMenuState::handleTextEdit(const cro::Event& evt)
     }
     else if (evt.type == SDL_TEXTINPUT)
     {
-        //TODO decide on some max string length (need also for sending over network)
-        if (m_textEdit.string->size() < ConstVal::MaxStringChars)
+        if (m_textEdit.string->size() < ConstVal::MaxStringChars
+            && m_textEdit.string->size() < m_textEdit.maxLen)
         {
             auto codePoints = cro::Util::String::getCodepoints(evt.text.text);
 
@@ -528,7 +529,8 @@ void GolfMenuState::handleTextEdit(const cro::Event& evt)
     if (!m_textEdit.string->empty())
     {
         auto bounds = cro::Text::getLocalBounds(m_textEdit.entity);
-        m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
+       // m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
+        //TODO make this scroll when we hist the edge of the input
     }
 }
 
@@ -541,10 +543,10 @@ void GolfMenuState::applyTextEdit()
             *m_textEdit.string = "INVALID";
         }
 
-        m_textEdit.entity.getComponent<cro::Text>().setFillColour(cro::Colour::White);
+        m_textEdit.entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         m_textEdit.entity.getComponent<cro::Text>().setString(*m_textEdit.string);
-        auto bounds = cro::Text::getLocalBounds(m_textEdit.entity);
-        m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
+        //auto bounds = cro::Text::getLocalBounds(m_textEdit.entity);
+        //m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
         m_textEdit.entity.getComponent<cro::Callback>().active = false;
         SDL_StopTextInput();
     }

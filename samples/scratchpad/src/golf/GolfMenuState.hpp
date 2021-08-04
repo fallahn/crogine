@@ -52,7 +52,8 @@ namespace MenuCommandID
         ReadyButton  = 0x2,
         LobbyList    = 0x4,
         ServerInfo   = 0x8,
-        PlayerConfig = 0x10
+        PlayerConfig = 0x10,
+        PlayerName   = 0x20
     };
 }
 
@@ -118,6 +119,7 @@ private:
     {
         cro::String* string = nullptr;
         cro::Entity entity;
+        std::size_t maxLen = ConstVal::MaxStringChars;
     }m_textEdit;
 
     glm::vec2 m_viewScale;
@@ -131,7 +133,7 @@ private:
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createOptionsMenu(cro::Entity, std::uint32_t, std::uint32_t);
-    void createPlayerConfigMenu();
+    void createPlayerConfigMenu(std::uint32_t, std::uint32_t);
 
     void handleTextEdit(const cro::Event&);
     void applyTextEdit();

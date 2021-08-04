@@ -433,9 +433,10 @@ void GolfMenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter,
                     callback.active = !callback.active;
                     if (callback.active)
                     {
-                        textEnt.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+                        textEnt.getComponent<cro::Text>().setFillColour(TextEditColour);
                         m_textEdit.string = &m_sharedData.targetIP;
                         m_textEdit.entity = textEnt;
+                        m_textEdit.maxLen = ConstVal::MaxStringChars;
                         SDL_StartTextInput();
                     }
                     else
@@ -676,7 +677,7 @@ void GolfMenuState::createOptionsMenu(cro::Entity parent, std::uint32_t, std::ui
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
 }
 
-void GolfMenuState::createPlayerConfigMenu()
+void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/player_selection.spt", m_textureResource);
@@ -713,7 +714,7 @@ void GolfMenuState::createPlayerConfigMenu()
         //the other menu graphics are done
         //auto size = glm::vec2(cro::App::getWindow().getSize());
         glm::vec2 size(1920.f, 1080.f);
-        e.getComponent<cro::Transform>().setPosition(size / 2.f);
+        e.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, 1.f));
         e.getComponent<cro::Transform>().setScale(m_viewScale * scale);
     };
 
@@ -730,6 +731,32 @@ void GolfMenuState::createPlayerConfigMenu()
 
 
     static constexpr float ButtonDepth = 0.1f;
+
+    //player name text
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 79.f, 171.f, ButtonDepth });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(m_font).setCharacterSize(8);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::PlayerName;
+
+    entity.addComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        if (m_textEdit.string != nullptr)
+        {
+            auto str = *m_textEdit.string;
+            if (str.size() < ConstVal::MaxNameChars)
+            {
+                str += "_";
+            }
+            e.getComponent<cro::Text>().setString(str);
+        }
+    };
+
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto textEnt = entity;
+
     auto createButton = [&](glm::vec2 pos, const std::string& sprite)
     {
         auto entity = m_scene.createEntity();
@@ -748,18 +775,32 @@ void GolfMenuState::createPlayerConfigMenu()
     };
 
     //I need to finish the layout editor :3
-    auto entity = createButton({ 82.f, 159.f }, "name_highlight");
+    entity = createButton({ 74.f, 159.f }, "name_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+        m_scene.getSystem<cro::UISystem>().addCallback(
+            [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
-                    //applyTextEdit();
+                    auto& callback = textEnt.getComponent<cro::Callback>();
+                    callback.active = !callback.active;
+                    if (callback.active)
+                    {
+                        textEnt.getComponent<cro::Text>().setFillColour(TextEditColour);
+                        m_textEdit.string = &m_sharedData.localConnectionData.playerData[callback.getUserData<std::uint8_t>()].name;
+                        m_textEdit.entity = textEnt;
+                        m_textEdit.maxLen = ConstVal::MaxNameChars;
+                        SDL_StartTextInput();
+                    }
+                    else
+                    {
+                        applyTextEdit();
+                    }
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    //textEnt.getComponent<cro::Drawable2D>().setCroppingArea(entity.getComponent<cro::Sprite>().getTextureBounds());
 
 
     //c1 left
@@ -892,12 +933,14 @@ void GolfMenuState::createPlayerConfigMenu()
     //done
     entity = createButton({ 76.f, 15.f }, "button_highlight");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+        m_scene.getSystem<cro::UISystem>().addCallback(
+            [&, mouseEnter, mouseExit](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    //applyTextEdit();
+                    applyTextEdit();
                     showPlayerConfig(false, 0);
+                    updateLocalAvatars(mouseEnter, mouseExit);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -953,11 +996,13 @@ void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t m
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_scene.getSystem<cro::UISystem>().addCallback(
-                [](cro::Entity, const cro::ButtonEvent& evt) mutable
+                [&, i](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
                     if (activated(evt))
                     {
-                        //TODO show the edit window for this index
+                        showPlayerConfig(true, i);
+
+                        //TODO hide or dim the background menu
                     }
                 });
         m_menuEntities[MenuID::Avatar].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1024,6 +1069,14 @@ void GolfMenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
 
         e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>().second = target;
         m_scene.getSystem<cro::UISystem>().setActiveGroup(menu);
+    };
+    m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    cmd.targetFlags = MenuCommandID::PlayerName;
+    cmd.action = [&, playerIndex](cro::Entity e, float)
+    {
+        e.getComponent<cro::Text>().setString(m_sharedData.localConnectionData.playerData[playerIndex].name);
+        e.getComponent<cro::Callback>().setUserData<std::uint8_t>(playerIndex);
     };
     m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
