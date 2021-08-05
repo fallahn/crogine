@@ -34,7 +34,7 @@ source distribution.
 
 struct TerrainID final
 {
-    //these values a re multiplied by 10 in the colour's blue channel
+    //these values are multiplied by 10 in the map's red channel
     //just cos it makes its a tiiiny bit easier to see in the image
     enum
     {

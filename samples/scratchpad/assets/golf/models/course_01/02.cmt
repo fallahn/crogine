@@ -1,18 +1,8 @@
-model hole_01
+model 02
 {
-    mesh = "assets/golf/models/hole_01.cmb"
+    mesh = "assets/golf/models/course_01/02.cmb"
     cast_shadows = false
 
-    material Unlit
-    {
-        name = "Untitled"
-        colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = false
-        repeat = true
-        blendmode = "none"
-        diffuse = "assets/golf/images/stripes.png"
-
-    }
     material Unlit
     {
         name = "Untitled"
@@ -21,6 +11,16 @@ model hole_01
         repeat = true
         vertex_coloured = true
         blendmode = "none"
+
+    }
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        blendmode = "none"
+        diffuse = "assets/golf/images/stripes.png"
 
     }
 }

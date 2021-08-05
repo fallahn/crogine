@@ -388,7 +388,7 @@ void TerrainBuilder::threadFunc()
                         float scale = static_cast<float>(cro::Util::Random::value(9, 11)) / 10.f;
 
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Pine, BillboardID::Willow)]);
-                        bb.position = { x, height - 0.02f, -y }; //small vertical offset to stop floating billboards
+                        bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards
                         bb.size *= scale;
                     }
                 }

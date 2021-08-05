@@ -561,6 +561,9 @@ bool GameState::validateMap()
         }
     }
 
+    //make sure we have the first map loaded else this won't match the hole...
+    m_currentMap.loadFromFile(m_holeData[0].mapPath);
+
     return true;
 }
 

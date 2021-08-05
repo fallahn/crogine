@@ -164,7 +164,7 @@ void BallSystem::process(float dt)
                     //add wind - adding less wind the morethe ball travels in the
                     //wind direction means we don't get blown forever
                     float windAmount = 1.f - glm::dot(m_windDirection, glm::normalize(ball.velocity));
-                    ball.velocity += m_windDirection * m_windStrength * 0.04f * windAmount * dt;
+                    ball.velocity += m_windDirection * m_windStrength * 0.05f * windAmount * dt;
 
                     //add slope from normal map
                     //glm::vec3 slope(normal.x, normal.y, 0.f); //TODO - calc this properly ;)

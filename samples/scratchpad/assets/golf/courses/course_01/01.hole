@@ -1,7 +1,7 @@
 hole 01
 {
     map = "assets/golf/courses/course_01/01.png"
-    model = "assets/golf/models/hole_01.cmt"
+    model = "assets/golf/models/course_01/01.cmt"
     pin = 22, 172
     tee = 260, 30
     par = 3
