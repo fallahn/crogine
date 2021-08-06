@@ -4,5 +4,5 @@ hole 01
     model = "assets/golf/models/course_01/01.cmt"
     pin = 22, 172
     tee = 260, 30
-    par = 3
+    par = 4
 }

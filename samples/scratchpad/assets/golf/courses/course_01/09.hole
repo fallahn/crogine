@@ -1,0 +1,8 @@
+hole 09
+{
+    map = "assets/golf/courses/course_01/09.png"
+    model = "assets/golf/models/course_01/09.cmt"
+    pin = 265, 40
+    tee = 32, 162
+    par = 4
+}
