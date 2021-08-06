@@ -120,6 +120,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         buildScene();
         });
 
+    context.mainWindow.setMouseCaptured(true);
+
 #ifdef CRO_DEBUG_
     registerWindow([&]() 
         {
@@ -321,6 +323,21 @@ void GolfState::handleMessage(const cro::Message& msg)
         }
     }
     break;
+    case cro::Message::ConsoleMessage:
+    {
+        const auto& data = msg.getData<cro::Message::ConsoleEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case cro::Message::ConsoleEvent::Closed:
+            cro::App::getWindow().setMouseCaptured(true);
+            break;
+        case cro::Message::ConsoleEvent::Opened:
+            cro::App::getWindow().setMouseCaptured(false);
+            break;
+        }
+    }
+        break;
     }
 
     m_gameScene.forwardMessage(msg);
@@ -748,8 +765,8 @@ void GolfState::buildScene()
 
     std::vector<float> verts =
     {
-        0.f, 0.f, 0.f,    1.f, 1.f, 1.f, 1.f,
-        5.f, 0.f, 0.f,    1.f, 1.f, 1.f, 0.2f
+        0.f, 0.02f, 0.f,    0.721f, 0.2f, 0.188f, 1.f,
+        5.f, 0.02f, 0.f,    0.721f, 0.2f, 0.188f, 0.2f
     };
     std::vector<std::uint32_t> indices =
     {

@@ -67,6 +67,12 @@ namespace golf
         std::uint16_t m_prevStick;
         float m_analogueAmount;
 
+        std::int32_t m_mouseWheel;
+        std::int32_t m_prevMouseWheel;
+        std::int32_t m_mouseMove;
+        std::int32_t m_prevMouseMove;
+
+
         float m_holeDirection; //radians
         float m_rotation; //+- max rads
 
@@ -86,5 +92,6 @@ namespace golf
         void setClub(float); //picks closest club to given distance
         void rotate(float);
         void checkControllerInput();
+        void checkMouseInput();
     };
 }

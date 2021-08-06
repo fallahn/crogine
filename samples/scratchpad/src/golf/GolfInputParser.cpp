@@ -54,6 +54,10 @@ namespace golf
         m_prevFlags         (0),
         m_prevStick         (0),
         m_analogueAmount    (0.f),
+        m_mouseWheel        (0),
+        m_prevMouseWheel    (0),
+        m_mouseMove         (0),
+        m_prevMouseMove     (0),
         m_holeDirection     (0.f),
         m_rotation          (0.f),
         m_power             (0.f),
@@ -202,6 +206,38 @@ namespace golf
                 }
             }
         }
+
+        else if (evt.type == SDL_MOUSEBUTTONDOWN)
+        {
+            if (evt.button.button == SDL_BUTTON_LEFT)
+            {
+                m_inputFlags |= InputFlag::Action;
+            }
+            else if (evt.button.button == SDL_BUTTON_RIGHT)
+            {
+                m_inputFlags |= InputFlag::NextClub;
+            }
+        }
+        else if (evt.type == SDL_MOUSEBUTTONUP)
+        {
+            if (evt.button.button == SDL_BUTTON_LEFT)
+            {
+                m_inputFlags &= ~InputFlag::Action;
+            }
+            else if (evt.button.button == SDL_BUTTON_RIGHT)
+            {
+                m_inputFlags &= ~InputFlag::NextClub;
+            }
+        }  
+
+        else if (evt.type == SDL_MOUSEWHEEL)
+        {
+            m_mouseWheel += evt.wheel.y;
+        }
+        else if (evt.type == SDL_MOUSEMOTION)
+        {
+            m_mouseMove += evt.motion.xrel;
+        }
     }
 
     void InputParser::setHoleDirection(glm::vec3 dir, bool selectClub)
@@ -262,6 +298,7 @@ namespace golf
         if (m_active)
         {
             checkControllerInput();
+            checkMouseInput();
 
             switch (m_state)
             {
@@ -427,5 +464,47 @@ namespace golf
         {
             m_prevStick = m_inputFlags;
         }
+    }
+
+    void InputParser::checkMouseInput()
+    {
+        if (m_mouseWheel > 0)
+        {
+            m_inputFlags |= InputFlag::PrevClub;
+        }
+        else if (m_mouseWheel < 0)
+        {
+            m_inputFlags |= InputFlag::NextClub;
+        }
+        else if (m_prevMouseWheel > 0)
+        {
+            m_inputFlags &= ~InputFlag::PrevClub;
+        }
+        else if (m_prevMouseWheel < 0)
+        {
+            m_inputFlags &= ~InputFlag::NextClub;
+        }
+
+        m_prevMouseWheel = m_mouseWheel;
+        m_mouseWheel = 0;
+
+        if (m_mouseMove > 0)
+        {
+            m_inputFlags |= InputFlag::Right;
+        }
+        else if (m_mouseMove < 0)
+        {
+            m_inputFlags |= InputFlag::Left;
+        }
+        else if (m_prevMouseMove > 0)
+        {
+            m_inputFlags &= ~InputFlag::Right;
+        }
+        else if (m_prevMouseMove < 0)
+        {
+            m_inputFlags &= ~InputFlag::Left;
+        }
+        m_prevMouseMove = m_mouseMove;
+        m_mouseMove = 0;
     }
 }

@@ -166,7 +166,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().position = { 0.68f, 0.f };
+    entity.addComponent<UIElement>().position = { 0.61f, 0.f };
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;
@@ -174,7 +174,8 @@ void GolfState::buildUI()
         [&](cro::Entity e, float)
     {
         auto stroke = std::to_string(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole]);
-        e.getComponent<cro::Text>().setString("Stroke: " + stroke);
+        auto par = std::to_string(m_holeData[m_currentHole].par);
+        e.getComponent<cro::Text>().setString("Stroke: " + stroke + " - Par: " + par);
     };
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
