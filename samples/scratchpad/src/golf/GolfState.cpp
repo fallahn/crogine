@@ -842,10 +842,10 @@ void GolfState::buildScene()
     md.createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
 
+
     auto pinDir = m_holeData[m_currentHole].pin - m_holeData[0].tee;
     m_camRotation = std::atan2(-pinDir.z, pinDir.x);
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
-    //TODO add callback for hole transition
     
 
 

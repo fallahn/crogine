@@ -107,7 +107,7 @@ static const std::string CelFragment = R"(
 
         //int index = int(step(0.5, amount) + step(0.75, amount));
 
-        amount = (0.2 * step(0.1, amount)) + 0.8;
+        amount = (0.2 * step(0.2, amount)) + 0.8;
         colour.rgb *= amount;//Steps[index];
 
         FRAG_OUT = vec4(colour.rgb, 1.0);
