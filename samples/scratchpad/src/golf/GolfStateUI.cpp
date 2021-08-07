@@ -660,7 +660,7 @@ void GolfState::updateScoreboard()
             totalString += "\n\nTOTAL\n" + std::to_string(par);
             for (auto i = 0u; i < playerCount; ++i)
             {
-                totalString += "\n" + std::to_string(scores[i + MaxCols].total);;
+                totalString += "\n" + std::to_string(scores[i/* + MaxCols*/].total);
             }
         }
 
@@ -699,6 +699,7 @@ void GolfState::showScoreboard(bool visible)
     std::int32_t step = -19;
     if (m_currentHole > 8)
     {
+        //TODO this only needs to scroll if we have more than 8 players
         //scroll to lower part of the board
         step = 19;
     }

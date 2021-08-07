@@ -3,6 +3,7 @@ hole 03
     map = "assets/golf/courses/course_01/03.png"
     model = "assets/golf/models/course_01/03.cmt"
     pin = 277, 38
+    target = 277, 38
     tee = 17, 160
     par = 4
 }

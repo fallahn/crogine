@@ -1,0 +1,9 @@
+hole 13
+{
+    map = "assets/golf/courses/course_01/13.png"
+    model = "assets/golf/models/course_01/13.cmt"
+    pin = 280, 165
+    target = 280, 165
+    tee = 31, 57
+    par = 3
+}

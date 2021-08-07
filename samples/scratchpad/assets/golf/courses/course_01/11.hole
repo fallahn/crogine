@@ -1,0 +1,9 @@
+hole 11
+{
+    map = "assets/golf/courses/course_01/11.png"
+    model = "assets/golf/models/course_01/11.cmt"
+    pin = 31, 107
+    target = 31, 107
+    tee = 280, 38
+    par = 3
+}

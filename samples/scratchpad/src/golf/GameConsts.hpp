@@ -66,7 +66,7 @@ struct ShaderID final
 static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, float px, float py)
 {
     auto size = glm::vec2(img.getSize());
-    //I forget why our coords a re float - but this makes for horrible casts :(
+    //I forget why our coords are float - this makes for horrible casts :(
     std::uint32_t x = static_cast<std::uint32_t>(std::min(size.x, std::max(0.f, std::floor(px))));
     std::uint32_t y = static_cast<std::uint32_t>(std::min(size.y, std::max(0.f, std::floor(py))));
 
@@ -97,7 +97,7 @@ static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, floa
 //TODO use this for interpolating slop height on a height map
 static inline float readHeightmap(glm::vec3 position, const std::vector<float>& heightmap)
 {
-    auto lerp = [](float a, float b, float t) constexpr
+    const auto lerp = [](float a, float b, float t) constexpr
     {
         return a + t * (b - a);
     };
@@ -122,5 +122,5 @@ static inline float readHeightmap(glm::vec3 position, const std::vector<float>& 
 
     //float topLine = lerp(getHeightAt(x, y), getHeightAt(x + 1, y), modX);
     //float botLine = lerp(getHeightAt(x, y + 1), getHeightAt(x + 1, y + 1), modX);
-    //return lerp(topLine, botLine, modY) * IslandHeight;
+    //return lerp(topLine, botLine, modY) * MaxTerrainHeight;
 }
