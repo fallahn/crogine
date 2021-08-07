@@ -26,6 +26,7 @@ Hole files describe which models/assets make up the hole hole, as well as the po
         map = "assets/golf/holes/01.png" //path to map file, see below
         model = "assets/golf/models/hole_01.cmt" //path to the hole model
         pin = 22, 172 //XY coordinates on the map file to the hole. This is automatically converted to world units when loaded
+        target = 22, 172 //initial direction the player should be looking at when the hole is loaded. Usually the pin, but can be different if hole is sharp dogleg
         tee = 243, 30 //XY coordinates on the map file to the tee
         par = 3 //par for this hole.
     }

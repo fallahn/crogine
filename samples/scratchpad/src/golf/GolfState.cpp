@@ -584,7 +584,7 @@ void GolfState::loadAssets()
             error = true;
         }
 
-        static constexpr std::int32_t MaxProps = 5;
+        static constexpr std::int32_t MaxProps = 6;
         std::int32_t propCount = 0;
         auto& holeData = m_holeData.emplace_back();
 
@@ -613,6 +613,15 @@ void GolfState::loadAssets()
                 auto tee = holeProp.getValue<glm::vec2>();
                 holeData.tee = { tee.x, 0.f, -tee.y };
                 propCount++;
+            }
+            else if (name == "target")
+            {
+                auto target = holeProp.getValue<glm::vec2>();
+                holeData.target = { target.x, 0.f, -target.y };
+                if (glm::length2(holeData.target) > 0)
+                {
+                    propCount++;
+                }
             }
             else if (name == "par")
             {
@@ -843,7 +852,7 @@ void GolfState::buildScene()
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
 
 
-    auto pinDir = m_holeData[m_currentHole].pin - m_holeData[0].tee;
+    auto pinDir = m_holeData[m_currentHole].pin - m_holeData[0].target;
     m_camRotation = std::atan2(-pinDir.z, pinDir.x);
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
     
@@ -1133,11 +1142,11 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             auto teePos = m_holeData[m_currentHole - 1].tee + (teeMove * percent);
 
             cmd.targetFlags = CommandID::Tee;
-            cmd.action = [teePos, pinPos](cro::Entity e, float)
+            cmd.action = [&,teePos](cro::Entity e, float)
             {
                 e.getComponent<cro::Transform>().setPosition(teePos);
 
-                auto pinDir = pinPos - teePos;
+                auto pinDir = m_holeData[m_currentHole].target - teePos;
                 auto rotation = std::atan2(-pinDir.z, pinDir.x);
                 e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
             };

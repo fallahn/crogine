@@ -35,6 +35,7 @@ source distribution.
 struct HoleData final
 {
     glm::vec3 tee = glm::vec3(0.f);
+    glm::vec3 target = glm::vec3(1.f);
     glm::vec3 pin = glm::vec3(0.f);
     std::int32_t par = 0;
     std::string mapPath;
