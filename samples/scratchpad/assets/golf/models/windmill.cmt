@@ -1,0 +1,18 @@
+model windmill
+{
+    mesh = "assets/golf/models/windmill.cmb"
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        blendmode = "none"
+        diffuse = "assets/golf/images/windmill.png"
+        alpha_clip = 0.998000
+        skinned = true
+
+    }
+}
