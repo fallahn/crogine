@@ -862,13 +862,38 @@ void GolfState::buildScene()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Tee;
     md.createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
-
-
+    
     auto targetDir = m_holeData[m_currentHole].target - m_holeData[0].tee;
     m_camRotation = std::atan2(-targetDir.z, targetDir.x);
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
-    
 
+    auto teeEnt = entity;
+    md.loadFromFile("assets/golf/models/cart.cmt");
+    std::array cartPositions =
+    {
+        glm::vec3(0.2f, 0.f, -5.2f),
+        glm::vec3(2.4f, 0.f, -5.8f),
+        glm::vec3(1.2f, 0.f, 4.8f),
+        glm::vec3(-0.7f, 0.f, 5.1f)
+    };
+
+    //add a cart for each connected client :3
+    for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+    {
+        if (m_sharedData.connectionData[i].playerCount > 0)
+        {
+            auto r = i + cro::Util::Random::value(0, 8);
+            float rotation = (cro::Util::Const::PI / 4.f) * r;
+
+            entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(cartPositions[i]);
+            entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+            entity.addComponent<cro::CommandTarget>().ID = CommandID::Cart;
+            md.createModel(entity);
+            //entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+            teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        }
+    }
 
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
@@ -1176,6 +1201,14 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
             auto targetDir = m_holeData[m_currentHole].target - currPos;
             m_camRotation = std::atan2(-targetDir.z, targetDir.x);
+
+            //randomise the cart positions a bit
+            cmd.targetFlags = CommandID::Cart;
+            cmd.action = [](cro::Entity e, float dt)
+            {
+                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.5f);
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
         }
         else
         {

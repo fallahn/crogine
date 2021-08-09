@@ -37,7 +37,8 @@ struct CommandID final
         StrokeIndicator = 0x2,
         Flag            = 0x4,
         Hole            = 0x8,
-        Tee             = 0x10
+        Tee             = 0x10,
+        Cart            = 0x20
     };
 
     struct UI final
