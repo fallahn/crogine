@@ -64,7 +64,7 @@ namespace
         glm::vec2(ColumnWidth * 12.f, ColumnHeight),
         glm::vec2(ColumnWidth * 13.f, ColumnHeight),
         glm::vec2(ColumnWidth * 14.f, ColumnHeight),
-        glm::vec2(ColumnWidth * 17.f, ColumnHeight),
+        glm::vec2(ColumnWidth * 15.f, ColumnHeight),
     };
 }
 
@@ -540,7 +540,9 @@ void GolfState::updateScoreboard()
         {
             cro::String name;
             std::vector<std::uint8_t> holes;
-            std::uint32_t total = 0;
+            std::int32_t frontNine = 0;
+            std::int32_t backNine = 0;
+            std::int32_t total = 0;
         };
 
         std::vector<ScoreEntry> scores;
@@ -555,11 +557,19 @@ void GolfState::updateScoreboard()
             {
                 auto& entry = scores.emplace_back();
                 entry.name = client.playerData[i].name;
-                for (auto s : client.playerData[i].holeScores)
+                for (auto j = 0u; j < client.playerData[i].holeScores.size(); ++j)
                 {
-                    entry.holes.push_back(s);
-                    entry.total += s;
+                    entry.holes.push_back(client.playerData[i].holeScores[j]);
+                    if (j < 9)
+                    {
+                        entry.frontNine += client.playerData[i].holeScores[j];
+                    }
+                    else
+                    {
+                        entry.backNine += client.playerData[i].holeScores[j];
+                    }
                 }
+                entry.total = entry.frontNine + entry.backNine;
             }
         }
 
@@ -655,9 +665,7 @@ void GolfState::updateScoreboard()
 
         for (auto i = 0u; i < playerCount; ++i)
         {
-            //TODO this should only total the front 9
-            //if page2 > 0
-            totalString += "\n" + std::to_string(scores[i].total);
+            totalString += "\n" + std::to_string(scores[i].frontNine);
         }
 
         //pad out for page 2
@@ -668,16 +676,32 @@ void GolfState::updateScoreboard()
 
         if (page2)
         {
+            const auto getSeparator = 
+                [](std::int32_t first)
+            {
+                std::string str;
+                if (first < 10)
+                {
+                    str += " ";
+                }
+                str += " - ";
+
+                return str;
+            };
+
+            auto frontPar = par;
             par = 0;
             for (auto i = MaxCols; i < m_holeData.size(); ++i)
             {
                 par += m_holeData[i].par;
             }
+            auto separator = getSeparator(par);
 
-            totalString += "\n\nTOTAL\n" + std::to_string(par);
+            totalString += "\n\nTOTAL\n" + std::to_string(par) + separator + std::to_string(par + frontPar);
             for (auto i = 0u; i < playerCount; ++i)
             {
-                totalString += "\n" + std::to_string(scores[i/* + MaxCols*/].total);
+                separator = getSeparator(scores[i].backNine);
+                totalString += "\n" + std::to_string(scores[i].backNine) + separator + std::to_string(scores[i].total);
             }
         }
 
@@ -716,7 +740,6 @@ void GolfState::showScoreboard(bool visible)
     std::int32_t step = -19;
     if (m_currentHole > 8)
     {
-        //TODO this only needs to scroll if we have more than 8 players
         //scroll to lower part of the board
         step = 19;
     }
