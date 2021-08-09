@@ -50,3 +50,9 @@ static const std::array<std::string, TerrainID::Count> TerrainStrings =
 {
     "Rough", "Fairway", "Green", "Bunker", "Water", "Scrub"
 };
+
+//how much the stroke is affected by the current terrain
+static constexpr std::array<float, TerrainID::Count> Dampening =
+{
+    0.9f, 1.f, 1.f, 0.85f, 1.f, 1.f
+};

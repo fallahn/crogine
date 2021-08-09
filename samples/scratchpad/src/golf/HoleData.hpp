@@ -42,3 +42,5 @@ struct HoleData final
     std::vector<glm::vec3> normalMap;
     cro::Entity modelEntity;
 };
+
+static constexpr std::size_t MaxHoles = 18;

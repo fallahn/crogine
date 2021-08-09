@@ -547,7 +547,8 @@ void GolfState::loadAssets()
     for (const auto& prop : props)
     {
         const auto& name = prop.getName();
-        if (name == "hole")
+        if (name == "hole"
+            && holeStrings.size() < MaxHoles)
         {
             holeStrings.push_back(prop.getValue<std::string>());
         }
@@ -1359,6 +1360,8 @@ void GolfState::hitBall()
     impulse = glm::toMat3(rotation) * impulse;
 
     impulse *= Clubs[getClub()].power * m_inputParser.getPower();
+    impulse *= Dampening[m_currentPlayer.terrain];
+
 
     InputUpdate update;
     update.clientID = m_sharedData.localConnectionData.connectionID;

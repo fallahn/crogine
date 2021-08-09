@@ -16,7 +16,7 @@ A course folder should contain one file with the course.data. It has the followi
         hole = "assets/golf/courses/course_01/02.hole"
     }
 
-The course file contains a list of paths to *.hole files which describe the individual holes that make up a course. This way holes can be recycled thoughout different course layouts should it be so desired. As many holes as needed can be added to a course (within reason) although 9 and 18 are the most common numbers.
+The course file contains a list of paths to *.hole files which describe the individual holes that make up a course. This way holes can be recycled thoughout different course layouts should it be so desired. Up to 18 holes can be added to a course.
 
 ###### Hole file
 Hole files describe which models/assets make up the hole hole, as well as the position of the tee, the hole and the par for that hole.

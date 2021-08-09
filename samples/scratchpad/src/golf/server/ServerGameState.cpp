@@ -480,7 +480,8 @@ bool GameState::validateMap()
     for (const auto& prop : props)
     {
         const auto& name = prop.getName();
-        if (name == "hole")
+        if (name == "hole"
+            && holeStrings.size() < MaxHoles)
         {
             holeStrings.push_back(prop.getValue<std::string>());
         }
