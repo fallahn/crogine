@@ -864,8 +864,8 @@ void GolfState::buildScene()
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
 
 
-    auto pinDir = m_holeData[m_currentHole].pin - m_holeData[0].tee;
-    m_camRotation = std::atan2(-pinDir.z, pinDir.x);
+    auto targetDir = m_holeData[m_currentHole].target - m_holeData[0].tee;
+    m_camRotation = std::atan2(-targetDir.z, targetDir.x);
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
     
 
@@ -1168,19 +1168,19 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             {
                 e.getComponent<cro::Transform>().setPosition(teePos);
 
-                auto pinDir = m_holeData[m_currentHole].pin - teePos;
+                auto pinDir = m_holeData[m_currentHole].target - teePos;
                 auto rotation = std::atan2(-pinDir.z, pinDir.x);
                 e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
             };
             m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
-            auto pinDir = m_holeData[m_currentHole].pin - currPos;
-            m_camRotation = std::atan2(-pinDir.z, pinDir.x);
+            auto targetDir = m_holeData[m_currentHole].target - currPos;
+            m_camRotation = std::atan2(-targetDir.z, targetDir.x);
         }
         else
         {
-            auto pinDir = m_holeData[m_currentHole].pin - currPos;
-            m_camRotation = std::atan2(-pinDir.z, pinDir.x);
+            auto targetDir = m_holeData[m_currentHole].target - currPos;
+            m_camRotation = std::atan2(-targetDir.z, targetDir.x);
         }
         
 
@@ -1230,7 +1230,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
     //this is called by setCurrentPlayer, but doing it here ensures that
     //each player starts a new hole on a driver/3 wood
-    m_inputParser.setHoleDirection(m_holeData[m_currentHole].pin - m_currentPlayer.position, true);
+    m_inputParser.setHoleDirection(m_holeData[m_currentHole].target - m_currentPlayer.position, true);
     m_currentPlayer.terrain = TerrainID::Fairway;
 }
 
@@ -1243,7 +1243,7 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
     auto camEnt = m_gameScene.getActiveCamera();
     auto& targetInfo = camEnt.getComponent<TargetInfo>();
-    auto target = m_holeData[m_currentHole].pin - position;
+    auto target = /*m_holeData[m_currentHole].pin*/targetInfo.currentLookAt - position;
 
     auto dist = glm::length(target);
     float distNorm = std::min(1.f, (dist - MinDist) / DistDiff);
@@ -1340,8 +1340,9 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
     //if client is ours activate input/set initial stroke direction
+    auto target = m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetLookAt;
     m_inputParser.setActive(localPlayer);
-    m_inputParser.setHoleDirection(m_holeData[m_currentHole].pin - player.position, m_currentPlayer != player); // this also selects the nearest club
+    m_inputParser.setHoleDirection(/*m_holeData[m_currentHole].pin*/target - player.position, m_currentPlayer != player); // this also selects the nearest club
 
     //TODO apply the correct sprite to the player entity
     cmd.targetFlags = CommandID::UI::PlayerSprite;
@@ -1477,14 +1478,33 @@ void GolfState::createTransition(const ActivePlayer& playerData)
         targetInfo.targetOffset = CameraStrokeOffset;
     }
 
-    auto targetDist = m_holeData[m_currentHole].target - playerData.position;
-    auto pinDist = m_holeData[m_currentHole].pin - playerData.position;
+    auto targetDir = m_holeData[m_currentHole].target - playerData.position;
+    auto pinDir = m_holeData[m_currentHole].pin - playerData.position;
     targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
     
-    //if both the pin and the target are in front of the player set the closest as the camera target
-    if (glm::dot(targetDist, pinDist) > 0)
+    //if both the pin and the target are in front of the player
+    if (glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)) > 0.2)
     {
-        targetInfo.targetLookAt = glm::length2(targetDist) < glm::length2(pinDist) ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
+        //set the target depending on how close it is
+        auto pinDist = glm::length2(pinDir);
+        auto targetDist = glm::length2(targetDir);
+        if (pinDist < targetDist)
+        {
+            //always target pin if its closer
+            targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+        }
+        else
+        {
+            //target the pin if the target is too close
+            if (targetDist < 10000) //remember this in len2
+            {
+                targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+            }
+            else
+            {
+                targetInfo.targetLookAt = m_holeData[m_currentHole].target;
+            }
+        }
     }
     else
     {
@@ -1510,12 +1530,12 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
         auto currPos = e.getComponent<cro::Transform>().getPosition();
         auto travel = playerData.position - currPos;
+        auto& targetInfo = m_gameScene.getActiveCamera().getComponent<TargetInfo>();
 
-        auto pinDir = m_holeData[m_currentHole].pin - currPos;
-        m_camRotation = std::atan2(-pinDir.z, pinDir.x);
+        auto targetDir = targetInfo.currentLookAt - currPos;
+        m_camRotation = std::atan2(-targetDir.z, targetDir.x);
 
         float minTravel = playerData.terrain == TerrainID::Green ? 0.000001f : 0.005f;
-        auto& targetInfo = m_gameScene.getActiveCamera().getComponent<TargetInfo>();
         if (glm::length2(travel) < minTravel)
         {
             //we're there
@@ -1531,7 +1551,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
         {
             const auto totalDist = glm::length(playerData.position - startPos);
             const auto currentDist = glm::length(travel);
-            const auto percent = currentDist / totalDist;
+            const auto percent = 1.f - (currentDist / totalDist);
 
             targetInfo.currentLookAt = targetInfo.prevLookAt + ((targetInfo.targetLookAt - targetInfo.prevLookAt) * percent);
 

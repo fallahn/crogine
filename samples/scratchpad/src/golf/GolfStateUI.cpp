@@ -232,7 +232,7 @@ void GolfState::buildUI()
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
     //sets the initial cam rotation for the wind indicator compensation
-    auto camDir = m_holeData[0].pin - m_currentPlayer.position;
+    auto camDir = m_holeData[0].target - m_currentPlayer.position;
     m_camRotation = std::atan2(-camDir.z, camDir.y);
 
     //root used to show/hide input UI
