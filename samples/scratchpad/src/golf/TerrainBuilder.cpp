@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/Skeleton.hpp>
 
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
@@ -244,16 +245,18 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_terrainEntity = entity;
 
     //create billboard entities
-    cro::ModelDefinition modelDef(resources);
+    cro::ModelDefinition billboardDef(resources);
+    cro::ModelDefinition windmillDef(resources);
+    windmillDef.loadFromFile("assets/golf/models/windmill.cmt");
 
     for (auto& entity : m_billboardEntities)
     {
         //reload the the model def each time to ensure unique VBOs
-        modelDef.loadFromFile("assets/golf/models/shrubbery.cmt");
+        billboardDef.loadFromFile("assets/golf/models/shrubbery.cmt");
 
         entity = scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, -MaxShrubOffset, 0.f });
-        modelDef.createModel(entity);
+        billboardDef.createModel(entity);
         //if the model def failed to load for some reason this will be
         //missing, so we'll add it here just to stop the thread exploding
         //if it can't find the component
@@ -272,6 +275,25 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
             m_terrainEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
+
+        //auto millEnt = scene.createEntity();
+        //millEnt.addComponent<cro::Transform>().setPosition({ 160.f, 0.f, -100.f });
+        //millEnt.getComponent<cro::Transform>().setScale(glm::vec3(1.2f));
+        //windmillDef.createModel(millEnt);
+        //if (millEnt.hasComponent<cro::Skeleton>())
+        //{
+        //    millEnt.getComponent<cro::Skeleton>().play(0);
+        //}
+        //millEnt.addComponent<cro::Callback>().active = true;
+        //millEnt.getComponent<cro::Callback>().function =
+        //    [entity](cro::Entity e, float)
+        //{
+        //    auto yPos = entity.getComponent<cro::Transform>().getPosition().y;
+        //    auto currPos = e.getComponent<cro::Transform>().getPosition();
+        //    currPos.y = yPos;
+        //    e.getComponent<cro::Transform>().setPosition(currPos);
+        //};
+        //entity.getComponent<cro::Transform>().addChild(millEnt.getComponent<cro::Transform>());
     }
 
     //load the billboard rects from a sprite sheet and convert to templates

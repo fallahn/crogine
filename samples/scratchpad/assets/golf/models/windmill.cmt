@@ -3,7 +3,7 @@ model windmill
     mesh = "assets/golf/models/windmill.cmb"
     cast_shadows = false
 
-    material Unlit
+    material VertexLit
     {
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000

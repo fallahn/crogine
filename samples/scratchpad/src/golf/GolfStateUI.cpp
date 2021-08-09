@@ -603,6 +603,12 @@ void GolfState::updateScoreboard()
         }
         if (page2)
         {
+            //pad out for page 2
+            for (auto i = 0u; i < 16u - playerCount; ++i)
+            {
+                nameString += "\n";
+            }
+
             nameString += "\n\nHOLE\nPAR";
             for (auto i = 0u; i < playerCount; ++i)
             {
@@ -623,6 +629,11 @@ void GolfState::updateScoreboard()
 
             if (page2)
             {
+                for (auto j = 0u; j < 16 - playerCount; ++j)
+                {
+                    scoreString += "\n";
+                }
+
                 scoreString += "\n\n" + std::to_string(i + MaxCols) + "\n" + std::to_string(m_holeData[i + MaxCols - 1].par);
                 for (auto j = 0u; j < playerCount; ++j)
                 {
@@ -647,6 +658,12 @@ void GolfState::updateScoreboard()
             //TODO this should only total the front 9
             //if page2 > 0
             totalString += "\n" + std::to_string(scores[i].total);
+        }
+
+        //pad out for page 2
+        for (auto i = 0u; i < 16u - playerCount; ++i)
+        {
+            totalString += "\n";
         }
 
         if (page2)

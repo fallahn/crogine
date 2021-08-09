@@ -249,10 +249,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
             showScoreboard(true);
             break;
         case SDLK_UP:
-            scrollScores(-1);
+        case SDLK_LEFT:
+            scrollScores(-19);
             break;
         case SDLK_DOWN:
-            scrollScores(1);
+        case SDLK_RIGHT:
+            scrollScores(19);
             break;
         case SDLK_RETURN:
             showScoreboard(false);
@@ -271,10 +273,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
             showScoreboard(false);
             break;
         case SDL_CONTROLLER_BUTTON_DPAD_UP:
-            scrollScores(-1);
+        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            scrollScores(-19);
             break;
         case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-            scrollScores(1);
+        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            scrollScores(19);
             break;
         }
     }
@@ -292,11 +296,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
     {
         if (evt.wheel.y > 0)
         {
-            scrollScores(-1);
+            scrollScores(-19);
         }
         else if (evt.wheel.y < 0)
         {
-            scrollScores(1);
+            scrollScores(19);
         }
     }
 
@@ -871,8 +875,8 @@ void GolfState::buildScene()
     md.loadFromFile("assets/golf/models/cart.cmt");
     std::array cartPositions =
     {
-        glm::vec3(0.2f, 0.f, -5.2f),
-        glm::vec3(2.4f, 0.f, -5.8f),
+        glm::vec3(0.2f, 0.f, -5.7f),
+        glm::vec3(2.4f, 0.f, -6.1f),
         glm::vec3(1.2f, 0.f, 4.8f),
         glm::vec3(-0.7f, 0.f, 5.1f)
     };
@@ -1375,7 +1379,14 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     //if client is ours activate input/set initial stroke direction
     auto target = m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetLookAt;
     m_inputParser.setActive(localPlayer);
-    m_inputParser.setHoleDirection(/*m_holeData[m_currentHole].pin*/target - player.position, m_currentPlayer != player); // this also selects the nearest club
+    m_inputParser.setHoleDirection(target - player.position, m_currentPlayer != player); // this also selects the nearest club
+
+    //this just makes sure to update the direction indicator
+    //regardless of whether or not we actually switched clubs
+    //it's a hack where above case tells the input parser not to update the club (because we're the same player)
+    //but we've also landed on th green and therefor auto-switched to a putter
+    auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+    msg->type = GolfEvent::ClubChanged;
 
     //TODO apply the correct sprite to the player entity
     cmd.targetFlags = CommandID::UI::PlayerSprite;
