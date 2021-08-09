@@ -2,7 +2,7 @@ spritesheet player
 {
     src="assets/golf/images/player.png"
 
-    sprite female
+    sprite female_wood
     {
         bounds = 0,56,52,56
 
@@ -33,7 +33,7 @@ spritesheet player
         }
     }
 
-    sprite male
+    sprite male_wood
     {
         bounds = 0,0,52,56
 
@@ -58,6 +58,70 @@ spritesheet player
             frame = 416,0,52,56
             frame = 468,0,52,56
             frame = 520,0,52,56
+
+            loop = false
+            framerate = 16
+        }
+    } 
+
+
+
+    sprite female_iron
+    {
+        bounds = 0,168,52,56
+
+        animation idle
+        {
+            frame = 0,168,52,56
+
+            loop = true
+            framerate = 30
+        }
+
+        animation swing
+        {
+            frame = 0,168,52,56
+            frame = 52,168,52,56
+            frame = 104,168,52,56
+            frame = 156,168,52,56
+            frame = 208,168,52,56
+            frame = 260,168,52,56
+            frame = 312,168,52,56
+            frame = 364,168,52,56
+            frame = 416,168,52,56
+            frame = 468,168,52,56
+            frame = 520,168,52,56
+
+            loop = false
+            framerate = 16
+        }
+    }
+
+    sprite male_iron
+    {
+        bounds = 0,112,52,56
+
+        animation idle
+        {
+            frame = 0,112,52,56
+
+            loop = true
+            framerate = 30
+        }
+
+        animation swing
+        {
+            frame = 0,112,52,56
+            frame = 52,112,52,56
+            frame = 104,112,52,56
+            frame = 156,112,52,56
+            frame = 208,112,52,56
+            frame = 260,112,52,56
+            frame = 312,112,52,56
+            frame = 364,112,52,56
+            frame = 416,112,52,56
+            frame = 468,112,52,56
+            frame = 520,112,52,56
 
             loop = false
             framerate = 16

@@ -152,13 +152,18 @@ private:
             PowerBarInner,
             HookBar,
             WindIndicator,
-            Player01,
-            Player02,
 
             Count
         };
     };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
+
+    struct Avatar final
+    {
+        cro::Sprite wood;
+        cro::Sprite iron;
+    };
+    std::array<Avatar, 2u> m_avatars;
 
     struct FontID final
     {

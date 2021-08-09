@@ -335,6 +335,25 @@ void GolfState::handleMessage(const cro::Message& msg)
                 e.getComponent<cro::Transform>().setScale({ scale, 1.f });
             };
             m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+            //update the sprite with correct club
+            cmd.targetFlags = CommandID::UI::PlayerSprite;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                auto colour = e.getComponent<cro::Sprite>().getColour();
+                auto skinID = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].skinID;
+                if (getClub() < ClubID::FiveIron)
+                {
+                    e.getComponent<cro::Sprite>() = m_avatars[skinID].wood;
+                }
+                else
+                {
+                    e.getComponent<cro::Sprite>() = m_avatars[skinID].iron;
+                }
+                e.getComponent<cro::Sprite>().setColour(colour);
+
+            };
+            m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
         }
     }
     break;
@@ -485,9 +504,10 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
 
     spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_resources.textures);
-    m_sprites[SpriteID::Player01] = spriteSheet.getSprite("female");
-    m_sprites[SpriteID::Player02] = spriteSheet.getSprite("male");
-
+    m_avatars[0].wood = spriteSheet.getSprite("female_wood");
+    m_avatars[0].iron = spriteSheet.getSprite("female_iron");
+    m_avatars[1].wood = spriteSheet.getSprite("male_wood");
+    m_avatars[1].iron = spriteSheet.getSprite("male_iron");
 
     m_resources.fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
 
@@ -784,14 +804,16 @@ void GolfState::buildScene()
 
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
-    material.blendMode = cro::Material::BlendMode::Alpha;
+    //material.blendMode = cro::Material::BlendMode::Alpha; //this causes the flag to glitch behind billboards :( Need to fix billboard sorting.
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
 
     std::vector<float> verts =
     {
-        0.f, 0.02f, 0.f,    0.721f, 0.2f, 0.188f, 1.f,
-        5.f, 0.02f, 0.f,    0.721f, 0.2f, 0.188f, 0.2f
+        /*0.f, 0.02f, 0.f,    0.721f, 0.2f, 0.188f, 1.f,
+        5.f, 0.02f, 0.f,    0.721f, 0.2f, 0.188f, 0.2f*/
+        0.f, 0.05f, 0.f,    1.f, 0.97f, 0.88f, 1.f,
+        5.f, 0.1f, 0.f,    1.f, 0.97f, 0.88f, 0.2f
     };
     std::vector<std::uint32_t> indices =
     {
@@ -1388,12 +1410,22 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 
-    //TODO apply the correct sprite to the player entity
+    //apply the correct sprite to the player entity
+    //TODO select correct texture
     cmd.targetFlags = CommandID::UI::PlayerSprite;
     cmd.action = [&,player](cro::Entity e, float)
     {
         if (player.terrain != TerrainID::Green)
         {
+            auto skinID = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].skinID;
+            if (getClub() < ClubID::FiveIron)
+            {
+                e.getComponent<cro::Sprite>() = m_avatars[skinID].wood;
+            }
+            else
+            {
+                e.getComponent<cro::Sprite>() = m_avatars[skinID].iron;
+            }
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
 
             const auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();

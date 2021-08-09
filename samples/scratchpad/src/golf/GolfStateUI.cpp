@@ -89,14 +89,14 @@ void GolfState::buildUI()
     camera.updateMatrices(m_gameScene.getActiveCamera().getComponent<cro::Transform>());
     auto pos = camera.coordsToPixel(m_holeData[0].tee, m_renderTexture.getSize());
 
-    //player sprite - TODO apply avatar customisation
+    //player sprite
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Player01];
+    entity.addComponent<cro::Sprite>();//actual sprite is selected with setCuttentPlayer() / set club callback
     entity.addComponent<cro::SpriteAnimation>();
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    bounds = m_avatars[0].wood.getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width * 0.78f, 0.f));
     courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto playerEnt = entity;
