@@ -1561,7 +1561,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
     
     //if both the pin and the target are in front of the player
-    if (glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)) > 0.2)
+    if (glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)) > 0.4)
     {
         //set the target depending on how close it is
         auto pinDist = glm::length2(pinDir);

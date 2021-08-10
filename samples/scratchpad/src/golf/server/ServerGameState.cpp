@@ -392,7 +392,7 @@ void GameState::setNextHole()
         for (auto& player : m_playerInfo)
         {
             player.position = m_holeData[m_currentHole].tee;
-            player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[m_currentHole].pin);
+            player.distanceToHole = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin);
             player.terrain = TerrainID::Fairway;
 
             player.ballEntity.getComponent<Ball>().terrain = TerrainID::Fairway;
