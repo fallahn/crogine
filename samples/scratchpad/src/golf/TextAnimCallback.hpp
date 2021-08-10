@@ -40,7 +40,7 @@ struct TextCallbackData final
     cro::String string;
     std::uint32_t currentChar = 0;
     float timer = 0.f;
-    static constexpr float CharTime = 0.1f;
+    static constexpr float CharTime = 0.05f;
 };
 
 struct TextAnimCallback final

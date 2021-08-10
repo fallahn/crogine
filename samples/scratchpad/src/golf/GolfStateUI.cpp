@@ -114,7 +114,7 @@ void GolfState::buildUI()
     };
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
-    entity.addComponent<cro::Sprite>();//actual sprite is selected with setCuttentPlayer() / set club callback
+    entity.addComponent<cro::Sprite>() = m_avatars[0].wood;//actual sprite is selected with setCurrentPlayer() / set club callback
     entity.addComponent<cro::SpriteAnimation>();
     bounds = m_avatars[0].wood.getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width * 0.78f, 0.f));
@@ -307,14 +307,14 @@ void GolfState::buildUI()
         [&](cro::Entity e, float dt)
     {
         auto& [state, scale] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
-        float speed = dt * 2.f;
+        float speed = dt * 4.f;
         float newScale = 0.f;
         
         if (state == 0)
         {
             //shrinking
             scale = std::max(0.f, scale - speed);
-            newScale = cro::Util::Easing::easeInSine(scale);
+            newScale = cro::Util::Easing::easeOutSine(scale);
 
             if (scale == 0)
             {
@@ -350,7 +350,7 @@ void GolfState::buildUI()
         {
             //growing
             scale = std::min(1.f, scale + speed);
-            newScale = cro::Util::Easing::easeOutSine(scale);
+            newScale = cro::Util::Easing::easeInSine(scale);
 
             if (scale == 1)
             {
@@ -378,7 +378,7 @@ void GolfState::buildUI()
     {
         //using a callback because parenting breaks orientation
         //TODO probably better to parent the map to this ent instead
-        e.getComponent<cro::Transform>().setPosition(mapEnt.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -76.f, 0.f));
+        e.getComponent<cro::Transform>().setPosition(mapEnt.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -82.f, 0.f));
     };
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
