@@ -139,7 +139,6 @@ private:
     void updateActor(const ActorInfo&);
 
     void createTransition(const ActivePlayer&);
-    void updateWindDisplay(glm::vec3);
     std::int32_t getClub() const;
 
 
@@ -183,6 +182,7 @@ private:
     void createScoreboard();
     void updateScoreboard();
     void showScoreboard(bool);
+    void updateWindDisplay(glm::vec3);
     //-----------
 
 #ifdef CRO_DEBUG_

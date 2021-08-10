@@ -781,6 +781,7 @@ void GolfState::buildScene()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Flag;
+    entity.addComponent<float>() = 0.f;
     md.createModel(entity);
     if (md.hasSkeleton())
     {
@@ -804,7 +805,7 @@ void GolfState::buildScene()
 
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
-    //material.blendMode = cro::Material::BlendMode::Alpha; //this causes the flag to glitch behind billboards :( Need to fix billboard sorting.
+    material.blendMode = cro::Material::BlendMode::Alpha;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
 
@@ -897,10 +898,10 @@ void GolfState::buildScene()
     md.loadFromFile("assets/golf/models/cart.cmt");
     std::array cartPositions =
     {
-        glm::vec3(0.2f, 0.f, -5.7f),
-        glm::vec3(2.4f, 0.f, -6.1f),
-        glm::vec3(1.2f, 0.f, 4.8f),
-        glm::vec3(-0.7f, 0.f, 5.1f)
+        glm::vec3(-0.4f, 0.f, -5.9f),
+        glm::vec3(2.6f, 0.f, -6.9f),
+        glm::vec3(2.2f, 0.f, 6.9f),
+        glm::vec3(-1.2f, 0.f, 5.2f)
     };
 
     //add a cart for each connected client :3
@@ -1641,43 +1642,6 @@ void GolfState::createTransition(const ActivePlayer& playerData)
                 targetInfo.currentOffset + (offset * Speed * dt));
         }
     };
-}
-
-void GolfState::updateWindDisplay(glm::vec3 direction)
-{
-    float rotation = std::atan2(-direction.z, direction.x);
-
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::UI::WindSock;
-    cmd.action = [&, rotation](cro::Entity e, float dt)
-    {
-        auto r = rotation - m_camRotation;
-        //e.getComponent<cro::Transform>().setRotation(r);
-
-        //this is smoother but uses a horrible static var
-        static float currRotation = 0.f;
-        currRotation += (r - currRotation) * dt;
-        e.getComponent<cro::Transform>().setRotation(currRotation);
-    };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
-    cmd.targetFlags = CommandID::UI::WindString;
-    cmd.action = [direction](cro::Entity e, float dt)
-    {
-        float knots = direction.y * KnotsPerMetre;
-        std::stringstream ss;
-        ss.precision(2);
-        ss << std::fixed << knots << " knots";
-        e.getComponent<cro::Text>().setString(ss.str());
-    };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
-    cmd.targetFlags = CommandID::Flag;
-    cmd.action = [rotation](cro::Entity e, float)
-    {
-        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
-    };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
 
 std::int32_t GolfState::getClub() const

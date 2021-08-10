@@ -46,6 +46,8 @@ source distribution.
 
 #include <crogine/graphics/SpriteSheet.hpp>
 
+#include <crogine/util/Maths.hpp>
+
 namespace
 {
     std::size_t scoreColumnCount = 2;
@@ -198,7 +200,7 @@ void GolfState::buildUI()
 
 
 
-    //wind strength
+    //wind strength - this is positioned by the camera's resize callback, below
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindString;
@@ -211,7 +213,7 @@ void GolfState::buildUI()
 
     //wind indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 20.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, -26.f));
     entity.addComponent<cro::Drawable2D>().setVertexData( 
     {
         cro::Vertex2D(glm::vec2(-1.f, 12.f), LeaderboardTextLight),
@@ -220,10 +222,11 @@ void GolfState::buildUI()
         cro::Vertex2D(glm::vec2(1.f, 0.f), LeaderboardTextLight)
     });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindSock;
+    entity.addComponent<float>() = 0.f; //current wind direction/rotation
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 52.f, -0.01f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 6.f, -0.01f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindIndicator];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -288,9 +291,6 @@ void GolfState::buildUI()
     createScoreboard();
 
 
-
-
-
     //callback for the UI camera when window is resized
     auto updateView = [&, playerEnt, courseEnt, infoEnt, windEnt, rootNode](cro::Camera& cam) mutable
     {
@@ -333,7 +333,7 @@ void GolfState::buildUI()
         infoEnt.getComponent<cro::Drawable2D>().updateLocalBounds();
         infoEnt.getComponent<cro::Transform>().setScale(m_viewScale);
 
-        windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(50.f, /*uiSize.y - 80.f*/32.f));
+        windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(/*46.f, uiSize.y - 56.f*//*uiSize.x / 2.f*/46.f, uiSize.y - 20.f));
 
         //send command to UIElements and reposition
         cro::Command cmd;
@@ -751,4 +751,41 @@ void GolfState::showScoreboard(bool visible)
         e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+}
+
+void GolfState::updateWindDisplay(glm::vec3 direction)
+{
+    float rotation = std::atan2(-direction.z, direction.x);
+
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::WindSock;
+    cmd.action = [&, rotation](cro::Entity e, float dt)
+    {
+        auto r = rotation - m_camRotation;
+
+        float& currRotation = e.getComponent<float>();
+        currRotation += cro::Util::Maths::shortestRotation(currRotation, r) * dt;
+        e.getComponent<cro::Transform>().setRotation(currRotation);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::UI::WindString;
+    cmd.action = [direction](cro::Entity e, float dt)
+    {
+        float knots = direction.y * KnotsPerMetre;
+        std::stringstream ss;
+        ss.precision(2);
+        ss << std::fixed << knots << " knots";
+        e.getComponent<cro::Text>().setString(ss.str());
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::Flag;
+    cmd.action = [rotation](cro::Entity e, float dt)
+    {
+        float& currRotation = e.getComponent<float>();
+        currRotation += cro::Util::Maths::shortestRotation(currRotation, rotation) * dt;
+        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
