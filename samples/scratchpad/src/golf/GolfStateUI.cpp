@@ -34,6 +34,7 @@ source distribution.
 #include "Clubs.hpp"
 #include "MenuConsts.hpp"
 #include "CommonConsts.hpp"
+#include "TextAnimCallback.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -141,6 +142,8 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+    entity.addComponent<cro::Callback>().setUserData<TextCallbackData>();
+    entity.getComponent<cro::Callback>().function = TextAnimCallback();
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole distance

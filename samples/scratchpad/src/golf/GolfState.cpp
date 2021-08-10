@@ -37,6 +37,7 @@ source distribution.
 #include "ClientPacketData.hpp"
 #include "MessageIDs.hpp"
 #include "Clubs.hpp"
+#include "TextAnimCallback.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 
@@ -1323,7 +1324,10 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.action =
         [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name);
+        //e.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name);
+        auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
+        data.string = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name;
+        e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
