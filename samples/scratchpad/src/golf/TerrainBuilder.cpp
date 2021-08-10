@@ -31,6 +31,7 @@ source distribution.
 #include "PoissonDisk.hpp"
 #include "Terrain.hpp"
 #include "GameConsts.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -222,6 +223,10 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         if (m_terrainProperties.morphTime == 1)
         {
             e.getComponent<cro::Callback>().active = false;
+
+            //raise a message to say the transition is complete
+            auto* msg = cro::App::getInstance().getMessageBus().post<SceneEvent>(MessageID::SceneMessage);
+            msg->type = SceneEvent::TransitionComplete;
         }
     };
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));

@@ -40,7 +40,8 @@ namespace MessageID
 {
     enum
     {
-        GolfMessage = 400//cro::Message::Count
+        GolfMessage = 400,//cro::Message::Count
+        SceneMessage
     };
 }
 
@@ -51,4 +52,12 @@ struct GolfEvent final
         HitBall,
         ClubChanged
     }type = HitBall;
+};
+
+struct SceneEvent
+{
+    enum
+    {
+        TransitionComplete
+    }type = TransitionComplete;
 };

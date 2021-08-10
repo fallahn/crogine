@@ -56,7 +56,8 @@ struct CommandID final
             PinDistance          = 0x100,
             Scoreboard           = 0x200,
             ScoreScroll          = 0x400,
-            ScoreboardController = 0x800
+            ScoreboardController = 0x800,
+            MiniMap              = 0x1000
         };
     };
 };

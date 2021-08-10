@@ -185,10 +185,7 @@ private:
     void updateWindDisplay(glm::vec3);
     //-----------
 
-#ifdef CRO_DEBUG_
-    cro::Entity m_debugCam;
-    cro::RenderTexture m_debugTexture;
-
-    void setupDebug();
-#endif
+    cro::Entity m_mapCam;
+    cro::RenderTexture m_mapTexture;
+    void updateMiniMap();
 };

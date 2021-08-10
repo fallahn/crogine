@@ -84,9 +84,6 @@ namespace
 #include "WaterShader.inl"
 #include "TerrainShader.inl"
 
-    glm::vec3 debugPos = glm::vec3(0.f);
-    glm::vec3 ballpos = glm::vec3(0.f);
-
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
     //used to set the camera target
@@ -140,8 +137,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
                 //ImGui::Text("Cam Rotation: %3.3f", m_camRotation);
 
-                //ImGui::Text("ball pos: %3.3f, %3.3f, %3.3f", ballpos.x, ballpos.y, ballpos.z);
-
                 /*auto rot = m_inputParser.getYaw();
                 ImGui::Text("Rotation %3.2f", rot);
 
@@ -165,18 +160,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
                 ImGui::Text("Terrain: %s", TerrainStrings[m_currentPlayer.terrain]);
 
-                //ImGui::Image(m_debugTexture.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
-
-                /*if (ImGui::Button("Save Image"))
-                {
-                    auto path = cro::FileSystem::saveFileDialogue("","png");
-                    if (!path.empty())
-                    {
-                        m_debugTexture.saveToFile(path);
-                    }
-                }*/
             }
             ImGui::End();
         });
@@ -236,6 +221,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_F7:
             showCountdown(10);
+            break;
+        case SDLK_F8:
+            updateMiniMap();
             break;
 #endif
         }
@@ -318,6 +306,20 @@ void GolfState::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
+    case MessageID::SceneMessage:
+    {
+        const auto& data = msg.getData<SceneEvent>();
+        switch(data.type)
+        {
+        default: break;
+        case SceneEvent::TransitionComplete:
+        {
+            updateMiniMap();
+        }
+            break;
+        }
+    }
+        break;
     case MessageID::GolfMessage:
     {
         const auto& data = msg.getData<GolfEvent>();
@@ -463,19 +465,10 @@ void GolfState::render()
     cam.setActivePass(cro::Camera::Pass::Final);
     cam.viewport = oldVP;
 
-
     //then render scene
     m_renderTexture.clear();
     m_gameScene.render(m_renderTexture);
     m_renderTexture.display();
-
-#ifdef CRO_DEBUG_
-    auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
-    m_debugTexture.clear(cro::Colour::Magenta);
-    m_gameScene.render(m_debugTexture);
-    m_debugTexture.display();
-    m_gameScene.setActiveCamera(oldCam);
-#endif
 
     m_uiScene.render(cro::App::getWindow());
 }
@@ -734,9 +727,6 @@ void GolfState::loadAssets()
 
     m_waterShader.shaderID = m_resources.shaders.get(ShaderID::Water).getGLHandle();
     m_waterShader.timeUniform = m_resources.shaders.get(ShaderID::Water).getUniformMap().at("u_time");
-#ifdef CRO_DEBUG_
-    m_debugTexture.create(320, 200);
-#endif
 }
 
 void GolfState::addSystems()
@@ -957,11 +947,6 @@ void GolfState::buildScene()
     auto sunEnt = m_gameScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -0.967f);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -1.5f);
-
-
-#ifdef CRO_DEBUG_
-    setupDebug();
-#endif
 }
 
 void GolfState::spawnBall(const ActorInfo& info)
@@ -1257,19 +1242,18 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             //set tee / flag
             cro::Command cmd;
             cmd.targetFlags = CommandID::Hole;
-            cmd.action = [&](cro::Entity e, float)
+            cmd.action = [&](cro::Entity en, float)
             {
-                e.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
+                en.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
             };
             m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
             cmd.targetFlags = CommandID::Tee;
-            cmd.action = [&](cro::Entity e, float)
+            cmd.action = [&](cro::Entity en, float)
             {
-                e.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].tee);
+                en.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].tee);
             };
             m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
 
             //remove the transition ent
             e.getComponent<cro::Callback>().active = false;
@@ -1496,7 +1480,6 @@ void GolfState::updateActor(const ActorInfo& update)
                 interp.setTarget({ update.position, {1.f,0.f,0.f,0.f}, update.timestamp });
             }
         }
-        ballpos = update.position;
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -1656,98 +1639,3 @@ std::int32_t GolfState::getClub() const
     case TerrainID::Green: return ClubID::Putter;
     }
 }
-
-#ifdef CRO_DEBUG_
-
-void GolfState::setupDebug()
-{
-    debugPos = m_holeData[0].tee;
-
-    m_debugCam = m_gameScene.createEntity();
-    m_debugCam.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 0.f });
-    m_debugCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    auto& dCam = m_debugCam.addComponent<cro::Camera>();
-    dCam.setOrthographic(0.f, 320.f, 0.f, 200.f, -0.1f, 20.f);
-    dCam.viewport = { 0.f, 0.f, 1.f, 1.f };
-
-    return;
-
-
-    //shadow map frustum
-    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
-    auto materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
-    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINES));
-
-    m_resources.materials.get(materialID).blendMode = cro::Material::BlendMode::Alpha;
-    //m_resources.materials.get(materialID).enableDepthTest = false;
-
-    auto ent = m_gameScene.getActiveCamera();
-
-    auto debugEnt = m_gameScene.createEntity();
-    debugEnt.addComponent<cro::Transform>();
-    debugEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialID));
-    debugEnt.addComponent<cro::Callback>().active = true;
-    debugEnt.getComponent<cro::Callback>().function =
-        [&, ent](cro::Entity e, float)
-    {
-        const auto& cam = ent.getComponent<cro::Camera>();
-        //e.getComponent<cro::Transform>().setPosition(ent.getComponent<cro::Transform>().getWorldPosition());
-        e.getComponent<cro::Transform>().setPosition(cam.depthPosition);
-        e.getComponent<cro::Transform>().setRotation(m_gameScene.getSunlight().getComponent<cro::Transform>().getRotation());
-
-        std::vector<float> verts =
-        {
-            cam.depthDebug[0], cam.depthDebug[2], cam.depthDebug[4],
-            1.f,0.f,1.f,1.f,
-
-            cam.depthDebug[1], cam.depthDebug[2], cam.depthDebug[4],
-            1.f,0.f,1.f,1.f,
-
-            cam.depthDebug[0], cam.depthDebug[3], cam.depthDebug[4],
-            1.f,0.f,1.f,1.f,
-
-            cam.depthDebug[1], cam.depthDebug[3], cam.depthDebug[4],
-            1.f,0.f,1.f,1.f,
-
-            cam.depthDebug[0], cam.depthDebug[2], -cam.depthDebug[5],
-            0.f,1.f,1.f,1.f,
-
-            cam.depthDebug[1], cam.depthDebug[2], -cam.depthDebug[5],
-            0.f,1.f,1.f,1.f,
-
-            cam.depthDebug[0], cam.depthDebug[3], -cam.depthDebug[5],
-            0.f,1.f,1.f,1.f,
-
-            cam.depthDebug[1], cam.depthDebug[3], -cam.depthDebug[5],
-            0.f,1.f,1.f,1.f,
-        };
-
-        std::vector<std::uint32_t> indices =
-        {
-            0,1, 1,3, 3,2, 2,0,
-            4,5, 5,7, 7,6, 6,4,
-            0,4, 1,5, 3,7, 2,6
-        };
-
-        auto& meshData = e.getComponent<cro::Model>().getMeshData();
-        glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
-        glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-        meshData.boundingBox[0] = { cam.depthDebug[0], cam.depthDebug[2], cam.depthDebug[4] };
-        meshData.boundingBox[1] = { cam.depthDebug[1], cam.depthDebug[3], -cam.depthDebug[5] };
-        meshData.boundingSphere.centre = meshData.boundingBox[0] + ((meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f);
-        meshData.boundingSphere.radius = glm::length(meshData.boundingSphere.centre);
-    };
-
-    auto& meshData = debugEnt.getComponent<cro::Model>().getMeshData();
-    meshData.vertexCount = 8;
-    meshData.vertexSize = 7 * meshData.vertexCount * sizeof(float);
-    meshData.indexData[0].indexCount = 24;
-}
-
-#endif
