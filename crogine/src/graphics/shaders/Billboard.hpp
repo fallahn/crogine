@@ -67,6 +67,8 @@ namespace cro::Shaders::Billboard
         #if defined (VERTEX_LIT)
         VARYING_OUT vec3 v_normalVector;
         VARYING_OUT vec3 v_worldPosition;
+        #else
+        VARYING_OUT float v_ditherAmount;
         #endif
 
         void main()
@@ -96,10 +98,10 @@ namespace cro::Shaders::Billboard
 
             gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
 
-            #if defined (VERTEX_LIT)
+#if defined (VERTEX_LIT)
             v_normalVector = normalize(cross(camRight, camUp));
             v_worldPosition = position;
-            #endif
+#endif
 #endif
 
 
@@ -117,8 +119,8 @@ namespace cro::Shaders::Billboard
                 const float farFadeDistance = 150.f;
                 float distance = length(position - u_cameraWorldPosition);
 
-                v_colour.a = pow(clamp(distance / nearFadeDistance, 0.0, 1.0), 5.0);
-                v_colour.a *= 1.0 - clamp((distance - farFadeDistance) / nearFadeDistance, 0.0, 1.0);
+                v_ditherAmount = pow(clamp(distance / nearFadeDistance, 0.0, 1.0), 5.0);
+                v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / nearFadeDistance, 0.0, 1.0);
 
                 v_colour.rgb *= (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 
@@ -134,17 +136,170 @@ namespace cro::Shaders::Billboard
             #endif
         })";
 
-    //not actually used, rather the VertxLit/Unlit fragment shaders are
-    static const std::string Fragment = R"(
+    /*
+    Billboards generally don't lend themselves well to alpha blending without
+    complicated depth sorting, so this shader uses bayer dithering on the alpha
+    channel, which is then discarded based on the alpha clip value.
+    */
+
+    static const std::string Unlit = R"(
+        OUTPUT
+        #if defined (TEXTURED)
+        uniform sampler2D u_diffuseMap;
+        #if defined(ALPHA_CLIP)
+        uniform float u_alphaClip;
+        #endif
+        #endif
+        #if defined(COLOURED)
+        uniform LOW vec4 u_colour;
+        #endif
+
+        #if defined (RX_SHADOWS)
+        uniform sampler2D u_shadowMap;
+        #endif
 
         #if defined (VERTEX_COLOUR)
         VARYING_IN LOW vec4 v_colour;
         #endif
+        #if defined (TEXTURED)
+        VARYING_IN MED vec2 v_texCoord0;
+        #endif
 
-        OUTPUT
+        VARYING_IN float v_ditherAmount;
+
+        #if defined(RX_SHADOWS)
+        VARYING_IN LOW vec4 v_lightWorldPosition;
+
+        #if defined(MOBILE)
+        #if defined (GL_FRAGMENT_PRECISION_HIGH)
+        #define PREC highp
+        #else
+        #define PREC mediump
+        #endif
+        #else
+        #define PREC
+        #endif
+
+        PREC float unpack(PREC vec4 colour)
+        {
+            const PREC vec4 bitshift = vec4(1.0 / 16777216.0, 1.0 / 65536.0, 1.0 / 256.0, 1.0);
+            return dot(colour, bitshift);
+        }
+                
+        #if defined(MOBILE)
+        PREC float shadowAmount(LOW vec4 lightWorldPos)
+        {
+            PREC vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
+            projectionCoords = projectionCoords * 0.5 + 0.5;
+            PREC float depthSample = unpack(TEXTURE(u_shadowMap, projectionCoords.xy));
+            PREC float currDepth = projectionCoords.z - 0.005;
+            return (currDepth < depthSample) ? 1.0 : 0.4;
+        }
+        #else
+        //some fancier pcf on desktop
+        const vec2 kernel[16] = vec2[](
+            vec2(-0.94201624, -0.39906216),
+            vec2(0.94558609, -0.76890725),
+            vec2(-0.094184101, -0.92938870),
+            vec2(0.34495938, 0.29387760),
+            vec2(-0.91588581, 0.45771432),
+            vec2(-0.81544232, -0.87912464),
+            vec2(-0.38277543, 0.27676845),
+            vec2(0.97484398, 0.75648379),
+            vec2(0.44323325, -0.97511554),
+            vec2(0.53742981, -0.47373420),
+            vec2(-0.26496911, -0.41893023),
+            vec2(0.79197514, 0.19090188),
+            vec2(-0.24188840, 0.99706507),
+            vec2(-0.81409955, 0.91437590),
+            vec2(0.19984126, 0.78641367),
+            vec2(0.14383161, -0.14100790)
+        );
+        const int filterSize = 3;
+        float shadowAmount(vec4 lightWorldPos)
+        {
+            vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
+            projectionCoords = projectionCoords * 0.5 + 0.5;
+
+            if(projectionCoords.z > 1.0) return 1.0;
+
+            float shadow = 0.0;
+            vec2 texelSize = 1.0 / textureSize(u_shadowMap, 0).xy;
+            for(int x = 0; x < filterSize; ++x)
+            {
+                for(int y = 0; y < filterSize; ++y)
+                {
+                    float pcfDepth = TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize).r;
+                    shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
+                }
+            }
+            return 1.0 - (shadow / 9.0);
+        }
+        #endif
+        #endif
+
+        //function based on example by martinsh
+        const int MatrixSize = 8;
+        float findClosest(int x, int y, float c0)
+        {
+            /* 8x8 Bayer ordered dithering */
+            /* pattern. Each input pixel */
+            /* is scaled to the 0..63 range */
+            /* before looking in this table */
+            /* to determine the action. */
+
+            const int dither[64] = int[64](
+             0, 32, 8, 40, 2, 34, 10, 42, 
+            48, 16, 56, 24, 50, 18, 58, 26, 
+            12, 44, 4, 36, 14, 46, 6, 38, 
+            60, 28, 52, 20, 62, 30, 54, 22, 
+             3, 35, 11, 43, 1, 33, 9, 41, 
+            51, 19, 59, 27, 49, 17, 57, 25,
+            15, 47, 7, 39, 13, 45, 5, 37,
+            63, 31, 55, 23, 61, 29, 53, 21 );
+
+            float limit = 0.0;
+            if (x < MatrixSize)
+            {
+                limit = (dither[y * MatrixSize + x] + 1) / 64.0;
+            }
+
+            if (c0 < limit)
+            {
+                return 0.0;
+            }
+            return 1.0;
+        }
+
 
         void main()
         {
+        #if defined (VERTEX_COLOUR)
             FRAG_OUT = v_colour;
+        #else
+            FRAG_OUT = vec4(1.0);
+        #endif
+        #if defined (TEXTURED)
+            FRAG_OUT *= TEXTURE(u_diffuseMap, v_texCoord0);
+        #endif
+
+        #if defined(COLOURED)
+            FRAG_OUT *= u_colour;
+        #endif
+
+        #if defined (RX_SHADOWS)
+            FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition);
+        #endif
+
+
+        vec2 xy = gl_FragCoord.xy;
+        int x = int(mod(xy.x, MatrixSize));
+        int y = int(mod(xy.y, MatrixSize));
+        float alpha = findClosest(x, y, v_ditherAmount);
+        FRAG_OUT.a *= alpha;
+
+        #if defined(ALPHA_CLIP)
+            if(FRAG_OUT.a < u_alphaClip) discard;
+        #endif
         })";
 }

@@ -193,7 +193,7 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
     {
     default:
     case BuiltIn::BillboardUnlit:
-        success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::Unlit::Fragment, defines);
+        success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::Billboard::Unlit, defines);
         break;
     case BuiltIn::BillboardVertexLit:
         defines += "#define VERTEX_LIT\n";

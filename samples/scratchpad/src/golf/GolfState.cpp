@@ -131,12 +131,12 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("buns"))
             {
-                auto pin = m_holeData[m_currentHole].pin;
+                /*auto pin = m_holeData[m_currentHole].pin;
                 auto target = m_holeData[m_currentHole].target;
                 auto currLookAt = m_gameScene.getActiveCamera().getComponent<TargetInfo>().currentLookAt;
                 ImGui::Text("Pin: %3.3f, %3.3f", pin.x, pin.z);
                 ImGui::Text("Target: %3.3f, %3.3f", target.x, target.z);
-                ImGui::Text("Look At: %3.3f, %3.3f", currLookAt.x, currLookAt.z);
+                ImGui::Text("Look At: %3.3f, %3.3f", currLookAt.x, currLookAt.z);*/
 
                 //ImGui::Text("Cam Rotation: %3.3f", m_camRotation);
 
@@ -151,7 +151,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 auto hook = m_inputParser.getHook();
                 ImGui::Text("Hook: %3.3f", hook);*/
 
-                /*static float scale = 1.f;
+                static float scale = 1.f;
                 if (ImGui::SliderFloat("Scale", &scale, 0.f, 1.f))
                 {
                     m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
@@ -163,7 +163,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 auto club = Clubs[getClub()];
                 ImGui::Text("Club: %s", club);
 
-                ImGui::Text("Terrain: %s", TerrainStrings[m_currentPlayer.terrain]);*/
+                ImGui::Text("Terrain: %s", TerrainStrings[m_currentPlayer.terrain]);
 
                 //ImGui::Image(m_debugTexture.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
