@@ -94,8 +94,8 @@ namespace
     {
         float targetHeight = CameraStrokeHeight;
         float targetOffset = CameraStrokeOffset;
-        float currentHeight = 0.f;
-        float currentOffset = 0.f;
+        float startHeight = 0.f;
+        float startOffset = 0.f;
 
         glm::vec3 targetLookAt = glm::vec3(0.f);
         glm::vec3 currentLookAt = glm::vec3(0.f);
@@ -1189,13 +1189,14 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
         //if we're moving on to any other than the first hole, interp the
         //tee and hole position based on how close to the tee the camera is
+        float percent = 1.f;
         if (hole > 0)
         {
             auto startPos = e.getComponent<cro::Callback>().getUserData<glm::vec3>();
             auto totalDist = glm::length(m_holeData[m_currentHole].tee - startPos);
             auto currentDist = glm::length(travel);
 
-            float percent = (totalDist - currentDist) / totalDist;
+            percent = (totalDist - currentDist) / totalDist;
             percent = std::min(1.f, std::max(0.f, percent));
 
             targetInfo.currentLookAt = targetInfo.prevLookAt + ((targetInfo.targetLookAt - targetInfo.prevLookAt) * percent);
@@ -1247,6 +1248,8 @@ void GolfState::setCurrentHole(std::uint32_t hole)
         if (glm::length2(travel) < 0.0001f)
         {
             targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
+            targetInfo.startHeight = targetInfo.targetHeight;
+            targetInfo.startOffset = targetInfo.targetOffset;
 
             //we're there
             setCameraPosition(m_holeData[m_currentHole].tee, targetInfo.targetHeight, targetInfo.targetOffset);
@@ -1274,14 +1277,14 @@ void GolfState::setCurrentHole(std::uint32_t hole)
         }
         else
         {
-            auto height = targetInfo.targetHeight - targetInfo.currentHeight;
-            auto offset = targetInfo.targetOffset - targetInfo.currentOffset;
+            auto height = targetInfo.targetHeight - targetInfo.startHeight;
+            auto offset = targetInfo.targetOffset - targetInfo.startOffset;
 
             static constexpr float Speed = 4.f;
             e.getComponent<cro::Transform>().move(travel * Speed * dt);
             setCameraPosition(e.getComponent<cro::Transform>().getPosition(),
-                targetInfo.currentHeight + (height * Speed * dt),
-                targetInfo.currentOffset + (offset * Speed * dt));
+                targetInfo.startHeight + (height * percent),
+                targetInfo.startOffset + (offset * percent));
         }
     };
 
@@ -1303,7 +1306,7 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
     auto camEnt = m_gameScene.getActiveCamera();
     auto& targetInfo = camEnt.getComponent<TargetInfo>();
-    auto target = /*m_holeData[m_currentHole].pin*/targetInfo.currentLookAt - position;
+    auto target = targetInfo.currentLookAt - position;
 
     auto dist = glm::length(target);
     float distNorm = std::min(1.f, (dist - MinDist) / DistDiff);
@@ -1320,8 +1323,6 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
     camEnt.getComponent<cro::Transform>().move(offset * viewOffset);
 
-    targetInfo.currentHeight = height;
-    targetInfo.currentOffset = viewOffset;
     targetInfo.waterPlane.getComponent<cro::Transform>().setPosition({ target.x, WaterLevel, target.z });
 }
 
@@ -1573,7 +1574,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
         else
         {
             //target the pin if the target is too close
-            if (targetDist < 10000) //remember this in len2
+            if (targetDist < 5625) //remember this in len2
             {
                 targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
             }
@@ -1617,6 +1618,8 @@ void GolfState::createTransition(const ActivePlayer& playerData)
         {
             //we're there
             targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
+            targetInfo.startHeight = targetInfo.targetHeight;
+            targetInfo.startOffset = targetInfo.targetOffset;
 
             setCameraPosition(playerData.position, targetInfo.targetHeight, targetInfo.targetOffset);
             setCurrentPlayer(playerData);
@@ -1632,14 +1635,14 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
             targetInfo.currentLookAt = targetInfo.prevLookAt + ((targetInfo.targetLookAt - targetInfo.prevLookAt) * percent);
 
-            auto height = targetInfo.targetHeight - targetInfo.currentHeight;
-            auto offset = targetInfo.targetOffset - targetInfo.currentOffset;
+            auto height = targetInfo.targetHeight - targetInfo.startHeight;
+            auto offset = targetInfo.targetOffset - targetInfo.startOffset;
 
             static constexpr float Speed = 4.f;
             e.getComponent<cro::Transform>().move(travel * Speed * dt);
             setCameraPosition(e.getComponent<cro::Transform>().getPosition(), 
-                targetInfo.currentHeight + (height * Speed * dt), 
-                targetInfo.currentOffset + (offset * Speed * dt));
+                targetInfo.startHeight + (height * percent), 
+                targetInfo.startOffset + (offset * percent));
         }
     };
 }
