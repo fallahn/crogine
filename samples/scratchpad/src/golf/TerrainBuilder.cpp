@@ -230,6 +230,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         }
     };
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
+    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
 
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
     meshData->vertexCount = static_cast<std::uint32_t>(m_terrainBuffer.size());

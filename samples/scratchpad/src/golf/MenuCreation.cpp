@@ -956,7 +956,7 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 113.f, 68.f, ButtonDepth });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("female");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("female_wood");
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 

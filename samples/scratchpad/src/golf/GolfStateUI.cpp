@@ -137,17 +137,7 @@ void GolfState::buildUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerName | CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().position = { 0.01f, 0.f };
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
-    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //hole number
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::HoleNumber | CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().position = { 0.21f, 0.f };
+    entity.addComponent<UIElement>().position = { 0.08f, 0.f };
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
@@ -230,7 +220,7 @@ void GolfState::buildUI()
 
     //wind indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, -26.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 20.f, 0.03f));
     entity.addComponent<cro::Drawable2D>().setVertexData( 
     {
         cro::Vertex2D(glm::vec2(-1.f, 12.f), LeaderboardTextLight),
@@ -243,7 +233,7 @@ void GolfState::buildUI()
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 6.f, -0.01f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 52.f, 0.01f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindIndicator];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -303,14 +293,92 @@ void GolfState::buildUI()
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //minimap view - TODO roll up/down transition
+    //minimap view
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniMap;
-    //infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(0, 1.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& [state, scale] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+        float speed = dt * 2.f;
+        float newScale = 0.f;
+        
+        if (state == 0)
+        {
+            //shrinking
+            scale = std::max(0.f, scale - speed);
+            newScale = cro::Util::Easing::easeInSine(scale);
+
+            if (scale == 0)
+            {
+                //update render
+                //TODO render some icons such as tee/hole
+
+                auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
+                m_mapTexture.clear(cro::Colour::Transparent);
+                m_gameScene.render(m_mapTexture);
+                m_mapTexture.display();
+                m_gameScene.setActiveCamera(oldCam);
+
+                //orientation - sets tee to bottom of map
+                if (m_holeData[m_currentHole].tee.x > 160)
+                {
+                    e.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
+                }
+                else
+                {
+                    e.getComponent<cro::Transform>().setRotation(90.f * cro::Util::Const::degToRad);
+                }
+
+                //looks straighter at the pin, but not pixel perfect
+                //auto dir = m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin;
+                //auto rot = std::atan2(-dir.z, dir.x);
+                //en.getComponent<cro::Transform>().setRotation(rot);
+
+                //and set to grow
+                state = 1;
+            }
+        }
+        else
+        {
+            //growing
+            scale = std::min(1.f, scale + speed);
+            newScale = cro::Util::Easing::easeOutSine(scale);
+
+            if (scale == 1)
+            {
+                //stop callback
+                state = 0;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, newScale));
+    };
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto mapEnt = entity;
+
+    //hole number
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::HoleNumber;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [mapEnt](cro::Entity e, float)
+    {
+        //using a callback because parenting breaks orientation
+        //TODO probably better to parent the map to this ent instead
+        e.getComponent<cro::Transform>().setPosition(mapEnt.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -76.f, 0.f));
+    };
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     createScoreboard();
 
@@ -335,31 +403,43 @@ void GolfState::buildUI()
         auto pos = camera.coordsToPixel(m_currentPlayer.position, m_renderTexture.getSize());
         playerEnt.getComponent<cro::Transform>().setPosition(pos);
 
+        //update minimap
+        auto uiSize = size / m_viewScale;
+        auto mapSize = glm::vec2(160.f, 100.f);
+        mapSize /= 2.f;
+        mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y, uiSize.y - mapSize.x - (UIBarHeight * 2.f) }); //this is rotated 90
+
+        windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(uiSize.x - 48.f, 40.f));
 
         //update the overlay
         auto colour = cro::Colour(0.f, 0.f, 0.f, 0.5f);
-        auto uiSize = size / m_viewScale;
         infoEnt.getComponent<cro::Drawable2D>().getVertexData() =
         {
+            //bottom bar
             cro::Vertex2D(glm::vec2(0.f, UIBarHeight), colour),
             cro::Vertex2D(glm::vec2(0.f), colour),
             cro::Vertex2D(glm::vec2(uiSize.x, UIBarHeight), colour),
             cro::Vertex2D(glm::vec2(uiSize.x, 0.f), colour),
-            
+            //degen
             cro::Vertex2D(glm::vec2(uiSize.x, 0.f), cro::Colour::Transparent),
             cro::Vertex2D(glm::vec2(0.f, uiSize.y), cro::Colour::Transparent),
-
+            //top bar
             cro::Vertex2D(glm::vec2(0.f, uiSize.y), colour),
             cro::Vertex2D(glm::vec2(0.f, uiSize.y - UIBarHeight), colour),
             cro::Vertex2D(uiSize, colour),
-            cro::Vertex2D(glm::vec2(uiSize.x, uiSize.y - UIBarHeight), colour)
+            cro::Vertex2D(glm::vec2(uiSize.x, uiSize.y - UIBarHeight), colour),
+            //degen
+            cro::Vertex2D(glm::vec2(uiSize.x, uiSize.y - UIBarHeight), cro::Colour::Transparent),
+            cro::Vertex2D(glm::vec2(uiSize.x - mapSize.y, uiSize.y - UIBarHeight), cro::Colour::Transparent),
+            //side bar
+            cro::Vertex2D(glm::vec2(uiSize.x - (mapSize.y * 2.f), uiSize.y - UIBarHeight), colour),
+            cro::Vertex2D(glm::vec2(uiSize.x - (mapSize.y * 2.f), UIBarHeight), colour),
+            cro::Vertex2D(glm::vec2(uiSize.x, uiSize.y - UIBarHeight), colour),
+            cro::Vertex2D(glm::vec2(uiSize.x, UIBarHeight), colour)
         };
         infoEnt.getComponent<cro::Drawable2D>().updateLocalBounds();
         infoEnt.getComponent<cro::Transform>().setScale(m_viewScale);
 
-        windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(/*46.f, uiSize.y - 56.f*//*uiSize.x / 2.f*/46.f, uiSize.y - 20.f));
-
-        mapEnt.getComponent<cro::Transform>().setPosition({ size.x - 100.f, size.y - 160.f  - (UIBarHeight * m_viewScale.y)});
 
         //send command to UIElements and reposition
         cro::Command cmd;
@@ -391,11 +471,13 @@ void GolfState::buildUI()
     //set up the overhead cam for the mini map
     auto updateMiniView = [&, mapEnt](cro::Camera& miniCam) mutable
     {
-        m_mapTexture.create(320, 200);
-        mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
-        mapEnt.getComponent<cro::Transform>().setOrigin({ 160.f, 100.f });
+        glm::uvec2 previewSize(320 / 2, 200 / 2);
 
-        miniCam.setOrthographic(1.f, 319.f, 1.f, 199.f, -0.1f, 20.f); //1 metre/px border
+        m_mapTexture.create(previewSize.x, previewSize.y);
+        mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
+        mapEnt.getComponent<cro::Transform>().setOrigin({ previewSize.x / 2.f, previewSize.y / 2.f });
+
+        miniCam.setOrthographic(0.f, 320.f, 0.f, 200.f, -0.1f, 20.f);
         miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -403,7 +485,7 @@ void GolfState::buildUI()
     m_mapCam.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 0.f });
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
-
+    miniCam.renderFlags = RenderFlags::MiniMap;
     miniCam.resizeCallback = updateMiniView;
     updateMiniView(miniCam);
 }
@@ -838,29 +920,12 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
 
 void GolfState::updateMiniMap()
 {
-    //TODO render some icons such as tee/hole
-
-    auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
-    m_mapTexture.clear(cro::Colour::Magenta);
-    m_gameScene.render(m_mapTexture);
-    m_mapTexture.display();
-    m_gameScene.setActiveCamera(oldCam);
-
-    //set sprite rotation so tee is at the bottom of the map
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::MiniMap;
     cmd.action = [&](cro::Entity en, float)
     {
-        //TODO trigger 'unroll' animation
-
-        if (m_holeData[m_currentHole].tee.x > 160)
-        {
-            en.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
-        }
-        else
-        {
-            en.getComponent<cro::Transform>().setRotation(90.f * cro::Util::Const::degToRad);
-        }
+        //trigger animation
+        en.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }

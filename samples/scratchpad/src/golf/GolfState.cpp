@@ -869,6 +869,7 @@ void GolfState::buildScene()
     waterEnt.getComponent<cro::Transform>().move({ 0.f, 0.f, -30.f });
     waterEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
     waterEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::Water]));
+    waterEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     m_gameScene.setWaterLevel(WaterLevel);
 
 

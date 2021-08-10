@@ -32,6 +32,14 @@ source distribution.
 #include <array>
 #include <string>
 
+struct RenderFlags final
+{
+    enum
+    {
+        MiniMap = 0x1
+    };
+};
+
 struct TerrainID final
 {
     //these values are multiplied by 10 in the map's red channel
