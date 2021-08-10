@@ -1428,7 +1428,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             {
                 e.getComponent<cro::Sprite>() = m_avatars[skinID].iron;
             }
-            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::Callback>().active = true;
 
             const auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
             auto pos = camera.coordsToPixel(player.position, m_renderTexture.getSize());
@@ -1532,7 +1532,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     cmd.targetFlags = CommandID::UI::PlayerSprite;
     cmd.action = [](cro::Entity e, float)
     {
-        e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, 0.f));
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 

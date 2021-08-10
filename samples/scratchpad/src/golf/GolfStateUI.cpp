@@ -46,6 +46,7 @@ source distribution.
 
 #include <crogine/graphics/SpriteSheet.hpp>
 
+#include <crogine/util/Easings.hpp>
 #include <crogine/util/Maths.hpp>
 
 namespace
@@ -94,6 +95,22 @@ void GolfState::buildUI()
     //player sprite
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f, 0.f));
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& scale = e.getComponent<cro::Callback>().getUserData<float>();
+        scale = std::min(1.f, scale + (dt * 2.f));
+
+        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, cro::Util::Easing::easeOutBounce(scale)));
+
+        if (scale == 1)
+        {
+            scale = 0.f;
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
     entity.addComponent<cro::Sprite>();//actual sprite is selected with setCuttentPlayer() / set club callback
