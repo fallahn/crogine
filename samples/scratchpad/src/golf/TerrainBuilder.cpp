@@ -422,10 +422,12 @@ void TerrainBuilder::threadFunc()
                 
                 const auto heightAt = [&](std::uint32_t x, std::uint32_t y)
                 {
-                    x = std::min(MapSize.x, std::max(0u, x));
-                    y = std::min(MapSize.y, std::max(0u, y));
+                    auto size = mapImage.getSize();
 
-                    auto index = y * MapSize.x + x;
+                    x = std::min(size.x, std::max(0u, x));
+                    y = std::min(size.y, std::max(0u, y));
+
+                    auto index = y * size.x + x;
                     index *= 4;
                     return (static_cast<float>(mapImage.getPixelData()[index + 1]) / 255.f) * MaxTerrainHeight;
                 };

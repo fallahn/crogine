@@ -54,7 +54,7 @@ ErrorState::ErrorState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     registerWindow([&, msg, ctx]() 
         {
             auto windowSize = ctx.mainWindow.getSize();
-            ImGui::SetNextWindowSize({ 200.f, 120.f });
+            ImGui::SetNextWindowSize({ 260.f, 120.f });
             ImGui::SetNextWindowPos({ (windowSize.x - 200.f) / 2.f, (windowSize.y - 120.f) / 2.f });
             if (ImGui::Begin("Error"))
             {

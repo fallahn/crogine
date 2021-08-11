@@ -736,7 +736,7 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 79.f, 171.f, ButtonDepth });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setCharacterSize(8);
+    entity.addComponent<cro::Text>(m_font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::PlayerName;
 

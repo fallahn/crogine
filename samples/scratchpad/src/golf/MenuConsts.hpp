@@ -32,9 +32,11 @@ source distribution.
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
-static const std::uint32_t LargeTextSize = 64;
-static const std::uint32_t MediumTextSize = 32;
-static const std::uint32_t SmallTextSize = 16;
+static constexpr std::uint32_t LargeTextSize = 64;
+static constexpr std::uint32_t MediumTextSize = 32;
+static constexpr std::uint32_t SmallTextSize = 16;
+
+static constexpr std::uint32_t UITextSize = 8;
 
 static const cro::Colour TextNormalColour(0xfff8e1ff);
 static const cro::Colour TextEditColour(0x6eb39dff);

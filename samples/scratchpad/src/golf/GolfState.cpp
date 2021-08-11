@@ -225,6 +225,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_F8:
             updateMiniMap();
+            //removeClient(1);
             break;
 #endif
         }
@@ -1051,10 +1052,33 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
 
 void GolfState::removeClient(std::uint8_t clientID)
 {
-    for (auto i = 0u; i < m_sharedData.connectionData[clientID].playerCount; ++i)
+    cro::String str = m_sharedData.connectionData[clientID].playerData[0].name;
+    for (auto i = 1u; i < m_sharedData.connectionData[clientID].playerCount; ++i)
     {
-        LogI << m_sharedData.connectionData[clientID].playerData[i].name.toAnsiString() << " left the game" << std::endl;
+        str += ", " + m_sharedData.connectionData[clientID].playerData[i].name;
     }
+    str += " left the game";
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 4.f, UIBarHeight * m_viewScale.y * 2.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(m_resources.fonts.get(FontID::UI)).setString(str);
+    entity.getComponent<cro::Text>().setCharacterSize(8u * static_cast<std::uint32_t>(m_viewScale.y));
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(5.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime -= dt;
+        if (currTime < 0)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        }
+    };
+
     m_sharedData.connectionData[clientID].playerCount = 0;
 }
 
