@@ -53,6 +53,8 @@ static constexpr float WaterLevel = -0.02f;
 static constexpr float TerrainLevel = WaterLevel - 0.03f;
 static constexpr float MaxTerrainHeight = 3.5f;
 
+static constexpr glm::uvec2 MapSize(320, 200);
+
 struct ShaderID final
 {
     enum

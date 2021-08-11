@@ -383,28 +383,6 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 bool GolfState::simulate(float dt)
 {
-    //glm::vec3 move(0.f);
-    //const float speed = 20.f * dt;
-    //if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_W))
-    //{
-    //    move.z -= speed;
-    //}
-    //if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_S))
-    //{
-    //    move.z += speed;
-    //}
-    //if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_A))
-    //{
-    //    move.x -= speed;
-    //}
-    //if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_D))
-    //{
-    //    move.x += speed;
-    //}
-    //debugPos += move;
-    //setCameraPosition(debugPos);
-
-
     if (m_sharedData.clientConnection.connected)
     {
         cro::NetEvent evt;
@@ -439,7 +417,6 @@ bool GolfState::simulate(float dt)
     //glUseProgram(0);
 
 
-
     m_inputParser.update(dt);
 
     m_gameScene.simulate(dt);
@@ -452,7 +429,6 @@ void GolfState::render()
 {
     //render reflections first
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-    //cam.renderFlags = NoPlanes | NoRefract;
     auto oldVP = cam.viewport;
 
     cam.viewport = { 0.f,0.f,1.f,1.f };
@@ -462,7 +438,6 @@ void GolfState::render()
     m_gameScene.render(cam.reflectionBuffer);
     cam.reflectionBuffer.display();
 
-    //cam.renderFlags = NoPlanes | PlayerPlanes[i] | NoReflect | NoRefract;
     cam.setActivePass(cro::Camera::Pass::Final);
     cam.viewport = oldVP;
 
@@ -802,8 +777,6 @@ void GolfState::buildScene()
 
     std::vector<float> verts =
     {
-        /*0.f, 0.02f, 0.f,    0.721f, 0.2f, 0.188f, 1.f,
-        5.f, 0.02f, 0.f,    0.721f, 0.2f, 0.188f, 0.2f*/
         0.f, 0.05f, 0.f,    1.f, 0.97f, 0.88f, 1.f,
         5.f, 0.1f, 0.f,    1.f, 0.97f, 0.88f, 0.2f
     };
@@ -921,11 +894,6 @@ void GolfState::buildScene()
 
         cam.setPerspective(FOV, vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-
-        if (static_cast<std::uint32_t>(vpSize.x) != m_renderTexture.getSize().x)
-        {
-            m_renderTexture.create(static_cast<std::uint32_t>(vpSize.x), static_cast<std::uint32_t>(vpSize.y));
-        }
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
@@ -948,7 +916,7 @@ void GolfState::buildScene()
 
     auto sunEnt = m_gameScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -0.967f);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -1.5f);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, /*-1.5f*/-48.f * cro::Util::Const::degToRad);
 }
 
 void GolfState::spawnBall(const ActorInfo& info)

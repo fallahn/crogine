@@ -296,9 +296,29 @@ void GolfState::buildUI()
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //minimap view
+
+    //hole number
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::HoleNumber;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().function =
+    //    [mapEnt](cro::Entity e, float)
+    //{
+    //    //using a callback because parenting breaks orientation
+    //    //TODO probably better to parent the map to this ent instead
+    //    e.getComponent<cro::Transform>().setPosition(mapEnt.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -82.f, 0.f));
+    //};
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto mapRoot = entity;
+
+    //minimap view
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniMap;
@@ -361,33 +381,15 @@ void GolfState::buildUI()
         }
         e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, newScale));
     };
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    mapRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto mapEnt = entity;
-
-    //hole number
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::HoleNumber;
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
-    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [mapEnt](cro::Entity e, float)
-    {
-        //using a callback because parenting breaks orientation
-        //TODO probably better to parent the map to this ent instead
-        e.getComponent<cro::Transform>().setPosition(mapEnt.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, -82.f, 0.f));
-    };
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     createScoreboard();
 
 
     //callback for the UI camera when window is resized
-    auto updateView = [&, playerEnt, courseEnt, infoEnt, windEnt, mapEnt, rootNode](cro::Camera& cam) mutable
+    auto updateView = [&, playerEnt, courseEnt, infoEnt, windEnt, mapRoot, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(cro::App::getWindow().getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.5f, 1.f);
@@ -408,9 +410,9 @@ void GolfState::buildUI()
 
         //update minimap
         auto uiSize = size / m_viewScale;
-        auto mapSize = glm::vec2(160.f, 100.f);
+        auto mapSize = glm::vec2(MapSize / 2u);
         mapSize /= 2.f;
-        mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y, uiSize.y - mapSize.x - (UIBarHeight * 2.f) }); //this is rotated 90
+        mapRoot.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y, uiSize.y - (mapSize.x * 2.f) - (UIBarHeight * 2.f) }); //map sprite is rotated 90
 
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(uiSize.x - 48.f, 40.f));
 
@@ -474,13 +476,13 @@ void GolfState::buildUI()
     //set up the overhead cam for the mini map
     auto updateMiniView = [&, mapEnt](cro::Camera& miniCam) mutable
     {
-        glm::uvec2 previewSize(320 / 2, 200 / 2);
+        glm::uvec2 previewSize = MapSize / 2u;
 
         m_mapTexture.create(previewSize.x, previewSize.y);
         mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
         mapEnt.getComponent<cro::Transform>().setOrigin({ previewSize.x / 2.f, previewSize.y / 2.f });
 
-        miniCam.setOrthographic(0.f, 320.f, 0.f, 200.f, -0.1f, 20.f);
+        miniCam.setOrthographic(0.f, static_cast<float>(MapSize.x), 0.f, static_cast<float>(MapSize.y), -0.1f, 20.f);
         miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 

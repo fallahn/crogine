@@ -63,9 +63,8 @@ namespace
 
     //TODO for grass board we could shrink the area slightly as we prefer trees further away
     constexpr std::array MinBounds = { 0.f, 0.f };
-    constexpr std::array MaxBounds = { 320.f, 200.f };
+    constexpr std::array MaxBounds = { static_cast<float>(MapSize.x), static_cast<float>(MapSize.y) };
 
-    constexpr glm::uvec2 Size(320, 200);
     constexpr float PixelPerMetre = 32.f; //64.f; //used for scaling billboards
 
     constexpr std::uint32_t QuadsPerMetre = 1;
@@ -122,7 +121,7 @@ namespace
 
 TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
     : m_holeData    (hd),
-    m_terrainBuffer ((Size.x * Size.y) / QuadsPerMetre),
+    m_terrainBuffer ((MapSize.x * MapSize.y) / QuadsPerMetre),
     m_threadRunning (false),
     m_wantsUpdate   (false),
     m_currentHole   (0)
@@ -169,15 +168,15 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //top and left - but hey you didn't notice until you read this did you? :)
     for (auto i = 0u; i < m_terrainBuffer.size(); ++i)
     {
-        std::size_t x = i % (Size.x / QuadsPerMetre);
-        std::size_t y = i / (Size.x / QuadsPerMetre);
+        std::size_t x = i % (MapSize.x / QuadsPerMetre);
+        std::size_t y = i / (MapSize.x / QuadsPerMetre);
 
         m_terrainBuffer[i].position = { static_cast<float>(x * QuadsPerMetre), 0.f, -static_cast<float>(y * QuadsPerMetre) };
         m_terrainBuffer[i].targetPosition = m_terrainBuffer[i].position;
     }
 
-    constexpr auto xCount = static_cast<std::uint32_t>(Size.x / QuadsPerMetre);
-    constexpr auto yCount = static_cast<std::uint32_t>(Size.y / QuadsPerMetre);
+    constexpr auto xCount = static_cast<std::uint32_t>(MapSize.x / QuadsPerMetre);
+    constexpr auto yCount = static_cast<std::uint32_t>(MapSize.y / QuadsPerMetre);
     std::vector<std::uint32_t> indices(xCount * yCount * 6);
 
 
@@ -423,10 +422,10 @@ void TerrainBuilder::threadFunc()
                 
                 const auto heightAt = [&](std::uint32_t x, std::uint32_t y)
                 {
-                    x = std::min(Size.x, std::max(0u, x));
-                    y = std::min(Size.y, std::max(0u, y));
+                    x = std::min(MapSize.x, std::max(0u, x));
+                    y = std::min(MapSize.y, std::max(0u, y));
 
-                    auto index = y * Size.x + x;
+                    auto index = y * MapSize.x + x;
                     index *= 4;
                     return (static_cast<float>(mapImage.getPixelData()[index + 1]) / 255.f) * MaxTerrainHeight;
                 };
@@ -436,8 +435,8 @@ void TerrainBuilder::threadFunc()
                 {
                     //for each vert copy the target to the current (as this is where we should be)
                     //then update the target with the new map height at that position
-                    std::uint32_t x = i % (Size.x / QuadsPerMetre) * QuadsPerMetre;
-                    std::uint32_t y = i / (Size.x / QuadsPerMetre) * QuadsPerMetre;
+                    std::uint32_t x = i % (MapSize.x / QuadsPerMetre) * QuadsPerMetre;
+                    std::uint32_t y = i / (MapSize.x / QuadsPerMetre) * QuadsPerMetre;
 
                     auto height = heightAt(x, y);
 
