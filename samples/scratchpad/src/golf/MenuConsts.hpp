@@ -51,7 +51,12 @@ static constexpr float UITextPosV = 12.f;
 //relative to the window size.
 struct UIElement final
 {
-    glm::vec2 position = glm::vec2(0.f);
+    glm::vec2 absolutePosition = glm::vec2(0.f); //absolute in units
+    glm::vec2 relativePosition = glm::vec2(0.f); //normalised relative to screen size
     float depth = 0.f;
 };
 static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);
+
+//spacing of each menu relative to root node
+//see GolfMenuState::m_menuPositions/MenuCreation.cpp
+static constexpr glm::vec2 MenuSpacing(1920.f, 1080.f);

@@ -60,4 +60,18 @@ struct CommandID final
             MiniMap              = 0x1000
         };
     };
+
+    struct Menu final
+    {
+        enum
+        {
+            RootNode     = 0x1,
+            ReadyButton  = 0x2,
+            LobbyList    = 0x4,
+            ServerInfo   = 0x8,
+            PlayerConfig = 0x10,
+            PlayerName   = 0x20,
+            UIElement    = 0x40
+        };
+    };
 };

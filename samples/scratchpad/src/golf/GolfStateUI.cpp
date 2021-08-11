@@ -138,7 +138,7 @@ void GolfState::buildUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerName | CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().position = { 0.08f, 0.f };
+    entity.addComponent<UIElement>().relativePosition = { 0.08f, 0.f };
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
@@ -150,7 +150,7 @@ void GolfState::buildUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PinDistance | CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().position = { 0.5f, 1.f };
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
@@ -162,7 +162,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().position = { 0.01f, 1.f };
+    entity.addComponent<UIElement>().relativePosition = { 0.01f, 1.f };
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;
@@ -178,7 +178,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().position = { 0.61f, 0.f };
+    entity.addComponent<UIElement>().relativePosition = { 0.61f, 0.f };
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;
@@ -197,7 +197,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().position = { 0.76f, 1.f };
+    entity.addComponent<UIElement>().relativePosition = { 0.76f, 1.f };
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;
@@ -443,7 +443,7 @@ void GolfState::buildUI()
         cmd.targetFlags = CommandID::UI::UIElement;
         cmd.action = [&, uiSize](cro::Entity e, float)
         {
-            auto pos = e.getComponent<UIElement>().position;
+            auto pos = e.getComponent<UIElement>().relativePosition;
             pos.x *= uiSize.x;
             pos.x = std::round(pos.x);
             pos.y *= (uiSize.y - UIBarHeight);

@@ -44,19 +44,6 @@ source distribution.
 
 #include <array>
 
-namespace MenuCommandID
-{
-    enum
-    {
-        RootNode     = 0x1,
-        ReadyButton  = 0x2,
-        LobbyList    = 0x4,
-        ServerInfo   = 0x8,
-        PlayerConfig = 0x10,
-        PlayerName   = 0x20
-    };
-}
-
 namespace GroupID
 {
     enum
@@ -109,11 +96,10 @@ private:
     };
 
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
-
-    
-    std::array<cro::Entity, MenuID::Count> m_menuEntities = {};
-    
+    std::array<cro::Entity, MenuID::Count> m_menuEntities = {};   
     std::vector<cro::Entity> m_avatarListEntities;
+
+    std::size_t m_currentMenu;
 
     struct TextEdit final
     {
@@ -128,6 +114,7 @@ private:
     void loadAssets();
     void createScene();
 
+    void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
@@ -144,5 +131,4 @@ private:
     void showPlayerConfig(bool, std::uint8_t);
 
     void handleNetEvent(const cro::NetEvent&);
-    void updateView(cro::Camera&);
 };

@@ -32,6 +32,7 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "MenuConsts.hpp"
 #include "Utility.hpp"
+#include "CommandIDs.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -65,6 +66,7 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
     : cro::State    (stack, context),
     m_sharedData    (sd),
     m_scene         (context.appInstance.getMessageBus()),
+    m_currentMenu   (MenuID::Main),
     m_viewScale     (2.f)
 {
     //launches a loading screen (registered in MyApp.cpp)
@@ -91,11 +93,12 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
 
         //switch to lobby view
         cro::Command cmd;
-        cmd.targetFlags = MenuCommandID::RootNode;
+        cmd.targetFlags = CommandID::Menu::RootNode;
         cmd.action = [&](cro::Entity e, float)
         {
-            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
+            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby] * m_viewScale);
             m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
+            m_currentMenu = MenuID::Lobby;
         };
         m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -119,14 +122,14 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
         }
 
 
-        cmd.targetFlags = MenuCommandID::ReadyButton;
+        cmd.targetFlags = CommandID::Menu::ReadyButton;
         cmd.action = [buttonString](cro::Entity e, float)
         {
             e.getComponent<cro::Text>().setString(buttonString);
         };
         m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
-        cmd.targetFlags = MenuCommandID::ServerInfo;
+        cmd.targetFlags = CommandID::Menu::ServerInfo;
         cmd.action = [connectionString](cro::Entity e, float)
         {
             e.getComponent<cro::Text>().setString(connectionString);
@@ -250,150 +253,7 @@ void GolfMenuState::loadAssets()
 
 void GolfMenuState::createScene()
 {
-#ifdef CRO_DEBUG_
-    registerWindow([&]() 
-        {
-            ImGui::SetNextWindowSize({ 400.f, 400.f });
-            if (ImGui::Begin("Main Menu"))
-            {
-                if (m_scene.getSystem<cro::UISystem>().getActiveGroup() == GroupID::Main)
-                {
-                    if (ImGui::Button("Host"))
-                    {
-                        if (!m_sharedData.clientConnection.connected)
-                        {
-                            m_sharedData.serverInstance.launch();
-
-                            //small delay for server to get ready
-                            cro::Clock clock;
-                            while (clock.elapsed().asMilliseconds() < 500) {}
-
-                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
-
-                            if (!m_sharedData.clientConnection.connected)
-                            {
-                                m_sharedData.serverInstance.stop();
-                                cro::Logger::log("Failed to connect to local server", cro::Logger::Type::Error);
-                            }
-                        }
-                    }
-
-                    if (ImGui::Button("Join"))
-                    {
-                        if (!m_sharedData.clientConnection.connected
-                            && !m_sharedData.serverInstance.running())
-                        {
-                            cro::Command cmd;
-                            cmd.targetFlags = MenuCommandID::RootNode;
-                            cmd.action = [&](cro::Entity e, float)
-                            {
-                                e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Join]);
-                                m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Join);
-                            };
-                            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-                        }
-                    }
-                }
-                else if (m_scene.getSystem<cro::UISystem>().getActiveGroup() == GroupID::Join)
-                {
-                    static char buffer[20] = "127.0.0.1";
-                    ImGui::InputText("Address", buffer, 20);
-                    if (ImGui::Button("Connect"))
-                    {
-                        if (!m_sharedData.clientConnection.connected)
-                        {
-                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(buffer, ConstVal::GamePort);
-                            if (!m_sharedData.clientConnection.connected)
-                            {
-                                cro::Logger::log("Could not connect to server", cro::Logger::Type::Error);
-                            }
-                        }
-                    }
-
-                    if (ImGui::Button("Back"))
-                    {
-                        m_sharedData.clientConnection.netClient.disconnect();
-                        m_sharedData.serverInstance.stop();
-                        m_sharedData.clientConnection.connected = false;
-                        
-                        cro::Command cmd;
-                        cmd.targetFlags = MenuCommandID::RootNode;
-                        cmd.action = [&](cro::Entity e, float)
-                        {
-                            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
-                            m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
-                        };
-                        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-                    }
-                }
-                else
-                {
-                    //lobby
-                    if (ImGui::Button("Start"))
-                    {
-                        if (m_sharedData.clientConnection.connected
-                            && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
-                        {
-                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                        }
-                    }
-
-                    if (ImGui::Button("Back"))
-                    {
-                        m_sharedData.clientConnection.netClient.disconnect();
-                        m_sharedData.serverInstance.stop();
-                        m_sharedData.clientConnection.connected = false;
-                        
-                        cro::Command cmd;
-                        cmd.targetFlags = MenuCommandID::RootNode;
-                        cmd.action = [&](cro::Entity e, float)
-                        {
-                            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
-                            m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
-                        };
-                        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-                    }
-                }
-
-            }
-            ImGui::End();        
-        });
-#endif //CRO_DEBUG_
-
-    auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>().addCallback(
-        [](cro::Entity e)
-        {
-            e.getComponent<cro::Text>().setFillColour(TextHighlightColour);        
-        });
-    auto mouseExitCallback = m_scene.getSystem<cro::UISystem>().addCallback(
-        [](cro::Entity e)
-        {
-            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        });
-
-    auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition( {0.f, 0.f, -10.f} );
-    entity.addComponent<cro::Sprite>(m_textureResource.get("assets/golf/images/menu_background.png"));
-    entity.addComponent<cro::Drawable2D>();
-
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::RootNode;
-
-    createMainMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createAvatarMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createJoinMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createPlayerConfigMenu(mouseEnterCallback, mouseExitCallback);
-
-    //set a custom camera so the scene doesn't overwrite the viewport
-    //with the default view when resizing the window
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = std::bind(&GolfMenuState::updateView, this, std::placeholders::_1);
-    m_scene.setActiveCamera(entity);
-    updateView(entity.getComponent<cro::Camera>());
+    createUI();
 }
 
 void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
@@ -423,11 +283,12 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
 
                 //switch to lobby view
                 cro::Command cmd;
-                cmd.targetFlags = MenuCommandID::RootNode;
+                cmd.targetFlags = CommandID::Menu::RootNode;
                 cmd.action = [&](cro::Entity e, float)
                 {
-                    e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
+                    e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby] * m_viewScale);
                     m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
+                    m_currentMenu = MenuID::Lobby;
                 };
                 m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -475,22 +336,6 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
         m_sharedData.errorMessage = "Lost Connection To Host";
         requestStackPush(States::Golf::Error);
     }
-}
-
-void GolfMenuState::updateView(cro::Camera& cam)
-{
-    glm::vec2 size(cro::App::getWindow().getSize());
-    auto windowSize = size;
-    size.y = ((size.x / 16.f) * 9.f) / size.y;
-    size.x = 1.f;
-
-    cam.setOrthographic(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -20.f, 10.f);
-    cam.viewport.bottom = (1.f - size.y) / 2.f;
-    cam.viewport.height = size.y;
-
-    auto vpSize = calcVPSize();
-
-    m_viewScale = glm::vec2(std::floor(windowSize.y / vpSize.y));
 }
 
 void GolfMenuState::handleTextEdit(const cro::Event& evt)
