@@ -43,6 +43,8 @@ struct ColourPair final
 
 namespace pc
 {
+    static constexpr std::uint8_t SkinCount = 2;
+
     struct ColourID final
     {
         enum
@@ -80,7 +82,7 @@ namespace pc
 
     struct ColourKey final
     {
-        enum
+        enum Index
         {
             Bottom, Top,
             Skin, Hair,

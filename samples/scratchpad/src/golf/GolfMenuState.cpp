@@ -66,6 +66,7 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
     : cro::State    (stack, context),
     m_sharedData    (sd),
     m_scene         (context.appInstance.getMessageBus()),
+    m_playerAvatar  ("assets/golf/images/player.png"),
     m_currentMenu   (MenuID::Main),
     m_viewScale     (2.f)
 {

@@ -899,13 +899,6 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     //I need to finish the layout editor :3
     entity = createButton({ 74.f, 159.f }, "name_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
-    //    m_scene.getSystem<cro::UISystem>().addCallback(
-    //        [&](cro::Entity e) 
-    //        {
-    //            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    //            applyTextEdit();
-    //        });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_scene.getSystem<cro::UISystem>().addCallback(
             [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
@@ -931,14 +924,20 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    //c1 left
+    //c1 left - TODO these could all share the same callback the only difference is the index
     entity = createButton({ 19.f, 127.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+        m_scene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    //applyTextEdit();
+                    applyTextEdit();
+
+                    auto paletteIdx = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Hair];
+                    paletteIdx = (paletteIdx + (pc::ColourID::Count - 1)) % pc::ColourID::Count;
+                    m_playerAvatar.setColour(pc::ColourKey::Hair, paletteIdx);
+
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Hair] = paletteIdx;
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -946,11 +945,17 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     //c1 right
     entity = createButton({ 52.f, 127.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+        m_scene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    //applyTextEdit();
+                    applyTextEdit();
+
+                    auto paletteIdx = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Hair];
+                    paletteIdx = (paletteIdx + 1) % pc::ColourID::Count;
+                    m_playerAvatar.setColour(pc::ColourKey::Hair, paletteIdx);
+
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Hair] = paletteIdx;
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -959,11 +964,17 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     //c2 left
     entity = createButton({ 19.f, 102.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+        m_scene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    //applyTextEdit();
+                    applyTextEdit();
+
+                    auto paletteIdx = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Skin];
+                    paletteIdx = (paletteIdx + (pc::ColourID::Count - 1)) % pc::ColourID::Count;
+                    m_playerAvatar.setColour(pc::ColourKey::Skin, paletteIdx);
+
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Skin] = paletteIdx;
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -971,11 +982,17 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     //c2 right
     entity = createButton({ 52.f, 102.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+        m_scene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    //applyTextEdit();
+                    applyTextEdit();
+
+                    auto paletteIdx = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Skin];
+                    paletteIdx = (paletteIdx + 1) % pc::ColourID::Count;
+                    m_playerAvatar.setColour(pc::ColourKey::Skin, paletteIdx);
+
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Skin] = paletteIdx;
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -984,11 +1001,17 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     //c3 left
     entity = createButton({ 19.f, 77.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+        m_scene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    //applyTextEdit();
+                    applyTextEdit();
+
+                    auto paletteIdx = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Top];
+                    paletteIdx = (paletteIdx + (pc::ColourID::Count - 1)) % pc::ColourID::Count;
+                    m_playerAvatar.setColour(pc::ColourKey::Top, paletteIdx);
+
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Top] = paletteIdx;
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -996,11 +1019,17 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     //c3 right
     entity = createButton({ 52.f, 77.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+        m_scene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    //applyTextEdit();
+                    applyTextEdit();
+
+                    auto paletteIdx = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Top];
+                    paletteIdx = (paletteIdx + 1) % pc::ColourID::Count;
+                    m_playerAvatar.setColour(pc::ColourKey::Top, paletteIdx);
+
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Top] = paletteIdx;
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1009,11 +1038,17 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     //c4 left
     entity = createButton({ 19.f, 52.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+        m_scene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    //applyTextEdit();
+                    applyTextEdit();
+
+                    auto paletteIdx = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Bottom];
+                    paletteIdx = (paletteIdx + (pc::ColourID::Count - 1)) % pc::ColourID::Count;
+                    m_playerAvatar.setColour(pc::ColourKey::Bottom, paletteIdx);
+
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Bottom] = paletteIdx;
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1021,11 +1056,17 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     //c4 right
     entity = createButton({ 52.f, 52.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+        m_scene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    //applyTextEdit();
+                    applyTextEdit();
+
+                    auto paletteIdx = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Bottom];
+                    paletteIdx = (paletteIdx + 1) % pc::ColourID::Count;
+                    m_playerAvatar.setColour(pc::ColourKey::Bottom, paletteIdx);
+
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[pc::ColourKey::Bottom] = paletteIdx;
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1035,11 +1076,23 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     //skin left
     entity = createButton({ 90.f, 92.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+        m_scene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    //applyTextEdit();
+                    applyTextEdit();
+
+                    auto skinID = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].skinID;
+                    skinID = (skinID + (pc::SkinCount - 1)) % pc::SkinCount;
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].skinID = skinID;
+
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::Menu::PlayerAvatar;
+                    cmd.action = [&, skinID](cro::Entity en, float)
+                    {
+                        en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatar.previewRects[skinID]);
+                    };
+                    m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1047,11 +1100,23 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     //skin right
     entity = createButton({ 172.f, 92.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+        m_scene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    //applyTextEdit();
+                    applyTextEdit();
+
+                    auto skinID = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].skinID;
+                    skinID = (skinID + 1) % pc::SkinCount;
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].skinID = skinID;
+
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::Menu::PlayerAvatar;
+                    cmd.action = [&, skinID](cro::Entity en, float)
+                    {
+                        en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatar.previewRects[skinID]);
+                    };
+                    m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1078,13 +1143,17 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 113.f, 68.f, ButtonDepth });
     entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::PlayerAvatar;
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("female_wood");
+    entity.getComponent<cro::Sprite>().setTexture(m_playerAvatar.getTexture(), false);
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    m_playerAvatar.previewRects[0] = spriteSheet.getSprite("female_wood").getTextureRect();
+    m_playerAvatar.previewRects[1] = spriteSheet.getSprite("male_wood").getTextureRect();
 }
 
 void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
-    static constexpr glm::vec2 BasePosition(0.f);// ({ 600.f, 700.f });
     static constexpr glm::vec2 EditButtonOffset({ -36.f, 0.f });
     static constexpr float LineHeight = 10.f;
 
@@ -1095,9 +1164,7 @@ void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t m
     m_avatarListEntities.clear();
 
     
-
-
-    auto pos = BasePosition;
+    auto pos = glm::vec2(0.f);
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
         auto entity = m_scene.createEntity();
@@ -1159,6 +1226,10 @@ void GolfMenuState::updateLobbyAvatars()
     //TODO detect only the avatars which changed
     //so we don't needlessly update textures
 
+    //TODO set the avatar target to each texture
+    //and apply the colour flags to it
+
+
     cro::Command cmd;
     cmd.targetFlags = CommandID::Menu::LobbyList;
     cmd.action = [&](cro::Entity e, float)
@@ -1191,6 +1262,8 @@ void GolfMenuState::updateLobbyAvatars()
 
 void GolfMenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
 {
+    m_playerAvatar.activePlayer = playerIndex;
+
     cro::Command cmd;
     cmd.targetFlags = CommandID::Menu::PlayerConfig;
     cmd.action = [&,visible](cro::Entity e, float)
@@ -1204,10 +1277,26 @@ void GolfMenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
     m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
     cmd.targetFlags = CommandID::Menu::PlayerName;
-    cmd.action = [&, playerIndex](cro::Entity e, float)
+    cmd.action = [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString(m_sharedData.localConnectionData.playerData[playerIndex].name);
-        e.getComponent<cro::Callback>().setUserData<std::uint8_t>(playerIndex);
+        e.getComponent<cro::Text>().setString(m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].name);
+        e.getComponent<cro::Callback>().setUserData<std::uint8_t>(m_playerAvatar.activePlayer);
     };
     m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::Menu::PlayerAvatar;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Sprite>().setTextureRect(m_playerAvatar.previewRects[m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].skinID]);
+    };
+    m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    //apply all the current indices to the player avatar
+    if (visible)
+    {
+        m_playerAvatar.setColour(pc::ColourKey::Bottom, m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags[0]);
+        m_playerAvatar.setColour(pc::ColourKey::Top, m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags[1]);
+        m_playerAvatar.setColour(pc::ColourKey::Skin, m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags[2]);
+        m_playerAvatar.setColour(pc::ColourKey::Hair, m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags[3]);
+    }
 }

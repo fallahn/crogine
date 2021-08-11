@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "CommonConsts.hpp"
+#include "PlayerAvatar.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/String.hpp>
@@ -68,7 +69,6 @@ class GolfMenuState final : public cro::State, public cro::GuiClient
 {
 public:
     GolfMenuState(cro::StateStack&, cro::State::Context, SharedStateData&);
-    ~GolfMenuState() = default;
 
     cro::StateID getStateID() const override { return States::Golf::Menu; }
 
@@ -98,6 +98,7 @@ private:
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {};   
     std::vector<cro::Entity> m_avatarListEntities;
+    PlayerAvatar m_playerAvatar;
 
     std::size_t m_currentMenu;
 

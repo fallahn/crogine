@@ -147,6 +147,9 @@
     <ClCompile Include="src\golf\TerrainBuilder.cpp">
       <Filter>Source Files\golf\client</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\PlayerAvatar.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -300,6 +303,9 @@
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\TextAnimCallback.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PlayerAvatar.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>

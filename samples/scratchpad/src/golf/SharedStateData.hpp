@@ -34,9 +34,11 @@ source distribution.
 
 #include <crogine/network/NetClient.hpp>
 #include <crogine/core/String.hpp>
+#include <crogine/graphics/Texture.hpp>
 
 #include <string>
 #include <array>
+#include <memory>
 
 struct PlayerData final
 {
@@ -77,6 +79,8 @@ struct SharedStateData final
 
     //data of all players rx'd from server
     std::array<ConnectionData, 4u> connectionData = {};
+
+    std::array<std::array<cro::Texture, 4u>, 4u> avatarTextures = {};
 
     //our local player data
     ConnectionData localConnectionData;
