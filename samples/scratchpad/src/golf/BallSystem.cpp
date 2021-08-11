@@ -66,14 +66,14 @@ BallSystem::BallSystem(cro::MessageBus& mb, const cro::Image& mapData)
     m_mapData               (mapData),
     m_windDirTime           (cro::seconds(0.f)),
     m_windStrengthTime      (cro::seconds(1.f)),
-    m_windInterpTime        (1.f),
-    m_currentWindInterpTime (0.f),
     m_windDirection         (-1.f, 0.f, 0.f),
     m_windDirSrc            (m_windDirection),
     m_windDirTarget         (1.f, 0.f, 0.f),
     m_windStrength          (0.f),
     m_windStrengthSrc       (m_windStrength),
     m_windStrengthTarget    (0.1f),
+    m_windInterpTime        (1.f),
+    m_currentWindInterpTime (0.f),
     m_holeData              (nullptr)
 {
     requireComponent<cro::Transform>();
