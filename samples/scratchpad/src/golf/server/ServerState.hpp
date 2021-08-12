@@ -41,6 +41,13 @@ source distribution.
 
 namespace sv
 {
+    struct PlayerInfo final
+    {
+        cro::String name;
+        std::array<std::uint8_t, 4> avatarFlags = {}; //not really flags per se, but let's at least keep naming consistent
+        std::uint8_t skinID = 0;
+    };
+
     struct ClientConnection final
     {
         bool ready = false; //< player is ready to recieve game data, not lobby readiness (see GameState)
@@ -50,7 +57,7 @@ namespace sv
         //TODO this is basically the same as the ConnectionData struct in client shared data
         static constexpr std::size_t MaxPlayers = 4;
         std::size_t playerCount = 0;
-        std::array<cro::String, MaxPlayers> playerData = {};
+        std::array<PlayerInfo, MaxPlayers> playerData = {};
     };
 
     struct SharedData final

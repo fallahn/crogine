@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -85,7 +85,7 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
 
     if (!m_window)
     {
-        Logger::log("failed creating Window");
+        LogE << SDL_GetError() << std::endl;
         return false;
     }
     else

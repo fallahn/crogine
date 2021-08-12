@@ -44,11 +44,11 @@ struct PlayerData final
 {
     cro::String name;
     std::array<std::uint8_t, 4u> avatarFlags = {}; //indexes into colour pairs
-    std::uint8_t skinID = 0; //currently male, female can be extended
+    std::uint8_t skinID = 0; //currently male, female can be extended, see PlayerColours::MaxSkins
 
     std::vector<std::uint8_t> holeScores;
     std::uint8_t score = 0;
-    glm::vec3 currentTarget = glm::vec3(0.f);
+    glm::vec3 currentTarget = glm::vec3(0.f); //TODO we don't really want to include this as it's not needed for sync
 };
 
 struct ConnectionData final

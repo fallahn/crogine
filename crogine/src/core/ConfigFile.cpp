@@ -153,7 +153,7 @@ bool ConfigObject::loadFromFile(const std::string& filePath)
 
     if (!rr.file)
     {
-        Logger::log(path + " file invalid or not found.", Logger::Type::Error);
+        Logger::log(path + " file invalid or not found.", Logger::Type::Warning);
         return false;
     }
     

@@ -126,8 +126,9 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
                 m_sharedData.clients[connectionID].playerCount = cd.playerCount;
                 for (auto i = 0u; i < cd.playerCount; ++i)
                 {
-                    m_sharedData.clients[connectionID].playerData[i] = cd.playerData[i].name;
-                    //TODO avatar flags
+                    m_sharedData.clients[connectionID].playerData[i].name = cd.playerData[i].name;
+                    m_sharedData.clients[connectionID].playerData[i].avatarFlags = cd.playerData[i].avatarFlags;
+                    m_sharedData.clients[connectionID].playerData[i].skinID = cd.playerData[i].skinID;
                 }
             }
             else
@@ -149,7 +150,9 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
             cd.playerCount = static_cast<std::uint8_t>(c.playerCount);
             for (auto j = 0u; j < c.playerCount; ++j)
             {
-                cd.playerData[j].name = c.playerData[j];
+                cd.playerData[j].name = c.playerData[j].name;
+                cd.playerData[j].avatarFlags = c.playerData[j].avatarFlags;
+                cd.playerData[j].skinID = c.playerData[j].skinID;
             }
             auto buffer = cd.serialise();
 
