@@ -123,7 +123,7 @@ void GolfState::buildUI()
     m_currentPlayer.position = m_holeData[0].tee;
 
 
-    //info panel background
+    //info panel background - vertices are set in resize callback
     auto windowSize = glm::vec2(cro::App::getWindow().getSize());
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -161,7 +161,7 @@ void GolfState::buildUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::ClubName | CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.01f, 1.f };
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
@@ -409,7 +409,7 @@ void GolfState::buildUI()
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(uiSize.x - 48.f, 40.f));
 
         //update the overlay
-        auto colour = cro::Colour(0.f, 0.f, 0.f, 0.5f);
+        auto colour = cro::Colour(0.f, 0.f, 0.f, 0.25f);
         infoEnt.getComponent<cro::Drawable2D>().getVertexData() =
         {
             //bottom bar

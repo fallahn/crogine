@@ -397,13 +397,15 @@ void BallSystem::updateWind()
 
 std::pair<std::uint8_t, glm::vec3> BallSystem::getTerrain(glm::vec3 pos) const
 {
-    auto size = glm::vec2(m_mapData.getSize());
-    std::uint32_t x = static_cast<std::uint32_t>(std::max(0.f, std::min(size.x, std::floor(pos.x))));
-    std::uint32_t y = static_cast<std::uint32_t>(std::max(0.f, std::min(size.y, std::floor(-pos.z))));
+    auto mapSize = m_mapData.getSize();
+    auto size = glm::vec2(mapSize);
+    std::uint32_t x = static_cast<std::uint32_t>(std::max(0.f, std::min(size.x - 1.f, std::floor(pos.x))));
+    std::uint32_t y = static_cast<std::uint32_t>(std::max(0.f, std::min(size.y - 1.f, std::floor(-pos.z))));
 
     CRO_ASSERT(m_mapData.getFormat() == cro::ImageFormat::RGBA, "expected RGBA format");
 
-    auto index = ((y * static_cast<std::uint32_t>(size.x)) + x);
+    auto index = ((y * mapSize.x) + x);
+    CRO_ASSERT(index < mapSize.x * mapSize.y, "");
 
     //R is terrain * 10
     std::uint8_t terrain = m_mapData.getPixelData()[index * 4] / 10;

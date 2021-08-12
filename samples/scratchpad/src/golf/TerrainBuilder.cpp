@@ -424,8 +424,8 @@ void TerrainBuilder::threadFunc()
                 {
                     auto size = mapImage.getSize();
 
-                    x = std::min(size.x, std::max(0u, x));
-                    y = std::min(size.y, std::max(0u, y));
+                    x = std::min(size.x - 1, std::max(0u, x));
+                    y = std::min(size.y - 1, std::max(0u, y));
 
                     auto index = y * size.x + x;
                     index *= 4;

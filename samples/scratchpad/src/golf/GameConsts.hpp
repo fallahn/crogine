@@ -69,8 +69,8 @@ static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, floa
 {
     auto size = glm::vec2(img.getSize());
     //I forget why our coords are float - this makes for horrible casts :(
-    std::uint32_t x = static_cast<std::uint32_t>(std::min(size.x, std::max(0.f, std::floor(px))));
-    std::uint32_t y = static_cast<std::uint32_t>(std::min(size.y, std::max(0.f, std::floor(py))));
+    std::uint32_t x = static_cast<std::uint32_t>(std::min(size.x - 1.f, std::max(0.f, std::floor(px))));
+    std::uint32_t y = static_cast<std::uint32_t>(std::min(size.y - 1.f, std::max(0.f, std::floor(py))));
 
     std::uint32_t stride = 4;
     //TODO we should have already asserted the format is RGBA elsewhere...
