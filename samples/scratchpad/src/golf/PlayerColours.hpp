@@ -34,8 +34,8 @@ source distribution.
 
 struct ColourPair final
 {
-    std::uint32_t light = 0x000000FF;
-    std::uint32_t dark = 0x000000FF;
+    const std::uint32_t light = 0x000000FF;
+    const std::uint32_t dark = 0x000000FF;
 
     constexpr ColourPair(std::uint32_t l, std::uint32_t d)
         : light(l), dark(d) {}
@@ -93,9 +93,9 @@ namespace pc
 
     static constexpr std::array<ColourPair, ColourKey::Count> Keys =
     {
-        ColourPair(0x0a0a0aff, 0x000000ff),
-        ColourPair(0x282828ff, 0x1e1e1eff),
-        ColourPair(0x464646ff, 0x3c3c3cff),
-        ColourPair(0x646464ff, 0x5a5a5aff)
+        ColourPair(0x0a, 0x00), //(0x0a0a0aff, 0x000000ff),
+        ColourPair(0x28, 0x1e), //(0x282828ff, 0x1e1e1eff),
+        ColourPair(0x46, 0x3c), //(0x464646ff, 0x3c3c3cff),
+        ColourPair(0x64, 0x5a)  //(0x646464ff, 0x5a5a5aff)
     };
 }

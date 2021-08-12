@@ -117,6 +117,15 @@ bool MyApp::initialise()
 
 void MyApp::finalise()
 {
+    //TODO only necessary in golf game
+    for (auto& c : m_sharedGolfData.avatarTextures)
+    {
+        for (auto& t : c)
+        {
+            t = {};
+        }
+    }
+
     m_stateStack.clearStates();
     m_stateStack.simulate(0.f);
 }

@@ -55,5 +55,6 @@ private:
     cro::Texture m_texture;
     cro::Image m_image;
 
-    std::array<std::vector<std::uint32_t>, pc::ColourKey::Count> m_keyIndices;
+    std::array<std::vector<std::uint32_t>, pc::ColourKey::Count> m_keyIndicesLight;
+    std::array<std::vector<std::uint32_t>, pc::ColourKey::Count> m_keyIndicesDark;
 };

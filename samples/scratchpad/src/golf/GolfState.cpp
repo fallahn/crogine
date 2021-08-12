@@ -161,6 +161,17 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
                 ImGui::Text("Terrain: %s", TerrainStrings[m_currentPlayer.terrain]);
 
+                for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+                {
+                    if (m_sharedData.connectionData[i].playerCount > 0)
+                    {
+                        for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
+                        {
+                            ImGui::Image(m_sharedData.avatarTextures[i][j], { 338.f, 112.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                        }
+                    }
+                }
+
                 //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
@@ -345,17 +356,15 @@ void GolfState::handleMessage(const cro::Message& msg)
             cmd.action = [&](cro::Entity e, float)
             {
                 auto colour = e.getComponent<cro::Sprite>().getColour();
-                auto skinID = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].skinID;
                 if (getClub() < ClubID::FiveIron)
                 {
-                    e.getComponent<cro::Sprite>() = m_avatars[skinID].wood;
+                    e.getComponent<cro::Sprite>() = m_avatars[m_currentPlayer.client][m_currentPlayer.player].wood;
                 }
                 else
                 {
-                    e.getComponent<cro::Sprite>() = m_avatars[skinID].iron;
+                    e.getComponent<cro::Sprite>() = m_avatars[m_currentPlayer.client][m_currentPlayer.player].iron;
                 }
                 e.getComponent<cro::Sprite>().setColour(colour);
-
             };
             m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
         }
@@ -474,10 +483,18 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
 
     spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_resources.textures);
-    m_avatars[0].wood = spriteSheet.getSprite("female_wood");
-    m_avatars[0].iron = spriteSheet.getSprite("female_iron");
-    m_avatars[1].wood = spriteSheet.getSprite("male_wood");
-    m_avatars[1].iron = spriteSheet.getSprite("male_iron");
+    for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+    {
+        for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
+        {
+            auto skinID = m_sharedData.connectionData[i].playerData[j].skinID;
+            m_avatars[i][j].iron = skinID == 0 ? spriteSheet.getSprite("female_iron") : spriteSheet.getSprite("male_iron");
+            m_avatars[i][j].wood = skinID == 0 ? spriteSheet.getSprite("female_wood") : spriteSheet.getSprite("male_wood");
+
+            m_avatars[i][j].iron.setTexture(m_sharedData.avatarTextures[i][j], false);
+            m_avatars[i][j].wood.setTexture(m_sharedData.avatarTextures[i][j], false);
+        }
+    }
 
     m_resources.fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
 
@@ -1399,14 +1416,13 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         if (player.terrain != TerrainID::Green)
         {
-            auto skinID = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].skinID;
             if (getClub() < ClubID::FiveIron)
             {
-                e.getComponent<cro::Sprite>() = m_avatars[skinID].wood;
+                e.getComponent<cro::Sprite>() = m_avatars[m_currentPlayer.client][m_currentPlayer.player].wood;
             }
             else
             {
-                e.getComponent<cro::Sprite>() = m_avatars[skinID].iron;
+                e.getComponent<cro::Sprite>() = m_avatars[m_currentPlayer.client][m_currentPlayer.player].iron;
             }
             e.getComponent<cro::Callback>().active = true;
 

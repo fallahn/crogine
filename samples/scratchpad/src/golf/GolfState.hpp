@@ -162,7 +162,7 @@ private:
         cro::Sprite wood;
         cro::Sprite iron;
     };
-    std::array<Avatar, 2u> m_avatars;
+    std::array<std::array<Avatar, 4u>, 4u> m_avatars;
 
     struct FontID final
     {

@@ -1226,23 +1226,34 @@ void GolfMenuState::updateLobbyAvatars()
     //TODO detect only the avatars which changed
     //so we don't needlessly update textures
 
-    //TODO set the avatar target to each texture
-    //and apply the colour flags to it
-
-
     cro::Command cmd;
     cmd.targetFlags = CommandID::Menu::LobbyList;
     cmd.action = [&](cro::Entity e, float)
     {
+        const auto applyTexture = [&](cro::Texture& targetTexture, const std::array<uint8_t, 4u>& flags)
+        {
+            m_playerAvatar.setTarget(targetTexture);
+            for (auto j = 0u; j < flags.size(); ++j)
+            {
+                m_playerAvatar.setColour(pc::ColourKey::Index(j), flags[j]);
+            }
+            m_playerAvatar.apply();
+        };
+
         cro::String str;
         for (const auto& c : m_sharedData.connectionData)
         {
             if (c.playerCount > 0)
             {
                 str += c.playerData[0].name;
+
+                applyTexture(m_sharedData.avatarTextures[c.connectionID][0], c.playerData[0].avatarFlags);
+
                 for (auto i = 1u; i < c.playerCount; ++i)
                 {
                     str += ", " + c.playerData[i].name;
+
+                    applyTexture(m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
                 }
                 str += "\n";
             }

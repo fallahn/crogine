@@ -35,12 +35,54 @@ PlayerAvatar::PlayerAvatar(const std::string& path)
     : m_target(nullptr)
 {
     //load into image
-    if (m_image.loadFromFile(path))
+    if (m_image.loadFromFile(path)
+        && (m_image.getFormat() == cro::ImageFormat::RGB
+            || m_image.getFormat() == cro::ImageFormat::RGBA))
     {
         //if successful load into texture
         m_texture.loadFromImage(m_image);
 
         //and cache color indices
+        auto stride = m_image.getFormat() == cro::ImageFormat::RGB ? 3u : 4u;
+        auto length = m_image.getSize().x * m_image.getSize().y * stride;
+        const auto* pixels = m_image.getPixelData();
+
+        for (auto i = 0u; i < length; i += stride)
+        {
+            auto alpha = pixels[i + (stride - 1)];
+
+            switch (pixels[i])
+            {
+            default: break;
+            case pc::Keys[pc::ColourKey::Bottom].light:
+                if (alpha) m_keyIndicesLight[pc::ColourKey::Bottom].push_back(i / stride);
+                break;
+            case pc::Keys[pc::ColourKey::Bottom].dark:
+                if (alpha) m_keyIndicesDark[pc::ColourKey::Bottom].push_back(i / stride);
+                break;
+
+            case pc::Keys[pc::ColourKey::Top].light:
+                if (alpha) m_keyIndicesLight[pc::ColourKey::Top].push_back(i / stride);
+                break;
+            case pc::Keys[pc::ColourKey::Top].dark:
+                if (alpha) m_keyIndicesDark[pc::ColourKey::Top].push_back(i / stride);
+                break;
+
+            case pc::Keys[pc::ColourKey::Skin].light:
+                if (alpha) m_keyIndicesLight[pc::ColourKey::Skin].push_back(i / stride);
+                break;
+            case pc::Keys[pc::ColourKey::Skin].dark:
+                if (alpha) m_keyIndicesDark[pc::ColourKey::Skin].push_back(i / stride);
+                break;
+
+            case pc::Keys[pc::ColourKey::Hair].light:
+                if (alpha) m_keyIndicesLight[pc::ColourKey::Hair].push_back(i / stride);
+                break;
+            case pc::Keys[pc::ColourKey::Hair].dark:
+                if (alpha) m_keyIndicesDark[pc::ColourKey::Hair].push_back(i / stride);
+                break;
+            }
+        }
     }
     else
     {
@@ -58,11 +100,24 @@ void PlayerAvatar::setColour(pc::ColourKey::Index idx, std::int8_t pairIdx)
 {
     CRO_ASSERT(pairIdx < pc::ColourID::Count, "");
 
-    for (auto i : m_keyIndices[idx])
+    const auto imgWidth = m_image.getSize().x;
+
+    for (auto i : m_keyIndicesLight[idx])
     {
         //set the colour in the image at this index
-        pc::Palette[pairIdx].light;
-        pc::Palette[pairIdx].dark;
+        auto x = i % imgWidth;
+        auto y = i / imgWidth;
+
+        m_image.setPixel(x, y, cro::Colour(pc::Palette[pairIdx].light));
+        
+    }
+
+    for (auto i : m_keyIndicesDark[idx])
+    {
+        auto x = i % imgWidth;
+        auto y = i / imgWidth;
+
+        m_image.setPixel(x, y, cro::Colour(pc::Palette[pairIdx].dark));
     }
 
     m_texture.loadFromImage(m_image);

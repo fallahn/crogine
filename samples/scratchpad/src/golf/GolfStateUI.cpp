@@ -114,9 +114,9 @@ void GolfState::buildUI()
     };
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
-    entity.addComponent<cro::Sprite>() = m_avatars[0].wood;//actual sprite is selected with setCurrentPlayer() / set club callback
+    entity.addComponent<cro::Sprite>() = m_avatars[0][0].wood;//actual sprite is selected with setCurrentPlayer() / set club callback
     entity.addComponent<cro::SpriteAnimation>();
-    bounds = m_avatars[0].wood.getTextureBounds();
+    bounds = m_avatars[0][0].wood.getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width * 0.78f, 0.f));
     courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto playerEnt = entity;
