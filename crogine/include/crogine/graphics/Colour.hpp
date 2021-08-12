@@ -71,6 +71,11 @@ namespace cro
         */
         Colour(glm::vec4 vector);
 
+        /*
+        \brief Creates a colour by assigning a RGBA packed 32bit integer
+        */
+        Colour& operator = (std::uint32_t mask);
+
         /*!
         \brief sets the red channel value
         */
@@ -140,7 +145,7 @@ namespace cro
         /*!
         \brief Returns the colour as a RGBA packed 32bit integer
         */
-        std::int32_t getPacked() const;
+        std::uint32_t getPacked() const;
 
         /*!
         \brief Returns the colour as a RGBA vec4 float

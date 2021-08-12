@@ -81,6 +81,15 @@ cro::Colour::Colour(glm::vec4 vector)
     setAlpha(vector.a);
 }
 
+cro::Colour& cro::Colour::operator = (std::uint32_t mask)
+{
+    r = (static_cast<float>((mask >> 24) & 0xFF) / 255.f);
+    g = (static_cast<float>((mask >> 16) & 0xFF) / 255.f);
+    b = (static_cast<float>((mask >> 8) & 0xFF) / 255.f);
+    a = (static_cast<float>(mask & 0xFF) / 255.f);
+    return *this;
+}
+
 //public
 void cro::Colour::setRed(std::uint8_t red)
 {
@@ -166,7 +175,7 @@ float cro::Colour::getAlpha() const
     return a;
 }
 
-std::int32_t cro::Colour::getPacked() const
+std::uint32_t cro::Colour::getPacked() const
 {
     return (getRedByte() << 24 | getGreenByte() << 16 | getBlueByte() << 8 | getAlphaByte());
 }

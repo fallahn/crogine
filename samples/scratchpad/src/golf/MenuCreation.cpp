@@ -51,6 +51,8 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Easings.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
+
 #include <cstring>
 
 namespace
@@ -1027,6 +1029,40 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    //colour preview
+    auto position = glm::vec2(35.f, 51.f);
+    for (auto i = 0u; i < 4u; ++i)
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(position, 0.1f));
+        entity.addComponent<cro::Drawable2D>().getVertexData() =
+        {
+            cro::Vertex2D(glm::vec2(0.f, 17.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(17.f), cro::Colour::White),
+            
+            cro::Vertex2D(glm::vec2(17.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(17, 0.f), cro::Colour::White)
+        };
+        entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+        entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, i](cro::Entity e, float)
+        {
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            for (auto j = 0u; j < verts.size(); ++j)
+            {
+                auto idx = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[i];
+                verts[j].colour = j < 3 ? pc::Palette[idx].light : pc::Palette[idx].dark;
+            }
+        };
+
+        bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        position.y += 25.f;
+    }
 
 
     //skin left
