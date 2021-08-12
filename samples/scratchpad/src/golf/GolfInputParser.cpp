@@ -488,23 +488,25 @@ namespace golf
         m_prevMouseWheel = m_mouseWheel;
         m_mouseWheel = 0;
 
-        if (m_mouseMove > 0)
-        {
-            m_inputFlags |= InputFlag::Right;
-        }
-        else if (m_mouseMove < 0)
-        {
-            m_inputFlags |= InputFlag::Left;
-        }
-        else if (m_prevMouseMove > 0)
-        {
-            m_inputFlags &= ~InputFlag::Right;
-        }
-        else if (m_prevMouseMove < 0)
-        {
-            m_inputFlags &= ~InputFlag::Left;
-        }
-        m_prevMouseMove = m_mouseMove;
-        m_mouseMove = 0;
+        //TODO make this not crap.
+
+        //if (m_mouseMove > 0)
+        //{
+        //    m_inputFlags |= InputFlag::Right;
+        //}
+        //else if (m_mouseMove < 0)
+        //{
+        //    m_inputFlags |= InputFlag::Left;
+        //}
+        //else if (m_prevMouseMove > 0)
+        //{
+        //    m_inputFlags &= ~InputFlag::Right;
+        //}
+        //else if (m_prevMouseMove < 0)
+        //{
+        //    m_inputFlags &= ~InputFlag::Left;
+        //}
+        //m_prevMouseMove = m_mouseMove;
+        //m_mouseMove = 0;
     }
 }
