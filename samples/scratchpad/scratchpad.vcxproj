@@ -230,6 +230,7 @@
     <ClCompile Include="src\bsp\Patch.cpp" />
     <ClCompile Include="src\bsp\Q3BspSystem.cpp" />
     <ClCompile Include="src\golf\BallSystem.cpp" />
+    <ClCompile Include="src\golf\ClientCollisionSystem.cpp" />
     <ClCompile Include="src\golf\ErrorState.cpp" />
     <ClCompile Include="src\golf\GolfState.cpp" />
     <ClCompile Include="src\golf\GolfInputParser.cpp" />
@@ -267,6 +268,7 @@
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\golf\BallSystem.hpp" />
     <ClInclude Include="src\golf\CircularBuffer.hpp" />
+    <ClInclude Include="src\golf\ClientCollisionSystem.hpp" />
     <ClInclude Include="src\golf\ClientPacketData.hpp" />
     <ClInclude Include="src\golf\Clubs.hpp" />
     <ClInclude Include="src\golf\CommandIDs.hpp" />

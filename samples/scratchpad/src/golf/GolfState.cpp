@@ -38,6 +38,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "Clubs.hpp"
 #include "TextAnimCallback.hpp"
+#include "ClientCollisionSystem.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 
@@ -319,6 +320,19 @@ void GolfState::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
+    case MessageID::CollisionMessage:
+    {
+        const auto& data = msg.getData<CollisionEvent>();
+        if (data.type == CollisionEvent::Begin)
+        {
+            LogI << "Begin collision at " << data.position << std::endl;
+        }
+        else
+        {
+            LogI << "End collision at " << data.position << std::endl;
+        }
+    }
+        break;
     case MessageID::SceneMessage:
     {
         const auto& data = msg.getData<SceneEvent>();
@@ -745,6 +759,7 @@ void GolfState::addSystems()
     auto& mb = m_gameScene.getMessageBus();
 
     m_gameScene.addSystem<InterpolationSystem>(mb);
+    m_gameScene.addSystem<ClientCollisionSystem>(mb, m_holeData);
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
@@ -964,6 +979,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.003f, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<InterpolationComponent>().setID(info.serverID);
+    entity.addComponent<ClientCollider>().previousPosition = info.position;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.ballMeshID), material);
 
     //ball shadow
@@ -1130,6 +1146,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     }
 
     m_terrainBuilder.update(hole);
+    m_gameScene.getSystem<ClientCollisionSystem>().setMap(hole);
 
     //create hole model transition
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().active = true;

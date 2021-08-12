@@ -150,6 +150,9 @@
     <ClCompile Include="src\golf\PlayerAvatar.cpp">
       <Filter>Source Files\golf\client</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\ClientCollisionSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -307,6 +310,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\PlayerAvatar.hpp">
       <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ClientCollisionSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

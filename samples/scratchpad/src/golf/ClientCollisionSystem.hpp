@@ -29,46 +29,30 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/Message.hpp>
+#include "HoleData.hpp"
+
+#include <crogine/ecs/System.hpp>
+
+#include <crogine/graphics/Image.hpp>
+
 #include <crogine/detail/glm/vec3.hpp>
 
-//be careful here as these messages overlap with the scratchpad messages
-//we're banking on the project not running golf at the same time as another
-//state - which will hopefully be true eventually after separating this project...
-
-namespace MessageID
+struct ClientCollider final
 {
-    enum
-    {
-        GolfMessage = 400,//cro::Message::Count
-        SceneMessage,
-        CollisionMessage
-    };
-}
-
-struct GolfEvent final
-{
-    enum
-    {
-        HitBall,
-        ClubChanged
-    }type = HitBall;
+    glm::vec3 previousPosition = glm::vec3(0.f);
 };
 
-struct SceneEvent
+class ClientCollisionSystem final :public cro::System 
 {
-    enum
-    {
-        TransitionComplete
-    }type = TransitionComplete;
-};
+public:
+    ClientCollisionSystem(cro::MessageBus&, const std::vector<HoleData>&);
 
-struct CollisionEvent final
-{
-    enum Type
-    {
-        Begin, End
-    }type = Begin;
-    glm::vec3 position = glm::vec3(0.f);
-    std::int32_t terrain = 0; //if TerrainID::Count then in the hole.
+    void process(float) override;
+
+    void setMap(std::uint32_t);
+
+private:
+    const std::vector<HoleData>& m_holeData;
+    std::uint32_t m_holeIndex;
+    cro::Image m_currentMap;
 };
