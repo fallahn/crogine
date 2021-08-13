@@ -279,7 +279,7 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
     //this entity has the player edit text ents added to it by updateLocalAvatars
     auto avatarEnt = m_scene.createEntity();
     avatarEnt.addComponent<cro::Transform>();
-    avatarEnt.addComponent<UIElement>().relativePosition = { 0.3f, 0.65f };
+    avatarEnt.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     avatarEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     menuEntity.getComponent<cro::Transform>().addChild(avatarEnt.getComponent<cro::Transform>());
     m_menuEntities[MenuID::Avatar] = avatarEnt;
@@ -807,6 +807,19 @@ void GolfMenuState::createOptionsMenu(cro::Entity parent, std::uint32_t, std::ui
 
 void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
+    cro::Colour c(0.f, 0.f, 0.f, 0.5f);
+    auto fadeNode = m_scene.createEntity();
+    fadeNode.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f }); //relative to bgNode!
+    fadeNode.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(-0.5f, 0.5f), c),
+        cro::Vertex2D(glm::vec2(-0.5f), c),
+        cro::Vertex2D(glm::vec2(0.5f), c),
+        cro::Vertex2D(glm::vec2(0.5f, -0.5f), c)
+    };
+    fadeNode.getComponent<cro::Drawable2D>().updateLocalBounds();
+
+
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/player_selection.spt", m_textureResource);
 
@@ -821,7 +834,7 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     bgNode.addComponent<cro::Callback>().active = true;
     bgNode.getComponent<cro::Callback>().setUserData<std::pair<float, float>>(0.f, 0.f);
     bgNode.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, fadeNode](cro::Entity e, float dt) mutable
     {
         auto& [current, target] = e.getComponent<cro::Callback>().getUserData<std::pair<float, float >>();
         float scale = current;
@@ -840,7 +853,18 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
         auto size = glm::vec2(cro::App::getWindow().getSize());
         e.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, 1.f));
         e.getComponent<cro::Transform>().setScale(m_viewScale * scale);
+
+        fadeNode.getComponent<cro::Transform>().setScale(size * current);
+        float alpha = cro::Util::Easing::easeInQuint(current) * 0.5f;
+        auto& verts = fadeNode.getComponent<cro::Drawable2D>().getVertexData();
+        for (auto& v : verts)
+        {
+            v.colour.setAlpha(alpha);
+        }
     };
+
+    fadeNode.getComponent<cro::Transform>().setPosition(bgNode.getComponent<cro::Transform>().getOrigin());
+    bgNode.getComponent<cro::Transform>().addChild(fadeNode.getComponent<cro::Transform>());
 
     auto selected = m_scene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e) 
@@ -1151,9 +1175,10 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
 
 void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
-    static constexpr glm::vec2 EditButtonOffset(-52.f, -24.f);
+    //these can have fixed positions as they are attached to a menuEntity[] which is UI scaled
+    static constexpr glm::vec2 EditButtonOffset(-42.f, -24.f);
     static constexpr glm::vec2 AvatarOffset = EditButtonOffset + glm::vec2(-12.f, 4.f);
-    static constexpr float LineHeight = 10.f;
+    static constexpr float LineHeight = 16.f;
 
     for (auto e : m_avatarListEntities)
     {
@@ -1161,12 +1186,16 @@ void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t m
     }
     m_avatarListEntities.clear();
 
-    
-    auto pos = glm::vec2(0.f);
+    static constexpr glm::vec2 RootPos(-90.f, 40.f);
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
+        auto localPos = glm::vec2(
+            152.f * static_cast<float>(i % 2),
+            -(LineHeight + m_playerAvatar.previewRects[0].height) * static_cast<float>(i / 2));
+        localPos += RootPos;
+
         auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(pos);
+        entity.addComponent<cro::Transform>().setPosition(localPos);
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(m_font).setString(m_sharedData.localConnectionData.playerData[i].name);
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -1183,7 +1212,7 @@ void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t m
         }
 
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(pos + AvatarOffset);
+        entity.addComponent<cro::Transform>().setPosition(localPos + AvatarOffset);
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>(m_sharedData.avatarTextures[0][i]);
         entity.getComponent<cro::Sprite>().setTextureRect(m_playerAvatar.previewRects[m_sharedData.localConnectionData.playerData[i].skinID]);
@@ -1192,7 +1221,7 @@ void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t m
 
         //add edit button
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(pos + EditButtonOffset);
+        entity.addComponent<cro::Transform>().setPosition(localPos + EditButtonOffset);
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(m_font).setString("EDIT");
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -1214,7 +1243,7 @@ void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t m
         m_menuEntities[MenuID::Avatar].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
 
-        pos.y -= (LineHeight + m_playerAvatar.previewRects[0].height);
+        //pos.y = -(LineHeight + m_playerAvatar.previewRects[0].height) * static_cast<float>(i%2);
     }
 }
 
