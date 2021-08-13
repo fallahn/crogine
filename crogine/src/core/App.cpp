@@ -252,7 +252,7 @@ void App::run()
         setImguiStyle(&ImGui::GetStyle());
         ImGui_ImplSDL2_InitForOpenGL(m_window.m_window, m_window.m_mainContext);
 #ifdef PLATFORM_DESKTOP
-        ImGui_ImplOpenGL3_Init("#version 150");
+        ImGui_ImplOpenGL3_Init("#version 410 core");
 #else
         //load ES2 shaders on mobile
         ImGui_ImplOpenGL3_Init();

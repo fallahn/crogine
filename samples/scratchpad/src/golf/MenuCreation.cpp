@@ -111,12 +111,12 @@ void GolfMenuState::createUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::RootNode;
     auto rootNode = entity;
 
+    createPlayerConfigMenu(mouseEnterCallback, mouseExitCallback);
     createMainMenu(rootNode, mouseEnterCallback, mouseExitCallback);
     createAvatarMenu(rootNode, mouseEnterCallback, mouseExitCallback);
     createJoinMenu(rootNode, mouseEnterCallback, mouseExitCallback);
     createLobbyMenu(rootNode, mouseEnterCallback, mouseExitCallback);
     createOptionsMenu(rootNode, mouseEnterCallback, mouseExitCallback);
-    createPlayerConfigMenu(mouseEnterCallback, mouseExitCallback);
 
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
@@ -1124,7 +1124,7 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
                 if (activated(evt))
                 {
                     applyTextEdit();
-                    showPlayerConfig(false, 0);
+                    showPlayerConfig(false, m_playerAvatar.activePlayer);
                     updateLocalAvatars(mouseEnter, mouseExit);
                 }
             });
@@ -1142,11 +1142,17 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
 
     m_playerAvatar.previewRects[0] = spriteSheet.getSprite("female_wood").getTextureRect();
     m_playerAvatar.previewRects[1] = spriteSheet.getSprite("male_wood").getTextureRect();
+
+    m_playerAvatar.setColour(pc::ColourKey::Bottom, pc::ColourID::Taupe);
+    m_playerAvatar.setColour(pc::ColourKey::Top, pc::ColourID::White);
+    m_playerAvatar.setColour(pc::ColourKey::Skin, pc::ColourID::Blue);
+    m_playerAvatar.setColour(pc::ColourKey::Hair, pc::ColourID::Red);
 }
 
 void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
-    static constexpr glm::vec2 EditButtonOffset({ -36.f, 0.f });
+    static constexpr glm::vec2 EditButtonOffset(-52.f, -24.f);
+    static constexpr glm::vec2 AvatarOffset = EditButtonOffset + glm::vec2(-12.f, 4.f);
     static constexpr float LineHeight = 10.f;
 
     for (auto e : m_avatarListEntities)
@@ -1169,8 +1175,20 @@ void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t m
         m_menuEntities[MenuID::Avatar].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
 
-        //TODO add avatar preview
+        //add avatar preview
+        if (m_sharedData.avatarTextures[0][i].getSize().x == 0)
+        {
+            m_playerAvatar.setTarget(m_sharedData.avatarTextures[0][i]);
+            m_playerAvatar.apply();
+        }
 
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(pos + AvatarOffset);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>(m_sharedData.avatarTextures[0][i]);
+        entity.getComponent<cro::Sprite>().setTextureRect(m_playerAvatar.previewRects[m_sharedData.localConnectionData.playerData[i].skinID]);
+        m_menuEntities[MenuID::Avatar].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_avatarListEntities.push_back(entity);
 
         //add edit button
         entity = m_scene.createEntity();
@@ -1191,14 +1209,12 @@ void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t m
                     if (activated(evt))
                     {
                         showPlayerConfig(true, i);
-
-                        //TODO hide or dim the background menu
                     }
                 });
         m_menuEntities[MenuID::Avatar].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
 
-        pos.y -= LineHeight;
+        pos.y -= (LineHeight + m_playerAvatar.previewRects[0].height);
     }
 }
 
@@ -1265,6 +1281,8 @@ void GolfMenuState::updateLobbyAvatars()
 
 void GolfMenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
 {
+    //TODO dim the background
+
     m_playerAvatar.activePlayer = playerIndex;
 
     cro::Command cmd;
@@ -1301,5 +1319,12 @@ void GolfMenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
         m_playerAvatar.setColour(pc::ColourKey::Top, m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags[1]);
         m_playerAvatar.setColour(pc::ColourKey::Skin, m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags[2]);
         m_playerAvatar.setColour(pc::ColourKey::Hair, m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags[3]);
+    }
+    else
+    {
+        //apply this to textures in the first slot just for preview
+        //these will be updated in the correct positions once we join the lobby
+        m_playerAvatar.setTarget(m_sharedData.avatarTextures[0][m_playerAvatar.activePlayer]);
+        m_playerAvatar.apply();
     }
 }

@@ -31,19 +31,23 @@ source distribution.
 
 #include <crogine/graphics/Colour.hpp>
 
+namespace
+{
+
+}
+
 PlayerAvatar::PlayerAvatar(const std::string& path)
     : m_target(nullptr)
 {
     //load into image
-    if (m_image.loadFromFile(path)
-        && (m_image.getFormat() == cro::ImageFormat::RGB
-            || m_image.getFormat() == cro::ImageFormat::RGBA))
+    if (m_image.loadFromFile(path) //MUST be RGBA for colour replace to work.
+        && m_image.getFormat() == cro::ImageFormat::RGBA)
     {
         //if successful load into texture
         m_texture.loadFromImage(m_image);
 
         //and cache color indices
-        auto stride = m_image.getFormat() == cro::ImageFormat::RGB ? 3u : 4u;
+        auto stride = 4u;
         auto length = m_image.getSize().x * m_image.getSize().y * stride;
         const auto* pixels = m_image.getPixelData();
 
@@ -109,7 +113,6 @@ void PlayerAvatar::setColour(pc::ColourKey::Index idx, std::int8_t pairIdx)
         auto y = i / imgWidth;
 
         m_image.setPixel(x, y, cro::Colour(pc::Palette[pairIdx].light));
-        
     }
 
     for (auto i : m_keyIndicesDark[idx])
