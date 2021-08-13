@@ -36,6 +36,7 @@ source distribution.
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/detail/GlobalConsts.hpp>
+#include <crogine/core/ConfigFile.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Text.hpp>
@@ -354,7 +355,10 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
                     {
                         auto index = m_sharedData.localConnectionData.playerCount;
                         
-                        m_sharedData.localConnectionData.playerData[index].name = "Player " + std::to_string(index + 1);
+                        if (m_sharedData.localConnectionData.playerData[index].name.empty())
+                        {
+                            m_sharedData.localConnectionData.playerData[index].name = "Player " + std::to_string(index + 1);
+                        }
                         m_sharedData.localConnectionData.playerCount++;
 
                         updateLocalAvatars(mouseEnter, mouseExit);
@@ -420,6 +424,7 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
                 if (activated(evt))
                 {
                     applyTextEdit();
+                    saveAvatars();
 
                     if (m_sharedData.hosting)
                     {
@@ -1168,11 +1173,6 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     m_playerAvatar.previewRects[1] = spriteSheet.getSprite("male_wood").getTextureRect();
     //m_playerAvatar.previewRects[2] = spriteSheet.getSprite("female_wood_l").getTextureRect();
     //m_playerAvatar.previewRects[3] = spriteSheet.getSprite("male_wood_l").getTextureRect();
-
-    m_playerAvatar.setColour(pc::ColourKey::Bottom, pc::ColourID::Taupe);
-    m_playerAvatar.setColour(pc::ColourKey::Top, pc::ColourID::White);
-    m_playerAvatar.setColour(pc::ColourKey::Skin, pc::ColourID::Blue);
-    m_playerAvatar.setColour(pc::ColourKey::Hair, pc::ColourID::Red);
 }
 
 void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouseExit)
@@ -1209,6 +1209,14 @@ void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t m
         //add avatar preview
         if (m_sharedData.avatarTextures[0][i].getSize().x == 0)
         {
+            //this is the first time the texture was displayed so
+            //updated it from the current (loaded from disk) settings
+            const auto& flags = m_sharedData.localConnectionData.playerData[i].avatarFlags;
+            m_playerAvatar.setColour(pc::ColourKey::Bottom, flags[0]);
+            m_playerAvatar.setColour(pc::ColourKey::Top, flags[1]);
+            m_playerAvatar.setColour(pc::ColourKey::Skin, flags[2]);
+            m_playerAvatar.setColour(pc::ColourKey::Hair, flags[3]);
+
             m_playerAvatar.setTarget(m_sharedData.avatarTextures[0][i]);
             m_playerAvatar.apply();
         }
@@ -1357,5 +1365,88 @@ void GolfMenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
         //these will be updated in the correct positions once we join the lobby
         m_playerAvatar.setTarget(m_sharedData.avatarTextures[0][m_playerAvatar.activePlayer]);
         m_playerAvatar.apply();
+    }
+}
+
+void GolfMenuState::saveAvatars()
+{
+    cro::ConfigFile cfg("avatars");
+    for (const auto& player : m_sharedData.localConnectionData.playerData)
+    {
+        auto* avatar = cfg.addObject("avatar");
+        avatar->addProperty("name", player.name.empty() ? "Player" : player.name.toAnsiString()); //hmmm shame we can't save the encoding here
+        avatar->addProperty("skin_id").setValue(player.skinID);
+        avatar->addProperty("flags0").setValue(player.avatarFlags[0]);
+        avatar->addProperty("flags1").setValue(player.avatarFlags[1]);
+        avatar->addProperty("flags2").setValue(player.avatarFlags[2]);
+        avatar->addProperty("flags3").setValue(player.avatarFlags[3]);
+    }
+
+    auto path = cro::App::getPreferencePath() + "avatars.cfg";
+    cfg.save(path);
+}
+
+void GolfMenuState::loadAvatars()
+{
+    auto path = cro::App::getPreferencePath() + "avatars.cfg";
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile(path))
+    {
+        std::uint32_t i = 0;
+
+        const auto& objects = cfg.getObjects();
+        for (const auto& obj : objects)
+        {
+            if (obj.getName() == "avatar"
+                && i < m_sharedData.localConnectionData.MaxPlayers)
+            {
+                const auto& props = obj.getProperties();
+                for (const auto& prop : props)
+                {
+                    const auto& name = prop.getName();
+                    if (name == "name")
+                    {
+                        //TODO try running this through unicode parser
+                        m_sharedData.localConnectionData.playerData[i].name = prop.getValue<std::string>();
+                    }
+                    else if (name == "skin_id")
+                    {
+                        auto id = prop.getValue<std::int32_t>();
+                        id = std::min(PlayerAvatar::MaxSkins - 1, std::max(0, id));
+                        m_sharedData.localConnectionData.playerData[i].skinID = id;
+                    }
+                    else if (name == "flags0")
+                    {
+                        auto flag = prop.getValue<std::int32_t>();
+                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        m_sharedData.localConnectionData.playerData[i].avatarFlags[0] = static_cast<std::uint8_t>(flag);
+                    }
+                    else if (name == "flags1")
+                    {
+                        auto flag = prop.getValue<std::int32_t>();
+                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        m_sharedData.localConnectionData.playerData[i].avatarFlags[1] = static_cast<std::uint8_t>(flag);
+                    }
+                    else if (name == "flags2")
+                    {
+                        auto flag = prop.getValue<std::int32_t>();
+                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        m_sharedData.localConnectionData.playerData[i].avatarFlags[2] = static_cast<std::uint8_t>(flag);
+                    }
+                    else if (name == "flags3")
+                    {
+                        auto flag = prop.getValue<std::int32_t>();
+                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        m_sharedData.localConnectionData.playerData[i].avatarFlags[3] = static_cast<std::uint8_t>(flag);
+                    }
+                }
+                i++;
+            }
+        }
+    }
+
+    if (m_sharedData.localConnectionData.playerData[0].name.empty())
+    {
+        m_sharedData.localConnectionData.playerData[0].name = "Player 1";
     }
 }

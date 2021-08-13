@@ -56,7 +56,7 @@ struct ConnectionData final
     static constexpr std::uint8_t MaxPlayers = 4;
     std::uint8_t connectionID = MaxPlayers;
 
-    std::uint8_t playerCount = 0;
+    std::uint8_t playerCount = 1;
     std::array<PlayerData, MaxPlayers> playerData = {};
 
     std::vector<std::uint8_t> serialise() const;
@@ -84,12 +84,12 @@ struct SharedStateData final
 
     //our local player data
     ConnectionData localConnectionData;
-    cro::String targetIP;
+    cro::String targetIP = "255.255.255.255";
 
     //sent to server if hosting else rx'd from server
     //for brevity this only contains a directory name
     //within which a file named data.course is sought
-    cro::String mapDirectory;
+    cro::String mapDirectory = "course_01";
 
     //printed by the error state
     std::string errorMessage;

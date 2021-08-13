@@ -1415,7 +1415,9 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.action =
         [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString("Hole: " + std::to_string(m_currentHole + 1));
+        auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
+        data.string = "Hole: " + std::to_string(m_currentHole + 1);
+        e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 

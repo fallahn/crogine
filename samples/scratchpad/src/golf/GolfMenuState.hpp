@@ -128,8 +128,10 @@ private:
     void updateLocalAvatars(std::uint32_t, std::uint32_t);
     void updateLobbyData(const cro::NetEvent&);
     void updateLobbyAvatars();
-
     void showPlayerConfig(bool, std::uint8_t);
+
+    void saveAvatars();
+    void loadAvatars();
 
     void handleNetEvent(const cro::NetEvent&);
 };

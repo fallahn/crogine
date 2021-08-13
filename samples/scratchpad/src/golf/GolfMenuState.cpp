@@ -72,6 +72,8 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
+        loadAvatars();
+
         //add systems to scene
         addSystems();
         //load assets (textures, shaders, models etc)
