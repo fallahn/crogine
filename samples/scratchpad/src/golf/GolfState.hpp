@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 
 #include <array>
 
@@ -186,6 +187,8 @@ private:
     //-----------
 
     cro::Entity m_mapCam;
+    cro::RenderTexture m_mapBuffer;
     cro::RenderTexture m_mapTexture;
+    cro::SimpleQuad m_mapQuad;
     void updateMiniMap();
 };

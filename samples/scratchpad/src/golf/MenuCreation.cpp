@@ -1099,7 +1099,7 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
                     applyTextEdit();
 
                     auto skinID = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].skinID;
-                    skinID = (skinID + (pc::SkinCount - 1)) % pc::SkinCount;
+                    skinID = (skinID + (PlayerAvatar::MaxSkins - 1)) % PlayerAvatar::MaxSkins;
                     m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].skinID = skinID;
 
                     cro::Command cmd;
@@ -1123,7 +1123,7 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
                     applyTextEdit();
 
                     auto skinID = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].skinID;
-                    skinID = (skinID + 1) % pc::SkinCount;
+                    skinID = (skinID + 1) % PlayerAvatar::MaxSkins;
                     m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].skinID = skinID;
 
                     cro::Command cmd;
@@ -1166,6 +1166,8 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
 
     m_playerAvatar.previewRects[0] = spriteSheet.getSprite("female_wood").getTextureRect();
     m_playerAvatar.previewRects[1] = spriteSheet.getSprite("male_wood").getTextureRect();
+    //m_playerAvatar.previewRects[2] = spriteSheet.getSprite("female_wood_l").getTextureRect();
+    //m_playerAvatar.previewRects[3] = spriteSheet.getSprite("male_wood_l").getTextureRect();
 
     m_playerAvatar.setColour(pc::ColourKey::Bottom, pc::ColourID::Taupe);
     m_playerAvatar.setColour(pc::ColourKey::Top, pc::ColourID::White);

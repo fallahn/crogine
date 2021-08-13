@@ -61,7 +61,7 @@ namespace PacketID
         ActorSpawn, //< ActorInfo
         WindDirection, //< compressed vec3
 
-        //EntityRemoved, //< uint32 entity ID
+        EntityRemoved, //< uint32 entity ID
 
         //from client
         RequestGameStart,

@@ -56,16 +56,19 @@ namespace
         R"(
         ATTRIBUTE vec2 a_position;
         ATTRIBUTE vec2 a_texCoord0;
+        ATTRIBUTE vec4 a_colour;
 
         uniform mat4 u_worldMatrix;
         uniform mat4 u_projectionMatrix;
 
         VARYING_OUT vec2 v_texCoord;
+        VARYING_OUT LOW vec4 v_colour;
 
         void main()
         {
             gl_Position = u_projectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
             v_texCoord = a_texCoord0;
+            v_colour = a_colour;
         })";
 
     const std::string ShaderFragment = 
@@ -73,12 +76,13 @@ namespace
         uniform sampler2D u_texture;
 
         VARYING_IN vec2 v_texCoord;
+        VARYING_IN LOW vec4 v_colour;
 
         OUTPUT
 
         void main()
         {
-            FRAG_OUT = TEXTURE(u_texture, v_texCoord);
+            FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour;
         })";
 
     std::int32_t projectionUniform = -1;
@@ -91,6 +95,8 @@ SimpleQuad::SimpleQuad()
     m_rotation      (0.f),
     m_scale         (1.f),
     m_modelMatrix   (1.f),
+    m_colour        (cro::Colour::White),
+    m_size          (0.f),
     m_vbo           (0),
 #ifdef PLATFORM_DESKTOP
     m_vao           (0),
@@ -119,13 +125,19 @@ SimpleQuad::SimpleQuad()
     glCheck(glBindVertexArray(m_vao));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
 
+    auto stride = 8 * static_cast<std::uint32_t>(sizeof(float)); //size of a vert
+
     //pos
-    glCheck(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0));
+    glCheck(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)0));
     glCheck(glEnableVertexAttribArray(0));
 
     //uv
-    glCheck(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float))));
+    glCheck(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float))));
     glCheck(glEnableVertexAttribArray(1));
+
+    //colour
+    glCheck(glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, (void*)(4 * sizeof(float))));
+    glCheck(glEnableVertexAttribArray(2));
 
     glCheck(glBindVertexArray(0));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -165,6 +177,26 @@ SimpleQuad::~SimpleQuad()
 }
 
 //public
+void SimpleQuad::setTexture(const cro::Texture& texture)
+{
+    if (texture.getGLHandle() > 0)
+    {
+        m_textureID = texture.getGLHandle();
+        m_size = texture.getSize();
+        updateVertexData();
+    }
+    else
+    {
+        LogE << "Invalid texture supplied to SimpleQuad" << std::endl;
+    }
+}
+
+void SimpleQuad::setColour(const cro::Colour& colour)
+{
+    m_colour = colour;
+    updateVertexData();
+}
+
 void SimpleQuad::setPosition(glm::vec2 position)
 {
     m_position = position;
@@ -186,20 +218,6 @@ void SimpleQuad::setScale(glm::vec2 scale)
 {
     m_scale = scale;
     updateTransform();
-}
-
-void SimpleQuad::setTexture(const cro::Texture& texture)
-{
-    if (texture.getGLHandle() > 0)
-    {
-        m_textureID = texture.getGLHandle();
-
-        updateVertexData(texture.getSize());
-    }
-    else
-    {
-        LogE << "Invalid texture supplied to SimpleQuad" << std::endl;
-    }
 }
 
 void SimpleQuad::draw() const
@@ -243,13 +261,19 @@ void SimpleQuad::draw() const
 #else
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
 
+        auto stride = 8 * static_cast<std::uint32_t>(sizeof(float))
+
         //pos
-        glCheck(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0));
+        glCheck(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)0));
         glCheck(glEnableVertexAttribArray(0));
 
         //uv
-        glCheck(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float))));
+        glCheck(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float))));
         glCheck(glEnableVertexAttribArray(1));
+
+        //colour
+        glCheck(glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, (void*)(4 * sizeof(float))));
+        glCheck(glEnableVertexAttribArray(2));
 
         glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
@@ -268,21 +292,34 @@ void SimpleQuad::draw() const
 }
 
 //private
-void SimpleQuad::updateVertexData(glm::vec2 size)
+void SimpleQuad::updateVertexData()
 {
+    //TODO we could cache the verts locally
+    //to make updating only what's changed faster
+    //but probably not worth it.
+
+    auto r = m_colour.getRed();
+    auto g = m_colour.getGreen();
+    auto b = m_colour.getBlue();
+    auto a = m_colour.getAlpha();
+
     std::vector<float> verts =
     {
-        0.f, size.y,
+        0.f, m_size.y,
         0.f, 1.f,
+        r,g,b,a,
 
         0.f, 0.f,
         0.f, 0.f,
+        r,g,b,a,
 
-        size.x, size.y,
+        m_size.x, m_size.y,
         1.f, 1.f,
+        r,g,b,a,
 
-        size.x, 0.f,
-        1.f, 0.f
+        m_size.x, 0.f,
+        1.f, 0.f,
+        r,g,b,a
     };
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));

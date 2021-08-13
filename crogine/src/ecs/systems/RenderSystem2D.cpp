@@ -332,6 +332,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
     applyBlendMode(Material::BlendMode::None);
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDepthMask(GL_TRUE));
+    //glCheck(glCullFace(GL_BACK));
 }
 
 void RenderSystem2D::setSortOrder(DepthAxis sortOrder)

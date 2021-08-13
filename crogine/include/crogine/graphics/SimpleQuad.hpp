@@ -72,6 +72,16 @@ namespace cro
         void setTexture(const cro::Texture& texture);
 
         /*!
+        \brief Sets the colour which is multiplied with the texture colour of the quad
+        */
+        void setColour(const cro::Colour& colour);
+
+        /*!
+        \brief Returns the current colour of the quad
+        */
+        const cro::Colour& getColour() const { return m_colour; }
+
+        /*!
         \brief Sets the position of the quad, in screen coordinates.
         */
         void setPosition(glm::vec2 position);
@@ -104,6 +114,13 @@ namespace cro
         glm::vec2 getScale() const { return m_scale; }
 
         /*!
+        \brief Return the current size of the quad.
+        This will be the size of the assigned texture in pixels
+        or zero if no texture is assigned.
+        */
+        glm::vec2 getSize() const { return m_size; }
+
+        /*!
         \brief Set the blend mdoe with which to draw the quad
         Defaults to Material::BlendMode::Alpha
         */
@@ -125,6 +142,8 @@ namespace cro
         float m_rotation;
         glm::vec2 m_scale;
         glm::mat4 m_modelMatrix;
+        cro::Colour m_colour;
+        glm::vec2 m_size;
 
         std::uint32_t m_vbo;
 
@@ -134,7 +153,7 @@ namespace cro
         std::int32_t m_textureID;
         Material::BlendMode m_blendMode;
 
-        void updateVertexData(glm::vec2 size);
+        void updateVertexData();
         void applyBlendMode() const;
         void updateTransform();
     };

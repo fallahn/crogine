@@ -1090,6 +1090,21 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                 requestStackPush(States::Golf::Menu);
             }
             break;
+        case PacketID::EntityRemoved:
+        {
+            auto idx = evt.packet.as<std::uint32_t>();
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Ball;
+            cmd.action = [&,idx](cro::Entity e, float)
+            {
+                if (e.getComponent<InterpolationComponent>().getID() == idx)
+                {
+                    m_gameScene.destroyEntity(e);
+                }
+            };
+            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        }
+            break;
         }
         break;
     case cro::NetEvent::ClientDisconnect:

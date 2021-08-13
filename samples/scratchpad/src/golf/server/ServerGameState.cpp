@@ -87,6 +87,10 @@ void GameState::handleMessage(const cro::Message& msg)
                 {
                     if (p.client == data.clientID)
                     {
+                        //tell clients to remove the ball
+                        std::uint32_t idx = p.ballEntity.getIndex();
+                        m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, idx, cro::NetFlag::Reliable);
+
                         m_scene.destroyEntity(p.ballEntity);
                         return true;
                     }
