@@ -41,6 +41,7 @@ static constexpr std::uint32_t UITextSize = 8;
 static const cro::Colour TextNormalColour(0xfff8e1ff);
 static const cro::Colour TextEditColour(0x6eb39dff);
 static const cro::Colour TextHighlightColour(0xb83530ff);
+static const cro::Colour TextGoldColour(0xf2cf5cff);
 static const cro::Colour LeaderboardTextDark(0x1a1e2dff);
 static const cro::Colour LeaderboardTextLight(0xfff8e1ff);
 
@@ -60,3 +61,4 @@ static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);
 //spacing of each menu relative to root node
 //see GolfMenuState::m_menuPositions/MenuCreation.cpp
 static constexpr glm::vec2 MenuSpacing(1920.f, 1080.f);
+static constexpr float MenuBottomBorder = 20.f;

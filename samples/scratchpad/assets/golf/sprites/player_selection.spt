@@ -14,7 +14,7 @@ spritesheet player_selection
 
     sprite button_highlight
     {
-        bounds = 208,17,57,17
+        bounds = 208,17,58,17
     }
 
     sprite arrow_left

@@ -1,0 +1,14 @@
+spritesheet player_menu
+{
+    src = "assets/golf/images/player_menu.png"
+
+    sprite background
+    {
+        bounds = 0,18,310,190
+    }
+
+    sprite button_highlight
+    {
+        bounds = 0,0,40,17
+    }
+}
