@@ -544,12 +544,12 @@ void TerrainBuilder::threadFunc()
                             auto dir = glm::vec2(normal.x, normal.z);
                             auto strength = glm::length(dir);
                             dir /= strength;
-                            strength = std::min(0.5f, strength * 20.f);
+                            strength = std::min(0.75f, strength * 12.f);
                             dir *= strength;
                             
                             auto& vert2 = m_slopeBuffer.emplace_back();
                             vert2.position = { posX + dir.x, 0.f, posZ + dir.y };
-                            vert2.colour = { 1.f, 1.f - (strength + 0.5f), 0.f, 1.f };
+                            vert2.colour = { 1.f, 1.f - (strength + 0.25f), 0.f, 1.f };
                             vert2.texCoord = glm::vec2(1.f);
 
                             m_slopeIndices.push_back(currIndex++);

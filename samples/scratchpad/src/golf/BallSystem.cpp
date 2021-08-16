@@ -58,6 +58,17 @@ namespace
         return a + (diff * t);
     }
 
+    float clamp(float t)
+    {
+        return std::min(1.f, std::max(0.f, t));
+    }
+
+    float smoothstep(float edge0, float edge1, float x)
+    {
+        float t = clamp((x - edge0) / (edge1 - edge0));
+        return t * t * (3.f - 2.f * t);
+    }
+
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
 }
 
@@ -160,25 +171,24 @@ void BallSystem::process(float dt)
                     //currently is and add some 'side spin' to the velocity.
 
 
+                    //move by slope from normal map
+                    auto velLength = glm::length(ball.velocity);
+                    glm::vec3 slope = glm::vec3(normal.x, 0.f, normal.z) * 0.16f * smoothstep(0.5f, 4.5f, velLength);
+                    ball.velocity += slope;
 
-                    //add wind - adding less wind the morethe ball travels in the
+                    //add wind - adding less wind the more the ball travels in the
                     //wind direction means we don't get blown forever
-                    float windAmount = 1.f - glm::dot(m_windDirection, glm::normalize(ball.velocity));
-                    ball.velocity += m_windDirection * m_windStrength * 0.05f * windAmount * dt;
-
-                    //add slope from normal map
-                    //glm::vec3 slope(normal.x, normal.y, 0.f); //TODO - calc this properly ;)
-                    //float slopeAmount = 1.f - glm::dot(glm::normalize(slope), glm::normalize(ball.velocity));
-                    //ball.velocity += slope * 0.04f * slopeAmount * dt;
-
+                    float windAmount = 1.f - glm::dot(m_windDirection, ball.velocity / velLength);
+                    ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
 
                     //add friction
                     ball.velocity *= 0.985f;
                 }
 
+
                 //move by velocity
                 tx.move(ball.velocity * dt);
-                ball.terrain = terrain;
+                ball.terrain = terrain; //TODO this will be wrong if the above movement changed the terrain
 
                 //if we've slowed down or fallen more than the
                 //ball's diameter (radius??) stop the ball

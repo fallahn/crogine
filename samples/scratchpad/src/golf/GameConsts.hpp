@@ -133,6 +133,10 @@ static inline void loadNormalMap(std::vector<glm::vec3>& dst, const std::string&
             {
                 dst[i] = { pixels[j], pixels[j + 2], pixels[j + 1] };
                 dst[i] /= 255.f;
+
+                dst[i].x = std::max(0.45f, std::min(0.55f, dst[i].x)); //clamps to +- 0.05f. I think. :3
+                dst[i].z = std::max(0.45f, std::min(0.55f, dst[i].z));
+
                 dst[i] *= 2.f;
                 dst[i] -= 1.f;
                 dst[i] = glm::normalize(dst[i]);
