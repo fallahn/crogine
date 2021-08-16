@@ -334,11 +334,12 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
 
     //create a mesh to display the slope data
-    flags = cro::VertexProperty::Position | cro::VertexProperty::Colour;
+    flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::UV0;
     meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_LINES));
     resources.shaders.loadFromString(ShaderID::Slope, SlopeVertexShader, SlopeFragmentShader);
     auto& slopeShader = resources.shaders.get(ShaderID::Slope);
-    m_slopeProperties.uniform = slopeShader.getUniformID("u_centrePosition");
+    m_slopeProperties.positionUniform = slopeShader.getUniformID("u_centrePosition");
+    m_slopeProperties.timeUniform = slopeShader.getUniformID("u_time");
     m_slopeProperties.shader = slopeShader.getGLHandle();
     materialID = resources.materials.add(slopeShader);
     resources.materials.get(materialID).blendMode = cro::Material::BlendMode::Alpha;
@@ -420,10 +421,16 @@ void TerrainBuilder::update(std::size_t holeIndex)
     }
 }
 
-void TerrainBuilder::setPlayerPosition(glm::vec3 position)
+void TerrainBuilder::updateTime(float elapsed)
 {
     glCheck(glUseProgram(m_slopeProperties.shader));
-    glCheck(glUniform3f(m_slopeProperties.uniform, position.x, position.y, position.z));
+    glCheck(glUniform1f(m_slopeProperties.timeUniform, elapsed));
+}
+
+void TerrainBuilder::setSlopePosition(glm::vec3 position)
+{
+    glCheck(glUseProgram(m_slopeProperties.shader));
+    glCheck(glUniform3f(m_slopeProperties.positionUniform, position.x, position.y, position.z));
     glCheck(glUseProgram(0));
 }
 
@@ -520,8 +527,7 @@ void TerrainBuilder::threadFunc()
                     for (auto x = 0u; x < MapSize.x; ++x)
                     {
                         auto terrain = readMap(mapImage, x, y).first;
-                        if (terrain != TerrainID::Scrub
-                            && terrain != TerrainID::Water)
+                        if (terrain == TerrainID::Green)
                         {
                             //TODO skip bunker too?
                             float posX = static_cast<float>(x) + 0.5f; //offset to centre of quad
@@ -531,7 +537,7 @@ void TerrainBuilder::threadFunc()
 
                             auto& vert = m_slopeBuffer.emplace_back();
                             vert.position = { posX, 0.f, posZ };
-                            vert.colour = { 1.f, 1.f, 0.f, 0.25f };
+                            vert.colour = { 1.f, 1.f, 0.f, 0.5f };
 
                             m_slopeIndices.push_back(currIndex++);
 
@@ -540,10 +546,11 @@ void TerrainBuilder::threadFunc()
                             dir /= strength;
                             strength = std::min(0.5f, strength * 20.f);
                             dir *= strength;
-
+                            
                             auto& vert2 = m_slopeBuffer.emplace_back();
                             vert2.position = { posX + dir.x, 0.f, posZ + dir.y };
                             vert2.colour = { 1.f, 1.f - (strength + 0.5f), 0.f, 1.f };
+                            vert2.texCoord = glm::vec2(1.f);
 
                             m_slopeIndices.push_back(currIndex++);
                         }

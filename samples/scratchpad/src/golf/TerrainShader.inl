@@ -69,36 +69,50 @@ static const std::string SlopeVertexShader =
 R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
+    ATTRIBUTE vec2 a_texCoord0;
 
     uniform mat4 u_worldMatrix;
     uniform mat4 u_viewProjectionMatrix;
     uniform vec3 u_centrePosition;
 
     VARYING_OUT vec4 v_colour;
+    VARYING_OUT vec2 v_texCoord;
 
-    const float Radius = 20.0;
+    const float Radius = 5.0;
 
     void main()
     {
         vec4 worldPos = u_worldMatrix * a_position;
-        float alpha = 1.0 - smoothstep(Radius, Radius + 1.5, length(worldPos.xyz - u_centrePosition));
+        float alpha = 1.0 - smoothstep(Radius, Radius + 5.0, length(worldPos.xyz - u_centrePosition));
 
         gl_Position = u_viewProjectionMatrix * worldPos;
 
         v_colour = a_colour;
         v_colour.a *= alpha;
+
+        v_texCoord = a_texCoord0;
     }   
 )";
 
+//the UV coords actually indicate direction of slope
 static const std::string SlopeFragmentShader =
 R"(
     OUTPUT
 
+    uniform float u_time;
+
     VARYING_IN vec4 v_colour;
+    VARYING_IN vec2 v_texCoord;
+
+    const float Scale = 20.0;
 
     void main()
     {
+        float alpha = (sin((v_texCoord.x * Scale) - u_time) + 1.0) * 0.5;
+        alpha = step(0.5, alpha);
+
         FRAG_OUT = v_colour;
+        FRAG_OUT.a *= alpha;
     }
 )";
 

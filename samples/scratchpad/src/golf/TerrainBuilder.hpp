@@ -65,7 +65,9 @@ public:
 
     void update(std::size_t); //loads the configured data into the existing scene and signals the thread to queue upcoming data
 
-    void setPlayerPosition(glm::vec3);
+    void setSlopePosition(glm::vec3);
+
+    void updateTime(float);
 
 private:
 
@@ -118,13 +120,15 @@ private:
     {
         glm::vec3 position = glm::vec3(0.f);
         glm::vec4 colour = glm::vec4(1.f);
+        glm::vec2 texCoord = glm::vec2(0.f);
     };
     std::vector<SlopeVertex> m_slopeBuffer;
     std::vector<std::uint32_t> m_slopeIndices;
     struct SlopeProperties final
     {
         cro::Mesh::Data* meshData = nullptr;
-        std::int32_t uniform = -1;
+        std::int32_t positionUniform = -1;
+        std::int32_t timeUniform = -1;
         std::uint32_t shader = 0;
     }m_slopeProperties;
     std::vector<glm::vec3> m_normalMapBuffer;

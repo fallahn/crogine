@@ -124,7 +124,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
     context.mainWindow.setMouseCaptured(true);
-
+    //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
     registerWindow([&]() 
         {
@@ -457,6 +457,7 @@ bool GolfState::simulate(float dt)
     glUniform1f(m_waterShader.timeUniform, elapsed * 15.f);
     //glUseProgram(0);
 
+    m_terrainBuilder.updateTime(elapsed * 10.f);
 
     m_inputParser.update(dt);
 
@@ -1350,6 +1351,8 @@ void GolfState::setCurrentHole(std::uint32_t hole)
         e.getComponent<cro::Model>().setHidden(true);
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    m_terrainBuilder.setSlopePosition(m_holeData[m_currentHole].pin);
 }
 
 void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)
@@ -1504,8 +1507,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
     m_currentPlayer = player;
-
-    m_terrainBuilder.setPlayerPosition(player.position);
 }
 
 void GolfState::hitBall()
