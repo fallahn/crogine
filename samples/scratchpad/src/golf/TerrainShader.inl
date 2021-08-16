@@ -104,11 +104,11 @@ R"(
     VARYING_IN vec4 v_colour;
     VARYING_IN vec2 v_texCoord;
 
-    const float Scale = 20.0;
+    //const float Scale = 20.0;
 
     void main()
     {
-        float alpha = (sin((v_texCoord.x * Scale) - u_time) + 1.0) * 0.5;
+        float alpha = (sin((v_texCoord.x) - u_time) + 1.0) * 0.5;
         alpha = step(0.5, alpha);
 
         FRAG_OUT = v_colour;

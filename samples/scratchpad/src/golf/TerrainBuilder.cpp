@@ -550,7 +550,7 @@ void TerrainBuilder::threadFunc()
                             auto& vert2 = m_slopeBuffer.emplace_back();
                             vert2.position = { posX + dir.x, 0.f, posZ + dir.y };
                             vert2.colour = { 1.f, 1.f - (strength + 0.25f), 0.f, 1.f };
-                            vert2.texCoord = glm::vec2(1.f);
+                            vert2.texCoord = glm::vec2(20.f);
 
                             m_slopeIndices.push_back(currIndex++);
                         }
