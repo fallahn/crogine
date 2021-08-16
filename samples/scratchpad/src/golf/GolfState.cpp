@@ -711,6 +711,8 @@ void GolfState::loadAssets()
             LOG("Missing hole property", cro::Logger::Type::Error);
             error = true;
         }
+
+
     }
 
 
@@ -738,7 +740,7 @@ void GolfState::loadAssets()
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
 
     //cel shaded material
-    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertex, CelFragment);
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader);
     auto& shader = m_resources.shaders.get(ShaderID::Cel);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(shader);
 
@@ -1339,6 +1341,15 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     //each player starts a new hole on a driver/3 wood
     m_inputParser.setHoleDirection(m_holeData[m_currentHole].target - m_currentPlayer.position, true);
     m_currentPlayer.terrain = TerrainID::Fairway;
+
+    //hide the slope indicator
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::SlopeIndicator;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Model>().setHidden(true);
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
 
 void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)
@@ -1484,7 +1495,17 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
+    //show or hide the slope indicator depending if we're on the green
+    cmd.targetFlags = CommandID::SlopeIndicator;
+    cmd.action = [player](cro::Entity e, float)
+    {
+        e.getComponent<cro::Model>().setHidden(player.terrain != TerrainID::Green);
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
     m_currentPlayer = player;
+
+    m_terrainBuilder.setPlayerPosition(player.position);
 }
 
 void GolfState::hitBall()

@@ -32,12 +32,14 @@ source distribution.
 #include "Terrain.hpp"
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
+#include "CommandIDs.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
@@ -57,11 +59,13 @@ namespace
 {
 #include "TerrainShader.inl"
 
+    cro::Entity slopeEntity;
+
     //params for poisson disk samples
     constexpr float GrassDensity = 1.7f; //radius for PD sampler
     constexpr float TreeDensity = 4.8f;
 
-    //TODO for grass board we could shrink the area slightly as we prefer trees further away
+    //TODO for grass billboard we could shrink the area slightly as we prefer trees further away
     constexpr std::array MinBounds = { 0.f, 0.f };
     constexpr std::array MaxBounds = { static_cast<float>(MapSize.x), static_cast<float>(MapSize.y) };
 
@@ -71,7 +75,7 @@ namespace
 
     constexpr float MaxShrubOffset = MaxTerrainHeight + 7.5f;
 
-    //calback data
+    //callback data
     struct SwapData final
     {
         static constexpr float TransitionTime = 2.f;
@@ -131,6 +135,12 @@ TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
         {
             if (ImGui::Begin("Terrain"))
             {
+                auto slopePos = slopeEntity.getComponent<cro::Transform>().getPosition();
+                if (ImGui::SliderFloat("Slope", &slopePos.y, -10.f, 10.f))
+                {
+                    slopeEntity.getComponent<cro::Transform>().setPosition(slopePos);
+                }
+
                 auto pos = m_terrainEntity.getComponent<cro::Transform>().getPosition();
                 if (ImGui::SliderFloat("Height", &pos.y, -10.f, 10.f))
                 {
@@ -201,7 +211,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
 
     //use a custom material for morphage
-    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertex, CelFragment);
+    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader);
     const auto& shader = resources.shaders.get(ShaderID::Terrain);
     m_terrainProperties.morphUniform = shader.getUniformID("u_morphTime");
     m_terrainProperties.shaderID = shader.getGLHandle();
@@ -323,7 +333,29 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_billboardTemplates[BillboardID::Birch] = convertSprite(spriteSheet.getSprite("birch"));
 
 
- 
+    //create a mesh to display the slope data
+    flags = cro::VertexProperty::Position | cro::VertexProperty::Colour;
+    meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_LINES));
+    resources.shaders.loadFromString(ShaderID::Slope, SlopeVertexShader, SlopeFragmentShader);
+    auto& slopeShader = resources.shaders.get(ShaderID::Slope);
+    m_slopeProperties.uniform = slopeShader.getUniformID("u_centrePosition");
+    m_slopeProperties.shader = slopeShader.getGLHandle();
+    materialID = resources.materials.add(slopeShader);
+    resources.materials.get(materialID).blendMode = cro::Material::BlendMode::Alpha;
+
+    entity = scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.01f, 0.f });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::SlopeIndicator;
+    entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
+    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    entity.getComponent<cro::Model>().setHidden(true);
+    m_slopeProperties.meshData = &entity.getComponent<cro::Model>().getMeshData();
+    m_slopeProperties.meshData->boundingBox[0] = glm::vec3(0.f, -10.f, 0.f);
+    m_slopeProperties.meshData->boundingBox[1] = glm::vec3(MaxBounds[0], 10.f, -MaxBounds[1]);
+    m_slopeProperties.meshData->boundingSphere.centre = { MaxBounds[0] / 2.f, 0.f, -MaxBounds[1] / 2.f };
+    m_slopeProperties.meshData->boundingSphere.radius = glm::length(m_slopeProperties.meshData->boundingSphere.centre);
+    slopeEntity = entity;
+
     //launch the thread - wants update is initially true
     //so we should create the first layout right away
     m_wantsUpdate = m_holeData.size() > m_currentHole;
@@ -360,7 +392,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
 
         //upload terrain data
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_terrainProperties.vbo));
-        glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_STATIC_DRAW));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
         
         m_terrainProperties.morphTime = 0.f;
@@ -368,12 +400,31 @@ void TerrainBuilder::update(std::size_t holeIndex)
         glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
         //terrain callback is set active when shrubbery callback switches
 
+        //upload the slope buffer data
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_slopeProperties.meshData->vbo));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(SlopeVertex) * m_slopeBuffer.size(), m_slopeBuffer.data(), GL_STATIC_DRAW));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+        auto* submesh = &m_slopeProperties.meshData->indexData[0];
+        submesh->indexCount = static_cast<std::uint32_t>(m_slopeIndices.size());
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), m_slopeIndices.data(), GL_STATIC_DRAW));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
 
         //signal to the thread we want to update the buffers
         //ready for next time
         m_currentHole++;
         m_wantsUpdate = m_currentHole < m_holeData.size();
     }
+}
+
+void TerrainBuilder::setPlayerPosition(glm::vec3 position)
+{
+    glCheck(glUseProgram(m_slopeProperties.shader));
+    glCheck(glUniform3f(m_slopeProperties.uniform, position.x, position.y, position.z));
+    glCheck(glUseProgram(0));
 }
 
 //private
@@ -451,14 +502,54 @@ void TerrainBuilder::threadFunc()
                     glm::vec3 normal = { l - r, d - u, 2.f };
                     normal = glm::normalize(normal);
 
-                    /*m_terrainBuffer[i].position.y = height;
-                    m_terrainBuffer[i].normal = normal;*/
-
                     m_terrainBuffer[i].position = m_terrainBuffer[i].targetPosition;
                     m_terrainBuffer[i].normal = m_terrainBuffer[i].targetNormal;
                     m_terrainBuffer[i].targetPosition.y = height;
                     m_terrainBuffer[i].targetNormal = normal;
                 } 
+
+                //update the vertex data for the slope indicator
+                //TODO is this the same size as the loop above? could save on double iteration
+                loadNormalMap(m_normalMapBuffer, m_holeData[m_currentHole].mapPath);
+                m_slopeBuffer.clear();
+                m_slopeIndices.clear();
+
+                std::uint32_t currIndex = 0u;
+                for (auto y = 0u; y < MapSize.y; ++y)
+                {
+                    for (auto x = 0u; x < MapSize.x; ++x)
+                    {
+                        auto terrain = readMap(mapImage, x, y).first;
+                        if (terrain != TerrainID::Scrub
+                            && terrain != TerrainID::Water)
+                        {
+                            //TODO skip bunker too?
+                            float posX = static_cast<float>(x) + 0.5f; //offset to centre of quad
+                            float posZ = -(static_cast<float>(y) + 0.5f);
+
+                            auto normal = m_normalMapBuffer[y * MapSize.x + x];
+
+                            auto& vert = m_slopeBuffer.emplace_back();
+                            vert.position = { posX, 0.f, posZ };
+                            vert.colour = { 1.f, 1.f, 0.f, 0.25f };
+
+                            m_slopeIndices.push_back(currIndex++);
+
+                            auto dir = glm::vec2(normal.x, normal.z);
+                            auto strength = glm::length(dir);
+                            dir /= strength;
+                            strength = std::min(0.5f, strength * 20.f);
+                            dir *= strength;
+
+                            auto& vert2 = m_slopeBuffer.emplace_back();
+                            vert2.position = { posX + dir.x, 0.f, posZ + dir.y };
+                            vert2.colour = { 1.f, 1.f - (strength + 0.5f), 0.f, 1.f };
+
+                            m_slopeIndices.push_back(currIndex++);
+                        }
+                    }
+                }
+                m_slopeProperties.meshData->vertexCount = static_cast<std::uint32_t>(m_slopeBuffer.size());
             }
 
             m_wantsUpdate = false;

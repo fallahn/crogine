@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/components/BillboardCollection.hpp>
+#include <crogine/graphics/MeshData.hpp>
 
 #include <vector>
 #include <thread>
@@ -64,6 +65,8 @@ public:
 
     void update(std::size_t); //loads the configured data into the existing scene and signals the thread to queue upcoming data
 
+    void setPlayerPosition(glm::vec3);
+
 private:
 
     const std::vector<HoleData>& m_holeData;
@@ -87,7 +90,7 @@ private:
     std::vector<cro::Billboard> m_billboardBuffer;
     std::array<cro::Entity, 2u> m_billboardEntities = {};
 
-    struct Vertex final
+    struct TerrainVertex final
     {
         glm::vec3 position = glm::vec3(0.f);
         //glm::vec4 colour = glm::vec4(0.1f, 0.117f, 0.176f, 1.f);
@@ -99,7 +102,7 @@ private:
         glm::vec3 targetPosition = glm::vec3(0.f);
         glm::vec3 targetNormal = glm::vec3(0.f, 1.f, 0.f);
     };
-    std::vector<Vertex> m_terrainBuffer;
+    std::vector<TerrainVertex> m_terrainBuffer;
 
     struct TerrainProperties final
     {
@@ -109,6 +112,22 @@ private:
         float morphTime = 0.f;
     }m_terrainProperties;
     cro::Entity m_terrainEntity;
+
+
+    struct SlopeVertex final
+    {
+        glm::vec3 position = glm::vec3(0.f);
+        glm::vec4 colour = glm::vec4(1.f);
+    };
+    std::vector<SlopeVertex> m_slopeBuffer;
+    std::vector<std::uint32_t> m_slopeIndices;
+    struct SlopeProperties final
+    {
+        cro::Mesh::Data* meshData = nullptr;
+        std::int32_t uniform = -1;
+        std::uint32_t shader = 0;
+    }m_slopeProperties;
+    std::vector<glm::vec3> m_normalMapBuffer;
 
     std::atomic_bool m_threadRunning;
     std::atomic_bool m_wantsUpdate;

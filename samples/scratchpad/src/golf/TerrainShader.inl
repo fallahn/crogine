@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-static const std::string TerrainVertex = R"(
+static const std::string TerrainVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
@@ -65,7 +65,44 @@ static const std::string TerrainVertex = R"(
         gl_ClipDistance[0] = dot(position, u_clipPlane);
     })";
 
-static const std::string CelVertex = R"(
+static const std::string SlopeVertexShader =
+R"(
+    ATTRIBUTE vec4 a_position;
+    ATTRIBUTE vec4 a_colour;
+
+    uniform mat4 u_worldMatrix;
+    uniform mat4 u_viewProjectionMatrix;
+    uniform vec3 u_centrePosition;
+
+    VARYING_OUT vec4 v_colour;
+
+    const float Radius = 20.0;
+
+    void main()
+    {
+        vec4 worldPos = u_worldMatrix * a_position;
+        float alpha = 1.0 - smoothstep(Radius, Radius + 1.5, length(worldPos.xyz - u_centrePosition));
+
+        gl_Position = u_viewProjectionMatrix * worldPos;
+
+        v_colour = a_colour;
+        v_colour.a *= alpha;
+    }   
+)";
+
+static const std::string SlopeFragmentShader =
+R"(
+    OUTPUT
+
+    VARYING_IN vec4 v_colour;
+
+    void main()
+    {
+        FRAG_OUT = v_colour;
+    }
+)";
+
+static const std::string CelVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
@@ -90,7 +127,7 @@ static const std::string CelVertex = R"(
         gl_ClipDistance[0] = dot(position, u_clipPlane);
     })";
 
-static const std::string CelFragment = R"(
+static const std::string CelFragmentShader = R"(
     uniform vec3 u_lightDirection;
 
     VARYING_IN vec3 v_normal;

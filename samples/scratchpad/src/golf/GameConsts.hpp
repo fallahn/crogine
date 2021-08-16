@@ -61,7 +61,8 @@ struct ShaderID final
     {
         Water = 100,
         Terrain,
-        Cel
+        Cel,
+        Slope
     };
 };
 
@@ -93,6 +94,51 @@ static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, floa
         return { terrain, height };
     case TerrainID::Scrub:
         return height > -(TerrainLevel - WaterLevel) ? std::make_pair(terrain, height) : std::make_pair(TerrainID::Water, height);
+    }
+}
+
+static inline void loadNormalMap(std::vector<glm::vec3>& dst, const std::string& path)
+{
+    dst.resize(MapSize.x * MapSize.y, glm::vec3(0.f, 1.f, 0.f));
+
+    auto extension = cro::FileSystem::getFileExtension(path);
+    auto filePath = path.substr(0, path.length() - extension.length());
+
+    filePath += "n" + extension;
+
+    cro::Image img;
+    if (img.loadFromFile(filePath))
+    {
+        auto size = img.getSize();
+        if (size != MapSize)
+        {
+            LogW << path << ": not loaded, image not 320x200" << std::endl;
+            return;
+        }
+
+        std::uint32_t stride = 0;
+        if (img.getFormat() == cro::ImageFormat::RGB)
+        {
+            stride = 3;
+        }
+        else if (img.getFormat() == cro::ImageFormat::RGBA)
+        {
+            stride = 4;
+        }
+
+        if (stride != 0)
+        {
+            auto pixels = img.getPixelData();
+            for (auto i = 0u, j = 0u; i < dst.size(); ++i, j += stride)
+            {
+                dst[i] = { pixels[j], pixels[j + 2], pixels[j + 1] };
+                dst[i] /= 255.f;
+                dst[i] *= 2.f;
+                dst[i] -= 1.f;
+                dst[i] = glm::normalize(dst[i]);
+                dst[i].z *= -1.f;
+            }
+        }
     }
 }
 

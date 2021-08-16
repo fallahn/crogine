@@ -29,6 +29,7 @@ source distribution.
 
 #include "../PacketIDs.hpp"
 #include "../CommonConsts.hpp"
+#include "../GameConsts.hpp"
 #include "../ClientPacketData.hpp"
 #include "../BallSystem.hpp"
 #include "ServerGameState.hpp"
@@ -530,7 +531,7 @@ bool GameState::validateMap()
                     return false;
                 }
 
-                loadNormalMap(holeData, holeProp.getValue<std::string>());
+                loadNormalMap(holeData.normalMap, holeProp.getValue<std::string>());
                 holeData.mapPath = holeProp.getValue<std::string>();
 
                 propCount++;
@@ -570,45 +571,6 @@ bool GameState::validateMap()
     m_currentMap.loadFromFile(m_holeData[0].mapPath);
 
     return true;
-}
-
-void GameState::loadNormalMap(HoleData& holeData, const std::string& path)
-{
-    auto size = m_currentMap.getSize();
-    holeData.normalMap.resize(size.x * size.y, glm::vec3(0.f, 1.f, 0.f));
-
-    auto extension = cro::FileSystem::getFileExtension(path);
-    auto filePath = path.substr(0, path.length() - extension.length());
-
-    filePath += "n" + extension;
-    
-    cro::Image img;
-    if (img.loadFromFile(filePath))
-    {
-        std::uint32_t stride = 0;
-        if (img.getFormat() == cro::ImageFormat::RGB)
-        {
-            stride = 3;
-        }
-        else if (img.getFormat() == cro::ImageFormat::RGBA)
-        {
-            stride = 4;
-        }
-
-        if (stride != 0)
-        {
-            auto pixels = img.getPixelData();
-            for (auto i = 0u, j = 0u; i < holeData.normalMap.size(); ++i, j += stride)
-            {
-                holeData.normalMap[i] = { pixels[j], pixels[j + 2], pixels[j + 1] };
-                holeData.normalMap[i] /= 255.f;
-                holeData.normalMap[i] *= 2.f;
-                holeData.normalMap[i] -= 1.f;
-                holeData.normalMap[i] = glm::normalize(holeData.normalMap[i]);
-                holeData.normalMap[i].z *= -1.f;
-            }
-        }
-    }
 }
 
 void GameState::initScene()

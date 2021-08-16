@@ -38,7 +38,8 @@ struct CommandID final
         Flag            = 0x4,
         Hole            = 0x8,
         Tee             = 0x10,
-        Cart            = 0x20
+        Cart            = 0x20,
+        SlopeIndicator  = 0x40
     };
 
     struct UI final
