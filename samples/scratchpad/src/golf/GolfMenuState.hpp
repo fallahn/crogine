@@ -37,10 +37,7 @@ source distribution.
 #include <crogine/core/String.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/MeshResource.hpp>
-#include <crogine/graphics/ShaderResource.hpp>
-#include <crogine/graphics/MaterialResource.hpp>
-#include <crogine/graphics/TextureResource.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Font.hpp>
 
 #include <array>
@@ -82,10 +79,8 @@ private:
     SharedStateData& m_sharedData;
 
     cro::Scene m_scene;
-    cro::MeshResource m_meshResource;
-    cro::ShaderResource m_shaderResource;
-    cro::MaterialResource m_materialResource;
-    cro::TextureResource m_textureResource;
+    cro::Scene m_backgroundScene;
+    cro::ResourceCollection m_resources;
 
     cro::Font m_font;
     std::array<bool, ConstVal::MaxClients> m_readyState = {};

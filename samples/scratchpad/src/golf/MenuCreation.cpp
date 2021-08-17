@@ -103,11 +103,11 @@ void GolfMenuState::createUI()
         });
 
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -10.f });
-    entity.addComponent<cro::Sprite>(m_textureResource.get("assets/golf/images/menu_background.png"));
-    entity.addComponent<cro::Drawable2D>();
+    //entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -10.f });
+    //entity.addComponent<cro::Sprite>(m_textureResource.get("assets/golf/images/menu_background.png"));
+    //entity.addComponent<cro::Drawable2D>();
 
-    entity = m_scene.createEntity();
+    //entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::RootNode;
     auto rootNode = entity;
@@ -280,7 +280,7 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
 
     //background
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/player_menu.spt", m_textureResource);
+    spriteSheet.loadFromFile("assets/golf/sprites/player_menu.spt", m_resources.textures);
 
 
     //this entity has the player edit text ents added to it by updateLocalAvatars
@@ -541,7 +541,7 @@ void GolfMenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter,
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().depth = -0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<cro::Sprite>().setTexture(m_textureResource.get("assets/golf/images/textbox.png"));
+    entity.addComponent<cro::Sprite>().setTexture(m_resources.textures.get("assets/golf/images/textbox.png"));
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::UIInput>().area = bounds;
@@ -839,7 +839,7 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
 
 
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/player_selection.spt", m_textureResource);
+    spriteSheet.loadFromFile("assets/golf/sprites/player_selection.spt", m_resources.textures);
 
     auto bgNode = m_scene.createEntity();
     bgNode.addComponent<cro::Transform>();
@@ -1173,7 +1173,7 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //player preview
-    spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_textureResource);
+    spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_resources.textures);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 113.f, 68.f, ButtonDepth });
     entity.addComponent<cro::Drawable2D>();

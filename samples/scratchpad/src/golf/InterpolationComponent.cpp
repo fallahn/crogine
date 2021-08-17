@@ -90,7 +90,7 @@ void InterpolationComponent::applyNextTarget()
 
         //before this function is called the entity
         //is usually snapped to the target position/rotation
-        //anyway so we can assume the pervious point will be
+        //anyway so we can assume the previous point will be
         //assigned the current position/rotation
         m_previousPoint = m_targetPoint;
         m_elapsedTimer.restart();

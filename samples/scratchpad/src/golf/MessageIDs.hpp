@@ -70,5 +70,5 @@ struct CollisionEvent final
         Begin, End
     }type = Begin;
     glm::vec3 position = glm::vec3(0.f);
-    std::int32_t terrain = 0; //if TerrainID::Count then in the hole.
+    std::int32_t terrain = 0;
 };

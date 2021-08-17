@@ -71,26 +71,39 @@ void ClientCollisionSystem::process(float)
                 auto len2 = glm::length2(m_holeData[m_holeIndex].pin - position);
                 if (len2 < MinBallDist)
                 {
-                    msg->terrain = TerrainID::Count;
+                    msg->terrain = TerrainID::Hole;
                 }
             }
         };
 
-        static constexpr float CollisionLevel = 0.05f;
+        static constexpr float CollisionLevel = 0.15f;
         auto position = tx.getPosition();
-        if (position.y < CollisionLevel
-            && collider.previousPosition.y >= CollisionLevel)
+        std::int32_t direction = 0;
+        if (position.y < collider.previousPosition.y)
         {
-            //begin collision
-            notify(CollisionEvent::Begin, position);
+            direction = -1;
         }
-        else if (position.y >= CollisionLevel
-            && collider.previousPosition.y < CollisionLevel)
+        else if (position.y > collider.previousPosition.y)
         {
-            //end collision
-            notify(CollisionEvent::End, position);
+            direction = 1;
         }
 
+        //yes it's an odd way of doing it, but we're floundering
+        //around in the spongey world of interpolated actors.
+        if (position.y < CollisionLevel)
+        {
+            if (direction > collider.previousDirection)
+            {
+                //started moving up
+                notify(CollisionEvent::End, position);
+            }
+            else if (collider.previousPosition.y > CollisionLevel)
+            {
+                notify(CollisionEvent::Begin, position);
+            }
+        }
+
+        collider.previousDirection = direction;
         collider.previousPosition = position;
     }
 }

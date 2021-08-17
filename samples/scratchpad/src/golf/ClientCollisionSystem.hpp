@@ -40,9 +40,10 @@ source distribution.
 struct ClientCollider final
 {
     glm::vec3 previousPosition = glm::vec3(0.f);
+    std::int32_t previousDirection = 0;
 };
 
-class ClientCollisionSystem final :public cro::System 
+class ClientCollisionSystem final : public cro::System 
 {
 public:
     ClientCollisionSystem(cro::MessageBus&, const std::vector<HoleData>&);

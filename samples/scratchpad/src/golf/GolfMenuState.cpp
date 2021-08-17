@@ -54,6 +54,7 @@ source distribution.
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <cstring>
 
@@ -63,12 +64,13 @@ namespace
 }
 
 GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
-    : cro::State    (stack, context),
-    m_sharedData    (sd),
-    m_scene         (context.appInstance.getMessageBus()),
-    m_playerAvatar  ("assets/golf/images/player.png"),
-    m_currentMenu   (MenuID::Main),
-    m_viewScale     (2.f)
+    : cro::State        (stack, context),
+    m_sharedData        (sd),
+    m_scene             (context.appInstance.getMessageBus()),
+    m_backgroundScene   (context.appInstance.getMessageBus()),
+    m_playerAvatar      ("assets/golf/images/player.png"),
+    m_currentMenu       (MenuID::Main),
+    m_viewScale         (2.f)
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -210,6 +212,7 @@ bool GolfMenuState::handleEvent(const cro::Event& evt)
 
 void GolfMenuState::handleMessage(const cro::Message& msg)
 {
+    m_backgroundScene.forwardMessage(msg);
     m_scene.forwardMessage(msg);
 }
 
@@ -225,6 +228,7 @@ bool GolfMenuState::simulate(float dt)
         }
     }
 
+    m_backgroundScene.simulate(dt);
     m_scene.simulate(dt);
     return true;
 }
@@ -232,6 +236,7 @@ bool GolfMenuState::simulate(float dt)
 void GolfMenuState::render()
 {
     //draw any renderable systems
+    m_backgroundScene.render(cro::App::getWindow());
     m_scene.render(cro::App::getWindow());
 }
 
@@ -239,6 +244,9 @@ void GolfMenuState::render()
 void GolfMenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+
+    m_backgroundScene.addSystem<cro::CameraSystem>(mb);
+    m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
 
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
@@ -252,6 +260,8 @@ void GolfMenuState::addSystems()
 void GolfMenuState::loadAssets()
 {
     m_font.loadFromFile("assets/golf/fonts/IBM_CGA.ttf");
+
+    m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
 }
 
 void GolfMenuState::createScene()
