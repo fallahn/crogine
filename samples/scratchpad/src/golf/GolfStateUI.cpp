@@ -954,7 +954,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
 {
     auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();
     auto size = glm::vec2(cro::App::getWindow().getSize());
-    auto position = glm::vec3(size.x / 2.f, size.y - (bounds.height + (UIBarHeight * m_viewScale.y) + 2.f), 0.05f);
+    auto position = glm::vec3(size.x / 2.f, size.y - ((bounds.height + UIBarHeight + 2.f) * m_viewScale.y), 0.05f);
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
@@ -1039,7 +1039,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
         case MessageAnim::Open:
             //grow
             currTime = std::min(1.f, currTime + (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale(glm::vec2(m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutBounce(currTime)));
+            e.getComponent<cro::Transform>().setScale(glm::vec2(m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime)));
             if (currTime == 1)
             {
                 currTime = 0;
