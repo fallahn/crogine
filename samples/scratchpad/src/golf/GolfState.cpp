@@ -1170,7 +1170,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 {
     updateScoreboard();
     showScoreboard(true);
-
+   
     //CRO_ASSERT(hole < m_holeData.size(), "");
     if (hole >= m_holeData.size())
     {
@@ -1405,8 +1405,25 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     updateScoreboard();
     showScoreboard(false);
 
-    //TODO we could move much of the UI stuff to its
-    //own class or function to encapsulate betterererer
+    //self destructing ent to provide delay before popping up player name
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(1.5f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime -= dt;
+        if (currTime <= 0)
+        {
+            showMessageBoard(MessageBoardID::PlayerName);
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        }
+    };
+    
+    //player UI name
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::PlayerName;
     cmd.action =
@@ -1416,7 +1433,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         data.string = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name;
         e.getComponent<cro::Callback>().active = true;
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);    
 
 
     cmd.targetFlags = CommandID::UI::PinDistance;

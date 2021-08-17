@@ -188,7 +188,8 @@ private:
 
     enum class MessageBoardID
     {
-        Bunker, Scrub, Water
+        Bunker, Scrub, Water,
+        PlayerName
     };
     void showMessageBoard(MessageBoardID);
 

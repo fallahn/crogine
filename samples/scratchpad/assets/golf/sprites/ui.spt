@@ -14,7 +14,7 @@ spritesheet ui
 
     sprite flag03
     {
-        bounds = 32,64,8,8
+        bounds = 34,64,4,6
     }
 
     sprite flag04
