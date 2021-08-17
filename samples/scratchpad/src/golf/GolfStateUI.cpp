@@ -35,6 +35,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "CommonConsts.hpp"
 #include "TextAnimCallback.hpp"
+#include "ScoreStrings.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -961,6 +962,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MessageBoard];
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard;
 
     auto& font = m_resources.fonts.get(FontID::UI);
     auto textEnt = m_uiScene.createEntity();
@@ -968,32 +970,47 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     textEnt.addComponent<cro::Drawable2D>();
     textEnt.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     
     auto textEnt2 = m_uiScene.createEntity();
     textEnt2.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 26.f, 0.01f });
     textEnt2.addComponent<cro::Drawable2D>();
     textEnt2.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     textEnt2.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    textEnt2.getComponent<cro::Text>().setFillColour(TextNormalColour);
 
     //TODO add mini graphic depending on message type
     switch (messageType)
     {
     default: break;
+    case MessageBoardID::HoleScore:
+    {
+        std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
+        score -= m_holeData[m_currentHole].par;
+        score += ScoreID::ScoreOffset;
+
+        if (score < ScoreID::Count)
+        {
+            textEnt.getComponent<cro::Text>().setString(ScoreStrings[score]);
+        }
+        else
+        {
+            textEnt.getComponent<cro::Text>().setString("Bad Luck!");
+        }
+        textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        textEnt.getComponent<cro::Transform>().move({ 0.f, -10.f, 0.f });
+    }
+        break;
     case MessageBoardID::Bunker:
         textEnt.getComponent<cro::Text>().setString("Bunker!");
-        textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
         break;
     case MessageBoardID::PlayerName:
         textEnt.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name);
-        textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-
         textEnt2.getComponent<cro::Text>().setString("Stroke: " + std::to_string(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] + 1));
-        textEnt2.getComponent<cro::Text>().setFillColour(TextNormalColour);
         break;
     case MessageBoardID::Scrub:
     case MessageBoardID::Water:
         textEnt.getComponent<cro::Text>().setString("Penalty!");
-        textEnt.getComponent<cro::Text>().setFillColour(TextHighlightColour);
         break;
     }
     
@@ -1003,7 +1020,10 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     //callback for anim/self destruction
     struct MessageAnim final
     {
-        std::int32_t state = 0;
+        enum
+        {
+            Open, Hold, Close
+        }state = Open;
         float currentTime = 0.f;
     };
     entity.addComponent<cro::Callback>().active = true;
@@ -1011,31 +1031,31 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     entity.getComponent<cro::Callback>().function =
         [&, textEnt, textEnt2](cro::Entity e, float dt)
     {
-        static constexpr float HoldTime = 3.f;
+        static constexpr float HoldTime = 2.f;
         auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
         switch (state)
         {
         default: break;
-        case 0:
+        case MessageAnim::Open:
             //grow
             currTime = std::min(1.f, currTime + (dt * 2.f));
             e.getComponent<cro::Transform>().setScale(glm::vec2(m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutBounce(currTime)));
             if (currTime == 1)
             {
                 currTime = 0;
-                state = 1;
+                state = MessageAnim::Hold;
             }
             break;
-        case 1:
+        case MessageAnim::Hold:
             //hold
             currTime = std::min(HoldTime, currTime + dt);
             if (currTime == HoldTime)
             {
                 currTime = 1.f;
-                state = 2;
+                state = MessageAnim::Close;
             }
             break;
-        case 2:
+        case MessageAnim::Close:
             //shrink
             currTime = std::max(0.f, currTime - (dt * 3.f));
             e.getComponent<cro::Transform>().setScale(glm::vec2(m_viewScale.x * cro::Util::Easing::easeInCubic(currTime), m_viewScale.y));
@@ -1049,6 +1069,24 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
             break;
         }
     };
+
+
+    //send a message to immediately close any current open messages
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::MessageBoard;
+    cmd.action = [entity](cro::Entity e, float)
+    {
+        if (e != entity)
+        {
+            auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
+            if (state != MessageAnim::Close)
+            {
+                currTime = 1.f;
+                state = MessageAnim::Close;
+            }
+        }
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
 
 void GolfState::updateMiniMap()

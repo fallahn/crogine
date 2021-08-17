@@ -1036,6 +1036,9 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             case TerrainID::Water:
                 showMessageBoard(MessageBoardID::Water);
                 break;
+            case TerrainID::Hole:
+                showMessageBoard(MessageBoardID::HoleScore);
+                break;
             }
         }
             break;

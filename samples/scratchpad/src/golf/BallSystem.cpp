@@ -224,7 +224,7 @@ void BallSystem::process(float dt)
 
                     auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
                     msg->type = BallEvent::Landed;
-                    msg->terrain = ball.terrain;
+                    msg->terrain = position.y < -Ball::Radius ? TerrainID::Hole : ball.terrain;
                     msg->position = position;
                 }
             }

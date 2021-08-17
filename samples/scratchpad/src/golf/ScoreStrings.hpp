@@ -29,40 +29,28 @@ source distribution.
 
 #pragma once
 
-#include <array>
 #include <string>
+#include <array>
 
-struct RenderFlags final
+struct ScoreID final
 {
     enum
     {
-        MiniMap = 0x1
-    };
-};
-
-struct TerrainID final
-{
-    //these values are multiplied by 10 in the map's red channel
-    //just cos it makes its a tiiiny bit easier to see in the image
-    enum
-    {
-        Rough, Fairway,
-        Green, Bunker,
-        Water, Scrub,
-
-        Hole,
+        Albatross,
+        Eagle,
+        Birdie,
+        Par,
+        Bogie,
+        DoubleBogie,
+        TripleBogie,
 
         Count
     };
+
+    static constexpr std::int32_t ScoreOffset = 3;
 };
 
-static const std::array<std::string, TerrainID::Count> TerrainStrings =
+static const std::array<std::string, ScoreID::Count> ScoreStrings =
 {
-    "Rough", "Fairway", "Green", "Bunker", "Water", "Scrub", "Hole"
-};
-
-//how much the stroke is affected by the current terrain
-static constexpr std::array<float, TerrainID::Count> Dampening =
-{
-    0.9f, 1.f, 1.f, 0.85f, 1.f, 1.f, 0.f
+    "Albatross", "Eagle", "Birdie", "Par", "Bogey", "Double Bogey", "Triple Bogey"
 };
