@@ -190,5 +190,6 @@ private:
     cro::RenderTexture m_mapBuffer;
     cro::RenderTexture m_mapTexture;
     cro::SimpleQuad m_mapQuad;
+    cro::SimpleQuad m_flagQuad;
     void updateMiniMap();
 };

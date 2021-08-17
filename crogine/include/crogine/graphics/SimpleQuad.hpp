@@ -67,9 +67,19 @@ namespace cro
         /*!
         \brief Sets a new texture for the quad.
         \param texture The new texture to use. The quad is automatically resized
-        to the size of the texture, in pixels.
+        to the size of the texture, in pixels. Note that this resets any texture
+        rect that was previously set
         */
         void setTexture(const cro::Texture& texture);
+
+        /*!
+        \brief Sets the quad to render a sub-rectangle of the current texture
+        \param subrect A FloatRect containing a sub-rectangular area of the
+        texture, in pixel coords, to set the quad to. Note that this will be reset
+        should a new texture be supplied.
+        \see setTexture()
+        */
+        void setTextureRect(cro::FloatRect subrect);
 
         /*!
         \brief Sets the colour which is multiplied with the texture colour of the quad
@@ -121,7 +131,7 @@ namespace cro
         glm::vec2 getSize() const { return m_size; }
 
         /*!
-        \brief Set the blend mdoe with which to draw the quad
+        \brief Set the blend mode with which to draw the quad
         Defaults to Material::BlendMode::Alpha
         */
         void setBlendMode(Material::BlendMode blendMode) { m_blendMode = blendMode; }
@@ -144,6 +154,7 @@ namespace cro
         glm::mat4 m_modelMatrix;
         cro::Colour m_colour;
         glm::vec2 m_size;
+        cro::FloatRect m_uvRect;
 
         std::uint32_t m_vbo;
 

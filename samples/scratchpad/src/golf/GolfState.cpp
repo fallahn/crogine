@@ -513,6 +513,10 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
+    auto flagSprite = spriteSheet.getSprite("flag03");
+    m_flagQuad.setTexture(*flagSprite.getTexture());
+    m_flagQuad.setTextureRect(flagSprite.getTextureRect());
+
 
     spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_resources.textures);
     for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)

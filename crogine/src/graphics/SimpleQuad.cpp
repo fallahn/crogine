@@ -182,12 +182,31 @@ void SimpleQuad::setTexture(const cro::Texture& texture)
     if (texture.getGLHandle() > 0)
     {
         m_textureID = texture.getGLHandle();
-        m_size = texture.getSize();
+        m_size = glm::vec2(texture.getSize());
+        m_uvRect = { 0.f, 0.f, 1.f, 1.f };
         updateVertexData();
     }
     else
     {
         LogE << "Invalid texture supplied to SimpleQuad" << std::endl;
+    }
+}
+
+void SimpleQuad::setTextureRect(cro::FloatRect subRect)
+{
+    if (m_textureID > 0
+        && m_size.x > 0 
+        && m_size.y > 0)
+    {
+        m_uvRect.left = subRect.left / m_size.x;
+        m_uvRect.width = subRect.width / m_size.x;
+        m_uvRect.bottom = subRect.bottom / m_size.y;
+        m_uvRect.height = subRect.height / m_size.y;
+
+        m_size = { subRect.width, subRect.height };
+        CRO_ASSERT(m_size.x > 0 && m_size.y > 0, "div by zero!");
+
+        updateVertexData();
     }
 }
 
@@ -306,19 +325,19 @@ void SimpleQuad::updateVertexData()
     std::vector<float> verts =
     {
         0.f, m_size.y,
-        0.f, 1.f,
+        m_uvRect.left, m_uvRect.bottom + m_uvRect.height,
         r,g,b,a,
 
         0.f, 0.f,
-        0.f, 0.f,
+        m_uvRect.left, m_uvRect.bottom,
         r,g,b,a,
 
         m_size.x, m_size.y,
-        1.f, 1.f,
+        m_uvRect.left + m_uvRect.width, m_uvRect.bottom + m_uvRect.height,
         r,g,b,a,
 
         m_size.x, 0.f,
-        1.f, 0.f,
+        m_uvRect.left + m_uvRect.width, m_uvRect.bottom,
         r,g,b,a
     };
 

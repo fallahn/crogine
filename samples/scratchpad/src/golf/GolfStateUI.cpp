@@ -340,16 +340,16 @@ void GolfState::buildUI()
                 {
                     e.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
                     offset = glm::vec2(2.f);
+                    m_flagQuad.setRotation(90.f);
                 }
                 else
                 {
                     e.getComponent<cro::Transform>().setRotation(90.f * cro::Util::Const::degToRad);
                     offset = glm::vec2(-2.f);
+                    m_flagQuad.setRotation(-90.f);
                 }
 
                 //update render
-                //TODO render some icons such as tee/hole
-
                 auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
                 m_mapBuffer.clear(cro::Colour::Transparent);
                 m_gameScene.render(m_mapTexture);
@@ -364,9 +364,11 @@ void GolfState::buildUI()
                 m_mapQuad.setPosition(glm::vec2(0.f));
                 m_mapQuad.setColour(cro::Colour::White);
                 m_mapQuad.draw();
+
+                auto holePos = m_holeData[m_currentHole].pin / 2.f;
+                m_flagQuad.setPosition({ holePos.x, -holePos.z });
+                m_flagQuad.draw();
                 m_mapTexture.display();
-
-
 
                 //and set to grow
                 state = 1;
@@ -918,6 +920,22 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
         ss.precision(2);
         ss << std::fixed << knots << " knots";
         e.getComponent<cro::Text>().setString(ss.str());
+
+        if (knots < 1.5f)
+        {
+            if (knots < 1)
+            {
+                e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            }
+            else
+            {
+                e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+            }
+        }
+        else
+        {
+            e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+        }
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
