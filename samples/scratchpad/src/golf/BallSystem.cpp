@@ -162,9 +162,22 @@ void BallSystem::process(float dt)
                     {
                         //these are all just a wild stab
                         //destined for some tweaking - basically puts the ball back along its vector
-                        //towards the hole while maintaining gravity.
-                        ball.velocity *= -1.f;
-                        ball.velocity.y *= -1.f;
+                        //towards the hole while maintaining gravity. As if it bounced off the inside of the hole
+                        if (position.y < -(Ball::Radius * 0.5f))
+                        {
+                            ball.velocity *= -1.f;
+                            ball.velocity.y *= -1.f;
+                        }
+                        else
+                        {
+                            //lets the ball continue travelling, ie overshoot
+                            ball.velocity *= 0.7f;
+                            ball.velocity.y = 0.f;
+                            //ball.velocity.y *= -1.f;
+
+                            position.y = 0.f;
+                            tx.setPosition(position);
+                        }
                     }
 
                     //TODO we could also test to see which side of the hole the ball
@@ -266,7 +279,7 @@ void BallSystem::process(float dt)
                 msg->terrain = ball.terrain;
                 msg->position = entity.getComponent<cro::Transform>().getPosition();
 
-                if (msg->position.y < 0)
+                if (msg->position.y < -Ball::Radius)
                 {
                     //we're in the hole
                     msg->type = BallEvent::Holed;
