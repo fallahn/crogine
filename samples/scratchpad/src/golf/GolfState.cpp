@@ -208,14 +208,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
-        /*case SDLK_ESCAPE:
-        case SDLK_BACKSPACE:
-            requestStackClear();
-            requestStackPush(States::MainMenu);
-            break;
-        case SDLK_SPACE:
-            hitBall();
-            break;*/
         case SDLK_TAB:
             showScoreboard(false);
             break;
@@ -233,7 +225,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), cro::NetFlag::Reliable);
             break;
         case SDLK_F7:
-            showCountdown(10);
+            //showCountdown(10);
+            showMessageBoard(MessageBoardID::Bunker);
             break;
         case SDLK_F8:
             updateMiniMap();
@@ -513,6 +506,7 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
+    m_sprites[SpriteID::MessageBoard] = spriteSheet.getSprite("message_board");
     auto flagSprite = spriteSheet.getSprite("flag03");
     m_flagQuad.setTexture(*flagSprite.getTexture());
     m_flagQuad.setTextureRect(flagSprite.getTextureRect());
@@ -1027,6 +1021,24 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::BallLanded:
+        {
+            auto terrain = evt.packet.as<std::uint8_t>();
+            switch (terrain)
+            {
+            default: break;
+            case TerrainID::Bunker:
+                showMessageBoard(MessageBoardID::Bunker);
+                break;
+            case TerrainID::Scrub:
+                showMessageBoard(MessageBoardID::Scrub);
+                break;
+            case TerrainID::Water:
+                showMessageBoard(MessageBoardID::Water);
+                break;
+            }
+        }
+            break;
         case PacketID::ClientDisconnected:
         {
             removeClient(evt.packet.as<std::uint8_t>());

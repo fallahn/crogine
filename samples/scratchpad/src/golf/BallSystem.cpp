@@ -221,6 +221,11 @@ void BallSystem::process(float dt)
                     }
 
                     ball.delay = 2.f;
+
+                    auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
+                    msg->type = BallEvent::Landed;
+                    msg->terrain = ball.terrain;
+                    msg->position = position;
                 }
             }
             break;
@@ -375,6 +380,11 @@ void BallSystem::doCollision(cro::Entity entity)
             ball.delay = 2.f;
             ball.terrain = terrain;
             ball.velocity = glm::vec3(0.f);
+
+            auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
+            msg->type = BallEvent::Landed;
+            msg->terrain = ball.terrain;
+            msg->position = tx.getPosition();
         }
     }
 }

@@ -152,6 +152,7 @@ private:
             PowerBarInner,
             HookBar,
             WindIndicator,
+            MessageBoard,
 
             Count
         };
@@ -184,6 +185,13 @@ private:
     void updateScoreboard();
     void showScoreboard(bool);
     void updateWindDisplay(glm::vec3);
+
+    enum class MessageBoardID
+    {
+        Bunker, Scrub, Water
+    };
+    void showMessageBoard(MessageBoardID);
+
     //-----------
 
     cro::Entity m_mapCam;

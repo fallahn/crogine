@@ -155,6 +155,11 @@ void GameState::handleMessage(const cro::Message& msg)
                 m_playerInfo[0].terrain = TerrainID::Green;
             }
         }
+        else if (data.type == BallEvent::Landed)
+        {
+            //immediate, pre-pause event when the ball stops moving
+            m_sharedData.host.broadcastPacket(PacketID::BallLanded, std::uint8_t(data.terrain), cro::NetFlag::Reliable);
+        }
     }
 
     m_scene.forwardMessage(msg);

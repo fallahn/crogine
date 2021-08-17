@@ -949,6 +949,88 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
 
+void GolfState::showMessageBoard(MessageBoardID messageType)
+{
+    auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();
+    auto size = glm::vec2(cro::App::getWindow().getSize());
+    auto position = glm::vec3(size.x / 2.f, size.y - (bounds.height + (UIBarHeight * m_viewScale.y)), 0.05f);
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.getComponent<cro::Transform>().setScale(m_viewScale);
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MessageBoard];
+
+    auto textEnt = m_uiScene.createEntity();
+    textEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 56.f, 0.01f });
+    textEnt.addComponent<cro::Drawable2D>();
+    textEnt.addComponent<cro::Text>(m_resources.fonts.get(FontID::UI)).setCharacterSize(UITextSize);
+    textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    if (messageType == MessageBoardID::Bunker)
+    {
+        textEnt.getComponent<cro::Text>().setString("Bunker!");
+        textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    }
+    else
+    {
+        textEnt.getComponent<cro::Text>().setString("Penalty!");
+        textEnt.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+    }
+    entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
+
+    //TODO add mini graphic depending on message type
+
+    //callback for anim/self destruction
+    struct MessageAnim final
+    {
+        std::int32_t state = 0;
+        float currentTime = 0.f;
+    };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<MessageAnim>();
+    entity.getComponent<cro::Callback>().function =
+        [&, textEnt](cro::Entity e, float dt)
+    {
+        static constexpr float HoldTime = 3.f;
+        auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
+        switch (state)
+        {
+        default: break;
+        case 0:
+            //grow
+            currTime = std::min(1.f, currTime + (dt * 2.f));
+            e.getComponent<cro::Transform>().setScale(glm::vec2(m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutBounce(currTime)));
+            if (currTime == 1)
+            {
+                currTime = 0;
+                state = 1;
+            }
+            break;
+        case 1:
+            //hold
+            currTime = std::min(HoldTime, currTime + dt);
+            if (currTime == HoldTime)
+            {
+                currTime = 1.f;
+                state = 2;
+            }
+            break;
+        case 2:
+            //shrink
+            currTime = std::max(0.f, currTime - (dt * 3.f));
+            e.getComponent<cro::Transform>().setScale(glm::vec2(m_viewScale.x * cro::Util::Easing::easeInCubic(currTime), m_viewScale.y));
+            if (currTime == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(textEnt);
+                m_uiScene.destroyEntity(e);
+            }
+            break;
+        }
+    };
+}
+
 void GolfState::updateMiniMap()
 {
     cro::Command cmd;
