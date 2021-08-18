@@ -61,7 +61,7 @@ source distribution.
 
 namespace
 {
-
+#include "TerrainShader.inl"
 }
 
 GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -153,16 +153,16 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
     }
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]() 
+    /*registerWindow([&]() 
         {
             if (ImGui::Begin("Debug"))
             {
                 auto camPos = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
-                ImGui::Text("Came Pos %3.3f, %3.3f, %3.3f", camPos.x, camPos.y, camPos.z);
+                ImGui::Text("Cam Pos %3.3f, %3.3f, %3.3f", camPos.x, camPos.y, camPos.z);
             }
             ImGui::End();
         
-        });
+        });*/
 #endif
 }
 
@@ -242,13 +242,6 @@ bool GolfMenuState::simulate(float dt)
         }
     }
 
-    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_W))
-    {
-        auto& tx = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>();
-        auto dir = tx.getForwardVector();
-        tx.move(-dir * 2.f * dt);
-    }
-
     m_backgroundScene.simulate(dt);
     m_scene.simulate(dt);
     return true;
@@ -286,10 +279,15 @@ void GolfMenuState::loadAssets()
     m_font.loadFromFile("assets/golf/fonts/IBM_CGA.ttf");
 
     m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
+
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader);
 }
 
 void GolfMenuState::createScene()
 {
+    auto matID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Cel));
+    auto material = m_resources.materials.get(matID);
+
     cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/menu_pavilion.cmt");
 
@@ -301,6 +299,7 @@ void GolfMenuState::createScene()
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
+    entity.getComponent<cro::Model>().setMaterial(0, material);
 
     md.loadFromFile("assets/golf/models/phone_box.cmt");
     entity = m_backgroundScene.createEntity();
@@ -330,8 +329,8 @@ void GolfMenuState::createScene()
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
 
     auto sunEnt = m_backgroundScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -0.967f);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -48.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, /*-0.967f*/-45.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -80.f * cro::Util::Const::degToRad);
 
     createUI();
 }

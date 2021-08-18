@@ -958,7 +958,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
-    entity.getComponent<cro::Transform>().setScale(m_viewScale);
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MessageBoard];
@@ -1022,9 +1022,9 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     {
         enum
         {
-            Open, Hold, Close
-        }state = Open;
-        float currentTime = 0.f;
+            Delay, Open, Hold, Close
+        }state = Delay;
+        float currentTime = 0.5f;
     };
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<MessageAnim>();
@@ -1036,6 +1036,13 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
         switch (state)
         {
         default: break;
+        case MessageAnim::Delay:
+            currTime = std::max(0.f, currTime - dt);
+            if (currTime == 0)
+            {
+                state = MessageAnim::Open;
+            }
+            break;
         case MessageAnim::Open:
             //grow
             currTime = std::min(1.f, currTime + (dt * 2.f));

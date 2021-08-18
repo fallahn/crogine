@@ -944,6 +944,18 @@ void GolfState::buildScene()
         //horizontal FOV, not the vertical one expected by default.
         cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+
+        //because we don't know in which order the cam callbacks are raised
+        //we need to send the player repos command from here when we know the view is correct
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::PlayerSprite;
+        cmd.action = [&](cro::Entity e, float)
+        {
+            const auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+            auto pos = camera.coordsToPixel(m_currentPlayer.position, m_gameSceneTexture.getSize());
+            e.getComponent<cro::Transform>().setPosition(pos);
+        };
+        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     };
 
     auto camEnt = m_gameScene.getActiveCamera();

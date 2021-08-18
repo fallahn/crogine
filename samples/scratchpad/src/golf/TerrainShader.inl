@@ -120,6 +120,9 @@ static const std::string CelVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
+#if defined (TEXTURED)
+    ATRTIBUTE vec2 a_texCoord0;
+#endif
 
     uniform mat3 u_normalMatrix;
     uniform mat4 u_worldMatrix;
@@ -129,6 +132,9 @@ static const std::string CelVertexShader = R"(
 
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec4 v_colour;
+#if defined (TEXTURED)
+    VARYING_OUT vec2 v_texCoord;
+#endif
 
     void main()
     {
@@ -138,28 +144,45 @@ static const std::string CelVertexShader = R"(
         v_normal = u_normalMatrix * a_normal;
         v_colour = a_colour;
 
+#if defined (TEXTURED)
+    v_texCoord = a_texCoord0;
+#endif
+
         gl_ClipDistance[0] = dot(position, u_clipPlane);
     })";
 
 static const std::string CelFragmentShader = R"(
     uniform vec3 u_lightDirection;
 
+#if defined(TEXTURED)
+    uniform sampler2D u_diffuseMap;
+    VARYING_IN vec2 v_texCoord;
+#endif
+
     VARYING_IN vec3 v_normal;
     VARYING_IN vec4 v_colour;
 
     OUTPUT
-
-    const float Steps[3] = float[3](0.25, 0.5, 1.0);
 
     void main()
     {
         float amount = dot(normalize(v_normal), normalize(-u_lightDirection));
         vec4 colour = v_colour;
 
-        //int index = int(step(0.5, amount) + step(0.75, amount));
+#if defined (TEXTURED)
+        colour *= TEXTURE(u_diffuseMap, v_texCoord);
+#endif
 
-        amount = (0.2 * step(0.2, amount)) + 0.8;
-        colour.rgb *= amount;//Steps[index];
+        //amount = (0.2 * step(0.2, amount)) + 0.8;
+
+amount *= 2.0;
+amount = round(amount);
+amount /= 2.0;
+amount = 0.6 + (amount * 0.4);
+
+        //vec3 ambient = colour.rgb * 0.7;
+        colour.rgb *= amount;
+        //colour.rgb += ambient;
 
         FRAG_OUT = vec4(colour.rgb, 1.0);
     })";
