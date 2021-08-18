@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "HoleData.hpp"
+#include "Billboard.hpp"
 
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Entity.hpp>
@@ -74,21 +75,7 @@ private:
     const std::vector<HoleData>& m_holeData;
     std::size_t m_currentHole;
 
-    struct BillboardID final
-    {
-        enum
-        {
-            Grass01,
-            Grass02,
-            Pine,
-            Birch,
-            Willow,
-
-            Count
-        };
-    };
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
-
     std::vector<cro::Billboard> m_billboardBuffer;
     std::array<cro::Entity, 2u> m_billboardEntities = {};
 

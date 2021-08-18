@@ -62,6 +62,7 @@ struct ShaderID final
         Water = 100,
         Terrain,
         Cel,
+        CelTextured,
         Slope
     };
 };

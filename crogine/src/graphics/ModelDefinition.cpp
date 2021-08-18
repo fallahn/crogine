@@ -627,6 +627,17 @@ bool ModelDefinition::createModel(Entity entity)
     return false;
 }
 
+const Material::Data* ModelDefinition::getMaterial(std::size_t index) const
+{
+    if (index < m_materialCount)
+    {
+        return &m_resources.materials.get(m_materialIDs[index]);
+    }
+
+    return nullptr;
+}
+
+//private
 void ModelDefinition::reset()
 {
     m_meshID = 0;

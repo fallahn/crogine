@@ -267,6 +267,7 @@
     <ClInclude Include="src\bsp\Q3BspSystem.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\golf\BallSystem.hpp" />
+    <ClInclude Include="src\golf\Billboard.hpp" />
     <ClInclude Include="src\golf\CircularBuffer.hpp" />
     <ClInclude Include="src\golf\ClientCollisionSystem.hpp" />
     <ClInclude Include="src\golf\ClientPacketData.hpp" />

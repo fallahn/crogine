@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "CommonConsts.hpp"
 #include "PlayerAvatar.hpp"
+#include "Billboard.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/String.hpp>
@@ -85,6 +86,19 @@ private:
 
 
     cro::RenderTexture m_backgroundTexture;
+    struct MaterialID final
+    {
+        enum
+        {
+            Cel,
+            CelTextured,
+
+            Count
+        };
+    };
+    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
+
+    std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
 
 
 

@@ -166,6 +166,12 @@ namespace cro
         */
         bool hasSkeleton() const { return m_skeleton; }
 
+        /*!
+        \brief Returns the assigned material at the given index, if it exists
+        else returns nullptr
+        */
+        const cro::Material::Data* getMaterial(std::size_t index) const;
+
     private:
         ResourceCollection& m_resources;
         EnvironmentMap* m_envMap;

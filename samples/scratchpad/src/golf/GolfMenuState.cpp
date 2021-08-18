@@ -34,11 +34,15 @@ source distribution.
 #include "Utility.hpp"
 #include "CommandIDs.hpp"
 #include "GameConsts.hpp"
+#include "PoissonDisk.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/String.hpp>
+#include <crogine/util/Random.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Text.hpp>
@@ -56,12 +60,15 @@ source distribution.
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/BillboardSystem.hpp>
 
 #include <cstring>
 
 namespace
 {
 #include "TerrainShader.inl"
+
+    constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 }
 
 GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -249,12 +256,12 @@ bool GolfMenuState::simulate(float dt)
 
 void GolfMenuState::render()
 {
-    //draw any renderable systems
-    m_backgroundTexture.clear();
-    m_backgroundScene.render(m_backgroundTexture);
-    m_backgroundTexture.display();
+//draw any renderable systems
+m_backgroundTexture.clear();
+m_backgroundScene.render(m_backgroundTexture);
+m_backgroundTexture.display();
 
-    m_scene.render(cro::App::getWindow());
+m_scene.render(cro::App::getWindow());
 }
 
 //private
@@ -262,6 +269,8 @@ void GolfMenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
+    m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
+    m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
 
@@ -281,30 +290,112 @@ void GolfMenuState::loadAssets()
     m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
 
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader);
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
+
+    m_materialIDs[MaterialID::Cel] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Cel));
+    m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(m_resources.shaders.get(ShaderID::CelTextured));
+
+    //load the billboard rects from a sprite sheet and convert to templates
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", m_resources.textures);
+    m_billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
+    m_billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
+    m_billboardTemplates[BillboardID::Pine] = spriteToBillboard(spriteSheet.getSprite("pine"));
+    m_billboardTemplates[BillboardID::Willow] = spriteToBillboard(spriteSheet.getSprite("willow"));
+    m_billboardTemplates[BillboardID::Birch] = spriteToBillboard(spriteSheet.getSprite("birch"));
 }
 
 void GolfMenuState::createScene()
 {
-    auto matID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Cel));
-    auto material = m_resources.materials.get(matID);
+    auto setTexture = [](const cro::ModelDefinition& modelDef, cro::Material::Data& dest)
+    {
+        if (auto* m = modelDef.getMaterial(0); m != nullptr)
+        {
+            if (m->properties.count("u_diffuseMap"))
+            {
+                dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
+            }
+        }
+    };
+
+    auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
 
     cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/menu_pavilion.cmt");
+    setTexture(md, texturedMat);
 
     auto entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
+    entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
+    //TODO switch this to textured so we get the correct colours.
     md.loadFromFile("assets/golf/models/menu_ground.cmt");
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
-    entity.getComponent<cro::Model>().setMaterial(0, material);
+    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
 
     md.loadFromFile("assets/golf/models/phone_box.cmt");
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 8.2f, 0.f, 13.8f });
     md.createModel(entity);
+
+    texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+    setTexture(md, texturedMat);
+    entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+
+
+    //billboards
+    md.loadFromFile("assets/golf/models/shrubbery.cmt");
+    entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    md.createModel(entity);
+
+    if (entity.hasComponent<cro::BillboardCollection>())
+    {
+        std::array minBounds = { 20.f, 0.f };
+        std::array maxBounds = { 40.f, 20.f };
+
+        auto& collection = entity.getComponent<cro::BillboardCollection>();
+
+        auto trees = pd::PoissonDiskSampling(4.8f, minBounds, maxBounds);
+        for (auto [x, y] : trees)
+        {
+            float scale = static_cast<float>(cro::Util::Random::value(8, 12)) / 10.f;
+
+            auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Pine, BillboardID::Willow)];
+            bb.position = { x, 0.f, -y };
+            bb.size *= scale;
+            collection.addBillboard(bb);
+        }
+
+        //repeat for grass
+        minBounds = { -40.f, 10.f };
+        maxBounds = { 40.f, 20.f };
+
+        auto grass = pd::PoissonDiskSampling(2.4f, minBounds, maxBounds);
+        for (auto [x, y] : grass)
+        {
+            float scale = static_cast<float>(cro::Util::Random::value(8, 11)) / 10.f;
+
+            auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)];
+            bb.position = { x, 0.f, y };
+            bb.size *= scale;
+            collection.addBillboard(bb);
+        }
+    }
+
+    //golf carts
+    md.loadFromFile("assets/golf/models/cart.cmt");
+    entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.2f, 0.01f, 1.8f });
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 87.f * cro::Util::Const::degToRad);
+    md.createModel(entity);
+
+    texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+    setTexture(md, texturedMat);
+    entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
@@ -323,10 +414,35 @@ void GolfMenuState::createScene()
     cam.resizeCallback = updateView;
     updateView(cam);
 
-    camEnt.getComponent<cro::Transform>().setPosition({ -22.f, 4.9f, 22.2f });
+    camEnt.getComponent<cro::Transform>().setPosition(CameraBasePosition);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -34.f * cro::Util::Const::degToRad);
     //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -0.84f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
+
+    struct CameraMotion final
+    {
+        std::size_t vertIndex = 0;
+        std::size_t horIndex = 0;
+    };
+    camEnt.addComponent<cro::Callback>().active = true;
+    camEnt.getComponent<cro::Callback>().setUserData<CameraMotion>();
+    camEnt.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        static const std::vector<float> table = cro::Util::Wavetable::sine(0.04f, 0.04f);
+        static constexpr float ShakeStrength = 0.5f;
+
+        auto& [vertIdx, horIdx] = e.getComponent<cro::Callback>().getUserData<CameraMotion>();
+
+        auto pos = CameraBasePosition;
+        pos.x += table[horIdx];
+        pos.y += table[vertIdx];
+
+        e.getComponent<cro::Transform>().setPosition(pos);
+
+        vertIdx = (vertIdx + 1) % table.size();
+        horIdx = (horIdx + 4) % table.size();
+    };
 
     auto sunEnt = m_backgroundScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, /*-0.967f*/-45.f * cro::Util::Const::degToRad);

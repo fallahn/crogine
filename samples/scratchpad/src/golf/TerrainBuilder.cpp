@@ -69,8 +69,6 @@ namespace
     constexpr std::array MinBounds = { 0.f, 0.f };
     constexpr std::array MaxBounds = { static_cast<float>(MapSize.x), static_cast<float>(MapSize.y) };
 
-    constexpr float PixelPerMetre = 32.f; //64.f; //used for scaling billboards
-
     constexpr std::uint32_t QuadsPerMetre = 1;
 
     constexpr float MaxShrubOffset = MaxTerrainHeight + 7.5f;
@@ -312,25 +310,13 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     }
 
     //load the billboard rects from a sprite sheet and convert to templates
-    const auto convertSprite = [](const cro::Sprite& sprite)
-    {
-        auto bounds = sprite.getTextureRect();
-        auto texSize = glm::vec2(sprite.getTexture()->getSize());
-
-        cro::Billboard bb;
-        bb.size = { bounds.width / PixelPerMetre, bounds.height / PixelPerMetre };
-        bb.textureRect = { bounds.left / texSize.x, bounds.bottom / texSize.y, bounds.width / texSize.x, bounds.height / texSize.y };
-        bb.origin = { bb.size.x / 2.f, 0.f };
-        return bb;
-    };
-    
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", resources.textures);
-    m_billboardTemplates[BillboardID::Grass01] = convertSprite(spriteSheet.getSprite("grass01"));
-    m_billboardTemplates[BillboardID::Grass02] = convertSprite(spriteSheet.getSprite("grass02"));
-    m_billboardTemplates[BillboardID::Pine] = convertSprite(spriteSheet.getSprite("pine"));
-    m_billboardTemplates[BillboardID::Willow] = convertSprite(spriteSheet.getSprite("willow"));
-    m_billboardTemplates[BillboardID::Birch] = convertSprite(spriteSheet.getSprite("birch"));
+    m_billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
+    m_billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
+    m_billboardTemplates[BillboardID::Pine] = spriteToBillboard(spriteSheet.getSprite("pine"));
+    m_billboardTemplates[BillboardID::Willow] = spriteToBillboard(spriteSheet.getSprite("willow"));
+    m_billboardTemplates[BillboardID::Birch] = spriteToBillboard(spriteSheet.getSprite("birch"));
 
 
     //create a mesh to display the slope data

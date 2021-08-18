@@ -317,6 +317,9 @@
     <ClInclude Include="src\golf\ScoreStrings.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\Billboard.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\WaterShader.inl">

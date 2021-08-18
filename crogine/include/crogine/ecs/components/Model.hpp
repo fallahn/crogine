@@ -46,7 +46,7 @@ namespace cro
         
         /*!
         \brief Applies the given material to the given sub-mesh index
-        \param idx The index of the sub-mesh to which to applyh the material
+        \param idx The index of the sub-mesh to which to apply the material
         \param material Data struct containing the material definition
         */
         void setMaterial(std::size_t idx, Material::Data material);
