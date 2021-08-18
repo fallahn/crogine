@@ -84,7 +84,7 @@ void GolfState::buildUI()
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_renderTexture.getTexture());
+    entity.addComponent<cro::Sprite>(m_gameSceneTexture.getTexture());
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
     auto courseEnt = entity;
@@ -92,7 +92,7 @@ void GolfState::buildUI()
 
     auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     camera.updateMatrices(m_gameScene.getActiveCamera().getComponent<cro::Transform>());
-    auto pos = camera.coordsToPixel(m_holeData[0].tee, m_renderTexture.getSize());
+    auto pos = camera.coordsToPixel(m_holeData[0].tee, m_gameSceneTexture.getSize());
 
     //player sprite
     entity = m_uiScene.createEntity();
@@ -414,7 +414,7 @@ void GolfState::buildUI()
 
         //update avatar position
         const auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-        auto pos = camera.coordsToPixel(m_currentPlayer.position, m_renderTexture.getSize());
+        auto pos = camera.coordsToPixel(m_currentPlayer.position, m_gameSceneTexture.getSize());
         playerEnt.getComponent<cro::Transform>().setPosition(pos);
 
         //update minimap
@@ -935,7 +935,7 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
         }
         else
         {
-            e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+            e.getComponent<cro::Text>().setFillColour(TextOrangeColour);
         }
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);

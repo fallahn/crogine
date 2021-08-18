@@ -40,8 +40,11 @@ static constexpr std::uint32_t UITextSize = 8;
 
 static const cro::Colour TextNormalColour(0xfff8e1ff);
 static const cro::Colour TextEditColour(0x6eb39dff);
-static const cro::Colour TextHighlightColour(0xb83530ff);
+static const cro::Colour TextHighlightColour(0xb83530ff); //red
+//static const cro::Colour TextHighlightColour(0x005ab5ff); //cb blue
+//static const cro::Colour TextHighlightColour(0x006cd1ff); //cb blue 2
 static const cro::Colour TextGoldColour(0xf2cf5cff);
+static const cro::Colour TextOrangeColour(0xec773dff);
 static const cro::Colour LeaderboardTextDark(0x1a1e2dff);
 static const cro::Colour LeaderboardTextLight(0xfff8e1ff);
 

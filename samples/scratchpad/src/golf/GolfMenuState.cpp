@@ -33,6 +33,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "Utility.hpp"
 #include "CommandIDs.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -150,6 +151,19 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
         }
         m_sharedData.hosting = false;
     }
+
+#ifdef CRO_DEBUG_
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Debug"))
+            {
+                auto camPos = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
+                ImGui::Text("Came Pos %3.3f, %3.3f, %3.3f", camPos.x, camPos.y, camPos.z);
+            }
+            ImGui::End();
+        
+        });
+#endif
 }
 
 //public
@@ -228,6 +242,13 @@ bool GolfMenuState::simulate(float dt)
         }
     }
 
+    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_W))
+    {
+        auto& tx = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>();
+        auto dir = tx.getForwardVector();
+        tx.move(-dir * 2.f * dt);
+    }
+
     m_backgroundScene.simulate(dt);
     m_scene.simulate(dt);
     return true;
@@ -236,7 +257,10 @@ bool GolfMenuState::simulate(float dt)
 void GolfMenuState::render()
 {
     //draw any renderable systems
-    m_backgroundScene.render(cro::App::getWindow());
+    m_backgroundTexture.clear();
+    m_backgroundScene.render(m_backgroundTexture);
+    m_backgroundTexture.display();
+
     m_scene.render(cro::App::getWindow());
 }
 
@@ -266,6 +290,49 @@ void GolfMenuState::loadAssets()
 
 void GolfMenuState::createScene()
 {
+    cro::ModelDefinition md(m_resources);
+    md.loadFromFile("assets/golf/models/menu_pavilion.cmt");
+
+    auto entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    md.createModel(entity);
+
+    md.loadFromFile("assets/golf/models/menu_ground.cmt");
+    entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    md.createModel(entity);
+
+    md.loadFromFile("assets/golf/models/phone_box.cmt");
+    entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 8.2f, 0.f, 13.8f });
+    md.createModel(entity);
+
+    //update the 3D view
+    auto updateView = [&](cro::Camera& cam)
+    {
+        auto vpSize = calcVPSize();
+        m_backgroundTexture.create(static_cast<std::uint32_t>(vpSize.x), static_cast<std::uint32_t>(vpSize.y));
+
+        //the resize actually extends the target vertically so we need to maintain a
+        //horizontal FOV, not the vertical one expected by default.
+        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+
+    auto camEnt = m_backgroundScene.getActiveCamera();
+    auto& cam = camEnt.getComponent<cro::Camera>();
+    cam.resizeCallback = updateView;
+    updateView(cam);
+
+    camEnt.getComponent<cro::Transform>().setPosition({ -22.f, 4.9f, 22.2f });
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -34.f * cro::Util::Const::degToRad);
+    //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -0.84f * cro::Util::Const::degToRad);
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
+
+    auto sunEnt = m_backgroundScene.getSunlight();
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -0.967f);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -48.f * cro::Util::Const::degToRad);
+
     createUI();
 }
 

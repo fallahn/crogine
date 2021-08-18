@@ -477,9 +477,9 @@ void GolfState::render()
     cam.viewport = oldVP;
 
     //then render scene
-    m_renderTexture.clear();
-    m_gameScene.render(m_renderTexture);
-    m_renderTexture.display();
+    m_gameSceneTexture.clear();
+    m_gameScene.render(m_gameSceneTexture);
+    m_gameSceneTexture.display();
 
     m_uiScene.render(cro::App::getWindow());
 }
@@ -487,10 +487,6 @@ void GolfState::render()
 //private
 void GolfState::loadAssets()
 {
-    //render buffer
-    auto vpSize = calcVPSize();
-    m_renderTexture.create(static_cast<std::uint32_t>(vpSize.x) , static_cast<std::uint32_t>(vpSize.y));
-
     //model definitions
     for (auto& md : m_modelDefs)
     {
@@ -942,8 +938,11 @@ void GolfState::buildScene()
     auto updateView = [&](cro::Camera& cam)
     {
         auto vpSize = calcVPSize();
+        m_gameSceneTexture.create(static_cast<std::uint32_t>(vpSize.x), static_cast<std::uint32_t>(vpSize.y));
 
-        cam.setPerspective(FOV, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        //the resize actually extends the target vertically so we need to maintain a
+        //horizontal FOV, not the vertical one expected by default.
+        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -1528,7 +1527,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             e.getComponent<cro::Callback>().active = true;
 
             const auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-            auto pos = camera.coordsToPixel(player.position, m_renderTexture.getSize());
+            auto pos = camera.coordsToPixel(player.position, m_gameSceneTexture.getSize());
             e.getComponent<cro::Transform>().setPosition(pos);
         }
     };

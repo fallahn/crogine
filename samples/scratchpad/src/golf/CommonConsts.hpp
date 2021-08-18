@@ -37,6 +37,9 @@ source distribution.
 #include <array>
 #include <string>
 
+static constexpr float ViewportHeight = 360.f;
+static constexpr float ViewportHeightWide = 300.f;
+
 static inline glm::vec2 calcVPSize()
 {
     glm::vec2 size(cro::App::getWindow().getSize());
@@ -44,7 +47,7 @@ static inline glm::vec2 calcVPSize()
     static constexpr float Widescreen = 16.f / 9.f;
     static constexpr float ViewportWidth = 640.f;
 
-    return { ViewportWidth, ratio < Widescreen ? 300.f : 360.f };
+    return { ViewportWidth, ratio < Widescreen ? ViewportHeightWide : ViewportHeight };
 }
 
 namespace ConstVal
@@ -66,7 +69,7 @@ namespace ConstVal
     //fixed for this anyway)
     static constexpr float FixedGameUpdate = 1.f / 60.f;
 
-    //root dir for course files preprended to directory
+    //root dir for course files prepended to directory
     //received from the hosting client
     static const std::string MapPath("assets/golf/courses/");
 }

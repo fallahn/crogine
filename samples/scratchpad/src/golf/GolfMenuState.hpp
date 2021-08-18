@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Font.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 
 #include <array>
 
@@ -81,6 +82,11 @@ private:
     cro::Scene m_scene;
     cro::Scene m_backgroundScene;
     cro::ResourceCollection m_resources;
+
+
+    cro::RenderTexture m_backgroundTexture;
+
+
 
     cro::Font m_font;
     std::array<bool, ConstVal::MaxClients> m_readyState = {};

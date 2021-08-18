@@ -76,7 +76,7 @@ private:
     cro::Clock m_readyClock; //pings ready state until ack'd
 
     cro::ResourceCollection m_resources;
-    cro::RenderTexture m_renderTexture;
+    cro::RenderTexture m_gameSceneTexture;
 
     cro::Image m_currentMap;
     std::vector<HoleData> m_holeData;

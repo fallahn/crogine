@@ -103,11 +103,14 @@ void GolfMenuState::createUI()
         });
 
     auto entity = m_scene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -10.f });
-    //entity.addComponent<cro::Sprite>(m_textureResource.get("assets/golf/images/menu_background.png"));
-    //entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_backgroundTexture.getTexture());
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    auto courseEnt = entity;
 
-    //entity = m_scene.createEntity();
+    entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::RootNode;
     auto rootNode = entity;
@@ -121,7 +124,7 @@ void GolfMenuState::createUI()
 
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
-    auto updateView = [&, rootNode](cro::Camera& cam) mutable
+    auto updateView = [&, rootNode, courseEnt](cro::Camera& cam) mutable
     {
         glm::vec2 size(cro::App::getWindow().getSize());
 
@@ -134,6 +137,10 @@ void GolfMenuState::createUI()
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(m_menuPositions[m_currentMenu] * m_viewScale);
 
+        courseEnt.getComponent<cro::Transform>().setScale(m_viewScale);
+        courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -1.f));
+        courseEnt.getComponent<cro::Transform>().setOrigin(vpSize / 2.f);
+        courseEnt.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, vpSize.x, vpSize.y });
 
         //updates any text objects / buttons with a relative position
         cro::Command cmd;
