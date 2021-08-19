@@ -10,6 +10,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/InterpolationComponent.cpp
   ${PROJECT_DIR}/golf/InterpolationSystem.cpp
   ${PROJECT_DIR}/golf/MenuCreation.cpp
+  ${PROJECT_DIR}/golf/OptionsState.cpp
   ${PROJECT_DIR}/golf/PlayerAvatar.cpp
   ${PROJECT_DIR}/golf/SharedStateData.cpp
   ${PROJECT_DIR}/golf/TerrainBuilder.cpp

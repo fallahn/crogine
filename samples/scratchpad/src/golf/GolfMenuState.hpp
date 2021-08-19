@@ -52,7 +52,6 @@ namespace GroupID
         Avatar,
         Join,
         Lobby,
-        Options,
         PlayerConfig
     };
 }
@@ -80,7 +79,7 @@ private:
 
     SharedStateData& m_sharedData;
 
-    cro::Scene m_scene;
+    cro::Scene m_uiScene;
     cro::Scene m_backgroundScene;
     cro::ResourceCollection m_resources;
 
@@ -135,7 +134,6 @@ private:
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
-    void createOptionsMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createPlayerConfigMenu(std::uint32_t, std::uint32_t);
 
     void handleTextEdit(const cro::Event&);

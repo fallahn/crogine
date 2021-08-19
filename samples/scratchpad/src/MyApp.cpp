@@ -34,6 +34,7 @@ source distribution.
 #include "golf/GolfMenuState.hpp"
 #include "golf/GolfState.hpp"
 #include "golf/ErrorState.hpp"
+#include "golf/OptionsState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -54,6 +55,7 @@ MyApp::MyApp()
     m_stateStack.registerState<GolfMenuState>(States::Golf::Menu, m_sharedGolfData);
     m_stateStack.registerState<GolfState>(States::Golf::Game, m_sharedGolfData);
     m_stateStack.registerState<ErrorState>(States::Golf::Error, m_sharedGolfData);
+    m_stateStack.registerState<OptionsState>(States::Golf::Options, m_sharedGolfData);
 }
 
 //public

@@ -156,6 +156,9 @@
     <ClCompile Include="src\golf\GolfCartSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\OptionsState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -325,6 +328,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\GolfCartSystem.hpp">
       <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\OptionsState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

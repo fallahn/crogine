@@ -75,7 +75,7 @@ namespace
 GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
-    m_scene             (context.appInstance.getMessageBus()),
+    m_uiScene           (context.appInstance.getMessageBus()),
     m_backgroundScene   (context.appInstance.getMessageBus()),
     m_playerAvatar      ("assets/golf/images/player.png"),
     m_currentMenu       (MenuID::Main),
@@ -111,10 +111,10 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
         cmd.action = [&](cro::Entity e, float)
         {
             e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby] * m_viewScale);
-            m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
+            m_uiScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
             m_currentMenu = MenuID::Lobby;
         };
-        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
         cro::String buttonString;
         cro::String connectionString;
@@ -141,14 +141,14 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
         {
             e.getComponent<cro::Text>().setString(buttonString);
         };
-        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
         cmd.targetFlags = CommandID::Menu::ServerInfo;
         cmd.action = [connectionString](cro::Entity e, float)
         {
             e.getComponent<cro::Text>().setString(connectionString);
         };
-        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     }
     else
     {
@@ -226,16 +226,16 @@ bool GolfMenuState::handleEvent(const cro::Event& evt)
         handleTextEdit(evt);
     }
 
-    m_scene.getSystem<cro::UISystem>().handleEvent(evt);
+    m_uiScene.getSystem<cro::UISystem>().handleEvent(evt);
 
-    m_scene.forwardEvent(evt);
+    m_uiScene.forwardEvent(evt);
     return true;
 }
 
 void GolfMenuState::handleMessage(const cro::Message& msg)
 {
     m_backgroundScene.forwardMessage(msg);
-    m_scene.forwardMessage(msg);
+    m_uiScene.forwardMessage(msg);
 }
 
 bool GolfMenuState::simulate(float dt)
@@ -251,7 +251,7 @@ bool GolfMenuState::simulate(float dt)
     }
 
     m_backgroundScene.simulate(dt);
-    m_scene.simulate(dt);
+    m_uiScene.simulate(dt);
     return true;
 }
 
@@ -262,7 +262,7 @@ m_backgroundTexture.clear();
 m_backgroundScene.render(m_backgroundTexture);
 m_backgroundTexture.display();
 
-m_scene.render(cro::App::getWindow());
+m_uiScene.render(cro::App::getWindow());
 }
 
 //private
@@ -276,13 +276,13 @@ void GolfMenuState::addSystems()
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
 
-    m_scene.addSystem<cro::CommandSystem>(mb);
-    m_scene.addSystem<cro::CallbackSystem>(mb);
-    m_scene.addSystem<cro::UISystem>(mb);
-    m_scene.addSystem<cro::CameraSystem>(mb);
-    m_scene.addSystem<cro::SpriteSystem2D>(mb);
-    m_scene.addSystem<cro::TextSystem>(mb);
-    m_scene.addSystem<cro::RenderSystem2D>(mb);
+    m_uiScene.addSystem<cro::CommandSystem>(mb);
+    m_uiScene.addSystem<cro::CallbackSystem>(mb);
+    m_uiScene.addSystem<cro::UISystem>(mb);
+    m_uiScene.addSystem<cro::CameraSystem>(mb);
+    m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
+    m_uiScene.addSystem<cro::TextSystem>(mb);
+    m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 }
 
 void GolfMenuState::loadAssets()
@@ -495,10 +495,10 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
                 cmd.action = [&](cro::Entity e, float)
                 {
                     e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby] * m_viewScale);
-                    m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
+                    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
                     m_currentMenu = MenuID::Lobby;
                 };
-                m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
                 if (m_sharedData.serverInstance.running())
                 {

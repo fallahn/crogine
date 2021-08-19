@@ -1,0 +1,58 @@
+spritesheet options
+{
+    src="assets/golf/images/options.png"
+
+    sprite tab_bar
+    {
+        bounds = 0,369,200,17
+    }
+
+    sprite background
+    {
+        bounds=0,216,200,150
+    }
+
+    sprite audio_video
+    {
+        bounds=0,108,192,108
+    }
+
+
+    sprite slider
+    {
+        bounds = 192,207,11,9
+    }
+
+    sprite handle
+    {
+        bounds = 200,326,3,24
+    }
+
+    sprite green_light
+    {
+        bounds = 200,318,3,5
+
+        animation idle
+        {
+            frame = 200,313,3,5
+            frame = 200,305,3,5
+
+            loop=true
+            framerate = 1
+        }
+    }
+
+    sprite red_light
+    {
+        bounds = 200,302,3,5
+
+        animation idle
+        {
+            frame = 200,297,3,5
+            frame = 200,289,3,5
+
+            loop=true
+            framerate = 3
+        }
+    }
+}
