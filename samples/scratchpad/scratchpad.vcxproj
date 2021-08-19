@@ -232,6 +232,7 @@
     <ClCompile Include="src\golf\BallSystem.cpp" />
     <ClCompile Include="src\golf\ClientCollisionSystem.cpp" />
     <ClCompile Include="src\golf\ErrorState.cpp" />
+    <ClCompile Include="src\golf\GolfCartSystem.cpp" />
     <ClCompile Include="src\golf\GolfState.cpp" />
     <ClCompile Include="src\golf\GolfInputParser.cpp" />
     <ClCompile Include="src\golf\GolfStateUI.cpp" />
@@ -276,6 +277,7 @@
     <ClInclude Include="src\golf\CommonConsts.hpp" />
     <ClInclude Include="src\golf\ErrorState.hpp" />
     <ClInclude Include="src\golf\GameConsts.hpp" />
+    <ClInclude Include="src\golf\GolfCartSystem.hpp" />
     <ClInclude Include="src\golf\GolfState.hpp" />
     <ClInclude Include="src\golf\HoleData.hpp" />
     <ClInclude Include="src\golf\InputBinding.hpp" />

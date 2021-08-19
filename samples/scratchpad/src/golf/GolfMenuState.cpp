@@ -35,6 +35,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "GameConsts.hpp"
 #include "PoissonDisk.hpp"
+#include "GolfCartSystem.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -269,6 +270,7 @@ void GolfMenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
+    m_backgroundScene.addSystem<GolfCartSystem>(mb);
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
@@ -354,8 +356,8 @@ void GolfMenuState::createScene()
 
     if (entity.hasComponent<cro::BillboardCollection>())
     {
-        std::array minBounds = { 20.f, 0.f };
-        std::array maxBounds = { 40.f, 20.f };
+        std::array minBounds = { 30.f, 0.f };
+        std::array maxBounds = { 70.f, 40.f };
 
         auto& collection = entity.getComponent<cro::BillboardCollection>();
 
@@ -371,8 +373,8 @@ void GolfMenuState::createScene()
         }
 
         //repeat for grass
-        minBounds = { -40.f, 10.f };
-        maxBounds = { 40.f, 20.f };
+        minBounds = { 11.f, 30.f };
+        maxBounds = { 28.f, 40.f };
 
         auto grass = pd::PoissonDiskSampling(2.4f, minBounds, maxBounds);
         for (auto [x, y] : grass)
@@ -380,7 +382,7 @@ void GolfMenuState::createScene()
             float scale = static_cast<float>(cro::Util::Random::value(8, 11)) / 10.f;
 
             auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)];
-            bb.position = { x, 0.f, y };
+            bb.position = { -x, 0.f, y };
             bb.size *= scale;
             collection.addBillboard(bb);
         }
@@ -389,13 +391,24 @@ void GolfMenuState::createScene()
     //golf carts
     md.loadFromFile("assets/golf/models/cart.cmt");
     entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.2f, 0.01f, 1.8f });
+    entity.addComponent<cro::Transform>().setPosition({ 5.f, 0.01f, 1.8f });
     entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 87.f * cro::Util::Const::degToRad);
     md.createModel(entity);
 
     texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
     setTexture(md, texturedMat);
     entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+
+    //these ones move :)
+    for (auto i = 0u; i < 2u; ++i)
+    {
+        entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<GolfCart>();
+        md.createModel(entity);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+    }
+
 
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
