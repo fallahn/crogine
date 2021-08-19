@@ -39,7 +39,7 @@ source distribution.
 
 static constexpr float CameraStrokeHeight = 3.2f;// 2.6f;
 static constexpr float CameraPuttHeight = 0.3f;
-static constexpr float CameraStrokeOffset = 7.f;// 5.1f;
+static constexpr float CameraStrokeOffset = 7.5f;// 5.1f;
 static constexpr float CameraPuttOffset = 0.8f;
 static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
 
@@ -147,7 +147,7 @@ static inline void loadNormalMap(std::vector<glm::vec3>& dst, const std::string&
     }
 }
 
-//TODO use this for interpolating slop height on a height map
+//TODO use this for interpolating slope height on a height map
 static inline float readHeightmap(glm::vec3 position, const std::vector<float>& heightmap)
 {
     const auto lerp = [](float a, float b, float t) constexpr

@@ -1382,6 +1382,17 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
+    //update the UI
+    cmd.targetFlags = CommandID::UI::HoleNumber;
+    cmd.action =
+        [&](cro::Entity e, float)
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
+        data.string = "Hole: " + std::to_string(m_currentHole + 1);
+        e.getComponent<cro::Callback>().active = true;
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
     m_terrainBuilder.setSlopePosition(m_holeData[m_currentHole].pin);
 }
 
@@ -1472,15 +1483,15 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
 
-    cmd.targetFlags = CommandID::UI::HoleNumber;
-    cmd.action =
-        [&](cro::Entity e, float)
-    {
-        auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
-        data.string = "Hole: " + std::to_string(m_currentHole + 1);
-        e.getComponent<cro::Callback>().active = true;
-    };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    //cmd.targetFlags = CommandID::UI::HoleNumber;
+    //cmd.action =
+    //    [&](cro::Entity e, float)
+    //{
+    //    auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
+    //    data.string = "Hole: " + std::to_string(m_currentHole + 1);
+    //    e.getComponent<cro::Callback>().active = true;
+    //};
+    //m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
 
     //show ui if this is our client

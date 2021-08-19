@@ -373,16 +373,16 @@ void GolfMenuState::createScene()
         }
 
         //repeat for grass
-        minBounds = { 11.f, 30.f };
-        maxBounds = { 28.f, 40.f };
+        minBounds = { 10.5f, 12.f };
+        maxBounds = { 26.f, 30.f };
 
-        auto grass = pd::PoissonDiskSampling(2.4f, minBounds, maxBounds);
+        auto grass = pd::PoissonDiskSampling(1.f, minBounds, maxBounds);
         for (auto [x, y] : grass)
         {
             float scale = static_cast<float>(cro::Util::Random::value(8, 11)) / 10.f;
 
             auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)];
-            bb.position = { -x, 0.f, y };
+            bb.position = { -x, 0.1f, y };
             bb.size *= scale;
             collection.addBillboard(bb);
         }

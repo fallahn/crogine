@@ -987,18 +987,19 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     {
         std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
         score -= m_holeData[m_currentHole].par;
+        auto overPar = score;
         score += ScoreID::ScoreOffset;
 
         if (score < ScoreID::Count)
         {
             textEnt.getComponent<cro::Text>().setString(ScoreStrings[score]);
+            textEnt.getComponent<cro::Transform>().move({ 0.f, -10.f, 0.f });
         }
         else
         {
             textEnt.getComponent<cro::Text>().setString("Bad Luck!");
+            textEnt2.getComponent<cro::Text>().setString(std::to_string(overPar) + " Over Par");
         }
-        textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        textEnt.getComponent<cro::Transform>().move({ 0.f, -10.f, 0.f });
     }
         break;
     case MessageBoardID::Bunker:
@@ -1010,7 +1011,8 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
         break;
     case MessageBoardID::Scrub:
     case MessageBoardID::Water:
-        textEnt.getComponent<cro::Text>().setString("Penalty!");
+        textEnt.getComponent<cro::Text>().setString("Foul!");
+        textEnt2.getComponent<cro::Text>().setString("1 Stroke Penalty");
         break;
     }
     
