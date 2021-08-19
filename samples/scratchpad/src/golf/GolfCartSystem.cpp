@@ -94,6 +94,9 @@ void GolfCartSystem::process(float dt)
                     m_nextFreePath = (m_nextFreePath + 1) % Paths.size();
 
                     tx.setPosition(Paths[cart.pathIndex][cart.pointIndex]);
+
+                    auto newDir = Paths[cart.pathIndex][1] - Paths[cart.pathIndex][0];
+                    tx.setRotation(cro::Transform::Y_AXIS, std::atan2(-newDir.z, newDir.x));
                 }
             }
             else
@@ -148,4 +151,7 @@ void GolfCartSystem::onEntityAdded(cro::Entity entity)
     entity.getComponent<GolfCart>().pathIndex = pathIndex;
     entity.getComponent<GolfCart>().currentTime = cro::Util::Random::value(1.f, 2.5f);
     entity.getComponent<cro::Transform>().setPosition(Paths[pathIndex][0]);
+
+    auto dir = Paths[pathIndex][1] - Paths[pathIndex][0];
+    entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, std::atan2(-dir.z, dir.x));
 }

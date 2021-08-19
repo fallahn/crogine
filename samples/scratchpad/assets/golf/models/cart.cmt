@@ -9,7 +9,7 @@ model cart
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        vertex_coloured = true
+        vertex_coloured = false
         blendmode = "none"
         diffuse = "assets/golf/images/cart.png"
 
