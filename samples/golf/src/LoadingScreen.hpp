@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,17 +29,37 @@ source distribution.
 
 #pragma once
 
-namespace States
-{
-    struct ScratchPad final
-    {
-        enum
-        {
-            MainMenu,
-            BatCat,
-            BSP,
+#include <crogine/graphics/LoadingScreen.hpp>
+#include <crogine/detail/Types.hpp>
+#include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/Texture.hpp>
+#include <crogine/core/Clock.hpp>
 
-            Count
-        };
-    };
-}
+#include <crogine/detail/glm/mat4x4.hpp>
+
+#include <vector>
+
+class LoadingScreen final : public cro::LoadingScreen
+{
+public:
+    LoadingScreen();
+    ~LoadingScreen();
+
+    void update() override;
+    void draw() override;
+
+private:
+    std::uint32_t m_vbo;
+    std::uint32_t m_transformIndex;
+
+    cro::Shader m_shader;
+    glm::mat4 m_transform;
+    glm::mat4 m_projectionMatrix;
+    glm::uvec2 m_viewport;
+
+    cro::Clock m_clock;
+    std::vector<float> m_wavetable;
+    std::size_t m_wavetableIndex;
+
+    cro::Texture m_texture;
+};

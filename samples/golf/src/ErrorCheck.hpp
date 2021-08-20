@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,17 +29,25 @@ source distribution.
 
 #pragma once
 
-namespace States
-{
-    struct ScratchPad final
-    {
-        enum
-        {
-            MainMenu,
-            BatCat,
-            BSP,
+#include <crogine/detail/OpenGL.hpp>
+#include <crogine/core/Log.hpp>
 
-            Count
-        };
-    };
+#include <sstream>
+
+#ifdef CRO_DEBUG_
+#define glCheck(x) do{x; glErrorCheck(__FILE__, __LINE__, #x);}while (false)
+#else
+#define glCheck(x) (x)
+#endif //_DEBUG_
+
+static inline void glErrorCheck(const char* file, unsigned int line, const char* expression)
+{
+    GLenum err = glGetError();
+    while(err != GL_NO_ERROR)
+    {
+        std::stringstream ss;
+        ss << file << ", " << line << ": " << expression << ". " << " glError: " << err << std::endl;
+        cro::Logger::log(ss.str(), cro::Logger::Type::Error);
+        err = glGetError();
+    }
 }

@@ -29,8 +29,6 @@ source distribution.
 
 #pragma once
 
-#include "golf/SharedStateData.hpp"
-
 #include <crogine/core/App.hpp>
 #include <crogine/core/StateStack.hpp>
 
@@ -40,8 +38,7 @@ public:
     MyApp();
 
 private:
-    
-    SharedStateData m_sharedGolfData;
+
     cro::StateStack m_stateStack;
 
     void handleEvent(const cro::Event&) override;

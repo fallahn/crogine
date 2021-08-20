@@ -28,7 +28,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
-    <ProjectGuid>{64579103-DEC3-41E4-971F-9C0DF996BE8B}</ProjectGuid>
+    <ProjectGuid>{B1559428-CDF8-4797-8766-0EA62BDD6D1B}</ProjectGuid>
     <RootNamespace>template</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -221,41 +221,74 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\batcat\BatcatState.cpp" />
-    <ClCompile Include="src\batcat\PlayerDirector.cpp" />
-    <ClCompile Include="src\batcat\TerrainSystem.cpp" />
-    <ClCompile Include="src\bsp\BspState.cpp" />
-    <ClCompile Include="src\bsp\FpsCameraSystem.cpp" />
-    <ClCompile Include="src\bsp\InputParser.cpp" />
-    <ClCompile Include="src\bsp\Patch.cpp" />
-    <ClCompile Include="src\bsp\Q3BspSystem.cpp" />
+    <ClCompile Include="src\golf\BallSystem.cpp" />
+    <ClCompile Include="src\golf\ClientCollisionSystem.cpp" />
+    <ClCompile Include="src\golf\ErrorState.cpp" />
+    <ClCompile Include="src\golf\GolfCartSystem.cpp" />
+    <ClCompile Include="src\golf\GolfState.cpp" />
+    <ClCompile Include="src\golf\GolfInputParser.cpp" />
+    <ClCompile Include="src\golf\GolfStateUI.cpp" />
+    <ClCompile Include="src\golf\InterpolationComponent.cpp" />
+    <ClCompile Include="src\golf\InterpolationSystem.cpp" />
+    <ClCompile Include="src\golf\MenuCreation.cpp" />
+    <ClCompile Include="src\golf\GolfMenuState.cpp" />
+    <ClCompile Include="src\golf\OptionsState.cpp" />
+    <ClCompile Include="src\golf\PlayerAvatar.cpp" />
+    <ClCompile Include="src\golf\server\Server.cpp" />
+    <ClCompile Include="src\golf\server\ServerGameState.cpp" />
+    <ClCompile Include="src\golf\server\ServerLobbyState.cpp" />
+    <ClCompile Include="src\golf\SharedStateData.cpp" />
+    <ClCompile Include="src\golf\TerrainBuilder.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\batcat\BatcatState.hpp" />
-    <ClInclude Include="src\batcat\icon.hpp" />
-    <ClInclude Include="src\batcat\LoadingScreen.hpp" />
-    <ClInclude Include="src\batcat\Messages.hpp" />
-    <ClInclude Include="src\batcat\PlayerDirector.hpp" />
-    <ClInclude Include="src\batcat\ResourceIDs.hpp" />
-    <ClInclude Include="src\batcat\TerrainChunk.hpp" />
-    <ClInclude Include="src\batcat\TerrainSystem.hpp" />
-    <ClInclude Include="src\bsp\BspState.hpp" />
-    <ClInclude Include="src\bsp\FpsCameraSystem.hpp" />
-    <ClInclude Include="src\bsp\InputParser.hpp" />
-    <ClInclude Include="src\bsp\Patch.hpp" />
-    <ClInclude Include="src\bsp\Q3Bsp.hpp" />
-    <ClInclude Include="src\bsp\Q3BspSystem.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
+    <ClInclude Include="src\golf\BallSystem.hpp" />
+    <ClInclude Include="src\golf\Billboard.hpp" />
+    <ClInclude Include="src\golf\CircularBuffer.hpp" />
+    <ClInclude Include="src\golf\ClientCollisionSystem.hpp" />
+    <ClInclude Include="src\golf\ClientPacketData.hpp" />
+    <ClInclude Include="src\golf\Clubs.hpp" />
+    <ClInclude Include="src\golf\CommandIDs.hpp" />
+    <ClInclude Include="src\golf\CommonConsts.hpp" />
+    <ClInclude Include="src\golf\ErrorState.hpp" />
+    <ClInclude Include="src\golf\GameConsts.hpp" />
+    <ClInclude Include="src\golf\GolfCartSystem.hpp" />
+    <ClInclude Include="src\golf\GolfState.hpp" />
+    <ClInclude Include="src\golf\HoleData.hpp" />
+    <ClInclude Include="src\golf\InputBinding.hpp" />
+    <ClInclude Include="src\golf\GolfInputParser.hpp" />
+    <ClInclude Include="src\golf\InterpolationSystem.hpp" />
+    <ClInclude Include="src\golf\MenuConsts.hpp" />
+    <ClInclude Include="src\golf\GolfMenuState.hpp" />
+    <ClInclude Include="src\golf\MessageIDs.hpp" />
+    <ClInclude Include="src\golf\OptionsState.hpp" />
+    <ClInclude Include="src\golf\PacketIDs.hpp" />
+    <ClInclude Include="src\golf\PlayerAvatar.hpp" />
+    <ClInclude Include="src\golf\PlayerColours.hpp" />
+    <ClInclude Include="src\golf\PoissonDisk.hpp" />
+    <ClInclude Include="src\golf\ScoreStrings.hpp" />
+    <ClInclude Include="src\golf\server\Server.hpp" />
+    <ClInclude Include="src\golf\server\ServerGameState.hpp" />
+    <ClInclude Include="src\golf\server\ServerLobbyState.hpp" />
+    <ClInclude Include="src\golf\server\ServerMessages.hpp" />
+    <ClInclude Include="src\golf\server\ServerPacketData.hpp" />
+    <ClInclude Include="src\golf\server\ServerState.hpp" />
+    <ClInclude Include="src\golf\SharedStateData.hpp" />
+    <ClInclude Include="src\golf\Terrain.hpp" />
+    <ClInclude Include="src\golf\TerrainBuilder.hpp" />
+    <ClInclude Include="src\golf\TextAnimCallback.hpp" />
+    <ClInclude Include="src\golf\Utility.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
-    <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
-    <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\golf\TerrainShader.inl" />
+    <None Include="src\golf\WaterShader.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

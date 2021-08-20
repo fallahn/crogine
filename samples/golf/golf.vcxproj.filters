@@ -1,0 +1,257 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\golf">
+      <UniqueIdentifier>{223ba715-5ad5-4690-90c9-039a16979013}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf">
+      <UniqueIdentifier>{2dc529c6-e396-45e2-b984-720bea400709}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\golf\server">
+      <UniqueIdentifier>{fa470af2-0f42-461f-a1a1-e611d162355a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\server">
+      <UniqueIdentifier>{08716eb7-be0f-4e65-8a07-0717962e4559}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\golf\client">
+      <UniqueIdentifier>{0334852e-a3d7-40a5-9327-9012d15bd76b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\golf\client\states">
+      <UniqueIdentifier>{d60308a8-5f22-45eb-841c-0232f1ed22a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\client">
+      <UniqueIdentifier>{09a8a285-f5aa-486f-8110-65ed9d2f9651}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\client\states">
+      <UniqueIdentifier>{5960c170-5e2f-420b-8929-4b38ad1f396c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\golf\shared">
+      <UniqueIdentifier>{1bdc2a82-9c53-46f8-80ac-d48be17ca5c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\golf\server\systems">
+      <UniqueIdentifier>{82fd6024-66a7-4c81-89bf-e99c87bda655}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\server\systems">
+      <UniqueIdentifier>{02db95df-396a-4102-bd9c-cd85745f5ac2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\golf\client\systems">
+      <UniqueIdentifier>{acdac83e-c873-4123-9186-41c89e6f6294}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\client\systems">
+      <UniqueIdentifier>{f887ea67-27ad-4323-ab5c-67764d76bc6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\golf\client\shaders">
+      <UniqueIdentifier>{f1004cbe-0ee0-4d66-8188-73de37f48b53}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\LoadingScreen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MyApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\server\Server.cpp">
+      <Filter>Source Files\golf\server</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\server\ServerGameState.cpp">
+      <Filter>Source Files\golf\server</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\server\ServerLobbyState.cpp">
+      <Filter>Source Files\golf\server</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\MenuCreation.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\GolfMenuState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\GolfState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ErrorState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\SharedStateData.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\BallSystem.cpp">
+      <Filter>Source Files\golf\server\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\InterpolationComponent.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\InterpolationSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\GolfInputParser.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\GolfStateUI.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\TerrainBuilder.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\PlayerAvatar.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ClientCollisionSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\GolfCartSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\OptionsState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ErrorCheck.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LoadingScreen.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Messages.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MyApp.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\StateIDs.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\Server.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\ServerGameState.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\ServerLobbyState.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\ServerMessages.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\ServerPacketData.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\ServerState.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CommonConsts.hpp">
+      <Filter>Header Files\golf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ClientPacketData.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\GolfMenuState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\SharedStateData.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\GolfState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CommandIDs.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\GameConsts.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ErrorState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\Utility.hpp">
+      <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\HoleData.hpp">
+      <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BallSystem.hpp">
+      <Filter>Header Files\golf\server\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\InterpolationSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CircularBuffer.hpp">
+      <Filter>Header Files\golf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PlayerColours.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\GolfInputParser.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\InputBinding.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\MessageIDs.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\Clubs.hpp">
+      <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\Terrain.hpp">
+      <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\TerrainBuilder.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PacketIDs.hpp">
+      <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PoissonDisk.hpp">
+      <Filter>Header Files\golf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\MenuConsts.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\TextAnimCallback.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PlayerAvatar.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ClientCollisionSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ScoreStrings.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\Billboard.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\GolfCartSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\OptionsState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\golf\WaterShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\TerrainShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+  </ItemGroup>
+</Project>

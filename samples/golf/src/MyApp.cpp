@@ -28,9 +28,10 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MyApp.hpp"
-#include "MenuState.hpp"
-#include "batcat/BatcatState.hpp"
-#include "bsp/BspState.hpp"
+#include "golf/GolfMenuState.hpp"
+#include "golf/GolfState.hpp"
+#include "golf/ErrorState.hpp"
+#include "golf/OptionsState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -43,9 +44,10 @@ namespace
 MyApp::MyApp()
     : m_stateStack({*this, getWindow()})
 {
-    m_stateStack.registerState<sp::MenuState>(States::ScratchPad::MainMenu);
-    m_stateStack.registerState<BatcatState>(States::ScratchPad::BatCat);
-    m_stateStack.registerState<BspState>(States::ScratchPad::BSP);
+    m_stateStack.registerState<GolfMenuState>(States::Golf::Menu, m_sharedGolfData);
+    m_stateStack.registerState<GolfState>(States::Golf::Game, m_sharedGolfData);
+    m_stateStack.registerState<ErrorState>(States::Golf::Error, m_sharedGolfData);
+    m_stateStack.registerState<OptionsState>(States::Golf::Options, m_sharedGolfData);
 }
 
 //public
@@ -86,12 +88,16 @@ void MyApp::render()
 bool MyApp::initialise()
 {
     getWindow().setLoadingScreen<LoadingScreen>();
-    getWindow().setTitle("Scratchpad Browser");
+    getWindow().setTitle("Golf!");
+
+    setApplicationStrings("trederia", "golf");
+
+    m_sharedGolfData.clientConnection.netClient.create(4);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::MainMenu);
+    m_stateStack.pushState(States::Golf::Menu);
 #else
-    m_stateStack.pushState(States::ScratchPad::MainMenu);
+    m_stateStack.pushState(States::Golf::Menu);
 #endif
 
     return true;
@@ -99,6 +105,14 @@ bool MyApp::initialise()
 
 void MyApp::finalise()
 {
+    for (auto& c : m_sharedGolfData.avatarTextures)
+    {
+        for (auto& t : c)
+        {
+            t = {};
+        }
+    }
+
     m_stateStack.clearStates();
     m_stateStack.simulate(0.f);
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,17 +29,25 @@ source distribution.
 
 #pragma once
 
-namespace States
-{
-    struct ScratchPad final
-    {
-        enum
-        {
-            MainMenu,
-            BatCat,
-            BSP,
+#include "golf/SharedStateData.hpp"
 
-            Count
-        };
-    };
-}
+#include <crogine/core/App.hpp>
+#include <crogine/core/StateStack.hpp>
+
+class MyApp final : public cro::App
+{
+public:
+    MyApp();
+
+private:
+    
+    SharedStateData m_sharedGolfData;
+    cro::StateStack m_stateStack;
+
+    void handleEvent(const cro::Event&) override;
+    void handleMessage(const cro::Message&) override;
+    void simulate(float) override;
+    void render() override;
+    bool initialise() override;
+    void finalise() override;
+};

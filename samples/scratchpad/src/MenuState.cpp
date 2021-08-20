@@ -208,28 +208,7 @@ void MenuState::createScene()
                     requestStackPush(States::ScratchPad::BSP);
                 }
             });
-    textPos.y -= 40.f;
 
-
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(textPos);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Golf");
-    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
-    entity.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
-    entity.getComponent<cro::Text>().setOutlineThickness(1.f);
-    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
-            {
-                if (activated(evt))
-                {
-                    requestStackClear();
-                    requestStackPush(States::Golf::Menu);
-                }
-            });
     textPos.y -= 80.f;
 
 

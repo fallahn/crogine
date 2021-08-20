@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -27,19 +27,14 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include <SDL.h>
 
-namespace States
+#include "MyApp.hpp"
+
+int main(int argc, char** argsv)
 {
-    struct ScratchPad final
-    {
-        enum
-        {
-            MainMenu,
-            BatCat,
-            BSP,
+    MyApp mapp;
+    mapp.run();
 
-            Count
-        };
-    };
+    return 0;
 }

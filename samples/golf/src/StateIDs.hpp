@@ -31,15 +31,14 @@ source distribution.
 
 namespace States
 {
-    struct ScratchPad final
+    struct Golf final
     {
         enum
         {
-            MainMenu,
-            BatCat,
-            BSP,
-
-            Count
+            Menu,
+            Game,
+            Options,
+            Error
         };
     };
 }

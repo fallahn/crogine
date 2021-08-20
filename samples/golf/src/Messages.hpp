@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,17 +29,32 @@ source distribution.
 
 #pragma once
 
-namespace States
-{
-    struct ScratchPad final
-    {
-        enum
-        {
-            MainMenu,
-            BatCat,
-            BSP,
+#include <crogine/core/Message.hpp>
 
-            Count
-        };
+#include <crogine/detail/glm/vec3.hpp>
+
+namespace MessageID
+{
+    enum
+    {
+        UIMessage = cro::Message::Count,
     };
 }
+
+
+struct UIEvent final
+{
+    enum
+    {
+        ButtonPressed,
+        ButtonReleased
+    }type;
+
+    enum Button
+    {
+        Left,
+        Right,
+        Jump,
+        Fire
+    }button;
+};
