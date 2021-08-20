@@ -50,7 +50,12 @@ public:
 
 private:
     std::uint32_t m_vbo;
-    std::uint32_t m_transformIndex;
+    std::int32_t m_projectionIndex;
+    std::int32_t m_transformIndex;
+    std::int32_t m_frameIndex;
+
+    std::int32_t m_currentFrame;
+    static constexpr std::int32_t FrameCount = 8;
 
     cro::Shader m_shader;
     glm::mat4 m_transform;
@@ -58,8 +63,6 @@ private:
     glm::uvec2 m_viewport;
 
     cro::Clock m_clock;
-    std::vector<float> m_wavetable;
-    std::size_t m_wavetableIndex;
 
     cro::Texture m_texture;
 };

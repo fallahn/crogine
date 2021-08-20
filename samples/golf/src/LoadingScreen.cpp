@@ -28,9 +28,11 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "LoadingScreen.hpp"
+#include "golf/CommonConsts.hpp"
 
-#include <crogine/detail/OpenGL.hpp>
 #include <crogine/core/App.hpp>
+#include <crogine/detail/OpenGL.hpp>
+#include <crogine/graphics/Image.hpp>
 #include <crogine/util/Wavetable.hpp>
 
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
@@ -63,41 +65,52 @@ namespace
 
     const std::string fragment = R"(
         uniform sampler2D u_texture;
+        uniform float u_frameNumber;
         
         VARYING_IN vec2 v_texCoord;
         OUTPUT
 
+        const float FrameHeight = 1.0/8.0;
+
         void main()
         {
-            FRAG_OUT = TEXTURE(u_texture, v_texCoord);
+            vec2 texCoord = v_texCoord;
+            texCoord.y *= FrameHeight;
+            texCoord.y += 1.0 - (u_frameNumber * FrameHeight);
+
+            FRAG_OUT = TEXTURE(u_texture, texCoord);
         }
     )";
 }
 
 LoadingScreen::LoadingScreen()
     : m_vbo             (0),
-    m_transformIndex    (0),
+    m_projectionIndex   (-1),
+    m_transformIndex    (-1),
+    m_frameIndex        (-1),
+    m_currentFrame      (0),
     m_transform         (1.f),
-    m_projectionMatrix  (1.f),
-    m_wavetableIndex    (0)
+    m_projectionMatrix  (1.f)
 {
     m_viewport = cro::App::getWindow().getSize();
-    m_projectionMatrix = glm::ortho(0.f, static_cast<float>(m_viewport.x), 0.f, static_cast<float>(m_viewport.y), -0.1f, 10.f);
 
-    m_wavetable = cro::Util::Wavetable::sine(2.f, 3.f);
-
-    //TODO if the texture fails we should load a version of the shader with defines which dont require a texture
-    m_texture.loadFromFile("assets/images/loading.png");
+    if (!m_texture.loadFromFile("assets/images/loading.png"))
+    {
+        cro::Image img;
+        img.create(12, 12, cro::Colour::Magenta);
+        m_texture.loadFromImage(img);
+    }
+    m_texture.setRepeated(true);
 
     if (m_shader.loadFromString(vertex, fragment))
     {
         const auto& uniforms = m_shader.getUniformMap();
         m_transformIndex = uniforms.find("u_worldMatrix")->second;
-        m_transform = glm::translate(glm::mat4(1.f), { 60.f, 60.f, 0.f });
-        m_transform = glm::scale(m_transform, { 128.f, 64.f, 1.f });
+        m_projectionIndex = uniforms.find("u_projectionMatrix")->second;
+        m_frameIndex = uniforms.find("u_frameNumber")->second;
 
         glCheck(glUseProgram(m_shader.getGLHandle()));
-        glCheck(glUniformMatrix4fv(uniforms.find("u_projectionMatrix")->second, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
+        /*glCheck(glUniformMatrix4fv(uniforms.find("u_projectionMatrix")->second, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));*/
         glCheck(glUniform1i(uniforms.find("u_texture")->second, 0));
         glCheck(glUseProgram(0));
 
@@ -135,10 +148,27 @@ void LoadingScreen::update()
     static float accumulator = 0.f;
     accumulator += m_clock.restart().asSeconds();
     
+    static std::int32_t frameCounter = 0;
+    static constexpr std::int32_t MaxFrames = 6;
+
     while (accumulator > timestep)
     {
-        m_transform = glm::translate(m_transform, { 0.f, m_wavetable[m_wavetableIndex] * timestep, 0.f });
-        m_wavetableIndex = (m_wavetableIndex + 1) % m_wavetable.size();
+        m_viewport = cro::App::getWindow().getSize();
+        glm::vec2 windowSize = glm::vec2(m_viewport);
+
+        m_projectionMatrix = glm::ortho(0.f, windowSize.x, 0.f, windowSize.y, -0.1f, 10.f);
+
+        auto vpSize = calcVPSize();
+
+        float texSize = static_cast<float>(m_texture.getSize().x) * std::floor(windowSize.y / vpSize.y);
+        m_transform = glm::translate(glm::mat4(1.f), { (windowSize.x - texSize) / 2.f, (windowSize.y - texSize) / 2.f, 0.f });
+        m_transform = glm::scale(m_transform, { texSize, texSize, 1.f });
+
+        frameCounter = (frameCounter + 1) % MaxFrames;
+        if (frameCounter == 0)
+        {
+            m_currentFrame = (m_currentFrame + 1) % FrameCount;
+        }
         
         accumulator -= timestep;
     }
@@ -154,7 +184,9 @@ void LoadingScreen::draw()
 
     glCheck(glViewport(0, 0, m_viewport.x, m_viewport.y));
     glCheck(glUseProgram(m_shader.getGLHandle()));
+    glCheck(glUniformMatrix4fv(m_projectionIndex, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
     glCheck(glUniformMatrix4fv(m_transformIndex, 1, GL_FALSE, glm::value_ptr(m_transform)));
+    glCheck(glUniform1f(m_frameIndex, static_cast<float>(m_currentFrame)));
 
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glBindTexture(GL_TEXTURE_2D, m_texture.getGLHandle()));

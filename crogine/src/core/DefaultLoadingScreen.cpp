@@ -72,6 +72,14 @@ DefaultLoadingScreen::DefaultLoadingScreen()
     m_transform         (1.f),
     m_projectionMatrix  (1.f)
 {
+    /*
+    TODO we have a problem here - to be core profile compatible this needs
+    to crete a VAO (which it currently doesnt), however VAOs can only be invoked
+    from the context in which they were created - in other words this needs to
+    be refactored so that loading screens are created when the loading thread
+    is launched, not before hand.
+    */
+
     m_viewport = App::getWindow().getSize();
     m_projectionMatrix = glm::ortho(0.f, static_cast<float>(m_viewport.x), 0.f, static_cast<float>(m_viewport.y), -0.1f, 10.f);
     
