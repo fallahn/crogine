@@ -54,6 +54,13 @@ namespace cro
         LoadingScreen& operator = (LoadingScreen&&) = delete;
 
         /*!
+        \brief This is require to create a valid VAO for the thread
+        context, and called when the thread is launched. It is up to the
+        user to make sure any VAO resources are released properly
+        */
+        virtual void launch() = 0;
+
+        /*!
         \brief updates the loading screen.
         This is called by the thread as often as possible, so it's
         up to concrete instances to provide any needed timing

@@ -67,19 +67,12 @@ namespace
 }
 
 DefaultLoadingScreen::DefaultLoadingScreen()
-    : m_vbo             (0),
+    : m_vao             (0),
+    m_vbo               (0),
     m_transformIndex    (0),
     m_transform         (1.f),
     m_projectionMatrix  (1.f)
 {
-    /*
-    TODO we have a problem here - to be core profile compatible this needs
-    to crete a VAO (which it currently doesnt), however VAOs can only be invoked
-    from the context in which they were created - in other words this needs to
-    be refactored so that loading screens are created when the loading thread
-    is launched, not before hand.
-    */
-
     m_viewport = App::getWindow().getSize();
     m_projectionMatrix = glm::ortho(0.f, static_cast<float>(m_viewport.x), 0.f, static_cast<float>(m_viewport.y), -0.1f, 10.f);
     
@@ -120,9 +113,34 @@ DefaultLoadingScreen::~DefaultLoadingScreen()
     {
         glCheck(glDeleteBuffers(1, &m_vbo));
     }
+
+    if (m_vao)
+    {
+        glCheck(glDeleteVertexArrays(1, &m_vao));
+    }
 }
 
 //public
+void DefaultLoadingScreen::launch()
+{
+    if (!m_vao)
+    {
+        CRO_ASSERT(m_vbo, "");
+
+        glCheck(glGenVertexArrays(1, &m_vao));
+
+        glCheck(glBindVertexArray(m_vao));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+
+        //pos
+        glCheck(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, vertexSize, (void*)0));
+        glCheck(glEnableVertexAttribArray(0));
+
+        glCheck(glBindVertexArray(0));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    }
+}
+
 void DefaultLoadingScreen::update()
 {
     m_transform = glm::rotate(m_transform, rotation * m_clock.restart().asSeconds(), { 0.f, 0.f, 1.f });
@@ -137,16 +155,8 @@ void DefaultLoadingScreen::draw()
     glCheck(glUseProgram(m_shader.getGLHandle()));
     glCheck(glUniformMatrix4fv(m_transformIndex, 1, GL_FALSE, glm::value_ptr(m_transform)));
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
-
-    const auto& attribs = m_shader.getAttribMap();
-    glCheck(glEnableVertexAttribArray(attribs[0]));
-    glCheck(glVertexAttribPointer(attribs[0], 2, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(vertexSize), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
-
+    glCheck(glBindVertexArray(m_vao));
     glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-
-    glCheck(glDisableVertexAttribArray(attribs[0]));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     glCheck(glUseProgram(0));
     glCheck(glViewport(oldView[0], oldView[1], oldView[2], oldView[3]));

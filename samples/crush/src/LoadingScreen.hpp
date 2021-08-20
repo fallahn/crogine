@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -45,12 +45,14 @@ public:
     LoadingScreen();
     ~LoadingScreen();
 
+    void launch() override;
     void update() override;
     void draw() override;
 
 private:
+    std::uint32_t m_vao;
     std::uint32_t m_vbo;
-    std::uint32_t m_transformIndex;
+    std::int32_t m_transformIndex;
 
     cro::Shader m_shader;
     glm::mat4 m_transform;

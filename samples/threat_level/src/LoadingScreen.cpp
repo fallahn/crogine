@@ -29,8 +29,9 @@ source distribution.
 
 #include "LoadingScreen.hpp"
 
-#include <crogine/detail/OpenGL.hpp>
 #include <crogine/core/App.hpp>
+#include <crogine/detail/OpenGL.hpp>
+#include <crogine/graphics/Image.hpp>
 #include <crogine/util/Wavetable.hpp>
 
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
@@ -75,8 +76,9 @@ namespace
 }
 
 LoadingScreen::LoadingScreen()
-    : m_vbo             (0),
-    m_transformIndex    (0),
+    : m_vao             (0),
+    m_vbo               (0),
+    m_transformIndex    (-1),
     m_transform         (1.f),
     m_projectionMatrix  (1.f),
     m_wavetableIndex    (0)
@@ -86,8 +88,12 @@ LoadingScreen::LoadingScreen()
 
     m_wavetable = cro::Util::Wavetable::sine(2.f, 3.f);
 
-    //TODO if the texture fails we should load a version of the shader with defines which dont require a texture
-    m_texture.loadFromFile("assets/sprites/loading.png");
+    if (!m_texture.loadFromFile("assets/sprites/loading.png"))
+    {
+        cro::Image img;
+        img.create(12, 12, cro::Colour::Green);
+        m_texture.loadFromImage(img);
+    }
 
     if (m_shader.loadFromString(vertex, fragment))
     {
@@ -127,9 +133,34 @@ LoadingScreen::~LoadingScreen()
     {
         glCheck(glDeleteBuffers(1, &m_vbo));
     }
+
+    if (m_vao)
+    {
+        glCheck(glDeleteVertexArrays(1, &m_vao));
+    }
 }
 
 //public
+void LoadingScreen::launch()
+{
+    if (!m_vao)
+    {
+        CRO_ASSERT(m_vbo, "");
+
+        glCheck(glGenVertexArrays(1, &m_vao));
+
+        glCheck(glBindVertexArray(m_vao));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+
+        //pos
+        glCheck(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, vertexSize, (void*)0));
+        glCheck(glEnableVertexAttribArray(0));
+
+        glCheck(glBindVertexArray(0));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    }
+}
+
 void LoadingScreen::update()
 {
     static float accumulator = 0.f;
@@ -159,16 +190,8 @@ void LoadingScreen::draw()
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glBindTexture(GL_TEXTURE_2D, m_texture.getGLHandle()));
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
-
-    const auto& attribs = m_shader.getAttribMap();
-    glCheck(glEnableVertexAttribArray(attribs[0]));
-    glCheck(glVertexAttribPointer(attribs[0], 2, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(vertexSize), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
-
+    glCheck(glBindVertexArray(m_vao));
     glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-
-    glCheck(glDisableVertexAttribArray(attribs[0]));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     glCheck(glUseProgram(0));
     glCheck(glViewport(oldView[0], oldView[1], oldView[2], oldView[3]));

@@ -292,6 +292,7 @@ namespace
     {
         ThreadData* threadData = static_cast<ThreadData*>(data);
         SDL_GL_MakeCurrent(threadData->window, threadData->context);
+        threadData->loadingScreen->launch();
 
         while (SDL_AtomicGet(&threadData->threadFlag) != 1)
         {

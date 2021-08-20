@@ -84,7 +84,8 @@ namespace
 }
 
 LoadingScreen::LoadingScreen()
-    : m_vbo             (0),
+    : m_vao             (0),
+    m_vbo               (0),
     m_projectionIndex   (-1),
     m_transformIndex    (-1),
     m_frameIndex        (-1),
@@ -110,7 +111,6 @@ LoadingScreen::LoadingScreen()
         m_frameIndex = uniforms.find("u_frameNumber")->second;
 
         glCheck(glUseProgram(m_shader.getGLHandle()));
-        /*glCheck(glUniformMatrix4fv(uniforms.find("u_projectionMatrix")->second, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));*/
         glCheck(glUniform1i(uniforms.find("u_texture")->second, 0));
         glCheck(glUseProgram(0));
 
@@ -140,9 +140,34 @@ LoadingScreen::~LoadingScreen()
     {
         glCheck(glDeleteBuffers(1, &m_vbo));
     }
+
+    if (m_vao)
+    {
+        glCheck(glDeleteVertexArrays(1, &m_vao));
+    }
 }
 
 //public
+void LoadingScreen::launch()
+{
+    if (!m_vao)
+    {
+        CRO_ASSERT(m_vbo, "");
+
+        glCheck(glGenVertexArrays(1, &m_vao));
+
+        glCheck(glBindVertexArray(m_vao));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+
+        //pos
+        glCheck(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, vertexSize, (void*)0));
+        glCheck(glEnableVertexAttribArray(0));
+
+        glCheck(glBindVertexArray(0));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    }
+}
+
 void LoadingScreen::update()
 {
     static float accumulator = 0.f;
@@ -191,16 +216,8 @@ void LoadingScreen::draw()
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glBindTexture(GL_TEXTURE_2D, m_texture.getGLHandle()));
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
-
-    const auto& attribs = m_shader.getAttribMap();
-    glCheck(glEnableVertexAttribArray(attribs[0]));
-    glCheck(glVertexAttribPointer(attribs[0], 2, GL_FLOAT, GL_FALSE, static_cast<GLsizei>(vertexSize), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
-
+    glCheck(glBindVertexArray(m_vao));
     glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-
-    glCheck(glDisableVertexAttribArray(attribs[0]));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     glCheck(glUseProgram(0));
     glCheck(glViewport(oldView[0], oldView[1], oldView[2], oldView[3]));

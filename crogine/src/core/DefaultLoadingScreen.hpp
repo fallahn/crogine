@@ -44,10 +44,12 @@ namespace cro
         DefaultLoadingScreen();
         ~DefaultLoadingScreen();
 
+        void launch() override;
         void update() override;
         void draw() override;
 
     private:
+        std::uint32_t m_vao;
         std::uint32_t m_vbo;
         std::uint32_t m_transformIndex;
 
