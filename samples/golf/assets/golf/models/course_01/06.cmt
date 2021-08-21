@@ -7,16 +7,6 @@ model 06
     {
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = true
-        repeat = true
-        vertex_coloured = true
-        blendmode = "none"
-
-    }
-    material Unlit
-    {
-        name = "Untitled"
-        colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
         blendmode = "none"

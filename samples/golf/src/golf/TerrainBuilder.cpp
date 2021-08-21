@@ -398,9 +398,10 @@ void TerrainBuilder::update(std::size_t holeIndex)
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), m_slopeIndices.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-        /*m_normalMaps[first].loadFromImage(m_normalMapImage);
+        m_normalMaps[first].loadFromImage(m_normalMapImage);
+        m_normalMaps[first].setSmooth(false);
         auto modelEnt = m_holeData[holeIndex].modelEntity;
-        modelEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_normalMap", cro::TextureID(m_normalMaps[first].getGLHandle()));*/
+        modelEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_normalMap", cro::TextureID(m_normalMaps[first].getGLHandle()));
 
         //signal to the thread we want to update the buffers
         //ready for next time

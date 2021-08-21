@@ -154,7 +154,7 @@ static const std::string CelVertexShader = R"(
 #endif
 
 #if defined (NORMAL_MAP)
-    v_normalTexCoord = vec2(position.x / MapSize.x, -position.x / MapSize.y);
+    v_normalTexCoord = vec2(position.x / MapSize.x, -position.z / MapSize.y);
 #endif
 
         gl_ClipDistance[0] = dot(position, u_clipPlane);
@@ -197,6 +197,7 @@ static const std::string CelFragmentShader = R"(
 
 #if defined (NORMAL_MAP)
         //colour = TEXTURE(u_normalMap, v_normalTexCoord);
+        //colour.rg = v_normalTexCoord;
         vec3 normal = TEXTURE(u_normalMap, v_normalTexCoord).rgb * 2.0 - 1.0;
 #else
         vec3 normal = normalize(v_normal);
