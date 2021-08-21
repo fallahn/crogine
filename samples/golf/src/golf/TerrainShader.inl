@@ -136,6 +136,11 @@ static const std::string CelVertexShader = R"(
     VARYING_OUT vec2 v_texCoord;
 #endif
 
+#if defined (NORMAL_MAP)
+    VARYING_OUT vec2 v_normalTexCoord;
+    const vec2 MapSize = vec2(320.0, 200.0);
+#endif
+
     void main()
     {
         vec4 position = u_worldMatrix * a_position;
@@ -148,6 +153,10 @@ static const std::string CelVertexShader = R"(
     v_texCoord = a_texCoord0;
 #endif
 
+#if defined (NORMAL_MAP)
+    v_normalTexCoord = vec2(position.x / MapSize.x, -position.x / MapSize.y);
+#endif
+
         gl_ClipDistance[0] = dot(position, u_clipPlane);
     })";
 
@@ -157,6 +166,11 @@ static const std::string CelFragmentShader = R"(
 #if defined(TEXTURED)
     uniform sampler2D u_diffuseMap;
     VARYING_IN vec2 v_texCoord;
+#endif
+
+#if defined (NORMAL_MAP)
+    uniform sampler2D u_normalMap;
+    VARYING_IN vec2 v_normalTexCoord;
 #endif
 
     VARYING_IN vec3 v_normal;
@@ -171,15 +185,24 @@ static const std::string CelFragmentShader = R"(
         vec4 colour = vec4(1.0);
 
 #if defined (TEXTURED)
-        colour = TEXTURE(u_diffuseMap, v_texCoord);
+        colour *= TEXTURE(u_diffuseMap, v_texCoord);
+
         /*colour.rgb *= Quantise;
         colour.rgb = round(colour.rgb);
         colour.rgb /= Quantise;*/
-#else
-        colour = v_colour;
+#endif
+#if defined (VERTEX_COLOURED)
+        colour *= v_colour;
 #endif
 
-        float amount = dot(normalize(v_normal), normalize(-u_lightDirection));
+#if defined (NORMAL_MAP)
+        //colour = TEXTURE(u_normalMap, v_normalTexCoord);
+        vec3 normal = TEXTURE(u_normalMap, v_normalTexCoord).rgb * 2.0 - 1.0;
+#else
+        vec3 normal = normalize(v_normal);
+#endif
+
+        float amount = dot(normal, normalize(-u_lightDirection));
         amount *= 2.0;
         amount = round(amount);
         amount /= 2.0;

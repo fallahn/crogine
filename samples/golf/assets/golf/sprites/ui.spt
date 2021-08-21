@@ -46,4 +46,14 @@ spritesheet ui
     {
         bounds = 112,0,152, 80
     }
+
+    sprite foul
+    {
+        bounds = 0,80,92,46
+    }
+
+    sprite bunker
+    {
+        bounds = 100,80,134,46
+    }
 }

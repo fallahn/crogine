@@ -226,10 +226,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_F7:
             //showCountdown(10);
-            showMessageBoard(MessageBoardID::Bunker);
+            showMessageBoard(MessageBoardID::Scrub);
             break;
         case SDLK_F8:
-            updateMiniMap();
+            showMessageBoard(MessageBoardID::Bunker);
+            //updateMiniMap();
             //removeClient(1);
             break;
 #endif
@@ -487,6 +488,36 @@ void GolfState::render()
 //private
 void GolfState::loadAssets()
 {
+    //load materials
+    std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
+
+    //cel shaded material
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
+    auto* shader = &m_resources.shaders.get(ShaderID::Cel);
+    m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
+    shader = &m_resources.shaders.get(ShaderID::CelTextured);
+    m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define VERTEX_COLOURED\n#define NORMAL_MAP\n");
+    shader = &m_resources.shaders.get(ShaderID::Course);
+    m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
+
+
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]).blendMode = cro::Material::BlendMode::Alpha;
+
+    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
+    m_materialIDs[MaterialID::Water] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Water));
+
+
+    m_waterShader.shaderID = m_resources.shaders.get(ShaderID::Water).getGLHandle();
+    m_waterShader.timeUniform = m_resources.shaders.get(ShaderID::Water).getUniformMap().at("u_time");
+    
+
+
     //model definitions
     for (auto& md : m_modelDefs)
     {
@@ -503,6 +534,8 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::MessageBoard] = spriteSheet.getSprite("message_board");
+    m_sprites[SpriteID::Bunker] = spriteSheet.getSprite("bunker");
+    m_sprites[SpriteID::Foul] = spriteSheet.getSprite("foul");
     auto flagSprite = spriteSheet.getSprite("flag03");
     m_flagQuad.setTexture(*flagSprite.getTexture());
     m_flagQuad.setTextureRect(flagSprite.getTextureRect());
@@ -529,7 +562,7 @@ void GolfState::loadAssets()
     //at a distance, and as a model when closer
     glCheck(glPointSize(BallPointSize));
 
-    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
     m_ballResources.materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_ballResources.ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
     m_ballResources.shadowMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
@@ -686,11 +719,22 @@ void GolfState::loadAssets()
             {
                 if (modelDef.loadFromFile(holeProp.getValue<std::string>()))
                 {
+                    auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
+                    setTexture(modelDef, material);
+
                     holeData.modelEntity = m_gameScene.createEntity();
                     holeData.modelEntity.addComponent<cro::Transform>();
                     holeData.modelEntity.addComponent<cro::Callback>();
                     modelDef.createModel(holeData.modelEntity);
                     holeData.modelEntity.getComponent<cro::Model>().setHidden(true);
+
+                    //TODO we need to distinguish between material types, or re-UV the meshes
+                    //to a single material
+                    /*auto matCount = holeData.modelEntity.getComponent<cro::Model>().getMeshData().submeshCount;
+                    for (auto j = 0; j < matCount; ++j)
+                    {
+                        holeData.modelEntity.getComponent<cro::Model>().setMaterial(j, material);
+                    }*/
                     propCount++;
                 }
                 else
@@ -706,7 +750,6 @@ void GolfState::loadAssets()
             LOG("Missing hole property", cro::Logger::Type::Error);
             error = true;
         }
-
 
     }
 
@@ -730,25 +773,6 @@ void GolfState::loadAssets()
         }
     }
 
-
-    //load materials
-    std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
-
-    //cel shaded material
-    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader);
-    auto& shader = m_resources.shaders.get(ShaderID::Cel);
-    m_materialIDs[MaterialID::Cel] = m_resources.materials.add(shader);
-
-    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
-    m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(shaderID));
-    m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]).blendMode = cro::Material::BlendMode::Alpha;
-
-    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
-    m_materialIDs[MaterialID::Water] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Water));
-
-
-    m_waterShader.shaderID = m_resources.shaders.get(ShaderID::Water).getGLHandle();
-    m_waterShader.timeUniform = m_resources.shaders.get(ShaderID::Water).getUniformMap().at("u_time");
 }
 
 void GolfState::addSystems()
@@ -907,7 +931,11 @@ void GolfState::buildScene()
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
 
     auto teeEnt = entity;
+
+
     md.loadFromFile("assets/golf/models/cart.cmt");
+    auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+    setTexture(md, texturedMat);
     std::array cartPositions =
     {
         glm::vec3(-0.4f, 0.f, -5.9f),
@@ -929,7 +957,7 @@ void GolfState::buildScene()
             entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
             entity.addComponent<cro::CommandTarget>().ID = CommandID::Cart;
             md.createModel(entity);
-            //entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+            entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
             teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
     }

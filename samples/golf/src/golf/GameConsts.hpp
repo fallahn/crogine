@@ -33,6 +33,7 @@ source distribution.
 
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/util/Constants.hpp>
 
 #include <cstdint>
@@ -63,8 +64,20 @@ struct ShaderID final
         Terrain,
         Cel,
         CelTextured,
+        Course,
         Slope
     };
+};
+
+static inline void setTexture(const cro::ModelDefinition& modelDef, cro::Material::Data& dest)
+{
+    if (auto* m = modelDef.getMaterial(0); m != nullptr)
+    {
+        if (m->properties.count("u_diffuseMap"))
+        {
+            dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
+        }
+    }
 };
 
 static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, float px, float py)
@@ -98,8 +111,10 @@ static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, floa
     }
 }
 
-static inline void loadNormalMap(std::vector<glm::vec3>& dst, const std::string& path)
+static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::string& path)
 {
+    static const cro::Colour DefaultColour(0x7f7fffff);
+    
     dst.resize(MapSize.x * MapSize.y, glm::vec3(0.f, 1.f, 0.f));
 
     auto extension = cro::FileSystem::getFileExtension(path);
@@ -114,7 +129,8 @@ static inline void loadNormalMap(std::vector<glm::vec3>& dst, const std::string&
         if (size != MapSize)
         {
             LogW << path << ": not loaded, image not 320x200" << std::endl;
-            return;
+            img.create(320, 300, DefaultColour);
+            return img;
         }
 
         std::uint32_t stride = 0;
@@ -145,6 +161,11 @@ static inline void loadNormalMap(std::vector<glm::vec3>& dst, const std::string&
             }
         }
     }
+    else
+    {
+        img.create(320, 300, DefaultColour);
+    }
+    return img;
 }
 
 //TODO use this for interpolating slope height on a height map

@@ -92,6 +92,8 @@ private:
             WireFrame,
             Water,
             Cel,
+            CelTextured,
+            Course,
 
             Count
         };
@@ -153,6 +155,8 @@ private:
             HookBar,
             WindIndicator,
             MessageBoard,
+            Bunker,
+            Foul,
 
             Count
         };

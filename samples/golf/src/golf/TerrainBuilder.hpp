@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/components/BillboardCollection.hpp>
 #include <crogine/graphics/MeshData.hpp>
+#include <crogine/graphics/Image.hpp>
 
 #include <vector>
 #include <thread>
@@ -119,6 +120,9 @@ private:
         std::uint32_t shader = 0;
     }m_slopeProperties;
     std::vector<glm::vec3> m_normalMapBuffer;
+
+    std::array<cro::Texture, 2u> m_normalMaps;
+    cro::Image m_normalMapImage;
 
     std::atomic_bool m_threadRunning;
     std::atomic_bool m_wantsUpdate;

@@ -966,20 +966,25 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
 
     auto& font = m_resources.fonts.get(FontID::UI);
     auto textEnt = m_uiScene.createEntity();
-    textEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 56.f, 0.01f });
+    textEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 56.f, 0.02f });
     textEnt.addComponent<cro::Drawable2D>();
     textEnt.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    
+
     auto textEnt2 = m_uiScene.createEntity();
-    textEnt2.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 26.f, 0.01f });
+    textEnt2.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 26.f, 0.02f });
     textEnt2.addComponent<cro::Drawable2D>();
     textEnt2.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     textEnt2.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     textEnt2.getComponent<cro::Text>().setFillColour(TextNormalColour);
 
-    //TODO add mini graphic depending on message type
+    //add mini graphic depending on message type
+    auto imgEnt = m_uiScene.createEntity();
+    imgEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, 0.01f });
+    imgEnt.getComponent<cro::Transform>().move(glm::vec2(0.f, -6.f));
+    imgEnt.addComponent<cro::Drawable2D>();
+
     switch (messageType)
     {
     default: break;
@@ -1001,9 +1006,11 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
             textEnt2.getComponent<cro::Text>().setString(std::to_string(overPar) + " Over Par");
         }
     }
-        break;
+    break;
     case MessageBoardID::Bunker:
         textEnt.getComponent<cro::Text>().setString("Bunker!");
+        imgEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Bunker];
+        bounds = m_sprites[SpriteID::Bunker].getTextureBounds();
         break;
     case MessageBoardID::PlayerName:
         textEnt.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name);
@@ -1013,11 +1020,15 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     case MessageBoardID::Water:
         textEnt.getComponent<cro::Text>().setString("Foul!");
         textEnt2.getComponent<cro::Text>().setString("1 Stroke Penalty");
+        imgEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Foul];
+        bounds = m_sprites[SpriteID::Foul].getTextureBounds();
         break;
     }
+    imgEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
     
     entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(textEnt2.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(imgEnt.getComponent<cro::Transform>());
 
     //callback for anim/self destruction
     struct MessageAnim final
@@ -1031,7 +1042,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<MessageAnim>();
     entity.getComponent<cro::Callback>().function =
-        [&, textEnt, textEnt2](cro::Entity e, float dt)
+        [&, textEnt, textEnt2, imgEnt](cro::Entity e, float dt)
     {
         static constexpr float HoldTime = 2.f;
         auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
@@ -1073,6 +1084,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
                 e.getComponent<cro::Callback>().active = false;
                 m_uiScene.destroyEntity(textEnt);
                 m_uiScene.destroyEntity(textEnt2);
+                m_uiScene.destroyEntity(imgEnt);
                 m_uiScene.destroyEntity(e);
             }
             break;

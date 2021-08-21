@@ -291,7 +291,7 @@ void GolfMenuState::loadAssets()
 
     m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
 
-    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader);
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
 
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Cel));
@@ -309,17 +309,6 @@ void GolfMenuState::loadAssets()
 
 void GolfMenuState::createScene()
 {
-    auto setTexture = [](const cro::ModelDefinition& modelDef, cro::Material::Data& dest)
-    {
-        if (auto* m = modelDef.getMaterial(0); m != nullptr)
-        {
-            if (m->properties.count("u_diffuseMap"))
-            {
-                dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
-            }
-        }
-    };
-
     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
 
     cro::ModelDefinition md(m_resources);

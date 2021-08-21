@@ -209,7 +209,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
 
     //use a custom material for morphage
-    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader);
+    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
     const auto& shader = resources.shaders.get(ShaderID::Terrain);
     m_terrainProperties.morphUniform = shader.getUniformID("u_morphTime");
     m_terrainProperties.shaderID = shader.getGLHandle();
@@ -398,7 +398,9 @@ void TerrainBuilder::update(std::size_t holeIndex)
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), m_slopeIndices.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-
+        /*m_normalMaps[first].loadFromImage(m_normalMapImage);
+        auto modelEnt = m_holeData[holeIndex].modelEntity;
+        modelEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_normalMap", cro::TextureID(m_normalMaps[first].getGLHandle()));*/
 
         //signal to the thread we want to update the buffers
         //ready for next time
@@ -503,7 +505,7 @@ void TerrainBuilder::threadFunc()
 
                 //update the vertex data for the slope indicator
                 //TODO is this the same size as the loop above? could save on double iteration
-                loadNormalMap(m_normalMapBuffer, m_holeData[m_currentHole].mapPath);
+                m_normalMapImage = loadNormalMap(m_normalMapBuffer, m_holeData[m_currentHole].mapPath);
                 m_slopeBuffer.clear();
                 m_slopeIndices.clear();
 
@@ -536,7 +538,7 @@ void TerrainBuilder::threadFunc()
                             auto& vert2 = m_slopeBuffer.emplace_back();
                             vert2.position = { posX + dir.x, 0.f, posZ + dir.y };
                             vert2.colour = { 0.f, 1.f - (strength + 0.25f), 1.f, 1.f };
-                            vert2.texCoord = glm::vec2(20.f);
+                            vert2.texCoord = glm::vec2(40.f);
 
                             m_slopeIndices.push_back(currIndex++);
                         }
