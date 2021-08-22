@@ -283,6 +283,11 @@ namespace golf
 
     void InputParser::setActive(bool active)
     {
+        if (m_active == active)
+        {
+            return;
+        }
+
         m_active = active;
         m_state = State::Aim;
         if (active)

@@ -44,11 +44,7 @@ namespace golf
     class InputParser final
     {
     public:
-        enum class State
-        {
-            Aim, Power, Stroke
-        };
-        
+       
         InputParser(InputBinding, cro::MessageBus&);
 
         void handleEvent(const cro::Event&);
@@ -59,10 +55,8 @@ namespace golf
         float getHook() const; //-1 to -1 * some angle, probably club defined
 
         std::int32_t getClub() const;
-        State getState() const { return m_state; }
 
         void setActive(bool);
-        bool getActive() const { return m_active; }
         void update(float);
 
     private:
@@ -89,7 +83,10 @@ namespace golf
 
         bool m_active;
 
-        State m_state;
+        enum class State
+        {
+            Aim, Power, Stroke
+        }m_state;
 
         std::int32_t m_currentClub;
 
