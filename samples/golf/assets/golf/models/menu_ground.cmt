@@ -3,15 +3,14 @@ model menu_ground
     mesh = "assets/golf/models/menu_ground.cmb"
     cast_shadows = false
 
-    material VertexLit
+    material Unlit
     {
-        mask_colour = 1.000000,0.000000,0.000000,1.000000
         name = "Untitled"
-        colour = 1.000000,1.0,1.000000,1.000000
-        smooth = true
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
         repeat = true
-        vertex_coloured = true
         blendmode = "none"
+        diffuse = "assets/golf/images/menu_ground.png"
 
     }
 }

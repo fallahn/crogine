@@ -47,7 +47,7 @@ static inline glm::vec2 calcVPSize()
     static constexpr float Widescreen = 16.f / 9.f;
     static constexpr float ViewportWidth = 640.f;
 
-    return { ViewportWidth, ratio < Widescreen ? ViewportHeightWide : ViewportHeight };
+    return glm::vec2(ViewportWidth, ratio < Widescreen ? ViewportHeightWide : ViewportHeight);
 }
 
 namespace ConstVal

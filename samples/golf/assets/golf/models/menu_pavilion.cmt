@@ -5,14 +5,13 @@ model menu_pavilion
 
     material Unlit
     {
-        mask_colour = 1.000000,0.000000,0.000000,1.000000
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = true
+        smooth = false
         repeat = true
-        vertex_coloured = true
         blendmode = "none"
         diffuse = "assets/golf/images/pavilion.png"
+        alpha_clip = 0.065000
 
     }
 }

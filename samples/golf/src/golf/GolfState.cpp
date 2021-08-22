@@ -266,7 +266,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             showScoreboard(true);
             break;
         case SDL_CONTROLLER_BUTTON_B:
-            showScoreboard(false);
+                showScoreboard(false);
             break;
         case SDL_CONTROLLER_BUTTON_DPAD_UP:
         case SDL_CONTROLLER_BUTTON_DPAD_LEFT:

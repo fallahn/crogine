@@ -38,7 +38,7 @@ namespace
 {
     constexpr std::array Path01 = { glm::vec3(-30.f, 0.01f, 5.4f),glm::vec3(60.f, 0.01f, 5.4f),  glm::vec3(70.f, 0.01f, 5.4f),  glm::vec3(77.f, 0.01f, 5.4f) };
     constexpr std::array Path03 = { glm::vec3(76.f, 0.01f, 9.5f), glm::vec3(8.f, 0.01f, 9.5f), glm::vec3(-30.f, 0.01f, 9.5f),glm::vec3(-30.f, 0.01f, 9.5f) };
-    constexpr std::array Path02 = { glm::vec3(-7.5f, 0.01f, 30.f),glm::vec3(-7.5f, 0.01f, 11.f), glm::vec3(-8.5f, 0.01f, 9.5f), glm::vec3(-30.f, 0.01f, 9.5f) };
+    constexpr std::array Path02 = { glm::vec3(-7.f, 0.01f, 30.f),glm::vec3(-7.f, 0.01f, 11.f), glm::vec3(-9.f, 0.01f, 9.5f), glm::vec3(-30.f, 0.01f, 9.5f) };
 
     constexpr std::array Paths =
     {
@@ -96,7 +96,8 @@ void GolfCartSystem::process(float dt)
                     tx.setPosition(Paths[cart.pathIndex][cart.pointIndex]);
 
                     auto newDir = Paths[cart.pathIndex][1] - Paths[cart.pathIndex][0];
-                    tx.setRotation(cro::Transform::Y_AXIS, std::atan2(-newDir.z, newDir.x));
+                    cart.rotation = std::atan2(-newDir.z, newDir.x);
+                    tx.setRotation(cro::Transform::Y_AXIS, cart.rotation);
                 }
             }
             else

@@ -320,12 +320,13 @@ void GolfMenuState::createScene()
     md.createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
-    //TODO switch this to textured so we get the correct colours.
     md.loadFromFile("assets/golf/models/menu_ground.cmt");
     entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
-    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+    texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+    setTexture(md, texturedMat);
+    entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
     md.loadFromFile("assets/golf/models/phone_box.cmt");
     entity = m_backgroundScene.createEntity();
@@ -346,7 +347,7 @@ void GolfMenuState::createScene()
     if (entity.hasComponent<cro::BillboardCollection>())
     {
         std::array minBounds = { 30.f, 0.f };
-        std::array maxBounds = { 70.f, 40.f };
+        std::array maxBounds = { 80.f, 10.f };
 
         auto& collection = entity.getComponent<cro::BillboardCollection>();
 

@@ -185,7 +185,13 @@ static const std::string CelFragmentShader = R"(
         vec4 colour = vec4(1.0);
 
 #if defined (TEXTURED)
-        colour *= TEXTURE(u_diffuseMap, v_texCoord);
+        vec4 c = TEXTURE(u_diffuseMap, v_texCoord);
+
+        if(c. a < 0.2)
+        {
+            discard;
+        }
+        colour *= c;
 
         /*colour.rgb *= Quantise;
         colour.rgb = round(colour.rgb);
