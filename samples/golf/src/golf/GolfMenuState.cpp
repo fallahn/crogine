@@ -302,8 +302,6 @@ void GolfMenuState::loadAssets()
     m_postShader.loadFromString(PostVertex, PostFragment);
     m_postQuad.setShader(m_postShader);
 
-    m_font.loadFromFile("assets/golf/fonts/IBM_CGA.ttf");
-
     m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
 
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");

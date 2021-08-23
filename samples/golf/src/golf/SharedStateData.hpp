@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/network/NetClient.hpp>
 #include <crogine/core/String.hpp>
 #include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 
 #include <string>
 #include <array>
@@ -67,8 +68,6 @@ struct SharedStateData final
 {
     Server serverInstance;
 
-    InputBinding inputBinding;
-
     struct ClientConnection final
     {
         cro::NetClient netClient;
@@ -98,4 +97,8 @@ struct SharedStateData final
 
     //client settings
     bool usePostProcess = false;
+    InputBinding inputBinding;
+
+
+    std::unique_ptr<cro::ResourceCollection> sharedResources;
 };

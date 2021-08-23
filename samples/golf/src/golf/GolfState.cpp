@@ -555,9 +555,6 @@ void GolfState::loadAssets()
         }
     }
 
-    m_resources.fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
-
-
     //ball resources - ball is rendered as a single point
     //at a distance, and as a model when closer
     glCheck(glPointSize(BallPointSize));

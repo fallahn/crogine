@@ -103,9 +103,6 @@ private:
 
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
 
-
-
-    cro::Font m_font;
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
     enum MenuID

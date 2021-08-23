@@ -84,7 +84,7 @@ namespace cro
         void simulate(float dt);
 
         /*!
-        \brief Creates a new entity in the Scene, and returns a copy of it
+        \brief Creates a new entity in the Scene, and returns a handle to it
         */
         Entity createEntity();
 

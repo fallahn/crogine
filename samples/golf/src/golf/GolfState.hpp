@@ -170,15 +170,7 @@ private:
     };
     std::array<std::array<Avatar, 4u>, 4u> m_avatars;
 
-    struct FontID final
-    {
-        enum
-        {
-            UI,
 
-            Count
-        };
-    };
     float m_camRotation; //used to offset the rotation of the wind indicator
     bool m_roundEnded;
     glm::vec2 m_viewScale;

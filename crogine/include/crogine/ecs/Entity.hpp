@@ -62,6 +62,14 @@ namespace cro
     The ID is generated as a combination of the index in the
     memory pool and the generation - that is the nth time the
     index has been used.
+
+    The entity class is a handle which refers to the underlying
+    data owned by the Scene which created it. As such they may
+    be treated similarly to pointers - they are lightweight and
+    easy to copy around, although they may become invalid should
+    the entity to which they refer is destroyed. The utility
+    functions isValid() and destroyed() can be used to determine
+    the current status and an Entity handle.
     */
     class CRO_EXPORT_API Entity final
     {

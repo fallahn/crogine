@@ -32,6 +32,16 @@ source distribution.
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
+struct FontID final
+{
+    enum
+    {
+        UI,
+
+        Count
+    };
+};
+
 static constexpr std::uint32_t LargeTextSize = 64;
 static constexpr std::uint32_t MediumTextSize = 32;
 static constexpr std::uint32_t SmallTextSize = 16;
@@ -47,6 +57,8 @@ static const cro::Colour TextGoldColour(0xf2cf5cff);
 static const cro::Colour TextOrangeColour(0xec773dff);
 static const cro::Colour LeaderboardTextDark(0x1a1e2dff);
 static const cro::Colour LeaderboardTextLight(0xfff8e1ff);
+
+static constexpr float BackgroundAlpha = 0.7f;
 
 static constexpr float UIBarHeight = 16.f;
 static constexpr float UITextPosV = 12.f;

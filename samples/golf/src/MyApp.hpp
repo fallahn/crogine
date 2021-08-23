@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/core/StateStack.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 
 class MyApp final : public cro::App, public cro::GuiClient
 {

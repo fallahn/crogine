@@ -32,10 +32,12 @@ source distribution.
 #include "golf/GolfState.hpp"
 #include "golf/ErrorState.hpp"
 #include "golf/OptionsState.hpp"
+#include "golf/MenuConsts.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/gui/Gui.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
 
 namespace
 {
@@ -109,6 +111,17 @@ bool MyApp::initialise()
     setApplicationStrings("trederia", "golf");
 
     m_sharedGolfData.clientConnection.netClient.create(4);
+    m_sharedGolfData.sharedResources = std::make_unique<cro::ResourceCollection>();
+
+    //preload resources which will be used in dynamically loaded menus
+    m_sharedGolfData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
+
+    cro::SpriteSheet s;
+    s.loadFromFile("assets/golf/sprites/options.spt", m_sharedGolfData.sharedResources->textures);
+
+
+
+
 
 #ifdef CRO_DEBUG_
     m_stateStack.pushState(States::Golf::Menu);
@@ -128,6 +141,7 @@ void MyApp::finalise()
             t = {};
         }
     }
+    m_sharedGolfData.sharedResources.reset();
 
     m_stateStack.clearStates();
     m_stateStack.simulate(0.f);

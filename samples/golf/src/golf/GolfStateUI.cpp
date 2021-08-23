@@ -133,7 +133,7 @@ void GolfState::buildUI()
 
 
 
-    auto& font = m_resources.fonts.get(FontID::UI);
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     //player's name
     entity = m_uiScene.createEntity();
@@ -522,7 +522,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     //show the scores
     showScoreboard(true);
 
-    auto& font = m_resources.fonts.get(FontID::UI);
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 200.f, 10.f, 0.23f }); //attaches to scoreboard which is fixed size
@@ -595,7 +595,7 @@ void GolfState::createScoreboard()
     rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto bgEnt = entity;
-    auto& font = m_resources.fonts.get(FontID::UI);
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 200.f, 293.f, 0.02f });
     entity.addComponent<cro::Drawable2D>();
@@ -969,7 +969,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MessageBoard];
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard;
 
-    auto& font = m_resources.fonts.get(FontID::UI);
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto textEnt = m_uiScene.createEntity();
     textEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 56.f, 0.02f });
     textEnt.addComponent<cro::Drawable2D>();
