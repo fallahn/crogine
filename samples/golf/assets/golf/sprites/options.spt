@@ -4,7 +4,7 @@ spritesheet options
 
     sprite tab_bar
     {
-        bounds = 0,369,200,17
+        bounds = 0,367,200,19
     }
 
     sprite background
@@ -25,5 +25,15 @@ spritesheet options
     sprite slider
     {
         bounds = 192,207,11,9
+    }
+
+    sprite square_highlight
+    {
+        vounds = 192,180,11,11
+    }
+
+    sprite round_highlight
+    {
+        bounds = 193,196,10,9
     }
 }
