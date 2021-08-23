@@ -57,7 +57,10 @@ namespace golf
         std::int32_t getClub() const;
 
         void setActive(bool);
+        void setSuspended(bool);
         void update(float);
+
+        bool inProgress() const;
 
     private:
         InputBinding m_inputBinding;
@@ -82,10 +85,12 @@ namespace golf
         float m_powerbarDirection;
 
         bool m_active;
+        bool m_suspended;
 
         enum class State
         {
-            Aim, Power, Stroke
+            Aim, Power, Stroke,
+            Flight
         }m_state;
 
         std::int32_t m_currentClub;

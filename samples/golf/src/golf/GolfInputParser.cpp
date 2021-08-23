@@ -64,6 +64,7 @@ namespace golf
         m_hook              (0.5f),
         m_powerbarDirection (1.f),
         m_active            (false),
+        m_suspended         (false),
         m_state             (State::Aim),
         m_currentClub       (ClubID::Driver)
     {
@@ -283,11 +284,6 @@ namespace golf
 
     void InputParser::setActive(bool active)
     {
-        if (m_active == active)
-        {
-            return;
-        }
-
         m_active = active;
         m_state = State::Aim;
         if (active)
@@ -296,6 +292,20 @@ namespace golf
             m_hook = 0.5f;
             m_powerbarDirection = 1.f;
         }
+    }
+
+    void InputParser::setSuspended(bool suspended)
+    {
+        if (suspended)
+        {
+            m_suspended = m_active;
+            m_active = false;
+        }
+        else
+        {
+            m_active = m_suspended;
+        }
+
     }
 
     void InputParser::update(float dt)
@@ -376,14 +386,23 @@ namespace golf
                 {
                     m_powerbarDirection = 1.f;
                     //setActive(false); //can't set this false here because it resets the values before we read them...
+                    m_state = State::Flight;
 
                     auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
                     msg->type = GolfEvent::HitBall;
                 }
                 break;
+            case State::Flight:
+                //do nothing, player's turn is complete
+                break;
             }
         }
         m_prevFlags = m_inputFlags;
+    }
+
+    bool InputParser::inProgress() const
+    {
+        return (m_state == State::Power || m_state == State::Stroke);
     }
 
     //private
