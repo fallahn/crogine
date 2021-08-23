@@ -68,6 +68,7 @@ source distribution.
 namespace
 {
 #include "TerrainShader.inl"
+#include "PostProcess.inl"
 
     constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 }
@@ -257,12 +258,16 @@ bool GolfMenuState::simulate(float dt)
 
 void GolfMenuState::render()
 {
-//draw any renderable systems
-m_backgroundTexture.clear();
-m_backgroundScene.render(m_backgroundTexture);
-m_backgroundTexture.display();
+    //draw any renderable systems
+    m_backgroundTexture.clear();
+    m_backgroundScene.render(m_backgroundTexture);
+    m_backgroundTexture.display();
 
-m_uiScene.render(cro::App::getWindow());
+    m_postBuffer.clear();
+    m_uiScene.render(m_postBuffer);
+    m_postBuffer.display();
+
+    m_postQuad.draw();
 }
 
 //private
@@ -287,6 +292,9 @@ void GolfMenuState::addSystems()
 
 void GolfMenuState::loadAssets()
 {
+    m_postShader.loadFromString(PostVertex, PostFragment);
+    m_postQuad.setShader(m_postShader);
+
     m_font.loadFromFile("assets/golf/fonts/IBM_CGA.ttf");
 
     m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");

@@ -125,7 +125,11 @@ void GolfMenuState::createUI()
     //is scaled to best-fit to maintain pixel accuracy of text.
     auto updateView = [&, rootNode, courseEnt](cro::Camera& cam) mutable
     {
-        glm::vec2 size(cro::App::getWindow().getSize());
+        auto windowSize = cro::App::getWindow().getSize();
+        glm::vec2 size(windowSize);
+
+        m_postBuffer.create(windowSize.x, windowSize.y, false);
+        m_postQuad.setTexture(m_postBuffer.getTexture());
 
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

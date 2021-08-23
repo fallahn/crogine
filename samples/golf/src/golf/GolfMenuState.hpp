@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 
 #include <array>
 
@@ -83,6 +84,9 @@ private:
     cro::Scene m_backgroundScene;
     cro::ResourceCollection m_resources;
 
+    cro::RenderTexture m_postBuffer;
+    cro::SimpleQuad m_postQuad;
+    cro::Shader m_postShader;
 
     cro::RenderTexture m_backgroundTexture;
     struct MaterialID final

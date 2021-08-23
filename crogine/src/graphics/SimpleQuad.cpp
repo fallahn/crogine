@@ -84,10 +84,6 @@ namespace
         {
             FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour;
         })";
-
-    std::int32_t projectionUniform = -1;
-    std::int32_t worldUniform = -1;
-    std::int32_t textureUniform = -1;
 }
 
 SimpleQuad::SimpleQuad()
@@ -101,7 +97,7 @@ SimpleQuad::SimpleQuad()
 #ifdef PLATFORM_DESKTOP
     m_vao           (0),
 #endif
-    m_textureID     (-1),
+    m_textureID     (0),
     m_blendMode     (Material::BlendMode::Alpha)
 {
     if (activeCount == 0)
@@ -109,13 +105,10 @@ SimpleQuad::SimpleQuad()
         //load shader
         shader = std::make_unique<Shader>();
         shader->loadFromString(ShaderVertex, ShaderFragment);
-
-        auto uniforms = shader->getUniformMap();
-        projectionUniform = uniforms.at("u_projectionMatrix");
-        worldUniform = uniforms.at("u_worldMatrix");
-        textureUniform = uniforms.at("u_texture");
     }
     activeCount++;
+    
+    setShader(*shader);
 
     //create buffer
     glCheck(glGenBuffers(1, &m_vbo));
@@ -170,9 +163,6 @@ SimpleQuad::~SimpleQuad()
     if (activeCount == 0)
     {
         shader.reset();
-        projectionUniform = -1;
-        worldUniform = -1;
-        textureUniform = -1;
     }
 }
 
@@ -239,6 +229,42 @@ void SimpleQuad::setScale(glm::vec2 scale)
     updateTransform();
 }
 
+void SimpleQuad::setShader(const cro::Shader& shader)
+{
+    auto uniforms = shader.getUniformMap();
+    if (uniforms.count("u_projectionMatrix"))
+    {
+        m_uniforms.projectionMatrix = uniforms.at("u_projectionMatrix");
+    }
+    else
+    {
+        m_uniforms.projectionMatrix = -1;
+        LogW << "Uniform u_projectionMatrix not found in SimpleQuad shader" << std::endl;
+    }
+
+    if (uniforms.count("u_worldMatrix"))
+    {
+        m_uniforms.worldMatrix = uniforms.at("u_worldMatrix");
+    }
+    else
+    {
+        m_uniforms.worldMatrix = -1;
+        LogW << "Uniform u_worldMatrix not found in SimpleQuad shader" << std::endl;
+    }
+
+    if (uniforms.count("u_texture"))
+    {
+        m_uniforms.texture = uniforms.at("u_texture");
+    }
+    else
+    {
+        m_uniforms.texture = -1;
+        LogW << "Uniform u_texture not found in SimpleQuad shader" << std::endl;
+    }
+
+    m_uniforms.shaderID = shader.getGLHandle();
+}
+
 void SimpleQuad::draw() const
 {
     if (m_textureID)
@@ -267,10 +293,10 @@ void SimpleQuad::draw() const
         glCheck(glBindTexture(GL_TEXTURE_2D, m_textureID));
 
         //bind shader
-        glCheck(glUseProgram(shader->getGLHandle()));
-        glCheck(glUniform1i(textureUniform, 0));
-        glCheck(glUniformMatrix4fv(worldUniform, 1, GL_FALSE, &m_modelMatrix[0][0]));
-        glCheck(glUniformMatrix4fv(projectionUniform, 1, GL_FALSE, &projectionMatrix[0][0]));
+        glCheck(glUseProgram(m_uniforms.shaderID));
+        glCheck(glUniform1i(m_uniforms.texture, 0));
+        glCheck(glUniformMatrix4fv(m_uniforms.worldMatrix, 1, GL_FALSE, &m_modelMatrix[0][0]));
+        glCheck(glUniformMatrix4fv(m_uniforms.projectionMatrix, 1, GL_FALSE, &projectionMatrix[0][0]));
 
         //draw
 #ifdef PLATFORM_DESKTOP

@@ -137,6 +137,18 @@ namespace cro
         void setBlendMode(Material::BlendMode blendMode) { m_blendMode = blendMode; }
 
         /*!
+        \brief Sets a custom shader with which to draw the quad.
+        A quad Vertex is defined as
+        vec2 Position
+        vec2 TextureCoords
+        vec4 Colour
+
+        Custom vertex shaders should expect this layout.
+
+        */
+        void setShader(const cro::Shader& shader);
+
+        /*!
         \brief Returns the current blend mode for this quad
         */
         Material::BlendMode getBlendMode() const { return m_blendMode; }
@@ -161,8 +173,16 @@ namespace cro
 #ifdef PLATFORM_DESKTOP
         std::uint32_t m_vao;
 #endif
-        std::int32_t m_textureID;
+        std::uint32_t m_textureID;
         Material::BlendMode m_blendMode;
+
+        struct ShaderUniforms final
+        {
+            std::int32_t projectionMatrix = -1;
+            std::int32_t worldMatrix = -1;
+            std::int32_t texture = -1;
+            std::uint32_t shaderID = 0;
+        }m_uniforms;
 
         void updateVertexData();
         void applyBlendMode() const;
