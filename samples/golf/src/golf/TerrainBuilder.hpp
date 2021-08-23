@@ -117,6 +117,7 @@ private:
         cro::Mesh::Data* meshData = nullptr;
         std::int32_t positionUniform = -1;
         std::int32_t timeUniform = -1;
+        std::int32_t alphaUniform = -1;
         std::uint32_t shader = 0;
     }m_slopeProperties;
     std::vector<glm::vec3> m_normalMapBuffer;

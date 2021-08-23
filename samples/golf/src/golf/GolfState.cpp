@@ -1399,7 +1399,9 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     cmd.targetFlags = CommandID::SlopeIndicator;
     cmd.action = [](cro::Entity e, float)
     {
-        e.getComponent<cro::Model>().setHidden(true);
+        //e.getComponent<cro::Model>().setHidden(true);
+        e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
+        e.getComponent<cro::Callback>().active = true;
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -1581,7 +1583,19 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.targetFlags = CommandID::SlopeIndicator;
     cmd.action = [player](cro::Entity e, float)
     {
-        e.getComponent<cro::Model>().setHidden(player.terrain != TerrainID::Green);
+        bool hidden = (player.terrain != TerrainID::Green);
+
+        if (!hidden)
+        {
+            e.getComponent<cro::Model>().setHidden(hidden);
+            e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 0;
+            e.getComponent<cro::Callback>().active = true;
+        }
+        else
+        {
+            e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
+            e.getComponent<cro::Callback>().active = true;
+        }
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 

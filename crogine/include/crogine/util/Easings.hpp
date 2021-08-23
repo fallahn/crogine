@@ -62,7 +62,7 @@ namespace cro
 
             static inline float easeInOutSine(float t)
             {
-                return 0.5f * (1 + std::sin(cro::Util::Const::PI * (t - 0.5f)));
+                return 0.5f * (1.f + std::sin(cro::Util::Const::PI * (t - 0.5f)));
             }
 
             static inline float easeInQuad(float t)
@@ -83,7 +83,7 @@ namespace cro
                 }
                 else
                 {
-                    return t * (4.f - 2.f * t) - 1;
+                    return t * (4.f - 2.f * t) - 1.f;
                 }
             }
 
@@ -164,7 +164,7 @@ namespace cro
 
             static inline float easeInExpo(float t)
             {
-                return (std::pow(2.f, 8.f * t) - 1) / 255.f;
+                return (std::pow(2.f, 8.f * t) - 1.f) / 255.f;
             }
 
             static inline float easeOutExpo(float t)

@@ -100,6 +100,7 @@ R"(
     OUTPUT
 
     uniform float u_time;
+    uniform float u_alpha;
 
     VARYING_IN vec4 v_colour;
     VARYING_IN vec2 v_texCoord;
@@ -112,7 +113,7 @@ R"(
         alpha = step(0.5, alpha);
 
         FRAG_OUT = v_colour;
-        FRAG_OUT.a *= alpha;
+        FRAG_OUT.a *= alpha * u_alpha;
     }
 )";
 

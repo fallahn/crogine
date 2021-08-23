@@ -90,6 +90,13 @@ BallSystem::BallSystem(cro::MessageBus& mb, const cro::Image& mapData)
     requireComponent<cro::Transform>();
     requireComponent<Ball>();
 
+    m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
+    m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
+
+    m_windDirTarget = glm::normalize(m_windDirTarget);
+
+    m_windStrengthTarget = static_cast<float>(cro::Util::Random::value(1, 10)) / 10.f;
+
     updateWind();
 }
 

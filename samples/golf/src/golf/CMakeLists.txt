@@ -2,6 +2,7 @@
 set(GOLF_SRC
   ${PROJECT_DIR}/golf/BallSystem.cpp
   ${PROJECT_DIR}/golf/ClientCollisionSystem.cpp
+  ${PROJECT_DIR}/golf/ErrorState.cpp
   ${PROJECT_DIR}/golf/GolfCartSystem.cpp
   ${PROJECT_DIR}/golf/GolfInputParser.cpp
   ${PROJECT_DIR}/golf/GolfMenuState.cpp

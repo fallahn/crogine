@@ -326,6 +326,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto& slopeShader = resources.shaders.get(ShaderID::Slope);
     m_slopeProperties.positionUniform = slopeShader.getUniformID("u_centrePosition");
     m_slopeProperties.timeUniform = slopeShader.getUniformID("u_time");
+    m_slopeProperties.alphaUniform = slopeShader.getUniformID("u_alpha");
     m_slopeProperties.shader = slopeShader.getGLHandle();
     materialID = resources.materials.add(slopeShader);
     resources.materials.get(materialID).blendMode = cro::Material::BlendMode::Alpha;
@@ -336,6 +337,33 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     entity.getComponent<cro::Model>().setHidden(true);
+    entity.addComponent<cro::Callback>().setUserData < std::pair<float, std::int32_t>>(0.f, 0);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& [alpha, direction] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+        if (direction == 0)
+        {
+            //fade in
+            alpha = std::min(1.f, alpha + dt);
+            if (alpha == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        else
+        {
+            alpha = std::max(0.f, alpha - dt);
+            if (alpha == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                e.getComponent<cro::Model>().setHidden(true);
+            }
+        }
+        glCheck(glUseProgram(m_slopeProperties.shader));
+        glCheck(glUniform1f(m_slopeProperties.alphaUniform, alpha));
+    };
+
     m_slopeProperties.meshData = &entity.getComponent<cro::Model>().getMeshData();
     m_slopeProperties.meshData->boundingBox[0] = glm::vec3(0.f, -10.f, 0.f);
     m_slopeProperties.meshData->boundingBox[1] = glm::vec3(MaxBounds[0], 10.f, -MaxBounds[1]);
