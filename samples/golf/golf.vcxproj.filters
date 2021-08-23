@@ -128,9 +128,6 @@
     <ClInclude Include="src\LoadingScreen.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Messages.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\MyApp.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>

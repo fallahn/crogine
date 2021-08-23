@@ -36,6 +36,8 @@ source distribution.
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/Message.hpp>
+#include <crogine/core/ConfigFile.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
@@ -75,6 +77,21 @@ void MyApp::handleEvent(const cro::Event& evt)
 
 void MyApp::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped)
+        {
+            switch (data.id)
+            {
+            default: break;
+            case States::Golf::Options:
+                savePreferences();
+                break;
+            }
+        }
+    }
+
     m_stateStack.handleMessage(msg);
 }
 
@@ -110,6 +127,8 @@ bool MyApp::initialise()
 
     setApplicationStrings("trederia", "golf");
 
+    loadPreferences();
+
     m_sharedGolfData.clientConnection.netClient.create(4);
     m_sharedGolfData.sharedResources = std::make_unique<cro::ResourceCollection>();
 
@@ -134,6 +153,8 @@ bool MyApp::initialise()
 
 void MyApp::finalise()
 {
+    savePreferences();
+
     for (auto& c : m_sharedGolfData.avatarTextures)
     {
         for (auto& t : c)
@@ -145,4 +166,42 @@ void MyApp::finalise()
 
     m_stateStack.clearStates();
     m_stateStack.simulate(0.f);
+}
+
+void MyApp::loadPreferences()
+{
+    auto path = getPreferencePath() + "prefs.cfg";
+    if (cro::FileSystem::fileExists(path))
+    {
+        cro::ConfigFile cfg;
+        if (cfg.loadFromFile(path))
+        {
+            const auto& properties = cfg.getProperties();
+            for (const auto& prop : properties)
+            {
+                const auto& name = prop.getName();
+                if (name == "use_post_process")
+                {
+                    m_sharedGolfData.usePostProcess = prop.getValue<bool>();
+                }
+            }
+        }
+    }
+
+    //TODO read keybind bin
+}
+
+void MyApp::savePreferences()
+{
+    auto path = getPreferencePath() + "prefs.cfg";
+    cro::ConfigFile cfg("preferences");
+
+    //advanced options
+    cfg.addProperty("use_post_process").setValue(m_sharedGolfData.usePostProcess);
+
+    cfg.save(path);
+
+
+    //keybinds
+    //TODO dump this as a binary.
 }
