@@ -95,4 +95,7 @@ struct SharedStateData final
     std::string errorMessage;
 
     bool hosting = false;
+
+    //client settings
+    bool usePostProcess = false;
 };

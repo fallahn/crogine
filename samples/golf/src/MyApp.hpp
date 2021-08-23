@@ -32,9 +32,10 @@ source distribution.
 #include "golf/SharedStateData.hpp"
 
 #include <crogine/core/App.hpp>
+#include <crogine/gui/GuiClient.hpp>
 #include <crogine/core/StateStack.hpp>
 
-class MyApp final : public cro::App
+class MyApp final : public cro::App, public cro::GuiClient
 {
 public:
     MyApp();

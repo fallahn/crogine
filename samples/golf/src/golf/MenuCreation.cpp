@@ -33,6 +33,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "Utility.hpp"
 #include "CommandIDs.hpp"
+#include "../ErrorCheck.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/detail/GlobalConsts.hpp>
@@ -128,8 +129,14 @@ void GolfMenuState::createUI()
         auto windowSize = cro::App::getWindow().getSize();
         glm::vec2 size(windowSize);
 
-        m_postBuffer.create(windowSize.x, windowSize.y, false);
-        m_postQuad.setTexture(m_postBuffer.getTexture());
+        if (m_sharedData.usePostProcess)
+        {
+            m_postBuffer.create(windowSize.x, windowSize.y, false);
+            m_postQuad.setTexture(m_postBuffer.getTexture());
+            auto shaderRes = size / 1.f;
+            glCheck(glUseProgram(m_postShader.getGLHandle()));
+            glCheck(glUniform2f(m_postShader.getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
+        }
 
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

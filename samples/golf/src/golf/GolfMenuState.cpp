@@ -263,11 +263,18 @@ void GolfMenuState::render()
     m_backgroundScene.render(m_backgroundTexture);
     m_backgroundTexture.display();
 
-    m_postBuffer.clear();
-    m_uiScene.render(m_postBuffer);
-    m_postBuffer.display();
+    if (m_sharedData.usePostProcess)
+    {
+        m_postBuffer.clear();
+        m_uiScene.render(m_postBuffer);
+        m_postBuffer.display();
 
-    m_postQuad.draw();
+        m_postQuad.draw();
+    }
+    else
+    {
+        m_uiScene.render(cro::App::getWindow());
+    }
 }
 
 //private

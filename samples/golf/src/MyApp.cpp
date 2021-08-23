@@ -35,6 +35,7 @@ source distribution.
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/gui/Gui.hpp>
 
 namespace
 {
@@ -87,6 +88,21 @@ void MyApp::render()
 
 bool MyApp::initialise()
 {
+    registerConsoleTab("Advanced",
+        [&]()
+        {
+            if (ImGui::Checkbox("PostProcess (not yet implemented)", &m_sharedGolfData.usePostProcess))
+            {
+                //TODO remove this - it just stops the assertion failure for having
+                //no post process buffer created yet
+                m_sharedGolfData.usePostProcess = false;
+                if (m_sharedGolfData.usePostProcess)
+                {
+                    //TODO raise a message or something to resize the post process buffers
+                }
+            }        
+        });
+
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Golf!");
 
