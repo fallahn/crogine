@@ -58,6 +58,7 @@ namespace golf
 
         void setActive(bool);
         void setSuspended(bool);
+        void resetPower();
         void update(float);
 
         bool inProgress() const;

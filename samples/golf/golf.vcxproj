@@ -241,7 +241,7 @@
     <ClCompile Include="src\golf\TerrainBuilder.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\MyApp.cpp" />
+    <ClCompile Include="src\GolfGame.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp" />
@@ -282,7 +282,7 @@
     <ClInclude Include="src\golf\TextAnimCallback.hpp" />
     <ClInclude Include="src\golf\Utility.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
-    <ClInclude Include="src\MyApp.hpp" />
+    <ClInclude Include="src\GolfGame.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
   </ItemGroup>
   <ItemGroup>

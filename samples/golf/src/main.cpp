@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,12 +29,12 @@ source distribution.
 
 #include <SDL.h>
 
-#include "MyApp.hpp"
+#include "GolfGame.hpp"
 
 int main(int argc, char** argsv)
 {
-    MyApp mapp;
-    mapp.run();
+    GolfGame game;
+    game.run();
 
     return 0;
 }

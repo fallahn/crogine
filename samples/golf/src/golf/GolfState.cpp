@@ -1450,13 +1450,15 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     updateScoreboard();
     showScoreboard(false);
 
+    auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
+
     //self destructing ent to provide delay before popping up player name
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(1.5f);
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, localPlayer](cro::Entity e, float dt)
     {
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime -= dt;
@@ -1465,6 +1467,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             showMessageBoard(MessageBoardID::PlayerName);
             e.getComponent<cro::Callback>().active = false;
             m_uiScene.destroyEntity(e);
+
+            m_inputParser.setActive(localPlayer);
         }
     };
     
@@ -1503,20 +1507,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
 
-    //cmd.targetFlags = CommandID::UI::HoleNumber;
-    //cmd.action =
-    //    [&](cro::Entity e, float)
-    //{
-    //    auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
-    //    data.string = "Hole: " + std::to_string(m_currentHole + 1);
-    //    e.getComponent<cro::Callback>().active = true;
-    //};
-    //m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
-
-    //show ui if this is our client
-    auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
-    
+    //show ui if this is our client    
     cmd.targetFlags = CommandID::UI::Root;
     cmd.action = [&,localPlayer](cro::Entity e, float)
     {
@@ -1542,7 +1533,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     //if client is ours activate input/set initial stroke direction
     auto target = m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetLookAt;
-    m_inputParser.setActive(localPlayer);
+    m_inputParser.resetPower();
     m_inputParser.setHoleDirection(target - player.position, m_currentPlayer != player); // this also selects the nearest club
 
     //this just makes sure to update the direction indicator
@@ -1553,7 +1544,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     msg->type = GolfEvent::ClubChanged;
 
     //apply the correct sprite to the player entity
-    //TODO select correct texture
     cmd.targetFlags = CommandID::UI::PlayerSprite;
     cmd.action = [&,player](cro::Entity e, float)
     {

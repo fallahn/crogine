@@ -63,7 +63,7 @@
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\MyApp.cpp">
+    <ClCompile Include="src\GolfGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\golf\server\Server.cpp">
@@ -128,7 +128,7 @@
     <ClInclude Include="src\LoadingScreen.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\MyApp.hpp">
+    <ClInclude Include="src\GolfGame.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\StateIDs.hpp">

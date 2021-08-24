@@ -36,14 +36,14 @@ source distribution.
 #include <crogine/core/StateStack.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
-class MyApp final : public cro::App, public cro::GuiClient
+class GolfGame final : public cro::App, public cro::GuiClient
 {
 public:
-    MyApp();
+    GolfGame();
 
 private:
     
-    SharedStateData m_sharedGolfData;
+    SharedStateData m_sharedData;
     cro::StateStack m_stateStack;
 
     void handleEvent(const cro::Event&) override;

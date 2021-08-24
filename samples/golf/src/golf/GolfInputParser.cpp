@@ -286,11 +286,11 @@ namespace golf
     {
         m_active = active;
         m_state = State::Aim;
+        //if the parser was suspended when set active then make sure un-suspending it returns the correct state.
+        m_suspended = active;
         if (active)
         {
-            m_power = 0.f;
-            m_hook = 0.5f;
-            m_powerbarDirection = 1.f;
+            resetPower();
         }
     }
 
@@ -306,6 +306,13 @@ namespace golf
             m_active = m_suspended;
         }
 
+    }
+
+    void InputParser::resetPower()
+    {
+        m_power = 0.f;
+        m_hook = 0.5f;
+        m_powerbarDirection = 1.f;
     }
 
     void InputParser::update(float dt)

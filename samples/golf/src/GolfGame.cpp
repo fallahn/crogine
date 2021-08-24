@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "MyApp.hpp"
+#include "GolfGame.hpp"
 #include "golf/GolfMenuState.hpp"
 #include "golf/GolfState.hpp"
 #include "golf/ErrorState.hpp"
@@ -47,17 +47,17 @@ namespace
 
 }
 
-MyApp::MyApp()
+GolfGame::GolfGame()
     : m_stateStack({*this, getWindow()})
 {
-    m_stateStack.registerState<GolfMenuState>(States::Golf::Menu, m_sharedGolfData);
-    m_stateStack.registerState<GolfState>(States::Golf::Game, m_sharedGolfData);
-    m_stateStack.registerState<ErrorState>(States::Golf::Error, m_sharedGolfData);
-    m_stateStack.registerState<OptionsState>(States::Golf::Options, m_sharedGolfData);
+    m_stateStack.registerState<GolfMenuState>(States::Golf::Menu, m_sharedData);
+    m_stateStack.registerState<GolfState>(States::Golf::Game, m_sharedData);
+    m_stateStack.registerState<ErrorState>(States::Golf::Error, m_sharedData);
+    m_stateStack.registerState<OptionsState>(States::Golf::Options, m_sharedData);
 }
 
 //public
-void MyApp::handleEvent(const cro::Event& evt)
+void GolfGame::handleEvent(const cro::Event& evt)
 {
 #ifdef CRO_DEBUG_
     if (evt.type == SDL_KEYUP)
@@ -76,7 +76,7 @@ void MyApp::handleEvent(const cro::Event& evt)
     m_stateStack.handleEvent(evt);
 }
 
-void MyApp::handleMessage(const cro::Message& msg)
+void GolfGame::handleMessage(const cro::Message& msg)
 {
     if (msg.id == cro::Message::StateMessage)
     {
@@ -96,27 +96,27 @@ void MyApp::handleMessage(const cro::Message& msg)
     m_stateStack.handleMessage(msg);
 }
 
-void MyApp::simulate(float dt)
+void GolfGame::simulate(float dt)
 {
     m_stateStack.simulate(dt);
 }
 
-void MyApp::render()
+void GolfGame::render()
 {
     m_stateStack.render();
 }
 
-bool MyApp::initialise()
+bool GolfGame::initialise()
 {
     registerConsoleTab("Advanced",
         [&]()
         {
-            if (ImGui::Checkbox("PostProcess (not yet implemented)", &m_sharedGolfData.usePostProcess))
+            if (ImGui::Checkbox("PostProcess (not yet implemented)", &m_sharedData.usePostProcess))
             {
                 //TODO remove this - it just stops the assertion failure for having
                 //no post process buffer created yet
-                m_sharedGolfData.usePostProcess = false;
-                if (m_sharedGolfData.usePostProcess)
+                m_sharedData.usePostProcess = false;
+                if (m_sharedData.usePostProcess)
                 {
                     //TODO raise a message or something to resize the post process buffers
                 }
@@ -130,14 +130,14 @@ bool MyApp::initialise()
 
     loadPreferences();
 
-    m_sharedGolfData.clientConnection.netClient.create(4);
-    m_sharedGolfData.sharedResources = std::make_unique<cro::ResourceCollection>();
+    m_sharedData.clientConnection.netClient.create(4);
+    m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
 
     //preload resources which will be used in dynamically loaded menus
-    m_sharedGolfData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
+    m_sharedData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
 
     cro::SpriteSheet s;
-    s.loadFromFile("assets/golf/sprites/options.spt", m_sharedGolfData.sharedResources->textures);
+    s.loadFromFile("assets/golf/sprites/options.spt", m_sharedData.sharedResources->textures);
 
 
 
@@ -152,24 +152,24 @@ bool MyApp::initialise()
     return true;
 }
 
-void MyApp::finalise()
+void GolfGame::finalise()
 {
     savePreferences();
 
-    for (auto& c : m_sharedGolfData.avatarTextures)
+    for (auto& c : m_sharedData.avatarTextures)
     {
         for (auto& t : c)
         {
             t = {};
         }
     }
-    m_sharedGolfData.sharedResources.reset();
+    m_sharedData.sharedResources.reset();
 
     m_stateStack.clearStates();
     m_stateStack.simulate(0.f);
 }
 
-void MyApp::loadPreferences()
+void GolfGame::loadPreferences()
 {
     auto path = getPreferencePath() + "prefs.cfg";
     if (cro::FileSystem::fileExists(path))
@@ -183,7 +183,7 @@ void MyApp::loadPreferences()
                 const auto& name = prop.getName();
                 if (name == "use_post_process")
                 {
-                    m_sharedGolfData.usePostProcess = prop.getValue<bool>();
+                    m_sharedData.usePostProcess = prop.getValue<bool>();
                 }
             }
         }
@@ -201,20 +201,20 @@ void MyApp::loadPreferences()
             auto size = SDL_RWsize(file.file);
             if (size == sizeof(InputBinding))
             {
-                SDL_RWread(file.file, &m_sharedGolfData.inputBinding, size, 1);
+                SDL_RWread(file.file, &m_sharedData.inputBinding, size, 1);
                 LOG("Read keybinds file", cro::Logger::Type::Info);
             }
         }
     }
 }
 
-void MyApp::savePreferences()
+void GolfGame::savePreferences()
 {
     auto path = getPreferencePath() + "prefs.cfg";
     cro::ConfigFile cfg("preferences");
 
     //advanced options
-    cfg.addProperty("use_post_process").setValue(m_sharedGolfData.usePostProcess);
+    cfg.addProperty("use_post_process").setValue(m_sharedData.usePostProcess);
 
     cfg.save(path);
 
@@ -225,6 +225,6 @@ void MyApp::savePreferences()
     file.file = SDL_RWFromFile(path.c_str(), "wb");
     if (file.file)
     {
-        SDL_RWwrite(file.file, &m_sharedGolfData.inputBinding, sizeof(InputBinding), 1);
+        SDL_RWwrite(file.file, &m_sharedData.inputBinding, sizeof(InputBinding), 1);
     }
 }
