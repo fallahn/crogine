@@ -283,7 +283,7 @@ void GolfMenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter,
             {
                 if (activated(evt))
                 {
-                    requestStackPush(States::Golf::Options);
+                    requestStackPush(StateID::Options);
                 }
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
@@ -495,7 +495,7 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
                             {
                                 m_sharedData.serverInstance.stop();
                                 m_sharedData.errorMessage = "Failed to connect to local server.";
-                                requestStackPush(States::Golf::Error);
+                                requestStackPush(StateID::Error);
                             }
                             else
                             {
@@ -670,7 +670,7 @@ void GolfMenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter,
                         if (!m_sharedData.clientConnection.connected)
                         {
                             m_sharedData.errorMessage = "Could not connect to server";
-                            requestStackPush(States::Golf::Error);
+                            requestStackPush(StateID::Error);
                         }
 
                         cro::Command cmd;

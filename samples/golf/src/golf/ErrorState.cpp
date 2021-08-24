@@ -68,7 +68,7 @@ ErrorState::ErrorState(cro::StateStack& ss, cro::State::Context ctx, SharedState
                     sd.clientConnection.ready = false;
 
                     requestStackClear();
-                    requestStackPush(States::Golf::Menu);
+                    requestStackPush(StateID::Menu);
                 }
             }
             ImGui::End();

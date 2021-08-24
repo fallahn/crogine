@@ -29,16 +29,14 @@ source distribution.
 
 #pragma once
 
-namespace States
+struct StateID final
 {
-    struct Golf final
+    enum
     {
-        enum
-        {
-            Menu,
-            Game,
-            Options,
-            Error
-        };
+        Menu,
+        Game,
+        Options,
+        Pause,
+        Error
     };
-}
+};

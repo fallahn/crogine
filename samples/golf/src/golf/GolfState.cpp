@@ -255,6 +255,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_RETURN:
             showScoreboard(false);
             break;
+        case SDLK_ESCAPE:
+        case SDLK_p:
+        case SDLK_PAUSE:
+            requestStackPush(StateID::Pause);
+            break;
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
@@ -440,7 +445,7 @@ bool GolfState::simulate(float dt)
     {
         //we've been disconnected somewhere - push error state
         m_sharedData.errorMessage = "Lost connection to host.";
-        requestStackPush(States::Golf::Error);
+        requestStackPush(StateID::Error);
     }
 
     //update time uniforms
@@ -747,7 +752,7 @@ void GolfState::loadAssets()
     if (error)
     {
         m_sharedData.errorMessage = "Failed to load course data";
-        requestStackPush(States::Golf::Error);
+        requestStackPush(StateID::Error);
     }
 
 
@@ -1086,7 +1091,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                 m_sharedData.errorMessage = "Server Failed To Load Map";
                 break;
             }
-            requestStackPush(States::Golf::Error);
+            requestStackPush(StateID::Error);
             break;
         case PacketID::SetPlayer:
             m_wantsGameState = false;
@@ -1138,7 +1143,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Lobby)
             {
                 requestStackClear();
-                requestStackPush(States::Golf::Menu);
+                requestStackPush(StateID::Menu);
             }
             break;
         case PacketID::EntityRemoved:
@@ -1160,7 +1165,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
         break;
     case cro::NetEvent::ClientDisconnect:
         m_sharedData.errorMessage = "Disconnected From Server (Host Quit)";
-        requestStackPush(States::Golf::Error);
+        requestStackPush(StateID::Error);
         break;
     default: break;
     }
@@ -1207,7 +1212,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     if (hole >= m_holeData.size())
     {
         m_sharedData.errorMessage = "Server requested hole\nnot found";
-        requestStackPush(States::Golf::Error);
+        requestStackPush(StateID::Error);
         return;
     }
 

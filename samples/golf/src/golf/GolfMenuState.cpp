@@ -478,7 +478,7 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Game)
             {
                 requestStackClear();
-                requestStackPush(States::Golf::Game);
+                requestStackPush(StateID::Game);
             }
             break;
         case PacketID::ConnectionAccepted:
@@ -545,7 +545,7 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
     else if (evt.type == cro::NetEvent::ClientDisconnect)
     {
         m_sharedData.errorMessage = "Lost Connection To Host";
-        requestStackPush(States::Golf::Error);
+        requestStackPush(StateID::Error);
     }
 }
 

@@ -69,7 +69,7 @@ class GolfMenuState final : public cro::State, public cro::GuiClient
 public:
     GolfMenuState(cro::StateStack&, cro::State::Context, SharedStateData&);
 
-    cro::StateID getStateID() const override { return States::Golf::Menu; }
+    cro::StateID getStateID() const override { return StateID::Menu; }
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;

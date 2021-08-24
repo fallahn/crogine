@@ -32,6 +32,7 @@ source distribution.
 #include "golf/GolfState.hpp"
 #include "golf/ErrorState.hpp"
 #include "golf/OptionsState.hpp"
+#include "golf/PauseState.hpp"
 #include "golf/MenuConsts.hpp"
 #include "LoadingScreen.hpp"
 
@@ -50,10 +51,11 @@ namespace
 GolfGame::GolfGame()
     : m_stateStack({*this, getWindow()})
 {
-    m_stateStack.registerState<GolfMenuState>(States::Golf::Menu, m_sharedData);
-    m_stateStack.registerState<GolfState>(States::Golf::Game, m_sharedData);
-    m_stateStack.registerState<ErrorState>(States::Golf::Error, m_sharedData);
-    m_stateStack.registerState<OptionsState>(States::Golf::Options, m_sharedData);
+    m_stateStack.registerState<GolfMenuState>(StateID::Menu, m_sharedData);
+    m_stateStack.registerState<GolfState>(StateID::Game, m_sharedData);
+    m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);
+    m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
+    m_stateStack.registerState<PauseState>(StateID::Pause, m_sharedData);
 }
 
 //public
@@ -86,7 +88,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
             switch (data.id)
             {
             default: break;
-            case States::Golf::Options:
+            case StateID::Options:
                 savePreferences();
                 break;
             }
@@ -144,9 +146,9 @@ bool GolfGame::initialise()
 
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::Golf::Menu);
+    m_stateStack.pushState(StateID::Menu);
 #else
-    m_stateStack.pushState(States::Golf::Menu);
+    m_stateStack.pushState(StateID::Menu);
 #endif
 
     return true;

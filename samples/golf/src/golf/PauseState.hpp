@@ -32,20 +32,15 @@ source distribution.
 #include "../StateIDs.hpp"
 
 #include <crogine/core/State.hpp>
-#include <crogine/gui/GuiClient.hpp>
 
 #include <crogine/ecs/Scene.hpp>
 
 struct SharedStateData;
-namespace cro
-{
-    struct Camera;
-}
 
-class ErrorState final : public cro::State, public cro::GuiClient
+class PauseState final : public cro::State
 {
 public:
-    ErrorState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    PauseState(cro::StateStack&, cro::State::Context, SharedStateData&);
 
     bool handleEvent(const cro::Event&) override;
 
@@ -55,13 +50,16 @@ public:
 
     void render() override;
 
-    cro::StateID getStateID() const override { return StateID::Error; }
+    cro::StateID getStateID() const override { return StateID::Pause; }
 
 private:
 
     cro::Scene m_scene;
-    cro::Texture m_backgroundTexture;
+    SharedStateData& m_sharedData;
 
+    glm::vec2 m_viewScale;
+    cro::Entity m_rootNode;
     void buildScene();
-    void updateView(cro::Camera&);
+
+    void quitState();
 };

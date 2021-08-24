@@ -233,6 +233,7 @@
     <ClCompile Include="src\golf\MenuCreation.cpp" />
     <ClCompile Include="src\golf\GolfMenuState.cpp" />
     <ClCompile Include="src\golf\OptionsState.cpp" />
+    <ClCompile Include="src\golf\PauseState.cpp" />
     <ClCompile Include="src\golf\PlayerAvatar.cpp" />
     <ClCompile Include="src\golf\server\Server.cpp" />
     <ClCompile Include="src\golf\server\ServerGameState.cpp" />
@@ -266,6 +267,7 @@
     <ClInclude Include="src\golf\MessageIDs.hpp" />
     <ClInclude Include="src\golf\OptionsState.hpp" />
     <ClInclude Include="src\golf\PacketIDs.hpp" />
+    <ClInclude Include="src\golf\PauseState.hpp" />
     <ClInclude Include="src\golf\PlayerAvatar.hpp" />
     <ClInclude Include="src\golf\PlayerColours.hpp" />
     <ClInclude Include="src\golf\PoissonDisk.hpp" />

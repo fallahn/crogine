@@ -63,7 +63,7 @@ public:
 
     void render() override;
 
-    cro::StateID getStateID() const override { return States::Golf::Game; }
+    cro::StateID getStateID() const override { return StateID::Game; }
 
 private:
     SharedStateData& m_sharedData;
