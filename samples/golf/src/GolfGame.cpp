@@ -137,6 +137,7 @@ bool GolfGame::initialise()
 
     //preload resources which will be used in dynamically loaded menus
     m_sharedData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
+    m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
 
     cro::SpriteSheet s;
     s.loadFromFile("assets/golf/sprites/options.spt", m_sharedData.sharedResources->textures);

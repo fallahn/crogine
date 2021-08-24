@@ -34,6 +34,11 @@ spritesheet options
 
     sprite round_highlight
     {
-        bounds = 193,196,10,9
+        bounds = 193,194,10,9
+    }
+
+    sprite tab_highlight
+    {
+        bounds = 0,386, 100, 20
     }
 }

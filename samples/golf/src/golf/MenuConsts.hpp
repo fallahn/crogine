@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
 struct FontID final
@@ -37,6 +38,7 @@ struct FontID final
     enum
     {
         UI,
+        Info,
 
         Count
     };
@@ -47,6 +49,7 @@ static constexpr std::uint32_t MediumTextSize = 32;
 static constexpr std::uint32_t SmallTextSize = 16;
 
 static constexpr std::uint32_t UITextSize = 8;
+static constexpr std::uint32_t InfoTextSize = 10;
 
 static const cro::Colour TextNormalColour(0xfff8e1ff);
 static const cro::Colour TextEditColour(0x6eb39dff);
@@ -77,3 +80,23 @@ static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);
 //see GolfMenuState::m_menuPositions/MenuCreation.cpp
 static constexpr glm::vec2 MenuSpacing(1920.f, 1080.f);
 static constexpr float MenuBottomBorder = 20.f;
+
+static inline bool activated(const cro::ButtonEvent& evt)
+{
+    switch (evt.type)
+    {
+    default: return false;
+    case SDL_MOUSEBUTTONUP:
+    case SDL_MOUSEBUTTONDOWN:
+        return evt.button.button == SDL_BUTTON_LEFT;
+    case SDL_CONTROLLERBUTTONUP:
+    case SDL_CONTROLLERBUTTONDOWN:
+        return evt.cbutton.button == SDL_CONTROLLER_BUTTON_A;
+    case SDL_FINGERUP:
+    case SDL_FINGERDOWN:
+        return true;
+    case SDL_KEYUP:
+    case SDL_KEYDOWN:
+        return (evt.key.keysym.sym == SDLK_KP_ENTER || evt.key.keysym.sym == SDLK_RETURN);
+    }
+}

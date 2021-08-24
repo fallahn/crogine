@@ -59,25 +59,7 @@ source distribution.
 
 namespace
 {
-    bool activated(const cro::ButtonEvent& evt)
-    {
-        switch (evt.type)
-        {
-        default: return false;
-        case SDL_MOUSEBUTTONUP:
-        case SDL_MOUSEBUTTONDOWN:
-            return evt.button.button == SDL_BUTTON_LEFT;
-        case SDL_CONTROLLERBUTTONUP:
-        case SDL_CONTROLLERBUTTONDOWN:
-            return evt.cbutton.button == SDL_CONTROLLER_BUTTON_A;
-        case SDL_FINGERUP:
-        case SDL_FINGERDOWN:
-            return true;
-        case SDL_KEYUP:
-        case SDL_KEYDOWN:
-            return (evt.key.keysym.sym == SDLK_KP_ENTER || evt.key.keysym.sym == SDLK_RETURN);
-        }
-    }
+
 }
 
 constexpr std::array<glm::vec2, GolfMenuState::MenuID::Count> GolfMenuState::m_menuPositions =

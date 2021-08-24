@@ -37,6 +37,11 @@ source distribution.
 
 struct SharedStateData;
 
+namespace cro
+{
+    class SpriteSheet;
+}
+
 class OptionsState final : public cro::State
 {
 public:
@@ -60,6 +65,11 @@ private:
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     void buildScene();
+
+    void buildAVMenu(cro::Entity, const cro::SpriteSheet&);
+    void buildControlMenu(cro::Entity, const cro::SpriteSheet&);
+
+    void createButtons(cro::Entity, std::int32_t, std::uint32_t, std::uint32_t);
 
     void quitState();
 };
