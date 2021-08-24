@@ -56,6 +56,14 @@ static constexpr float MaxTerrainHeight = 3.5f;
 
 static constexpr glm::uvec2 MapSize(320, 200);
 
+struct MixerChannel final
+{
+    enum
+    {
+        Music, Effects, Menu
+    };
+};
+
 struct ShaderID final
 {
     enum

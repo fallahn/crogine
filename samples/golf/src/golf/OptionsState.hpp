@@ -62,6 +62,12 @@ private:
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
 
+    struct VideoSettings final
+    {
+        std::size_t resolutionIndex = 0;
+        bool fullScreen = false;
+    }m_videoSettings;
+
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     void buildScene();

@@ -78,6 +78,17 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
 {
     ctx.mainWindow.setMouseCaptured(false);
 
+    m_videoSettings.fullScreen = ctx.mainWindow.isFullscreen();
+    auto size = ctx.mainWindow.getSize();
+    for (auto i = 0u; i < sd.resolutions.size(); ++i)
+    {
+        if (sd.resolutions[i].x == size.x && sd.resolutions[i].y == size.y)
+        {
+            m_videoSettings.resolutionIndex = i;
+            break;
+        }
+    }
+
     buildScene();
 }
 
@@ -232,16 +243,23 @@ void OptionsState::buildScene()
     auto bgSize = glm::vec2(bounds.width, bounds.height);
 
     auto& uiSystem = m_scene.getSystem<cro::UISystem>();
-    auto selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Text>().setFillColour(TextHighlightColour); });
+    auto selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Text>().setFillColour(TextGoldColour); });
     auto unselectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Text>().setFillColour(TextNormalColour); });
 
     //video options
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 4.f, 20.f, 0.1f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("audio_video");
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto videoEnt = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    createButtons(entity, MenuID::Video, selectedID, unselectedID);
+    auto videoButtonEnt = entity;
 
     //control options
     entity = m_scene.createEntity();
@@ -264,10 +282,10 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_bar");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setPosition({ 0.f, bgSize.y - bounds.height, 0.1f });
-    entity.addComponent<cro::Callback>();// .active = true;
+    entity.addComponent<cro::Callback>();
     entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(1.f, 1);
     entity.getComponent<cro::Callback>().function =
-        [videoEnt, controlEnt](cro::Entity e, float dt) mutable
+        [&uiSystem, videoEnt, controlEnt](cro::Entity e, float dt) mutable
     {
         auto& [currPos, direction] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
         if (direction == 0)
@@ -277,7 +295,7 @@ void OptionsState::buildScene()
             if (currPos == 1)
             {
                 direction = 1;
-                //TODO set active menu
+                uiSystem.setActiveGroup(MenuID::Controls);
                 e.getComponent<cro::Callback>().active = false;
             }
         }
@@ -288,7 +306,7 @@ void OptionsState::buildScene()
             if (currPos == 0)
             {
                 direction = 0;
-                //TODO set active menu
+                uiSystem.setActiveGroup(MenuID::Video);
                 e.getComponent<cro::Callback>().active = false;
             }
         }
@@ -311,6 +329,11 @@ void OptionsState::buildScene()
 
     auto tabEnt = entity;
 
+    //dummy input to consume events during animation
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::Dummy);
+
     selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); });
     unselectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
 
@@ -325,15 +348,48 @@ void OptionsState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [tabEnt, controlButtonEnt](cro::Entity e, cro::ButtonEvent evt)  mutable
+        [&uiSystem, tabEnt, videoButtonEnt, controlButtonEnt](cro::Entity e, cro::ButtonEvent evt)  mutable
     {
-            tabEnt.getComponent<cro::Callback>().active = true;
-            //TODO set control ent off screen somewhere
-            //TODO reset position for video button ent
-            //TODO set the active group to a dummy until animation is complete
+            if (activated(evt))
+            {
+                tabEnt.getComponent<cro::Callback>().active = true;
+                controlButtonEnt.getComponent<cro::Transform>().move(glm::vec2(-10000.f));
+
+                //reset position for video button ent
+                videoButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
+
+                //set the active group to a dummy until animation is complete
+                uiSystem.setActiveGroup(MenuID::Dummy);
+            }
     });
     controlButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //tab button to switch to controls
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(100.f, 130.f, 0.2f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Video);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&uiSystem, tabEnt, videoButtonEnt, controlButtonEnt](cro::Entity e, cro::ButtonEvent evt)  mutable
+        {
+            if (activated(evt))
+            {
+                tabEnt.getComponent<cro::Callback>().active = true;
+                videoButtonEnt.getComponent<cro::Transform>().move(glm::vec2(-10000.f));
+
+                //reset position for control button ent
+                controlButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
+
+                //set the active group to a dummy until animation is complete
+                uiSystem.setActiveGroup(MenuID::Dummy);
+            }
+        });
+    videoButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     buildAVMenu(videoEnt, spriteSheet);
     buildControlMenu(controlEnt, spriteSheet);
@@ -393,7 +449,144 @@ void OptionsState::buildScene()
 
 void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
 {
+    auto parentBounds = parent.getComponent<cro::Sprite>().getTextureBounds();
 
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    auto createLabel = [&](glm::vec2 pos, const std::string& str)
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(pos);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setString(str);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        return entity;
+    };
+
+    //music label
+    createLabel(glm::vec2(10.f, 103.f), "Music");
+
+    //effects label
+    createLabel(glm::vec2(10.f, 78.f), "Effects");
+
+    //menu label
+    createLabel(glm::vec2(10.f, 53.f), "Menu");
+
+    //resolution label
+    createLabel(glm::vec2(10.f, 26.f), "Resolution");
+
+    //full screen label
+    createLabel(glm::vec2(131.f, 14.f), "Full Screen");
+
+
+    //resolution value text
+    auto resLabel = createLabel(glm::vec2(60.f, 14.f), m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
+    resLabel.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+
+
+    auto& uiSystem = m_scene.getSystem<cro::UISystem>();
+    auto selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); });
+    auto unselectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
+
+    auto createHighlight = [&](glm::vec2 pos)
+    {
+        auto ent = m_scene.createEntity();
+        ent.addComponent<cro::Transform>().setPosition(pos);
+        ent.addComponent<cro::Drawable2D>();
+        ent.addComponent<cro::Sprite>() = spriteSheet.getSprite("square_highlight");
+        ent.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        ent.addComponent<cro::UIInput>().setGroup(MenuID::Video);
+        ent.getComponent<cro::UIInput>().area = ent.getComponent<cro::Sprite>().getTextureBounds();
+        ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+        ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+
+        parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+
+        return ent;
+    };
+
+    //music down
+    auto entity = createHighlight(glm::vec2(7.f, 83.f));
+
+    //music up
+    entity = createHighlight(glm::vec2(174.f, 83.f));
+
+
+
+    //effects down
+    entity = createHighlight(glm::vec2(7.f, 58.f));
+
+    //effect up
+    entity = createHighlight(glm::vec2(174.f, 58.f));
+
+
+
+    //menu down
+    entity = createHighlight(glm::vec2(7.f, 33.f));
+
+    //menu up
+    entity = createHighlight(glm::vec2(174.f, 33.f));
+
+
+    //res down
+    entity = createHighlight(glm::vec2(5.f, 5.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback(
+            [&, resLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                m_videoSettings.resolutionIndex = (m_videoSettings.resolutionIndex + (m_sharedData.resolutions.size() - 1)) % m_sharedData.resolutions.size();
+                resLabel.getComponent<cro::Text>().setString(m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
+            }
+        });
+
+    //res up
+    entity = createHighlight(glm::vec2(105.f, 5.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback(
+            [&, resLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_videoSettings.resolutionIndex = (m_videoSettings.resolutionIndex + 1) % m_sharedData.resolutions.size();
+                    resLabel.getComponent<cro::Text>().setString(m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
+                }
+            });
+
+    //check box
+    entity = createHighlight(glm::vec2(118.f, 5.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    m_videoSettings.fullScreen = !m_videoSettings.fullScreen;
+                }
+            });
+
+    //checkbox centre
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(120.f, 7.f));
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        float scale = m_videoSettings.fullScreen ? 1.f : 0.f;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    };
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
@@ -404,7 +597,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     auto infoEnt = m_scene.createEntity();
     infoEnt.addComponent<cro::Transform>().setPosition(glm::vec2(parentBounds.width / 2.f, parentBounds.height - 4.f));
     infoEnt.addComponent<cro::Drawable2D>();
-    infoEnt.addComponent<cro::Text>(infoFont).setString("Info Text");
+    infoEnt.addComponent<cro::Text>(infoFont);// .setString("Info Text");
     infoEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     infoEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     infoEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -592,11 +785,12 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [](cro::Entity e, cro::ButtonEvent evt)
+        [&](cro::Entity e, cro::ButtonEvent evt)
         {
             if (activated(evt))
             {
-
+                cro::App::getWindow().setSize(m_sharedData.resolutions[m_videoSettings.resolutionIndex]);
+                cro::App::getWindow().setFullScreen(m_videoSettings.fullScreen);
             }
         });
 

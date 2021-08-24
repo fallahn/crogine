@@ -95,7 +95,6 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
     });
 
     context.mainWindow.setMouseCaptured(false);
-    context.mainWindow.setTitle("Lotec Golf");
     //context.appInstance.setClearColour(cro::Colour(0.2f, 0.2f, 0.26f));
 
     sd.clientConnection.ready = false;

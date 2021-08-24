@@ -161,6 +161,11 @@ namespace cro
         */
         void setApplicationStrings(const std::string& organisation, const std::string& applicationName);
 
+        /*!
+        \brief Saves the current window and AudioMixer settings
+        */
+        void saveSettings();
+
     private:
         std::uint32_t m_windowStyleFlags;
         Window m_window;
@@ -219,7 +224,6 @@ namespace cro
             bool useMultisampling = false;
         };
         WindowSettings loadSettings();
-        void saveSettings();
 
         void saveScreenshot();
     };

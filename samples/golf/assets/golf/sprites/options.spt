@@ -29,7 +29,7 @@ spritesheet options
 
     sprite square_highlight
     {
-        vounds = 192,180,11,11
+        bounds = 192,178,11,11
     }
 
     sprite round_highlight

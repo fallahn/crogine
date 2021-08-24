@@ -34,8 +34,10 @@ source distribution.
 #include "golf/OptionsState.hpp"
 #include "golf/PauseState.hpp"
 #include "golf/MenuConsts.hpp"
+#include "golf/GameConsts.hpp"
 #include "LoadingScreen.hpp"
 
+#include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Message.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -51,6 +53,9 @@ namespace
 GolfGame::GolfGame()
     : m_stateStack({*this, getWindow()})
 {
+    //must be sest before anything else cfg is still loaded from default path
+    setApplicationStrings("trederia", "golf");
+
     m_stateStack.registerState<GolfMenuState>(StateID::Menu, m_sharedData);
     m_stateStack.registerState<GolfState>(StateID::Game, m_sharedData);
     m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);
@@ -90,6 +95,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
             default: break;
             case StateID::Options:
                 savePreferences();
+                saveSettings();
                 break;
             }
         }
@@ -126,9 +132,11 @@ bool GolfGame::initialise()
         });
 
     getWindow().setLoadingScreen<LoadingScreen>();
-    getWindow().setTitle("Golf!");
+    getWindow().setTitle("Lotec Golf!");
 
-    setApplicationStrings("trederia", "golf");
+    cro::AudioMixer::setLabel("Music", MixerChannel::Music);
+    cro::AudioMixer::setLabel("Effects", MixerChannel::Effects);
+    cro::AudioMixer::setLabel("Menu", MixerChannel::Menu);
 
     loadPreferences();
 
@@ -138,6 +146,14 @@ bool GolfGame::initialise()
     //preload resources which will be used in dynamically loaded menus
     m_sharedData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
     m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
+
+    m_sharedData.resolutions = getWindow().getAvailableResolutions();
+    std::reverse(m_sharedData.resolutions.begin(), m_sharedData.resolutions.end());
+    for (auto r : m_sharedData.resolutions)
+    {
+        auto& str = m_sharedData.resolutionStrings.emplace_back();
+        str += std::to_string(r.x) + " x " + std::to_string(r.y);
+    }
 
     cro::SpriteSheet s;
     s.loadFromFile("assets/golf/sprites/options.spt", m_sharedData.sharedResources->textures);

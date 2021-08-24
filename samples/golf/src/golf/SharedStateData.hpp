@@ -101,4 +101,6 @@ struct SharedStateData final
 
 
     std::unique_ptr<cro::ResourceCollection> sharedResources;
+    std::vector<glm::uvec2> resolutions;
+    std::vector<std::string> resolutionStrings;
 };
