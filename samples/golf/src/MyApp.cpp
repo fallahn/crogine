@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/detail/Types.hpp>
 
 namespace
 {
@@ -188,7 +189,23 @@ void MyApp::loadPreferences()
         }
     }
 
-    //TODO read keybind bin
+    //read keybind bin
+    path = getPreferencePath() + "keys.bind";
+
+    if (cro::FileSystem::fileExists(path))
+    {
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        if (file.file)
+        {
+            auto size = SDL_RWsize(file.file);
+            if (size == sizeof(InputBinding))
+            {
+                SDL_RWread(file.file, &m_sharedGolfData.inputBinding, size, 1);
+                LOG("Read keybinds file", cro::Logger::Type::Info);
+            }
+        }
+    }
 }
 
 void MyApp::savePreferences()
@@ -203,5 +220,11 @@ void MyApp::savePreferences()
 
 
     //keybinds
-    //TODO dump this as a binary.
+    path = getPreferencePath() + "keys.bind";
+    cro::RaiiRWops file;
+    file.file = SDL_RWFromFile(path.c_str(), "wb");
+    if (file.file)
+    {
+        SDL_RWwrite(file.file, &m_sharedGolfData.inputBinding, sizeof(InputBinding), 1);
+    }
 }
