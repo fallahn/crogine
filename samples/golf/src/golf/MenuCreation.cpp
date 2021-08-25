@@ -69,40 +69,58 @@ namespace
 
         std::int32_t targetMenu = MenuState::MenuID::Main;
     };
-
-    struct MenuCallback final
-    {
-        void operator()(cro::Entity e, float dt)
-        {
-            static constexpr float Speed = 2.f;
-            auto& menuData = e.getComponent<cro::Callback>().getUserData<MenuData>();
-            if (menuData.direction == MenuData::In)
-            {
-                //expand vertically
-                menuData.currentTime = std::min(1.f, menuData.currentTime + (dt * Speed));
-                e.getComponent<cro::Transform>().setScale({ 1.f, cro::Util::Easing::easeInQuint(menuData.currentTime) });
-
-                if (menuData.currentTime == 1)
-                {
-                    //TODO stop here
-                    menuData.direction = MenuData::Out;
-                }
-            }
-            else
-            {
-                //contract horizontally
-                menuData.currentTime = std::max(0.f, menuData.currentTime - (dt * Speed));
-                e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeInQuint(menuData.currentTime), 1.f });
-
-                if (menuData.currentTime == 0)
-                {
-                    //TODO set target position and init target animation
-                    menuData.direction = MenuData::In;
-                }
-            }
-        }
-    };
 }
+
+void MenuCallback::operator()(cro::Entity e, float dt)
+{
+    static constexpr float Speed = 2.f;
+    auto& menuData = e.getComponent<cro::Callback>().getUserData<MenuData>();
+    if (menuData.direction == MenuData::In)
+    {
+        //expand vertically
+        menuData.currentTime = std::min(1.f, menuData.currentTime + (dt * Speed));
+        e.getComponent<cro::Transform>().setScale({ 1.f, cro::Util::Easing::easeInQuint(menuData.currentTime) });
+
+        if (menuData.currentTime == 1)
+        {
+            //stop here
+            menuData.direction = MenuData::Out;
+            e.getComponent<cro::Callback>().active = false;
+            menuState.m_uiScene.getSystem<cro::UISystem>().setActiveGroup(menuData.targetMenu);
+        }
+    }
+    else
+    {
+        //contract horizontally
+        menuData.currentTime = std::max(0.f, menuData.currentTime - (dt * Speed));
+        e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeInQuint(menuData.currentTime), 1.f });
+
+        if (menuData.currentTime == 0)
+        {
+            //stop this callback
+            menuData.direction = MenuData::In;
+            e.getComponent<cro::Callback>().active = false;
+
+            //set target position and init target animation
+            auto* positions = &menuState.m_menuPositions;
+            auto viewScale = menuState.m_viewScale;
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Menu::RootNode;
+            cmd.action = [positions, menuData, viewScale](cro::Entity e, float)
+            {
+                e.getComponent<cro::Transform>().setPosition(positions->at(menuData.targetMenu) * viewScale);
+            };
+            menuState.m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+            menuState.m_menuEntities[menuData.targetMenu].getComponent<cro::Callback>().active = true;
+            menuState.m_menuEntities[menuData.targetMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = menuData.targetMenu;
+
+            menuState.m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuState::MenuID::Dummy); //TODO probably should set this when activating the anim.
+        }
+    }
+}
+
 
 constexpr std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPositions =
 {
@@ -139,6 +157,11 @@ void MenuState::createUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::RootNode;
     auto rootNode = entity;
+
+    //consumes input during menu animation.
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::Dummy);
 
     createPlayerConfigMenu(mouseEnterCallback, mouseExitCallback);
     createMainMenu(rootNode, mouseEnterCallback, mouseExitCallback);
@@ -205,9 +228,10 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 {
     auto menuEntity = m_uiScene.createEntity();
     menuEntity.addComponent<cro::Transform>();
-    /*menuEntity.addComponent<cro::Callback>().active = true;
-    menuEntity.getComponent<cro::Callback>().setUserData<MenuData>();
-    menuEntity.getComponent<cro::Callback>().function = MenuCallback();*/
+    /*menuEntity.addComponent<cro::Callback>().setUserData<MenuData>();
+    menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().direction = MenuData::Out;
+    menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().currentTime = 1.f;
+    menuEntity.getComponent<cro::Callback>().function = MenuCallback(*this);*/
 
     parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
 
@@ -238,13 +262,18 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&,parent](cro::Entity, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>().addCallback([&,parent, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
                     m_sharedData.hosting = true;
                     parent.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Avatar] * m_viewScale);
                     m_uiScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Avatar);
+                    
+                    /*m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                    menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
+                    menuEntity.getComponent<cro::Callback>().active = true;*/
+                    
                     m_currentMenu = MenuID::Avatar;
                 }
             });
@@ -341,7 +370,9 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
     auto menuEntity = m_uiScene.createEntity();
-    menuEntity.addComponent<cro::Transform>();
+    menuEntity.addComponent<cro::Transform>();// .setScale(glm::vec2(0.f));
+    /*menuEntity.addComponent<cro::Callback>().setUserData<MenuData>();
+    menuEntity.getComponent<cro::Callback>().function = MenuCallback(*this);*/
     parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
     
 

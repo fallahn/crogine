@@ -64,6 +64,15 @@ namespace cro
     struct Camera;
 }
 
+class MenuState;
+struct MenuCallback final
+{
+    MenuState& menuState;
+    explicit MenuCallback(MenuState& m) : menuState(m) {}
+
+    void operator()(cro::Entity, float);
+};
+
 class MenuState final : public cro::State, public cro::GuiClient
 {
 public:
@@ -78,7 +87,7 @@ public:
 
     enum MenuID
     {
-        Main, Avatar, Join, Lobby, Options, PlayerConfig, Count
+        Main, Avatar, Join, Lobby, Options, PlayerConfig, Dummy, Count
     };
 
 private:
@@ -148,4 +157,6 @@ private:
     void loadAvatars();
 
     void handleNetEvent(const cro::NetEvent&);
+
+    friend struct MenuCallback;
 };
