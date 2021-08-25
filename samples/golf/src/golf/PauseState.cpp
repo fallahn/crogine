@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 
@@ -50,6 +51,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
@@ -63,7 +65,7 @@ namespace
     {
         enum
         {
-            Video, Controls
+            Main, Confirm
         };
     };
 }
@@ -136,6 +138,7 @@ void PauseState::buildScene()
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
+    m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
 
@@ -214,6 +217,137 @@ void PauseState::buildScene()
     };
 
    
+    //background
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("message_board");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
+
+    auto menuEntity = m_scene.createEntity();
+    menuEntity.addComponent<cro::Transform>();
+    rootNode.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
+
+    auto confirmEntity = m_scene.createEntity();
+    confirmEntity.addComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
+    rootNode.getComponent<cro::Transform>().addChild(confirmEntity.getComponent<cro::Transform>());
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto& uiSystem = m_scene.getSystem<cro::UISystem>();
+
+    auto selectedID = uiSystem.addCallback([](cro::Entity e) { e.getComponent<cro::Text>().setFillColour(TextHighlightColour); });
+    auto unselectedID = uiSystem.addCallback([](cro::Entity e) { e.getComponent<cro::Text>().setFillColour(TextNormalColour); });
+    
+    //options button
+    auto createItem = [&](glm::vec2 position, const std::string label, cro::Entity parent) 
+    {
+        auto e = m_scene.createEntity();
+        e.addComponent<cro::Transform>().setPosition(position);
+        e.addComponent<cro::Drawable2D>();
+        e.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+        e.getComponent<cro::Text>().setString(label);
+        e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        e.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        e.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(e);
+        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+
+        parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+        return e;
+    };
+
+    entity = createItem(glm::vec2(0.f, 10.f), "Options", menuEntity);
+    entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) 
+            {
+                if (activated(evt))
+                {
+                    requestStackPush(StateID::Options);
+                }            
+            });
+
+    //return to game
+    entity = createItem(glm::vec2(0.f), "Return To Game", menuEntity);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    quitState();
+                }
+            });
+
+    //quit button
+    entity = createItem(glm::vec2(0.f, -10.f), "Quit", menuEntity);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&,menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
+                    menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
+
+                    m_scene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Confirm);
+                }
+            });
+
+
+    //confirmation buttons
+    entity = createItem(glm::vec2(-20.f, -10.f), "No", confirmEntity);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Confirm);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&,menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
+                    confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
+
+                    m_scene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Main);
+                }
+            });
+
+
+    entity = createItem(glm::vec2(20.f, -10.f), "Yes", confirmEntity);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Confirm);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.clientConnection.connected = false;
+                    m_sharedData.clientConnection.netClient.disconnect();
+
+                    if (m_sharedData.hosting)
+                    {
+                        m_sharedData.serverInstance.stop();
+                        m_sharedData.hosting = false;
+                    }
+
+                    requestStackClear();
+                    requestStackPush(StateID::Menu);
+                }
+            });
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 10.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setString("Are You Sure?");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    confirmEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
         glm::vec2 size(cro::App::getWindow().getSize());

@@ -415,6 +415,18 @@ void GolfState::handleMessage(const cro::Message& msg)
         }
     }
         break;
+    case cro::Message::StateMessage:
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped)
+        {
+            if (data.id == StateID::Pause)
+            {
+                cro::App::getWindow().setMouseCaptured(true);
+            }
+        }
+    }
+        break;
     }
 
     m_gameScene.forwardMessage(msg);
