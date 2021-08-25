@@ -75,6 +75,9 @@ private:
     void pickSlider();
     void updateSlider();
 
+    std::int32_t m_bindingIndex;
+    void updateKeybind(SDL_Keycode);
+
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     void buildScene();

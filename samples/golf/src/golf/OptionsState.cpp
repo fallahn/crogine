@@ -142,6 +142,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_sharedData        (sd),
     m_updatingKeybind   (false),
     m_lastMousePos      (0.f),
+    m_bindingIndex      (-1),
     m_viewScale         (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -170,14 +171,41 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         return false;
     }
 
+
+    if (!m_updatingKeybind
+        && !m_activeSlider.isValid())
+    {
+        m_scene.getSystem<cro::UISystem>().handleEvent(evt);
+    }
+
+
     if (evt.type == SDL_KEYUP)
     {
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE)
+        switch (evt.key.keysym.sym)
         {
+        default:
+            if (m_updatingKeybind)
+            {
+                //apply keybind
+                updateKeybind(evt.key.keysym.sym);
+            }
+            break;
+        case SDLK_RETURN:
+        case SDLK_RETURN2:
+        case SDLK_KP_ENTER:
+            //handle these cases just so
+            //they can't be applied to keybinds
+            break;
+        case SDLK_BACKSPACE:
+        case SDLK_ESCAPE:
             if (!m_updatingKeybind)
             {
                 quitState();
+            }
+            else
+            {
+                //cancel the input
+                updateKeybind(evt.key.keysym.sym);
             }
             return false;
         }
@@ -213,7 +241,6 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         updateSlider();
     }
 
-    m_scene.getSystem<cro::UISystem>().handleEvent(evt);
     m_scene.forwardEvent(evt);
     return false;
 }
@@ -293,6 +320,75 @@ void OptionsState::updateSlider()
 
         m_lastMousePos = mousePos.x;
     }
+}
+
+void OptionsState::updateKeybind(SDL_Keycode key)
+{
+    auto& keys = m_sharedData.inputBinding.keys;
+    if (auto result = std::find(keys.begin(), keys.end(), key); result != keys.end())
+    {
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Menu::PlayerConfig;
+        cmd.action = [key](cro::Entity e, float)
+        {
+            //briefly shoes error message before returning to old string
+            auto oldStr = e.getComponent<cro::Text>().getString();
+            e.getComponent<cro::Callback>().setUserData<std::pair<float, cro::String>>(2.f, oldStr);
+            e.getComponent<cro::Callback>().active = true;
+
+            auto msg = cro::Keyboard::keyString(key);
+            msg += " is already bound";
+            e.getComponent<cro::Text>().setString(msg);
+        };
+        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+        return;
+    }
+
+
+    m_updatingKeybind = false;
+
+    //these keys cancel the input
+    if (key != SDLK_ESCAPE
+        && key != SDLK_BACKSPACE)
+    {
+        keys[m_bindingIndex] = key;
+    }
+
+    auto index = m_bindingIndex;
+    m_bindingIndex = -1;
+
+    //actually update the info text
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Menu::PlayerConfig;
+    cmd.action = [index](cro::Entity e, float)
+    {
+        switch (index)
+        {
+        default: break;
+        case InputBinding::PrevClub:
+            e.getComponent<cro::Text>().setString("Next Club");
+            break;
+        case InputBinding::NextClub:
+            e.getComponent<cro::Text>().setString("Previous Club");
+            break;
+        case InputBinding::Left:
+            e.getComponent<cro::Text>().setString("Aim Left");
+            break;
+        case InputBinding::Right:
+            e.getComponent<cro::Text>().setString("Aim Right");
+            break;
+        case InputBinding::Action:
+            e.getComponent<cro::Text>().setString("Take Shot");
+            break;
+
+        }
+
+        //reset any existing callback so that it doesn't timeout
+        //and set the wrong string
+        e.getComponent<cro::Callback>().active = false;
+    };
+    m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
 
 void OptionsState::buildScene()
@@ -780,6 +876,19 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     infoEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     infoEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     infoEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    infoEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::PlayerConfig; //not the best description, just recycling existing members here...
+
+    infoEnt.addComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& [currTime, str] = e.getComponent<cro::Callback>().getUserData<std::pair<float, cro::String>>();
+        currTime -= dt;
+        if (currTime < 0)
+        {
+            e.getComponent<cro::Text>().setString(str);
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
 
     parent.getComponent<cro::Transform>().addChild(infoEnt.getComponent<cro::Transform>());
 
@@ -792,7 +901,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         });
 
 
-    auto createHighlight = [&](glm::vec2 position)
+    auto createHighlight = [&, infoEnt](glm::vec2 position, std::int32_t keyIndex)
     {
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
@@ -803,6 +912,17 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectID;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+            [&, infoEnt, keyIndex](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_updatingKeybind = true;
+                    infoEnt.getComponent<cro::Text>().setString("Press a Key");
+
+                    m_bindingIndex = keyIndex;
+                }
+            });
 
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -810,89 +930,51 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     };
 
     //prev club
-    auto entity = createHighlight(glm::vec2(58.f, 80.f));
+    auto entity = createHighlight(glm::vec2(58.f, 80.f), InputBinding::PrevClub);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             infoEnt.getComponent<cro::Text>().setString("Previous Club");
         });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [](cro::Entity e, cro::ButtonEvent evt) 
-        {
-            if (activated(evt))
-            {
 
-            }
-        });
 
     //next club
-    entity = createHighlight(glm::vec2(124.f, 80.f));
+    entity = createHighlight(glm::vec2(124.f, 80.f), InputBinding::NextClub);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             infoEnt.getComponent<cro::Text>().setString("Next Club");
         });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [](cro::Entity e, cro::ButtonEvent evt)
-        {
-            if (activated(evt))
-            {
-
-            }
-        });
 
     //aim left
-    entity = createHighlight(glm::vec2(30.f, 42.f));
+    entity = createHighlight(glm::vec2(30.f, 42.f), InputBinding::Left);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             infoEnt.getComponent<cro::Text>().setString("Aim Left");
         });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [](cro::Entity e, cro::ButtonEvent evt)
-        {
-            if (activated(evt))
-            {
-
-            }
-        });
 
     //aim right
-    entity = createHighlight(glm::vec2(30.f, 27.f));
+    entity = createHighlight(glm::vec2(30.f, 27.f), InputBinding::Right);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             infoEnt.getComponent<cro::Text>().setString("Aim Right");
         });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [](cro::Entity e, cro::ButtonEvent evt)
-        {
-            if (activated(evt))
-            {
-
-            }
-        });
 
     //swing
-    entity = createHighlight(glm::vec2(152.f, 41.f));
+    entity = createHighlight(glm::vec2(152.f, 41.f), InputBinding::Action);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             infoEnt.getComponent<cro::Text>().setString("Take Shot");
         });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [](cro::Entity e, cro::ButtonEvent evt)
-        {
-            if (activated(evt))
-            {
 
-            }
-        });
 
     //label entities
     struct LabelCallback final
