@@ -791,16 +791,26 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
 
+
+    auto createHighlight = [&](glm::vec2 position)
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight");
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.addComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectID;
+
+        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        return entity;
+    };
+
     //prev club
-    auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(58.f, 80.f));
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight");
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectID;
+    auto entity = createHighlight(glm::vec2(58.f, 80.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt](cro::Entity e) mutable
         {
@@ -816,17 +826,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             }
         });
 
-    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
     //next club
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(124.f, 80.f));
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight");
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectID;
+    entity = createHighlight(glm::vec2(124.f, 80.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt](cro::Entity e) mutable
         {
@@ -842,17 +843,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             }
         });
 
-    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
     //aim left
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(30.f, 42.f));
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight");
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectID;
+    entity = createHighlight(glm::vec2(30.f, 42.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt](cro::Entity e) mutable
         {
@@ -868,17 +860,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             }
         });
 
-    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
     //aim right
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(30.f, 27.f));
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight");
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectID;
+    entity = createHighlight(glm::vec2(30.f, 27.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt](cro::Entity e) mutable
         {
@@ -894,17 +877,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             }
         });
 
-    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
     //swing
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(152.f, 41.f));
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight");
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectID;
+    entity = createHighlight(glm::vec2(152.f, 41.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt](cro::Entity e) mutable
         {
@@ -920,7 +894,46 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             }
         });
 
-    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //label entities
+    struct LabelCallback final
+    {
+        std::int32_t labelIndex = 0;
+        const InputBinding& binding;
+        LabelCallback(std::int32_t idx, const InputBinding& b) : labelIndex(idx), binding(b) {}
+
+        void operator() (cro::Entity e, float)
+        {
+            e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(binding.keys[labelIndex]));
+        }
+    };
+
+    auto createLabel = [&](glm::vec2 position, std::int32_t bindingIndex)
+    {
+        auto e = m_scene.createEntity();
+        e.addComponent<cro::Transform>().setPosition(position);
+        e.addComponent<cro::Drawable2D>();
+        e.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
+        e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        e.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        e.addComponent<cro::Callback>().active = true;
+        e.getComponent<cro::Callback>().function = LabelCallback(bindingIndex, m_sharedData.inputBinding);
+        parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+    };
+
+    //prev club
+    createLabel(glm::vec2(52.f, 94.f), InputBinding::PrevClub);
+
+    //next club
+    createLabel(glm::vec2(140.f, 94.f), InputBinding::NextClub);
+
+    //stroke
+    createLabel(glm::vec2(160.f, 59.f), InputBinding::Action);
+
+    //left
+    createLabel(glm::vec2(20.f, 50.f), InputBinding::Left);
+    
+    //right
+    createLabel(glm::vec2(20.f, 35.f), InputBinding::Right);
 }
 
 void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::uint32_t selectedID, std::uint32_t unselectedID)
