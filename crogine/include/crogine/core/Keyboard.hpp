@@ -31,33 +31,45 @@ source distribution.
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/core/App.hpp>
+#include <crogine/core/String.hpp>
 
 #include <SDL.h>
 
 #include <cstdint>
+#include <cstring>
 #include <string>
 
 namespace cro::Keyboard
 {
     /*!
     \brief Returns the real time state of the keyboard
-    \param scancode The SDL scancode of the key to test
+    \param scancode The SDL_Scancode of the key to test
     \returns true if the key is pressed else false.
     */
-    static inline bool isKeyPressed(std::int32_t scancode)
+    static inline bool isKeyPressed(SDL_Scancode scancode)
     {
         CRO_ASSERT(scancode > -1 && scancode < SDL_NUM_SCANCODES, "scancode out of range!");
-        //CRO_ASSERT(cro::App::isValid(), "No app instance is running");
         auto* state = SDL_GetKeyboardState(nullptr);
         return state[scancode] != 0;
     }
 
     /*!
-    \brief Returns the string representation of the given SDLK_ enum
+    \brief Returns the real time state of the keyboard
+    \param key The SDL_Keycode of the key to test
+    \returns true if the key is pressed else false.
     */
-    static inline std::string keyString(std::int32_t SDLkey)
+    static inline bool isKeyPressed(SDL_Keycode key)
     {
-        //CRO_ASSERT(cro::App::isValid(), "No app instance is running");
-        return SDL_GetKeyName(SDLkey);
+        return isKeyPressed(SDL_GetScancodeFromKey(key));
+    }
+
+    /*!
+    \brief Returns the string representation of the given SDL_Keycode enum
+    */
+    static inline cro::String keyString(SDL_Keycode key)
+    {
+        const auto* charArr = SDL_GetKeyName(key);
+        cro::String str = cro::String::fromUtf8(charArr, charArr + std::strlen(charArr));
+        return str;
     }
 }
