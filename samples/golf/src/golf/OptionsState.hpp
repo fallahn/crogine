@@ -68,6 +68,13 @@ private:
         bool fullScreen = false;
     }m_videoSettings;
 
+    bool m_updatingKeybind;
+    float m_lastMousePos;
+    std::vector<cro::Entity> m_sliders;
+    cro::Entity m_activeSlider;
+    void pickSlider();
+    void updateSlider();
+
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     void buildScene();

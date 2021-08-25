@@ -123,5 +123,11 @@ namespace cro
     template <>
     FloatRect& FloatRect::operator=(const Box&);
 
+    template <typename T>
+    Rectangle<T> operator * (const glm::mat4& mat, const Rectangle<T>& rect)
+    {
+        return rect.transform(mat);
+    }
+
 #include "Rectangle.inl"
 }

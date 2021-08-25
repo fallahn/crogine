@@ -32,9 +32,11 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/core/Window.hpp>
+#include <crogine/core/Mouse.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
@@ -56,6 +58,7 @@ source distribution.
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/util/Easings.hpp>
+#include <crogine/audio/AudioMixer.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
@@ -68,13 +71,78 @@ namespace
             Video, Controls, Dummy
         };
     };
+
+    constexpr float SliderWidth = 144.f;
+
+    struct SliderData final
+    {
+        const std::uint8_t channel = 0;
+        const glm::vec2 basePosition = glm::vec2(0.f);
+        SliderData(std::uint8_t c, glm::vec2 p)
+            : channel(c), basePosition(p) {}
+    };
+
+    struct SliderCallback final
+    {
+        void operator() (cro::Entity e, float)
+        {
+            const auto& [channel, pos] = e.getComponent<cro::Callback>().getUserData<SliderData>();
+            float vol = cro::AudioMixer::getVolume(channel);
+            e.getComponent<cro::Transform>().setPosition({ pos.x + (SliderWidth * vol), pos.y });
+        }
+    };
+
+    struct SliderDownCallback final
+    {
+        explicit SliderDownCallback(std::uint8_t chan)
+            : channel(chan) { }
+
+        void operator() (cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                float vol = cro::AudioMixer::getVolume(channel);
+                vol = std::max(0.f, vol - 0.1f);
+                cro::AudioMixer::setVolume(vol, channel);
+            }
+        }
+
+        std::uint8_t channel = 0;
+    };
+
+    struct SliderUpCallback final
+    {
+        explicit SliderUpCallback(std::uint8_t chan)
+            : channel(chan) { }
+
+        void operator() (cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                float vol = cro::AudioMixer::getVolume(channel);
+                vol = std::min(1.f, vol + 0.1f);
+                cro::AudioMixer::setVolume(vol, channel);
+            }
+        }
+
+        std::uint8_t channel = 0;
+    };
+
+    std::array SliderRects =
+    {
+        cro::FloatRect(),
+        cro::FloatRect(),
+        cro::FloatRect()
+    };
 }
 
 OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State(ss, ctx),
-    m_scene     (ctx.appInstance.getMessageBus()),
-    m_sharedData(sd),
-    m_viewScale (2.f)
+    : cro::State        (ss, ctx),
+    m_scene             (ctx.appInstance.getMessageBus()),
+    m_sharedData        (sd),
+    m_updatingKeybind   (false),
+    m_lastMousePos      (0.f),
+    m_viewScale         (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -107,7 +175,10 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         if (evt.key.keysym.sym == SDLK_BACKSPACE
             || evt.key.keysym.sym == SDLK_ESCAPE)
         {
-            quitState();
+            if (!m_updatingKeybind)
+            {
+                quitState();
+            }
             return false;
         }
     }
@@ -115,9 +186,31 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     {
         if (evt.cbutton.button == SDL_CONTROLLER_BUTTON_B)
         {
-            quitState();
+            if (!m_updatingKeybind)
+            {
+                quitState();
+            }
             return false;
         }
+    }
+    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    {
+        if (evt.button.button == SDL_BUTTON_LEFT
+            && !m_updatingKeybind)
+        {
+            pickSlider();
+        }
+    }
+    else if (evt.type == SDL_MOUSEBUTTONUP)
+    {
+        if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            m_activeSlider = {};
+        }
+    }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        updateSlider();
     }
 
     m_scene.getSystem<cro::UISystem>().handleEvent(evt);
@@ -142,6 +235,66 @@ void OptionsState::render()
 }
 
 //private
+void OptionsState::pickSlider()
+{
+    auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+
+    for (auto& entity : m_sliders)
+    {
+        auto bounds = entity.getComponent<cro::Drawable2D>().getLocalBounds();
+        bounds = entity.getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+        if (bounds.contains(mousePos))
+        {
+            m_activeSlider = entity;
+            m_lastMousePos = mousePos.x;
+
+            break;
+        }
+    }
+
+    //if we didn't pick a slider knob test to see if we clicked in a runner
+    /*if (!m_activeSlider.isValid())
+    {
+        for (auto i = 0u; i < SliderRects.size(); ++i)
+        {
+            const auto& slider = SliderRects[i];
+            LogI << slider << std::endl;
+            if (slider.contains(mousePos))
+            {
+                float pos = mousePos.x - slider.left;
+                float vol = pos / slider.width;
+                cro::AudioMixer::setVolume(vol, i);
+
+                break;
+            }
+        }
+    }*/
+}
+
+void OptionsState::updateSlider()
+{
+    if (m_activeSlider.isValid())
+    {
+        auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+        float movement = (mousePos.x - m_lastMousePos) / m_viewScale.x;
+
+        const auto& [index, pos] = m_activeSlider.getComponent<cro::Callback>().getUserData<SliderData>();
+        float maxMove = pos.x + SliderWidth;
+        float minMove = pos.x;
+
+        auto currentPos = m_activeSlider.getComponent<cro::Transform>().getPosition();
+        float finalPos = std::min(maxMove, std::max(minMove, currentPos.x + movement));
+
+        m_activeSlider.getComponent<cro::Transform>().setPosition({ finalPos, currentPos.y });
+
+        float vol = (finalPos - pos.x) / SliderWidth;
+        cro::AudioMixer::setVolume(vol, index);
+
+        m_lastMousePos = mousePos.x;
+    }
+}
+
 void OptionsState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
@@ -467,13 +620,13 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     };
 
     //music label
-    createLabel(glm::vec2(10.f, 103.f), "Music");
+    createLabel(glm::vec2(10.f, 103.f), "Music Volume");
 
     //effects label
-    createLabel(glm::vec2(10.f, 78.f), "Effects");
+    createLabel(glm::vec2(10.f, 78.f), "Effects Volume");
 
     //menu label
-    createLabel(glm::vec2(10.f, 53.f), "Menu");
+    createLabel(glm::vec2(10.f, 53.f), "Menu Volume");
 
     //resolution label
     createLabel(glm::vec2(10.f, 26.f), "Resolution");
@@ -486,6 +639,28 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     auto resLabel = createLabel(glm::vec2(60.f, 14.f), m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
     resLabel.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
 
+
+    auto createSlider = [&](std::uint8_t index,glm::vec2 position)
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("slider");
+        auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<SliderData>(index, position);
+        entity.getComponent<cro::Callback>().function = SliderCallback();
+
+        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        m_sliders.push_back(entity);
+    };
+
+    createSlider(MixerChannel::Music, glm::vec2(24.f, 89.f));
+    createSlider(MixerChannel::Effects, glm::vec2(24.f, 64.f));
+    createSlider(MixerChannel::Menu, glm::vec2(24.f, 39.f));
 
     auto& uiSystem = m_scene.getSystem<cro::UISystem>();
     auto selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); });
@@ -510,25 +685,29 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //music down
     auto entity = createHighlight(glm::vec2(7.f, 83.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(MixerChannel::Music));
 
     //music up
     entity = createHighlight(glm::vec2(174.f, 83.f));
-
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(MixerChannel::Music));
 
 
     //effects down
     entity = createHighlight(glm::vec2(7.f, 58.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(MixerChannel::Effects));
 
     //effect up
     entity = createHighlight(glm::vec2(174.f, 58.f));
-
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(MixerChannel::Effects));
 
 
     //menu down
     entity = createHighlight(glm::vec2(7.f, 33.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(MixerChannel::Menu));
 
     //menu up
     entity = createHighlight(glm::vec2(174.f, 33.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(MixerChannel::Menu));
 
 
     //res down
