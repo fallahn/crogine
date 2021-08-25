@@ -4,13 +4,13 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ClientCollisionSystem.cpp
   ${PROJECT_DIR}/golf/ErrorState.cpp
   ${PROJECT_DIR}/golf/GolfCartSystem.cpp
-  ${PROJECT_DIR}/golf/GolfInputParser.cpp
-  ${PROJECT_DIR}/golf/GolfMenuState.cpp
   ${PROJECT_DIR}/golf/GolfState.cpp
   ${PROJECT_DIR}/golf/GolfStateUI.cpp
+  ${PROJECT_DIR}/golf/InputParser.cpp  
   ${PROJECT_DIR}/golf/InterpolationComponent.cpp
   ${PROJECT_DIR}/golf/InterpolationSystem.cpp
   ${PROJECT_DIR}/golf/MenuCreation.cpp
+  ${PROJECT_DIR}/golf/MenuState.cpp
   ${PROJECT_DIR}/golf/OptionsState.cpp
   ${PROJECT_DIR}/golf/PauseState.cpp
   ${PROJECT_DIR}/golf/PlayerAvatar.cpp

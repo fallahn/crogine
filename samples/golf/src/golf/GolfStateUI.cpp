@@ -1000,6 +1000,14 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
         auto overPar = score;
         score += ScoreID::ScoreOffset;
 
+        //if this is a remote player the score won't
+        //have arrived yet, so kludge this here so the
+        //display type is correct.
+        if (m_currentPlayer.client != m_sharedData.clientConnection.connectionID)
+        {
+            score++;
+        }
+
         if (score < ScoreID::Count)
         {
             textEnt.getComponent<cro::Text>().setString(ScoreStrings[score]);

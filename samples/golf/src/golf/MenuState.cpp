@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "GolfMenuState.hpp"
+#include "MenuState.hpp"
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
 #include "MenuConsts.hpp"
@@ -73,7 +73,7 @@ namespace
     constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 }
 
-GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
+MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
     m_uiScene           (context.appInstance.getMessageBus()),
@@ -175,7 +175,7 @@ GolfMenuState::GolfMenuState(cro::StateStack& stack, cro::State::Context context
 }
 
 //public
-bool GolfMenuState::handleEvent(const cro::Event& evt)
+bool MenuState::handleEvent(const cro::Event& evt)
 {
     if(cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
@@ -232,13 +232,13 @@ bool GolfMenuState::handleEvent(const cro::Event& evt)
     return true;
 }
 
-void GolfMenuState::handleMessage(const cro::Message& msg)
+void MenuState::handleMessage(const cro::Message& msg)
 {
     m_backgroundScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
 
-bool GolfMenuState::simulate(float dt)
+bool MenuState::simulate(float dt)
 {
     if (m_sharedData.clientConnection.connected)
     {
@@ -255,7 +255,7 @@ bool GolfMenuState::simulate(float dt)
     return true;
 }
 
-void GolfMenuState::render()
+void MenuState::render()
 {
     //draw any renderable systems
     m_backgroundTexture.clear();
@@ -277,7 +277,7 @@ void GolfMenuState::render()
 }
 
 //private
-void GolfMenuState::addSystems()
+void MenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
@@ -296,7 +296,7 @@ void GolfMenuState::addSystems()
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 }
 
-void GolfMenuState::loadAssets()
+void MenuState::loadAssets()
 {
     m_postShader.loadFromString(PostVertex, PostFragment);
     m_postQuad.setShader(m_postShader);
@@ -319,7 +319,7 @@ void GolfMenuState::loadAssets()
     m_billboardTemplates[BillboardID::Birch] = spriteToBillboard(spriteSheet.getSprite("birch"));
 }
 
-void GolfMenuState::createScene()
+void MenuState::createScene()
 {
     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
 
@@ -466,7 +466,7 @@ void GolfMenuState::createScene()
     createUI();
 }
 
-void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
+void MenuState::handleNetEvent(const cro::NetEvent& evt)
 {
     if (evt.type == cro::NetEvent::PacketReceived)
     {
@@ -548,7 +548,7 @@ void GolfMenuState::handleNetEvent(const cro::NetEvent& evt)
     }
 }
 
-void GolfMenuState::handleTextEdit(const cro::Event& evt)
+void MenuState::handleTextEdit(const cro::Event& evt)
 {
     if (!m_textEdit.string)
     {
@@ -593,7 +593,7 @@ void GolfMenuState::handleTextEdit(const cro::Event& evt)
     }
 }
 
-void GolfMenuState::applyTextEdit()
+void MenuState::applyTextEdit()
 {
     if (m_textEdit.string && m_textEdit.entity.isValid())
     {

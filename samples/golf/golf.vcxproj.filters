@@ -78,7 +78,7 @@
     <ClCompile Include="src\golf\MenuCreation.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
-    <ClCompile Include="src\golf\GolfMenuState.cpp">
+    <ClCompile Include="src\golf\MenuState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
     <ClCompile Include="src\golf\GolfState.cpp">
@@ -99,7 +99,7 @@
     <ClCompile Include="src\golf\InterpolationSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
     </ClCompile>
-    <ClCompile Include="src\golf\GolfInputParser.cpp">
+    <ClCompile Include="src\golf\InputParser.cpp">
       <Filter>Source Files\golf\client</Filter>
     </ClCompile>
     <ClCompile Include="src\golf\GolfStateUI.cpp">
@@ -161,7 +161,7 @@
     <ClInclude Include="src\golf\ClientPacketData.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
-    <ClInclude Include="src\golf\GolfMenuState.hpp">
+    <ClInclude Include="src\golf\MenuState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\SharedStateData.hpp">
@@ -197,7 +197,7 @@
     <ClInclude Include="src\golf\PlayerColours.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
-    <ClInclude Include="src\golf\GolfInputParser.hpp">
+    <ClInclude Include="src\golf\InputParser.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\InputBinding.hpp">

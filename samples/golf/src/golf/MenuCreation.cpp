@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "GolfMenuState.hpp"
+#include "MenuState.hpp"
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
 #include "MenuConsts.hpp"
@@ -59,10 +59,52 @@ source distribution.
 
 namespace
 {
+    struct MenuData final
+    {
+        enum
+        {
+            In, Out
+        }direction = In;
+        float currentTime = 0.f;
 
+        std::int32_t targetMenu = MenuState::MenuID::Main;
+    };
+
+    struct MenuCallback final
+    {
+        void operator()(cro::Entity e, float dt)
+        {
+            static constexpr float Speed = 2.f;
+            auto& menuData = e.getComponent<cro::Callback>().getUserData<MenuData>();
+            if (menuData.direction == MenuData::In)
+            {
+                //expand vertically
+                menuData.currentTime = std::min(1.f, menuData.currentTime + (dt * Speed));
+                e.getComponent<cro::Transform>().setScale({ 1.f, cro::Util::Easing::easeInQuint(menuData.currentTime) });
+
+                if (menuData.currentTime == 1)
+                {
+                    //TODO stop here
+                    menuData.direction = MenuData::Out;
+                }
+            }
+            else
+            {
+                //contract horizontally
+                menuData.currentTime = std::max(0.f, menuData.currentTime - (dt * Speed));
+                e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeInQuint(menuData.currentTime), 1.f });
+
+                if (menuData.currentTime == 0)
+                {
+                    //TODO set target position and init target animation
+                    menuData.direction = MenuData::In;
+                }
+            }
+        }
+    };
 }
 
-constexpr std::array<glm::vec2, GolfMenuState::MenuID::Count> GolfMenuState::m_menuPositions =
+constexpr std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPositions =
 {
     glm::vec2(0.f, 0.f),
     glm::vec2(0.f, MenuSpacing.y),
@@ -72,7 +114,7 @@ constexpr std::array<glm::vec2, GolfMenuState::MenuID::Count> GolfMenuState::m_m
     glm::vec2(0.f, 0.f)
 };
 
-void GolfMenuState::createUI()
+void MenuState::createUI()
 {
     auto mouseEnterCallback = m_uiScene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e)
@@ -159,10 +201,14 @@ void GolfMenuState::createUI()
     updateView(entity.getComponent<cro::Camera>());
 }
 
-void GolfMenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
+void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
     auto menuEntity = m_uiScene.createEntity();
     menuEntity.addComponent<cro::Transform>();
+    /*menuEntity.addComponent<cro::Callback>().active = true;
+    menuEntity.getComponent<cro::Callback>().setUserData<MenuData>();
+    menuEntity.getComponent<cro::Callback>().function = MenuCallback();*/
+
     parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
 
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
@@ -292,7 +338,7 @@ void GolfMenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter,
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 }
 
-void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
+void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
     auto menuEntity = m_uiScene.createEntity();
     menuEntity.addComponent<cro::Transform>();
@@ -517,7 +563,7 @@ void GolfMenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnte
     updateLocalAvatars(mouseEnter, mouseExit);
 }
 
-void GolfMenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
+void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
     auto menuEntity = m_uiScene.createEntity();
     menuEntity.addComponent<cro::Transform>();
@@ -677,7 +723,7 @@ void GolfMenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter,
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 }
 
-void GolfMenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
+void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
     auto menuEntity = m_uiScene.createEntity();
     menuEntity.addComponent<cro::Transform>();
@@ -839,7 +885,7 @@ void GolfMenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 }
 
-void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t mouseExit)
+void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
     cro::Colour c(0.f, 0.f, 0.f, BackgroundAlpha);
     auto fadeNode = m_uiScene.createEntity();
@@ -1205,7 +1251,7 @@ void GolfMenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32
     //m_playerAvatar.previewRects[3] = spriteSheet.getSprite("male_wood_l").getTextureRect();
 }
 
-void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouseExit)
+void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
     //these can have fixed positions as they are attached to a menuEntity[] which is UI scaled
     static constexpr glm::vec3 EditButtonOffset(-47.f, -36.f, 0.f);
@@ -1292,7 +1338,7 @@ void GolfMenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t m
     }
 }
 
-void GolfMenuState::updateLobbyData(const cro::NetEvent& evt)
+void MenuState::updateLobbyData(const cro::NetEvent& evt)
 {
     ConnectionData cd;
     if (cd.deserialise(evt.packet))
@@ -1303,7 +1349,7 @@ void GolfMenuState::updateLobbyData(const cro::NetEvent& evt)
     updateLobbyAvatars();
 }
 
-void GolfMenuState::updateLobbyAvatars()
+void MenuState::updateLobbyAvatars()
 {
     //TODO detect only the avatars which changed
     //so we don't needlessly update textures
@@ -1353,7 +1399,7 @@ void GolfMenuState::updateLobbyAvatars()
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
 
-void GolfMenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
+void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
 {
     m_playerAvatar.activePlayer = playerIndex;
 
@@ -1401,7 +1447,7 @@ void GolfMenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
     }
 }
 
-void GolfMenuState::saveAvatars()
+void MenuState::saveAvatars()
 {
     cro::ConfigFile cfg("avatars");
     for (const auto& player : m_sharedData.localConnectionData.playerData)
@@ -1419,7 +1465,7 @@ void GolfMenuState::saveAvatars()
     cfg.save(path);
 }
 
-void GolfMenuState::loadAvatars()
+void MenuState::loadAvatars()
 {
     auto path = cro::App::getPreferencePath() + "avatars.cfg";
     cro::ConfigFile cfg;

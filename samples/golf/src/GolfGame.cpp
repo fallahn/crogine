@@ -28,7 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "GolfGame.hpp"
-#include "golf/GolfMenuState.hpp"
+#include "golf/MenuState.hpp"
 #include "golf/GolfState.hpp"
 #include "golf/ErrorState.hpp"
 #include "golf/OptionsState.hpp"
@@ -56,7 +56,7 @@ GolfGame::GolfGame()
     //must be sest before anything else cfg is still loaded from default path
     setApplicationStrings("trederia", "golf");
 
-    m_stateStack.registerState<GolfMenuState>(StateID::Menu, m_sharedData);
+    m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData);
     m_stateStack.registerState<GolfState>(StateID::Game, m_sharedData);
     m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);
     m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);

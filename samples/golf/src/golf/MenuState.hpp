@@ -64,10 +64,10 @@ namespace cro
     struct Camera;
 }
 
-class GolfMenuState final : public cro::State, public cro::GuiClient
+class MenuState final : public cro::State, public cro::GuiClient
 {
 public:
-    GolfMenuState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    MenuState(cro::StateStack&, cro::State::Context, SharedStateData&);
 
     cro::StateID getStateID() const override { return StateID::Menu; }
 
@@ -75,6 +75,11 @@ public:
     void handleMessage(const cro::Message&) override;
     bool simulate(float) override;
     void render() override;
+
+    enum MenuID
+    {
+        Main, Avatar, Join, Lobby, Options, PlayerConfig, Count
+    };
 
 private:
 
@@ -104,11 +109,6 @@ private:
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
 
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
-
-    enum MenuID
-    {
-        Main, Avatar, Join, Lobby, Options, PlayerConfig, Count
-    };
 
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {};   

@@ -226,12 +226,12 @@
     <ClCompile Include="src\golf\ErrorState.cpp" />
     <ClCompile Include="src\golf\GolfCartSystem.cpp" />
     <ClCompile Include="src\golf\GolfState.cpp" />
-    <ClCompile Include="src\golf\GolfInputParser.cpp" />
+    <ClCompile Include="src\golf\InputParser.cpp" />
     <ClCompile Include="src\golf\GolfStateUI.cpp" />
     <ClCompile Include="src\golf\InterpolationComponent.cpp" />
     <ClCompile Include="src\golf\InterpolationSystem.cpp" />
     <ClCompile Include="src\golf\MenuCreation.cpp" />
-    <ClCompile Include="src\golf\GolfMenuState.cpp" />
+    <ClCompile Include="src\golf\MenuState.cpp" />
     <ClCompile Include="src\golf\OptionsState.cpp" />
     <ClCompile Include="src\golf\PauseState.cpp" />
     <ClCompile Include="src\golf\PlayerAvatar.cpp" />
@@ -260,10 +260,10 @@
     <ClInclude Include="src\golf\GolfState.hpp" />
     <ClInclude Include="src\golf\HoleData.hpp" />
     <ClInclude Include="src\golf\InputBinding.hpp" />
-    <ClInclude Include="src\golf\GolfInputParser.hpp" />
+    <ClInclude Include="src\golf\InputParser.hpp" />
     <ClInclude Include="src\golf\InterpolationSystem.hpp" />
     <ClInclude Include="src\golf\MenuConsts.hpp" />
-    <ClInclude Include="src\golf\GolfMenuState.hpp" />
+    <ClInclude Include="src\golf\MenuState.hpp" />
     <ClInclude Include="src\golf\MessageIDs.hpp" />
     <ClInclude Include="src\golf\OptionsState.hpp" />
     <ClInclude Include="src\golf\PacketIDs.hpp" />
