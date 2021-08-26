@@ -45,18 +45,6 @@ source distribution.
 
 #include <array>
 
-namespace GroupID
-{
-    enum
-    {
-        Main = 0,
-        Avatar,
-        Join,
-        Lobby,
-        PlayerConfig
-    };
-}
-
 struct SharedStateData;
 namespace cro
 {
@@ -87,7 +75,7 @@ public:
 
     enum MenuID
     {
-        Main, Avatar, Join, Lobby, Options, PlayerConfig, Dummy, Count
+        Main, Avatar, Join, Lobby, PlayerConfig, Dummy, Count
     };
 
 private:
@@ -120,11 +108,12 @@ private:
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
-    std::array<cro::Entity, MenuID::Count> m_menuEntities = {};   
+    cro::Entity m_avatarMenu; //root of the avatar menu to which each player avatar is attached
     std::vector<cro::Entity> m_avatarListEntities;
     PlayerAvatar m_playerAvatar;
 
-    std::size_t m_currentMenu;
+    std::size_t m_currentMenu; //used by view callback to reposition the root node on window resize
+    std::array<cro::Entity, MenuID::Count> m_menuEntities = {}; //each menu transform, attatched to root node.
 
     struct TextEdit final
     {
@@ -159,4 +148,16 @@ private:
     void handleNetEvent(const cro::NetEvent&);
 
     friend struct MenuCallback;
+};
+
+//used in animation callback
+struct MenuData final
+{
+    enum
+    {
+        In, Out
+    }direction = In;
+    float currentTime = 0.f;
+
+    std::int32_t targetMenu = MenuState::MenuID::Main;
 };

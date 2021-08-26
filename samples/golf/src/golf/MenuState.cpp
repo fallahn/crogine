@@ -111,7 +111,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cmd.action = [&](cro::Entity e, float)
         {
             e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby] * m_viewScale);
-            m_uiScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
+            m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Lobby);
             m_currentMenu = MenuID::Lobby;
         };
         m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
@@ -496,9 +496,9 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 cmd.targetFlags = CommandID::Menu::RootNode;
                 cmd.action = [&](cro::Entity e, float)
                 {
-                    e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby] * m_viewScale);
-                    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
-                    m_currentMenu = MenuID::Lobby;
+                    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                    m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
+                    m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
                 };
                 m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
