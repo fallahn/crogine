@@ -291,6 +291,8 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 glCheck(glScissor(0, 0, rtSize.x, rtSize.y));
             }
 
+            glCheck(glFrontFace(drawable.m_facing));
+
 #ifdef PLATFORM_DESKTOP
             glCheck(glBindVertexArray(drawable.m_vao));
             glCheck(glDrawArrays(static_cast<GLenum>(drawable.m_primitiveType), 0, static_cast<GLsizei>(drawable.m_vertices.size())));
@@ -331,6 +333,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
     glCheck(glDisable(GL_SCISSOR_TEST));
     applyBlendMode(Material::BlendMode::None);
     glCheck(glDisable(GL_CULL_FACE));
+    glCheck(glFrontFace(GL_CCW));
     glCheck(glDepthMask(GL_TRUE));
     //glCheck(glCullFace(GL_BACK));
 }

@@ -43,6 +43,7 @@ Drawable2D::Drawable2D()
     m_textureUniform    (-1),
     m_worldViewUniform  (-1),
     m_projectionUniform (-1),
+    m_facing            (GL_CCW),
     m_blendMode         (Material::BlendMode::Alpha),
     m_primitiveType     (GL_TRIANGLE_STRIP),
     m_vbo               (0),
@@ -220,6 +221,16 @@ void Drawable2D::bindUniform(const std::string& name, Colour value)
 void Drawable2D::bindUniform(const std::string& name, const float* value)
 {
     bindUniform(name, value, m_matBindings);
+}
+
+void Drawable2D::setFacing(Facing direction)
+{
+    m_facing = direction == Facing::Front ? GL_CCW : GL_CW;
+}
+
+Drawable2D::Facing Drawable2D::getFacing() const
+{
+    return m_facing == GL_CCW ? Facing::Front : Facing::Back;
 }
 
 //private

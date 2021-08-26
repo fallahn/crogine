@@ -240,6 +240,30 @@ namespace cro
         */
         void setCullingEnabled(bool enabled) { m_autoCrop = enabled; }
 
+
+        enum class Facing
+        {
+            Front, Back
+        };
+
+        /*!
+        \brief Sets which direction the Drawable is facing.
+        By default the Drawable is facing Front, but scaling
+        a Drawable negatively on the x or y axis will invert
+        the vertex winding, therefore causing the Drawable to
+        face towards the Back. Setting this to Back will
+        tell the Drawable to render correctly where negative
+        scales are desired eg when flipping/mirroring a Sprite
+        \param direction The facing direction to which to set the Drawable
+        */
+        void setFacing(Facing direction);
+
+        /*!
+        \brief Returns the current Facing direction of the Drawable
+        \see setFacing()
+        */
+        Facing getFacing() const;
+
     private:
 
         const Texture* m_texture;
@@ -250,6 +274,8 @@ namespace cro
         std::int32_t m_textureUniform;
         std::int32_t m_worldViewUniform;
         std::int32_t m_projectionUniform;
+
+        std::uint32_t m_facing;
 
         Material::BlendMode m_blendMode;
         std::uint32_t m_primitiveType;

@@ -43,11 +43,7 @@ Sprite::Sprite()
 }
 
 Sprite::Sprite(const Texture& texture)
-    : m_texture         (nullptr),
-    m_colour            (Colour::White),
-    m_dirtyFlags        (DirtyFlags::All),
-    m_overrideBlendMode (false),
-    m_blendMode         (Material::BlendMode::Alpha)
+    : Sprite()
 {
     setTexture(texture);
 }

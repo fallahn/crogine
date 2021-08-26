@@ -123,6 +123,32 @@ void GolfState::buildUI()
     auto playerEnt = entity;
     m_currentPlayer.position = m_holeData[0].tee;
 
+    //player reflection
+    /*auto origin = playerEnt.getComponent<cro::Transform>().getOrigin();
+    origin.x -= (bounds.width - (bounds.width - origin.x));
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setOrigin(origin);
+    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.addComponent<cro::Sprite>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [playerEnt](cro::Entity e, float)
+    {
+        auto& sprite = e.getComponent<cro::Sprite>();
+        const auto* tx = playerEnt.getComponent<cro::Sprite>().getTexture();
+        if (tx != sprite.getTexture())
+        {
+            sprite.setTexture(*tx, false);
+        }
+
+        sprite.setTextureRect(playerEnt.getComponent<cro::Sprite>().getTextureRect());
+
+        auto scale = playerEnt.getComponent<cro::Transform>().getScale();
+        scale.y *= -1.f;
+        e.getComponent<cro::Transform>().setScale(scale);
+    };
+    playerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
+
 
     //info panel background - vertices are set in resize callback
     auto windowSize = glm::vec2(cro::App::getWindow().getSize());
@@ -960,7 +986,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
 {
     auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();
     auto size = glm::vec2(cro::App::getWindow().getSize());
-    auto position = glm::vec3(size.x / 2.f, size.y - ((bounds.height + UIBarHeight + 2.f) * m_viewScale.y), 0.05f);
+    auto position = glm::vec3(size.x / 2.f, size.y - (((bounds.height / 2.f) + UIBarHeight + 2.f) * m_viewScale.y), 0.05f);
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);

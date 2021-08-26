@@ -323,20 +323,23 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
     {
         auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
 
-        ball.velocity = input.impulse;
-        ball.state = ball.terrain == TerrainID::Green ? Ball::State::Putt : Ball::State::Flight;
-        //this is a kludge to wait for the anim before hitting the ball
-        //Ideally we want to read the frame data from the sprite sheet
-        //as well as account for a frame of interp delay on the client
-        ball.delay = 0.32f;
+        if (ball.state == Ball::State::Idle)
+        {
+            ball.velocity = input.impulse;
+            ball.state = ball.terrain == TerrainID::Green ? Ball::State::Putt : Ball::State::Flight;
+            //this is a kludge to wait for the anim before hitting the ball
+            //Ideally we want to read the frame data from the sprite sheet
+            //as well as account for a frame of interp delay on the client
+            ball.delay = 0.32f;
 
-        ball.startPoint = m_playerInfo[0].ballEntity.getComponent<cro::Transform>().getPosition();
+            ball.startPoint = m_playerInfo[0].ballEntity.getComponent<cro::Transform>().getPosition();
 
-        m_playerInfo[0].holeScore[m_currentHole]++;
+            m_playerInfo[0].holeScore[m_currentHole]++;
 
-        m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, m_animIDs[AnimID::Swing], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, m_animIDs[AnimID::Swing], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-        m_turnTimer.restart(); //don't time out mid-shot...
+            m_turnTimer.restart(); //don't time out mid-shot...
+        }
     }
 }
 
