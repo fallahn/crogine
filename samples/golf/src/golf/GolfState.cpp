@@ -39,6 +39,7 @@ source distribution.
 #include "Clubs.hpp"
 #include "TextAnimCallback.hpp"
 #include "ClientCollisionSystem.hpp"
+#include "GolfParticleDirector.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/Gamecontroller.hpp>
@@ -53,6 +54,7 @@ source distribution.
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -340,19 +342,6 @@ void GolfState::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
-    case MessageID::CollisionMessage:
-    {
-        const auto& data = msg.getData<CollisionEvent>();
-        if (data.type == CollisionEvent::Begin)
-        {
-            LogI << "Begin collision at " << data.position << std::endl;
-        }
-        else
-        {
-            LogI << "End collision at " << data.position << std::endl;
-        }
-    }
-        break;
     case MessageID::SceneMessage:
     {
         const auto& data = msg.getData<SceneEvent>();
@@ -818,6 +807,9 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::ParticleSystem>(mb);
+
+    m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures);
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);

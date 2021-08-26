@@ -107,7 +107,7 @@ void ErrorState::handleMessage(const cro::Message& msg)
 bool ErrorState::simulate(float dt)
 {
     m_scene.simulate(dt);
-    return true;
+    return m_sharedData.baseState == StateID::Menu;
 }
 
 void ErrorState::render()

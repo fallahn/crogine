@@ -225,6 +225,7 @@
     <ClCompile Include="src\golf\ClientCollisionSystem.cpp" />
     <ClCompile Include="src\golf\ErrorState.cpp" />
     <ClCompile Include="src\golf\GolfCartSystem.cpp" />
+    <ClCompile Include="src\golf\GolfParticleDirector.cpp" />
     <ClCompile Include="src\golf\GolfState.cpp" />
     <ClCompile Include="src\golf\InputParser.cpp" />
     <ClCompile Include="src\golf\GolfStateUI.cpp" />
@@ -233,6 +234,7 @@
     <ClCompile Include="src\golf\MenuCreation.cpp" />
     <ClCompile Include="src\golf\MenuState.cpp" />
     <ClCompile Include="src\golf\OptionsState.cpp" />
+    <ClCompile Include="src\golf\ParticleDirector.cpp" />
     <ClCompile Include="src\golf\PauseState.cpp" />
     <ClCompile Include="src\golf\PlayerAvatar.cpp" />
     <ClCompile Include="src\golf\server\Server.cpp" />
@@ -257,6 +259,7 @@
     <ClInclude Include="src\golf\ErrorState.hpp" />
     <ClInclude Include="src\golf\GameConsts.hpp" />
     <ClInclude Include="src\golf\GolfCartSystem.hpp" />
+    <ClInclude Include="src\golf\GolfParticleDirector.hpp" />
     <ClInclude Include="src\golf\GolfState.hpp" />
     <ClInclude Include="src\golf\HoleData.hpp" />
     <ClInclude Include="src\golf\InputBinding.hpp" />
@@ -267,6 +270,7 @@
     <ClInclude Include="src\golf\MessageIDs.hpp" />
     <ClInclude Include="src\golf\OptionsState.hpp" />
     <ClInclude Include="src\golf\PacketIDs.hpp" />
+    <ClInclude Include="src\golf\ParticleDirector.hpp" />
     <ClInclude Include="src\golf\PauseState.hpp" />
     <ClInclude Include="src\golf\PlayerAvatar.hpp" />
     <ClInclude Include="src\golf\PlayerColours.hpp" />

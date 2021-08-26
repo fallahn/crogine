@@ -55,6 +55,12 @@
     <Filter Include="Header Files\golf\client\shaders">
       <UniqueIdentifier>{f1004cbe-0ee0-4d66-8188-73de37f48b53}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf\client\directors">
+      <UniqueIdentifier>{d2e40c71-df8a-4aaf-972c-9c4609f12782}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\client\directors">
+      <UniqueIdentifier>{ac49d76a-c9e3-46b1-8ee8-3b845a7951bc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -122,6 +128,12 @@
     </ClCompile>
     <ClCompile Include="src\golf\PauseState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ParticleDirector.cpp">
+      <Filter>Source Files\golf\client\directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\GolfParticleDirector.cpp">
+      <Filter>Source Files\golf\client\directors</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -247,6 +259,12 @@
     </ClInclude>
     <ClInclude Include="src\golf\PauseState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ParticleDirector.hpp">
+      <Filter>Header Files\golf\client\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\GolfParticleDirector.hpp">
+      <Filter>Header Files\golf\client\directors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

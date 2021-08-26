@@ -121,9 +121,22 @@ namespace cro
     public:
         ParticleEmitter();
 
+        /*!
+        \brief Starts emitting particles with the current settings
+        Note that applying custom settings to the emitter will not
+        take effect until the next time this is called.
+        */
         void start();
+
+        /*!
+        \brief Stops the emitter from creating particles
+        */
         void stop();
 
+        /*!
+        \brief Returns true id stop() has been called on the emitter, or
+        if the emitter is currently not running, else returns false.
+        */
         const bool stopped() const { return (!m_running && m_nextFreeParticle == 0); }
 
         static const std::uint32_t MaxParticles = 1000u;
