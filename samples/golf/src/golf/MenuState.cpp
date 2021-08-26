@@ -40,6 +40,7 @@ source distribution.
 #include "../ErrorCheck.hpp"
 
 #include <crogine/core/App.hpp>
+#include <crogine/core/GameController.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
@@ -226,6 +227,20 @@ bool MenuState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_TEXTINPUT)
     {
         handleTextEdit(evt);
+    }
+    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    {
+        //TODO check if any players are using the controller
+        //and reassign any still connected devices
+        //TODO update the avatar menu if it is active with
+        //correct controller assignment
+        for (auto i = 0; i < 4; ++i)
+        {
+            if (evt.cdevice.which == cro::GameController::deviceID(i))
+            {
+
+            }
+        }
     }
 
     m_uiScene.getSystem<cro::UISystem>().handleEvent(evt);

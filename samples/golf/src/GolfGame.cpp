@@ -155,6 +155,7 @@ bool GolfGame::initialise()
 
     m_sharedData.clientConnection.netClient.create(4);
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
+    std::fill(m_sharedData.controllerIDs.begin(), m_sharedData.controllerIDs.end(), 0);
 
     //preload resources which will be used in dynamically loaded menus
     m_sharedData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");

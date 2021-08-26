@@ -41,6 +41,7 @@ source distribution.
 #include "ClientCollisionSystem.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/core/Gamecontroller.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -262,34 +263,39 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN
+        && evt.cdevice.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
     {
         switch (evt.cbutton.button)
         {
         default: break;
-        case SDL_CONTROLLER_BUTTON_BACK:
+        case cro::GameController::ButtonBack:
             showScoreboard(true);
             break;
-        case SDL_CONTROLLER_BUTTON_B:
+        case cro::GameController::ButtonB:
                 showScoreboard(false);
             break;
-        case SDL_CONTROLLER_BUTTON_DPAD_UP:
-        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+        case cro::GameController::DPadUp:
+        case cro::GameController::DPadLeft:
             scrollScores(-19);
             break;
-        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+        case cro::GameController::DPadDown:
+        case cro::GameController::DPadRight:
             scrollScores(19);
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_CONTROLLERBUTTONUP
+        && evt.cdevice.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
     {
         switch (evt.cbutton.button)
         {
         default: break;
-        case SDL_CONTROLLER_BUTTON_BACK:
+        case cro::GameController::ButtonBack:
             showScoreboard(false);
+            break;
+        case cro::GameController::ButtonStart:
+            requestStackPush(StateID::Pause);
             break;
         }
     }
@@ -302,6 +308,19 @@ bool GolfState::handleEvent(const cro::Event& evt)
         else if (evt.wheel.y < 0)
         {
             scrollScores(19);
+        }
+    }
+
+    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    {
+        //TODO check if any players are using the controller
+        //and reassign any still connected devices
+        for (auto i = 0; i < 4; ++i)
+        {
+            if (evt.cdevice.which == cro::GameController::deviceID(i))
+            {
+
+            }
         }
     }
 
@@ -1549,6 +1568,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
     //if client is ours activate input/set initial stroke direction
+    m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[player.player];
     auto target = m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetLookAt;
     m_inputParser.resetPower();
     m_inputParser.setHoleDirection(target - player.position, m_currentPlayer != player); // this also selects the nearest club
