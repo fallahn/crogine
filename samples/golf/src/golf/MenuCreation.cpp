@@ -170,7 +170,7 @@ void MenuState::createUI()
         {
             m_postBuffer.create(windowSize.x, windowSize.y, false);
             m_postQuad.setTexture(m_postBuffer.getTexture());
-            auto shaderRes = size / 1.f;
+            auto shaderRes = size;// / 1.f;
             glCheck(glUseProgram(m_postShader.getGLHandle()));
             glCheck(glUniform2f(m_postShader.getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
         }

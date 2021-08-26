@@ -212,3 +212,9 @@ std::string GameController::getName(std::int32_t controllerIndex)
     }
     return "Unknown Device";
 }
+
+std::size_t GameController::getControllerCount()
+{
+    CRO_ASSERT(App::m_instance, "No app running");
+    return App::m_instance->m_controllerCount;
+}

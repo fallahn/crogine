@@ -42,7 +42,8 @@ namespace MessageID
     {
         GolfMessage = 400,//cro::Message::Count
         SceneMessage,
-        CollisionMessage
+        CollisionMessage,
+        SystemMessage
     };
 }
 
@@ -71,4 +72,12 @@ struct CollisionEvent final
     }type = Begin;
     glm::vec3 position = glm::vec3(0.f);
     std::int32_t terrain = 0;
+};
+
+struct SystemEvent final
+{
+    enum
+    {
+        PostProcessToggled
+    }type = PostProcessToggled;
 };

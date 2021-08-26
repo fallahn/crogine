@@ -146,6 +146,7 @@ App::App(std::uint32_t styleFlags)
     : m_windowStyleFlags(styleFlags),
     m_frameClock        (nullptr),
     m_running           (false),
+    m_controllerCount   (0),
     m_orgString         ("Trederia"),
     m_appString         ("CrogineApp")
 {
@@ -438,6 +439,7 @@ void App::handleEvents()
                     ci.joystickID = SDL_JoystickInstanceID(j);
 
                     m_controllers[id] = ci;
+                    m_controllerCount++;
                 }
             }
             else
@@ -470,6 +472,7 @@ void App::handleEvents()
                 
                 SDL_GameControllerClose(m_controllers[controllerIndex].controller);
                 m_controllers[controllerIndex] = {};
+                m_controllerCount--;
             }
 
             if (m_joysticks.count(id) > 0)

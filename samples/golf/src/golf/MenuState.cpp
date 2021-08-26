@@ -36,6 +36,8 @@ source distribution.
 #include "GameConsts.hpp"
 #include "PoissonDisk.hpp"
 #include "GolfCartSystem.hpp"
+#include "MessageIDs.hpp"
+#include "../ErrorCheck.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -234,6 +236,30 @@ bool MenuState::handleEvent(const cro::Event& evt)
 
 void MenuState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == MessageID::SystemMessage)
+    {
+        const auto& data = msg.getData<SystemEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case SystemEvent::PostProcessToggled:
+            m_sharedData.usePostProcess = !m_sharedData.usePostProcess;
+
+            if (m_sharedData.usePostProcess)
+            {
+                auto windowSize = cro::App::getWindow().getSize();
+
+                m_postBuffer.create(windowSize.x, windowSize.y, false);
+                m_postQuad.setTexture(m_postBuffer.getTexture());
+                auto shaderRes = glm::vec2(windowSize/* / 2u*/);
+                glCheck(glUseProgram(m_postShader.getGLHandle()));
+                glCheck(glUniform2f(m_postShader.getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
+            }
+
+            break;
+        }
+    }
+
     m_backgroundScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -195,6 +195,7 @@ namespace cro
 
         std::array<ControllerInfo, MaxControllers> m_controllers = {};
         std::map<std::int32_t, SDL_Joystick*> m_joysticks;
+        std::size_t m_controllerCount;
         friend class GameController;
 
         std::vector<std::pair<std::function<void()>, const GuiClient*>> m_statusControls;

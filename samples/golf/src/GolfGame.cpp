@@ -35,6 +35,7 @@ source distribution.
 #include "golf/PauseState.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
+#include "golf/MessageIDs.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
@@ -119,16 +120,28 @@ bool GolfGame::initialise()
     registerConsoleTab("Advanced",
         [&]()
         {
-            if (ImGui::Checkbox("PostProcess (not yet implemented)", &m_sharedData.usePostProcess))
+            bool usePost = m_sharedData.usePostProcess;
+            if (ImGui::Checkbox("PostProcess", &usePost))
             {
-                //TODO remove this - it just stops the assertion failure for having
-                //no post process buffer created yet
-                m_sharedData.usePostProcess = false;
-                if (m_sharedData.usePostProcess)
-                {
-                    //TODO raise a message or something to resize the post process buffers
-                }
-            }        
+                //we rely on the message handler to actually
+                //set the shared data property, in case we need to first create the buffer
+
+                //raise a message to resize the post process buffers
+                auto* msg = getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+                msg->type = SystemEvent::PostProcessToggled;
+            }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::BeginTooltip();
+                ImGui::Text("Not fully implemented, cos it's a bit crap.");
+                ImGui::EndTooltip();
+            }
+
+
+            if (ImGui::Button("Choose Shader"))
+            {
+                cro::FileSystem::showMessageBox("", "Maybe I'll implement this one day");
+            }
         });
 
     getWindow().setLoadingScreen<LoadingScreen>();

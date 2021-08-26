@@ -205,7 +205,7 @@ namespace cro
         static void rumbleStart(std::int32_t controllerIndex, float strength, std::uint32_t duration);
 
         /*!
-        \brief Stops the rumble effect o nthe given controller, if it is active
+        \brief Stops the rumble effect on the given controller, if it is active
         \param controllerIndex The index of the controller to stop
         */
         static void rumbleStop(std::int32_t controllerIndex);
@@ -214,6 +214,12 @@ namespace cro
         \brief Returns a string containing the identifier associated with the given controller ID
         */
         static std::string getName(std::int32_t controllerIndex);
+
+        /*!
+        \brief Returns the number of currently connected GameControllers.
+        Note that this does not include any Joystick devices
+        */
+        static std::size_t getControllerCount();
 
     private:
 
