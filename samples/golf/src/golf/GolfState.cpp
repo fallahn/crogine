@@ -125,6 +125,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
     context.mainWindow.setMouseCaptured(true);
+    sd.baseState = StateID::Game;
+
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
     registerWindow([&]() 
@@ -1055,27 +1057,57 @@ void GolfState::spawnBall(const ActorInfo& info)
     auto ballEnt = entity;
     material.blendMode = cro::Material::BlendMode::Multiply;
 
+    //point shadow seen from distance
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(info.position);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [ballEnt](cro::Entity e, float)
+        [&, ballEnt](cro::Entity e, float)
     {
-        auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
-        ballPos.y = 0.003f; //just to prevent z-fighting
-        e.getComponent<cro::Transform>().setPosition(ballPos);
+        if (ballEnt.destroyed())
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+        else
+        {
+            auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
+            ballPos.y = 0.003f; //just to prevent z-fighting
+            e.getComponent<cro::Transform>().setPosition(ballPos);
+        }
     };
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.shadowMeshID), material);
 
+    //large shadow seen close up
     auto shadowEnt = entity;
     entity = m_gameScene.createEntity();
     shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
     m_modelDefs[ModelID::BallShadow]->createModel(entity);
     entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&,ballEnt](cro::Entity e, float)
+    {
+        if (ballEnt.destroyed())
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+    };
 
     //adding a ball model means we see something a bit more reasonable when close up
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, ballEnt](cro::Entity e, float)
+    {
+        if (ballEnt.destroyed())
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+    };
     m_modelDefs[ModelID::Ball]->createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1217,7 +1249,7 @@ void GolfState::removeClient(std::uint8_t clientID)
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 4.f, UIBarHeight * m_viewScale.y * 2.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_resources.fonts.get(FontID::UI)).setString(str);
+    entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI)).setString(str);
     entity.getComponent<cro::Text>().setCharacterSize(8u * static_cast<std::uint32_t>(m_viewScale.y));
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;

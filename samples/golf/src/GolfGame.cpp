@@ -172,6 +172,7 @@ bool GolfGame::initialise()
     cro::SpriteSheet s;
     s.loadFromFile("assets/golf/sprites/options.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
+    s.loadFromFile("assets/golf/sprites/scoreboard.spt", m_sharedData.sharedResources->textures);
 
 
 

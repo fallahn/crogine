@@ -160,11 +160,18 @@ void ErrorState::buildScene()
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
             if (currTime == 0)
             {
-                requestStackPop();
+                if (m_sharedData.baseState != StateID::Menu)
+                {
+                    requestStackClear();
+                    requestStackPush(StateID::Menu);
+                }
+                else
+                {
+                    requestStackPop();
+                }
             }
             break;
         }
-
     };
 
     m_rootNode = rootNode;
@@ -200,14 +207,14 @@ void ErrorState::buildScene()
     };
 
 
-    //background - TODO swap this for something big enough to hold the error message
+    //background
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_sharedData.sharedResources->textures);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("message_board");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("border");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());

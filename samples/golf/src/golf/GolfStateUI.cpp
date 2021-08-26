@@ -595,9 +595,10 @@ void GolfState::createScoreboard()
     rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto bgEnt = entity;
+
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 200.f, 293.f, 0.02f });
+    entity.addComponent<cro::Transform>().setPosition({ 200.f, 293.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("LEADERS");
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -607,7 +608,7 @@ void GolfState::createScoreboard()
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.getComponent<cro::Transform>().setOrigin({ -6.f, 253.f});
+    entity.getComponent<cro::Transform>().setOrigin({ -6.f, 253.f, -0.1});
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     cro::FloatRect bgCrop({ 0.f, bounds.height - 266.f, 389.f, 266.f });
@@ -659,7 +660,7 @@ void GolfState::createScoreboard()
     for (auto& e : ents)
     {
         e = m_uiScene.createEntity();
-        e.addComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions[i], 0.02f));
+        e.addComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions[i], 0.2f));
         e.addComponent<cro::Drawable2D>();
         e.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
         e.getComponent<cro::Text>().setVerticalSpacing(6.f);

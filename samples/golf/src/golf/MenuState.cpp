@@ -100,6 +100,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     context.mainWindow.setMouseCaptured(false);
     
     sd.inputBinding.controllerID = 0;
+    sd.baseState = StateID::Menu;
 
     sd.clientConnection.ready = false;
     std::fill(m_readyState.begin(), m_readyState.end(), false);
