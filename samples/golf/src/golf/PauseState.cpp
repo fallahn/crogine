@@ -33,10 +33,11 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 
-#include <crogine/gui/Gui.hpp>
 #include <crogine/core/Window.hpp>
+#include <crogine/core/GameController.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
@@ -94,13 +95,15 @@ bool PauseState::handleEvent(const cro::Event& evt)
     if (evt.type == SDL_KEYUP)
     {
         if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE)
+            || evt.key.keysym.sym == SDLK_ESCAPE
+            || evt.key.keysym.sym == SDLK_p)
         {
             quitState();
             return false;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    else if (evt.type == SDL_CONTROLLERBUTTONUP
+        && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
     {
         if (evt.cbutton.button == SDL_CONTROLLER_BUTTON_B)
         {
@@ -134,7 +137,7 @@ void PauseState::render()
 void PauseState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb);
+    m_scene.addSystem<cro::UISystem>(mb).setActiveControllerID(m_sharedData.inputBinding.controllerID);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);

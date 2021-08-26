@@ -264,7 +264,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN
-        && evt.cdevice.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+        && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
     {
         switch (evt.cbutton.button)
         {
@@ -286,7 +286,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP
-        && evt.cdevice.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+        && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
     {
         switch (evt.cbutton.button)
         {
@@ -442,6 +442,9 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (data.id == StateID::Pause)
             {
                 cro::App::getWindow().setMouseCaptured(true);
+
+                //make sure to set the correct controller
+                m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer.player];
             }
         }
     }
@@ -1568,10 +1571,16 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
     //if client is ours activate input/set initial stroke direction
-    m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[player.player];
     auto target = m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetLookAt;
     m_inputParser.resetPower();
     m_inputParser.setHoleDirection(target - player.position, m_currentPlayer != player); // this also selects the nearest club
+
+    //if the pause/options menu is open, don't take control
+    //from the active input (this will be set when the state is closed)
+    if (getStateCount() == 1)
+    {
+        m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[player.player];
+    }
 
     //this just makes sure to update the direction indicator
     //regardless of whether or not we actually switched clubs

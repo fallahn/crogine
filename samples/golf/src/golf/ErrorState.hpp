@@ -32,7 +32,6 @@ source distribution.
 #include "../StateIDs.hpp"
 
 #include <crogine/core/State.hpp>
-#include <crogine/gui/GuiClient.hpp>
 
 #include <crogine/ecs/Scene.hpp>
 
@@ -42,7 +41,7 @@ namespace cro
     struct Camera;
 }
 
-class ErrorState final : public cro::State, public cro::GuiClient
+class ErrorState final : public cro::State
 {
 public:
     ErrorState(cro::StateStack&, cro::State::Context, SharedStateData&);

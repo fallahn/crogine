@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -27,13 +27,15 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include <crogine/core/App.hpp>
+#include <crogine/core/Clock.hpp>
+#include <crogine/core/GameController.hpp>
+
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/Scene.hpp>
-#include <crogine/core/Clock.hpp>
-#include <crogine/core/App.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -43,6 +45,7 @@ using namespace cro;
 
 UISystem::UISystem(MessageBus& mb)
     : System            (mb, typeid(UISystem)),
+    m_activeControllerID(0),
     m_controllerMask    (0),
     m_prevControllerMask(0),
     m_columnCount       (1),
@@ -66,6 +69,18 @@ void UISystem::handleEvent(const Event& evt)
     switch (evt.type)
     {
     default: break;
+    case SDL_CONTROLLERDEVICEREMOVED:
+        //check if this is the active controller and update
+        //if necessary to a connected controller
+        if (evt.cdevice.which == cro::GameController::deviceID(m_activeControllerID)
+            && m_activeControllerID > 0)
+        {
+            do
+            {
+                m_activeControllerID--;
+            } while (m_activeControllerID > 0 && !cro::GameController::isConnected(m_activeControllerID));
+        }
+        break;
     case SDL_MOUSEMOTION:
         m_eventPosition = toWorldCoords(evt.motion.x, evt.motion.y);
         m_movementDelta = m_eventPosition - m_prevMousePosition;
@@ -161,37 +176,39 @@ void UISystem::handleEvent(const Event& evt)
     }
         break;
     case SDL_CONTROLLERBUTTONDOWN:
-    {
-        switch (evt.cbutton.button)
+        if(evt.cbutton.which == cro::GameController::deviceID(m_activeControllerID))
         {
-        default:
+            switch (evt.cbutton.button)
+            {
+            default:
+            {
+                auto& buttonEvent = m_buttonDownEvents.emplace_back();
+                buttonEvent.type = evt.type;
+                buttonEvent.cbutton = evt.cbutton;
+            }
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                m_controllerMask |= ControllerBits::Up;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                m_controllerMask |= ControllerBits::Down;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                m_controllerMask |= ControllerBits::Left;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                m_controllerMask |= ControllerBits::Right;
+                break;
+            }
+        }
+        break;
+    case SDL_CONTROLLERBUTTONUP:
+        if (evt.cbutton.which == cro::GameController::deviceID(m_activeControllerID))
         {
-            auto& buttonEvent = m_buttonDownEvents.emplace_back();
+            auto& buttonEvent = m_buttonUpEvents.emplace_back();
             buttonEvent.type = evt.type;
             buttonEvent.cbutton = evt.cbutton;
         }
-            break;
-        case SDL_CONTROLLER_BUTTON_DPAD_UP:
-            m_controllerMask |= ControllerBits::Up;
-            break;
-        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-            m_controllerMask |= ControllerBits::Down;
-            break;
-        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-            m_controllerMask |= ControllerBits::Left;
-            break;
-        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-            m_controllerMask |= ControllerBits::Right;
-            break;
-        }
-    }
-        break;
-    case SDL_CONTROLLERBUTTONUP:
-    {
-        auto& buttonEvent = m_buttonUpEvents.emplace_back();
-        buttonEvent.type = evt.type;
-        buttonEvent.cbutton = evt.cbutton;
-    }
         break;
     case SDL_JOYBUTTONDOWN:
     {
@@ -384,6 +401,16 @@ void UISystem::setActiveGroup(std::size_t group)
 void UISystem::setColumnCount(std::size_t count)
 {
     m_columnCount = std::max(std::size_t(1), count);
+}
+
+void UISystem::setActiveControllerID(std::int32_t id)
+{
+    id = std::max(0, id);
+
+    if (GameController::isConnected(id))
+    {
+        m_activeControllerID = id;
+    }
 }
 
 //private

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -171,6 +171,14 @@ namespace cro
         */
         void setColumnCount(std::size_t count);
 
+        /*!
+        \brief Sets the controller ID allowed to send input to the system.
+        Only controller events with the controller ID will be forwarded to
+        the UI callbacks. By default this is controller 0
+        \param id The ID of the controller to set active. Normally 0 - 3.
+        */
+        void setActiveControllerID(std::int32_t id);
+
     private:
 
         std::vector<ButtonCallback> m_buttonCallbacks;
@@ -194,6 +202,7 @@ namespace cro
         glm::vec2 toWorldCoords(std::int32_t x, std::int32_t y); //converts screen coords
         glm::vec2 toWorldCoords(float, float); //converts normalised coords
 
+        std::int32_t m_activeControllerID;
         std::uint8_t m_controllerMask;
         std::uint8_t m_prevControllerMask;
         enum ControllerBits

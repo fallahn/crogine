@@ -98,7 +98,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     });
 
     context.mainWindow.setMouseCaptured(false);
-    //context.appInstance.setClearColour(cro::Colour(0.2f, 0.2f, 0.26f));
+    
+    sd.inputBinding.controllerID = 0;
 
     sd.clientConnection.ready = false;
     std::fill(m_readyState.begin(), m_readyState.end(), false);

@@ -34,11 +34,12 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
 
-#include <crogine/gui/Gui.hpp>
 #include <crogine/core/Window.hpp>
 #include <crogine/core/Mouse.hpp>
+#include <crogine/core/GameController.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
@@ -212,11 +213,16 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (evt.cbutton.button == SDL_CONTROLLER_BUTTON_B)
+        if (evt.cbutton.which == cro::GameController::deviceID(0)
+            && evt.cbutton.button == cro::GameController::ButtonB)
         {
             if (!m_updatingKeybind)
             {
                 quitState();
+            }
+            else
+            {
+                updateKeybind(SDLK_ESCAPE);
             }
             return false;
         }
@@ -394,7 +400,10 @@ void OptionsState::updateKeybind(SDL_Keycode key)
 void OptionsState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb);
+    //only problem here is if player changes between opening
+    //pause menu and opening options menu changes the active controller
+    //as the game isn't actually paused. Not much we can do about this though?
+    m_scene.addSystem<cro::UISystem>(mb).setActiveControllerID(m_sharedData.inputBinding.controllerID);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
@@ -656,23 +665,6 @@ void OptionsState::buildScene()
         m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
-
-        //updates any text objects / buttons with a relative position
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::Menu::UIElement;
-        cmd.action =
-            [&, size](cro::Entity e, float)
-        {
-            const auto& element = e.getComponent<UIElement>();
-            auto pos = element.absolutePosition;
-            pos += element.relativePosition * size / m_viewScale;
-
-            pos.x = std::floor(pos.x);
-            pos.y = std::floor(pos.y);
-
-            e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
-        };
-        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     };
 
     entity = m_scene.createEntity();
