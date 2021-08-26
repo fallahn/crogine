@@ -60,8 +60,10 @@ public:
 private:
 
     cro::Scene m_scene;
-    cro::Texture m_backgroundTexture;
+    SharedStateData& m_sharedData;
+    cro::Entity m_rootNode;
+    glm::vec2 m_viewScale;
 
     void buildScene();
-    void updateView(cro::Camera&);
+    void quitState();
 };

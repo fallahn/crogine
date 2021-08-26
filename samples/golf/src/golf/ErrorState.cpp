@@ -29,51 +29,35 @@ source distribution.
 
 #include "ErrorState.hpp"
 #include "SharedStateData.hpp"
+#include "MenuConsts.hpp"
 
-#include <crogine/gui/Gui.hpp>
+#include <crogine/core/GameController.hpp>
 #include <crogine/core/Window.hpp>
-#include <crogine/detail/GlobalConsts.hpp>
-#include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
+
+#include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
+#include <crogine/util/Easings.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 ErrorState::ErrorState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State(ss, ctx),
-    m_scene     (ctx.appInstance.getMessageBus())
+    m_scene     (ctx.appInstance.getMessageBus()),
+    m_sharedData(sd),
+    m_viewScale (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
-
-    auto msg = sd.errorMessage;
-    registerWindow([&, msg, ctx]() 
-        {
-            auto windowSize = ctx.mainWindow.getSize();
-            ImGui::SetNextWindowSize({ 260.f, 120.f });
-            ImGui::SetNextWindowPos({ (windowSize.x - 200.f) / 2.f, (windowSize.y - 120.f) / 2.f });
-            if (ImGui::Begin("Error"))
-            {
-                ImGui::Text("%s", msg.c_str());
-                if (ImGui::Button("OK"))
-                {
-                    sd.serverInstance.stop();
-                    sd.clientConnection.connected = false;
-                    sd.clientConnection.netClient.disconnect();
-                    sd.clientConnection.connectionID = 4;
-                    sd.clientConnection.ready = false;
-
-                    requestStackClear();
-                    requestStackPush(StateID::Menu);
-                }
-            }
-            ImGui::End();
-        
-        });
 
     buildScene();
 }
@@ -81,6 +65,36 @@ ErrorState::ErrorState(cro::StateStack& ss, cro::State::Context ctx, SharedState
 //public
 bool ErrorState::handleEvent(const cro::Event& evt)
 {
+    if (m_rootNode.getComponent<cro::Callback>().active)
+    {
+        return false;
+    }
+
+    if (evt.type == SDL_KEYUP)
+    {
+        if (evt.key.keysym.sym == SDLK_SPACE
+            || evt.key.keysym.sym == SDLK_ESCAPE
+            || evt.key.keysym.sym == SDLK_RETURN
+            || evt.key.keysym.sym == SDLK_KP_ENTER)
+        {
+            quitState();
+            return false;
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    {
+        if (evt.cbutton.button == cro::GameController::ButtonA)
+        {
+            quitState();
+            return false;
+        }
+    }
+    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    {
+        quitState();
+        return false;
+    }
+
     m_scene.forwardEvent(evt);
     return false;
 }
@@ -93,7 +107,7 @@ void ErrorState::handleMessage(const cro::Message& msg)
 bool ErrorState::simulate(float dt)
 {
     m_scene.simulate(dt);
-    return false;
+    return true;
 }
 
 void ErrorState::render()
@@ -105,35 +119,157 @@ void ErrorState::render()
 void ErrorState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_scene.addSystem<cro::CallbackSystem>(mb);
+    m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
+    m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
 
-    cro::Image img;
-    img.create(2, 2, cro::Colour(std::uint8_t(0),0u,0u,120u));
+    struct RootCallbackData final
+    {
+        enum
+        {
+            FadeIn, FadeOut
+        }state = FadeIn;
+        float currTime = 0.f;
+    };
 
-    m_backgroundTexture.create(2, 2);
-    m_backgroundTexture.update(img.getPixelData());
+    auto rootNode = m_scene.createEntity();
+    rootNode.addComponent<cro::Transform>();
+    rootNode.addComponent<cro::Callback>().active = true;
+    rootNode.getComponent<cro::Callback>().setUserData<RootCallbackData>();
+    rootNode.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<RootCallbackData>();
 
+        switch (state)
+        {
+        default: break;
+        case RootCallbackData::FadeIn:
+            currTime = std::min(1.f, currTime + (dt * 2.f));
+            e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
+            if (currTime == 1)
+            {
+                state = RootCallbackData::FadeOut;
+                e.getComponent<cro::Callback>().active = false;
+            }
+            break;
+        case RootCallbackData::FadeOut:
+            currTime = std::max(0.f, currTime - (dt * 2.f));
+            e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
+            if (currTime == 0)
+            {
+                requestStackPop();
+            }
+            break;
+        }
+
+    };
+
+    m_rootNode = rootNode;
+
+
+    //quad to darken the screen
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setScale({ cro::DefaultSceneSize.x / 2.f, cro::DefaultSceneSize.y / 2.f, 1.f });
-    entity.getComponent<cro::Transform>().setPosition({ -(cro::DefaultSceneSize.x / 2.f), -(cro::DefaultSceneSize.y / 2.f), 0.f });
-    entity.addComponent<cro::Sprite>(m_backgroundTexture);
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.4f });
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(-0.5f, 0.5f), cro::Colour::Black),
+        cro::Vertex2D(glm::vec2(-0.5f), cro::Colour::Black),
+        cro::Vertex2D(glm::vec2(0.5f), cro::Colour::Black),
+        cro::Vertex2D(glm::vec2(0.5f, -0.5f), cro::Colour::Black)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, rootNode](cro::Entity e, float)
+    {
+        auto size = glm::vec2(cro::App::getWindow().getSize());
+        e.getComponent<cro::Transform>().setScale(size);
+        e.getComponent<cro::Transform>().setPosition(size / 2.f);
+
+        auto scale = rootNode.getComponent<cro::Transform>().getScale().x;
+        scale = std::min(1.f, scale / m_viewScale.x);
+
+        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+        for (auto& v : verts)
+        {
+            v.colour.setAlpha(BackgroundAlpha * scale);
+        }
+    };
+
+
+    //background - TODO swap this for something big enough to hold the error message
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
     entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("message_board");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
+
+    auto menuEntity = m_scene.createEntity();
+    menuEntity.addComponent<cro::Transform>();
+    rootNode.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    //title
+    auto createItem = [&](glm::vec2 position, const std::string label, cro::Entity parent)
+    {
+        auto e = m_scene.createEntity();
+        e.addComponent<cro::Transform>().setPosition(position);
+        e.addComponent<cro::Drawable2D>();
+        e.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+        e.getComponent<cro::Text>().setString(label);
+        e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        e.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+
+        parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+        return e;
+    };
+
+    //title
+    entity = createItem(glm::vec2(0.f, 10.f), "Error", menuEntity);
+    entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+
+
+    //message
+    entity = createItem(glm::vec2(0.f), m_sharedData.errorMessage, menuEntity);
+    
+
+    auto updateView = [&, rootNode](cro::Camera& cam) mutable
+    {
+        glm::vec2 size(cro::App::getWindow().getSize());
+
+        cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+
+        auto vpSize = calcVPSize();
+
+        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
+        rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
+    };
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = std::bind(&ErrorState::updateView, this, std::placeholders::_1);
-
+    entity.addComponent<cro::Camera>().resizeCallback = updateView;
     m_scene.setActiveCamera(entity);
+    updateView(entity.getComponent<cro::Camera>());
 }
 
-void ErrorState::updateView(cro::Camera& cam)
+void ErrorState::quitState()
 {
-    glm::vec2 size(cro::App::getWindow().getSize());
-    size.y = ((size.x / 16.f) * 9.f) / size.y;
-    size.x = 1.f;
+    m_rootNode.getComponent<cro::Callback>().active = true;
 
-    cam.setOrthographic(0.f, static_cast<float>(cro::DefaultSceneSize.x), 0.f, static_cast<float>(cro::DefaultSceneSize.y), -2.f, 100.f);
-    cam.viewport.bottom = (1.f - size.y) / 2.f;
-    cam.viewport.height = size.y;
+    m_sharedData.serverInstance.stop();
+    m_sharedData.clientConnection.connected = false;
+    m_sharedData.clientConnection.netClient.disconnect();
+    m_sharedData.clientConnection.connectionID = 4;
+    m_sharedData.clientConnection.ready = false;
 }
