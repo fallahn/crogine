@@ -146,9 +146,10 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 //ImGui::Text("Cam Rotation: %3.3f", m_camRotation);
 
                 /*static float sunRot = 0.f;
+                auto prevRot = sunRot;
                 if (ImGui::SliderFloat("Sun", &sunRot, -90.f, 90.f))
                 {
-                    m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, sunRot * cro::Util::Const::degToRad);
+                    m_greenCam.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, (prevRot - sunRot) * cro::Util::Const::degToRad);
                 }*/
 
                 /*auto rot = m_inputParser.getYaw();
@@ -910,6 +911,7 @@ void GolfState::buildScene()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     entity.getComponent<cro::Model>().setHidden(true);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
 
 
     //draw the flag pole as a single line which can be
