@@ -88,6 +88,7 @@ namespace
 {
 #include "WaterShader.inl"
 #include "TerrainShader.inl"
+#include "MinimapShader.inl"
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
@@ -518,6 +519,12 @@ void GolfState::render()
     m_gameScene.render(m_gameSceneTexture);
     m_gameSceneTexture.display();
 
+    auto oldCam = m_gameScene.setActiveCamera(m_greenCam);
+    m_greenBuffer.clear();
+    m_gameScene.render(m_greenBuffer);
+    m_greenBuffer.display();
+    m_gameScene.setActiveCamera(oldCam);
+
     m_uiScene.render(cro::App::getWindow());
 }
 
@@ -545,9 +552,10 @@ void GolfState::loadAssets()
     m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]).blendMode = cro::Material::BlendMode::Alpha;
 
+    m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment);
+
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Water));
-
 
     m_waterShader.shaderID = m_resources.shaders.get(ShaderID::Water).getGLHandle();
     m_waterShader.timeUniform = m_resources.shaders.get(ShaderID::Water).getUniformMap().at("u_time");
@@ -1029,8 +1037,8 @@ void GolfState::buildScene()
 
     m_currentPlayer.position = m_holeData[m_currentHole].tee; //prevents the initial camera movement
 
-    setCurrentHole(0);
     buildUI(); //put this here because we don't want to do this if the map data didn't load
+    setCurrentHole(0);
 
     //careful with these values - they are fine tuned for shadowing of terrain
     auto sunEnt = m_gameScene.getSunlight();
@@ -1483,6 +1491,10 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
     m_terrainBuilder.setSlopePosition(m_holeData[m_currentHole].pin);
+
+    //set green cam position
+    auto holePos = m_holeData[m_currentHole].pin;
+    m_greenCam.getComponent<cro::Transform>().setPosition({ holePos.x, 0.9f, holePos.z });
 }
 
 void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)

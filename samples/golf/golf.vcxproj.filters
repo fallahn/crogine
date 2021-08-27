@@ -277,5 +277,8 @@
     <None Include="src\golf\PostProcess.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
+    <None Include="src\golf\MinimapShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

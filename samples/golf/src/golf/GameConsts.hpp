@@ -73,7 +73,8 @@ struct ShaderID final
         Cel,
         CelTextured,
         Course,
-        Slope
+        Slope,
+        Minimap
     };
 };
 

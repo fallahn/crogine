@@ -197,4 +197,7 @@ private:
     cro::SimpleQuad m_mapQuad;
     cro::SimpleQuad m_flagQuad;
     void updateMiniMap();
+
+    cro::Entity m_greenCam;
+    cro::RenderTexture m_greenBuffer;
 };

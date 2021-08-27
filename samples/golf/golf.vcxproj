@@ -292,6 +292,7 @@
     <ClInclude Include="src\StateIDs.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\golf\MinimapShader.inl" />
     <None Include="src\golf\PostProcess.inl" />
     <None Include="src\golf\TerrainShader.inl" />
     <None Include="src\golf\WaterShader.inl" />
