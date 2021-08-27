@@ -460,13 +460,96 @@ void GolfState::buildUI()
 
     //green close up view
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>(); //position is set in UI cam callback, below
+    entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f }); //position is set in UI cam callback, below
     entity.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::Minimap));
-    entity.addComponent<cro::Sprite>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniGreen;
+    entity.addComponent<cro::Sprite>(); //updated by the camera callback with correct texture
+    entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        static constexpr float Speed = 2.f;
+        auto& [currTime, state] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+        if (state == 0)
+        {
+            //expand
+            currTime = std::min(1.f, currTime + (dt * Speed));
+            float scale = cro::Util::Easing::easeOutQuint(currTime);
+            e.getComponent<cro::Transform>().setScale({ scale,  1.f });
+
+            if (currTime == 1)
+            {
+                state = 1;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        else
+        {
+            //contract
+            currTime = std::max(0.f, currTime - (dt * Speed));
+            float scale = cro::Util::Easing::easeOutQuint(currTime);
+            e.getComponent<cro::Transform>().setScale({ 1.f, scale });
+
+            if (currTime == 0)
+            {
+                state = 0;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+    };
+
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto greenEnt = entity;
 
 
     createScoreboard();
+
+
+    //set up the overhead cam for the mini map - do we really need to do this on every resize?
+    auto updateMiniView = [&, mapEnt](cro::Camera& miniCam) mutable
+    {
+        glm::uvec2 previewSize = MapSize / 2u;
+
+        m_mapBuffer.create(previewSize.x, previewSize.y);
+        m_mapQuad.setTexture(m_mapBuffer.getTexture());
+        m_mapTexture.create(previewSize.x, previewSize.y);
+        mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
+        mapEnt.getComponent<cro::Transform>().setOrigin({ previewSize.x / 2.f, previewSize.y / 2.f });
+
+        miniCam.setOrthographic(0.f, static_cast<float>(MapSize.x), 0.f, static_cast<float>(MapSize.y), -0.1f, 20.f);
+        miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+
+    m_mapCam = m_gameScene.createEntity();
+    m_mapCam.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 0.f });
+    m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+    auto& miniCam = m_mapCam.addComponent<cro::Camera>();
+    miniCam.renderFlags = RenderFlags::MiniMap;
+    miniCam.resizeCallback = updateMiniView;
+    updateMiniView(miniCam);
+
+
+
+    //and the mini view of the green
+    auto updateGreenView = [&, greenEnt](cro::Camera& greenCam) mutable
+    {
+        auto texSize = MapSize.y / 3u;
+        m_greenBuffer.create(texSize, texSize); //yes, it's square
+        greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
+
+        greenEnt.getComponent<cro::Transform>().setOrigin({ texSize / 2, texSize / 2 }); //must divide to a whole pixel!
+
+        greenCam.setOrthographic(-0.5f, 0.5f, -0.5f, 0.5f, -0.15f, 1.f);
+        greenCam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+
+    m_greenCam = m_gameScene.createEntity();
+    m_greenCam.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+    auto& greenCam = m_greenCam.addComponent<cro::Camera>();
+    greenCam.resizeCallback = updateGreenView;
+    updateGreenView(greenCam);
+
+
 
 
     //callback for the UI camera when window is resized
@@ -495,8 +578,8 @@ void GolfState::buildUI()
         mapSize /= 2.f;
         mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y, uiSize.y - (mapSize.x) - (UIBarHeight * 1.5f) }); //map sprite is rotated 90
 
-        greenEnt.getComponent<cro::Transform>().setPosition({ 4.f, size.y - (((MapSize.y / 3) * m_viewScale.y)) - (UIBarHeight * m_viewScale.y) - 4.f });
-        greenEnt.getComponent<cro::Transform>().setScale(m_viewScale);
+        greenEnt.getComponent<cro::Transform>().setPosition({ 4.f, uiSize.y - (MapSize.y / 3) - UIBarHeight - 4.f });
+        greenEnt.getComponent<cro::Transform>().move(greenEnt.getComponent<cro::Transform>().getOrigin());
 
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(uiSize.x - 48.f, 40.f));
 
@@ -555,46 +638,6 @@ void GolfState::buildUI()
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     updateView(cam);
-
-
-    //set up the overhead cam for the mini map - do we really need to do this on every resize?
-    auto updateMiniView = [&, mapEnt](cro::Camera& miniCam) mutable
-    {
-        glm::uvec2 previewSize = MapSize / 2u;
-
-        m_mapBuffer.create(previewSize.x, previewSize.y);
-        m_mapQuad.setTexture(m_mapBuffer.getTexture());
-        m_mapTexture.create(previewSize.x, previewSize.y);
-        mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
-        mapEnt.getComponent<cro::Transform>().setOrigin({ previewSize.x / 2.f, previewSize.y / 2.f });
-
-        miniCam.setOrthographic(0.f, static_cast<float>(MapSize.x), 0.f, static_cast<float>(MapSize.y), -0.1f, 20.f);
-        miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
-    };
-
-    m_mapCam = m_gameScene.createEntity();
-    m_mapCam.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 0.f });
-    m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    auto& miniCam = m_mapCam.addComponent<cro::Camera>();
-    miniCam.renderFlags = RenderFlags::MiniMap;
-    miniCam.resizeCallback = updateMiniView;
-    updateMiniView(miniCam);
-
-
-    auto updateGreenView = [&, greenEnt](cro::Camera& greenCam) mutable
-    {
-        m_greenBuffer.create(MapSize.y / 3, MapSize.y / 3); //yes, it's square
-        greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
-
-        greenCam.setOrthographic(-0.5f, 0.5f, -0.5f, 0.5f, -0.15f, 1.f);
-        greenCam.viewport = { 0.f, 0.f, 1.f, 1.f };
-    };
-
-    m_greenCam = m_gameScene.createEntity();
-    m_greenCam.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    auto& greenCam = m_greenCam.addComponent<cro::Camera>();
-    greenCam.resizeCallback = updateGreenView;
-    updateGreenView(greenCam);
 }
 
 void GolfState::showCountdown(std::uint8_t seconds)

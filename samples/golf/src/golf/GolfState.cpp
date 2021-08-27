@@ -519,11 +519,15 @@ void GolfState::render()
     m_gameScene.render(m_gameSceneTexture);
     m_gameSceneTexture.display();
 
-    auto oldCam = m_gameScene.setActiveCamera(m_greenCam);
-    m_greenBuffer.clear();
-    m_gameScene.render(m_greenBuffer);
-    m_greenBuffer.display();
-    m_gameScene.setActiveCamera(oldCam);
+    //update mini green if ball is there
+    if (m_currentPlayer.terrain == TerrainID::Green)
+    {
+        auto oldCam = m_gameScene.setActiveCamera(m_greenCam);
+        m_greenBuffer.clear();
+        m_gameScene.render(m_greenBuffer);
+        m_greenBuffer.display();
+        m_gameScene.setActiveCamera(oldCam);
+    }
 
     m_uiScene.render(cro::App::getWindow());
 }
@@ -1685,6 +1689,25 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    //also check if we need to display mini map for green
+    cmd.targetFlags = CommandID::UI::MiniGreen;
+    cmd.action = [player](cro::Entity e, float)
+    {
+        bool hidden = (player.terrain != TerrainID::Green);
+
+        if (!hidden)
+        {
+            e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 0;
+            e.getComponent<cro::Callback>().active = true;
+        }
+        else
+        {
+            e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
+            e.getComponent<cro::Callback>().active = true;
+        }
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
     m_currentPlayer = player;
 }
