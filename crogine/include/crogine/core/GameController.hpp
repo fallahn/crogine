@@ -221,6 +221,11 @@ namespace cro
         */
         static std::size_t getControllerCount();
 
+        /*!
+        \brief Maximum number of game controllers which may be connected
+        Note that this does not include joystick devices.
+        */
+        static constexpr std::int32_t MaxControllers = 12;
     private:
 
     };

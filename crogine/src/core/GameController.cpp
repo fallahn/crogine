@@ -36,7 +36,7 @@ using namespace cro;
 std::int32_t GameController::deviceID(std::int32_t controllerID)
 {
     CRO_ASSERT(App::m_instance, "No app running");
-    CRO_ASSERT(controllerID < App::MaxControllers, "");
+    CRO_ASSERT(controllerID < MaxControllers, "");
 
     return controllerID < 0 ? -1 : App::m_instance->m_controllers[controllerID].joystickID;
 }
@@ -44,7 +44,7 @@ std::int32_t GameController::deviceID(std::int32_t controllerID)
 std::int16_t GameController::getAxisPosition(std::int32_t controllerIndex, std::int32_t axis)
 {
     CRO_ASSERT(App::m_instance, "No app running");
-    CRO_ASSERT(controllerIndex < App::MaxControllers, "");
+    CRO_ASSERT(controllerIndex < MaxControllers, "");
 
     return controllerIndex < 0 ? 0 : SDL_GameControllerGetAxis(App::m_instance->m_controllers[controllerIndex].controller, static_cast<SDL_GameControllerAxis>(axis));
 }
@@ -52,7 +52,7 @@ std::int16_t GameController::getAxisPosition(std::int32_t controllerIndex, std::
 bool GameController::isButtonPressed(std::int32_t controllerIndex, std::int32_t button)
 {
     CRO_ASSERT(App::m_instance, "No app running");
-    CRO_ASSERT(controllerIndex < App::MaxControllers, "");
+    CRO_ASSERT(controllerIndex < MaxControllers, "");
 
     return controllerIndex < 0 ? false : (SDL_GameControllerGetButton(App::m_instance->m_controllers[controllerIndex].controller, static_cast<SDL_GameControllerButton>(button)) == 1);
 }
@@ -60,7 +60,7 @@ bool GameController::isButtonPressed(std::int32_t controllerIndex, std::int32_t 
 bool GameController::isConnected(std::int32_t controllerIndex)
 {
     CRO_ASSERT(App::m_instance, "No app running");
-    CRO_ASSERT(controllerIndex < App::MaxControllers, "");
+    CRO_ASSERT(controllerIndex < MaxControllers, "");
 
     return controllerIndex < 0 ? false : (App::m_instance->m_controllers[controllerIndex].controller != nullptr);
 }
@@ -68,7 +68,7 @@ bool GameController::isConnected(std::int32_t controllerIndex)
 bool GameController::hasHapticSupport(std::int32_t controllerIndex)
 {
     CRO_ASSERT(App::m_instance, "No app running");
-    CRO_ASSERT(controllerIndex < App::MaxControllers, "");
+    CRO_ASSERT(controllerIndex < MaxControllers, "");
 
     return controllerIndex < 0 ? false : (App::m_instance->m_controllers[controllerIndex].haptic != nullptr);
 }
@@ -76,7 +76,7 @@ bool GameController::hasHapticSupport(std::int32_t controllerIndex)
 HapticEffect GameController::registerHapticEffect(std::int32_t controllerIndex, SDL_HapticEffect& effect)
 {
     CRO_ASSERT(App::m_instance, "No app running");
-    CRO_ASSERT(controllerIndex < App::MaxControllers, "");
+    CRO_ASSERT(controllerIndex < MaxControllers, "");
 
     HapticEffect retVal;
     if (controllerIndex < 0)
@@ -112,7 +112,7 @@ HapticEffect GameController::registerHapticEffect(std::int32_t controllerIndex, 
 void GameController::startHapticEffect(HapticEffect effect, std::uint32_t repeat)
 {
     CRO_ASSERT(App::m_instance, "No app running");
-    CRO_ASSERT(effect.controllerIndex < App::MaxControllers && effect.controllerIndex > -1, "");
+    CRO_ASSERT(effect.controllerIndex < MaxControllers && effect.controllerIndex > -1, "");
 
     if (App::m_instance->m_controllers[effect.controllerIndex].haptic)
     {
@@ -131,7 +131,7 @@ void GameController::startHapticEffect(HapticEffect effect, std::uint32_t repeat
 void GameController::stopHapticEffect(HapticEffect effect)
 {
     CRO_ASSERT(App::m_instance, "No app running");
-    CRO_ASSERT(effect.controllerIndex < App::MaxControllers && effect.controllerIndex > -1, "");
+    CRO_ASSERT(effect.controllerIndex < MaxControllers && effect.controllerIndex > -1, "");
 
     if (App::m_instance->m_controllers[effect.controllerIndex].haptic)
     {
@@ -150,7 +150,7 @@ void GameController::stopHapticEffect(HapticEffect effect)
 bool GameController::isHapticActive(HapticEffect effect)
 {
     CRO_ASSERT(App::m_instance, "No app running");
-    CRO_ASSERT(effect.controllerIndex < App::MaxControllers&& effect.controllerIndex > -1, "");
+    CRO_ASSERT(effect.controllerIndex < MaxControllers&& effect.controllerIndex > -1, "");
 
     if (App::m_instance->m_controllers[effect.controllerIndex].haptic)
     {
@@ -174,7 +174,7 @@ bool GameController::isHapticActive(HapticEffect effect)
 void GameController::rumbleStart(std::int32_t controllerIndex, float strength, std::uint32_t duration)
 {
     CRO_ASSERT(App::m_instance, "No app running");
-    CRO_ASSERT(controllerIndex < App::MaxControllers, "");
+    CRO_ASSERT(controllerIndex < MaxControllers, "");
 
     if (controllerIndex > -1 && App::m_instance->m_controllers[controllerIndex].haptic)
     {
@@ -189,7 +189,7 @@ void GameController::rumbleStart(std::int32_t controllerIndex, float strength, s
 void GameController::rumbleStop(std::int32_t controllerIndex)
 {
     CRO_ASSERT(App::m_instance, "No app running");
-    CRO_ASSERT(controllerIndex < App::MaxControllers, "");
+    CRO_ASSERT(controllerIndex < MaxControllers, "");
 
     if (controllerIndex > -1 && App::m_instance->m_controllers[controllerIndex].haptic)
     {
@@ -204,7 +204,7 @@ void GameController::rumbleStop(std::int32_t controllerIndex)
 std::string GameController::getName(std::int32_t controllerIndex)
 {
     CRO_ASSERT(App::m_instance, "No app running");
-    CRO_ASSERT(controllerIndex < App::MaxControllers, "");
+    CRO_ASSERT(controllerIndex < MaxControllers, "");
 
     if (App::m_instance->m_controllers[controllerIndex].controller)
     {

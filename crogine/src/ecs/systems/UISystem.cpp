@@ -75,10 +75,14 @@ void UISystem::handleEvent(const Event& evt)
         if (evt.cdevice.which == cro::GameController::deviceID(m_activeControllerID)
             && m_activeControllerID > 0)
         {
+            auto old = m_activeControllerID;
+            m_activeControllerID = GameController::MaxControllers - 1;
             do
             {
                 m_activeControllerID--;
-            } while (m_activeControllerID > 0 && !cro::GameController::isConnected(m_activeControllerID));
+            } while ((m_activeControllerID > 0 
+                && !cro::GameController::isConnected(m_activeControllerID))
+                || m_activeControllerID == old);
         }
         break;
     case SDL_MOUSEMOTION:

@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Console.hpp>
 #include <crogine/core/Keyboard.hpp>
+#include <crogine/core/GameController.hpp>
 #include <crogine/detail/Types.hpp>
 
 #include <crogine/graphics/Colour.hpp>
@@ -191,9 +192,9 @@ namespace cro
             bool rumble = false;
             std::int32_t joystickID = -1; //event IDs don't actually match the controllers
         };
-        static constexpr std::int32_t MaxControllers = 12;
 
-        std::array<ControllerInfo, MaxControllers> m_controllers = {};
+
+        std::array<ControllerInfo, GameController::MaxControllers> m_controllers = {};
         std::map<std::int32_t, SDL_Joystick*> m_joysticks;
         std::size_t m_controllerCount;
         friend class GameController;
