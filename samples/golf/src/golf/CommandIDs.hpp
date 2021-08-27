@@ -59,7 +59,8 @@ struct CommandID final
             ScoreScroll          = 0x400,
             ScoreboardController = 0x800,
             MiniMap              = 0x1000,
-            MessageBoard         = 0x2000
+            MiniBall             = 0x2000,
+            MessageBoard         = 0x4000
         };
     };
 

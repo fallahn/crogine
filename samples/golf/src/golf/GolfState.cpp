@@ -1550,7 +1550,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     cmd.targetFlags = CommandID::UI::PinDistance;
     cmd.action =
-        [&](cro::Entity e, float)
+        [&, player](cro::Entity e, float)
     {
         //if we're on the green convert to cm
         float ballDist = glm::length(player.position - m_holeData[m_currentHole].pin);
@@ -1566,6 +1566,18 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             distance = static_cast<std::int32_t>(ballDist * 100.f);
             e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "cm");
         }
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::UI::MiniBall;
+    cmd.action =
+        [player](cro::Entity e, float)
+    {
+        auto pos = glm::vec3(player.position.x, -player.position.z, 0.1f);
+        e.getComponent<cro::Transform>().setPosition(pos / 2.f);
+
+        //play the callback animation
+        e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -1738,6 +1750,20 @@ void GolfState::updateActor(const ActorInfo& update)
                 distance = static_cast<std::int32_t>(ballDist * 100.f);
                 e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "cm");
             }
+        };
+        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+        cmd.targetFlags = CommandID::UI::MiniBall;
+        cmd.action =
+            [update](cro::Entity e, float)
+        {
+            auto pos = glm::vec3(update.position.x, -update.position.z, 0.1f);
+            e.getComponent<cro::Transform>().setPosition(pos / 2.f); //need to tie into the fact the mini map is 1/2 scale
+            
+            //set scale based on height
+            static constexpr float MaxHeight = 40.f;
+            float scale = 1.f + ((update.position.y / MaxHeight) * 2.f);
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
         m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     }
