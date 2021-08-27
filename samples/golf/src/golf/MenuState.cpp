@@ -166,16 +166,23 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     }
 
 #ifdef CRO_DEBUG_
-    /*registerWindow([&]() 
-        {
-            if (ImGui::Begin("Debug"))
-            {
-                auto camPos = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
-                ImGui::Text("Cam Pos %3.3f, %3.3f, %3.3f", camPos.x, camPos.y, camPos.z);
-            }
-            ImGui::End();
-        
-        });*/
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Debug"))
+    //        {
+    //            /*auto camPos = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
+    //            ImGui::Text("Cam Pos %3.3f, %3.3f, %3.3f", camPos.x, camPos.y, camPos.z);*/
+
+    //            static float sunRot = 0.f;
+    //            float prevRot = sunRot;
+    //            if (ImGui::SliderFloat("Sun", &sunRot, -180.f, 180.f))
+    //            {
+    //                m_backgroundScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, sunRot * cro::Util::Const::degToRad);
+    //            }
+    //        }
+    //        ImGui::End();
+    //    
+    //    });
 #endif
 }
 
@@ -503,8 +510,8 @@ void MenuState::createScene()
     };
 
     auto sunEnt = m_backgroundScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, /*-0.967f*/-45.f * cro::Util::Const::degToRad);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -80.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-0.967f*/-40.56f * cro::Util::Const::degToRad);
+    //sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -80.7f * cro::Util::Const::degToRad);
 
     createUI();
 }

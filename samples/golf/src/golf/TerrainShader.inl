@@ -211,11 +211,18 @@ static const std::string CelFragmentShader = R"(
 #endif
 
         float amount = dot(normal, normalize(-u_lightDirection));
+
+        float checkAmount = step(0.3, 1.0 - amount);
+
         amount *= 2.0;
         amount = round(amount);
         amount /= 2.0;
         amount = 0.6 + (amount * 0.4);
 
+        colour.rgb *= amount;
+        
+        float check = mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) * checkAmount;
+        amount = (1.0 - check) + (check * amount);
         colour.rgb *= amount;
 
         FRAG_OUT = vec4(colour.rgb, 1.0);

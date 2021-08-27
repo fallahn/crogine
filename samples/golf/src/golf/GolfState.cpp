@@ -144,6 +144,12 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
                 //ImGui::Text("Cam Rotation: %3.3f", m_camRotation);
 
+                /*static float sunRot = 0.f;
+                if (ImGui::SliderFloat("Sun", &sunRot, -90.f, 90.f))
+                {
+                    m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, sunRot * cro::Util::Const::degToRad);
+                }*/
+
                 /*auto rot = m_inputParser.getYaw();
                 ImGui::Text("Rotation %3.2f", rot);
 
@@ -1026,10 +1032,10 @@ void GolfState::buildScene()
     setCurrentHole(0);
     buildUI(); //put this here because we don't want to do this if the map data didn't load
 
-
+    //careful with these values - they are fine tuned for shadowing of terrain
     auto sunEnt = m_gameScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -0.967f);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, /*-1.5f*/-48.f * cro::Util::Const::degToRad);
+    //sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, /*-0.967f*/-45.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-1.5f*/-38.746f * cro::Util::Const::degToRad);
 }
 
 void GolfState::spawnBall(const ActorInfo& info)
