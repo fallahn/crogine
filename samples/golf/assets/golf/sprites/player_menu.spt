@@ -4,7 +4,7 @@ spritesheet player_menu
 
     sprite background
     {
-        bounds = 0,18,310,190
+        bounds = 0,18,370,208
     }
 
     sprite button_highlight

@@ -475,8 +475,15 @@ void App::handleEvents()
                 }
                 
                 SDL_GameControllerClose(m_controllers[controllerIndex].controller);
-                m_controllers[controllerIndex] = {};
                 m_controllerCount--;
+
+                
+                //all controller IDs after the ID removed now move down..
+                for (auto i = controllerIndex; i < GameController::MaxControllers - 1; ++i)
+                {
+                    m_controllers[i] = m_controllers[i + 1];
+                }
+                m_controllers.back() = {};
             }
 
             if (m_joysticks.count(id) > 0)

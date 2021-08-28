@@ -173,12 +173,12 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //            /*auto camPos = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
     //            ImGui::Text("Cam Pos %3.3f, %3.3f, %3.3f", camPos.x, camPos.y, camPos.z);*/
 
-    //            static float sunRot = 0.f;
+    //            /*static float sunRot = 0.f;
     //            float prevRot = sunRot;
     //            if (ImGui::SliderFloat("Sun", &sunRot, -180.f, 180.f))
     //            {
     //                m_backgroundScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, sunRot * cro::Util::Const::degToRad);
-    //            }
+    //            }*/
     //        }
     //        ImGui::End();
     //    

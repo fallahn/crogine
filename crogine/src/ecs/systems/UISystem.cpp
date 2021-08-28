@@ -74,15 +74,9 @@ void UISystem::handleEvent(const Event& evt)
         //if necessary to a connected controller
         if (evt.cdevice.which == cro::GameController::deviceID(m_activeControllerID))
         {
-            auto old = m_activeControllerID;
-            m_activeControllerID = GameController::MaxControllers - 1;
-            do
-            {
-                m_activeControllerID--;
-            } while ((m_activeControllerID > 0
-                && !cro::GameController::isConnected(m_activeControllerID))
-                || m_activeControllerID == old);
-
+            //controller IDs automatically shift down
+            //so drop to the next lowest available
+            m_activeControllerID = (std::max(0, m_activeControllerID - 1));
         }
         break;
     case SDL_MOUSEMOTION:
