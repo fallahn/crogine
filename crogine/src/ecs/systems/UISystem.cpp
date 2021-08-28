@@ -72,17 +72,17 @@ void UISystem::handleEvent(const Event& evt)
     case SDL_CONTROLLERDEVICEREMOVED:
         //check if this is the active controller and update
         //if necessary to a connected controller
-        if (evt.cdevice.which == cro::GameController::deviceID(m_activeControllerID)
-            && m_activeControllerID > 0)
+        if (evt.cdevice.which == cro::GameController::deviceID(m_activeControllerID))
         {
             auto old = m_activeControllerID;
             m_activeControllerID = GameController::MaxControllers - 1;
             do
             {
                 m_activeControllerID--;
-            } while ((m_activeControllerID > 0 
+            } while ((m_activeControllerID > 0
                 && !cro::GameController::isConnected(m_activeControllerID))
                 || m_activeControllerID == old);
+
         }
         break;
     case SDL_MOUSEMOTION:

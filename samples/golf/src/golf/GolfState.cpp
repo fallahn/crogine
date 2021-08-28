@@ -976,6 +976,14 @@ void GolfState::buildScene()
     auto teeEnt = entity;
 
 
+    //player shadow
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
+    entity.getComponent<cro::Transform>().move(glm::vec3(-0.25f, 0.02f, 0.75f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(20.3f, 1.f, 20.3f));
+    m_modelDefs[ModelID::BallShadow]->createModel(entity);
+
+
     md.loadFromFile("assets/golf/models/cart.cmt");
     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
     setTexture(md, texturedMat);

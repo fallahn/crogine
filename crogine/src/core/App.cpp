@@ -383,8 +383,12 @@ void App::handleEvents()
     cro::Event evt;
     while (m_window.pollEvent(evt))
     {
-        bool eventConsumed = false;
         ImGui_ImplSDL2_ProcessEvent(&evt);
+
+        //handle events first in case user events
+        //want to read disconnected controllers
+        //before the following cases handle removal
+        handleEvent(evt);
 
         switch (evt.type)
         {
@@ -483,8 +487,6 @@ void App::handleEvents()
         }
             break;
         }
-
-        if(!eventConsumed) handleEvent(evt);
     }
 }
 

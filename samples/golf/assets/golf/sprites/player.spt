@@ -4,11 +4,11 @@ spritesheet player
 
     sprite female_wood
     {
-        bounds = 0,56,52,56
+        bounds = 0,96,64,96
 
         animation idle
         {
-            frame = 0,56,52,56
+            frame = 0,96,64,96
 
             loop = true
             framerate = 30
@@ -16,30 +16,32 @@ spritesheet player
 
         animation swing
         {
-            frame = 0,56,52,56
-            frame = 52,56,52,56
-            frame = 104,56,52,56
-            frame = 156,56,52,56
-            frame = 208,56,52,56
-            frame = 260,56,52,56
-            frame = 312,56,52,56
-            frame = 364,56,52,56
-            frame = 416,56,52,56
-            frame = 468,56,52,56
-            frame = 520,56,52,56
+            frame = 0,96,64,96
+            frame = 64,96,64,96
+            frame = 128,96,64,96
+            frame = 192,96,64,96
+            frame = 256,96,64,96
+            frame = 320,96,64,96
+            frame = 384,96,64,96
+            frame = 448,96,64,96
+            frame = 512,96,64,96
+            frame = 576,96,64,96
+            frame = 640,96,64,96
+            frame = 704,96,64,96
+            frame = 768,96,64,96
 
             loop = false
-            framerate = 16
+            framerate = 12
         }
     }
 
     sprite male_wood
     {
-        bounds = 0,0,52,56
+        bounds = 0,0,64,96
 
         animation idle
         {
-            frame = 0,0,52,56
+            frame = 0,0,64,96
 
             loop = true
             framerate = 30
@@ -47,32 +49,32 @@ spritesheet player
 
         animation swing
         {
-            frame = 0,0,52,56
-            frame = 52,0,52,56
-            frame = 104,0,52,56
-            frame = 156,0,52,56
-            frame = 208,0,52,56
-            frame = 260,0,52,56
-            frame = 312,0,52,56
-            frame = 364,0,52,56
-            frame = 416,0,52,56
-            frame = 468,0,52,56
-            frame = 520,0,52,56
+            frame = 0,0,64,96
+            frame = 64,0,64,96
+            frame = 128,0,64,96
+            frame = 192,0,64,96
+            frame = 256,0,64,96
+            frame = 320,0,64,96
+            frame = 384,0,64,96
+            frame = 448,0,64,96
+            frame = 512,0,64,96
+            frame = 576,0,64,96
+            frame = 640,0,64,96
+            frame = 704,0,64,96
+            frame = 768,0,64,96
 
             loop = false
-            framerate = 16
+            framerate = 12
         }
     } 
 
-
-
     sprite female_iron
     {
-        bounds = 0,168,52,56
+        bounds = 0,288,64,96
 
         animation idle
         {
-            frame = 0,168,52,56
+            frame = 0,288,64,96
 
             loop = true
             framerate = 30
@@ -80,30 +82,32 @@ spritesheet player
 
         animation swing
         {
-            frame = 0,168,52,56
-            frame = 52,168,52,56
-            frame = 104,168,52,56
-            frame = 156,168,52,56
-            frame = 208,168,52,56
-            frame = 260,168,52,56
-            frame = 312,168,52,56
-            frame = 364,168,52,56
-            frame = 416,168,52,56
-            frame = 468,168,52,56
-            frame = 520,168,52,56
+            frame = 0,288,64,96
+            frame = 64,288,64,96
+            frame = 128,288,64,96
+            frame = 192,288,64,96
+            frame = 256,288,64,96
+            frame = 320,288,64,96
+            frame = 384,288,64,96
+            frame = 448,288,64,96
+            frame = 512,288,64,96
+            frame = 576,288,64,96
+            frame = 640,288,64,96
+            frame = 704,288,64,96
+            frame = 768,288,64,96
 
             loop = false
-            framerate = 16
+            framerate = 12
         }
     }
 
     sprite male_iron
     {
-        bounds = 0,112,52,56
+        bounds = 0,192,64,96
 
         animation idle
         {
-            frame = 0,112,52,56
+            frame = 0,192,64,96
 
             loop = true
             framerate = 30
@@ -111,20 +115,22 @@ spritesheet player
 
         animation swing
         {
-            frame = 0,112,52,56
-            frame = 52,112,52,56
-            frame = 104,112,52,56
-            frame = 156,112,52,56
-            frame = 208,112,52,56
-            frame = 260,112,52,56
-            frame = 312,112,52,56
-            frame = 364,112,52,56
-            frame = 416,112,52,56
-            frame = 468,112,52,56
-            frame = 520,112,52,56
+            frame = 0,192,64,96
+            frame = 64,192,64,96
+            frame = 128,192,64,96
+            frame = 192,192,64,96
+            frame = 256,192,64,96
+            frame = 320,192,64,96
+            frame = 384,192,64,96
+            frame = 448,192,64,96
+            frame = 512,192,64,96
+            frame = 576,192,64,96
+            frame = 640,192,64,96
+            frame = 704,192,64,96
+            frame = 768,192,64,96
 
             loop = false
-            framerate = 16
+            framerate = 12
         }
-    }    
+    }
 }

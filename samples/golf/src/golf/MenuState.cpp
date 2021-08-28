@@ -484,7 +484,7 @@ void MenuState::createScene()
     //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -0.84f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
 
-    struct CameraMotion final
+    /*struct CameraMotion final
     {
         std::size_t vertIndex = 0;
         std::size_t horIndex = 0;
@@ -507,7 +507,7 @@ void MenuState::createScene()
 
         vertIdx = (vertIdx + 1) % table.size();
         horIdx = (horIdx + 4) % table.size();
-    };
+    };*/
 
     auto sunEnt = m_backgroundScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-0.967f*/-40.56f * cro::Util::Const::degToRad);
