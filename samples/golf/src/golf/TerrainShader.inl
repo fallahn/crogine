@@ -217,7 +217,7 @@ static const std::string CelFragmentShader = R"(
         amount *= 2.0;
         amount = round(amount);
         amount /= 2.0;
-        amount = 0.6 + (amount * 0.4);
+        amount = 0.8 + (amount * 0.2);
 
         colour.rgb *= amount;
         
