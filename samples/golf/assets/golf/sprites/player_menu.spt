@@ -4,11 +4,36 @@ spritesheet player_menu
 
     sprite background
     {
-        bounds = 0,18,370,208
+        bounds = 0,0,370,208
     }
 
-    sprite button_highlight
+    sprite keyboard
     {
-        bounds = 0,0,40,17
+        bounds = 0,214,83,31
+    }
+
+    sprite controller
+    {
+        bounds = 87,214,50,33
+    }
+
+    sprite arrow_l_h
+    {
+        bounds = 143,214,17,19
+    }
+
+    sprite arrow_r_h
+    {
+        bounds = 163,214,17,19
+    }
+
+    sprite arrow_l
+    {
+        bounds = 183,214,17,19
+    }
+
+    sprite arrow_r
+    {
+        bounds = 203,214,17,19
     }
 }

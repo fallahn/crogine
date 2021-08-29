@@ -12,6 +12,11 @@ spritesheet main_menu
         bounds = 0,64,232,60
     }
 
+    sprite banner_small
+    {
+        bounds = 0,225,232,23
+    }
+
     sprite header
     {
         bounds = 0,128,164,20
