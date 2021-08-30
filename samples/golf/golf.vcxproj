@@ -245,6 +245,7 @@
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\GolfGame.cpp" />
+    <ClCompile Include="src\SplashScreenState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp" />
@@ -289,6 +290,7 @@
     <ClInclude Include="src\golf\Utility.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\GolfGame.hpp" />
+    <ClInclude Include="src\SplashScreenState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
   </ItemGroup>
   <ItemGroup>

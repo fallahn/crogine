@@ -62,8 +62,20 @@ namespace cro
         \param path String containing the path to the file to load.
         \param streaming If set to true the requested file should be streamed from storage
         rather than loaded entirely into RAM
+        \returns true if successful, else returns false.
         */
         bool load(std::int32_t id, const std::string& path, bool streaming = false);
+
+        /*!
+        
+        \brief Loads and audio file at the given path and returns an auto-mapped ID on success
+        \param path String containing the path to the file to load.
+        \param streaming If set to true the requested file should be streamed from storage
+        rather than loaded entirely into RAM
+        \returns an integer ID, starting at std::int32_t::max and working downwards if successful
+        else returns -1 if the file failed to load.
+        */
+        std::int32_t load(const std::string& path, bool streaming = false);
 
         /*!
         \brief Attempts to return the loaded data mapped to the given ID
@@ -75,5 +87,6 @@ namespace cro
 
         std::unique_ptr<AudioSource> m_fallback;
         std::unordered_map<std::int32_t, std::unique_ptr<AudioSource>> m_sources;
+        std::unordered_map<std::string, std::int32_t> m_usedPaths;
     };
 }

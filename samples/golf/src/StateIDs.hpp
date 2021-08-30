@@ -37,6 +37,7 @@ struct StateID final
         Game,
         Options,
         Pause,
-        Error
+        Error,
+        SplashScreen
     };
 };

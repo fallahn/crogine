@@ -37,6 +37,7 @@ source distribution.
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
 #include "LoadingScreen.hpp"
+#include "SplashScreenState.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/Clock.hpp>
@@ -57,6 +58,7 @@ GolfGame::GolfGame()
     //must be sest before anything else cfg is still loaded from default path
     setApplicationStrings("trederia", "golf");
 
+    m_stateStack.registerState<SplashState>(StateID::SplashScreen, m_sharedData);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData);
     m_stateStack.registerState<GolfState>(StateID::Game, m_sharedData);
     m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);
@@ -177,9 +179,10 @@ bool GolfGame::initialise()
 
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(StateID::Menu);
+    //m_stateStack.pushState(StateID::Menu);
+    m_stateStack.pushState(StateID::SplashScreen);
 #else
-    m_stateStack.pushState(StateID::Menu);
+    m_stateStack.pushState(StateID::SplashScreen);
 #endif
 
     return true;

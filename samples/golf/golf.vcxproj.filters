@@ -135,6 +135,9 @@
     <ClCompile Include="src\golf\GolfParticleDirector.cpp">
       <Filter>Source Files\golf\client\directors</Filter>
     </ClCompile>
+    <ClCompile Include="src\SplashScreenState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -265,6 +268,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\GolfParticleDirector.hpp">
       <Filter>Header Files\golf\client\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SplashScreenState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

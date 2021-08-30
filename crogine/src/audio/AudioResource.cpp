@@ -31,15 +31,21 @@ source distribution.
 #include <crogine/audio/AudioBuffer.hpp>
 #include <crogine/audio/AudioStream.hpp>
 #include <crogine/core/Log.hpp>
+#include <crogine/detail/Assert.hpp>
 
 #include <vector>
 
 using namespace cro;
 
+namespace
+{
+    std::int32_t autoID = std::numeric_limits<std::int32_t>::max();
+}
+
 AudioResource::AudioResource()
 {
     m_fallback = std::make_unique<AudioBuffer>();
-    std::vector<std::uint8_t> data(10);
+    std::vector<std::uint8_t> data(10, 0);
     dynamic_cast<AudioBuffer*>(m_fallback.get())->loadFromMemory(data.data(), 8, 22500, false, 10);
 }
 
@@ -67,8 +73,28 @@ bool AudioResource::load(std::int32_t ID, const std::string& path, bool streamin
     if (result)
     {
         m_sources.insert(std::make_pair(ID, std::move(buffer)));
+        m_usedPaths.insert(std::make_pair(path, ID));
     }
     return result;
+}
+
+std::int32_t AudioResource::load(const std::string& path, bool streaming)
+{
+    if (m_usedPaths.count(path) != 0)
+    {
+        return m_usedPaths.at(path);
+    }
+
+    CRO_ASSERT(autoID > 0, "Something is very wrong if you've used this many IDs.");
+    auto id = autoID;
+
+    if (load(id, path, streaming))
+    {
+        autoID--;
+        return id;
+    }
+
+    return -1;
 }
 
 const AudioSource& AudioResource::get(std::int32_t id) const
