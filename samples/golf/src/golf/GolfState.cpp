@@ -109,17 +109,18 @@ namespace
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
-    : cro::State    (stack, context),
-    m_sharedData    (sd),
-    m_gameScene     (context.appInstance.getMessageBus()),
-    m_uiScene       (context.appInstance.getMessageBus()),
-    m_inputParser   (sd.inputBinding, context.appInstance.getMessageBus()),
-    m_wantsGameState(true),
-    m_currentHole   (0),
-    m_terrainBuilder(m_holeData),
-    m_camRotation   (0.f),
-    m_roundEnded    (false),
-    m_viewScale     (1.f)
+    : cro::State        (stack, context),
+    m_sharedData        (sd),
+    m_gameScene         (context.appInstance.getMessageBus()),
+    m_uiScene           (context.appInstance.getMessageBus()),
+    m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
+    m_wantsGameState    (true),
+    m_currentHole       (0),
+    m_terrainBuilder    (m_holeData),
+    m_camRotation       (0.f),
+    m_roundEnded        (false),
+    m_viewScale         (1.f),
+    m_scoreColumnCount  (2)
 {
     context.mainWindow.loadResources([this]() {
         loadAssets();

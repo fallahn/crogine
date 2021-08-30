@@ -53,8 +53,6 @@ source distribution.
 
 namespace
 {
-    std::size_t scoreColumnCount = 2;
-
     constexpr float ColumnWidth = 20.f;
     constexpr float ColumnHeight = 276.f;
     constexpr std::array ColumnPositions =
@@ -685,6 +683,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
     //show the scores
+    updateScoreboard();
     showScoreboard(true);
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -816,11 +815,11 @@ void GolfState::createScoreboard()
     //these have the text components on them, the callback updates scroll cropping
     bgEnt.addComponent<cro::Callback>().setUserData<std::vector<cro::Entity>>();
 
-    //scoreColumnCount = 11;
-    scoreColumnCount = std::min(m_holeData.size() + scoreColumnCount, std::size_t(11));
+    //m_scoreColumnCount = 11;
+    m_scoreColumnCount = std::min(m_holeData.size() + m_scoreColumnCount, std::size_t(11));
 
     auto& ents = bgEnt.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
-    ents.resize(scoreColumnCount); //title and total
+    ents.resize(m_scoreColumnCount); //title and total
     std::int32_t i = 0;
     for (auto& e : ents)
     {
@@ -910,9 +909,9 @@ void GolfState::updateScoreboard()
 
         std::size_t page2 = 0;
         static constexpr std::size_t MaxCols = 9;
-        if (holeCount > scoreColumnCount)
+        if (holeCount > m_scoreColumnCount)
         {
-            page2 = std::min(MaxCols, holeCount - scoreColumnCount);
+            page2 = std::min(MaxCols, holeCount - m_scoreColumnCount);
         }
 
         //name column
