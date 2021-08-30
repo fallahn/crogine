@@ -223,9 +223,11 @@ void OpenALImpl::deleteBuffer(std::int32_t buffer)
 {
     if (buffer > 0)
     {
+        LOG("Deleted audio buffer " + std::to_string(buffer), Logger::Type::Info);
+
+        //hm. Code smell.
         auto buf = static_cast<ALuint>(buffer);
         alCheck(alDeleteBuffers(1, &buf));
-        LOG("Deleted audio buffer", Logger::Type::Info);
     }
 }
 

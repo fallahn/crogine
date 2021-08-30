@@ -42,13 +42,14 @@ source distribution.
 namespace cro
 {
     struct Camera;
+    class AudioResource;
 }
 
 struct SharedStateData;
 class SplashState final : public cro::State
 {
 public:
-    SplashState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    SplashState(cro::StateStack&, cro::State::Context, cro::AudioResource&);
 
     cro::StateID getStateID() const override { return StateID::SplashScreen; }
 
@@ -59,7 +60,7 @@ public:
 
 private:
 
-    SharedStateData& m_sharedData;
+    cro::AudioResource& m_audioResource;
     cro::Scene m_uiScene;
     float m_timer;
 

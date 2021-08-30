@@ -32,9 +32,11 @@ source distribution.
 #include "golf/SharedStateData.hpp"
 
 #include <crogine/core/App.hpp>
-#include <crogine/gui/GuiClient.hpp>
 #include <crogine/core/StateStack.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/gui/GuiClient.hpp>
+
+#include <crogine/audio/AudioResource.hpp>
 
 class GolfGame final : public cro::App, public cro::GuiClient
 {
@@ -45,6 +47,8 @@ private:
     
     SharedStateData m_sharedData;
     cro::StateStack m_stateStack;
+
+    cro::AudioResource m_audioResource;
 
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;

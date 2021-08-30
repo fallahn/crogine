@@ -834,7 +834,7 @@ void GolfState::createScoreboard()
         scrollEnt.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         i++;
     }
-    ents.back().getComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions.back(), 0.02f));
+    ents.back().getComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions.back(), 0.2f));
 
     updateScoreboard();
     showScoreboard(true);
