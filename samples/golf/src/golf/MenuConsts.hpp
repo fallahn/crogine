@@ -65,6 +65,7 @@ static constexpr float BackgroundAlpha = 0.7f;
 
 static constexpr float UIBarHeight = 16.f;
 static constexpr float UITextPosV = 12.f;
+static constexpr glm::vec3 CursorOffset(-20.f, -7.f, 0.f);
 
 //ui components are laid out as a normalised value
 //relative to the window size.

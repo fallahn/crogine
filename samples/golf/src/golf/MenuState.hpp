@@ -123,6 +123,9 @@ private:
             ArrowLeftHighlight,
             ArrowRightHighlight,
 
+            ButtonBanner,
+            Cursor,
+
             Count
         };
     };
