@@ -1281,9 +1281,9 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
 void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
     //these can have fixed positions as they are attached to a menuEntity[] which is UI scaled
-    static constexpr glm::vec3 EditButtonOffset(-47.f, -36.f, 0.f);
-    static constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-55.f, -10.f, 0.f);
-    static constexpr float LineHeight = 16.f;
+    static constexpr glm::vec3 EditButtonOffset(-47.f, -57.f, 0.f);
+    static constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-68.f, -10.f, 0.f);
+    static constexpr float LineHeight = -8.f;
 
     for (auto e : m_avatarListEntities)
     {
@@ -1293,11 +1293,11 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
-    static constexpr glm::vec3 RootPos(101.f, 154.f, 0.f);
+    static constexpr glm::vec3 RootPos(131.f, 174.f, 0.f);
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
         auto localPos = glm::vec3(
-            151.f * static_cast<float>(i % 2),
+            173.f * static_cast<float>(i % 2),
             -(LineHeight + m_playerAvatar.previewRects[0].height) * static_cast<float>(i / 2),
             0.1f);
         localPos += RootPos;
