@@ -112,6 +112,22 @@ private:
     std::vector<cro::Entity> m_avatarListEntities;
     PlayerAvatar m_playerAvatar;
 
+    struct SpriteID final
+    {
+        enum
+        {
+            Controller,
+            Keyboard,
+            ArrowLeft,
+            ArrowRight,
+            ArrowLeftHighlight,
+            ArrowRightHighlight,
+
+            Count
+        };
+    };
+    std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
+
     std::size_t m_currentMenu; //used by view callback to reposition the root node on window resize
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {}; //each menu transform, attatched to root node.
 

@@ -368,6 +368,12 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/player_menu.spt", m_resources.textures);
 
+    m_sprites[SpriteID::ArrowLeft] = spriteSheet.getSprite("arrow_l");
+    m_sprites[SpriteID::ArrowLeftHighlight] = spriteSheet.getSprite("arrow_l_h");
+    m_sprites[SpriteID::ArrowRight] = spriteSheet.getSprite("arrow_r");
+    m_sprites[SpriteID::ArrowRightHighlight] = spriteSheet.getSprite("arrow_r_h");
+    m_sprites[SpriteID::Controller] = spriteSheet.getSprite("controller");
+    m_sprites[SpriteID::Keyboard] = spriteSheet.getSprite("keyboard");
 
     //this entity has the player edit text ents added to it by updateLocalAvatars
     auto avatarEnt = m_uiScene.createEntity();
@@ -1283,6 +1289,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
     //these can have fixed positions as they are attached to a menuEntity[] which is UI scaled
     static constexpr glm::vec3 EditButtonOffset(-47.f, -57.f, 0.f);
     static constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-68.f, -10.f, 0.f);
+    static constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(115.f, 34.f, 0.f);
     static constexpr float LineHeight = -8.f;
 
     for (auto e : m_avatarListEntities)
@@ -1361,7 +1368,87 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
 
-        //pos.y = -(LineHeight + m_playerAvatar.previewRects[0].height) * static_cast<float>(i%2);
+        //input type icon
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(localPos + ControlIconOffset);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Keyboard];
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+
+        struct ControlUserData final
+        {
+            std::size_t prevControllerCount = 0;
+            std::array<cro::Entity, 2u> arrowEntities = {};
+        };
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<ControlUserData>();
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+        {
+            auto& controlData = e.getComponent<cro::Callback>().getUserData<ControlUserData>();
+            auto controllerCount = 2;// cro::GameController::getControllerCount();
+            if (controllerCount != controlData.prevControllerCount)
+            {
+                //we need to delete specifically the button
+                //arrows should we be going to < 2 controllers
+                if (controllerCount < 2 && controlData.arrowEntities[0].isValid())
+                {
+                    //remove from main list first
+                    m_avatarListEntities.erase(std::remove_if(m_avatarListEntities.begin(), m_avatarListEntities.end(),
+                        [&controlData](const cro::Entity a)
+                        {
+                            return (a == controlData.arrowEntities[0] || a == controlData.arrowEntities[1]);
+                        }), m_avatarListEntities.end());
+
+                    m_uiScene.destroyEntity(controlData.arrowEntities[0]);
+                    m_uiScene.destroyEntity(controlData.arrowEntities[1]);
+                    controlData.arrowEntities = {};
+                }
+
+
+                if (controllerCount == 0)
+                {
+                    e.getComponent<cro::Sprite>() = m_sprites[SpriteID::Keyboard];
+                }
+                else
+                {
+                    e.getComponent<cro::Sprite>() = m_sprites[SpriteID::Controller];
+
+                    //add buttons for selecting controller ID
+                    if (controllerCount > 1)
+                    {
+                        auto ent = m_uiScene.createEntity();
+                        ent.addComponent<cro::Transform>().setPosition({ -22.f, 7.f, 0.f });
+                        ent.addComponent<cro::Drawable2D>();
+                        ent.addComponent<cro::Sprite>() = m_sprites[SpriteID::ArrowLeft];
+                        e.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+                        m_avatarListEntities.push_back(ent);
+                        controlData.arrowEntities[0] = ent;
+
+                        ent = m_uiScene.createEntity();
+                        ent.addComponent<cro::Transform>().setPosition({ 55.f, 7.f, 0.f });
+                        ent.addComponent<cro::Drawable2D>();
+                        ent.addComponent<cro::Sprite>() = m_sprites[SpriteID::ArrowRight];
+                        e.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+                        m_avatarListEntities.push_back(ent);
+                        controlData.arrowEntities[1] = ent;
+
+                        //TODO add UI input to above
+                        //TODO apply controller ID to player
+                        //TODO add indicator for current controller ID
+                    }
+                }
+
+                auto bb = e.getComponent<cro::Sprite>().getTextureBounds();
+                e.getComponent<cro::Transform>().setOrigin({ bb.width / 2.f, bb.height / 2.f });
+            }
+            controlData.prevControllerCount = controllerCount;
+        };
+
+        m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_avatarListEntities.push_back(entity);
     }
 }
 
