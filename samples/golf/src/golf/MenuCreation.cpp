@@ -796,6 +796,10 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
     updateLocalAvatars(mouseEnter, mouseExit);
+
+    //we have to store these so the avatars can be updated from elsewhere
+    //such as the player config menu when it is closed
+    m_avatarCallbacks = { mouseEnter, mouseExit };
 }
 
 void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
@@ -1508,7 +1512,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
                 {
                     applyTextEdit();
                     showPlayerConfig(false, m_playerAvatar.activePlayer);
-                    updateLocalAvatars(mouseEnter, mouseExit);
+                    updateLocalAvatars(m_avatarCallbacks.first, m_avatarCallbacks.second);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

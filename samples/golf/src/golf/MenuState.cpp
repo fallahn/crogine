@@ -83,6 +83,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_uiScene           (context.appInstance.getMessageBus()),
     m_backgroundScene   (context.appInstance.getMessageBus()),
     m_playerAvatar      ("assets/golf/images/player.png"),
+    m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu       (MenuID::Main),
     m_viewScale         (2.f)
 {
@@ -290,8 +291,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             case MenuID::PlayerConfig:
                 applyTextEdit();
                 showPlayerConfig(false, m_playerAvatar.activePlayer);
-                //hmmmmmmmm how do we get hold of these callbacks?
-                //updateLocalAvatars(mouseEnter, mouseExit);
+                updateLocalAvatars(m_avatarCallbacks.first, m_avatarCallbacks.second);
                 break;
             }
             break;
