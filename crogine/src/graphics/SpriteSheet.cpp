@@ -78,6 +78,11 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
         texture->setSmooth(p->getValue<bool>());
     }
 
+    if (auto* p = sheetFile.findProperty("repeat"))
+    {
+        texture->setRepeated(p->getValue<bool>());
+    }
+
     const auto& sheetObjs = sheetFile.getObjects();
     for (const auto& spr : sheetObjs)
     {

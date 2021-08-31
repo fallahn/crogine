@@ -76,7 +76,8 @@ struct CommandID final
             PlayerConfig = 0x10,
             PlayerName   = 0x20,
             PlayerAvatar = 0x40,
-            UIElement    = 0x80
+            UIElement    = 0x80,
+            UIBanner     = 0x100
         };
     };
 };

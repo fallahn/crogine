@@ -1,6 +1,7 @@
 spritesheet main_menu
 {
     src = "assets/golf/images/main_menu.png"
+    repeat = true
 
     sprite title
     {
@@ -38,7 +39,7 @@ spritesheet main_menu
             frame = 218,128,6,7
 
             loop = true
-            framerate = 12
+            framerate = 16
         }
     }
 
@@ -49,18 +50,18 @@ spritesheet main_menu
 
     sprite cursor
     {
-        bounds = 176,144,15,8
+        bounds = 176,144,16,7
 
         animation idle
         {
-            frame = 176,193,15,8
-            frame = 176,186,15,8
-            frame = 176,179,15,8
-            frame = 176,172,15,8
-            frame = 176,165,15,8
-            frame = 176,158,15,8
-            frame = 176,151,15,8
-            frame = 176,144,15,8
+            frame = 176,193,16,7
+            frame = 176,186,16,7
+            frame = 176,179,16,7
+            frame = 176,172,16,7
+            frame = 176,165,16,7
+            frame = 176,158,16,7
+            frame = 176,151,16,7
+            frame = 176,144,16,7
 
             loop = true
             framerate = 12
