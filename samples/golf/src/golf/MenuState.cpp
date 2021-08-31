@@ -111,7 +111,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     {
         updateLobbyAvatars();
 
-        //switch to lobby view
+        //switch to lobby view - send as a command
+        //to ensure it's delayed by a frame
         cro::Command cmd;
         cmd.targetFlags = CommandID::Menu::RootNode;
         cmd.action = [&](cro::Entity e, float)
@@ -250,6 +251,50 @@ bool MenuState::handleEvent(const cro::Event& evt)
             {
 
             }
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    {
+        switch (evt.cbutton.button)
+        {
+        default: break;
+            //leave the current menu when B is pressed.
+        case cro::GameController::ButtonB:
+            switch (m_currentMenu)
+            {
+            default: break;
+            case MenuID::Avatar:
+                m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
+                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+                break;
+            case MenuID::Join:
+                m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
+                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+                break;
+            case MenuID::Lobby:
+                m_sharedData.clientConnection.connected = false;
+                m_sharedData.clientConnection.netClient.disconnect();
+
+                if (m_sharedData.hosting)
+                {
+                    m_sharedData.serverInstance.stop();
+                    m_sharedData.hosting = false;
+                }
+
+                m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
+                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+                break;
+            case MenuID::PlayerConfig:
+                applyTextEdit();
+                showPlayerConfig(false, m_playerAvatar.activePlayer);
+                //hmmmmmmmm how do we get hold of these callbacks?
+                //updateLocalAvatars(mouseEnter, mouseExit);
+                break;
+            }
+            break;
         }
     }
 
