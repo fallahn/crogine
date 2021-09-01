@@ -130,6 +130,7 @@ private:
     void loadAssets();
     void addSystems();
     void buildScene();
+    void initAudio();
 
     void spawnBall(const struct ActorInfo&);
 

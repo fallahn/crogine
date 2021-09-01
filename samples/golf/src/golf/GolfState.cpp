@@ -42,6 +42,7 @@ source distribution.
 #include "GolfParticleDirector.hpp"
 #include "PlayerAvatar.hpp"
 
+#include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/Gamecontroller.hpp>
 
@@ -56,6 +57,7 @@ source distribution.
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
+#include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -67,6 +69,7 @@ source distribution.
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/BillboardCollection.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
@@ -128,6 +131,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         loadAssets();
         addSystems();
         buildScene();
+        initAudio();
         });
 
     context.mainWindow.setMouseCaptured(true);
@@ -1100,6 +1104,60 @@ void GolfState::buildScene()
     auto sunEnt = m_gameScene.getSunlight();
     //sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, /*-0.967f*/-45.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-1.5f*/-38.746f * cro::Util::Const::degToRad);
+}
+
+void GolfState::initAudio()
+{
+    //4 evenly spaced points with ambient audio
+    auto envOffset = glm::vec2(MapSize) / 3.f;
+    cro::AudioScape as;
+    as.loadFromFile("assets/golf/sound/ambience.xas", m_resources.audio);
+
+    std::array emitterNames =
+    {
+        std::string("01"),
+        std::string("02"),
+        std::string("03"),
+        std::string("04")
+    };
+
+    for (auto i = 0; i < 2; ++i)
+    {
+        for (auto j = 0; j < 2; ++j)
+        {
+            static constexpr float height = 4.f;
+            glm::vec3 position(envOffset.x * i, height, -envOffset.y * j);
+
+            auto idx = i * 2 + j;
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(position);
+            entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[idx]);
+            entity.getComponent<cro::AudioEmitter>().play();
+        }
+    }
+
+    //random plane audio
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("plane");
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::pair<float, float>>(0.f, static_cast<float>(cro::Util::Random::value(12, 64)));
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& [currTime, timeOut] = e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>();
+        currTime += dt;
+
+        if (currTime > timeOut)
+        {
+            currTime = 0.f;
+            timeOut = static_cast<float>(cro::Util::Random::value(30, 70));
+
+            if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+            {
+                e.getComponent<cro::AudioEmitter>().play();
+            }
+        }
+    };
 }
 
 void GolfState::spawnBall(const ActorInfo& info)
