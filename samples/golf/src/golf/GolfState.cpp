@@ -41,6 +41,7 @@ source distribution.
 #include "ClientCollisionSystem.hpp"
 #include "GolfParticleDirector.hpp"
 #include "PlayerAvatar.hpp"
+#include "GolfSoundDirector.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -854,8 +855,10 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
+    m_gameScene.addSystem<cro::AudioSystem>(mb);
 
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures);
+    m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio);
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);

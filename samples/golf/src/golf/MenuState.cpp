@@ -518,6 +518,10 @@ void MenuState::createScene()
         entity.getComponent<cro::AudioEmitter>().play();
     }
 
+    //music
+    entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("music");
+    entity.getComponent<cro::AudioEmitter>().play();
 
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
@@ -541,30 +545,9 @@ void MenuState::createScene()
     //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -0.84f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
 
-    /*struct CameraMotion final
-    {
-        std::size_t vertIndex = 0;
-        std::size_t horIndex = 0;
-    };
-    camEnt.addComponent<cro::Callback>().active = true;
-    camEnt.getComponent<cro::Callback>().setUserData<CameraMotion>();
-    camEnt.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
-    {
-        static const std::vector<float> table = cro::Util::Wavetable::sine(0.04f, 0.04f);
-        static constexpr float ShakeStrength = 0.5f;
-
-        auto& [vertIdx, horIdx] = e.getComponent<cro::Callback>().getUserData<CameraMotion>();
-
-        auto pos = CameraBasePosition;
-        pos.x += table[horIdx];
-        pos.y += table[vertIdx];
-
-        e.getComponent<cro::Transform>().setPosition(pos);
-
-        vertIdx = (vertIdx + 1) % table.size();
-        horIdx = (horIdx + 4) % table.size();
-    };*/
+    //add the ambience to the cam cos why not
+    camEnt.addComponent<cro::AudioEmitter>() = as.getEmitter("01");
+    camEnt.getComponent<cro::AudioEmitter>().play();
 
     auto sunEnt = m_backgroundScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-0.967f*/-40.56f * cro::Util::Const::degToRad);

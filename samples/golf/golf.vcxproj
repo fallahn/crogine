@@ -226,6 +226,7 @@
     <ClCompile Include="src\golf\ErrorState.cpp" />
     <ClCompile Include="src\golf\GolfCartSystem.cpp" />
     <ClCompile Include="src\golf\GolfParticleDirector.cpp" />
+    <ClCompile Include="src\golf\GolfSoundDirector.cpp" />
     <ClCompile Include="src\golf\GolfState.cpp" />
     <ClCompile Include="src\golf\InputParser.cpp" />
     <ClCompile Include="src\golf\GolfStateUI.cpp" />
@@ -241,6 +242,7 @@
     <ClCompile Include="src\golf\server\ServerGameState.cpp" />
     <ClCompile Include="src\golf\server\ServerLobbyState.cpp" />
     <ClCompile Include="src\golf\SharedStateData.cpp" />
+    <ClCompile Include="src\golf\SoundEffectsDirector.cpp" />
     <ClCompile Include="src\golf\TerrainBuilder.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -261,6 +263,7 @@
     <ClInclude Include="src\golf\GameConsts.hpp" />
     <ClInclude Include="src\golf\GolfCartSystem.hpp" />
     <ClInclude Include="src\golf\GolfParticleDirector.hpp" />
+    <ClInclude Include="src\golf\GolfSoundDirector.hpp" />
     <ClInclude Include="src\golf\GolfState.hpp" />
     <ClInclude Include="src\golf\HoleData.hpp" />
     <ClInclude Include="src\golf\InputBinding.hpp" />
@@ -284,6 +287,7 @@
     <ClInclude Include="src\golf\server\ServerPacketData.hpp" />
     <ClInclude Include="src\golf\server\ServerState.hpp" />
     <ClInclude Include="src\golf\SharedStateData.hpp" />
+    <ClInclude Include="src\golf\SoundEffectsDirector.hpp" />
     <ClInclude Include="src\golf\Terrain.hpp" />
     <ClInclude Include="src\golf\TerrainBuilder.hpp" />
     <ClInclude Include="src\golf\TextAnimCallback.hpp" />

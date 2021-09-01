@@ -5,6 +5,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ErrorState.cpp
   ${PROJECT_DIR}/golf/GolfCartSystem.cpp
   ${PROJECT_DIR}/golf/GolfParticleDirector.cpp
+  ${PROJECT_DIR}/golf/GolfSoundDirector.cpp
   ${PROJECT_DIR}/golf/GolfState.cpp
   ${PROJECT_DIR}/golf/GolfStateUI.cpp
   ${PROJECT_DIR}/golf/InputParser.cpp  
@@ -17,6 +18,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ParticleDirector.cpp
   ${PROJECT_DIR}/golf/PlayerAvatar.cpp
   ${PROJECT_DIR}/golf/SharedStateData.cpp
+  ${PROJECT_DIR}/golf/SoundEffectsDirector.cpp
   ${PROJECT_DIR}/golf/TerrainBuilder.cpp
 
   ${PROJECT_DIR}/golf/server/Server.cpp

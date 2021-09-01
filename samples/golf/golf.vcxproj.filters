@@ -138,6 +138,12 @@
     <ClCompile Include="src\SplashScreenState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\SoundEffectsDirector.cpp">
+      <Filter>Source Files\golf\client\directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\GolfSoundDirector.cpp">
+      <Filter>Source Files\golf\client\directors</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -271,6 +277,12 @@
     </ClInclude>
     <ClInclude Include="src\SplashScreenState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\SoundEffectsDirector.hpp">
+      <Filter>Header Files\golf\client\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\GolfSoundDirector.hpp">
+      <Filter>Header Files\golf\client\directors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -4,7 +4,7 @@ audioscape menu
     {
         path = "assets/golf/sound/menu.ogg"
         streaming = true
-        volume = 0.5
+        volume = 0.15
         mixer_channel = 0
         looped = true
     }
@@ -16,5 +16,17 @@ audioscape menu
         mixer_channel = 1
         looped = true
         attenuation = 0.2
+        volume = 2
+    }
+
+    emitter 01
+    {
+        path = "assets/golf/sound/ambience/env01.ogg"
+        streaming = true
+        volume = 1
+        mixer_channel = 1
+        attenuation = 0.1
+        looped = true
+        volume = 2
     }
 }
