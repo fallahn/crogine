@@ -99,7 +99,17 @@ namespace cro
 
     private:
         AudioResource* m_audioResource;
-        std::unordered_map<std::string, ConfigObject> m_configs;
-        std::unordered_map<std::string, std::int32_t> m_bufferIDs;
+
+        struct AudioConfig final
+        {
+            float volume = 0.5f;
+            float pitch = 1.f;
+            float rolloff = 0.f;
+            std::int32_t audioBuffer = -1;
+
+            bool looped = false;
+            std::uint8_t channel = 0;
+        };
+        std::unordered_map<std::string, AudioConfig> m_configs;
     };
 }

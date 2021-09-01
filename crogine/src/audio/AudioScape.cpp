@@ -45,20 +45,20 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
     if (cfg.loadFromFile(path))
     {
         m_audioResource = &audioResource;
-        m_bufferIDs.clear();
         m_configs.clear();
 
         const auto& objs = cfg.getObjects();
         for (const auto& obj : objs)
         {
-            if (obj.getName().empty())
+            if (obj.getId().empty())
             {
-                LogW << "Parsed AudioScape with missing emitter name in " << path << std::endl;
+                LogW << "Parsed AudioScape with missing emitter ID in " << path << std::endl;
                 continue;
             }
 
             bool streaming = true; //fall back to this if missing so we don't accidentally try to load huge files
             std::string mediaPath;
+            AudioConfig ac;
 
             const auto& props = obj.getProperties();
             for (const auto& prop : props)
@@ -72,25 +72,56 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
                 {
                     streaming = prop.getValue<bool>();
                 }
+                else if (propName == "looped")
+                {
+                    ac.looped = prop.getValue<bool>();
+                }
+                else if (propName == "pitch")
+                {
+                    ac.pitch = prop.getValue<float>();
+                }
+                else if (propName == "volume")
+                {
+                    ac.volume = prop.getValue<float>();
+                }
+                else if (propName == "mixer_channel")
+                {
+                    ac.channel = static_cast<std::uint8_t>(std::min(15, std::max(0, prop.getValue<std::int32_t>())));
+                }
+                else if (propName == "attenuation")
+                {
+                    ac.rolloff = prop.getValue<float>();
+                }
+                else if (propName == "relative_listener")
+                {
+                    //oh...
+                }
             }
 
             if (!mediaPath.empty() && cro::FileSystem::fileExists(mediaPath))
             {
-                auto id = audioResource.load(mediaPath, streaming);
-                if (id != -1)
+                ac.audioBuffer = audioResource.load(mediaPath, streaming);
+                if (ac.audioBuffer != -1)
                 {
-                    m_bufferIDs.insert(std::make_pair(mediaPath, id));
-                    m_configs.insert(std::make_pair(obj.getName(), obj));
+                    m_configs.insert(std::make_pair(obj.getId(), ac));
+                }
+                else
+                {
+                    LogW << "Failed opening file " << mediaPath << std::endl;
                 }
             }
-
-            if (m_configs.empty())
+            else
             {
-                LogW << "No valid AudioScape definitions were loaded from " << path << std::endl;
-                return false;
+                LogW << obj.getId() << " found no valid media file" << std::endl;
             }
-            return true;
         }
+
+        if (m_configs.empty())
+        {
+            LogW << "No valid AudioScape definitions were loaded from " << path << std::endl;
+            return false;
+        }
+        return true;
     }
 
     return false;
@@ -103,40 +134,12 @@ AudioEmitter AudioScape::getEmitter(const std::string& name) const
         && m_configs.count(name))
     {
         const auto& cfg = m_configs.at(name);
-        const auto& props = cfg.getProperties();
-        for (const auto& prop : props)
-        {
-            const auto& propName = prop.getName();
-            if (name == "path")
-            {
-                emitter.setSource(m_audioResource->get(m_bufferIDs.at(name)));
-            }
-            else if (name == "looped")
-            {
-                emitter.setLooped(prop.getValue<bool>());
-            }
-            else if (name == "pitch")
-            {
-                emitter.setPitch(prop.getValue<float>());
-            }
-            else if (name == "volume")
-            {
-                emitter.setVolume(prop.getValue<float>());
-            }
-            else if (name == "mixer_channel")
-            {
-                std::uint8_t channel = static_cast<std::uint8_t>(std::min(15, std::max(0, prop.getValue<std::int32_t>())));
-                emitter.setMixerChannel(channel);
-            }
-            else if (name == "attenuation")
-            {
-                emitter.setRolloff(prop.getValue<float>());
-            }
-            else if (name == "relative_listener")
-            {
-                //oh...
-            }
-        }        
+        emitter.setSource(m_audioResource->get(cfg.audioBuffer));
+        emitter.setMixerChannel(cfg.channel);
+        emitter.setLooped(cfg.looped);
+        emitter.setPitch(cfg.pitch);
+        emitter.setRolloff(cfg.rolloff);
+        emitter.setVolume(cfg.volume);               
     }
     else
     {

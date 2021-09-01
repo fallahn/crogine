@@ -64,6 +64,8 @@ namespace al
                 break;
             case AL_INVALID_OPERATION:
                 message = "AL_INVALID_OPERATION: operation is not acceptable in current state";
+                //NOTE: getting this when trying to delete buffers? Make sure an AudioResource
+                //out-lives any Scene/System which has AudioSources in use that use that buffer.
                 break;
             case AL_INVALID_VALUE:
                 message = "AL_INVALID_VALUE: value is out of range";

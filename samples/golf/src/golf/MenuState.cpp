@@ -39,6 +39,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "../ErrorCheck.hpp"
 
+#include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -55,6 +56,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -66,6 +68,7 @@ source distribution.
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
+#include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <cstring>
 
@@ -382,6 +385,7 @@ void MenuState::addSystems()
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
+    m_backgroundScene.addSystem<cro::AudioSystem>(mb);
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
@@ -487,6 +491,9 @@ void MenuState::createScene()
         }
     }
 
+    cro::AudioScape as;
+    as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
+
     //golf carts
     md.loadFromFile("assets/golf/models/cart.cmt");
     entity = m_backgroundScene.createEntity();
@@ -506,6 +513,9 @@ void MenuState::createScene()
         entity.addComponent<GolfCart>();
         md.createModel(entity);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+
+        entity.addComponent<cro::AudioEmitter>() = as.getEmitter("cart");
+        entity.getComponent<cro::AudioEmitter>().play();
     }
 
 

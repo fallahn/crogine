@@ -43,6 +43,9 @@ namespace cro
     \brief Resource management for audio data sources.
     AudioBuffers and AudioStreams provide the audio data required by AudioEmitters.
     Data can be mapped to arbitrary integer values, such as that of an enum.
+
+    Note that this should have its life span outlive any instances of a Scene
+    which use it, so that buffers in use are properly freed upon destruction.
     */
     class CRO_EXPORT_API AudioResource final
     {

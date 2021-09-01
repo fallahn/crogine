@@ -66,6 +66,8 @@ public:
     cro::StateID getStateID() const override { return StateID::Game; }
 
 private:
+    cro::ResourceCollection m_resources;    
+    
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
@@ -75,7 +77,6 @@ private:
     bool m_wantsGameState;
     cro::Clock m_readyClock; //pings ready state until ack'd
 
-    cro::ResourceCollection m_resources;
     cro::RenderTexture m_gameSceneTexture;
 
     cro::Image m_currentMap;

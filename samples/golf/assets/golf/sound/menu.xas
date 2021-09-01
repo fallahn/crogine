@@ -1,0 +1,20 @@
+audioscape menu
+{
+    emitter music
+    {
+        path = "assets/golf/sound/menu.ogg"
+        streaming = true
+        volume = 0.5
+        mixer_channel = 0
+        looped = true
+    }
+
+    emitter cart
+    {
+        path = "assets/golf/sound/cart.wav"
+        streaming = false
+        mixer_channel = 1
+        looped = true
+        attenuation = 25
+    }
+}

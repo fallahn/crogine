@@ -192,6 +192,9 @@ void GolfGame::finalise()
 {
     savePreferences();
 
+    m_stateStack.clearStates();
+    m_stateStack.simulate(0.f);
+
     for (auto& c : m_sharedData.avatarTextures)
     {
         for (auto& t : c)
@@ -200,9 +203,6 @@ void GolfGame::finalise()
         }
     }
     m_sharedData.sharedResources.reset();
-
-    m_stateStack.clearStates();
-    m_stateStack.simulate(0.f);
 }
 
 void GolfGame::loadPreferences()

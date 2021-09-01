@@ -79,12 +79,11 @@ public:
     };
 
 private:
-
     SharedStateData& m_sharedData;
+    cro::ResourceCollection m_resources;
 
     cro::Scene m_uiScene;
     cro::Scene m_backgroundScene;
-    cro::ResourceCollection m_resources;
 
     cro::RenderTexture m_postBuffer;
     cro::SimpleQuad m_postQuad;
