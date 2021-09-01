@@ -78,6 +78,7 @@ source distribution.
 #include <crogine/util/Matrix.hpp>
 #include <crogine/util/Network.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Easings.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include "../ErrorCheck.hpp"
@@ -144,14 +145,16 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::Text("Target: %3.3f, %3.3f", target.x, target.z);
                 ImGui::Text("Look At: %3.3f, %3.3f", currLookAt.x, currLookAt.z);*/
 
-                //ImGui::Text("Cam Rotation: %3.3f", m_camRotation);
+                ImGui::Text("Cam Rotation: %3.3f", m_camRotation);
 
-                /*static float sunRot = 0.f;
-                auto prevRot = sunRot;
-                if (ImGui::SliderFloat("Sun", &sunRot, -90.f, 90.f))
-                {
-                    m_greenCam.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, (prevRot - sunRot) * cro::Util::Const::degToRad);
-                }*/
+                //static float sunRot = 0.f;
+                //auto prevRot = sunRot;
+                //if (ImGui::SliderFloat("Sun", &sunRot, -90.f, 90.f))
+                //{
+                //    m_greenCam.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, (prevRot - sunRot) * cro::Util::Const::degToRad);
+                //    //shadowEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, sunRot * cro::Util::Const::degToRad);
+                //}
+                //ImGui::Text("Shadow Rot: %3.3f", sunRot * cro::Util::Const::degToRad);
 
                 /*auto rot = m_inputParser.getYaw();
                 ImGui::Text("Rotation %3.2f", rot);
@@ -978,13 +981,32 @@ void GolfState::buildScene()
 
 
     //player shadow
+    static constexpr float ShadowScale = 20.f;
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
-    entity.getComponent<cro::Transform>().move(glm::vec3(-0.25f, 0.02f, 0.75f));
-    entity.getComponent<cro::Transform>().setScale(glm::vec3(20.3f, 1.f, 20.3f));
+    entity.getComponent<cro::Transform>().setOrigin({0.f, 0.f, 0.04f});
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f, 1.f, ShadowScale));
+    entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::PlayerShadow;
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + (dt * 2.f));
+
+        e.getComponent<cro::Transform>().setScale({ ShadowScale * cro::Util::Easing::easeOutBounce(currTime), 1.f, ShadowScale });
+
+        if(currTime == 1)
+        {
+            currTime = 0.f;
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
     m_modelDefs[ModelID::BallShadow]->createModel(entity);
 
 
+    //carts
     md.loadFromFile("assets/golf/models/cart.cmt");
     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
     setTexture(md, texturedMat);
@@ -1698,6 +1720,19 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
             e.getComponent<cro::Callback>().active = true;
         }
+    };
+    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+    //update player shadow position
+    cmd.targetFlags = CommandID::PlayerShadow;
+    cmd.action = [&,player](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setPosition(player.position);
+        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
+        //TODO add PI if player avatar flipped
+
+        e.getComponent<cro::Model>().setHidden(player.terrain == TerrainID::Green);
+        e.getComponent<cro::Callback>().active = true;
     };
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 

@@ -504,9 +504,9 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
-        cro::Vertex2D(glm::vec2(22.f, 1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(22.f, -1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(32.f, 0.f), TextGoldColour)
+        cro::Vertex2D(glm::vec2(32.f, -1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(32.f, 1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(22.f, 0.f), TextGoldColour)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;

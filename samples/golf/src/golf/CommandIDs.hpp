@@ -39,7 +39,8 @@ struct CommandID final
         Hole            = 0x8,
         Tee             = 0x10,
         Cart            = 0x20,
-        SlopeIndicator  = 0x40
+        SlopeIndicator  = 0x40,
+        PlayerShadow    = 0x80
     };
 
     struct UI final
