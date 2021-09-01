@@ -15,6 +15,6 @@ audioscape menu
         streaming = false
         mixer_channel = 1
         looped = true
-        attenuation = 25
+        attenuation = 0.2
     }
 }

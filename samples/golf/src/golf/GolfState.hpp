@@ -168,6 +168,7 @@ private:
     {
         cro::Sprite wood;
         cro::Sprite iron;
+        bool flipped = false;
     };
     std::array<std::array<Avatar, 4u>, 4u> m_avatars;
 

@@ -40,6 +40,7 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "ClientCollisionSystem.hpp"
 #include "GolfParticleDirector.hpp"
+#include "PlayerAvatar.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/Gamecontroller.hpp>
@@ -593,15 +594,33 @@ void GolfState::loadAssets()
     m_flagQuad.setTexture(*flagSprite.getTexture());
     m_flagQuad.setTextureRect(flagSprite.getTextureRect());
 
-
+    //these are doubled because odd skinIDs are flipped
+    //versions of even numbered
     spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_resources.textures);
+    std::vector<cro::Sprite> ironSprites =
+    {
+        spriteSheet.getSprite("female_iron"),
+        spriteSheet.getSprite("female_iron"),
+        spriteSheet.getSprite("male_iron"),
+        spriteSheet.getSprite("male_iron")
+    };
+
+    std::vector<cro::Sprite> woodSprites =
+    {
+        spriteSheet.getSprite("female_wood"),
+        spriteSheet.getSprite("female_wood"),
+        spriteSheet.getSprite("male_wood"),
+        spriteSheet.getSprite("male_wood")
+    };
+
     for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
     {
         for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
         {
-            auto skinID = m_sharedData.connectionData[i].playerData[j].skinID;
-            m_avatars[i][j].iron = skinID == 0 ? spriteSheet.getSprite("female_iron") : spriteSheet.getSprite("male_iron");
-            m_avatars[i][j].wood = skinID == 0 ? spriteSheet.getSprite("female_wood") : spriteSheet.getSprite("male_wood");
+            auto skinID = std::min(m_sharedData.connectionData[i].playerData[j].skinID, std::uint8_t(PlayerAvatar::MaxSkins - 1));
+            m_avatars[i][j].iron = ironSprites[skinID];
+            m_avatars[i][j].wood = woodSprites[skinID];
+            m_avatars[i][j].flipped = (skinID % 2);
 
             m_avatars[i][j].iron.setTexture(m_sharedData.avatarTextures[i][j], false);
             m_avatars[i][j].wood.setTexture(m_sharedData.avatarTextures[i][j], false);
@@ -1696,6 +1715,18 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             }
             e.getComponent<cro::Callback>().active = true;
 
+            if (m_avatars[m_currentPlayer.client][m_currentPlayer.player].flipped)
+            {
+                e.getComponent<cro::Transform>().setScale({ -1.f, 0.f });
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale({ 1.f, 0.f });
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            }
+
+
             const auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
             auto pos = camera.coordsToPixel(player.position, m_gameSceneTexture.getSize());
             e.getComponent<cro::Transform>().setPosition(pos);
@@ -1727,9 +1758,14 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.targetFlags = CommandID::PlayerShadow;
     cmd.action = [&,player](cro::Entity e, float)
     {
+        float rotation = m_camRotation;
+        if (m_avatars[m_currentPlayer.client][m_currentPlayer.player].flipped)
+        {
+            rotation += cro::Util::Const::PI;
+        }
+
         e.getComponent<cro::Transform>().setPosition(player.position);
-        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
-        //TODO add PI if player avatar flipped
+        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
 
         e.getComponent<cro::Model>().setHidden(player.terrain == TerrainID::Green);
         e.getComponent<cro::Callback>().active = true;

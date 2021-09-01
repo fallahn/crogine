@@ -1470,6 +1470,17 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
                     cmd.action = [&, skinID](cro::Entity en, float)
                     {
                         en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatar.previewRects[skinID]);
+
+                        if (skinID % 2)
+                        {
+                            en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                            en.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
+                        }
+                        else
+                        {
+                            en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                            en.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+                        }
                     };
                     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                 }
@@ -1494,6 +1505,17 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
                     cmd.action = [&, skinID](cro::Entity en, float)
                     {
                         en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatar.previewRects[skinID]);
+
+                        if (skinID % 2)
+                        {
+                            en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                            en.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
+                        }
+                        else
+                        {
+                            en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                            en.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+                        }
                     };
                     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                 }
@@ -1527,15 +1549,22 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     entity.getComponent<cro::Sprite>().setTexture(m_playerAvatar.getTexture(), false);
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //odd indices are left handed
     m_playerAvatar.previewRects[0] = spriteSheet.getSprite("female_wood").getTextureRect();
-    m_playerAvatar.previewRects[1] = spriteSheet.getSprite("male_wood").getTextureRect();
+    m_playerAvatar.previewRects[1] = spriteSheet.getSprite("female_wood").getTextureRect();
+    m_playerAvatar.previewRects[2] = spriteSheet.getSprite("male_wood").getTextureRect();
+    m_playerAvatar.previewRects[3] = spriteSheet.getSprite("male_wood").getTextureRect();
+
+    auto centre = m_playerAvatar.previewRects[0].width / 2.f;
+    entity.getComponent<cro::Transform>().setOrigin({ centre, 0.f });
+    entity.getComponent<cro::Transform>().move({ centre, 0.f });
 }
 
 void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
     //these can have fixed positions as they are attached to a menuEntity[] which is UI scaled
     static constexpr glm::vec3 EditButtonOffset(-47.f, -57.f, 0.f);
-    static constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-68.f, -10.f, 0.f);
+    static constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-70.f, -10.f, 0.f);
     static constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(115.f, 34.f, 0.f);
     static constexpr float LineHeight = -8.f;
 
@@ -1583,13 +1612,30 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
             m_playerAvatar.apply();
         }
 
+        auto id = m_sharedData.localConnectionData.playerData[i].skinID;
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(localPos + AvatarOffset);
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>(m_sharedData.avatarTextures[0][i]);
-        entity.getComponent<cro::Sprite>().setTextureRect(m_playerAvatar.previewRects[m_sharedData.localConnectionData.playerData[i].skinID]);
+        entity.getComponent<cro::Sprite>().setTextureRect(m_playerAvatar.previewRects[id]);
+        auto centre = std::ceil(entity.getComponent<cro::Sprite>().getTextureBounds().width / 2.f);
+        entity.getComponent<cro::Transform>().setOrigin({ centre, 0.f });
+        entity.getComponent<cro::Transform>().move({ centre, 0.f });
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
+
+        //flip if left handed
+        if (id % 2)
+        {
+            entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            entity.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
+        }
+        else
+        {
+            entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            entity.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+        }
+
 
         //add edit button
         entity = m_uiScene.createEntity();
@@ -1788,7 +1834,20 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
     cmd.targetFlags = CommandID::Menu::PlayerAvatar;
     cmd.action = [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Sprite>().setTextureRect(m_playerAvatar.previewRects[m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].skinID]);
+        auto id = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].skinID;
+        e.getComponent<cro::Sprite>().setTextureRect(m_playerAvatar.previewRects[id]);
+
+        if (id % 2)
+        {
+            //flipped left handed
+            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            e.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
+        }
+        else
+        {
+            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            e.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+        }
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
