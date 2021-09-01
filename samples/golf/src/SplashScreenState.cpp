@@ -139,9 +139,8 @@ namespace
     constexpr float ButtonTimeout = 2.f;
 }
 
-SplashState::SplashState(cro::StateStack& stack, cro::State::Context context, cro::AudioResource& ar)
+SplashState::SplashState(cro::StateStack& stack, cro::State::Context context)
     : cro::State        (stack, context),
-    m_audioResource     (ar),
     m_uiScene           (context.appInstance.getMessageBus()),
     m_timer             (0.f),
     m_windowRatio       (1.f),
@@ -231,7 +230,7 @@ void SplashState::loadAssets()
     entity.addComponent<cro::Drawable2D>().setShader(&m_noiseShader);
     entity.addComponent<cro::Sprite>(m_texture);
     
-    //this is a fudge because we need the buffer to outlive this state...
+    //audio
     if (auto id = m_audioResource.load("assets/sound/startup.wav"); id > 0)
     {
         entity = m_uiScene.createEntity();

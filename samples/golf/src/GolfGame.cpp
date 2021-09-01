@@ -58,7 +58,7 @@ GolfGame::GolfGame()
     //must be sest before anything else cfg is still loaded from default path
     setApplicationStrings("trederia", "golf");
 
-    m_stateStack.registerState<SplashState>(StateID::SplashScreen, m_audioResource);
+    m_stateStack.registerState<SplashState>(StateID::SplashScreen);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData);
     m_stateStack.registerState<GolfState>(StateID::Game, m_sharedData);
     m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);

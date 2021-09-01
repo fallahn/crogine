@@ -32,6 +32,7 @@ source distribution.
 #include "StateIDs.hpp"
 
 #include <crogine/audio/AudioBuffer.hpp>
+#include <crogine/audio/AudioResource.hpp>
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -49,7 +50,7 @@ struct SharedStateData;
 class SplashState final : public cro::State
 {
 public:
-    SplashState(cro::StateStack&, cro::State::Context, cro::AudioResource&);
+    SplashState(cro::StateStack&, cro::State::Context);
 
     cro::StateID getStateID() const override { return StateID::SplashScreen; }
 
@@ -60,7 +61,8 @@ public:
 
 private:
 
-    cro::AudioResource& m_audioResource;
+    cro::AudioResource m_audioResource;
+
     cro::Scene m_uiScene;
     float m_timer;
 
