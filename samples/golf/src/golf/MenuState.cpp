@@ -212,19 +212,11 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_F3:
             showPlayerConfig(false, 0);
             break;
+        case SDLK_F4:
+            requestStackClear();
+            requestStackPush(StateID::SplashScreen);
+            break;
 #endif
-        case SDLK_1:
-
-            break;
-        case SDLK_2:
-            
-            break;
-        case SDLK_3:
-            
-            break;
-        case SDLK_4:
-
-            break;
         case SDLK_RETURN:
         case SDLK_RETURN2:
         case SDLK_KP_ENTER:

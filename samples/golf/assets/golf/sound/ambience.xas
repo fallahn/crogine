@@ -4,9 +4,9 @@ audioscape ambience
     {
         path = "assets/golf/sound/ambience/env01.ogg"
         streaming = true
-        volume = 1
+        volume = 1.05
         mixer_channel = 1
-        attenuation = 0.1
+        attenuation = 0.06
         looped = true
     }
 
@@ -14,9 +14,9 @@ audioscape ambience
     {
         path = "assets/golf/sound/ambience/env02.ogg"
         streaming = true
-        volume = 1
+        volume = 1.05
         mixer_channel = 1
-        attenuation = 0.1
+        attenuation = 0.06
         looped = true
     }
 
@@ -24,9 +24,9 @@ audioscape ambience
     {
         path = "assets/golf/sound/ambience/env03.ogg"
         streaming = true
-        volume = 1
+        volume = 1.05
         mixer_channel = 1
-        attenuation = 0.1
+        attenuation = 0.06
         looped = true
     }
 
@@ -34,9 +34,9 @@ audioscape ambience
     {
         path = "assets/golf/sound/ambience/env04.ogg"
         streaming = true
-        volume = 1
+        volume = 1.05
         mixer_channel = 1
-        attenuation = 0.1
+        attenuation = 0.06
         looped = true
     }
 
@@ -44,7 +44,7 @@ audioscape ambience
     {
         path = "assets/golf/sound/ambience/plane.ogg"
         streaming = true
-        volume = 1
+        volume = 1.2
         mixer_channel = 1
         attenuation = 0
         looped = false

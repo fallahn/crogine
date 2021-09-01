@@ -1129,10 +1129,16 @@ void GolfState::initAudio()
         for (auto j = 0; j < 2; ++j)
         {
             static constexpr float height = 4.f;
-            glm::vec3 position(envOffset.x * i, height, -envOffset.y * j);
-
+            glm::vec3 position(envOffset.x * (i + 1), height, -envOffset.y * (j + 1));
+            
             auto idx = i * 2 + j;
             auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(position);
+            entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[idx]);
+            entity.getComponent<cro::AudioEmitter>().play();
+
+            position = { i * MapSize.x, height, -static_cast<float>(MapSize.y) * j };
+            entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(position);
             entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[idx]);
             entity.getComponent<cro::AudioEmitter>().play();
