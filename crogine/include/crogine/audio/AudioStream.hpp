@@ -59,7 +59,7 @@ namespace cro
         AudioStream& operator = (AudioStream&&) noexcept;
 
         /*!
-        \brief Attempts to open the *.ogg or *.wav file fomr the given path.
+        \brief Attempts to open the *.ogg or *.wav file from the given path.
         \returns true on success else false.
         */
         bool loadFromFile(const std::string& path) override;

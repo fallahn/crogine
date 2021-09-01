@@ -45,6 +45,7 @@
   <ItemGroup>
     <ClInclude Include="..\crogine\include\crogine\android\Android.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioBuffer.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioScape.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioSource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioMixer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioResource.hpp" />
@@ -225,6 +226,7 @@
     <ClCompile Include="..\crogine\src\audio\AudioMixer.cpp" />
     <ClCompile Include="..\crogine\src\audio\AudioRenderer.cpp" />
     <ClCompile Include="..\crogine\src\audio\AudioResource.cpp" />
+    <ClCompile Include="..\crogine\src\audio\AudioScape.cpp" />
     <ClCompile Include="..\crogine\src\audio\AudioStream.cpp" />
     <ClCompile Include="..\crogine\src\audio\OpenALImpl.cpp" />
     <ClCompile Include="..\crogine\src\audio\stb_vorbis.c" />
