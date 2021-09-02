@@ -663,6 +663,13 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                     e.getComponent<cro::Text>().setString(data->description);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::Menu::CourseHoles;
+                cmd.action = [data](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(data->holeCount);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
             }
             else
             {
@@ -680,6 +687,13 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 {
                     e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
                     e.getComponent<cro::Text>().setString("Course Data Not Found");
+                };
+                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::Menu::CourseHoles;
+                cmd.action = [data](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(" ");
                 };
                 m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
             }

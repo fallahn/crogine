@@ -151,7 +151,8 @@ private:
     {
         cro::String directory;
         cro::String title = "Untitled";
-        cro::String description = "No Description";
+        cro::String description = "No Description"; 
+        cro::String holeCount = "0";
     };
     std::vector<CourseData> m_courseData;
     void parseCourseDirectory();

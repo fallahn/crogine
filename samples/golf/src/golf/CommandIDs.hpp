@@ -81,6 +81,8 @@ struct CommandID final
             UIBanner     = 0x100,
             CourseTitle  = 0x200,
             CourseDesc   = 0x400,
+            CourseHoles  = 0x800,
+            CourseSelect = 0x1000,
         };
     };
 };
