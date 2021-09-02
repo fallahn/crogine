@@ -1,0 +1,9 @@
+spritesheet lobby
+{
+    src="assets/golf/images/lobby_menu.png"
+
+    sprite background
+    {
+        bounds = 0,0,288,152
+    }
+}
