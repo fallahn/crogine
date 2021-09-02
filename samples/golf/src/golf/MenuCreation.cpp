@@ -123,8 +123,54 @@ constexpr std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPosit
     glm::vec2(0.f, 0.f)
 };
 
+void MenuState::parseCourseDirectory()
+{
+    static const std::string rootDir("assets/golf/courses");
+    auto directories = cro::FileSystem::listDirectories(rootDir);
+    for (const auto& dir : directories)
+    {
+        auto courseFile = rootDir + "/" + dir + "/course.data";
+        if (cro::FileSystem::fileExists(courseFile))
+        {
+            std::string description("This course is missing a description");
+            std::size_t holeCount = 0;
+
+            cro::ConfigFile cfg;
+            cfg.loadFromFile(courseFile);
+
+            const auto& props = cfg.getProperties();
+            for (const auto& prop : props)
+            {
+                const auto& propName = prop.getName();
+                if (propName == "description")
+                {
+                    description = prop.getValue<std::string>();
+                }
+                else if (propName == "hole")
+                {
+                    holeCount++;
+                }
+                //TODO we could validate the hole files exist
+                //but that's done when loading the game anyway
+                //here we just want some lobby info and an
+                //early indication if a client is missing the
+                //data the host has
+            }
+
+            if (holeCount > 0)
+            {
+                auto& data = m_courseData.emplace_back();
+                data.desription = description;
+                data.directory = dir;
+            }
+        }
+    }
+}
+
 void MenuState::createUI()
 {
+    parseCourseDirectory();
+
     auto mouseEnterCallback = m_uiScene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e) mutable
         {
@@ -149,7 +195,6 @@ void MenuState::createUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::RootNode;
     auto rootNode = entity;
-
 
     //consumes input during menu animation.
     entity = m_uiScene.createEntity();
@@ -396,79 +441,95 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     static constexpr float LineSpacing = 10.f;
     glm::vec3 textPos = { TextOffset, 54.f, 0.1f };
 
-    //host
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(textPos);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Create Game");
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
-    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
-            {
-                if (activated(evt))
+    if (!m_courseData.empty())
+    {
+        //host
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(textPos);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("Create Game");
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            m_uiScene.getSystem<cro::UISystem>().addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
-                    m_sharedData.hosting = true;
+                    if (activated(evt))
+                    {
+                        m_sharedData.hosting = true;
 
-                    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
-                    menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
-                    menuEntity.getComponent<cro::Callback>().active = true;
-                }
-            });
-    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    textPos.y -= LineSpacing;
+                        m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                        menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
+                        menuEntity.getComponent<cro::Callback>().active = true;
+                    }
+                });
+        bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        textPos.y -= LineSpacing;
 
-    //join
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(textPos);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Join Game");
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
-            {
-                if (activated(evt))
+        //join
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(textPos);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("Join Game");
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            m_uiScene.getSystem<cro::UISystem>().addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
-                    m_sharedData.hosting = false;
+                    if (activated(evt))
+                    {
+                        m_sharedData.hosting = false;
 
-                    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
-                    menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
-                    menuEntity.getComponent<cro::Callback>().active = true;
-                }
-            });
-    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    textPos.y -= LineSpacing;
+                        m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                        menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
+                        menuEntity.getComponent<cro::Callback>().active = true;
+                    }
+                });
+        bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        textPos.y -= LineSpacing;
 
-    //driving range
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(textPos);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Driving Range (Tutorial)");
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
-            {
-                if (activated(evt))
+        //driving range
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(textPos);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("Driving Range (Tutorial)");
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            m_uiScene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
                 {
-                    
-                }
-            });
-    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    textPos.y -= LineSpacing;
+                    if (activated(evt))
+                    {
+
+                    }
+                });
+        bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        textPos.y -= LineSpacing;
+    }
+    else
+    {
+        //display error
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(textPos);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("Error: No Course Data Found.");
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+
+        bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        textPos.y -= LineSpacing * 3.f;
+    }
 
     //options
     entity = m_uiScene.createEntity();

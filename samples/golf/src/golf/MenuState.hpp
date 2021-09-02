@@ -147,6 +147,14 @@ private:
     void loadAssets();
     void createScene();
 
+    struct CourseData final
+    {
+        std::string directory;
+        std::string desription;
+    };
+    std::vector<CourseData> m_courseData;
+    void parseCourseDirectory();
+
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
