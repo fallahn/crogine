@@ -50,6 +50,8 @@ public:
     bool running() const { return m_running; }
     void stop();
 
+    void setHostID(std::uint32_t id);
+
 private:
     std::atomic_bool m_running;
     std::unique_ptr<std::thread> m_thread;

@@ -35,7 +35,8 @@ namespace MessageType
     {
         ServerFull,
         NotInLobby,
-        MapNotFound
+        MapNotFound,
+        BadData
     };
 }
 

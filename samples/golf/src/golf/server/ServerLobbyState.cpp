@@ -84,14 +84,19 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
             break;
         case PacketID::MapInfo:
         {
-            m_sharedData.mapDir = deserialiseString(evt.packet);
-            //forward to all clients
-            m_sharedData.host.broadcastPacket(PacketID::MapInfo, evt.packet.getData(), evt.packet.getSize(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.mapDir = deserialiseString(evt.packet);
+                //forward to all clients
+                m_sharedData.host.broadcastPacket(PacketID::MapInfo, evt.packet.getData(), evt.packet.getSize(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+            }
         }
             break;
         case PacketID::RequestGameStart:
-            //TODO assert this came from the host
-            m_returnValue = StateID::Game;
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_returnValue = StateID::Game;
+            }
             break;
         }
     }
@@ -133,8 +138,13 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
             }
             else
             {
-                //TODO reject the client
-                LogE << "Server - reject client, unable to read player info packet" << std::endl;
+                //reject the client
+                m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::BadData), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                
+                auto peer = evt.peer;
+                m_sharedData.host.disconnectLater(peer);
+
+                LogE << "Server - rejected client, unable to read player info packet" << std::endl;
             }
         }
     }

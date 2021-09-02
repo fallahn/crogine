@@ -222,3 +222,12 @@ void NetHost::disconnect(NetPeer& peer)
         peer.m_peer = nullptr;
     }
 }
+
+void NetHost::disconnectLater(NetPeer& peer)
+{
+    if (m_host && peer.m_peer)
+    {
+        enet_peer_disconnect_later(peer.m_peer, 0);
+        peer.m_peer = nullptr;
+    }
+}

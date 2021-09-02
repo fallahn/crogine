@@ -81,6 +81,11 @@ void Server::stop()
     }
 }
 
+void Server::setHostID(std::uint32_t id)
+{
+    m_sharedData.hostID = id;
+}
+
 //private
 void Server::run()
 {
@@ -128,7 +133,7 @@ void Server::run()
                     {
                         //tell client server is full
                         m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerFull), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                        //TODO actually disconnect client
+                        m_sharedData.host.disconnectLater(evt.peer);
                     }
                     else
                     {
@@ -140,6 +145,7 @@ void Server::run()
                 {
                     //send rejection packet
                     m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::NotInLobby), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.host.disconnectLater(evt.peer);
                 }
             }
             else if (evt.type == cro::NetEvent::ClientDisconnect)
@@ -147,13 +153,6 @@ void Server::run()
                 //remove from client list
                 removeClient(evt);
             }
-            /*else if (evt.type == cro::NetEvent::PacketReceived)
-            {
-                switch (evt.packet.getID())
-                {
-                default: break;
-                }
-            }*/
         }
 
         //network broadcasts

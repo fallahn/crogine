@@ -132,7 +132,8 @@ void MenuState::parseCourseDirectory()
         auto courseFile = rootDir + "/" + dir + "/course.data";
         if (cro::FileSystem::fileExists(courseFile))
         {
-            std::string description("This course is missing a description");
+            std::string title;
+            std::string description;
             std::size_t holeCount = 0;
 
             cro::ConfigFile cfg;
@@ -150,6 +151,10 @@ void MenuState::parseCourseDirectory()
                 {
                     holeCount++;
                 }
+                else if (propName == "title")
+                {
+                    title = prop.getValue<std::string>();
+                }
                 //TODO we could validate the hole files exist
                 //but that's done when loading the game anyway
                 //here we just want some lobby info and an
@@ -160,10 +165,16 @@ void MenuState::parseCourseDirectory()
             if (holeCount > 0)
             {
                 auto& data = m_courseData.emplace_back();
-                data.desription = description;
+                if (!title.empty())data.title = title;
+                if(!description.empty()) data.description = description;
                 data.directory = dir;
             }
         }
+    }
+
+    if (!m_courseData.empty())
+    {
+        m_sharedData.courseIndex = std::min(m_sharedData.courseIndex, m_courseData.size() - 1);
     }
 }
 
@@ -823,6 +834,9 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                             }
                             else
                             {
+                                //make sure the server knows we're the host
+                                m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
+
                                 cro::Command cmd;
                                 cmd.targetFlags = CommandID::Menu::ReadyButton;
                                 cmd.action = [](cro::Entity e, float)
@@ -837,9 +851,11 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                                     e.getComponent<cro::Text>().setString("Hosting on: localhost:" + std::to_string(ConstVal::GamePort));
                                 };
                                 m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                                
+                                //enable the course selction in the lobby
 
-                                //send the selected map/course
-                                //TODO this should be sent from lobby menu so host can change the selected course
+                                //send the initially selected map/course
+                                m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
                                 auto data = serialiseString(m_sharedData.mapDirectory);
                                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
                             }
@@ -1037,6 +1053,8 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                             e.getComponent<cro::Text>().setString("Connected to: " + m_sharedData.targetIP + ":" + std::to_string(ConstVal::GamePort));
                         };
                         m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                        //TODO diable the course selection in the lobby
                     }
                 }
             });
@@ -1110,6 +1128,33 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
         textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
+
+
+    //course title
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 60.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseTitle;
+    entity.addComponent<cro::Text>(font).setString("Title");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    //course title
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 46.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseDesc;
+    entity.addComponent<cro::Text>(font).setString("Course Description");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
 
     //banner
     entity = m_uiScene.createEntity();

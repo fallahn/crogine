@@ -34,6 +34,7 @@ source distribution.
 #include "Utility.hpp"
 #include "CommandIDs.hpp"
 #include "GameConsts.hpp"
+#include "MenuConsts.hpp"
 #include "PoissonDisk.hpp"
 #include "GolfCartSystem.hpp"
 #include "MessageIDs.hpp"
@@ -586,7 +587,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
 
                 if (m_sharedData.serverInstance.running())
                 {
-                    //auto ready up if host
+                    //auto ready up if hosting
                     m_sharedData.clientConnection.netClient.sendPacket(
                         PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
                         cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -597,8 +598,25 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             break;
         case PacketID::ConnectionRefused:
         {
-            std::string err = evt.packet.as<std::uint8_t>() == 0 ? "Server full" : "Game in progress";
-            cro::Logger::log("Connection refused: " + err, cro::Logger::Type::Error);
+            std::string err = "Connection refused: ";
+            switch (evt.packet.as<std::uint8_t>())
+            {
+            default:
+                err += "Unknown Error";
+                break;
+            case MessageType::ServerFull:
+                err += "Server full";
+                break;
+            case MessageType::NotInLobby:
+                err += "Game in progress";
+                break;
+            case MessageType::BadData:
+                err += "Bad Data Received";
+                break;
+            }
+            LogE << err << std::endl;
+            m_sharedData.errorMessage = err;
+            requestStackPush(StateID::Error);
 
             m_sharedData.clientConnection.netClient.disconnect();
             m_sharedData.clientConnection.connected = false;
@@ -618,7 +636,54 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
         }
             break;
         case PacketID::MapInfo:
-            m_sharedData.mapDirectory = deserialiseString(evt.packet);
+        {
+            //check we have the local data (or at least something with the same name)
+            auto course = deserialiseString(evt.packet);
+            if (auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(), 
+                [&course](const CourseData& cd)
+                {
+                    return cd.directory == course;
+                }); data != m_courseData.cend())
+            {
+                m_sharedData.mapDirectory = course;
+                
+                //update UI
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Menu::CourseTitle;
+                cmd.action = [data](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(data->title);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::Menu::CourseDesc;
+                cmd.action = [data](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                    e.getComponent<cro::Text>().setString(data->description);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            }
+            else
+            {
+                //print to UI course is missing
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Menu::CourseTitle;
+                cmd.action = [course](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(course);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::Menu::CourseDesc;
+                cmd.action = [course](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+                    e.getComponent<cro::Text>().setString("Course Data Not Found");
+                };
+                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            }
+        }
             break;
         break;
         }

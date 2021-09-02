@@ -95,6 +95,7 @@ struct SharedStateData final
     std::string errorMessage;
 
     bool hosting = false;
+    std::size_t courseIndex = 0; //id hosting which course we last chose.
 
     //client settings
     bool usePostProcess = false;

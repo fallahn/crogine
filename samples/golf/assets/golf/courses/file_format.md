@@ -8,7 +8,8 @@ A course folder should contain one file with the course.data. It has the followi
     {
         skybox = "assets/images/skybox/sky.ccm" //a path to the skybox to use when the course is loaded
 
-        description = "This is a test course. Why not have a play?" //a brief description, shown in the game's UI
+        title = "St. Billybob's links, Isle of Wibble" //course title, shown in the game lobby
+        description = "This is a test course. Why not have a play?" //a brief description, shown in the game lobby
 
 
         //a list of paths to *.hole files. These should be in the order in which the holes are to be played.

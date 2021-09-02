@@ -78,7 +78,9 @@ struct CommandID final
             PlayerName   = 0x20,
             PlayerAvatar = 0x40,
             UIElement    = 0x80,
-            UIBanner     = 0x100
+            UIBanner     = 0x100,
+            CourseTitle  = 0x200,
+            CourseDesc   = 0x400,
         };
     };
 };

@@ -149,8 +149,9 @@ private:
 
     struct CourseData final
     {
-        std::string directory;
-        std::string desription;
+        cro::String directory;
+        cro::String title = "Untitled";
+        cro::String description = "No Description";
     };
     std::vector<CourseData> m_courseData;
     void parseCourseDirectory();

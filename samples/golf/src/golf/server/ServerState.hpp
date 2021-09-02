@@ -66,6 +66,8 @@ namespace sv
         std::array<sv::ClientConnection, ConstVal::MaxClients> clients;
         cro::MessageBus messageBus;
         cro::String mapDir;
+
+        std::atomic_uint32_t hostID = 0;
     };
 
     namespace StateID

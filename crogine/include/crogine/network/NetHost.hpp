@@ -158,6 +158,12 @@ namespace cro
         */
         void disconnect(NetPeer& peer);
 
+        /*!
+        \brief Disconnects the given peer from the host if it is valid, once all queued packets are sent
+        This is useful for disconnecting a client, but making sure any error messages etc are sent first
+        */
+        void disconnectLater(NetPeer& peer);
+
     private:
 
         _ENetHost* m_host;

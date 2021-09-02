@@ -182,7 +182,10 @@ void GameState::netEvent(const cro::NetEvent& evt)
             handlePlayerInput(evt.packet);
             break;
         case PacketID::ServerCommand:
-            doServerCommand(evt);
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                doServerCommand(evt);
+            }
             break;
         }
     }

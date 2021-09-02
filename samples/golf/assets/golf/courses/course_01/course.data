@@ -2,6 +2,7 @@ course course_01
 {
     skybox = "assets/golf/images/skybox/spring/sky.ccm"
 
+    title = "St. Billybob's links, Isle of Wibble"
     description = "This is a test course. Why not have a play?"
 
     hole = "assets/golf/courses/course_01/01.hole"
