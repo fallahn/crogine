@@ -52,8 +52,13 @@ struct GolfEvent final
     enum
     {
         HitBall,
-        ClubChanged
+        ClubChanged,
+        ClubSwing
     }type = HitBall;
+
+    glm::vec3 position = glm::vec3(0.f);
+    std::uint8_t terrain = 0;
+    std::uint8_t club = 0;
 };
 
 struct SceneEvent

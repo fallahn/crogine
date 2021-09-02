@@ -48,14 +48,8 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
-    case cro::Message::SpriteAnimationMessage:
-    {
-        const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
-        if (data.userType == 0)
-        {
-            //hmmmm how to discover the terrain?
-        }
-    }
+    case MessageID::GolfMessage:
+
         break;
     case MessageID::CollisionMessage:
     {

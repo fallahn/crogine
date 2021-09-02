@@ -62,12 +62,11 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
 //public
 void GolfSoundDirector::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == cro::Message::SpriteAnimationMessage)
+    switch (msg.id)
     {
-        const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
-        if (data.userType == 0)
-        {
-            //LogI << "THWOCK!" << std::endl;
-        }
+    default: break;
+    case MessageID::GolfMessage:
+
+        break;
     }
 }

@@ -360,6 +360,20 @@ void GolfState::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
+    case cro::Message::SpriteAnimationMessage:
+    {
+        const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
+        if (data.userType == 0)
+        {
+            //relay this message with the info needed for particle/sound effects
+            auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+            msg2->type = GolfEvent::ClubSwing;
+            msg2->position = m_currentPlayer.position;
+            msg2->terrain = m_currentPlayer.terrain;
+            msg2->club = static_cast<std::uint8_t>(getClub());
+        }
+    }
+    break;
     case MessageID::SceneMessage:
     {
         const auto& data = msg.getData<SceneEvent>();
