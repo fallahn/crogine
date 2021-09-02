@@ -130,6 +130,8 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
                 {
                     auto& animation = spriteComponent.m_animations.emplace_back();
 
+                    std::vector<glm::ivec2> frameEvents;
+
                     const auto& properties = sprOb.getProperties();
                     for (const auto& p : properties)
                     {
@@ -138,6 +140,12 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
                             && animation.frames.size() < Sprite::MaxFrames)
                         {
                             animation.frames.emplace_back(p.getValue<FloatRect>());
+                        }
+                        else if (name == "event")
+                        {
+                            //x is event id, y is the frame number
+                            auto evt = p.getValue<glm::vec2>();
+                            frameEvents.emplace_back(static_cast<std::int32_t>(evt.x), static_cast<std::int32_t>(evt.y));
                         }
                         else if (name == "framerate")
                         {
@@ -153,10 +161,16 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
                         }
                     }
 
+                    for (const auto& evt : frameEvents)
+                    {
+                        if (static_cast<std::size_t>(evt.y) < animation.frames.size())
+                        {
+                            animation.frames[evt.y].event = evt.x;
+                        }
+                    }
+
                     auto animId = sprOb.getId();
                     m_animations[spriteName].push_back(animId);
-                    animation.id.resize(animId.length());
-                    animId.copy(animation.id.data(), animId.length());
                 }
             }
 

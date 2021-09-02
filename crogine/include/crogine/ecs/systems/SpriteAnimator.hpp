@@ -46,6 +46,6 @@ namespace cro
         void process(float) override;
 
     private:
-
+        std::vector<std::pair<cro::Entity, std::int32_t>> m_animationEvents;
     };
 }

@@ -487,7 +487,7 @@ void TerrainBuilder::threadFunc()
                     auto [terrain, height] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Scrub)
                     {
-                        float scale = static_cast<float>(cro::Util::Random::value(9, 11)) / 10.f;
+                        float scale = static_cast<float>(cro::Util::Random::value(13, 18)) / 10.f;
 
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Pine, BillboardID::Willow)]);
                         bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards

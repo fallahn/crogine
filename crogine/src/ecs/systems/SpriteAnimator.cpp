@@ -36,16 +36,25 @@ source distribution.
 
 using namespace cro;
 
+namespace
+{
+    constexpr std::size_t MaxEvents = 12;
+}
+
 SpriteAnimator::SpriteAnimator(MessageBus& mb)
     : System(mb, typeid(SpriteAnimator))
 {
     requireComponent<Sprite>();
     requireComponent<SpriteAnimation>();
+
+    m_animationEvents.reserve(MaxEvents);
 }
 
 //public
 void SpriteAnimator::process(float dt)
 {
+    m_animationEvents.clear();
+
     auto& entities = getEntities();
     for (auto& entity : entities) 
     {
@@ -53,7 +62,17 @@ void SpriteAnimator::process(float dt)
         if (animation.playing)
         {
             auto& sprite = entity.getComponent<Sprite>();
-            CRO_ASSERT(animation.id < sprite.m_animations.size(), "");
+
+            //TODO we need to somehow make sure this never gets
+            //set out of range - however the anim component doesn't
+            //know how many animations there are - given that they
+            //are stored in the sprite and could theoretically change at any time...
+            //CRO_ASSERT(animation.id < sprite.m_animations.size(), "");
+            if (animation.id >= sprite.m_animations.size())
+            {
+                animation.stop();
+                continue;
+            }
 
             //TODO this should be an assertion as we should never have
             //tried playing the animation in the first place...
@@ -62,6 +81,8 @@ void SpriteAnimator::process(float dt)
                 animation.stop();
                 continue;
             }
+            //really these two cases should be fixed by moving the frame
+            //data into the animation component, however this will break sprite sheets.
             
 
             animation.currentFrameTime -= dt;
@@ -84,8 +105,23 @@ void SpriteAnimator::process(float dt)
                         animation.frameID = std::max(animation.frameID, sprite.m_animations[animation.id].loopStart);
                     }
                 }
-                sprite.setTextureRect(sprite.m_animations[animation.id].frames[animation.frameID]);
+
+                const auto& frame = sprite.m_animations[animation.id].frames[animation.frameID];
+                sprite.setTextureRect(frame.frame);
+
+                if (frame.event != -1
+                    && m_animationEvents.size() < MaxEvents)
+                {
+                    m_animationEvents.emplace_back(entity, frame.event);
+                }
             }
         }
+    }
+
+    for (const auto& [entity, eventID] : m_animationEvents)
+    {
+        auto* msg = postMessage<cro::Message::SpriteAnimationEvent>(cro::Message::SpriteAnimationMessage);
+        msg->entity = entity;
+        msg->userType = eventID;
     }
 }

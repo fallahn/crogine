@@ -61,6 +61,7 @@ namespace cro
             StateMessage,
             ConsoleMessage,
             SkeletalAnimationMessage,
+            SpriteAnimationMessage,
             Count
         };
 
@@ -101,6 +102,10 @@ namespace cro
             std::int32_t entityID = -1;
         };
 
+        /*!
+        \brief Raised when ther is a State
+        change in the StateStack
+        */
         struct StateEvent final
         {
             enum
@@ -112,6 +117,10 @@ namespace cro
             std::int32_t id = -1;
         };
 
+        /*!
+        \brief Raised when the Console is opened,
+        closed, or a message is printed.
+        */
         struct ConsoleEvent final
         {
             enum
@@ -129,9 +138,19 @@ namespace cro
 
         struct SkeletalAnimEvent final
         {
-            std::int32_t userType = -1;
-            glm::vec3 position = glm::vec3(0.f); //local position of the joint which raised this event
-            Entity entity;
+            std::int32_t userType = -1; //! < User assigned event ID
+            glm::vec3 position = glm::vec3(0.f); //! < Local position of the joint which raised this event
+            Entity entity; //! < Entity which raised the event
+        };
+
+        /*!
+        \brief Raised when a Sprite animation frame is
+        set that has an event ID > -1 assigned to it.
+        */
+        struct SpriteAnimationEvent final
+        {
+            std::int32_t userType = -1; //! < User assigned event ID
+            Entity entity; //! < Entity which raised the event
         };
 
         ID id = -1;

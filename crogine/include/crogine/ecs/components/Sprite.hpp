@@ -134,13 +134,13 @@ namespace cro
         */
         struct Animation final
         {
-            /*!
-            \brief Maximum  length of animation id
-            */
-            static constexpr std::size_t MaxAnimationIdLength = 32;
-
-            std::vector<char> id;
-            std::vector<FloatRect> frames;
+            struct Frame final
+            {
+                Frame(FloatRect rect) : frame(rect) {}
+                FloatRect frame;
+                std::int32_t event = -1;
+            };
+            std::vector<Frame> frames;
             std::uint32_t loopStart = 0; //!< looped animations can jump to somewhere other than the beginning
             bool looped = false;
             float framerate = 12.f;

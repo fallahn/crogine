@@ -48,10 +48,19 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
+    case cro::Message::SpriteAnimationMessage:
+    {
+        const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
+        if (data.userType == 0)
+        {
+            //hmmmm how to discover the terrain?
+        }
+    }
+        break;
     case MessageID::CollisionMessage:
     {
         const auto& data = msg.getData<CollisionEvent>();
-        auto getEnt = [&](std::int32_t id)
+        const auto getEnt = [&](std::int32_t id)
         {
             auto entity = getNextEntity();
             entity.getComponent<cro::Transform>().setPosition(data.position);
