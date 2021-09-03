@@ -71,5 +71,11 @@ namespace cro
         {
             return std::any_cast<T&>(userData);
         }
+
+        template <typename T>
+        const T& getUserData() const
+        {
+            return std::any_cast<const T&>(userData);
+        }
     };
 }

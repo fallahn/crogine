@@ -53,6 +53,7 @@ source distribution.
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
 
@@ -60,7 +61,7 @@ source distribution.
 
 namespace
 {
-
+#include "RandNames.hpp"
 }
 
 void MenuCallback::operator()(cro::Entity e, float dt)
@@ -747,7 +748,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                         
                         if (m_sharedData.localConnectionData.playerData[index].name.empty())
                         {
-                            m_sharedData.localConnectionData.playerData[index].name = "Player " + std::to_string(index + 1);
+                            m_sharedData.localConnectionData.playerData[index].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
                         }
                         m_sharedData.localConnectionData.playerCount++;
 
@@ -1722,9 +1723,70 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //random
+    entity = createButton({ 42.f, 15.f }, "button_highlight");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>().addCallback(
+            [&, textEnt](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    //randomise name
+                    const auto& callback = textEnt.getComponent<cro::Callback>();
+                    m_sharedData.localConnectionData.playerData[callback.getUserData<std::uint8_t>()].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
+                    m_textEdit.string = &m_sharedData.localConnectionData.playerData[callback.getUserData<std::uint8_t>()].name;
+                    m_textEdit.entity = textEnt;
+                    applyTextEdit();
+                    
+
+                    //random colours
+                    std::int32_t prevIndex = 0;
+                    for (auto i = 0; i < 4; ++i)
+                    {
+                        auto paletteIdx = cro::Util::Random::value(0, pc::ColourID::Count - 1);
+
+                        //prevent getting the same colours in a row
+                        if (paletteIdx == prevIndex)
+                        {
+                            paletteIdx = (paletteIdx + 1) % pc::ColourID::Count;
+                        }
+
+                        m_playerAvatar.setColour(pc::ColourKey::Index(i), paletteIdx);
+                        m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].avatarFlags[i] = paletteIdx;
+
+                        prevIndex = paletteIdx;
+                    }
+
+
+                    //random skin
+                    auto skinID = cro::Util::Random::value(0, PlayerAvatar::MaxSkins - 1);
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].skinID = skinID;
+
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::Menu::PlayerAvatar;
+                    cmd.action = [&, skinID](cro::Entity en, float)
+                    {
+                        en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatar.previewRects[skinID]);
+
+                        if (skinID % 2)
+                        {
+                            en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                            en.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
+                        }
+                        else
+                        {
+                            en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                            en.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+                        }
+                    };
+                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                }
+            });
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //done
-    entity = createButton({ 75.f, 15.f }, "button_highlight");
+    entity = createButton({ 107.f, 15.f }, "button_highlight");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>().addCallback(
             [&, mouseEnter, mouseExit](cro::Entity, const cro::ButtonEvent& evt)
@@ -2182,6 +2244,6 @@ void MenuState::loadAvatars()
 
     if (m_sharedData.localConnectionData.playerData[0].name.empty())
     {
-        m_sharedData.localConnectionData.playerData[0].name = "Player 1";
+        m_sharedData.localConnectionData.playerData[0].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
     }
 }

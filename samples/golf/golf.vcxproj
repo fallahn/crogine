@@ -280,6 +280,7 @@
     <ClInclude Include="src\golf\PlayerAvatar.hpp" />
     <ClInclude Include="src\golf\PlayerColours.hpp" />
     <ClInclude Include="src\golf\PoissonDisk.hpp" />
+    <ClInclude Include="src\golf\RandNames.hpp" />
     <ClInclude Include="src\golf\ScoreStrings.hpp" />
     <ClInclude Include="src\golf\server\Server.hpp" />
     <ClInclude Include="src\golf\server\ServerGameState.hpp" />

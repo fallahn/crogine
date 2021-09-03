@@ -290,6 +290,9 @@
     <ClInclude Include="src\golf\TutorialState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\RandNames.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\WaterShader.inl">
