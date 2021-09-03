@@ -41,6 +41,7 @@ source distribution.
 #include "../ErrorCheck.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
+#include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -415,6 +416,33 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
+    cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
+    cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Effects);
+
+    //fade in entity
+    auto audioEnt = m_backgroundScene.createEntity();
+    audioEnt.addComponent<cro::Callback>().active = true;
+    audioEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
+    audioEnt.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        static constexpr float MaxTime = 2.f;
+
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(MaxTime, currTime + dt);
+        
+        float progress = currTime / MaxTime;
+        cro::AudioMixer::setPrefadeVolume(progress, MixerChannel::Music);
+        cro::AudioMixer::setPrefadeVolume(progress, MixerChannel::Effects);
+        
+        if(currTime == MaxTime)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_backgroundScene.destroyEntity(e);
+        }
+    };
+
+
     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
 
     cro::ModelDefinition md(m_resources);
@@ -502,7 +530,7 @@ void MenuState::createScene()
     for (auto i = 0u; i < 2u; ++i)
     {
         entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(-10000.f));
         entity.addComponent<GolfCart>();
         md.createModel(entity);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);

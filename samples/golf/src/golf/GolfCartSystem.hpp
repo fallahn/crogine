@@ -55,5 +55,6 @@ public:
 private:
 
     std::size_t m_nextFreePath;
+    float m_maxPitch;
     void onEntityAdded(cro::Entity) override;
 };

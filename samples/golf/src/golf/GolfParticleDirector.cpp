@@ -40,6 +40,8 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr)
     m_emitterSettings[ParticleID::Water].loadFromFile("assets/golf/particles/water.cps", tr);
     m_emitterSettings[ParticleID::Grass].loadFromFile("assets/golf/particles/dirt.cps", tr);
     m_emitterSettings[ParticleID::Sand].loadFromFile("assets/golf/particles/sand.cps", tr);
+
+    //hmm how to set smoothing on the texture?
 }
 
 //public
