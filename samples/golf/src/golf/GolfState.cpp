@@ -371,6 +371,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             msg2->position = m_currentPlayer.position;
             msg2->terrain = m_currentPlayer.terrain;
             msg2->club = static_cast<std::uint8_t>(getClub());
+
+            cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 0.5f, 100);
         }
     }
     break;

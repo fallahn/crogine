@@ -44,6 +44,7 @@ AudioEmitter::AudioEmitter()
     m_pitch             (1.f),
     m_volume            (1.f),
     m_rolloff           (1.f),
+    m_velocity          (0.f),
     m_mixerChannel      (0),
     m_transportFlags    (0),
     m_newDataSource     (false),
@@ -59,6 +60,7 @@ AudioEmitter::AudioEmitter(const AudioSource& dataSource)
     m_pitch             (1.f),
     m_volume            (1.f),
     m_rolloff           (1.f),
+    m_velocity          (0.f),
     m_mixerChannel      (0),
     m_transportFlags    (0),
     m_newDataSource     (true),
@@ -86,6 +88,7 @@ AudioEmitter::AudioEmitter(AudioEmitter&& other) noexcept
     std::swap(m_pitch, other.m_pitch);
     std::swap(m_volume, other.m_volume);
     std::swap(m_rolloff, other.m_rolloff);
+    std::swap(m_velocity, other.m_velocity);
     std::swap(m_mixerChannel, other.m_mixerChannel);
     std::swap(m_ID, other.m_ID);
     std::swap(m_dataSourceID, other.m_dataSourceID);
@@ -104,6 +107,7 @@ AudioEmitter& AudioEmitter::operator=(AudioEmitter&& other) noexcept
         std::swap(m_pitch, other.m_pitch);
         std::swap(m_volume, other.m_volume);
         std::swap(m_rolloff, other.m_rolloff);
+        std::swap(m_velocity, other.m_velocity);
         std::swap(m_mixerChannel, other.m_mixerChannel);
         std::swap(m_ID, other.m_ID);
         std::swap(m_dataSourceID, other.m_dataSourceID);
@@ -133,7 +137,7 @@ void AudioEmitter::play()
     /*
     Using these flags means there's a delay until the next
     AudioSystem updte which actually plays the sound, so we
-    set the status here so it  will return the expected value
+    set the status here so it will return the expected value
     on any immediate state queries. The AudioSystem will then
     update the state with the correct value.
     */
@@ -181,6 +185,11 @@ void AudioEmitter::setVolume(float volume)
 void AudioEmitter::setRolloff(float rolloff)
 {
     m_rolloff = std::max(0.f, rolloff);
+}
+
+void AudioEmitter::setVelocity(glm::vec3 velocity)
+{
+    m_velocity = velocity;
 }
 
 void AudioEmitter::setMixerChannel(std::uint8_t channel)

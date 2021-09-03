@@ -671,11 +671,14 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
 
     //this callback is overriden for the avatar previews
     mouseEnter = m_uiScene.getSystem<cro::UISystem>().addCallback(
-        [entity](cro::Entity e) mutable
+        [entity, avatarEnt](cro::Entity e) mutable
         {
-            static constexpr glm::vec3 Offset(68.f, 39.f, 0.f);
+            auto basePos = avatarEnt.getComponent<cro::Transform>().getPosition();
+            basePos -= avatarEnt.getComponent<cro::Transform>().getOrigin();
+
+            static constexpr glm::vec3 Offset(52.f, -7.f, 0.f);
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
-            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + Offset);
+            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + basePos + Offset);
             entity.getComponent<cro::Transform>().setScale(glm::vec2(-1.f, 1.f));
             entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
         });
@@ -1371,7 +1374,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
 {
     cro::Colour c(0.f, 0.f, 0.f, BackgroundAlpha);
     auto fadeNode = m_uiScene.createEntity();
-    fadeNode.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f }); //relative to bgNode!
+    fadeNode.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.4f }); //relative to bgNode!
     fadeNode.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(-0.5f, 0.5f), c),

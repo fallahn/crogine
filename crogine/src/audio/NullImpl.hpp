@@ -68,6 +68,7 @@ namespace cro
             void setSourcePitch(std::int32_t, float) override {}
             void setSourceVolume(std::int32_t, float) override {}
             void setSourceRolloff(std::int32_t, float) override {}
+            void setSourceVelocity(std::int32_t, glm::vec3) override {}
         };
     }
 }

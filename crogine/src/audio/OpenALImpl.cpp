@@ -503,3 +503,8 @@ void OpenALImpl::setSourceRolloff(std::int32_t src, float rolloff)
 {
     alCheck(alSourcef(src, AL_ROLLOFF_FACTOR, rolloff));
 }
+
+void OpenALImpl::setSourceVelocity(std::int32_t src, glm::vec3 velocity)
+{
+    alCheck(alSource3f(src, AL_VELOCITY, velocity.x, velocity.y, velocity.z));
+}

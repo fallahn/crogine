@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/audio/AudioSource.hpp>
 
+#include <crogine/detail/glm/vec3.hpp>
+
 namespace cro
 {
     /*!
@@ -131,6 +133,23 @@ namespace cro
         */
         float getRolloff() const { return m_rolloff; }
 
+        /*
+        \brief Sets the perceived velocity of the emitter.
+        Note that this stays set at the supplied value - it does not
+        automatically update with any motion of the entity to which
+        the emitter is connected.
+        The velocity of the emitter is used to calculate the doppler
+        effect of moving objects.
+        */
+        void setVelocity(glm::vec3 velocity);
+
+        /*!
+        \brief Returns the current velocity setting of the emitter
+        \see setVelocity()
+        */
+        glm::vec3 getVelocity() const { return m_velocity; }
+
+
         /*!
         \brief Sets the AudioMixer channel for the AudioEmitter.
         AudioEmitters may be grouped via AudioMixer channels, which
@@ -165,6 +184,7 @@ namespace cro
         float m_pitch;
         float m_volume;
         float m_rolloff;
+        glm::vec3 m_velocity;
 
         std::uint8_t m_mixerChannel;
 

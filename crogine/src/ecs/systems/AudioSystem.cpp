@@ -105,7 +105,7 @@ void AudioSystem::process(float)
         }
         //reset all flags, but preserve Loop flag
         audioSource.m_transportFlags &= AudioEmitter::Looped;
-        //check the actual state as we map have stopped...
+        //check the actual state as we may have stopped...
         audioSource.m_state = static_cast<AudioEmitter::State>(AudioRenderer::getSourceState(audioSource.m_ID));
 
         //check its position and update
@@ -118,9 +118,13 @@ void AudioSystem::process(float)
         }
 
         //check properties such as pitch and gain
-        AudioRenderer::setSourcePitch(audioSource.m_ID, audioSource.m_pitch);
-        AudioRenderer::setSourceVolume(audioSource.m_ID, audioSource.m_volume * AudioMixer::m_channels[audioSource.m_mixerChannel] * AudioMixer::m_prefadeChannels[audioSource.m_mixerChannel]);
-        AudioRenderer::setSourceRolloff(audioSource.m_ID, audioSource.m_rolloff);
+        if (audioSource.m_state == AudioEmitter::State::Playing)
+        {
+            AudioRenderer::setSourcePitch(audioSource.m_ID, audioSource.m_pitch);
+            AudioRenderer::setSourceVolume(audioSource.m_ID, audioSource.m_volume * AudioMixer::m_channels[audioSource.m_mixerChannel] * AudioMixer::m_prefadeChannels[audioSource.m_mixerChannel]);
+            AudioRenderer::setSourceRolloff(audioSource.m_ID, audioSource.m_rolloff);
+            AudioRenderer::setSourceVelocity(audioSource.m_ID, audioSource.m_velocity);
+        }
 
         //if we're steaming make sure to update the stream buffer
         if (audioSource.m_sourceType == AudioSource::Type::Stream)

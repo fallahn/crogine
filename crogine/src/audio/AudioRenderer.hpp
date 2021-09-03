@@ -92,6 +92,7 @@ namespace cro
         virtual void setSourcePitch(std::int32_t, float) = 0;
         virtual void setSourceVolume(std::int32_t, float) = 0;
         virtual void setSourceRolloff(std::int32_t, float) = 0;
+        virtual void setSourceVelocity(std::int32_t, glm::vec3) = 0;
     };
 
 
@@ -255,9 +256,14 @@ namespace cro
         static void setSourceVolume(std::int32_t src, float vol);
 
         /*!
-        \brief Sets the give source rolloff
+        \brief Sets the given source rolloff
         */
         static void setSourceRolloff(std::int32_t src, float rolloff);
+
+        /*
+        \brief Sets the given source velocity
+        */
+        static void setSourceVelocity(std::int32_t stc, glm::vec3 velocity);
 
     private:
         static std::unique_ptr<AudioRendererImpl> m_impl;

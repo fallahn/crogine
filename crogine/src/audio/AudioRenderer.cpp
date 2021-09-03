@@ -191,3 +191,9 @@ void AudioRenderer::setSourceRolloff(std::int32_t src, float rolloff)
     CRO_ASSERT(src > 0, "Not a valid src ID");
     m_impl->setSourceRolloff(src, rolloff);
 }
+
+void AudioRenderer::setSourceVelocity(std::int32_t src, glm::vec3 velocity)
+{
+    CRO_ASSERT(src > 0, "Not a valid src ID");
+    m_impl->setSourceVelocity(src, velocity);
+}

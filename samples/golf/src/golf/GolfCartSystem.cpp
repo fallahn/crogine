@@ -30,6 +30,7 @@ source distribution.
 #include "GolfCartSystem.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -139,6 +140,10 @@ void GolfCartSystem::process(float dt)
                 tx.setRotation(cro::Transform::Y_AXIS, cart.rotation);
 
                 tx.move(tx.getRightVector() * Speed * accel * dt);
+
+                //this just affects the doppler amount as the velocity is between 0 - 1 (assuming no scaling on the transform)
+                static constexpr float Exaggeration = 50.f;
+                entity.getComponent<cro::AudioEmitter>().setVelocity(tx.getForwardVector() * accel * Exaggeration);
             }
         }
     }

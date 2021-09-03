@@ -4,6 +4,6 @@ spritesheet lobby
 
     sprite background
     {
-        bounds = 0,0,288,152
+        bounds = 0,0,400,152
     }
 }
