@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,16 +29,37 @@ source distribution.
 
 #pragma once
 
-struct StateID final
+#include "../StateIDs.hpp"
+
+#include <crogine/core/State.hpp>
+
+#include <crogine/ecs/Scene.hpp>
+
+
+namespace cro
 {
-    enum
-    {
-        Menu,
-        Game,
-        Options,
-        Pause,
-        Error,
-        SplashScreen,
-        Tutorial
-    };
+    struct Camera;
+}
+
+class TutorialState final : public cro::State
+{
+public:
+    TutorialState(cro::StateStack&, cro::State::Context, struct SharedStateData&);
+
+    bool handleEvent(const cro::Event&) override;
+
+    void handleMessage(const cro::Message&) override;
+
+    bool simulate(float) override;
+
+    void render() override;
+
+    cro::StateID getStateID() const override { return StateID::Tutorial; }
+
+private:
+
+    cro::Scene m_scene;
+    SharedStateData& m_sharedData;
+
+    void buildScene();
 };

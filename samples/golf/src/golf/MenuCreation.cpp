@@ -519,11 +519,12 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-            m_uiScene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+            m_uiScene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
                 {
                     if (activated(evt))
                     {
-
+                        requestStackClear();
+                        requestStackPush(StateID::Tutorial);
                     }
                 });
         bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1041,7 +1042,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
     //banner
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 5.f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 5.f, -0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ButtonBanner];
     auto spriteRect = entity.getComponent<cro::Sprite>().getTextureRect();
@@ -1062,6 +1063,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 10.f, MenuBottomBorder };
+    entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Text>(font).setString("Back");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -1091,6 +1093,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 0.f, MenuBottomBorder };
     entity.getComponent<UIElement>().relativePosition = { 0.98f, 0.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Text>(font).setString("Join");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -1956,7 +1959,7 @@ void MenuState::updateLobbyData(const cro::NetEvent& evt)
 void MenuState::updateLobbyAvatars()
 {
     //TODO detect only the avatars which changed
-    //so we don't needlessly update textures
+    //so we don't needlessly update textures?
 
     cro::Command cmd;
     cmd.targetFlags = CommandID::Menu::LobbyList;
@@ -2008,8 +2011,9 @@ void MenuState::updateLobbyAvatars()
                 children.push_back(entity);
 
                 //add a ready status for that client
+                static constexpr glm::vec2 ReadyOffset(-12.f, -7.f);
                 entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ -12.f, -7.f});
+                entity.addComponent<cro::Transform>().setPosition(textPos + ReadyOffset);
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Callback>().active = true;
                 entity.getComponent<cro::Callback>().function =
@@ -2030,7 +2034,7 @@ void MenuState::updateLobbyAvatars()
                 e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                 children.push_back(entity);
 
-                textPos.y -= 12.f;
+                textPos.y -= 14.f;
                 h++;
             }
         }
