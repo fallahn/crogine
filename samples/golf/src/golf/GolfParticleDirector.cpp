@@ -45,23 +45,43 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr)
 //public
 void GolfParticleDirector::handleMessage(const cro::Message& msg)
 {
+    const auto getEnt = [&](std::int32_t id, glm::vec3 position)
+    {
+        auto entity = getNextEntity();
+        entity.getComponent<cro::Transform>().setPosition(position);
+        entity.getComponent<cro::ParticleEmitter>().settings = m_emitterSettings[id];
+        entity.getComponent<cro::ParticleEmitter>().start();
+        return entity;
+    };
+
     switch (msg.id)
     {
     default: break;
     case MessageID::GolfMessage:
-
+    {
+        const auto& data = msg.getData<GolfEvent>();
+        if (data.type == GolfEvent::ClubSwing)
+        {
+            switch (data.terrain)
+            {
+            default: break;
+            case TerrainID::Rough:
+            case TerrainID::Fairway:
+                getEnt(ParticleID::Grass, data.position);
+                break;
+            case TerrainID::Bunker:
+                getEnt(ParticleID::Sand, data.position);
+                break;
+            case TerrainID::Water:
+                getEnt(ParticleID::Water, data.position);
+                break;
+            }
+        }
+    }
         break;
     case MessageID::CollisionMessage:
     {
         const auto& data = msg.getData<CollisionEvent>();
-        const auto getEnt = [&](std::int32_t id)
-        {
-            auto entity = getNextEntity();
-            entity.getComponent<cro::Transform>().setPosition(data.position);
-            entity.getComponent<cro::ParticleEmitter>().settings = m_emitterSettings[id];
-            entity.getComponent<cro::ParticleEmitter>().start();
-            return entity;
-        };
 
         if (data.type == CollisionEvent::Begin)
         {
@@ -69,23 +89,13 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
             {
             default: break;
             case TerrainID::Rough:
-                getEnt(ParticleID::Grass);
+                getEnt(ParticleID::Grass, data.position);
                 break;
             case TerrainID::Bunker:
-                getEnt(ParticleID::Sand);
+                getEnt(ParticleID::Sand, data.position);
                 break;
             case TerrainID::Water:
-                getEnt(ParticleID::Water);
-                break;
-            }
-        }
-        else
-        {
-            switch (data.terrain)
-            {
-            default: break;
-            case TerrainID::Fairway:
-                getEnt(ParticleID::Grass);
+                getEnt(ParticleID::Water, data.position);
                 break;
             }
         }

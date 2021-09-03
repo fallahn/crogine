@@ -58,6 +58,7 @@ static const cro::Colour TextHighlightColour(0xb83530ff); //red
 //static const cro::Colour TextHighlightColour(0x006cd1ff); //cb blue 2
 static const cro::Colour TextGoldColour(0xf2cf5cff);
 static const cro::Colour TextOrangeColour(0xec773dff);
+static const cro::Colour TextGreenColour(0x6ebe70ff);
 static const cro::Colour LeaderboardTextDark(0x1a1e2dff);
 static const cro::Colour LeaderboardTextLight(0xfff8e1ff);
 

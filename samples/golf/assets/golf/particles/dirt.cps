@@ -1,6 +1,6 @@
 particle_system dirt
 {
-    src = 
+    src = "assets/golf/images/grass_particle.png"
     blendmode = "alpha"
     acceleration = 1.000000
     gravity = 0.000000,-4.375000,0.000000
@@ -8,7 +8,7 @@ particle_system dirt
     spread = 26.865999
     lifetime = 2.907000
     lifetime_variance = 0.000000
-    colour = 32.000000,68.000000,57.000000,255.000000
+    colour = 254.000000,255.000000,254.000000,255.000000
     random_initial_rotation = true
     rotation_speed = 0.000000
     scale_affector = 0.000000
@@ -19,10 +19,10 @@ particle_system dirt
     spawn_offset = 0.000000,0.000000,0.000000
     release_count = 10
     inherit_rotation = true
-    frame_count = 1
-    animate = false
-    random_frame = false
-    framerate = 1.000000
+    frame_count = 6
+    animate = true
+    random_frame = true
+    framerate = 5.000000
 
     forces 
     {
