@@ -69,7 +69,7 @@ namespace cro
             the data after the WavLoader has been destroyed results in
             undefined behaviour.
             */
-            const PCMData& getData(std::size_t chunkSize = 0) const override;
+            const PCMData& getData(std::size_t chunkSize = 0, bool looped = false) const override;
 
             /*!
             \brief Seek to a specific offset in the file.

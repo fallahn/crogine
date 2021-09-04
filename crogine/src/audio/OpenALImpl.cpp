@@ -53,7 +53,7 @@ using namespace cro::Detail;
 
 namespace
 {
-    constexpr std::size_t STREAM_CHUNK_SIZE = 48000u * sizeof(std::uint16_t) * 30; //30 sec of stereo @ highest quality (mono)
+    constexpr std::size_t STREAM_CHUNK_SIZE = 32768;// 48000u * sizeof(std::uint16_t) * 30; //30 sec of stereo @ highest quality (mono)
 
     ALenum getFormatFromData(const PCMData& data)
     {
@@ -79,7 +79,7 @@ namespace
         for (auto i = 0; i < stream.processed; ++i)
         {
             //fill buffer
-            auto data = stream.audioFile->getData(STREAM_CHUNK_SIZE);
+            auto data = stream.audioFile->getData(STREAM_CHUNK_SIZE, stream.looped);
             if (data.size > 0) //only update if we have data else we'll loop even if we don't want to
             {
                 //unqueue
@@ -93,11 +93,16 @@ namespace
 
                 //increment currentBuffer
                 stream.currentBuffer = (stream.currentBuffer + 1) % stream.buffers.size();
+                //LogI << "Data size " << data.size << std::endl;
             }
-            else if(stream.looped)
+            //else if(stream.looped)
+            //{
+            //    //rewind
+            //    stream.audioFile->seek(cro::Time());
+            //}
+            else
             {
-                //rewind
-                stream.audioFile->seek(cro::Time());
+                int buns = 0;
             }
         }
 
@@ -200,7 +205,7 @@ std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
         Logger::log(ext + ": format not supported", Logger::Type::Error);
     }
 
-    if(data.data)
+    if (data.data)
     {
         return requestNewBuffer(data);
     }
@@ -311,9 +316,11 @@ void OpenALImpl::updateStream(std::int32_t streamID)
         if (stream.processed > 0)
         {
             stream.updating = true;
-            SDL_DetachThread(stream.thread); //make sure to clean up any old threads
-            stream.thread = SDL_CreateThread(streamUpdate, nullptr, &stream);
+            //SDL_DetachThread(stream.thread); //make sure to clean up any old threads
+            //stream.thread = SDL_CreateThread(streamUpdate, nullptr, &stream);
             //LOG("Processed " + std::to_string(stream.processed) + " buffers", Logger::Type::Info);
+
+            streamUpdate(&stream);
         }
     }
 }
@@ -327,8 +334,8 @@ void OpenALImpl::deleteStream(std::int32_t id)
         stream.updating = false;
         //wait for thread to finish - we have to wait else
         //we can't be sure it's safe to delete the buffers
-        SDL_WaitThread(stream.thread, nullptr);
-        stream.thread = nullptr;
+        //SDL_WaitThread(stream.thread, nullptr);
+        //stream.thread = nullptr;
     } 
 
     if (stream.buffers[0])

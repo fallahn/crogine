@@ -110,17 +110,17 @@ bool VorbisLoader::open(const std::string& path)
     return true;
 }
 
-const PCMData& VorbisLoader::getData(std::size_t size) const
+const PCMData& VorbisLoader::getData(std::size_t size, bool looped) const
 {
     CRO_ASSERT(m_vorbisFile, "File not open");
     
     //according to stb the Vorbis spec allows reading no more than 4096 samples per channel at once
-    static const std::size_t readSize = 4096;
-    static const std::int32_t bytesPerSample = 2;
+    static constexpr std::size_t readSize = 4096;
+    static constexpr std::int32_t bytesPerSample = 2;
     
     
     //read entire file if size == 0
-    if(!size)
+    if (!size)
     {
         //limit this to ~ 1mb
         //larger files should be streamed
@@ -145,7 +145,22 @@ const PCMData& VorbisLoader::getData(std::size_t size) const
         idx += read;
         m_dataChunk.size += read;
 
-        if (read == 0) break; //EOF
+        if (read == 0)
+        {
+            if (!looped)
+            {
+                LogI << "EOF" << std::endl;
+                break; //EOF
+            }
+            else
+            {
+                //rewind to beginning of file and continue filling the buffer
+                //so that there's no gap in the loop (or we don't stop playing)
+                stb_vorbis_seek_start(m_vorbisFile);
+                LogI << "Rewind" << std::endl;
+            }
+        }
+        LogI << read << std::endl;
     }
     
     m_dataChunk.size *= bytesPerSample;

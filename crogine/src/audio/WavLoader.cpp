@@ -187,12 +187,12 @@ bool WavLoader::open(const std::string& path)
     return false; //no file :(
 }
 
-const PCMData& WavLoader::getData(std::size_t size) const
+const PCMData& WavLoader::getData(std::size_t size, bool looped) const
 {
     auto currPos = m_file.file->seek(m_file.file, 0, RW_SEEK_CUR);
 
-    //return null if at the end
-    if (currPos >= ((m_dataStart + m_dataSize) - 1) || currPos == -1)
+    //return null if failed
+    if (currPos == -1)
     {
         //return empty so we know we reached the end
         m_dataChunk.size = 0;
@@ -203,13 +203,31 @@ const PCMData& WavLoader::getData(std::size_t size) const
     std::size_t remain = (m_dataStart + m_dataSize) - currPos;
     std::size_t byteCount = (size > 0) ? std::min(remain, size) : remain;
 
-    if (m_sampleBuffer.size() < byteCount)
+    auto buffSize = std::max(size, byteCount);
+    if (m_sampleBuffer.size() < buffSize)
     {
-        m_sampleBuffer.resize(byteCount);
+        m_sampleBuffer.resize(buffSize);
     }
 
-    m_file.file->read(m_file.file, m_sampleBuffer.data(), byteCount, 1);
+    if (m_file.file->read(m_file.file, m_sampleBuffer.data(), byteCount, 1) == 0)
+    {
+        m_dataChunk.size = 0;
+        m_dataChunk.data = nullptr;
+        return m_dataChunk;
+    }
     
+    //go back to beginning of file if looped
+    if (remain < size
+        && looped)
+    {
+        auto fill = size - remain;
+        m_file.file->seek(m_file.file, m_dataStart, RW_SEEK_SET);
+        if (m_file.file->read(m_file.file, m_sampleBuffer.data() + byteCount, fill, 1))
+        {
+            byteCount += fill;
+        }
+    }
+
     m_dataChunk.size = static_cast<std::uint32_t>(byteCount);
     m_dataChunk.data = m_sampleBuffer.data();
     return m_dataChunk;

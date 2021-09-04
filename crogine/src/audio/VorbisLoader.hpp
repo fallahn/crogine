@@ -51,7 +51,7 @@ namespace cro
 
             bool open(const std::string&) override;
 
-            const PCMData& getData(std::size_t = 0) const override;
+            const PCMData& getData(std::size_t = 0, bool looped = false) const override;
 
             bool seek(cro::Time) override;
 

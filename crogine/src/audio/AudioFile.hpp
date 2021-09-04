@@ -58,9 +58,12 @@ namespace cro
             /*!
             \brief Returns a PCMData struct containing the requested
             chunk of decoded LPCM audio data.
+            \param chunkSize How much data is required to fill the PCMData
+            \param looped Whether or not filling the struct should loop back
+            to the beginning again once the end of the dile is reached
             \see PCMData
             */
-            virtual const PCMData& getData(std::size_t chunkSize = 0) const = 0;
+            virtual const PCMData& getData(std::size_t chunkSize = 0, bool looped = false) const = 0;
 
             /*!
             \brief seek to a specific offset in the file

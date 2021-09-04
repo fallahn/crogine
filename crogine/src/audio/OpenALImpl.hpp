@@ -52,12 +52,12 @@ namespace cro
     {
         struct OpenALStream final
         {
-            std::array<ALuint, 3> buffers{};
+            std::array<ALuint, 4u> buffers{};
             std::size_t currentBuffer = 0;
             std::unique_ptr<AudioFile> audioFile;
             std::atomic<bool> updating{ false };
             ALint processed = 0;
-            SDL_Thread* thread = nullptr;
+            //SDL_Thread* thread = nullptr;
             std::int32_t sourceID = -1;
             std::atomic<bool> looped{ false };
             ALenum state = AL_STOPPED;
