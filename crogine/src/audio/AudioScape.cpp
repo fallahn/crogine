@@ -100,14 +100,23 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
 
             if (!mediaPath.empty() && cro::FileSystem::fileExists(mediaPath))
             {
-                ac.audioBuffer = audioResource.load(mediaPath, streaming);
-                if (ac.audioBuffer != -1)
+                if (!streaming)
                 {
-                    m_configs.insert(std::make_pair(obj.getId(), ac));
+                    ac.audioBuffer = audioResource.load(mediaPath, false);
+                    if (ac.audioBuffer != -1)
+                    {
+                        m_configs.insert(std::make_pair(obj.getId(), ac));
+                    }
+                    else
+                    {
+                        LogW << "Failed opening file " << mediaPath << std::endl;
+                    }
                 }
                 else
                 {
-                    LogW << "Failed opening file " << mediaPath << std::endl;
+                    //load the streaming source when creating the emitters, as streams need to be unique
+                    ac.mediaPath = mediaPath;
+                    m_configs.insert(std::make_pair(obj.getId(), ac));
                 }
             }
             else
@@ -134,12 +143,26 @@ AudioEmitter AudioScape::getEmitter(const std::string& name) const
         && m_configs.count(name))
     {
         const auto& cfg = m_configs.at(name);
-        emitter.setSource(m_audioResource->get(cfg.audioBuffer));
         emitter.setMixerChannel(cfg.channel);
         emitter.setLooped(cfg.looped);
         emitter.setPitch(cfg.pitch);
         emitter.setRolloff(cfg.rolloff);
-        emitter.setVolume(cfg.volume);               
+        emitter.setVolume(cfg.volume);
+
+        if (cfg.audioBuffer > -1)
+        {
+            emitter.setSource(m_audioResource->get(cfg.audioBuffer));
+        }
+        else
+        {
+            //assume we're streaming
+            auto id = m_audioResource->load(cfg.mediaPath, true);
+
+            if (id > -1)
+            {
+                emitter.setSource(m_audioResource->get(id));
+            }
+        }
     }
     else
     {

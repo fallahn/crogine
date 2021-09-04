@@ -106,6 +106,7 @@ namespace cro
             float pitch = 1.f;
             float rolloff = 0.f;
             std::int32_t audioBuffer = -1;
+            std::string mediaPath;
 
             bool looped = false;
             std::uint8_t channel = 0;
