@@ -93,16 +93,6 @@ namespace
 
                 //increment currentBuffer
                 stream.currentBuffer = (stream.currentBuffer + 1) % stream.buffers.size();
-                //LogI << "Data size " << data.size << std::endl;
-            }
-            //else if(stream.looped)
-            //{
-            //    //rewind
-            //    stream.audioFile->seek(cro::Time());
-            //}
-            else
-            {
-                int buns = 0;
             }
         }
 

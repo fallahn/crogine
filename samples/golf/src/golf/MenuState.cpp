@@ -567,8 +567,8 @@ void MenuState::createScene()
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
 
     //add the ambience to the cam cos why not
-    /*camEnt.addComponent<cro::AudioEmitter>() = as.getEmitter("01");
-    camEnt.getComponent<cro::AudioEmitter>().play();*/
+    camEnt.addComponent<cro::AudioEmitter>() = as.getEmitter("01");
+    camEnt.getComponent<cro::AudioEmitter>().play();
 
     auto sunEnt = m_backgroundScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-0.967f*/-40.56f * cro::Util::Const::degToRad);

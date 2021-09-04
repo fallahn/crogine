@@ -149,7 +149,6 @@ const PCMData& VorbisLoader::getData(std::size_t size, bool looped) const
         {
             if (!looped)
             {
-                LogI << "EOF" << std::endl;
                 break; //EOF
             }
             else
@@ -157,10 +156,8 @@ const PCMData& VorbisLoader::getData(std::size_t size, bool looped) const
                 //rewind to beginning of file and continue filling the buffer
                 //so that there's no gap in the loop (or we don't stop playing)
                 stb_vorbis_seek_start(m_vorbisFile);
-                LogI << "Rewind" << std::endl;
             }
         }
-        LogI << read << std::endl;
     }
     
     m_dataChunk.size *= bytesPerSample;
