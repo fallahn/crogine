@@ -104,7 +104,7 @@ namespace cro
             ALCcontext* m_context;
 
             std::array<OpenALStream, 64u> m_streams = {};
-            std::array<std::size_t, 64u> m_streamIDs = {};
+            std::array<std::int32_t, 64u> m_streamIDs = {};
             std::int32_t m_nextFreeStream;
         };
     }

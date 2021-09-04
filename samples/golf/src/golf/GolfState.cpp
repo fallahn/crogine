@@ -1175,7 +1175,7 @@ void GolfState::initAudio()
         if (currTime > timeOut)
         {
             currTime = 0.f;
-            timeOut = static_cast<float>(cro::Util::Random::value(30, 70));
+            timeOut = static_cast<float>(cro::Util::Random::value(90, 170));
 
             if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
             {

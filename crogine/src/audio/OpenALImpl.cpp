@@ -271,17 +271,22 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     }
     
     alCheck(alGenBuffers(static_cast<ALsizei>(stream.buffers.size()), stream.buffers.data()));
-    //fill buffers from file
-    for (auto b : stream.buffers)
+
+    if (stream.buffers[0])
     {
-        auto audioData = stream.audioFile->getData(STREAM_CHUNK_SIZE);
-        alCheck(alBufferData(b, getFormatFromData(audioData), audioData.data, audioData.size, audioData.frequency));
+        //fill buffers from file
+        for (auto b : stream.buffers)
+        {
+            auto audioData = stream.audioFile->getData(STREAM_CHUNK_SIZE);
+            alCheck(alBufferData(b, getFormatFromData(audioData), audioData.data, audioData.size, audioData.frequency));
+        }
+
+        //hurrah we has stream
+        m_nextFreeStream++;
+
+        return streamID;
     }
-
-    //hurrah we has stream
-    m_nextFreeStream++;
-
-    return streamID;
+    return -1;
 }
 
 void OpenALImpl::updateStream(std::int32_t streamID)
@@ -329,25 +334,26 @@ void OpenALImpl::deleteStream(std::int32_t id)
     } 
 
     if (stream.buffers[0])
-    {        
+    {
         alCheck(alDeleteBuffers(static_cast<ALsizei>(stream.buffers.size()), stream.buffers.data()));
         std::fill(stream.buffers.begin(), stream.buffers.end(), 0);
         LOG("Deleted audio stream", Logger::Type::Info);
-    }
-    stream.audioFile.reset();
-    stream.currentBuffer = 0;
-    stream.processed = 0;
+
+        stream.audioFile.reset();
+        stream.currentBuffer = 0;
+        stream.processed = 0;
 
 
-    m_nextFreeStream--;
+        m_nextFreeStream--;
 
-    for (auto& i : m_streamIDs)
-    {
-        if (i == id)
+        for (auto& i : m_streamIDs)
         {
-            i = m_streamIDs[m_nextFreeStream];
-            m_streamIDs[m_nextFreeStream] = id;
-            break;
+            if (i == id)
+            {
+                i = m_streamIDs[m_nextFreeStream];
+                m_streamIDs[m_nextFreeStream] = id;
+                break;
+            }
         }
     }
 }
