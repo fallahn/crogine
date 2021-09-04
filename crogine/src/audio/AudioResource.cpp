@@ -52,7 +52,8 @@ AudioResource::AudioResource()
 //public
 bool AudioResource::load(std::int32_t ID, const std::string& path, bool streaming)
 {
-    if (m_sources.count(ID) > 0)
+    if (!streaming &&
+        m_sources.count(ID) > 0)
     {
         Logger::log("Data Source with ID " + std::to_string(ID) + " alread exists", Logger::Type::Error);
         return false;
@@ -80,7 +81,11 @@ bool AudioResource::load(std::int32_t ID, const std::string& path, bool streamin
 
 std::int32_t AudioResource::load(const std::string& path, bool streaming)
 {
-    if (m_usedPaths.count(path) != 0)
+    //streaming sources shouldn't be shared
+    //cos, well, they're streaming
+
+    if (!streaming &&
+        m_usedPaths.count(path) != 0)
     {
         return m_usedPaths.at(path);
     }

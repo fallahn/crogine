@@ -104,11 +104,14 @@ namespace
 }
 
 OpenALImpl::OpenALImpl()
-    : m_device  (nullptr),
-    m_context   (nullptr),
-    m_nextStream(0)
+    : m_device          (nullptr),
+    m_context           (nullptr),
+    m_nextFreeStream    (0)
 {
-
+    for (auto i = 0u; i < m_streamIDs.size(); ++i)
+    {
+        m_streamIDs[i] = i;
+    }
 }
 
 
@@ -229,14 +232,17 @@ void OpenALImpl::deleteBuffer(std::int32_t buffer)
 std::int32_t OpenALImpl::requestNewStream(const std::string& path)
 {
     //check we have available streams
-    if (m_nextStream >= m_streams.size())
+    if (m_nextFreeStream >= m_streams.size())
     {
         Logger::log("Maximum number of streams has been reached!", Logger::Type::Warning);
         return -1;
     }
 
+    auto streamID = m_streamIDs[m_nextFreeStream];
+
+
     //attempt to open the file
-    auto& stream = m_streams[m_nextStream];
+    auto& stream = m_streams[streamID];
     auto ext = FileSystem::getFileExtension(path);
     if (ext == ".wav")
     {
@@ -273,14 +279,8 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     }
 
     //hurrah we has stream
-    auto streamID = m_nextStream;
+    m_nextFreeStream++;
 
-    while (m_nextStream < m_streams.size()
-        && m_streams[m_nextStream].audioFile)
-    {
-        m_nextStream++;
-    }
-    
     return streamID;
 }
 
@@ -331,15 +331,24 @@ void OpenALImpl::deleteStream(std::int32_t id)
     if (stream.buffers[0])
     {        
         alCheck(alDeleteBuffers(static_cast<ALsizei>(stream.buffers.size()), stream.buffers.data()));
+        std::fill(stream.buffers.begin(), stream.buffers.end(), 0);
         LOG("Deleted audio stream", Logger::Type::Info);
     }
     stream.audioFile.reset();
     stream.currentBuffer = 0;
     stream.processed = 0;
 
-    if (id < m_nextStream)
+
+    m_nextFreeStream--;
+
+    for (auto& i : m_streamIDs)
     {
-        m_nextStream = id;
+        if (i == id)
+        {
+            i = m_streamIDs[m_nextFreeStream];
+            m_streamIDs[m_nextFreeStream] = id;
+            break;
+        }
     }
 }
 

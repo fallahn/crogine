@@ -40,7 +40,7 @@ AudioStream::AudioStream()
 
 AudioStream::~AudioStream()
 {
-    if (getID() > 0)
+    if (getID() > -1)
     {
         AudioRenderer::deleteStream(getID());
         setID(-1);

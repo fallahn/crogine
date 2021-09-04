@@ -103,8 +103,9 @@ namespace cro
             ALCdevice* m_device;
             ALCcontext* m_context;
 
-            std::array<OpenALStream, 64> m_streams = {};
-            std::int32_t m_nextStream;
+            std::array<OpenALStream, 64u> m_streams = {};
+            std::array<std::size_t, 64u> m_streamIDs = {};
+            std::int32_t m_nextFreeStream;
         };
     }
 }

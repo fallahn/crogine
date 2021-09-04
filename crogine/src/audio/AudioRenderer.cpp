@@ -114,7 +114,7 @@ void AudioRenderer::updateStream(std::int32_t id)
 
 void AudioRenderer::deleteStream(std::int32_t id)
 {
-    CRO_ASSERT(id > 0, "Must be a valid ID");
+    CRO_ASSERT(id > -1, "Must be a valid ID");
     m_impl->deleteStream(id);
 }
 
