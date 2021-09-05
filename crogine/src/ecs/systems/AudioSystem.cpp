@@ -54,6 +54,7 @@ void AudioSystem::process(float)
     //update the scene's listener details
     const auto& listener = getScene()->getActiveListener();
     AudioRenderer::setListenerVolume(listener.getComponent<AudioListener>().getVolume() * AudioMixer::m_masterVol);
+    AudioRenderer::setListenerVelocity(listener.getComponent<AudioListener>().getVelocity());
     const auto& tx = listener.getComponent<Transform>();
     auto worldPos = tx.getWorldPosition();
     AudioRenderer::setListenerPosition(worldPos);
@@ -108,29 +109,24 @@ void AudioSystem::process(float)
         //check the actual state as we may have stopped...
         audioSource.m_state = static_cast<AudioEmitter::State>(AudioRenderer::getSourceState(audioSource.m_ID));
 
-        //check its position and update
-        if (entity.hasComponent<Transform>())
-        {
-            //set position
-            auto pos = entity.getComponent<Transform>().getWorldPosition();
-            AudioRenderer::setSourcePosition(audioSource.m_ID, pos);
-            //DPRINT("Sound Position", std::to_string(worldPos.x) + ", " + std::to_string(worldPos.y) + ", " + std::to_string(worldPos.z));
-        }
 
         //check properties such as pitch and gain
         if (audioSource.m_state == AudioEmitter::State::Playing)
         {
+            //hmm these are static funcs so could be called directly by component setters, no?
             AudioRenderer::setSourcePitch(audioSource.m_ID, audioSource.m_pitch);
             AudioRenderer::setSourceVolume(audioSource.m_ID, audioSource.m_volume * AudioMixer::m_channels[audioSource.m_mixerChannel] * AudioMixer::m_prefadeChannels[audioSource.m_mixerChannel]);
             AudioRenderer::setSourceRolloff(audioSource.m_ID, audioSource.m_rolloff);
             AudioRenderer::setSourceVelocity(audioSource.m_ID, audioSource.m_velocity);
-        }
 
-        //if we're streaming make sure to update the stream buffer
-        /*if (audioSource.m_sourceType == AudioSource::Type::Stream)
-        {
-            AudioRenderer::updateStream(audioSource.m_dataSourceID);
-        }*/
+            //check its position and update
+            if (entity.hasComponent<Transform>())
+            {
+                //set position
+                auto pos = entity.getComponent<Transform>().getWorldPosition();
+                AudioRenderer::setSourcePosition(audioSource.m_ID, pos);
+            }
+        }
     }
 }
 

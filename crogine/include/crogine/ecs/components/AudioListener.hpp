@@ -53,21 +53,34 @@ namespace cro
         A volume of 0 will mute all audio, 1 plays back at 'normal' volume
         and anything greater will amplify any sounds heard by the listener.
         */
-        void setVolume(float volume)
-        {
-            m_volume = std::max(0.f, volume);
-        }
+        void setVolume(float volume) { m_volume = std::max(0.f, volume); }
 
         /*!
         \brief Returns the current volume of the listener
         */
-        float getVolume() const
-        {
-            return m_volume;
-        }
+        float getVolume() const { return m_volume; }
+
+        /*!
+        \brief Sets the perceived velocity of the Listener.
+        This is used by the AudioRenderer to calculate the doppler effect when
+        moving the Listener past an Emitter.
+        Note that this is not automatically calculated and needs to be set
+        explicitly by the user. The default units are metres per second.
+        \see AudioRenderer::setDopplerFactor()
+        \see AudioRenderer::setSpeedOfSound()
+        */
+        void setVelocity(glm::vec3 velocity) { m_velocity = velocity; }
+
+        /*!
+        \brief Returns the current Listener velocity.
+        \see setVelocity()
+        \returns A 3D vector representing the velocity in world units
+        */
+        glm::vec3 getVelocity() const { return m_velocity; }
 
     private:
         friend class AudioSystem;
         float m_volume = 1.f;
+        glm::vec3 m_velocity = glm::vec3(0.f);
     };
 }

@@ -45,13 +45,13 @@ namespace cro
             void setListenerPosition(glm::vec3) override {}
             void setListenerOrientation(glm::vec3, glm::vec3) override {}
             void setListenerVolume(float) override {}
+            void setListenerVelocity(glm::vec3) override {}
 
             std::int32_t requestNewBuffer(const std::string&) override { return -1; }
             std::int32_t requestNewBuffer(const Detail::PCMData&) override { return -1; }
             void deleteBuffer(std::int32_t) override {}
 
             std::int32_t requestNewStream(const std::string&) override { return -1; }
-            void updateStream(std::int32_t) override {}
             void deleteStream(std::int32_t) override {}
 
             std::int32_t requestAudioSource(std::int32_t, bool) override { return -1; }
@@ -69,6 +69,8 @@ namespace cro
             void setSourceVolume(std::int32_t, float) override {}
             void setSourceRolloff(std::int32_t, float) override {}
             void setSourceVelocity(std::int32_t, glm::vec3) override {}
+            void setDopplerFactor(float) override {}
+            void setSpeedOfSound(float) override {}
         };
     }
 }

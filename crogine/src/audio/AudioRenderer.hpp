@@ -47,9 +47,7 @@ namespace cro
     /*!
     \brief Defines the interface for an audio renderer.
     Allows for definining multiple rendersystems for targetting different
-    platforms. For example by default desktop platforms use an OpenAL renderer
-    while mobile devices use SDL_mixer. To force a particular renderer define
-    AL_AUDIO or SDL_AUDIO when building crogine.
+    platforms. Currently only OpenAL is implemented as a renderer.
     */
     class AudioRendererImpl
     {
@@ -68,13 +66,13 @@ namespace cro
         virtual void setListenerPosition(glm::vec3) = 0;
         virtual void setListenerOrientation(glm::vec3, glm::vec3) = 0;
         virtual void setListenerVolume(float) = 0;
+        virtual void setListenerVelocity(glm::vec3) = 0;
 
         virtual std::int32_t requestNewBuffer(const std::string&) = 0;
         virtual std::int32_t requestNewBuffer(const Detail::PCMData&) = 0;
         virtual void deleteBuffer(std::int32_t) = 0;
 
         virtual std::int32_t requestNewStream(const std::string&) = 0;
-        virtual void updateStream(std::int32_t) = 0;
         virtual void deleteStream(std::int32_t) = 0;
 
         //note that this is the openAL source, not the buffer or stream behind it
@@ -93,12 +91,20 @@ namespace cro
         virtual void setSourceVolume(std::int32_t, float) = 0;
         virtual void setSourceRolloff(std::int32_t, float) = 0;
         virtual void setSourceVelocity(std::int32_t, glm::vec3) = 0;
+        virtual void setDopplerFactor(float) = 0;
+        virtual void setSpeedOfSound(float) = 0;
     };
 
 
     /*!
     \brief AudioRenderer accessor class.
     Provides static access to the current audio renderer in a unified way.
+
+    Note that, while these functions can be accessed anywhere from within
+    crogine, an AudioSystem active in a Scene will call these automatically
+    to update any active AudioEmitters and the Scene's listener. Depending
+    on the order in which they are used manually calling these functions may
+    overwrite the output of an AudioSystem or vice versa.
     */
     class AudioRenderer final
     {
@@ -106,7 +112,7 @@ namespace cro
         /*!
         \brief Called by the main app at startup.
         This should be used to create any contexts or initialise audio
-        hardware. Return true on success, else return false
+        hardware. Returns true on success, else return false
         */
         static bool init();
 
@@ -141,11 +147,19 @@ namespace cro
         static void setListenerOrientation(glm::vec3 forward, glm::vec3 up);
 
         /*!
-        \brief Sets the master volum of the listener.
+        \brief Sets the master volume of the listener.
         \param volume A positive value to set as the max gain of the
         listener. Negative values are automatically clamped to 0.
         */
         static void setListenerVolume(float volume);
+
+        /*!
+        \brief Sets the velocity value of the Listener.
+        The velocity is used by the AudioRenderer to calculate doppler effects.
+        \param velocity A vector 3 representing the current velocity of the Listener.
+        By default this is in metres per second.
+        */
+        static void setListenerVelocity(glm::vec3 velocity);
 
         /*!
         \brief Requests a new buffer be created from the file at the given string.
@@ -174,11 +188,6 @@ namespace cro
         \returns ID of stream, or -1 if opening the file failed
         */
         static std::int32_t requestNewStream(const std::string& path);
-
-        /*!
-        \brief Updates the stream belonging to the given ID
-        */
-        static void updateStream(std::int32_t);
 
         /*!
         \brief Deletes the stream with the given ID, if it exists
@@ -263,7 +272,27 @@ namespace cro
         /*
         \brief Sets the given source velocity
         */
-        static void setSourceVelocity(std::int32_t stc, glm::vec3 velocity);
+        static void setSourceVelocity(std::int32_t src, glm::vec3 velocity);
+
+        /*!
+        \brief Sets the doppler effect multiplier.
+        This has the effects of multiplying the current source and listener velocities
+        for an increased or more subtle doppler effect. Must be a positive value.
+        Default value is 1
+        \param multiplier Effect multiplier value
+        */
+        static void setDopplerFactor(float multiplier);
+
+        /*!
+        \brief Sets the percieved speed of sound.
+        This is used when calculating pitch change during doppler effects. By 
+        default this value is 343.3 which is the approximate metres per second
+        sound travels through air. Setting this to a lower value will simulate
+        sound as it travels through water, for example
+        Must be greater than zero.
+        \param speed Speed at which sound is to be simulated in world units
+        */
+        static void setSpeedOfSound(float speed);
 
     private:
         static std::unique_ptr<AudioRendererImpl> m_impl;

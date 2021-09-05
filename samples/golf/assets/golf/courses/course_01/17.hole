@@ -5,5 +5,5 @@ hole 17
     pin = 100, 143
     target = 160, 138
     tee = 215, 61
-    par = 2
+    par = 3
 }

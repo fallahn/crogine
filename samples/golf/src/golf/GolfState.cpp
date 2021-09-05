@@ -71,6 +71,7 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/BillboardCollection.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
+#include <crogine/ecs/components/AudioListener.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
@@ -2074,6 +2075,8 @@ void GolfState::createTransition(const ActivePlayer& playerData)
             setCameraPosition(playerData.position, targetInfo.targetHeight, targetInfo.targetOffset);
             setCurrentPlayer(playerData);
 
+            m_gameScene.getActiveListener().getComponent<cro::AudioListener>().setVelocity(glm::vec3(0.f));
+
             e.getComponent<cro::Callback>().active = false;
             m_gameScene.destroyEntity(e);
         }
@@ -2093,6 +2096,8 @@ void GolfState::createTransition(const ActivePlayer& playerData)
             setCameraPosition(e.getComponent<cro::Transform>().getPosition(), 
                 targetInfo.startHeight + (height * percent), 
                 targetInfo.startOffset + (offset * percent));
+
+            m_gameScene.getActiveListener().getComponent<cro::AudioListener>().setVelocity(travel * Speed);
         }
     };
 }

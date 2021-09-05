@@ -86,6 +86,11 @@ void AudioRenderer::setListenerVolume(float volume)
     m_impl->setListenerVolume(std::max(0.f, volume));
 }
 
+void AudioRenderer::setListenerVelocity(glm::vec3 velocity)
+{
+    m_impl->setListenerVelocity(velocity);
+}
+
 std::int32_t AudioRenderer::requestNewBuffer(const std::string& path)
 {
     return m_impl->requestNewBuffer(path);
@@ -104,12 +109,6 @@ void AudioRenderer::deleteBuffer(std::int32_t buffer)
 std::int32_t AudioRenderer::requestNewStream(const std::string& path)
 {
     return m_impl->requestNewStream(path);
-}
-
-void AudioRenderer::updateStream(std::int32_t id)
-{
-    CRO_ASSERT(id > -1, "Must be a valid ID");
-    m_impl->updateStream(id);
 }
 
 void AudioRenderer::deleteStream(std::int32_t id)
@@ -196,4 +195,16 @@ void AudioRenderer::setSourceVelocity(std::int32_t src, glm::vec3 velocity)
 {
     CRO_ASSERT(src > 0, "Not a valid src ID");
     m_impl->setSourceVelocity(src, velocity);
+}
+
+void AudioRenderer::setDopplerFactor(float factor)
+{
+    CRO_ASSERT(factor >= 0, "Must not be negative");
+    m_impl->setDopplerFactor(std::max(0.f, factor));
+}
+
+void AudioRenderer::setSpeedOfSound(float speed)
+{
+    CRO_ASSERT(speed > 0, "Must be more than 0");
+    m_impl->setSpeedOfSound(std::max(0.01f, speed));
 }

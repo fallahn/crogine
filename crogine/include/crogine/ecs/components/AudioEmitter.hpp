@@ -140,6 +140,8 @@ namespace cro
         the emitter is connected.
         The velocity of the emitter is used to calculate the doppler
         effect of moving objects.
+        \see AudioRenderer::setDopplerFactor()
+        \see AudioRenderer::setSpeedOfSound()
         */
         void setVelocity(glm::vec3 velocity);
 

@@ -70,37 +70,6 @@ namespace
             return AL_FORMAT_STEREO16;
         }
     }
-
-    //called in its own thread to update stream buffers
-    //int streamUpdate(void* s)
-    //{
-    //    OpenALStream& stream = *(OpenALStream*)s;
-
-    //    for (auto i = 0; i < stream.processed; ++i)
-    //    {
-    //        //fill buffer
-    //        auto data = stream.audioFile->getData(STREAM_CHUNK_SIZE, stream.looped);
-    //        if (data.size > 0) //only update if we have data else we'll loop even if we don't want to
-    //        {
-    //            //unqueue
-    //            alCheck(alSourceUnqueueBuffers(stream.sourceID, 1, &stream.buffers[stream.currentBuffer]));
-    //            
-    //            //refill
-    //            alCheck(alBufferData(stream.buffers[stream.currentBuffer], getFormatFromData(data), data.data, data.size, data.frequency));
-
-    //            //requeue
-    //            alCheck(alSourceQueueBuffers(stream.sourceID, 1, &stream.buffers[stream.currentBuffer]));
-
-    //            //increment currentBuffer
-    //            stream.currentBuffer = (stream.currentBuffer + 1) % stream.buffers.size();
-    //        }
-    //    }
-
-    //    stream.updating = false;
-    //    stream.processed = 0;
-
-    //    return 0;
-    //}
 }
 
 OpenALImpl::OpenALImpl()
@@ -177,6 +146,11 @@ void OpenALImpl::setListenerOrientation(glm::vec3 forward, glm::vec3 up)
 void OpenALImpl::setListenerVolume(float volume)
 {
     alCheck(alListenerf(AL_GAIN, volume));
+}
+
+void OpenALImpl::setListenerVelocity(glm::vec3 velocity)
+{
+    alCheck(alListener3f(AL_VELOCITY, velocity.x, velocity.y, velocity.z));
 }
 
 std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
@@ -302,37 +276,6 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
         return streamID;
     }
     return -1;
-}
-
-void OpenALImpl::updateStream(std::int32_t streamID)
-{
-    //auto& stream = m_streams[streamID];
-    //if (!stream.updating)
-    //{
-    //    alCheck(alGetSourcei(stream.sourceID, AL_BUFFERS_PROCESSED, &stream.processed));
-    //    /*ALint queued;
-    //    alCheck(alGetSourcei(stream.sourceID, AL_BUFFERS_QUEUED, &queued));
-    //    DPRINT("Queued Buffers", std::to_string(queued));*/
-
-    //    //if stopped rewind file and load buffers
-    //    ALenum state;
-    //    alCheck(alGetSourcei(stream.sourceID, AL_SOURCE_STATE, &state));
-    //    if (state == AL_STOPPED && state != stream.state)
-    //    {
-    //        stream.audioFile->seek(cro::Time());
-    //        stream.processed = static_cast<ALint>(stream.buffers.size());
-    //    }
-    //    stream.state = state;
-
-    //    if (stream.processed > 0)
-    //    {
-    //        stream.updating = true;
-
-    //        m_mutex.lock();
-    //        m_pendingUpdates.push_back(&stream);
-    //        m_mutex.unlock();
-    //    }
-    //}
 }
 
 void OpenALImpl::deleteStream(std::int32_t id)
@@ -551,6 +494,16 @@ void OpenALImpl::setSourceVelocity(std::int32_t src, glm::vec3 velocity)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     alCheck(alSource3f(src, AL_VELOCITY, velocity.x, velocity.y, velocity.z));
+}
+
+void OpenALImpl::setDopplerFactor(float factor)
+{
+    alCheck(alDopplerFactor(factor));
+}
+
+void OpenALImpl::setSpeedOfSound(float speed)
+{
+    alCheck(alSpeedOfSound(speed));
 }
 
 //private

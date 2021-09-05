@@ -76,13 +76,13 @@ namespace cro
             void setListenerPosition(glm::vec3) override;
             void setListenerOrientation(glm::vec3, glm::vec3) override;
             void setListenerVolume(float) override;
+            void setListenerVelocity(glm::vec3) override;
 
             std::int32_t requestNewBuffer(const std::string& path) override;
             std::int32_t requestNewBuffer(const PCMData&) override;
             void deleteBuffer(std::int32_t) override;
 
             std::int32_t requestNewStream(const std::string&) override;
-            void updateStream(std::int32_t) override;
             void deleteStream(std::int32_t) override;
 
             std::int32_t requestAudioSource(std::int32_t, bool) override;
@@ -100,6 +100,8 @@ namespace cro
             void setSourceVolume(std::int32_t, float) override;
             void setSourceRolloff(std::int32_t, float) override;
             void setSourceVelocity(std::int32_t, glm::vec3) override;
+            void setDopplerFactor(float) override;
+            void setSpeedOfSound(float) override;
 
         private:
             ALCdevice* m_device;
