@@ -29,10 +29,14 @@ source distribution.
 
 #include "GolfSoundDirector.hpp"
 #include "MessageIDs.hpp"
+#include "Terrain.hpp"
 
 #include <crogine/audio/AudioResource.hpp>
 
 #include <crogine/ecs/components/AudioEmitter.hpp>
+#include <crogine/ecs/components/Transform.hpp>
+
+#include <crogine/util/Random.hpp>
 
 GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
 {
@@ -46,6 +50,13 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/ball/swing01.wav",
         "assets/golf/sound/ball/swing02.wav",
         "assets/golf/sound/ball/swing03.wav",
+
+        "assets/golf/sound/ball/wedge01.wav",
+
+        "assets/golf/sound/ball/holed.wav",
+        "assets/golf/sound/ball/splash.wav",
+        "assets/golf/sound/ball/drop.wav",
+        "assets/golf/sound/ball/scrub.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -55,6 +66,11 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         if (id != -1)
         {
             m_audioSources[i] = &ar.get(id);
+        }
+        else
+        {
+            //get a default sound so we at least don't have nullptr
+            m_audioSources[i] = &ar.get(1010101);
         }
     }
 }
@@ -66,7 +82,59 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
     {
     default: break;
     case MessageID::GolfMessage:
+    {
+        const auto& data = msg.getData<GolfEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case GolfEvent::ClubSwing:
+        {
+            auto ent = getNextEntity();
 
+            if (data.terrain == TerrainID::Green)
+            {
+                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[cro::Util::Random::value(AudioID::Putt01, AudioID::Putt03)]);
+            }
+            else if (data.terrain == TerrainID::Bunker)
+            {
+                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[AudioID::Wedge]);
+            }
+            else
+            {
+                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[cro::Util::Random::value(AudioID::Swing01, AudioID::Swing03)]);
+            }
+            ent.getComponent<cro::AudioEmitter>().play();
+            ent.getComponent<cro::Transform>().setPosition(data.position);
+        }
+            break;
+        }
+    }
+        break;
+    case MessageID::CollisionMessage:
+    {
+        const auto& data = msg.getData<CollisionEvent>();
+        if (data.type == CollisionEvent::Begin)
+        {
+            auto ent = getNextEntity();
+            switch (data.terrain)
+            {
+            default:
+                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[AudioID::Ground]);
+                break;
+            case TerrainID::Water:
+                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[AudioID::Water]);
+                break;
+            case TerrainID::Hole:
+                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[AudioID::Hole]);
+                break;
+            case TerrainID::Scrub:
+                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[AudioID::Scrub]);
+                break;
+            }
+            ent.getComponent<cro::AudioEmitter>().play();
+            ent.getComponent<cro::Transform>().setPosition(data.position);
+        }
+    }
         break;
     }
 }

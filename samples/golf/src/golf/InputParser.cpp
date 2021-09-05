@@ -345,7 +345,7 @@ void InputParser::update(float dt)
             if ((m_prevFlags & InputFlag::PrevClub) == 0
                 && (m_inputFlags & InputFlag::PrevClub))
             {
-                m_currentClub = (m_currentClub + ClubID::PitchWedge) % ClubID::Putter;
+                m_currentClub = (m_currentClub + 1) % ClubID::Putter;
 
                 auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
@@ -354,7 +354,7 @@ void InputParser::update(float dt)
             if ((m_prevFlags & InputFlag::NextClub) == 0
                 && (m_inputFlags & InputFlag::NextClub))
             {
-                m_currentClub = (m_currentClub + 1) % ClubID::Putter;
+                m_currentClub = (m_currentClub + ClubID::PitchWedge) % ClubID::Putter;
 
                 auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;

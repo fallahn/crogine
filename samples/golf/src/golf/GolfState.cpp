@@ -119,7 +119,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     : cro::State        (stack, context),
     m_sharedData        (sd),
     m_gameScene         (context.appInstance.getMessageBus()),
-    m_uiScene           (context.appInstance.getMessageBus()),
+    m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
     m_wantsGameState    (true),
     m_currentHole       (0),
@@ -1165,10 +1165,17 @@ void GolfState::initAudio()
     //random plane audio
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::AudioEmitter>() = as.getEmitter("plane");
+    auto plane01 = entity;
+
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("plane02");
+    auto plane02 = entity;
+
+    entity = m_gameScene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<std::pair<float, float>>(0.f, static_cast<float>(cro::Util::Random::value(12, 64)));
     entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [plane01, plane02](cro::Entity e, float dt) mutable
     {
         auto& [currTime, timeOut] = e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>();
         currTime += dt;
@@ -1178,9 +1185,10 @@ void GolfState::initAudio()
             currTime = 0.f;
             timeOut = static_cast<float>(cro::Util::Random::value(90, 170));
 
-            if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+            auto ent = cro::Util::Random::value(0, 20) % 2 == 0 ? plane01 : plane02;
+            if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
             {
-                e.getComponent<cro::AudioEmitter>().play();
+                ent.getComponent<cro::AudioEmitter>().play();
             }
         }
     };

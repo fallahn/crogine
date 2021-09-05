@@ -30,6 +30,7 @@ source distribution.
 #include "ClientCollisionSystem.hpp"
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
+#include "BallSystem.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 
@@ -37,7 +38,7 @@ source distribution.
 
 namespace
 {
-    constexpr float MinBallDist = HoleRadius * HoleRadius;
+    constexpr float MinBallDist = (HoleRadius * 1.1f) * (HoleRadius * 1.1f);
 }
 
 ClientCollisionSystem::ClientCollisionSystem(cro::MessageBus& mb, const std::vector<HoleData>& hd)
@@ -99,6 +100,12 @@ void ClientCollisionSystem::process(float)
             }
             else if (collider.previousPosition.y > CollisionLevel)
             {
+                notify(CollisionEvent::Begin, position);
+            }
+            else if (position.y < -Ball::Radius
+                && collider.previousPosition.y > -Ball::Radius)
+            {
+                //we're in the hole. Probably.
                 notify(CollisionEvent::Begin, position);
             }
         }

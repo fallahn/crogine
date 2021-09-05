@@ -57,7 +57,12 @@ private:
             Swing02,
             Swing03,
 
+            Wedge,
 
+            Hole,
+            Water,
+            Ground,
+            Scrub,
 
             Count
         };
