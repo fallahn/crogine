@@ -149,7 +149,7 @@ bool GolfGame::initialise()
         });
 
     getWindow().setLoadingScreen<LoadingScreen>();
-    getWindow().setTitle("Lotec Golf!");
+    getWindow().setTitle("Golf Game");
 
     cro::AudioMixer::setLabel("Music", MixerChannel::Music);
     cro::AudioMixer::setLabel("Effects", MixerChannel::Effects);

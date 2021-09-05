@@ -132,8 +132,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     context.mainWindow.loadResources([this]() {
         loadAssets();
         addSystems();
-        buildScene();
         initAudio();
+        buildScene();
         });
 
     context.mainWindow.setMouseCaptured(true);
@@ -1108,6 +1108,7 @@ void GolfState::buildScene()
     cam.resizeCallback = updateView;
     updateView(cam);
 
+
     //used by transition callback to interp camera
     camEnt.addComponent<TargetInfo>().waterPlane = waterEnt;
     camEnt.getComponent<TargetInfo>().targetLookAt = m_holeData[0].target;
@@ -1192,6 +1193,10 @@ void GolfState::initAudio()
             }
         }
     };
+
+
+    //put the new hole music on the cam for accessabilty
+    m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>() = as.getEmitter("music");
 }
 
 void GolfState::spawnBall(const ActorInfo& info)
@@ -1594,6 +1599,9 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             //remove the transition ent
             e.getComponent<cro::Callback>().active = false;
             m_gameScene.destroyEntity(e);
+
+            //play the music
+            m_gameScene.getActiveCamera().getComponent<cro::AudioEmitter>().play();
         }
         else
         {

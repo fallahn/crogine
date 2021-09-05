@@ -12,7 +12,7 @@ particle_system sand
     random_initial_rotation = true
     rotation_speed = 0.000000
     scale_affector = 0.000000
-    size = 0.010000
+    size = 0.022000
     emit_rate = 10.000000
     emit_count = 10
     spawn_radius = 0.060000

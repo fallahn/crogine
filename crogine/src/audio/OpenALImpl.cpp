@@ -467,32 +467,32 @@ std::int32_t OpenALImpl::getSourceState(std::int32_t source) const
 
 void OpenALImpl::setSourcePosition(std::int32_t source, glm::vec3 position)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    //std::lock_guard<std::mutex> lock(m_mutex);
     alCheck(alSource3f(source, AL_POSITION, position.x, position.y, position.z));
     //DPRINT("source Pos", std::to_string(position.x) + ", " + std::to_string(position.y) + ", " + std::to_string(position.z));
 }
 
 void OpenALImpl::setSourcePitch(std::int32_t src, float pitch)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    //std::lock_guard<std::mutex> lock(m_mutex);
     alCheck(alSourcef(src, AL_PITCH, pitch));
 }
 
 void OpenALImpl::setSourceVolume(std::int32_t src, float volume)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    //std::lock_guard<std::mutex> lock(m_mutex);
     alCheck(alSourcef(src, AL_GAIN, volume));
 }
 
 void OpenALImpl::setSourceRolloff(std::int32_t src, float rolloff)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    //std::lock_guard<std::mutex> lock(m_mutex);
     alCheck(alSourcef(src, AL_ROLLOFF_FACTOR, rolloff));
 }
 
 void OpenALImpl::setSourceVelocity(std::int32_t src, glm::vec3 velocity)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    //std::lock_guard<std::mutex> lock(m_mutex);
     alCheck(alSource3f(src, AL_VELOCITY, velocity.x, velocity.y, velocity.z));
 }
 

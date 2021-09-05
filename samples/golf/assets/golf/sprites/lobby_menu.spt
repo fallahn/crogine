@@ -4,6 +4,11 @@ spritesheet lobby
 
     sprite background
     {
-        bounds = 0,0,400,152
+        bounds = 0,56,246,156
+    }
+
+    sprite course_desc
+    {
+        bounds = 0,0,344,53
     }
 }

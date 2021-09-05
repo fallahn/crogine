@@ -59,4 +59,13 @@ audioscape ambience
         attenuation = 0
         looped = false
     }
+
+    emitter music
+    {
+        path = "assets/golf/sound/new_hole.ogg"
+        streaming = true
+        volume = 0.5
+        mixer_channel = 0
+        looped = false
+    }    
 }

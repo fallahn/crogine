@@ -1,0 +1,36 @@
+spritesheet bounce
+{
+    src = "assets/golf/images/bounce.png"
+
+    sprite bounce
+    {
+        bounds = 0,0,160,24
+
+        animation bounce
+        {
+            frame = 0,0,0,0
+            frame = 0,288,160,24
+            frame = 0,264,160,24
+            frame = 0,240,160,24
+            frame = 0,216,160,24
+            frame = 0,192,160,24
+            frame = 0,168,160,24
+            frame = 0,144,160,24
+            frame = 0,120,160,24
+            frame = 0,96,160,24
+            frame = 0,72,160,24
+            frame = 0,48,160,24
+            frame = 0,24,160,24
+            frame = 0,0,160,24
+            frame = 0,0,0,0
+
+            event = 0,5
+            event = 0,8
+            event = 0,10
+            event = 0,12
+
+            framerate = 12
+            loop = false
+        }
+    }
+}
