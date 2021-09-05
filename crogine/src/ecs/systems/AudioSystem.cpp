@@ -126,11 +126,11 @@ void AudioSystem::process(float)
             AudioRenderer::setSourceVelocity(audioSource.m_ID, audioSource.m_velocity);
         }
 
-        //if we're steaming make sure to update the stream buffer
-        if (audioSource.m_sourceType == AudioSource::Type::Stream)
+        //if we're streaming make sure to update the stream buffer
+        /*if (audioSource.m_sourceType == AudioSource::Type::Stream)
         {
             AudioRenderer::updateStream(audioSource.m_dataSourceID);
-        }
+        }*/
     }
 }
 

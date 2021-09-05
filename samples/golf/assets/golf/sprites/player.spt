@@ -30,7 +30,7 @@ spritesheet player
             frame = 704,96,64,96
             frame = 768,96,64,96
 
-            event = 0,4
+            event = 0,5
 
             loop = false
             framerate = 12
@@ -65,7 +65,7 @@ spritesheet player
             frame = 704,0,64,96
             frame = 768,0,64,96
 
-            event = 0,4
+            event = 0,5
 
             loop = false
             framerate = 12
@@ -100,7 +100,7 @@ spritesheet player
             frame = 704,288,64,96
             frame = 768,288,64,96
 
-            event = 0,4
+            event = 0,5
 
             loop = false
             framerate = 12
@@ -135,7 +135,7 @@ spritesheet player
             frame = 704,192,64,96
             frame = 768,192,64,96
 
-            event = 0,4
+            event = 0,5
 
             loop = false
             framerate = 12

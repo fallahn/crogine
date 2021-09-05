@@ -45,6 +45,9 @@ source distribution.
 
 #include <atomic>
 #include <array>
+#include <thread>
+#include <mutex>
+#include <memory>
 
 namespace cro
 {
@@ -57,7 +60,6 @@ namespace cro
             std::unique_ptr<AudioFile> audioFile;
             std::atomic<bool> updating{ false };
             ALint processed = 0;
-            //SDL_Thread* thread = nullptr;
             std::int32_t sourceID = -1;
             std::atomic<bool> looped{ false };
             ALenum state = AL_STOPPED;
@@ -103,9 +105,16 @@ namespace cro
             ALCdevice* m_device;
             ALCcontext* m_context;
 
-            std::array<OpenALStream, 64u> m_streams = {};
-            std::array<std::int32_t, 64u> m_streamIDs = {};
-            std::int32_t m_nextFreeStream;
+            static constexpr std::size_t MaxStreams = 128;
+            std::array<OpenALStream, MaxStreams> m_streams = {};
+            std::array<std::int32_t, MaxStreams> m_streamIDs = {};
+            std::size_t m_nextFreeStream;
+
+            std::vector<OpenALStream*> m_pendingUpdates;
+            mutable std::mutex m_mutex;
+            std::atomic_bool m_threadRunning;
+            std::unique_ptr<std::thread> m_updateThread;
+            void streamThreadedUpdate();
         };
     }
 }

@@ -874,7 +874,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::AudioSystem>(mb);
 
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures);
-    //m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio);
+    m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio);
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);

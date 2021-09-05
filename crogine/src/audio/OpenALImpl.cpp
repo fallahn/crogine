@@ -72,41 +72,42 @@ namespace
     }
 
     //called in its own thread to update stream buffers
-    int streamUpdate(void* s)
-    {
-        OpenALStream& stream = *(OpenALStream*)s;
+    //int streamUpdate(void* s)
+    //{
+    //    OpenALStream& stream = *(OpenALStream*)s;
 
-        for (auto i = 0; i < stream.processed; ++i)
-        {
-            //fill buffer
-            auto data = stream.audioFile->getData(STREAM_CHUNK_SIZE, stream.looped);
-            if (data.size > 0) //only update if we have data else we'll loop even if we don't want to
-            {
-                //unqueue
-                alCheck(alSourceUnqueueBuffers(stream.sourceID, 1, &stream.buffers[stream.currentBuffer]));
-                
-                //refill
-                alCheck(alBufferData(stream.buffers[stream.currentBuffer], getFormatFromData(data), data.data, data.size, data.frequency));
+    //    for (auto i = 0; i < stream.processed; ++i)
+    //    {
+    //        //fill buffer
+    //        auto data = stream.audioFile->getData(STREAM_CHUNK_SIZE, stream.looped);
+    //        if (data.size > 0) //only update if we have data else we'll loop even if we don't want to
+    //        {
+    //            //unqueue
+    //            alCheck(alSourceUnqueueBuffers(stream.sourceID, 1, &stream.buffers[stream.currentBuffer]));
+    //            
+    //            //refill
+    //            alCheck(alBufferData(stream.buffers[stream.currentBuffer], getFormatFromData(data), data.data, data.size, data.frequency));
 
-                //requeue
-                alCheck(alSourceQueueBuffers(stream.sourceID, 1, &stream.buffers[stream.currentBuffer]));
+    //            //requeue
+    //            alCheck(alSourceQueueBuffers(stream.sourceID, 1, &stream.buffers[stream.currentBuffer]));
 
-                //increment currentBuffer
-                stream.currentBuffer = (stream.currentBuffer + 1) % stream.buffers.size();
-            }
-        }
+    //            //increment currentBuffer
+    //            stream.currentBuffer = (stream.currentBuffer + 1) % stream.buffers.size();
+    //        }
+    //    }
 
-        stream.updating = false;
-        stream.processed = 0;
+    //    stream.updating = false;
+    //    stream.processed = 0;
 
-        return 0;
-    }
+    //    return 0;
+    //}
 }
 
 OpenALImpl::OpenALImpl()
     : m_device          (nullptr),
     m_context           (nullptr),
-    m_nextFreeStream    (0)
+    m_nextFreeStream    (0),
+    m_threadRunning     (false)
 {
     for (auto i = 0u; i < m_streamIDs.size(); ++i)
     {
@@ -137,11 +138,20 @@ bool OpenALImpl::init()
     bool current = false;
     /*alCheck*/(current = alcMakeContextCurrent(m_context));
 
+    if (current)
+    {
+        m_threadRunning = true;
+        m_updateThread = std::make_unique<std::thread>(&OpenALImpl::streamThreadedUpdate, this);
+    }
+
     return current;
 }
 
 void OpenALImpl::shutdown()
 {
+    m_threadRunning = false;
+    m_updateThread->join();
+
     //make sure to close any open streams
     for (auto i = 0u; i < m_streams.size(); ++i)
     {
@@ -208,6 +218,8 @@ std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
 
 std::int32_t OpenALImpl::requestNewBuffer(const PCMData& data)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     ALuint buff;
     alCheck(alGenBuffers(1, &buff));
 
@@ -222,6 +234,7 @@ void OpenALImpl::deleteBuffer(std::int32_t buffer)
     if (buffer > 0)
     {
         LOG("Deleted audio buffer " + std::to_string(buffer), Logger::Type::Info);
+        std::lock_guard<std::mutex> lock(m_mutex);
 
         //hm. Code smell.
         auto buf = static_cast<ALuint>(buffer);
@@ -231,6 +244,8 @@ void OpenALImpl::deleteBuffer(std::int32_t buffer)
 
 std::int32_t OpenALImpl::requestNewStream(const std::string& path)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     //check we have available streams
     if (m_nextFreeStream >= m_streams.size())
     {
@@ -291,46 +306,45 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
 
 void OpenALImpl::updateStream(std::int32_t streamID)
 {
-    auto& stream = m_streams[streamID];
-    if (!stream.updating)
-    {
-        alCheck(alGetSourcei(stream.sourceID, AL_BUFFERS_PROCESSED, &stream.processed));
-        /*ALint queued;
-        alCheck(alGetSourcei(stream.sourceID, AL_BUFFERS_QUEUED, &queued));
-        DPRINT("Queued Buffers", std::to_string(queued));*/
-        //if stopped rewind file and load buffers
-        ALenum state;
-        alCheck(alGetSourcei(stream.sourceID, AL_SOURCE_STATE, &state));
-        if (state == AL_STOPPED && state != stream.state)
-        {
-            stream.audioFile->seek(cro::Time());
-            stream.processed = static_cast<ALint>(stream.buffers.size());
-        }
-        stream.state = state;
+    //auto& stream = m_streams[streamID];
+    //if (!stream.updating)
+    //{
+    //    alCheck(alGetSourcei(stream.sourceID, AL_BUFFERS_PROCESSED, &stream.processed));
+    //    /*ALint queued;
+    //    alCheck(alGetSourcei(stream.sourceID, AL_BUFFERS_QUEUED, &queued));
+    //    DPRINT("Queued Buffers", std::to_string(queued));*/
 
-        if (stream.processed > 0)
-        {
-            stream.updating = true;
-            //SDL_DetachThread(stream.thread); //make sure to clean up any old threads
-            //stream.thread = SDL_CreateThread(streamUpdate, nullptr, &stream);
-            //LOG("Processed " + std::to_string(stream.processed) + " buffers", Logger::Type::Info);
+    //    //if stopped rewind file and load buffers
+    //    ALenum state;
+    //    alCheck(alGetSourcei(stream.sourceID, AL_SOURCE_STATE, &state));
+    //    if (state == AL_STOPPED && state != stream.state)
+    //    {
+    //        stream.audioFile->seek(cro::Time());
+    //        stream.processed = static_cast<ALint>(stream.buffers.size());
+    //    }
+    //    stream.state = state;
 
-            streamUpdate(&stream);
-        }
-    }
+    //    if (stream.processed > 0)
+    //    {
+    //        stream.updating = true;
+
+    //        m_mutex.lock();
+    //        m_pendingUpdates.push_back(&stream);
+    //        m_mutex.unlock();
+    //    }
+    //}
 }
 
 void OpenALImpl::deleteStream(std::int32_t id)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     auto& stream = m_streams[id];
     
-    if (stream.updating)
+    while (stream.updating)
     {
-        stream.updating = false;
         //wait for thread to finish - we have to wait else
         //we can't be sure it's safe to delete the buffers
-        //SDL_WaitThread(stream.thread, nullptr);
-        //stream.thread = nullptr;
     } 
 
     if (stream.buffers[0])
@@ -342,7 +356,6 @@ void OpenALImpl::deleteStream(std::int32_t id)
         stream.audioFile.reset();
         stream.currentBuffer = 0;
         stream.processed = 0;
-
 
         m_nextFreeStream--;
 
@@ -361,6 +374,8 @@ void OpenALImpl::deleteStream(std::int32_t id)
 std::int32_t OpenALImpl::requestAudioSource(std::int32_t buffer, bool streaming)
 {
     CRO_ASSERT(buffer > -1, "Invalid audio buffer");
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     ALuint source;
     alCheck(alGenSources(1, &source));
     if (source > 0)
@@ -386,8 +401,10 @@ void OpenALImpl::updateAudioSource(std::int32_t sourceID, std::int32_t bufferID,
     CRO_ASSERT(bufferID > 0, "Invalid buffer ID");
 
     //if the src is playing stop it and wait for it to finish
-    stopSource(sourceID);
+    stopSource(sourceID); //this locks too...
 
+
+    std::lock_guard<std::mutex> lock(m_mutex);
     auto src = static_cast<ALuint>(sourceID);
     ALenum state;
     alCheck(alGetSourcei(src, AL_SOURCE_STATE, &state));
@@ -410,11 +427,14 @@ void OpenALImpl::updateAudioSource(std::int32_t sourceID, std::int32_t bufferID,
 
 void OpenALImpl::deleteAudioSource(std::int32_t source)
 {
+
     CRO_ASSERT(source > 0, "Invalid source ID");
 
     //if the src is playing stop it and wait for it to finish
+    //this also locks the mutex!
     stopSource(source);
 
+    std::lock_guard<std::mutex> lock(m_mutex);
     auto src = static_cast<ALuint>(source);
     ALenum state;
     alCheck(alGetSourcei(src, AL_SOURCE_STATE, &state));
@@ -447,6 +467,7 @@ void OpenALImpl::playSource(std::int32_t source, bool looped)
 {
     ALuint src = static_cast<ALuint>(source);
 
+    std::lock_guard<std::mutex> lock(m_mutex);
     auto result = std::find_if(std::begin(m_streams), std::end(m_streams),
         [src](const OpenALStream& str)
     {
@@ -467,12 +488,16 @@ void OpenALImpl::playSource(std::int32_t source, bool looped)
 void OpenALImpl::pauseSource(std::int32_t source)
 {
     ALuint src = static_cast<ALuint>(source);
+
+    std::lock_guard<std::mutex> lock(m_mutex);
     alCheck(alSourcePause(src));
 }
 
 void OpenALImpl::stopSource(std::int32_t source)
 {
     ALuint src = static_cast<ALuint>(source);
+
+    std::lock_guard<std::mutex> lock(m_mutex);
     alCheck(alSourceStop(src));
 }
 
@@ -480,6 +505,8 @@ std::int32_t OpenALImpl::getSourceState(std::int32_t source) const
 {
     ALuint src = static_cast<ALuint>(source);
     ALenum state;
+
+    std::lock_guard<std::mutex> lock(m_mutex);
     alCheck(alGetSourcei(src, AL_SOURCE_STATE, &state));
 
     if (state == AL_PLAYING)
@@ -497,26 +524,107 @@ std::int32_t OpenALImpl::getSourceState(std::int32_t source) const
 
 void OpenALImpl::setSourcePosition(std::int32_t source, glm::vec3 position)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     alCheck(alSource3f(source, AL_POSITION, position.x, position.y, position.z));
     //DPRINT("source Pos", std::to_string(position.x) + ", " + std::to_string(position.y) + ", " + std::to_string(position.z));
 }
 
 void OpenALImpl::setSourcePitch(std::int32_t src, float pitch)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     alCheck(alSourcef(src, AL_PITCH, pitch));
 }
 
 void OpenALImpl::setSourceVolume(std::int32_t src, float volume)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     alCheck(alSourcef(src, AL_GAIN, volume));
 }
 
 void OpenALImpl::setSourceRolloff(std::int32_t src, float rolloff)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     alCheck(alSourcef(src, AL_ROLLOFF_FACTOR, rolloff));
 }
 
 void OpenALImpl::setSourceVelocity(std::int32_t src, glm::vec3 velocity)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     alCheck(alSource3f(src, AL_VELOCITY, velocity.x, velocity.y, velocity.z));
+}
+
+//private
+void OpenALImpl::streamThreadedUpdate()
+{
+    while (m_threadRunning)
+    {
+        //check active streams to see if they need queuing
+        m_mutex.lock();
+        for (auto i = 0; i < m_nextFreeStream; ++i)
+        {
+            auto& stream = m_streams[m_streamIDs[i]]; //hm might jump about a bit - better or worse than checking all and conditional jumping?
+
+            if (stream.sourceID > -1 &&
+                !stream.updating)
+            {
+                alCheck(alGetSourcei(stream.sourceID, AL_BUFFERS_PROCESSED, &stream.processed));
+
+                //if stopped rewind file and load buffers
+                ALenum state;
+                alCheck(alGetSourcei(stream.sourceID, AL_SOURCE_STATE, &state));
+                if (state == AL_STOPPED && state != stream.state)
+                {
+                    stream.audioFile->seek(cro::Time());
+                    stream.processed = static_cast<ALint>(stream.buffers.size());
+                }
+                stream.state = state;
+
+                if (stream.processed > 0)
+                {
+                    stream.updating = true;
+                    m_pendingUpdates.push_back(&stream);
+                }
+            }
+        }
+        m_mutex.unlock();
+
+
+        //check for new jobs waiting if we have none
+        if (m_pendingUpdates.empty())
+        {
+            std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(50));
+        }
+        else
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+
+            //update the buffers
+            for (auto* stream : m_pendingUpdates)
+            {
+                for (auto i = 0; i < stream->processed; ++i)
+                {
+                    //fill buffer
+                    auto data = stream->audioFile->getData(STREAM_CHUNK_SIZE, stream->looped);
+                    if (data.size > 0) //only update if we have data else we'll loop even if we don't want to
+                    {
+                        //unqueue
+                        alCheck(alSourceUnqueueBuffers(stream->sourceID, 1, &stream->buffers[stream->currentBuffer]));
+
+                        //refill
+                        alCheck(alBufferData(stream->buffers[stream->currentBuffer], getFormatFromData(data), data.data, data.size, data.frequency));
+
+                        //requeue
+                        alCheck(alSourceQueueBuffers(stream->sourceID, 1, &stream->buffers[stream->currentBuffer]));
+
+                        //increment currentBuffer
+                        stream->currentBuffer = (stream->currentBuffer + 1) % stream->buffers.size();
+                    }
+                }
+
+                stream->updating = false;
+                stream->processed = 0;
+            }
+            m_pendingUpdates.clear();
+        }
+    }
 }
