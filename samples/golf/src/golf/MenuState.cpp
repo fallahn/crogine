@@ -240,16 +240,13 @@ bool MenuState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
     {
-        //TODO check if any players are using the controller
-        //and reassign any still connected devices
-        //TODO update the avatar menu if it is active with
-        //correct controller assignment
-        for (auto i = 0; i < 4; ++i)
+        //controller IDs are automatically reassigned
+        //so we just need to make sure no one is out of range
+        for (auto& c : m_sharedData.controllerIDs)
         {
-            if (evt.cdevice.which == cro::GameController::deviceID(i))
-            {
-
-            }
+            //be careful with this cast because we might assign - 1 as an ID...
+            //note that the controller count hasn't been updated yet...
+            c = std::min(static_cast<std::int32_t>(cro::GameController::getControllerCount() - 2), c);
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)

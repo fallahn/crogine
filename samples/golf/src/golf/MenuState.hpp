@@ -144,6 +144,28 @@ private:
 
     glm::vec2 m_viewScale;
 
+    struct ControllerCallbackID final
+    {
+        enum
+        {
+            EnterLeft, ExitLeft,
+            EnterRight, ExitRight,
+            //this order is IMPORTANT
+            Inc01,
+            Inc02,
+            Inc03,
+            Inc04,
+
+            Dec01,
+            Dec02,
+            Dec03,
+            Dec04,
+
+            Count
+        };
+    };
+    std::array<std::uint32_t, ControllerCallbackID::Count> m_controllerCallbackIDs = {};
+
     void addSystems();
     void loadAssets();
     void createScene();
