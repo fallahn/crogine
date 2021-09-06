@@ -20,7 +20,7 @@ A course folder should contain one file with the course.data. It has the followi
 The course file contains a list of paths to *.hole files which describe the individual holes that make up a course. This way holes can be recycled thoughout different course layouts should it be so desired. Up to 18 holes can be added to a course (any further holes will be ignored when the course file is loaded).
 
 ###### Hole file
-Hole files describe which models/assets make up the hole hole, as well as the position of the tee, the hole and the par for that hole.
+Hole files describe which models/assets make up the hole, as well as the position of the tee, the hole and the par for that hole. Optionally prop objects can be added to the hole to display models as props in the game.
 
     hole 01 //hole ID
     {
@@ -30,6 +30,13 @@ Hole files describe which models/assets make up the hole hole, as well as the po
         target = 22, 172 //initial direction which the player should be looking when the hole is loaded. Usually the pin, but can be different if hole is sharp dogleg
         tee = 243, 30 //XY coordinates on the map file to the tee
         par = 3 //par for this hole.
+
+        prop
+        {
+            position = 70,0,45 //position relative to the hole model origin
+            rotation = 45 //rotation around the Y axis
+            model = "assets/golf/models/cart.cmt" //path to a model description to use as a prop
+        }
     }
 
 The map file contains metadata about the hole stored as an image. The image is stored with a scale of one pixel per metre. In other words each pixel represents one metre square on the course grid. The XY coordinates of the image, starting at the bottom left, are mapped to the X, -Z coordinates of the 3D world. Map sizes are fixed at 320 pixels but 200 pixels.
