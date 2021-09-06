@@ -1,0 +1,11 @@
+model crowd
+{
+    mesh = billboard
+
+    material Unlit
+    {
+        diffuse = "assets/golf/images/crowd.png"
+        alpha_clip = 0.2
+        blendmode = "none"        
+    }
+}
