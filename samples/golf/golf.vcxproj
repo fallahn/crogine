@@ -233,6 +233,7 @@
     <ClCompile Include="src\golf\InterpolationComponent.cpp" />
     <ClCompile Include="src\golf\InterpolationSystem.cpp" />
     <ClCompile Include="src\golf\MenuCreation.cpp" />
+    <ClCompile Include="src\golf\MenuSoundDirector.cpp" />
     <ClCompile Include="src\golf\MenuState.cpp" />
     <ClCompile Include="src\golf\OptionsState.cpp" />
     <ClCompile Include="src\golf\ParticleDirector.cpp" />
@@ -271,6 +272,7 @@
     <ClInclude Include="src\golf\InputParser.hpp" />
     <ClInclude Include="src\golf\InterpolationSystem.hpp" />
     <ClInclude Include="src\golf\MenuConsts.hpp" />
+    <ClInclude Include="src\golf\MenuSoundDirector.hpp" />
     <ClInclude Include="src\golf\MenuState.hpp" />
     <ClInclude Include="src\golf\MessageIDs.hpp" />
     <ClInclude Include="src\golf\OptionsState.hpp" />

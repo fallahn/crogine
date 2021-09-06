@@ -284,11 +284,11 @@ void OpenALImpl::deleteStream(std::int32_t id)
 
     auto& stream = m_streams[id];
     
-    while (stream.updating)
-    {
-        //wait for thread to finish - we have to wait else
-        //we can't be sure it's safe to delete the buffers
-    } 
+    //while (stream.updating)
+    //{
+    //    //wait for thread to finish - we have to wait else
+    //    //we can't be sure it's safe to delete the buffers
+    //} 
 
     if (stream.buffers[0])
     {
@@ -370,7 +370,6 @@ void OpenALImpl::updateAudioSource(std::int32_t sourceID, std::int32_t bufferID,
 
 void OpenALImpl::deleteAudioSource(std::int32_t source)
 {
-
     CRO_ASSERT(source > 0, "Invalid source ID");
 
     //if the src is playing stop it and wait for it to finish
@@ -545,7 +544,7 @@ void OpenALImpl::streamThreadedUpdate()
         //check for new jobs waiting if we have none
         if (m_pendingUpdates.empty())
         {
-            std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(50));
+            std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(20));
         }
         else
         {

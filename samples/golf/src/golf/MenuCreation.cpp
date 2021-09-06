@@ -513,7 +513,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(textPos);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString("Driving Range (Tutorial)");
+        entity.addComponent<cro::Text>(font).setString("Practice (Tutorial)");
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
@@ -1173,7 +1173,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     //title
-    auto entity = m_uiScene.createEntity();
+    /*auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<UIElement>().absolutePosition = { 10.f, 0.f };
     entity.getComponent<UIElement>().relativePosition = { 0.f, 0.9f };
@@ -1182,13 +1182,13 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Text>(font).setString("Lobby");
     entity.getComponent<cro::Text>().setCharacterSize(SmallTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    menuTransform.addChild(entity.getComponent<cro::Transform>());
+    menuTransform.addChild(entity.getComponent<cro::Transform>());*/
 
     //background
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_resources.textures);
 
-    entity = m_uiScene.createEntity();
+    auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");

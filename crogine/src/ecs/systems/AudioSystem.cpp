@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -55,9 +55,12 @@ void AudioSystem::process(float)
     const auto& listener = getScene()->getActiveListener();
     AudioRenderer::setListenerVolume(listener.getComponent<AudioListener>().getVolume() * AudioMixer::m_masterVol);
     AudioRenderer::setListenerVelocity(listener.getComponent<AudioListener>().getVelocity());
+    
     const auto& tx = listener.getComponent<Transform>();
+    
     auto worldPos = tx.getWorldPosition();
     AudioRenderer::setListenerPosition(worldPos);
+
     const auto& worldTx = tx.getWorldTransform();
     AudioRenderer::setListenerOrientation(Util::Matrix::getForwardVector(worldTx), Util::Matrix::getUpVector(worldTx));
     //DPRINT("Listener Position", std::to_string(worldPos.x) + ", " + std::to_string(worldPos.y) + ", " + std::to_string(worldPos.z));

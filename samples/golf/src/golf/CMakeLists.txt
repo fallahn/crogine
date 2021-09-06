@@ -12,6 +12,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/InterpolationComponent.cpp
   ${PROJECT_DIR}/golf/InterpolationSystem.cpp
   ${PROJECT_DIR}/golf/MenuCreation.cpp
+  ${PROJECT_DIR}/golf/MenuSoundDirector.cpp
   ${PROJECT_DIR}/golf/MenuState.cpp
   ${PROJECT_DIR}/golf/OptionsState.cpp
   ${PROJECT_DIR}/golf/PauseState.cpp
