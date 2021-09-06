@@ -305,6 +305,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     //just store these here to save reloading the same sprite sheet
     m_sprites[SpriteID::ButtonBanner] = spriteSheet.getSprite("banner_small");
     m_sprites[SpriteID::Cursor] = spriteSheet.getSprite("cursor");
+    m_sprites[SpriteID::Flag] = spriteSheet.getSprite("flag");
 
     //title
     auto entity = m_uiScene.createEntity();
@@ -684,7 +685,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
         });
 
 
-    //and this one is used for regualr text.
+    //and this one is used for regular text.
     auto mouseEnterCursor = m_uiScene.getSystem<cro::UISystem>().addCallback(
         [entity](cro::Entity e) mutable
         {
@@ -858,7 +859,9 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                             if (!m_sharedData.clientConnection.connected)
                             {
                                 m_sharedData.serverInstance.stop();
-                                m_sharedData.errorMessage = "Failed to connect to local server.";
+                                m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port " 
+                                    + std::to_string(ConstVal::GamePort) 
+                                    + " is allowed through\nany firewalls or NAT";
                                 requestStackPush(StateID::Error);
                             }
                             else
@@ -887,6 +890,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                                 buttonEnt.addComponent<cro::Drawable2D>();
                                 buttonEnt.addComponent<cro::Text>(font).setString("Prev Course");
                                 buttonEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+                                buttonEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
                                 buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
                                 buttonEnt.addComponent<UIElement>().absolutePosition = { 10.f, 46.f };
                                 //buttonEnt.getComponent<UIElement>().relativePosition = { 0.05f, 0.f };
@@ -905,6 +909,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                                 buttonEnt.addComponent<cro::Drawable2D>();
                                 buttonEnt.addComponent<cro::Text>(font).setString("Next Course");
                                 buttonEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+                                buttonEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
                                 buttonEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
                                 buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
                                 buttonEnt.addComponent<UIElement>().absolutePosition = { -10.f, 46.f };
@@ -1188,7 +1193,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.6f };
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.62f };
     entity.getComponent<UIElement>().depth = -0.2f;
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
@@ -1201,57 +1206,88 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 20.f, bounds.height - 25.f };
-    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().depth = 0.2f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::LobbyList;
     entity.addComponent<cro::Callback>().setUserData<std::vector<cro::Entity>>(); //abuse this component to store handles to the text children.
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
-    //chat prompt
+    //background for course info
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 8.f, 13.f, 0.1f });
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString("Chat:");
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("course_desc");
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.24f };
+    entity.getComponent<UIElement>().depth = -0.2f;
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+    bgEnt = entity;
+
+    //flag
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), bounds.height });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Flag];
+    entity.addComponent<cro::SpriteAnimation>().play(0);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //bouncy ball
+    cro::SpriteSheet sheet;
+    sheet.loadFromFile("assets/golf/sprites/bounce.spt", m_resources.textures);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 14.f, bounds.height - 4.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = sheet.getSprite("bounce");
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime -= dt;
+        if (currTime < 0)
+        {
+            e.getComponent<cro::SpriteAnimation>().play(0);
+            currTime = static_cast<float>(cro::Util::Random::value(30, 60));
+        }
+    };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
     //course title
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 40.f, 01.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, 92.f };
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseTitle;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseTitle;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    menuTransform.addChild(entity.getComponent<cro::Transform>());
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //course description
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 28.f, 01.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, 80.f };
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseDesc;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseDesc;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    menuTransform.addChild(entity.getComponent<cro::Transform>());
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole count
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 16.f, 01.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, 68.f };
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseHoles;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseHoles;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    menuTransform.addChild(entity.getComponent<cro::Transform>());
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //banner
     entity = m_uiScene.createEntity();
@@ -2052,56 +2088,58 @@ void MenuState::updateLobbyAvatars()
         std::int32_t h = 0;
         for (const auto& c : m_sharedData.connectionData)
         {
-            if (c.playerCount > 0)
+            //create a list of names on the connected client
+            cro::String str;
+            for (auto i = 0u; i < c.playerCount; ++i)
             {
-                //create a list of names on the connected client
-                cro::String str = c.playerData[0].name;
+                str += c.playerData[i].name + "\n";
 
-                applyTexture(m_sharedData.avatarTextures[c.connectionID][0], c.playerData[0].avatarFlags);
-
-                for (auto i = 1u; i < c.playerCount; ++i)
-                {
-                    str += ", " + c.playerData[i].name;
-
-                    applyTexture(m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
-                }
-
-                auto entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition(textPos);
-                entity.addComponent<cro::Drawable2D>();
-                entity.addComponent<cro::Text>(font).setString(str);
-                entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
-                entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-                e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-                children.push_back(entity);
-
-                //add a ready status for that client
-                static constexpr glm::vec2 ReadyOffset(-12.f, -7.f);
-                entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition(textPos + ReadyOffset);
-                entity.addComponent<cro::Drawable2D>();
-                entity.addComponent<cro::Callback>().active = true;
-                entity.getComponent<cro::Callback>().function =
-                [&, h](cro::Entity e, float)
-                {
-                    cro::Colour colour = m_readyState[h] ? TextGreenColour : LeaderboardTextDark;
-
-                    auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-                    verts =
-                    {
-                        cro::Vertex2D(glm::vec2(0.f), colour),
-                        cro::Vertex2D(glm::vec2(8.f, 0.f), colour),
-                        cro::Vertex2D(glm::vec2(0.f, 8.f), colour),
-                        cro::Vertex2D(glm::vec2(8.f), colour)
-                    };
-                    e.getComponent<cro::Drawable2D>().updateLocalBounds();
-                };
-                e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-                children.push_back(entity);
-
-                textPos.y -= 14.f;
-                h++;
+                applyTexture(m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
             }
+
+            if (str.empty())
+            {
+                str = "Empty";
+            }
+
+            textPos.x = (h % 2) * 120.f;
+            textPos.y = (h / 2) * -60.f;
+
+            auto entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(textPos);
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(font).setString(str);
+            entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+            entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+            entity.getComponent<cro::Text>().setVerticalSpacing(6.f);
+            e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            children.push_back(entity);
+
+            //add a ready status for that client
+            static constexpr glm::vec2 ReadyOffset(-12.f, -7.f);
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(textPos + ReadyOffset);
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+            [&, h](cro::Entity e2, float)
+            {
+                cro::Colour colour = m_readyState[h] ? TextGreenColour : LeaderboardTextDark;
+
+                auto& verts = e2.getComponent<cro::Drawable2D>().getVertexData();
+                verts =
+                {
+                    cro::Vertex2D(glm::vec2(0.f), colour),
+                    cro::Vertex2D(glm::vec2(8.f, 0.f), colour),
+                    cro::Vertex2D(glm::vec2(0.f, 8.f), colour),
+                    cro::Vertex2D(glm::vec2(8.f), colour)
+                };
+                e2.getComponent<cro::Drawable2D>().updateLocalBounds();
+            };
+            e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            children.push_back(entity);
+
+            h++;
         }
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);

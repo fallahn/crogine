@@ -28,6 +28,7 @@ spritesheet bounce
             event = 0,8
             event = 0,10
             event = 0,12
+            event = 1,14
 
             framerate = 12
             loop = false

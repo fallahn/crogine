@@ -30,6 +30,7 @@ source distribution.
 #include "GolfSoundDirector.hpp"
 #include "MessageIDs.hpp"
 #include "Terrain.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/audio/AudioResource.hpp>
 
@@ -104,6 +105,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[cro::Util::Random::value(AudioID::Swing01, AudioID::Swing03)]);
             }
             ent.getComponent<cro::AudioEmitter>().play();
+            ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             ent.getComponent<cro::Transform>().setPosition(data.position);
         }
             break;
@@ -132,6 +134,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 break;
             }
             ent.getComponent<cro::AudioEmitter>().play();
+            ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             ent.getComponent<cro::Transform>().setPosition(data.position);
         }
     }

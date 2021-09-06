@@ -125,6 +125,7 @@ private:
 
             ButtonBanner,
             Cursor,
+            Flag,
 
             Count
         };
