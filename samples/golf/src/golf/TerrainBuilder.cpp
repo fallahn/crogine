@@ -259,8 +259,6 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     //create billboard entities
     cro::ModelDefinition billboardDef(resources);
-    cro::ModelDefinition windmillDef(resources);
-    windmillDef.loadFromFile("assets/golf/models/windmill.cmt");
 
     for (auto& entity : m_billboardEntities)
     {
@@ -288,25 +286,6 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
             m_terrainEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
-
-        /*auto millEnt = scene.createEntity();
-        millEnt.addComponent<cro::Transform>().setPosition({ 160.f, 0.f, -100.f });
-        millEnt.getComponent<cro::Transform>().setScale(glm::vec3(1.2f));
-        windmillDef.createModel(millEnt);
-        if (millEnt.hasComponent<cro::Skeleton>())
-        {
-            millEnt.getComponent<cro::Skeleton>().play(0);
-        }
-        millEnt.addComponent<cro::Callback>().active = true;
-        millEnt.getComponent<cro::Callback>().function =
-            [entity](cro::Entity e, float)
-        {
-            auto yPos = entity.getComponent<cro::Transform>().getPosition().y;
-            auto currPos = e.getComponent<cro::Transform>().getPosition();
-            currPos.y = yPos;
-            e.getComponent<cro::Transform>().setPosition(currPos);
-        };
-        entity.getComponent<cro::Transform>().addChild(millEnt.getComponent<cro::Transform>());*/
     }
 
     //load the billboard rects from a sprite sheet and convert to templates

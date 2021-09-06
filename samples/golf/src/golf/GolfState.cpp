@@ -834,7 +834,67 @@ void GolfState::loadAssets()
             LOG("Missing hole property", cro::Logger::Type::Error);
             error = true;
         }
+        else
+        {
+            //look for prop models (are optional and can fail to load no problem)
+            const auto& propObjs = holeCfg.getObjects();
+            for (const auto& obj : propObjs)
+            {
+                const auto& name = obj.getName();
+                if (name == "prop")
+                {
+                    const auto& modelProps = obj.getProperties();
+                    glm::vec3 position(0.f);
+                    float rotation = 0.f;
+                    std::string path;
 
+                    for (const auto& modelProp : modelProps)
+                    {
+                        auto propName = modelProp.getName();
+                        if (propName == "position")
+                        {
+                            position = modelProp.getValue<glm::vec3>();
+                        }
+                        else if (propName == "model")
+                        {
+                            path = modelProp.getValue<std::string>();
+                        }
+                        else if (propName == "rotation")
+                        {
+                            rotation = modelProp.getValue<float>();
+                        }
+                    }
+
+                    if (!path.empty()
+                        && cro::FileSystem::fileExists(path))
+                    {
+                        if (modelDef.loadFromFile(path))
+                        {
+                            auto ent = m_gameScene.createEntity();
+                            ent.addComponent<cro::Transform>().setPosition(position);
+                            ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation* cro::Util::Const::degToRad);
+                            modelDef.createModel(ent);
+                            if (modelDef.hasSkeleton())
+                            {
+                                ent.getComponent<cro::Skeleton>().play(0);
+
+                                //TODO we need to specialise the material for skinned models.
+                            }
+                            else
+                            {
+                                auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+                                setTexture(modelDef, texturedMat);
+                                ent.getComponent<cro::Model>().setMaterial(0, texturedMat);
+                            }
+                            ent.getComponent<cro::Model>().setHidden(true);
+
+                            holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+                            holeData.propEntities.push_back(ent);
+                        }
+                    }
+                }
+            }
+        }
     }
 
 
@@ -1445,10 +1505,11 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     m_gameScene.getSystem<ClientCollisionSystem>().setMap(hole);
 
     //create hole model transition
+    auto* propModels = &m_holeData[m_currentHole].propEntities;
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().active = true;
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().setUserData<float>(0.f);
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, propModels](cro::Entity e, float dt)
     {
         auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
         progress = std::min(1.f, progress + dt);
@@ -1460,6 +1521,11 @@ void GolfState::setCurrentHole(std::uint32_t hole)
         {
             e.getComponent<cro::Callback>().active = false;
             e.getComponent<cro::Model>().setHidden(true);
+
+            for (auto i = 0u; i < propModels->size(); ++i)
+            {
+                propModels->at(i).getComponent<cro::Model>().setHidden(true);
+            }
 
             //index should be updated by now (as this is a callback)
             //so we're actually targetting the next hole entity
@@ -1482,6 +1548,12 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                     ent.getComponent<cro::Callback>().active = false;
                 }
             };
+
+            //unhide any prop models
+            for (auto prop : m_holeData[m_currentHole].propEntities)
+            {
+                prop.getComponent<cro::Model>().setHidden(false);
+            }
         }
     };
 

@@ -6,4 +6,11 @@ hole 01
     target = 105, 93
     tee = 260, 30
     par = 4
+
+    prop
+    {
+        model = "assets/golf/models/cart.cmt"
+        position = 72, 0, 75
+        rotation = 45
+    }
 }
