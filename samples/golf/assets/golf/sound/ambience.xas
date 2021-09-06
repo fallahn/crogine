@@ -40,6 +40,26 @@ audioscape ambience
         looped = true
     }
 
+    emitter 05
+    {
+        path = "assets/golf/sound/ambience/env05.ogg"
+        streaming = true
+        volume = 1.6
+        mixer_channel = 1
+        attenuation = 0.06
+        looped = true
+    }
+
+    emitter 06
+    {
+        path = "assets/golf/sound/ambience/env06.ogg"
+        streaming = true
+        volume = 1.6
+        mixer_channel = 1
+        attenuation = 0.06
+        looped = true
+    }    
+
     emitter plane
     {
         path = "assets/golf/sound/ambience/plane.ogg"

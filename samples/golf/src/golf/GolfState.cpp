@@ -1199,7 +1199,11 @@ void GolfState::initAudio()
         std::string("01"),
         std::string("02"),
         std::string("03"),
-        std::string("04")
+        std::string("04"),
+        std::string("05"),
+        std::string("06"),
+        std::string("05"),
+        std::string("06"),
     };
 
     for (auto i = 0; i < 2; ++i)
@@ -1212,7 +1216,7 @@ void GolfState::initAudio()
             auto idx = i * 2 + j;
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(position);
-            entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[idx]);
+            entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[idx + 4]);
             entity.getComponent<cro::AudioEmitter>().play();
 
             position = { i * MapSize.x, height, -static_cast<float>(MapSize.y) * j };

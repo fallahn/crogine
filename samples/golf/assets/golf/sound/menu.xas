@@ -22,7 +22,7 @@ audioscape menu
 
     emitter 01
     {
-        path = "assets/golf/sound/ambience/env01.ogg"
+        path = "assets/golf/sound/ambience/env05.ogg"
         streaming = true
         volume = 2
         mixer_channel = 1
