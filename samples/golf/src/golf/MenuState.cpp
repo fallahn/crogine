@@ -86,7 +86,7 @@ namespace
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
-    m_uiScene           (context.appInstance.getMessageBus()),
+    m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_backgroundScene   (context.appInstance.getMessageBus()),
     m_playerAvatar      ("assets/golf/images/player.png"),
     m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
@@ -657,8 +657,12 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             updateLobbyData(evt);
             break;
         case PacketID::ClientDisconnected:
-            m_sharedData.connectionData[evt.packet.as<std::uint8_t>()].playerCount = 0;
+        {
+            auto client = evt.packet.as<std::uint8_t>();
+            m_sharedData.connectionData[client].playerCount = 0;
+            m_readyState[client] = false;
             updateLobbyAvatars();
+        }
             break;
         case PacketID::LobbyReady:
         {

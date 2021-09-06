@@ -33,6 +33,7 @@ source distribution.
 #include "../Utility.hpp"
 #include "ServerLobbyState.hpp"
 #include "ServerPacketData.hpp"
+#include "ServerMessages.hpp"
 
 #include <crogine/core/Log.hpp>
 #include <crogine/network/NetData.hpp>
@@ -60,9 +61,16 @@ LobbyState::LobbyState(SharedData& sd)
     }
 }
 
-void LobbyState::handleMessage(const cro::Message&)
+void LobbyState::handleMessage(const cro::Message& msg)
 {
-
+    if (msg.id == MessageID::ConnectionMessage)
+    {
+        const auto& data = msg.getData<ConnectionEvent>();
+        if (data.type == ConnectionEvent::Disconnected)
+        {
+            m_readyState[data.clientID] = false;
+        }
+    }
 }
 
 void LobbyState::netEvent(const cro::NetEvent& evt)

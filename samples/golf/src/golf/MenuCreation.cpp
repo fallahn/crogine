@@ -1336,6 +1336,16 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     {
                         m_sharedData.serverInstance.stop();
                         m_sharedData.hosting = false;
+
+                        //delete the course selection entities as they'll be re-created as needed
+                        cro::Command cmd;
+                        cmd.targetFlags = CommandID::Menu::CourseSelect;
+                        cmd.action =
+                            [&](cro::Entity b, float)
+                        {
+                            m_uiScene.destroyEntity(b);
+                        };
+                        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                     }
                 }
             });
