@@ -57,6 +57,10 @@ struct TextAnimCallback final
             if (data.currentChar <= data.string.size())
             {
                 e.getComponent<cro::Text>().setString(data.string.substr(0, data.currentChar));
+
+                auto bounds = cro::Text::getLocalBounds(e);
+                bounds.width = std::floor(bounds.width / 2.f);
+                e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
             }
             else
             {

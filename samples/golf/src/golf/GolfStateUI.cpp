@@ -169,11 +169,10 @@ void GolfState::buildUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerName | CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().relativePosition = { 0.08f, 0.f };
+    entity.addComponent<UIElement>().relativePosition = { 0.2f, 0.f };
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-    //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::Callback>().setUserData<TextCallbackData>();
     entity.getComponent<cro::Callback>().function = TextAnimCallback();
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -186,7 +185,6 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //club info
@@ -249,13 +247,12 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto windEnt = entity;
 
     //wind indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 20.f, 0.03f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 20.f, 0.03f));
     entity.addComponent<cro::Drawable2D>().setVertexData( 
     {
         cro::Vertex2D(glm::vec2(-1.f, 12.f), LeaderboardTextLight),
@@ -268,7 +265,7 @@ void GolfState::buildUI()
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 52.f, 0.01f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 52.f, 0.01f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindIndicator];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -331,12 +328,11 @@ void GolfState::buildUI()
 
     //hole number
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, -12.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(38.f, -12.f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::HoleNumber;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::Callback>().setUserData<TextCallbackData>();
     entity.getComponent<cro::Callback>().function = TextAnimCallback();
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -698,7 +694,6 @@ void GolfState::showCountdown(std::uint8_t seconds)
     entity.addComponent<cro::Transform>().setPosition({ 200.f, 10.f, 0.23f }); //attaches to scoreboard which is fixed size
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::uint8_t>>(1.f, seconds);
@@ -714,6 +709,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
         }
 
         e.getComponent<cro::Text>().setString("Return to lobby in: " + std::to_string(sec));
+
+        auto bounds = cro::Text::getLocalBounds(e);
+        bounds.width = std::floor(bounds.width / 2.f);
+        e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
     };
 
     //attach to the scoreboard
@@ -771,9 +770,11 @@ void GolfState::createScoreboard()
     entity.addComponent<cro::Transform>().setPosition({ 200.f, 293.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("LEADERS");
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+    bounds = cro::Text::getLocalBounds(entity);
+    bounds.width = std::floor(bounds.width / 2.f);
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
@@ -1098,6 +1099,10 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
         ss << std::fixed << knots << " knots";
         e.getComponent<cro::Text>().setString(ss.str());
 
+        auto bounds = cro::Text::getLocalBounds(e);
+        bounds.width = std::floor(bounds.width / 2.f);
+        e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+
         if (knots < 1.5f)
         {
             if (knots < 1)
@@ -1140,19 +1145,18 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MessageBoard];
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard;
 
+
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto textEnt = m_uiScene.createEntity();
     textEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 56.f, 0.02f });
     textEnt.addComponent<cro::Drawable2D>();
     textEnt.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
-    textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
 
     auto textEnt2 = m_uiScene.createEntity();
     textEnt2.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 26.f, 0.02f });
     textEnt2.addComponent<cro::Drawable2D>();
     textEnt2.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
-    textEnt2.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     textEnt2.getComponent<cro::Text>().setFillColour(TextNormalColour);
 
     //add mini graphic depending on message type
@@ -1209,6 +1213,9 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
         break;
     }
     imgEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
+
+    centreText(textEnt);
+    centreText(textEnt2);
     
     entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(textEnt2.getComponent<cro::Transform>());

@@ -1816,6 +1816,10 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             distance = static_cast<std::int32_t>(ballDist * 100.f);
             e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "cm");
         }
+
+        auto bounds = cro::Text::getLocalBounds(e);
+        bounds.width = std::floor(bounds.width / 2.f);
+        e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -2049,6 +2053,10 @@ void GolfState::updateActor(const ActorInfo& update)
                 distance = static_cast<std::int32_t>(ballDist * 100.f);
                 e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "cm");
             }
+
+            auto bounds = cro::Text::getLocalBounds(e);
+            bounds.width = std::floor(bounds.width / 2.f);
+            e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
         };
         m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 

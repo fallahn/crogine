@@ -685,6 +685,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 cmd.action = [data](cro::Entity e, float)
                 {
                     e.getComponent<cro::Text>().setString(data->title);
+                    centreText(e);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -693,6 +694,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 {
                     e.getComponent<cro::Text>().setFillColour(TextNormalColour);
                     e.getComponent<cro::Text>().setString(data->description);
+                    centreText(e);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -700,6 +702,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 cmd.action = [data](cro::Entity e, float)
                 {
                     e.getComponent<cro::Text>().setString(data->holeCount);
+                    centreText(e);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
             }
@@ -711,6 +714,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 cmd.action = [course](cro::Entity e, float)
                 {
                     e.getComponent<cro::Text>().setString(course);
+                    centreText(e);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -719,6 +723,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 {
                     e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
                     e.getComponent<cro::Text>().setString("Course Data Not Found");
+                    centreText(e);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 

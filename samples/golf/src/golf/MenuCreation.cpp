@@ -1331,7 +1331,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseTitle;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //course description
@@ -1341,7 +1340,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseDesc;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole count
@@ -1351,7 +1349,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseHoles;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //banner
@@ -1991,7 +1988,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         entity.addComponent<cro::Text>(font).setString(m_sharedData.localConnectionData.playerData[i].name);
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
         entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
-        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        centreText(entity);
 
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
@@ -2148,13 +2145,13 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
                         ent.addComponent<cro::Transform>().setPosition({ 25.f, 4.f, 0.f });
                         ent.addComponent<cro::Drawable2D>();
                         ent.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setCharacterSize(InfoTextSize);
-                        ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
                         ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
                         ent.addComponent<cro::Callback>().active = true;
                         ent.getComponent<cro::Callback>().function =
                             [&, i](cro::Entity numEnt, float)
                         {
                             numEnt.getComponent<cro::Text>().setString(std::to_string(m_sharedData.controllerIDs[i] + 1));
+                            centreText(numEnt);
                         };
 
                         e.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());

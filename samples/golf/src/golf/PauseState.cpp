@@ -255,7 +255,7 @@ void PauseState::buildScene()
         e.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
         e.getComponent<cro::Text>().setString(label);
         e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        e.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        centreText(e);
         e.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(e);
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
@@ -347,7 +347,7 @@ void PauseState::buildScene()
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setString("Are You Sure?");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    centreText(entity);
     confirmEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 

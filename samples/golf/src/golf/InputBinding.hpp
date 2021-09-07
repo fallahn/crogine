@@ -64,12 +64,12 @@ struct InputBinding final
         SDLK_SPACE,
         SDLK_e,
         SDLK_q,
-        SDLK_LCTRL,
-        SDLK_LSHIFT,
+        SDLK_UNKNOWN,
+        SDLK_UNKNOWN,
         SDLK_a,
         SDLK_d,
-        SDLK_w,
-        SDLK_s
+        SDLK_UNKNOWN,
+        SDLK_UNKNOWN
     };
 
     std::array<std::int32_t, 5u> buttons =

@@ -31,6 +31,8 @@ source distribution.
 
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
+#include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
 struct FontID final
@@ -101,4 +103,11 @@ static inline bool activated(const cro::ButtonEvent& evt)
     case SDL_KEYDOWN:
         return (evt.key.keysym.sym == SDLK_KP_ENTER || evt.key.keysym.sym == SDLK_RETURN);
     }
+}
+
+static inline void centreText(cro::Entity entity)
+{
+    auto bounds = cro::Text::getLocalBounds(entity);
+    bounds.width = std::floor(bounds.width / 2.f);
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
 }

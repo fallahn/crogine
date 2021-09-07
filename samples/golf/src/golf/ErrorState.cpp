@@ -234,7 +234,11 @@ void ErrorState::buildScene()
         e.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
         e.getComponent<cro::Text>().setString(label);
         e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        e.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        
+        auto bounds = cro::Text::getLocalBounds(e);
+        bounds.width = std::floor(bounds.width / 2.f);
+        bounds.height = std::floor(bounds.height / 2.f);
+        e.getComponent<cro::Transform>().setOrigin({ bounds.width, bounds.height });
 
         parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         return e;

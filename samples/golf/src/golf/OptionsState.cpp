@@ -345,6 +345,7 @@ void OptionsState::updateKeybind(SDL_Keycode key)
             auto msg = cro::Keyboard::keyString(key);
             msg += " is already bound";
             e.getComponent<cro::Text>().setString(msg);
+            centreText(e);
         };
         m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -387,8 +388,8 @@ void OptionsState::updateKeybind(SDL_Keycode key)
         case InputBinding::Action:
             e.getComponent<cro::Text>().setString("Take Shot");
             break;
-
         }
+        centreText(e);
 
         //reset any existing callback so that it doesn't timeout
         //and set the wrong string
@@ -725,7 +726,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //resolution value text
     auto resLabel = createLabel(glm::vec2(60.f, 14.f), m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
-    resLabel.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    centreText(resLabel);
 
 
     auto createSlider = [&](std::uint8_t index,glm::vec2 position)
@@ -865,7 +866,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     infoEnt.addComponent<cro::Transform>().setPosition(glm::vec2(parentBounds.width / 2.f, parentBounds.height - 4.f));
     infoEnt.addComponent<cro::Drawable2D>();
     infoEnt.addComponent<cro::Text>(infoFont);// .setString("Info Text");
-    infoEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     infoEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     infoEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     infoEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::PlayerConfig; //not the best description, just recycling existing members here...
@@ -878,6 +878,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         if (currTime < 0)
         {
             e.getComponent<cro::Text>().setString(str);
+            centreText(e);
             e.getComponent<cro::Callback>().active = false;
         }
     };
@@ -889,6 +890,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         [infoEnt](cro::Entity e) mutable
         {
             infoEnt.getComponent<cro::Text>().setString(" ");
+            centreText(infoEnt);
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
 
@@ -904,13 +906,16 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectID;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
             [&, infoEnt, keyIndex](cro::Entity e, cro::ButtonEvent evt) mutable
             {
-                if (activated(evt))
+                if (evt.type != SDL_MOUSEBUTTONDOWN
+                    && evt.type != SDL_MOUSEBUTTONUP
+                    && activated(evt))
                 {
                     m_updatingKeybind = true;
                     infoEnt.getComponent<cro::Text>().setString("Press a Key");
+                    centreText(infoEnt);
 
                     m_bindingIndex = keyIndex;
                 }
@@ -928,6 +933,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             infoEnt.getComponent<cro::Text>().setString("Previous Club");
+            centreText(infoEnt);
         });
 
 
@@ -938,6 +944,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             infoEnt.getComponent<cro::Text>().setString("Next Club");
+            centreText(infoEnt);
         });
 
     //aim left
@@ -947,6 +954,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             infoEnt.getComponent<cro::Text>().setString("Aim Left");
+            centreText(infoEnt);
         });
 
     //aim right
@@ -956,6 +964,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             infoEnt.getComponent<cro::Text>().setString("Aim Right");
+            centreText(infoEnt);
         });
 
     //swing
@@ -965,6 +974,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             infoEnt.getComponent<cro::Text>().setString("Take Shot");
+            centreText(infoEnt);
         });
 
 
@@ -978,6 +988,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         void operator() (cro::Entity e, float)
         {
             e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(binding.keys[labelIndex]));
+            centreText(e);
         }
     };
 
@@ -988,7 +999,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         e.addComponent<cro::Drawable2D>();
         e.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
         e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        e.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         e.addComponent<cro::Callback>().active = true;
         e.getComponent<cro::Callback>().function = LabelCallback(bindingIndex, m_sharedData.inputBinding);
         parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
