@@ -36,4 +36,9 @@ spritesheet player_menu
     {
         bounds = 203,214,17,19
     }
+
+    sprite title
+    {
+        bounds = 0, 259 ,190, 51
+    }
 }

@@ -1,0 +1,44 @@
+spritesheet connect_menu
+{
+    src = "assets/golf/images/connect_menu.png"
+
+    sprite background
+    {
+        bounds = 0,0,152,80
+    }
+
+    sprite title
+    {
+        bounds = 0,81, 142,40
+    }
+
+    sprite highlight
+    {
+        bounds = 0,127,129,17
+    }
+
+    sprite bounce
+    {
+        bounds = 160,0,80,16
+
+        animation bounce
+        {
+            frame = 160,0,80,16
+            frame = 160,16,80,16
+            frame = 160,32,80,16
+            frame = 160,48,80,16
+            frame = 160,64,80,16
+            frame = 160,80,80,16
+            frame = 160,96,80,16
+            frame = 160,112,80,16
+            frame = 160,128,80,16
+            frame = 160,144,80,16
+            frame = 160,160,80,16
+            frame = 0,160,80,16
+            frame = 0,0,0,0
+
+            loop = true
+            framerate = 12
+        }
+    }
+}

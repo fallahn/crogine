@@ -2218,7 +2218,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
                 }
 
                 auto bb = e.getComponent<cro::Sprite>().getTextureBounds();
-                e.getComponent<cro::Transform>().setOrigin({ bb.width / 2.f, bb.height / 2.f });
+                e.getComponent<cro::Transform>().setOrigin({ std::floor(bb.width / 2.f), std::floor(bb.height / 2.f) });
             }
             controlData.prevControllerCount = controllerCount;
         };
