@@ -20,7 +20,7 @@ A course folder should contain one file with the course.data. It has the followi
 The course file contains a list of paths to *.hole files which describe the individual holes that make up a course. This way holes can be recycled thoughout different course layouts should it be so desired. Up to 18 holes can be added to a course (any further holes will be ignored when the course file is loaded).
 
 ###### Hole file
-Hole files describe which models/assets make up the hole, as well as the position of the tee, the hole and the par for that hole. Optionally prop objects can be added to the hole to display models as props in the game.
+Hole files describe which models/assets make up the hole, as well as the position of the tee, the hole and the par for that hole. Optionally prop objects can be added to the hole to display models as props in the game. Crowd objetcs can also optionally be added to place a small crowd of spectators. By default they are aligned left to right along the X axis and can be rotated with the `rotation` property.
 
     hole 01 //hole ID
     {
@@ -34,8 +34,14 @@ Hole files describe which models/assets make up the hole, as well as the positio
         prop
         {
             position = 70,0,45 //position relative to the hole model origin
-            rotation = 45 //rotation around the Y axis
+            rotation = 45 //rotation around the Y axis (in degrees)
             model = "assets/golf/models/cart.cmt" //path to a model description to use as a prop
+        }
+
+        crowd
+        {
+            position = -130, 0, -65
+            rotation = 180
         }
     }
 

@@ -84,7 +84,7 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
             default: break;
             case 0:
                 ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[AudioID::Ground]);
-                ent.getComponent<cro::AudioEmitter>().setVolume(1.4f);
+                ent.getComponent<cro::AudioEmitter>().setVolume(2.f);
                 break;
             case 1:
                 ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[AudioID::Hole]);

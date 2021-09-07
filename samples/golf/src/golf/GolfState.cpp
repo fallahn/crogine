@@ -696,6 +696,48 @@ void GolfState::loadAssets()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
 
+    //pre-process the crowd geometry
+    cro::ModelDefinition billboardDef(m_resources);
+    cro::SpriteSheet crowdSprites;
+    crowdSprites.loadFromFile("assets/golf/sprites/crowd.spt", m_resources.textures);
+    const auto& sprites = crowdSprites.getSprites();
+    std::vector<cro::Billboard> billboards;
+    for (const auto& [name, spr] : sprites)
+    {
+        billboards.push_back(spriteToBillboard(spr));
+    }
+
+    //used when parsing holes
+    auto addCrowd = [&](HoleData& holeData, glm::vec3 position, float rotation)
+    {
+        //reload to ensure unique VBO
+        if (!billboards.empty() &&
+            billboardDef.loadFromFile("assets/golf/models/crowd.cmt"))
+        {
+            auto ent = m_gameScene.createEntity();
+            ent.addComponent<cro::Transform>().setPosition(position);
+            ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
+            billboardDef.createModel(ent);
+
+            glm::vec3 bbPos(-8.f, 0.f, 0.f);
+            for (auto i = 0; i < 16; ++i)
+            {
+                bbPos.x += 0.5f + (static_cast<float>(cro::Util::Random::value(5, 10)) / 10.f);
+                bbPos.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
+
+                auto bb = billboards[(i % billboards.size()) + cro::Util::Random::value(0, 2)];
+                bb.size *= static_cast<float>(cro::Util::Random::value(9, 11)) / 10.f;
+                bb.position = bbPos;
+                ent.getComponent<cro::BillboardCollection>().addBillboard(bb);
+            }
+
+            ent.getComponent<cro::Model>().setHidden(true);
+
+            holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+            holeData.propEntities.push_back(ent);
+        }
+    };
+
 
     //load the map data
     bool error = false;
@@ -892,6 +934,27 @@ void GolfState::loadAssets()
                             holeData.propEntities.push_back(ent);
                         }
                     }
+                }
+                else if (name == "crowd")
+                {
+                    const auto& modelProps = obj.getProperties();
+                    glm::vec3 position(0.f);
+                    float rotation = 0.f;
+
+                    for (const auto& modelProp : modelProps)
+                    {
+                        auto propName = modelProp.getName();
+                        if (propName == "position")
+                        {
+                            position = modelProp.getValue<glm::vec3>();
+                        }
+                        else if (propName == "rotation")
+                        {
+                            rotation = modelProp.getValue<float>();
+                        }
+                    }
+
+                    addCrowd(holeData, position, rotation);
                 }
             }
         }

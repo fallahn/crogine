@@ -10,7 +10,19 @@ hole 01
     prop
     {
         model = "assets/golf/models/cart.cmt"
-        position = 72, 0, 75
+        position = 70, 0, 74
         rotation = 45
     }
+
+    crowd
+    {
+        position = -144, 0 , -70
+        rotation = 90
+    }
+
+    crowd
+    {
+        position = 80, 0 , 76
+        rotation = 170
+    }    
 }
