@@ -540,7 +540,8 @@ void UISystem::onEntityRemoved(Entity entity)
     //remove the entity from its group
     auto group = entity.getComponent<UIInput>().m_group;
 
-    if (m_activeGroup == group)
+    if (m_activeGroup == group
+        && m_groups[group][m_selectedIndex] == entity)
     {
         selectPrev(1);
     }

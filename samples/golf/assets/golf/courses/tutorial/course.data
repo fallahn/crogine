@@ -1,0 +1,9 @@
+course tutorial
+{
+    skybox = "assets/golf/images/skybox/spring/sky.ccm"
+
+    title = "Tutorial"
+    description = "Learn How To Play"
+
+    hole = "assets/golf/courses/course_01/01.hole"
+}

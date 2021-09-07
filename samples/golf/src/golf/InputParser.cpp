@@ -45,7 +45,7 @@ namespace
     constexpr float MaxPower = 1.f - MinPower;
 }
 
-InputParser::InputParser(InputBinding ip, cro::MessageBus& mb)
+InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)
     : m_inputBinding    (ip),
     m_messageBus        (mb),
     m_inputFlags        (0),

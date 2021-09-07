@@ -197,8 +197,8 @@ void Server::run()
     //clear client data
     for (auto& c : m_sharedData.clients)
     {
-        c.playerCount = 0;
         m_sharedData.host.disconnect(c.peer);
+        c = {};
     }
 
     m_sharedData.host.stop();

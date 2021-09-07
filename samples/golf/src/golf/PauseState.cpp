@@ -327,14 +327,16 @@ void PauseState::buildScene()
             {
                 if (activated(evt))
                 {
-                    m_sharedData.clientConnection.connected = false;
-                    m_sharedData.clientConnection.netClient.disconnect();
-
                     if (m_sharedData.hosting)
                     {
                         m_sharedData.serverInstance.stop();
                         m_sharedData.hosting = false;
                     }
+
+                    m_sharedData.clientConnection.connected = false;
+                    m_sharedData.clientConnection.connectionID = 4;
+                    m_sharedData.clientConnection.ready = false;
+                    m_sharedData.clientConnection.netClient.disconnect();
 
                     requestStackClear();
                     requestStackPush(StateID::Menu);

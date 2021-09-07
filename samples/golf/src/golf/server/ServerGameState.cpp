@@ -229,11 +229,14 @@ std::int32_t GameState::process(float dt)
         //check the turn timer and skip player if they AFK'd
         if (m_turnTimer.elapsed() > TurnTime)
         {
-            m_playerInfo[0].holeScore[m_currentHole] = MaxStrokes;
-            m_playerInfo[0].position = m_holeData[m_currentHole].pin;
-            m_playerInfo[0].distanceToHole = 0.f;
-            m_playerInfo[0].terrain = TerrainID::Green;
-            setNextPlayer(); //resets the timer
+            if (m_sharedData.clients[m_playerInfo[0].client].peer.getID() != m_sharedData.hostID)
+            {
+                m_playerInfo[0].holeScore[m_currentHole] = MaxStrokes;
+                m_playerInfo[0].position = m_holeData[m_currentHole].pin;
+                m_playerInfo[0].distanceToHole = 0.f;
+                m_playerInfo[0].terrain = TerrainID::Green;
+                setNextPlayer(); //resets the timer
+            }
         }
     }
 

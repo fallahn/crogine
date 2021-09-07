@@ -112,7 +112,20 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
     sd.clientConnection.ready = false;
     std::fill(m_readyState.begin(), m_readyState.end(), false);
-        
+
+    //reset the state if we came from the tutorial
+    if (sd.tutorial)
+    {
+        sd.serverInstance.stop();
+
+        sd.tutorial = false;
+        sd.hosting = false;
+        sd.clientConnection.connected = false;
+        sd.clientConnection.connectionID = 4;
+        sd.clientConnection.ready = false;
+        sd.clientConnection.netClient.disconnect();
+    }
+
     //we returned from a previous game
     if (sd.clientConnection.connected)
     {

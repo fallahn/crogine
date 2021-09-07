@@ -43,7 +43,7 @@ class InputParser final
 {
 public:
        
-    InputParser(InputBinding, cro::MessageBus&);
+    InputParser(const InputBinding&, cro::MessageBus&);
 
     void handleEvent(const cro::Event&);
     void setHoleDirection(glm::vec3, bool);
@@ -62,7 +62,7 @@ public:
     bool inProgress() const;
 
 private:
-    InputBinding m_inputBinding;
+    const InputBinding& m_inputBinding;
     cro::MessageBus& m_messageBus;
 
     std::uint16_t m_inputFlags;

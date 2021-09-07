@@ -513,7 +513,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(textPos);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString("Practice (Tutorial)");
+        entity.addComponent<cro::Text>(font).setString("Tutorial");
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
@@ -523,10 +523,45 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
                 {
+                    //TODO check stuff like current connection status (must be disconnected)
+                    //and whether or not the tutorial course data exists.
                     if (activated(evt))
                     {
-                        requestStackClear();
-                        requestStackPush(StateID::Tutorial);
+                        m_sharedData.hosting = true;
+                        m_sharedData.tutorial = true;
+                        m_sharedData.localConnectionData.playerCount = 1;
+
+                        //start a local server and connect
+                        if (!m_sharedData.clientConnection.connected)
+                        {
+                            m_sharedData.serverInstance.launch();
+
+                            //small delay for server to get ready
+                            cro::Clock clock;
+                            while (clock.elapsed().asMilliseconds() < 500) {}
+
+                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+
+                            if (!m_sharedData.clientConnection.connected)
+                            {
+                                m_sharedData.serverInstance.stop();
+                                m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
+                                    + std::to_string(ConstVal::GamePort)
+                                    + " is allowed through\nany firewalls or NAT";
+                                requestStackPush(StateID::Error); //error makes sure to reset any connection
+                            }
+                            else
+                            {
+                                m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
+
+                                //set the course to tutorial
+                                auto data = serialiseString("tutorial");
+                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+                                //and start
+                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                            }
+                        }
                     }
                 });
         bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -668,6 +703,18 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Cursor];
     entity.addComponent<cro::SpriteAnimation>().play(0);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::pair<cro::Entity,glm::vec3>>(cro::Entity(), 0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+    {
+        //makes sure to move with current parent on screen resize
+        const auto& [parent, offset] = e.getComponent<cro::Callback>().getUserData<std::pair<cro::Entity, glm::vec3>>();
+        if (parent.isValid())
+        {
+            e.getComponent<cro::Transform>().setPosition(parent.getComponent<cro::Transform>().getPosition() + offset);
+        }
+    };
     menuTransform.addChild(entity.getComponent<cro::Transform>());
     auto cursorEnt = entity;
 
@@ -684,6 +731,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             entity.getComponent<cro::Transform>().setScale(glm::vec2(-1.f, 1.f));
             entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            entity.getComponent<cro::Callback>().setUserData<std::pair<cro::Entity, glm::vec3>>(e, basePos + Offset);
         });
 
 
@@ -696,6 +744,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            entity.getComponent<cro::Callback>().setUserData<std::pair<cro::Entity, glm::vec3>>(e, CursorOffset);
         });
 
     //back
