@@ -684,68 +684,78 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
         {
             //check we have the local data (or at least something with the same name)
             auto course = deserialiseString(evt.packet);
-            if (auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(), 
-                [&course](const CourseData& cd)
-                {
-                    return cd.directory == course;
-                }); data != m_courseData.cend())
+
+            //jump straight into the tutorial
+            //if that's what's set
+            if (course == "tutorial")
             {
-                m_sharedData.mapDirectory = course;
-                
-                //update UI
-                cro::Command cmd;
-                cmd.targetFlags = CommandID::Menu::CourseTitle;
-                cmd.action = [data](cro::Entity e, float)
-                {
-                    e.getComponent<cro::Text>().setString(data->title);
-                    centreText(e);
-                };
-                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
-                cmd.targetFlags = CommandID::Menu::CourseDesc;
-                cmd.action = [data](cro::Entity e, float)
-                {
-                    e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-                    e.getComponent<cro::Text>().setString(data->description);
-                    centreText(e);
-                };
-                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-
-                cmd.targetFlags = CommandID::Menu::CourseHoles;
-                cmd.action = [data](cro::Entity e, float)
-                {
-                    e.getComponent<cro::Text>().setString(data->holeCount);
-                    centreText(e);
-                };
-                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             else
             {
-                //print to UI course is missing
-                cro::Command cmd;
-                cmd.targetFlags = CommandID::Menu::CourseTitle;
-                cmd.action = [course](cro::Entity e, float)
+                if (auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
+                    [&course](const CourseData& cd)
+                    {
+                        return cd.directory == course;
+                    }); data != m_courseData.cend())
                 {
-                    e.getComponent<cro::Text>().setString(course);
-                    centreText(e);
-                };
-                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                    m_sharedData.mapDirectory = course;
 
-                cmd.targetFlags = CommandID::Menu::CourseDesc;
-                cmd.action = [course](cro::Entity e, float)
-                {
-                    e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
-                    e.getComponent<cro::Text>().setString("Course Data Not Found");
-                    centreText(e);
-                };
-                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                    //update UI
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::Menu::CourseTitle;
+                    cmd.action = [data](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Text>().setString(data->title);
+                        centreText(e);
+                    };
+                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
-                cmd.targetFlags = CommandID::Menu::CourseHoles;
-                cmd.action = [data](cro::Entity e, float)
+                    cmd.targetFlags = CommandID::Menu::CourseDesc;
+                    cmd.action = [data](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                        e.getComponent<cro::Text>().setString(data->description);
+                        centreText(e);
+                    };
+                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                    cmd.targetFlags = CommandID::Menu::CourseHoles;
+                    cmd.action = [data](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Text>().setString(data->holeCount);
+                        centreText(e);
+                    };
+                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                }
+                else
                 {
-                    e.getComponent<cro::Text>().setString(" ");
-                };
-                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                    //print to UI course is missing
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::Menu::CourseTitle;
+                    cmd.action = [course](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Text>().setString(course);
+                        centreText(e);
+                    };
+                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                    cmd.targetFlags = CommandID::Menu::CourseDesc;
+                    cmd.action = [course](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+                        e.getComponent<cro::Text>().setString("Course Data Not Found");
+                        centreText(e);
+                    };
+                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+                    cmd.targetFlags = CommandID::Menu::CourseHoles;
+                    cmd.action = [data](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Text>().setString(" ");
+                    };
+                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                }
             }
         }
             break;

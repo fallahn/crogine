@@ -130,6 +130,11 @@ void MenuState::parseCourseDirectory()
     auto directories = cro::FileSystem::listDirectories(rootDir);
     for (const auto& dir : directories)
     {
+        if (dir == "tutorial")
+        {
+            continue;
+        }
+
         auto courseFile = rootDir + "/" + dir + "/course.data";
         if (cro::FileSystem::fileExists(courseFile))
         {
@@ -509,7 +514,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         textPos.y -= LineSpacing;
 
-        //driving range
+        //tutorial
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(textPos);
         entity.addComponent<cro::Drawable2D>();
@@ -558,8 +563,8 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                                 auto data = serialiseString("tutorial");
                                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
-                                //and start
-                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                                //now we wait for the server to send us the map name so we know the tutorial
+                                //course has been set. Then the network event handler launches the game.
                             }
                         }
                     }

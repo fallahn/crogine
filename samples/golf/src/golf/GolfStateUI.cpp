@@ -192,7 +192,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::ClubName | CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().relativePosition = { 0.01f, 1.f };
+    entity.addComponent<UIElement>().relativePosition = ClubTextPosition;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;
@@ -612,7 +612,7 @@ void GolfState::buildUI()
         greenEnt.getComponent<cro::Transform>().setPosition({ 4.f, uiSize.y - (MapSize.y / 3) - UIBarHeight - 4.f });
         greenEnt.getComponent<cro::Transform>().move(greenEnt.getComponent<cro::Transform>().getOrigin());
 
-        windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(uiSize.x - 48.f, 40.f));
+        windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(uiSize.x + WindIndicatorPosition.x, WindIndicatorPosition.y));
 
         //update the overlay
         auto colour = cro::Colour(0.f, 0.f, 0.f, 0.25f);

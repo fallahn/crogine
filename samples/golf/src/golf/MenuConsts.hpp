@@ -85,6 +85,9 @@ static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);
 static constexpr glm::vec2 MenuSpacing(1920.f, 1080.f);
 static constexpr float MenuBottomBorder = 20.f;
 
+static constexpr glm::vec2 ClubTextPosition(0.01f, 1.f); //relative
+static constexpr glm::vec2 WindIndicatorPosition(-48.f, 40.f); //absolute from edge of the screen
+
 static inline bool activated(const cro::ButtonEvent& evt)
 {
     switch (evt.type)
