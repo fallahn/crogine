@@ -83,6 +83,7 @@ struct CommandID final
             CourseDesc   = 0x400,
             CourseHoles  = 0x800,
             CourseSelect = 0x1000,
+            TitleText    = 0x2000
         };
     };
 };

@@ -62,6 +62,22 @@ source distribution.
 namespace
 {
 #include "RandNames.hpp"
+
+    struct TitleTextCallback final
+    {
+        void operator() (cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::min(1.f, currTime + dt);
+            float scale = cro::Util::Easing::easeOutBounce(currTime);
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+            if (currTime == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+    };
 }
 
 void MenuCallback::operator()(cro::Entity e, float dt)
@@ -81,6 +97,16 @@ void MenuCallback::operator()(cro::Entity e, float dt)
             e.getComponent<cro::Callback>().active = false;
             menuState.m_uiScene.getSystem<cro::UISystem>().setActiveGroup(menuData.targetMenu);
             menuState.m_currentMenu = menuData.targetMenu;
+
+            //start title animation
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Menu::TitleText;
+            cmd.action = [](cro::Entity t, float)
+            {
+                t.getComponent<cro::Callback>().setUserData<float>(0.f);
+                t.getComponent<cro::Callback>().active = true;
+            };
+            menuState.m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
         }
     }
     else
@@ -101,14 +127,22 @@ void MenuCallback::operator()(cro::Entity e, float dt)
 
             cro::Command cmd;
             cmd.targetFlags = CommandID::Menu::RootNode;
-            cmd.action = [positions, menuData, viewScale](cro::Entity e, float)
+            cmd.action = [positions, menuData, viewScale](cro::Entity n, float)
             {
-                e.getComponent<cro::Transform>().setPosition(positions->at(menuData.targetMenu) * viewScale);
+                n.getComponent<cro::Transform>().setPosition(positions->at(menuData.targetMenu) * viewScale);
             };
             menuState.m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
             menuState.m_menuEntities[menuData.targetMenu].getComponent<cro::Callback>().active = true;
             menuState.m_menuEntities[menuData.targetMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = menuData.targetMenu;
+
+            //hide incoming titles
+            cmd.targetFlags = CommandID::Menu::TitleText;
+            cmd.action = [](cro::Entity t, float)
+            {
+                t.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
+            };
+            menuState.m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
         }
     }
 }
@@ -321,24 +355,24 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
     entity.addComponent<UIElement>().absolutePosition = { 0.f, 0.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.75f };
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
 
     entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
-    {
-        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-        currTime = std::min(1.f, currTime + dt);
-        float scale = cro::Util::Easing::easeOutBounce(currTime);
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    entity.getComponent<cro::Callback>().function = TitleTextCallback();
+    //    [](cro::Entity e, float dt)
+    //{
+    //    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+    //    currTime = std::min(1.f, currTime + dt);
+    //    float scale = cro::Util::Easing::easeOutBounce(currTime);
+    //    e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
 
-        if (currTime == 1)
-        {
-            e.getComponent<cro::Callback>().active = false;
-        }
-    };
+    //    if (currTime == 1)
+    //    {
+    //        e.getComponent<cro::Callback>().active = false;
+    //    }
+    //};
 
     menuTransform.addChild(entity.getComponent<cro::Transform>());
     auto titleEnt = entity;
@@ -682,7 +716,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     avatarEnt.addComponent<cro::Transform>();
     avatarEnt.addComponent<cro::Drawable2D>();
     avatarEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
-    avatarEnt.addComponent<UIElement>().relativePosition = { 0.5f, 0.54f };
+    avatarEnt.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     avatarEnt.getComponent<UIElement>().depth = -0.2f;
     avatarEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     auto bounds = avatarEnt.getComponent<cro::Sprite>().getTextureBounds();
@@ -697,20 +731,22 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     //title
-    //auto entity = m_uiScene.createEntity();
-    //entity.addComponent<cro::Transform>();
-    //entity.addComponent<UIElement>().absolutePosition = { 10.f, 0.f };
-    //entity.getComponent<UIElement>().relativePosition = { 0.f, 0.9f };
-    //entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    //entity.addComponent<cro::Drawable2D>();
-    //entity.addComponent<cro::Text>(font).setString("Player Details");
-    //entity.getComponent<cro::Text>().setCharacterSize(SmallTextSize);
-    //entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    //menuTransform.addChild(entity.getComponent<cro::Transform>());
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.9f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function = TitleTextCallback();
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
 
 
     //banner
-    auto entity = m_uiScene.createEntity();
+    entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 5.f, -0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ButtonBanner];
@@ -734,18 +770,25 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Cursor];
     entity.addComponent<cro::SpriteAnimation>().play(0);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<std::pair<cro::Entity,glm::vec3>>(cro::Entity(), 0.f);
-    entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float)
-    {
-        //makes sure to move with current parent on screen resize
-        const auto& [parent, offset] = e.getComponent<cro::Callback>().getUserData<std::pair<cro::Entity, glm::vec3>>();
-        if (parent.isValid())
-        {
-            e.getComponent<cro::Transform>().setPosition(parent.getComponent<cro::Transform>().getPosition() + offset);
-        }
-    };
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().setUserData<std::pair<cro::Entity,glm::vec3>>(cro::Entity(), 0.f);
+    //entity.getComponent<cro::Callback>().function =
+    //    [avatarEnt](cro::Entity e, float)
+    //{
+    //    //makes sure to move with current parent on screen resize
+    //    const auto& [parent, offset] = e.getComponent<cro::Callback>().getUserData<std::pair<cro::Entity, glm::vec3>>();
+    //    if (parent.isValid())
+    //    {
+    //        auto pos = offset;
+    //        if (parent == avatarEnt)
+    //        {
+    //            pos += avatarEnt.getComponent<cro::Transform>().getPosition();
+    //            pos -= avatarEnt.getComponent<cro::Transform>().getOrigin();
+    //        }
+
+    //        e.getComponent<cro::Transform>().setPosition(parent.getComponent<cro::Transform>().getPosition() + pos);
+    //    }
+    //};
     menuTransform.addChild(entity.getComponent<cro::Transform>());
     auto cursorEnt = entity;
 
@@ -762,7 +805,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             entity.getComponent<cro::Transform>().setScale(glm::vec2(-1.f, 1.f));
             entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-            entity.getComponent<cro::Callback>().setUserData<std::pair<cro::Entity, glm::vec3>>(e, basePos + Offset);
+            //entity.getComponent<cro::Callback>().setUserData<std::pair<cro::Entity, glm::vec3>>(e, Offset);
         });
 
 
@@ -775,7 +818,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-            entity.getComponent<cro::Callback>().setUserData<std::pair<cro::Entity, glm::vec3>>(e, CursorOffset);
+            //entity.getComponent<cro::Callback>().setUserData<std::pair<cro::Entity, glm::vec3>>(e, CursorOffset);
         });
 
     //back
