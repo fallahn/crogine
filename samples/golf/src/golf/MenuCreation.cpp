@@ -441,6 +441,32 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //banner header
+    bounds = spriteSheet.getSprite("header").getTextureBounds();
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ textureRect.width / 2.f, textureRect.height - bounds.height, -0.1f });
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("header");
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [bannerEnt, textureRect](cro::Entity e, float dt)
+    {
+        float width = bannerEnt.getComponent<cro::Sprite>().getTextureRect().width;
+        auto position = e.getComponent<cro::Transform>().getPosition();
+        position.x = width / 2.f;
+
+        if (!bannerEnt.getComponent<cro::Callback>().active)
+        {
+            float diff = textureRect.height - position.y;
+            position.y += diff * (dt * 2.f);
+        }
+
+        e.getComponent<cro::Transform>().setPosition(position);
+    };
+    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     //cursor
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ -100.f, 0.f, 0.1f });
