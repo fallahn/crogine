@@ -279,23 +279,13 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
                 break;
             case MenuID::Join:
+                applyTextEdit();
                 m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
                 m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
                 m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
                 break;
             case MenuID::Lobby:
-                m_sharedData.clientConnection.connected = false;
-                m_sharedData.clientConnection.netClient.disconnect();
-
-                if (m_sharedData.hosting)
-                {
-                    m_sharedData.serverInstance.stop();
-                    m_sharedData.hosting = false;
-                }
-
-                m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
-                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
-                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+                quitLobby();
                 break;
             case MenuID::PlayerConfig:
                 applyTextEdit();

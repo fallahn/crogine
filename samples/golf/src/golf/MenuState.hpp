@@ -195,6 +195,7 @@ private:
     void updateLobbyData(const cro::NetEvent&);
     void updateLobbyAvatars();
     void showPlayerConfig(bool, std::uint8_t);
+    void quitLobby();
 
     void saveAvatars();
     void loadAvatars();

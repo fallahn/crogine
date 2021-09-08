@@ -1196,17 +1196,19 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     //ip text
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 200.f, -16.f });
     entity.addComponent<cro::Text>(font).setString(m_sharedData.targetIP);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    bounds = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(-bounds.height / 2.f) });
     entity.addComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
         //add a cursor to the end of the string when active
-        cro::String str = m_sharedData.targetIP + "|";
+        cro::String str = m_sharedData.targetIP;
+        if (str.size() < ConstVal::MaxIPChars)
+        {
+            str += "_";
+        }
         e.getComponent<cro::Text>().setString(str);
     };
     menuTransform.addChild(entity.getComponent<cro::Transform>());
@@ -1252,7 +1254,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     callback.active = !callback.active;
                     if (callback.active)
                     {
-                        beginTextEdit(textEnt, &m_sharedData.targetIP, ConstVal::MaxStringChars);
+                        beginTextEdit(textEnt, &m_sharedData.targetIP, ConstVal::MaxIPChars);
                     }
                     else
                     {
@@ -1261,7 +1263,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 }
             });
     textEnt.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getOrigin());
-    textEnt.getComponent<cro::Transform>().move({ 0.f, -16.f, 0.1f });
+    textEnt.getComponent<cro::Transform>().move({ -60.f, -12.f, 0.1f });
     balls.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getOrigin());
     balls.getComponent<cro::Transform>().move({ 0.f, 0.f, 0.1f });
     entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
@@ -1587,32 +1589,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>().addCallback([&/*, menuEntity*/](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
-                    m_sharedData.clientConnection.connected = false;
-                    m_sharedData.clientConnection.netClient.disconnect();
-
-                    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
-                    menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
-                    menuEntity.getComponent<cro::Callback>().active = true;
-
-                    if (m_sharedData.hosting)
-                    {
-                        m_sharedData.serverInstance.stop();
-                        m_sharedData.hosting = false;
-
-                        //delete the course selection entities as they'll be re-created as needed
-                        cro::Command cmd;
-                        cmd.targetFlags = CommandID::Menu::CourseSelect;
-                        cmd.action =
-                            [&](cro::Entity b, float)
-                        {
-                            m_uiScene.destroyEntity(b);
-                        };
-                        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
-                    }
+                    quitLobby();
                 }
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
@@ -2513,6 +2494,35 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
         //I'm probably going to regret that.
         m_currentMenu = MenuID::Avatar;
     }
+}
+
+void MenuState::quitLobby()
+{
+    m_sharedData.clientConnection.connected = false;
+    m_sharedData.clientConnection.connectionID = 4;
+    m_sharedData.clientConnection.ready = false;
+    m_sharedData.clientConnection.netClient.disconnect();
+
+    if (m_sharedData.hosting)
+    {
+        m_sharedData.serverInstance.stop();
+        m_sharedData.hosting = false;
+    }
+
+    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+    m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
+    m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+
+
+    //delete the course selection entities as they'll be re-created as needed
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Menu::CourseSelect;
+    cmd.action =
+        [&](cro::Entity b, float)
+    {
+        m_uiScene.destroyEntity(b);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 }
 
 void MenuState::saveAvatars()

@@ -223,6 +223,19 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.usePostProcess = prop.getValue<bool>();
                 }
+                else if (name == "last_ip")
+                {
+                    auto str = prop.getValue<std::string>();
+
+                    if (!str.empty())
+                    {
+                        m_sharedData.targetIP = str.substr(0, ConstVal::MaxIPChars);
+                    }
+                    else
+                    {
+                        m_sharedData.targetIP = "255.255.255.255";
+                    }
+                }
             }
         }
     }
@@ -253,7 +266,7 @@ void GolfGame::savePreferences()
 
     //advanced options
     cfg.addProperty("use_post_process").setValue(m_sharedData.usePostProcess);
-
+    cfg.addProperty("last_ip").setValue(m_sharedData.targetIP.toAnsiString());
     cfg.save(path);
 
 

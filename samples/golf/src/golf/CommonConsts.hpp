@@ -55,6 +55,7 @@ namespace ConstVal
     //max string vars for name/limiting packet size
     static constexpr std::size_t MaxStringChars = 24;
     static constexpr std::size_t MaxNameChars = 12;
+    static constexpr std::size_t MaxIPChars = 15;
     //this is sent as a byte in packet headers - so don't increase MaxStringChars above 32!!
     static constexpr std::size_t MaxStringDataSize = MaxStringChars * sizeof(std::uint32_t);
 
