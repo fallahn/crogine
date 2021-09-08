@@ -133,6 +133,7 @@ private:
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
     std::size_t m_currentMenu; //used by view callback to reposition the root node on window resize
+    std::size_t m_prevMenu; //used to resore active menu when completing text entry
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {}; //each menu transform, attatched to root node.
 
     struct TextEdit final
@@ -187,6 +188,7 @@ private:
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createPlayerConfigMenu(std::uint32_t, std::uint32_t);
 
+    void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);
     void applyTextEdit();
     void updateLocalAvatars(std::uint32_t, std::uint32_t);

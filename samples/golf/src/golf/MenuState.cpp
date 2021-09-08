@@ -91,6 +91,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_playerAvatar      ("assets/golf/images/player.png"),
     m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu       (MenuID::Main),
+    m_prevMenu          (MenuID::Main),
     m_viewScale         (2.f)
 {
     //launches a loading screen (registered in MyApp.cpp)
@@ -769,6 +770,21 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
     }
 }
 
+void MenuState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)
+{
+    stringEnt.getComponent<cro::Text>().setFillColour(TextEditColour);
+    m_textEdit.string = dst;
+    m_textEdit.entity = stringEnt;
+    m_textEdit.maxLen = maxChars;
+
+    //block input to menu
+    m_prevMenu = m_currentMenu;
+    m_currentMenu = MenuID::Dummy;
+    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(m_currentMenu);
+
+    SDL_StartTextInput();
+}
+
 void MenuState::handleTextEdit(const cro::Event& evt)
 {
     if (!m_textEdit.string)
@@ -810,7 +826,7 @@ void MenuState::handleTextEdit(const cro::Event& evt)
     {
         auto bounds = cro::Text::getLocalBounds(m_textEdit.entity);
        // m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
-        //TODO make this scroll when we hist the edge of the input
+        //TODO make this scroll when we hit the edge of the input
     }
 }
 
@@ -825,9 +841,24 @@ void MenuState::applyTextEdit()
 
         m_textEdit.entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         m_textEdit.entity.getComponent<cro::Text>().setString(*m_textEdit.string);
-        //auto bounds = cro::Text::getLocalBounds(m_textEdit.entity);
-        //m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
         m_textEdit.entity.getComponent<cro::Callback>().active = false;
+
+        //send this as a command to delay it by a frame - doesn't matter who receives it :)
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Menu::RootNode;
+        cmd.action = [&](cro::Entity, float)
+        {
+            //commandception
+            cro::Command cmd2;
+            cmd2.targetFlags = CommandID::Menu::RootNode;
+            cmd2.action = [&](cro::Entity, float)
+            {
+                m_currentMenu = m_prevMenu;
+                m_uiScene.getSystem<cro::UISystem>().setActiveGroup(m_currentMenu);
+            };
+            m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd2);
+        };
+        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
         SDL_StopTextInput();
     }
     m_textEdit = {};

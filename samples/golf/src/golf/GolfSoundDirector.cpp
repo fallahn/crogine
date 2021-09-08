@@ -90,23 +90,18 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         default: break;
         case GolfEvent::ClubSwing:
         {
-            auto ent = getNextEntity();
-
             if (data.terrain == TerrainID::Green)
             {
-                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[cro::Util::Random::value(AudioID::Putt01, AudioID::Putt03)]);
+                playSound(cro::Util::Random::value(AudioID::Putt01, AudioID::Putt03), data.position);
             }
             else if (data.terrain == TerrainID::Bunker)
             {
-                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[AudioID::Wedge]);
+                playSound(AudioID::Wedge, data.position);
             }
             else
             {
-                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[cro::Util::Random::value(AudioID::Swing01, AudioID::Swing03)]);
+                playSound(cro::Util::Random::value(AudioID::Swing01, AudioID::Swing03), data.position);
             }
-            ent.getComponent<cro::AudioEmitter>().play();
-            ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-            ent.getComponent<cro::Transform>().setPosition(data.position);
         }
             break;
         }
@@ -117,27 +112,36 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<CollisionEvent>();
         if (data.type == CollisionEvent::Begin)
         {
-            auto ent = getNextEntity();
+            
             switch (data.terrain)
             {
             default:
-                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[AudioID::Ground]);
+                playSound(AudioID::Ground, data.position);
                 break;
             case TerrainID::Water:
-                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[AudioID::Water]);
+                playSound(AudioID::Water, data.position);
                 break;
             case TerrainID::Hole:
-                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[AudioID::Hole]);
+                playSound(AudioID::Hole, data.position);
                 break;
             case TerrainID::Scrub:
-                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[AudioID::Scrub]);
+                playSound(AudioID::Scrub, data.position);
                 break;
             }
-            ent.getComponent<cro::AudioEmitter>().play();
-            ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-            ent.getComponent<cro::Transform>().setPosition(data.position);
+            
         }
     }
         break;
     }
+}
+
+//private
+void GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, float volume)
+{
+    auto ent = getNextEntity();
+    ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
+    ent.getComponent<cro::AudioEmitter>().play();
+    ent.getComponent<cro::AudioEmitter>().setVolume(volume);
+    ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+    ent.getComponent<cro::Transform>().setPosition(position);
 }

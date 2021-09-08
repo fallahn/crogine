@@ -1252,11 +1252,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     callback.active = !callback.active;
                     if (callback.active)
                     {
-                        textEnt.getComponent<cro::Text>().setFillColour(TextEditColour);
-                        m_textEdit.string = &m_sharedData.targetIP;
-                        m_textEdit.entity = textEnt;
-                        m_textEdit.maxLen = ConstVal::MaxStringChars;
-                        SDL_StartTextInput();
+                        beginTextEdit(textEnt, &m_sharedData.targetIP, ConstVal::MaxStringChars);
                     }
                     else
                     {
@@ -1816,11 +1812,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
                     callback.active = !callback.active;
                     if (callback.active)
                     {
-                        textEnt.getComponent<cro::Text>().setFillColour(TextEditColour);
-                        m_textEdit.string = &m_sharedData.localConnectionData.playerData[callback.getUserData<std::uint8_t>()].name;
-                        m_textEdit.entity = textEnt;
-                        m_textEdit.maxLen = ConstVal::MaxNameChars;
-                        SDL_StartTextInput();
+                        beginTextEdit(textEnt, &m_sharedData.localConnectionData.playerData[callback.getUserData<std::uint8_t>()].name, ConstVal::MaxNameChars);
                     }
                     else
                     {
@@ -2507,6 +2499,8 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
         m_playerAvatar.setColour(pc::ColourKey::Top, m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags[1]);
         m_playerAvatar.setColour(pc::ColourKey::Skin, m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags[2]);
         m_playerAvatar.setColour(pc::ColourKey::Hair, m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags[3]);
+
+        m_currentMenu = MenuID::PlayerConfig;
     }
     else
     {
@@ -2514,6 +2508,10 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
         //these will be updated in the correct positions once we join the lobby
         m_playerAvatar.setTarget(m_sharedData.avatarTextures[0][m_playerAvatar.activePlayer]);
         m_playerAvatar.apply();
+
+        //this is an assumption, but a fair one I feel.
+        //I'm probably going to regret that.
+        m_currentMenu = MenuID::Avatar;
     }
 }
 
