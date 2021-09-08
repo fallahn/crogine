@@ -74,26 +74,42 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
     default: break;
     case cro::Message::SpriteAnimationMessage:
     {
+        const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
         if (m_currentMenu == MenuState::MenuID::Lobby)
         {
-            const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
-            auto ent = getNextEntity();
 
             switch (data.userType)
             {
             default: break;
             case 0:
-                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[AudioID::Ground]);
-                ent.getComponent<cro::AudioEmitter>().setVolume(2.f);
+                playSound(AudioID::Ground, 2.f);
                 break;
             case 1:
-                ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[AudioID::Hole]);
+                playSound(AudioID::Hole);
+                break;
+            }            
+        }
+        else if (m_currentMenu == MenuState::MenuID::Avatar)
+        {
+            switch (data.userType)
+            {
+            default: break;
+            case 2:
+                playSound(AudioID::Ground, 2.f);
                 break;
             }
-            ent.getComponent<cro::AudioEmitter>().play();
-            ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
         }
     }
         break;
     }
+}
+
+//private
+void MenuSoundDirector::playSound(std::int32_t id, float vol)
+{
+    auto ent = getNextEntity();
+    ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+    ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
+    ent.getComponent<cro::AudioEmitter>().setVolume(vol);
+    ent.getComponent<cro::AudioEmitter>().play();
 }

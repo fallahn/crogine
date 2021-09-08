@@ -25,10 +25,10 @@ spritesheet bounce_02
             frame = 432,0,36,248
             frame = 468,0,36,248
 
-            frame = 0,0,0,
+            frame = 0,0,0,0
 
-            event = 0,5
-            event = 0,8
+            event = 2,4
+            event = 2,7
 
 
             loop = false

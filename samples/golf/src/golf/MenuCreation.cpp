@@ -686,9 +686,30 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     m_menuEntities[MenuID::Avatar] = menuEntity;
     parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
     
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/bounce02.spt", m_resources.textures);
+
+    //ball drop
+    auto ballEnt = m_uiScene.createEntity();
+    ballEnt.addComponent<cro::Transform>().setPosition({ 340.f, -6.f, 0.1f });
+    ballEnt.addComponent<cro::Drawable2D>();
+    ballEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("bounce");
+    ballEnt.addComponent<cro::SpriteAnimation>().play(0);
+    ballEnt.addComponent<cro::Callback>().active = true;
+    ballEnt.getComponent<cro::Callback>().setUserData<float>(static_cast<float>(cro::Util::Random::value(18, 50)));
+    ballEnt.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime -= dt;
+        if (currTime < 0)
+        {
+            e.getComponent<cro::SpriteAnimation>().play(0);
+            currTime = static_cast<float>(cro::Util::Random::value(18, 50));
+        }
+    };
 
     //background
-    cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/player_menu.spt", m_resources.textures);
 
     m_sprites[SpriteID::ArrowLeft] = spriteSheet.getSprite("arrow_l");
@@ -708,7 +729,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     avatarEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     auto bounds = avatarEnt.getComponent<cro::Sprite>().getTextureBounds();
     avatarEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-
+    avatarEnt.getComponent<cro::Transform>().addChild(ballEnt.getComponent<cro::Transform>());
     menuEntity.getComponent<cro::Transform>().addChild(avatarEnt.getComponent<cro::Transform>());
     m_avatarMenu = avatarEnt;
 

@@ -58,4 +58,6 @@ private:
         };
     };
     std::array<const cro::AudioSource*, AudioID::Count> m_audioSources = {};
+
+    void playSound(std::int32_t, float = 1.f);
 };
