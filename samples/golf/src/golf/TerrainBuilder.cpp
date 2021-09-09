@@ -293,6 +293,9 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", resources.textures);
     m_billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
     m_billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
+    m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("flowers01"));
+    m_billboardTemplates[BillboardID::Flowers02] = spriteToBillboard(spriteSheet.getSprite("flowers02"));
+    m_billboardTemplates[BillboardID::Flowers03] = spriteToBillboard(spriteSheet.getSprite("flowers03"));
     m_billboardTemplates[BillboardID::Pine] = spriteToBillboard(spriteSheet.getSprite("pine"));
     m_billboardTemplates[BillboardID::Willow] = spriteToBillboard(spriteSheet.getSprite("willow"));
     m_billboardTemplates[BillboardID::Birch] = spriteToBillboard(spriteSheet.getSprite("birch"));
@@ -443,8 +446,10 @@ void TerrainBuilder::threadFunc()
             if (mapImage.loadFromFile(m_holeData[m_currentHole].mapPath))
             {
                 //recreate the distribution(s)
-                auto grass = pd::PoissonDiskSampling(GrassDensity, MinBounds, MaxBounds, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
+                auto seed = static_cast<std::uint32_t>(std::time(nullptr));
+                auto grass = pd::PoissonDiskSampling(GrassDensity, MinBounds, MaxBounds, 30u, seed);
                 auto trees = pd::PoissonDiskSampling(TreeDensity, MinBounds, MaxBounds);
+                auto flowers = pd::PoissonDiskSampling(TreeDensity, MinBounds, MaxBounds, 30u, seed / 2);
 
                 //filter distribution by map area
                 m_billboardBuffer.clear();
@@ -474,6 +479,21 @@ void TerrainBuilder::threadFunc()
                     }
                 }
                 
+                for (auto [x, y] : flowers)
+                {
+                    auto [terrain, height] = readMap(mapImage, x, y);
+                    if (terrain == TerrainID::Scrub
+                        /*&& height > 0.6f*/)
+                    {
+                        float scale = static_cast<float>(cro::Util::Random::value(9, 12)) / 10.f;
+
+                        auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Flowers03)]);
+                        bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards
+                        bb.size *= scale;
+                        //LogI << height << std::endl;
+                    }
+                }
+
                 const auto heightAt = [&](std::uint32_t x, std::uint32_t y)
                 {
                     auto size = mapImage.getSize();

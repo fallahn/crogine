@@ -26,4 +26,19 @@ spritesheet shrubbery
     {
         bounds = 300,0,138,200
     }
+
+    sprite flowers01
+    {
+        bounds = 112,200,16,8
+    }
+
+    sprite flowers02
+    {
+        bounds = 144,200,16,8
+    }
+
+    sprite flowers03
+    {
+        bounds = 176,200,16,8
+    }
 }

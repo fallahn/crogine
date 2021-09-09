@@ -413,6 +413,9 @@ void MenuState::loadAssets()
     spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", m_resources.textures);
     m_billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
     m_billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
+    m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("flowers01"));
+    m_billboardTemplates[BillboardID::Flowers02] = spriteToBillboard(spriteSheet.getSprite("flowers02"));
+    m_billboardTemplates[BillboardID::Flowers03] = spriteToBillboard(spriteSheet.getSprite("flowers03"));
     m_billboardTemplates[BillboardID::Pine] = spriteToBillboard(spriteSheet.getSprite("pine"));
     m_billboardTemplates[BillboardID::Willow] = spriteToBillboard(spriteSheet.getSprite("willow"));
     m_billboardTemplates[BillboardID::Birch] = spriteToBillboard(spriteSheet.getSprite("birch"));
@@ -509,7 +512,7 @@ void MenuState::createScene()
         {
             float scale = static_cast<float>(cro::Util::Random::value(8, 11)) / 10.f;
 
-            auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)];
+            auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Flowers03)];
             bb.position = { -x, 0.1f, y };
             bb.size *= scale;
             collection.addBillboard(bb);
