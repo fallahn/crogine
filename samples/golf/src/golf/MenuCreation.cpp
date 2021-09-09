@@ -2025,8 +2025,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
                     //randomise name
                     const auto& callback = textEnt.getComponent<cro::Callback>();
                     m_sharedData.localConnectionData.playerData[callback.getUserData<std::uint8_t>()].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
-                    m_textEdit.string = &m_sharedData.localConnectionData.playerData[callback.getUserData<std::uint8_t>()].name;
-                    m_textEdit.entity = textEnt;
+                    beginTextEdit(textEnt, &m_sharedData.localConnectionData.playerData[callback.getUserData<std::uint8_t>()].name, ConstVal::MaxNameChars);
                     applyTextEdit();
                     
 
