@@ -82,9 +82,8 @@ namespace cro
         renders it to the current active buffer.
         Called automatically by the scene to which this effect belongs
         \param source The source texture to process
-        \param camera The camera component with which the source was rendered
         */
-        virtual void apply(const RenderTexture& source, const Camera& camera) = 0;
+        virtual void apply(const RenderTexture& source) = 0;
 
         /*
         \brief Used by crogine to update the post process should the buffer be resized.

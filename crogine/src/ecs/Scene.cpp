@@ -689,9 +689,6 @@ void Scene::postRenderPath(const RenderTarget&, const Entity* cameraList, std::s
     defaultRenderPath(m_sceneBuffer, cameraList, cameraCount);
     m_sceneBuffer.display();
 
-    //TODO remove camera param. screen space effects shouldn't
-    //be post processes.
-    const auto& cam = m_activeCamera.getComponent<Camera>();
     RenderTexture* inTex = &m_sceneBuffer;
     RenderTexture* outTex = nullptr;
 
@@ -699,14 +696,14 @@ void Scene::postRenderPath(const RenderTarget&, const Entity* cameraList, std::s
     {
         outTex = &m_postBuffers[i % 2];
         outTex->clear();
-        m_postEffects[i]->apply(*inTex, cam);
+        m_postEffects[i]->apply(*inTex);
         outTex->display();
         inTex = outTex;
     }
 
     auto vp = m_sceneBuffer.getDefaultViewport();
     glViewport(vp.left, vp.bottom, vp.width, vp.height);
-    m_postEffects.back()->apply(*inTex, cam);
+    m_postEffects.back()->apply(*inTex);
 }
 
 void Scene::destroySkybox()

@@ -40,6 +40,8 @@ namespace cro
     class MultiRenderTexture;
 
     /*!
+    DEPRECATED. Left here for legacy reasons, will eventually be removed.
+
     \brief Screen space ambient occlusion.
     This effect is not available on mobile platforms.
     To render this post process the Scene must first be buffered to
@@ -80,7 +82,7 @@ namespace cro
     \endcode
 
     */
-    class CRO_EXPORT_API PostSSAO final : public cro::PostProcess
+    class PostSSAO final : public cro::PostProcess
     {
     public:
         /*!

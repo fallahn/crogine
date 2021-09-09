@@ -148,7 +148,6 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\MultiRenderTexture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostChromeAB.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostProcess.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostSSAO.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostVertex.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\QuadBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Rectangle.hpp" />
@@ -321,7 +320,6 @@
     <ClCompile Include="..\crogine\src\graphics\MultiRenderTexture.cpp" />
     <ClCompile Include="..\crogine\src\graphics\postprocess\PostChromeAB.cpp" />
     <ClCompile Include="..\crogine\src\graphics\postprocess\PostProcess.cpp" />
-    <ClCompile Include="..\crogine\src\graphics\postprocess\PostSSAO.cpp" />
     <ClCompile Include="..\crogine\src\graphics\PrimitiveBuilders.cpp" />
     <ClCompile Include="..\crogine\src\graphics\RenderTexture.cpp" />
     <ClCompile Include="..\crogine\src\graphics\ModelDefinition.cpp" />
@@ -369,7 +367,6 @@
     <None Include="..\crogine\include\crogine\network\NetData.inl" />
     <None Include="..\crogine\include\crogine\network\NetHost.inl" />
     <None Include="..\crogine\src\graphics\postprocess\PostChromeAB.inl" />
-    <None Include="..\crogine\src\graphics\postprocess\PostSSAO.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
