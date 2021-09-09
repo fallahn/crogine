@@ -10,8 +10,14 @@ hole 02
 
     crowd
     {
-        position = -148, 0 , -80
-        rotation = 45
+        position = -139, 0 , -91
+        rotation = -7
+    }
+
+    crowd
+    {
+        position = -148, 0, -48
+        rotation = -29
     }
 
     crowd
