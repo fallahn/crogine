@@ -605,9 +605,10 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                             else
                             {
                                 m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
+                                m_sharedData.mapDirectory = "tutorial";
 
                                 //set the course to tutorial
-                                auto data = serialiseString("tutorial");
+                                auto data = serialiseString(m_sharedData.mapDirectory);
                                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                                 //now we wait for the server to send us the map name so we know the tutorial

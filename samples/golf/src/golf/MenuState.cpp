@@ -125,6 +125,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         sd.clientConnection.connectionID = 4;
         sd.clientConnection.ready = false;
         sd.clientConnection.netClient.disconnect();
+
+        sd.mapDirectory = "course_01";
     }
 
     //we returned from a previous game

@@ -42,6 +42,7 @@ source distribution.
 #include "GolfParticleDirector.hpp"
 #include "PlayerAvatar.hpp"
 #include "GolfSoundDirector.hpp"
+#include "TutorialDirector.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -250,10 +251,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_F7:
             //showCountdown(10);
-            showMessageBoard(MessageBoardID::Scrub);
+            //showMessageBoard(MessageBoardID::Scrub);
+            requestStackPush(StateID::Tutorial);
             break;
         case SDLK_F8:
-            showMessageBoard(MessageBoardID::Bunker);
+            //showMessageBoard(MessageBoardID::Bunker);
             //updateMiniMap();
             //removeClient(1);
             break;
@@ -999,6 +1001,11 @@ void GolfState::addSystems()
 
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures);
     m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio);
+
+    if (m_sharedData.tutorial)
+    {
+        m_gameScene.addDirector<TutorialDirector>();
+    }
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);

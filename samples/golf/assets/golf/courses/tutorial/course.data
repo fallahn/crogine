@@ -5,5 +5,5 @@ course tutorial
     title = "Tutorial"
     description = "Learn How To Play"
 
-    hole = "assets/golf/courses/course_01/01.hole"
+    hole = "assets/golf/courses/course_01/02.hole"
 }

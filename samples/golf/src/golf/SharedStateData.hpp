@@ -96,6 +96,7 @@ struct SharedStateData final
 
     bool hosting = false;
     bool tutorial = false;
+    std::size_t tutorialIndex = 0; //set in tutorial mode to decide which part to display
     std::size_t courseIndex = 0; //if hosting which course we last chose.
 
     //client settings

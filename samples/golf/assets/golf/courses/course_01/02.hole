@@ -6,4 +6,17 @@ hole 02
     target = 22, 180
     tee = 280, 25
     par = 3
+
+
+    crowd
+    {
+        position = -148, 0 , -80
+        rotation = 45
+    }
+
+    crowd
+    {
+        position = 110, 0, 50
+        rotation = -30
+    }
 }

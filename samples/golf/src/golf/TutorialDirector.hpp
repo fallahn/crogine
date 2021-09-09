@@ -29,41 +29,15 @@ source distribution.
 
 #pragma once
 
-#include "../StateIDs.hpp"
+#include <crogine/ecs/Director.hpp>
 
-#include <crogine/core/State.hpp>
-
-#include <crogine/ecs/Scene.hpp>
-
-
-namespace cro
-{
-    struct Camera;
-}
-
-class TutorialState final : public cro::State
+class TutorialDirector final : public cro::Director
 {
 public:
-    TutorialState(cro::StateStack&, cro::State::Context, struct SharedStateData&);
-
-    bool handleEvent(const cro::Event&) override;
+    TutorialDirector();
 
     void handleMessage(const cro::Message&) override;
 
-    bool simulate(float) override;
-
-    void render() override;
-
-    cro::StateID getStateID() const override { return StateID::Tutorial; }
-
 private:
 
-    cro::Scene m_scene;
-    SharedStateData& m_sharedData;
-
-    void buildScene();
-
-    void tutorialOne(cro::Entity);
-
-    void quitState();
 };
