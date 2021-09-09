@@ -1135,12 +1135,12 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
 {
     auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();
     auto size = glm::vec2(cro::App::getWindow().getSize());
-    auto position = glm::vec3(size.x / 2.f, size.y - (((bounds.height / 2.f) + UIBarHeight + 2.f) * m_viewScale.y), 0.05f);
+    auto position = glm::vec3(size.x / 2.f, size.y / 2.f /*- (((bounds.height / 2.f) + UIBarHeight + 2.f) * m_viewScale.y)*/, 0.05f);
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MessageBoard];
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard;

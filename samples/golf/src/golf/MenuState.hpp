@@ -111,6 +111,7 @@ private:
     std::vector<cro::Entity> m_avatarListEntities;
     PlayerAvatar m_playerAvatar;
     std::pair<std::uint32_t, std::uint32_t> m_avatarCallbacks;
+    std::pair<std::uint32_t, std::uint32_t> m_courseSelectCallbacks;
 
     struct SpriteID final
     {
@@ -196,6 +197,7 @@ private:
     void updateLobbyAvatars();
     void showPlayerConfig(bool, std::uint8_t);
     void quitLobby();
+    void addCourseSelectButtons();
 
     void saveAvatars();
     void loadAvatars();

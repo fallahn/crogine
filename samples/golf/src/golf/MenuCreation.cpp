@@ -398,7 +398,13 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
             {
                 state = 1;
                 e.getComponent<cro::Callback>().active = false;
-                m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Main);
+
+                //only set this if we're not already connected
+                //else we'll be going straight to the lobby
+                if (!m_sharedData.clientConnection.connected)
+                {
+                    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Main);
+                }
             }
         }
         else
@@ -954,6 +960,9 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
             }
         });
+    
+    //store these here so the creation function can use them
+    m_courseSelectCallbacks = { prevCourse, nextCourse };
 
     //continue
     entity = m_uiScene.createEntity();
@@ -972,7 +981,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>().addCallback(
-            [&, menuEntity, mouseEnter, mouseExit, prevCourse, nextCourse](cro::Entity, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1019,44 +1028,8 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                                 };
                                 m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
                                 
-                                //enable the course selction in the lobby
-                                auto buttonEnt = m_uiScene.createEntity();
-                                buttonEnt.addComponent<cro::Transform>();
-                                buttonEnt.addComponent<cro::Drawable2D>();
-                                buttonEnt.addComponent<cro::Text>(font).setString("Prev Course");
-                                buttonEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
-                                buttonEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-                                buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-                                buttonEnt.addComponent<UIElement>().absolutePosition = { 10.f, 46.f };
-                                //buttonEnt.getComponent<UIElement>().relativePosition = { 0.05f, 0.f };
-                                buttonEnt.getComponent<UIElement>().depth = 0.01f;
-                                buttonEnt.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(buttonEnt);
-                                buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
-                                buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
-                                buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
-                                buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = prevCourse;
-                                    
-                                m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
-
-
-                                buttonEnt = m_uiScene.createEntity();
-                                buttonEnt.addComponent<cro::Transform>();
-                                buttonEnt.addComponent<cro::Drawable2D>();
-                                buttonEnt.addComponent<cro::Text>(font).setString("Next Course");
-                                buttonEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
-                                buttonEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-                                buttonEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
-                                buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-                                buttonEnt.addComponent<UIElement>().absolutePosition = { -10.f, 46.f };
-                                buttonEnt.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
-                                buttonEnt.getComponent<UIElement>().depth = 0.01f;
-                                buttonEnt.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(buttonEnt);
-                                buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
-                                buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
-                                buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
-                                buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = nextCourse;
-
-                                m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+                                //enable the course selection in the lobby
+                                addCourseSelectButtons();
 
                                 //send a UI refresh to correctly place buttons
                                 glm::vec2 size(cro::App::getWindow().getSize());
@@ -1468,7 +1441,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.24f };
     entity.getComponent<UIElement>().depth = -0.2f;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor( bounds.width / 2.f), std::floor(bounds.height / 2.f) });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
     bgEnt = entity;
 
@@ -2523,6 +2496,51 @@ void MenuState::quitLobby()
         m_uiScene.destroyEntity(b);
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+}
+
+void MenuState::addCourseSelectButtons()
+{
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto [mouseEnter, mouseExit] = m_avatarCallbacks;
+    auto [prevCourse, nextCourse] = m_courseSelectCallbacks;
+
+    auto buttonEnt = m_uiScene.createEntity();
+    buttonEnt.addComponent<cro::Transform>();
+    buttonEnt.addComponent<cro::Drawable2D>();
+    buttonEnt.addComponent<cro::Text>(font).setString("Prev Course");
+    buttonEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    buttonEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 10.f, 46.f };
+    //buttonEnt.getComponent<UIElement>().relativePosition = { 0.05f, 0.f };
+    buttonEnt.getComponent<UIElement>().depth = 0.01f;
+    buttonEnt.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(buttonEnt);
+    buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = prevCourse;
+
+    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+
+    buttonEnt = m_uiScene.createEntity();
+    buttonEnt.addComponent<cro::Transform>();
+    buttonEnt.addComponent<cro::Drawable2D>();
+    buttonEnt.addComponent<cro::Text>(font).setString("Next Course");
+    buttonEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    buttonEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    buttonEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+    buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+    buttonEnt.addComponent<UIElement>().absolutePosition = { -10.f, 46.f };
+    buttonEnt.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    buttonEnt.getComponent<UIElement>().depth = 0.01f;
+    buttonEnt.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(buttonEnt);
+    buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = nextCourse;
+
+    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 }
 
 void MenuState::saveAvatars()
