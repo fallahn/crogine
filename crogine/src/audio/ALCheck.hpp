@@ -31,6 +31,7 @@ source distribution.
 
 #ifndef CRO_DEBUG_
 #define alCheck(x) x;
+#define alcCheck(x) x;
 #else
 #ifdef __APPLE__
 #include <al.h>
@@ -42,8 +43,14 @@ source distribution.
 #include <sstream>
 
 #define alCheck(x) alGetError(); x; al::errorCheck(__FILE__, __LINE__);
+#define alcCheck(x, y) alcGetError(y); x; al::contextErrorCheck(__FILE__, __LINE__);
 namespace al
 {
+    static inline void contextErrorCheck(const char* file, int line)
+    {
+        //TODO implement this
+    }
+
     static inline void errorCheck(const char* file, int line)
     {
         auto error = alGetError();

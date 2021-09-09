@@ -41,12 +41,9 @@ source distribution.
 #endif
 
 
-#include <SDL_thread.h>
-
 #include <atomic>
 #include <array>
 #include <thread>
-#include <mutex>
 #include <memory>
 
 namespace cro
@@ -55,11 +52,19 @@ namespace cro
     {
         struct OpenALStream final
         {
+            std::unique_ptr<AudioFile> audioFile;
+
             std::array<ALuint, 4u> buffers{};
             std::size_t currentBuffer = 0;
-            std::unique_ptr<AudioFile> audioFile;
-            std::atomic<bool> updating{ false };
-            ALint processed = 0;
+            //ALint processed = 0;
+
+            std::atomic<bool> busy{ false }; //signifies the thread is processing
+            std::atomic<bool> running{ false }; //signifies the thread is running
+            std::atomic<bool> accessed{ false }; //signifies the main thread is modifying the stream
+            
+            std::unique_ptr<std::thread> thread;
+            void updateStream(); //runs in own thread
+
             std::int32_t sourceID = -1;
             std::atomic<bool> looped{ false };
             ALenum state = AL_STOPPED;
@@ -111,12 +116,6 @@ namespace cro
             std::array<OpenALStream, MaxStreams> m_streams = {};
             std::array<std::int32_t, MaxStreams> m_streamIDs = {};
             std::size_t m_nextFreeStream;
-
-            std::vector<OpenALStream*> m_pendingUpdates;
-            mutable std::mutex m_mutex;
-            std::atomic_bool m_threadRunning;
-            std::unique_ptr<std::thread> m_updateThread;
-            void streamThreadedUpdate();
         };
     }
 }
