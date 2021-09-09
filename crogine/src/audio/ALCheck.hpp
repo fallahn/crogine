@@ -31,7 +31,7 @@ source distribution.
 
 #ifndef CRO_DEBUG_
 #define alCheck(x) x;
-#define alcCheck(x) x;
+#define alcCheck(x,y) x;
 #else
 #ifdef __APPLE__
 #include <al.h>
