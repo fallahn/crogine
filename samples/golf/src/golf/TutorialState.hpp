@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 
 #include <crogine/core/State.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 #include <crogine/ecs/Scene.hpp>
 
@@ -41,7 +42,7 @@ namespace cro
     struct Camera;
 }
 
-class TutorialState final : public cro::State
+class TutorialState final : public cro::State, public cro::GuiClient
 {
 public:
     TutorialState(cro::StateStack&, cro::State::Context, struct SharedStateData&);
@@ -61,11 +62,19 @@ private:
     SharedStateData& m_sharedData;
     cro::Scene m_scene;
     cro::Entity m_backgroundEnt;
+    cro::Entity m_messageEnt;
     glm::vec2 m_viewScale;
+
+    std::vector<std::function<void()>> m_actionCallbacks;
+    std::size_t m_currentAction;
+    bool m_actionActive;
 
     void buildScene();
 
     void tutorialOne(cro::Entity);
+
+    void showContinue();
+    void doCurrentAction();
 
     void quitState();
 };

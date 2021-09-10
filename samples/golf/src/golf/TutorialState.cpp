@@ -72,11 +72,23 @@ TutorialState::TutorialState(cro::StateStack& ss, cro::State::Context ctx, Share
     : cro::State(ss, ctx),
     m_sharedData    (sd),
     m_scene         (ctx.appInstance.getMessageBus()),
-    m_viewScale     (2.f)
+    m_viewScale     (2.f),
+    m_currentAction (0),
+    m_actionActive  (false)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
     buildScene();
+
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("flaps"))
+    //        {
+    //            auto pos = m_backgroundEnt.getComponent<cro::Transform>().getPosition();
+    //            ImGui::Text("%3.3f, %3.3f", pos.x, pos.y);
+    //        }
+    //        ImGui::End();
+    //    });
 }
 
 //public
@@ -91,10 +103,27 @@ bool TutorialState::handleEvent(const cro::Event& evt)
     {
         switch (evt.key.keysym.sym)
         {
-        default: break;
+        default: 
+            doCurrentAction();
+            break;
         case SDLK_o:
             quitState();
             break;
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    {
+        if (evt.cbutton.which == cro::GameController::deviceID(0))
+        {
+            switch (evt.cbutton.button)
+            {
+            default: break;
+            case cro::GameController::ButtonA:
+            case cro::GameController::ButtonB:
+            case cro::GameController::ButtonStart:
+                doCurrentAction();
+                break;
+            }
         }
     }
 
@@ -152,7 +181,7 @@ void TutorialState::buildScene()
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<BackgroundCallbackData>(size / m_viewScale);
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, rootNode](cro::Entity e, float dt) mutable
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<BackgroundCallbackData>();
         data.progress = std::min(1.f, data.progress + (dt* 2.f));
@@ -178,8 +207,11 @@ void TutorialState::buildScene()
         }
         break;
         case BackgroundCallbackData::Out:
-            verts[0].position.x = data.targetSize.x * cro::Util::Easing::easeInCubic(data.progress);
-            verts[1].position.x = verts[0].position.x;
+            //shift the root node out instead
+            //so all our items leave.
+            auto position = rootNode.getComponent<cro::Transform>().getPosition();
+            position.x = data.targetSize.x * cro::Util::Easing::easeInCubic(data.progress);
+            rootNode.getComponent<cro::Transform>().setPosition(position);
 
             if (data.progress == 1)
             {
@@ -192,6 +224,21 @@ void TutorialState::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_backgroundEnt = entity;
 
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Press Any Button");
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    centreText(entity);
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, 32.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_messageEnt = entity;
 
     //create the layout depending on the requested tutorial
     switch (m_sharedData.tutorialIndex)
@@ -261,7 +308,7 @@ void TutorialState::tutorialOne(cro::Entity root)
     //second tip text
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<UIElement>().absolutePosition = { 0.f, -200.f };
@@ -282,8 +329,25 @@ void TutorialState::tutorialOne(cro::Entity root)
         entity.getComponent<cro::Text>().setString(str);
     }
 
-    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + (dt * 3.f));
+        cro::FloatRect area(0.f, 0.f, bounds.width * currTime, -bounds.height * currTime);
+        e.getComponent<cro::Drawable2D>().setCroppingArea(area);
 
+        if (currTime == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            showContinue();
+        }
+    };
+
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto text02 = entity;
 
     //second tip arrow
     entity = m_scene.createEntity();
@@ -296,18 +360,34 @@ void TutorialState::tutorialOne(cro::Entity root)
         cro::Vertex2D(glm::vec2(0.5f, -170.f), TextNormalColour)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.getComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<UIElement>().absolutePosition = { 0.f, -24.f };
     entity.getComponent<UIElement>().relativePosition = { 0.1f, 1.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [text02](cro::Entity e, float dt) mutable
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + (dt * 4.f));
+        cro::FloatRect area = { -1.f, 0.f, 2.f, -170.f * currTime };
+        e.getComponent<cro::Drawable2D>().setCroppingArea(area);
 
+        if (currTime == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            text02.getComponent<cro::Callback>().active = true;
+        }
+    };
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto arrow02 = entity;
 
 
     //first tip text
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<cro::Text>(font).setString("This is the distance to the hole.");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -316,6 +396,24 @@ void TutorialState::tutorialOne(cro::Entity root)
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 1.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    float width = cro::Text::getLocalBounds(entity).width;
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&,width](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + (dt * 3.f));
+        cro::FloatRect area(0.f, 0.f, width * currTime, -14.f);
+        e.getComponent<cro::Drawable2D>().setCroppingArea(area);
+
+        if (currTime == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            showContinue();
+        }
+    };
+    auto text01 = entity;
+
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //first tip arrow
@@ -329,17 +427,34 @@ void TutorialState::tutorialOne(cro::Entity root)
         cro::Vertex2D(glm::vec2(0.5f, -70.f), TextNormalColour)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.getComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<UIElement>().absolutePosition = { 0.f, -24.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 1.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [text01](cro::Entity e, float dt) mutable
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + (dt * 4.f));
+        cro::FloatRect area = { -1.f, 0.f, 2.f, -70.f * currTime };
+        e.getComponent<cro::Drawable2D>().setCroppingArea(area);
+
+        if (currTime == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            text01.getComponent<cro::Callback>().active = true;
+        }
+    };
+    auto arrow01 = entity;
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //moves the background down
     entity = m_scene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt) mutable
+        [&, arrow01](cro::Entity e, float dt) mutable
     {
         if (!m_backgroundEnt.getComponent<cro::Callback>().active)
         {
@@ -353,9 +468,54 @@ void TutorialState::tutorialOne(cro::Entity root)
                 e.getComponent<cro::Callback>().active = false;
 
                 //show first tip
+                arrow01.getComponent<cro::Callback>().active = true;
             }
         }
     };
+
+
+    //first action shows the next set of messages
+    m_actionCallbacks.push_back([arrow02]() mutable { arrow02.getComponent<cro::Callback>().active = true; });
+
+    //second action quits
+    m_actionCallbacks.push_back([&]() { quitState(); });
+}
+
+void TutorialState::showContinue()
+{
+    //pop this in an ent callback for time delay
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt) mutable
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + dt);
+
+        if(currTime == 1)
+        {
+            m_messageEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            m_actionActive = true;
+
+            e.getComponent<cro::Callback>().active = false;
+            m_scene.destroyEntity(e);
+        }
+    };
+    
+}
+
+void TutorialState::doCurrentAction()
+{
+    if (m_actionActive)
+    {
+        //hide message
+        m_messageEnt.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
+
+        m_actionActive = false;
+        m_actionCallbacks[m_currentAction]();
+        m_currentAction++;
+    }
 }
 
 void TutorialState::quitState()
@@ -365,5 +525,6 @@ void TutorialState::quitState()
     data.progress = 0.f;
     data.state = BackgroundCallbackData::Out;
     data.targetSize = cro::App::getWindow().getSize();
+    data.targetSize /= m_viewScale;
     m_backgroundEnt.getComponent<cro::Callback>().active = true;
 }
