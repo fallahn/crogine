@@ -72,6 +72,9 @@ private:
     void buildScene();
 
     void tutorialOne(cro::Entity);
+    void tutorialTwo(cro::Entity);
+    void tutorialThree(cro::Entity);
+    void tutorialFour(cro::Entity);
 
     void showContinue();
     void doCurrentAction();

@@ -243,9 +243,20 @@ void TutorialState::buildScene()
     //create the layout depending on the requested tutorial
     switch (m_sharedData.tutorialIndex)
     {
-    default: break;
+    default:
+        quitState();
+        break;
     case 0:
         tutorialOne(rootNode);
+        break;
+    case 1:
+        tutorialTwo(rootNode);
+        break;
+    case 2:
+        tutorialThree(rootNode);
+        break;
+    case 3:
+        tutorialFour(rootNode);
         break;
     }
 
@@ -479,6 +490,35 @@ void TutorialState::tutorialOne(cro::Entity root)
 
     //second action quits
     m_actionCallbacks.push_back([&]() { quitState(); });
+}
+
+void TutorialState::tutorialTwo(cro::Entity root)
+{
+    /*
+    The wind indicator shows which way the wind is blowing
+    and how strong it currently is between 0 - 2 knots
+
+    Use X and X to aim your shot accounting for the wind
+
+    */
+}
+
+void TutorialState::tutorialThree(cro::Entity root)
+{
+    /*
+    Press A to start  your swing and A again to choose the power
+
+    Finally press A when the hook/slice indicator is in the centre
+    */
+}
+
+void TutorialState::tutorialFour(cro::Entity root)
+{
+    /*
+    Blue lines on the ground indicate the direction of the slope
+
+    The long the lines and the bluer they are the strong the effect of the slope.
+    */
 }
 
 void TutorialState::showContinue()
