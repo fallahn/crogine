@@ -28,14 +28,39 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "TutorialDirector.hpp"
+#include "MessageIDs.hpp"
+#include "SharedStateData.hpp"
+#include "../StateIDs.hpp"
 
-TutorialDirector::TutorialDirector()
+TutorialDirector::TutorialDirector(SharedStateData& sd)
+    : m_sharedData(sd)
 {
 
 }
 
 //public
-void TutorialDirector::handleMessage(const cro::Message&)
+void TutorialDirector::handleMessage(const cro::Message& msg)
 {
+    switch (msg.id)
+    {
+    default: break;
+    case MessageID::SceneMessage:
+    {
+        const auto& data = msg.getData<SceneEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case SceneEvent::TransitionComplete:
+        {
+            //push first tutorial
+            m_sharedData.tutorialIndex = 0;
 
+            auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
+            msg2->data = StateID::Tutorial;
+            msg2->type = SystemEvent::StateRequest;
+        }
+        break;
+        }
+    }
+    }
 }

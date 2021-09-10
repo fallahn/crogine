@@ -34,10 +34,10 @@ source distribution.
 class TutorialDirector final : public cro::Director
 {
 public:
-    TutorialDirector();
+    explicit TutorialDirector(struct SharedStateData&);
 
     void handleMessage(const cro::Message&) override;
 
 private:
-
+    SharedStateData& m_sharedData;
 };

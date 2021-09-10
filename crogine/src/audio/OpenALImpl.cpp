@@ -271,14 +271,8 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
 void OpenALImpl::deleteStream(std::int32_t id)
 {
     auto& stream = m_streams[id];
-    
-    while (stream.busy)
-    {
-        //wait for thread to finish - we have to wait else
-        //we can't be sure it's safe to delete the buffers
-    } 
-
     stream.running = false;
+
     if (stream.thread)
     {
         //we can't just detach as we need to reset the
@@ -536,10 +530,10 @@ void OpenALStream::updateStream()
                 audioFile->seek(cro::Time());
                 processed = static_cast<ALint>(buffers.size());
             }
-            state = newState;
 
             //update the buffers if necessary
-            if (processed > 0)
+            if (processed > 0
+                && state == AL_PLAYING)
             {
                 for (auto i = 0; i < processed; ++i)
                 {
@@ -572,6 +566,7 @@ void OpenALStream::updateStream()
                 busy = false;
                 std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(50));
             }
+            state = newState;
         }
         else
         {

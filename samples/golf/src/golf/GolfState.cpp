@@ -142,67 +142,67 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("buns"))
-            {
-                /*auto pin = m_holeData[m_currentHole].pin;
-                auto target = m_holeData[m_currentHole].target;
-                auto currLookAt = m_gameScene.getActiveCamera().getComponent<TargetInfo>().currentLookAt;
-                ImGui::Text("Pin: %3.3f, %3.3f", pin.x, pin.z);
-                ImGui::Text("Target: %3.3f, %3.3f", target.x, target.z);
-                ImGui::Text("Look At: %3.3f, %3.3f", currLookAt.x, currLookAt.z);*/
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("buns"))
+    //        {
+    //            /*auto pin = m_holeData[m_currentHole].pin;
+    //            auto target = m_holeData[m_currentHole].target;
+    //            auto currLookAt = m_gameScene.getActiveCamera().getComponent<TargetInfo>().currentLookAt;
+    //            ImGui::Text("Pin: %3.3f, %3.3f", pin.x, pin.z);
+    //            ImGui::Text("Target: %3.3f, %3.3f", target.x, target.z);
+    //            ImGui::Text("Look At: %3.3f, %3.3f", currLookAt.x, currLookAt.z);*/
 
-                ImGui::Text("Cam Rotation: %3.3f", m_camRotation);
+    //            ImGui::Text("Cam Rotation: %3.3f", m_camRotation);
 
-                //static float sunRot = 0.f;
-                //auto prevRot = sunRot;
-                //if (ImGui::SliderFloat("Sun", &sunRot, -90.f, 90.f))
-                //{
-                //    m_greenCam.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, (prevRot - sunRot) * cro::Util::Const::degToRad);
-                //    //shadowEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, sunRot * cro::Util::Const::degToRad);
-                //}
-                //ImGui::Text("Shadow Rot: %3.3f", sunRot * cro::Util::Const::degToRad);
+    //            //static float sunRot = 0.f;
+    //            //auto prevRot = sunRot;
+    //            //if (ImGui::SliderFloat("Sun", &sunRot, -90.f, 90.f))
+    //            //{
+    //            //    m_greenCam.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, (prevRot - sunRot) * cro::Util::Const::degToRad);
+    //            //    //shadowEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, sunRot * cro::Util::Const::degToRad);
+    //            //}
+    //            //ImGui::Text("Shadow Rot: %3.3f", sunRot * cro::Util::Const::degToRad);
 
-                /*auto rot = m_inputParser.getYaw();
-                ImGui::Text("Rotation %3.2f", rot);
+    //            /*auto rot = m_inputParser.getYaw();
+    //            ImGui::Text("Rotation %3.2f", rot);
 
-                auto power = m_inputParser.getPower();
-                ImGui::Text("Power: %3.3f", power);
+    //            auto power = m_inputParser.getPower();
+    //            ImGui::Text("Power: %3.3f", power);
 
-                auto hook = m_inputParser.getHook();
-                ImGui::Text("Hook: %3.3f", hook);*/
+    //            auto hook = m_inputParser.getHook();
+    //            ImGui::Text("Hook: %3.3f", hook);*/
 
-                static float scale = 1.f;
-                if (ImGui::SliderFloat("Scale", &scale, 0.f, 1.f))
-                {
-                    m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
-                }
+    //            static float scale = 1.f;
+    //            if (ImGui::SliderFloat("Scale", &scale, 0.f, 1.f))
+    //            {
+    //                m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
+    //            }
 
-                float height = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getPosition().y;
-                ImGui::Text("Cam height: %3.3f", height);
+    //            float height = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getPosition().y;
+    //            ImGui::Text("Cam height: %3.3f", height);
 
-                auto club = Clubs[getClub()];
-                ImGui::Text("Club: %s", club);
+    //            auto club = Clubs[getClub()];
+    //            ImGui::Text("Club: %s", club);
 
-                ImGui::Text("Terrain: %s", TerrainStrings[m_currentPlayer.terrain]);
+    //            ImGui::Text("Terrain: %s", TerrainStrings[m_currentPlayer.terrain]);
 
-                for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
-                {
-                    if (m_sharedData.connectionData[i].playerCount > 0)
-                    {
-                        for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
-                        {
-                            ImGui::Image(m_sharedData.avatarTextures[i][j], { 338.f, 112.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                        }
-                    }
-                }
+    //            for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+    //            {
+    //                if (m_sharedData.connectionData[i].playerCount > 0)
+    //                {
+    //                    for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
+    //                    {
+    //                        ImGui::Image(m_sharedData.avatarTextures[i][j], { 338.f, 112.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //                    }
+    //                }
+    //            }
 
-                //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
-            }
-            ImGui::End();
-        });
+    //            //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //            //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
@@ -363,6 +363,15 @@ void GolfState::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
+    case MessageID::SystemMessage:
+    {
+        const auto& data = msg.getData<SystemEvent>();
+        if (data.type == SystemEvent::StateRequest)
+        {
+            requestStackPush(data.data);
+        }
+    }
+        break;
     case cro::Message::SpriteAnimationMessage:
     {
         const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
@@ -467,7 +476,8 @@ void GolfState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::StateEvent>();
         if (data.action == cro::Message::StateEvent::Popped)
         {
-            if (data.id == StateID::Pause)
+            if (data.id == StateID::Pause
+                || data.id == StateID::Tutorial)
             {
                 cro::App::getWindow().setMouseCaptured(true);
 
@@ -727,8 +737,9 @@ void GolfState::loadAssets()
                 bbPos.x += 0.5f + (static_cast<float>(cro::Util::Random::value(5, 10)) / 10.f);
                 bbPos.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
 
+                //images are a little oversized at 2.5m...
                 auto bb = billboards[(i % billboards.size()) + cro::Util::Random::value(0, 2)];
-                bb.size *= static_cast<float>(cro::Util::Random::value(9, 11)) / 10.f;
+                bb.size *= static_cast<float>(cro::Util::Random::value(65, 75)) / 100.f;
                 bb.position = bbPos;
                 ent.getComponent<cro::BillboardCollection>().addBillboard(bb);
             }
@@ -1004,7 +1015,7 @@ void GolfState::addSystems()
 
     if (m_sharedData.tutorial)
     {
-        m_gameScene.addDirector<TutorialDirector>();
+        m_gameScene.addDirector<TutorialDirector>(m_sharedData);
     }
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
@@ -1565,8 +1576,8 @@ void GolfState::removeClient(std::uint8_t clientID)
 void GolfState::setCurrentHole(std::uint32_t hole)
 {
     updateScoreboard();
-    showScoreboard(true);
-   
+    showScoreboard(!m_sharedData.tutorial);
+
     //CRO_ASSERT(hole < m_holeData.size(), "");
     if (hole >= m_holeData.size())
     {

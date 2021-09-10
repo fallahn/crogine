@@ -129,33 +129,33 @@ TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
     m_currentHole   (0)
 {
 #ifdef CRO_DEBUG_
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("Terrain"))
-            {
-                auto slopePos = slopeEntity.getComponent<cro::Transform>().getPosition();
-                if (ImGui::SliderFloat("Slope", &slopePos.y, -10.f, 10.f))
-                {
-                    slopeEntity.getComponent<cro::Transform>().setPosition(slopePos);
-                }
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Terrain"))
+    //        {
+    //            auto slopePos = slopeEntity.getComponent<cro::Transform>().getPosition();
+    //            if (ImGui::SliderFloat("Slope", &slopePos.y, -10.f, 10.f))
+    //            {
+    //                slopeEntity.getComponent<cro::Transform>().setPosition(slopePos);
+    //            }
 
-                auto pos = m_terrainEntity.getComponent<cro::Transform>().getPosition();
-                if (ImGui::SliderFloat("Height", &pos.y, -10.f, 10.f))
-                {
-                    m_terrainEntity.getComponent<cro::Transform>().setPosition(pos);
-                }
+    //            auto pos = m_terrainEntity.getComponent<cro::Transform>().getPosition();
+    //            if (ImGui::SliderFloat("Height", &pos.y, -10.f, 10.f))
+    //            {
+    //                m_terrainEntity.getComponent<cro::Transform>().setPosition(pos);
+    //            }
 
-                auto visible = m_terrainEntity.getComponent<cro::Model>().isVisible();
-                ImGui::Text("Visible: %s", visible ? "yes" : "no");
+    //            auto visible = m_terrainEntity.getComponent<cro::Model>().isVisible();
+    //            ImGui::Text("Visible: %s", visible ? "yes" : "no");
 
-                if (ImGui::SliderFloat("Morph", &m_terrainProperties.morphTime, 0.f, 1.f))
-                {
-                    glCheck(glUseProgram(m_terrainProperties.shaderID));
-                    glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
-                }
-            }
-            ImGui::End();        
-        });
+    //            if (ImGui::SliderFloat("Morph", &m_terrainProperties.morphTime, 0.f, 1.f))
+    //            {
+    //                glCheck(glUseProgram(m_terrainProperties.shaderID));
+    //                glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
+    //            }
+    //        }
+    //        ImGui::End();        
+    //    });
 #endif
 }
 

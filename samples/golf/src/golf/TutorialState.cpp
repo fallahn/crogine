@@ -30,6 +30,8 @@ source distribution.
 #include "TutorialState.hpp"
 #include "SharedStateData.hpp"
 #include "MenuConsts.hpp"
+#include "CommonConsts.hpp"
+#include "CommandIDs.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -39,17 +41,38 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
+
+#include <crogine/util/Easings.hpp>
+#include <crogine/core/GameController.hpp>
+
+namespace
+{
+    struct BackgroundCallbackData final
+    {
+        glm::vec2 targetSize = glm::vec2(0.f);
+        float progress = 0.f;
+        enum
+        {
+            In, Out
+        }state = In;
+
+        BackgroundCallbackData(glm::vec2 t) : targetSize(t) {}
+    };
+}
 
 TutorialState::TutorialState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State(ss, ctx),
+    m_sharedData    (sd),
     m_scene         (ctx.appInstance.getMessageBus()),
-    m_sharedData    (sd)
+    m_viewScale     (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -62,6 +85,17 @@ bool TutorialState::handleEvent(const cro::Event& evt)
     if (cro::ui::wantsKeyboard() || cro::ui::wantsMouse())
     {
         return false;
+    }
+
+    if (evt.type == SDL_KEYUP)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_o:
+            quitState();
+            break;
+        }
     }
 
     m_scene.forwardEvent(evt);
@@ -89,6 +123,7 @@ void TutorialState::buildScene()
 {
     //add systems
     auto& mb = getContext().appInstance.getMessageBus();
+    m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
     m_scene.addSystem<cro::TextSystem>(mb);
@@ -96,13 +131,16 @@ void TutorialState::buildScene()
     m_scene.addSystem<cro::RenderSystem2D>(mb);
 
 
+    //root node is used to scale all attachments
+    auto rootNode = m_scene.createEntity();
+    rootNode.addComponent<cro::Transform>();
+
     //load background
     cro::Colour c(0.f, 0.f, 0.f, BackgroundAlpha);
     glm::vec2 size = cro::App::getWindow().getSize();
 
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ size.x / 2.f, size.y / 2.f, -0.1f });
-    entity.getComponent<cro::Transform>().setOrigin(size / 2.f);
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.1f });
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, size.y), c),
@@ -112,43 +150,220 @@ void TutorialState::buildScene()
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().setUserData<BackgroundCallbackData>(size / m_viewScale);
     entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [&](cro::Entity e, float dt)
     {
-        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-        currTime = std::min(1.f, currTime + dt);
+        auto& data = e.getComponent<cro::Callback>().getUserData<BackgroundCallbackData>();
+        data.progress = std::min(1.f, data.progress + (dt* 2.f));
 
         auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-        for (auto& v : verts)
-        {
-            v.colour.setAlpha(BackgroundAlpha * currTime);
-        }
+        verts[0].position.y = data.targetSize.y;
+        verts[2].position.y = data.targetSize.y;
 
-        if (currTime == 1)
+        switch (data.state)
         {
-            e.getComponent<cro::Callback>().active = false;
+        default: break;
+        case BackgroundCallbackData::In:
+        {
+            verts[2].position.x = data.targetSize.x * cro::Util::Easing::easeOutCubic(data.progress);
+            verts[3].position.x = verts[2].position.x;
+
+            if (data.progress == 1)
+            {
+                data.state = BackgroundCallbackData::Out;
+                data.progress = 0.f;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        break;
+        case BackgroundCallbackData::Out:
+            verts[0].position.x = data.targetSize.x * cro::Util::Easing::easeInCubic(data.progress);
+            verts[1].position.x = verts[0].position.x;
+
+            if (data.progress == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                requestStackPop();
+            }
+            break;
         }
     };
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_backgroundEnt = entity;
 
+
+    //create the layout depending on the requested tutorial
     switch (m_sharedData.tutorialIndex)
     {
     default: break;
     case 0:
-        tutorialOne(entity);
+        tutorialOne(rootNode);
         break;
     }
+
+
+    //set up camera / resize callback
+    auto camCallback = [&, rootNode](cro::Camera& cam) mutable
+    {
+        glm::vec2 size = cro::App::getWindow().getSize();
+        cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.5f, 5.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+
+        auto vpSize = calcVPSize();
+        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
+
+        size /= m_viewScale;
+
+        //if animation active set target size,
+        //otherwise set the size explicitly
+        if (m_backgroundEnt.getComponent<cro::Callback>().active)
+        {
+            m_backgroundEnt.getComponent<cro::Callback>().getUserData<BackgroundCallbackData>().targetSize = size;
+        }
+        else
+        {
+            auto& verts = m_backgroundEnt.getComponent<cro::Drawable2D>().getVertexData();
+            verts[0].position = { 0.f, size.y };
+            verts[2].position = size;
+            verts[3].position = { size.x, 0.f };
+        }
+
+        //update any UI layout
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::UIElement;
+        cmd.action =
+            [&, size](cro::Entity e, float)
+        {
+            const auto& element = e.getComponent<UIElement>();
+            auto pos = element.absolutePosition;
+            pos += element.relativePosition * size;
+
+            pos.x = std::floor(pos.x);
+            pos.y = std::floor(pos.y);
+
+            e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
+        };
+        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    };
+    auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+    camCallback(cam);
+    cam.resizeCallback = camCallback;
 }
 
-void TutorialState::tutorialOne(cro::Entity backgroundEnt)
+void TutorialState::tutorialOne(cro::Entity root)
 {
-    //TODO set up layout
+    //set up layout
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    
+
+    //second tip text
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -200.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.1f, 1.f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+
+    if (cro::GameController::getControllerCount() > 0)
+    {
+        entity.getComponent<cro::Text>().setString("This is your selected club.\nUse    and    to cycle through them\nand find one with an appropriate distance.");
+        //TODO attach bumper graphics
+    }
+    else
+    {
+        cro::String str("This is your selected club.\nUse ");
+        str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]) + " and ";
+        str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + " to cycle through them\nand find one with an appropriate distance.";
+        entity.getComponent<cro::Text>().setString(str);
+    }
+
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    //TODO set up camera / resize callback
+    //second tip arrow
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(-0.5f, 0.f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(-0.5f, -170.f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(0.5f, 0.f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(0.5f, -170.f), TextNormalColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -24.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.1f, 1.f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    //first tip text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("This is the distance to the hole.");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    centreText(entity);
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -100.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 1.f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //first tip arrow
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(-0.5f, 0.f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(-0.5f, -70.f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(0.5f, 0.f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(0.5f, -70.f), TextNormalColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -24.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 1.f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //moves the background down
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt) mutable
+    {
+        if (!m_backgroundEnt.getComponent<cro::Callback>().active)
+        {
+            auto pos = m_backgroundEnt.getComponent<cro::Transform>().getPosition();
+            auto diff = -UIBarHeight - pos.y;
+            pos.y += diff * (dt * 3.f);
+            m_backgroundEnt.getComponent<cro::Transform>().setPosition(pos);
+
+            if (diff > -1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+
+                //show first tip
+            }
+        }
+    };
 }
 
 void TutorialState::quitState()
 {
-    //TODO trigger background callback to pop state
+    //trigger background callback to pop state
+    auto& data = m_backgroundEnt.getComponent<cro::Callback>().getUserData<BackgroundCallbackData>();
+    data.progress = 0.f;
+    data.state = BackgroundCallbackData::Out;
+    data.targetSize = cro::App::getWindow().getSize();
+    m_backgroundEnt.getComponent<cro::Callback>().active = true;
 }

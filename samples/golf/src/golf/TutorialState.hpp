@@ -58,8 +58,10 @@ public:
 
 private:
 
-    cro::Scene m_scene;
     SharedStateData& m_sharedData;
+    cro::Scene m_scene;
+    cro::Entity m_backgroundEnt;
+    glm::vec2 m_viewScale;
 
     void buildScene();
 

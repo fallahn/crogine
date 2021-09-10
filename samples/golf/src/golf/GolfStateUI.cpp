@@ -735,7 +735,7 @@ void GolfState::createScoreboard()
     size.y -= size.y / 2.f;
 
     auto rootEnt = m_uiScene.createEntity();
-    rootEnt.addComponent<cro::Transform>().setPosition(size);
+    rootEnt.addComponent<cro::Transform>().setPosition({ size.x, -size.y });
     rootEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::ScoreboardController;
     //use the callback to keep the board centred/scaled
     rootEnt.addComponent<cro::Callback>().function =
@@ -843,7 +843,6 @@ void GolfState::createScoreboard()
     ents.back().getComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions.back(), 0.2f));
 
     updateScoreboard();
-    showScoreboard(true);
 }
 
 void GolfState::updateScoreboard()
