@@ -6,4 +6,22 @@ hole 07
     target = 294, 32
     tee = 25, 175
     par = 3
+
+    crowd
+    {
+        position = 131,0,90.8
+        rotation = 4.4
+    }
+
+    crowd
+    {
+        position = 154.4,0,64
+        rotation = -91
+    }
+
+    crowd
+    {
+        position = 7.7,0,-39.8
+        rotation = -29
+    }
 }

@@ -6,4 +6,16 @@ hole 06
     target = 65, 47
     tee = 241, 142
     par = 3
+
+    crowd
+    {
+        position = -113,0,35
+        rotation = 34
+    }
+
+    crowd
+    {
+        position = -124.9,0,53
+        rotation = -76
+    }
 }

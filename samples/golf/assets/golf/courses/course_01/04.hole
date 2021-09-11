@@ -6,4 +6,16 @@ hole 04
     target = 204, 39
     tee = 85, 175
     par = 3
+
+    crowd
+    {
+        position = 81,0,55
+        rotation = 78
+    }
+
+    crowd
+    {
+        position = 69.6,0,75
+        rotation = 49.4
+    }
 }

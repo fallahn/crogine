@@ -6,4 +6,22 @@ hole 05
     target = 148, 80
     tee = 302, 175
     par = 3
+
+    crowd
+    {
+        position = -124.7,0,74
+        rotation = 4.3
+    }
+
+    crowd
+    {
+        position = -141.6,0,57.2
+        rotation = -57.7
+    }
+
+    crowd
+    {
+        position = -130,0,26
+        rotation = 27.6
+    }
 }

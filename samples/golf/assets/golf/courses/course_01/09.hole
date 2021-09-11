@@ -6,4 +6,22 @@ hole 09
     target = 178, 136
     tee = 32, 162
     par = 4
+
+    crowd
+    {
+        position = 116.7,0,84.2
+        rotation = 48.6
+    }
+
+    crowd
+    {
+        position = 126.6,0,67
+        rotation = 87
+    }
+
+    crowd
+    {
+        position = -108,0,-76
+        rotation = 1.4
+    }
 }

@@ -184,7 +184,7 @@ void TutorialState::buildScene()
         [&, rootNode](cro::Entity e, float dt) mutable
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<BackgroundCallbackData>();
-        data.progress = std::min(1.f, data.progress + (dt* 2.f));
+        data.progress = std::min(1.f, data.progress + (dt * 2.f));
 
         auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
         verts[0].position.y = data.targetSize.y;
@@ -200,6 +200,8 @@ void TutorialState::buildScene()
 
             if (data.progress == 1)
             {
+                e.getComponent<cro::Drawable2D>().updateLocalBounds();
+
                 data.state = BackgroundCallbackData::Out;
                 data.progress = 0.f;
                 e.getComponent<cro::Callback>().active = false;
@@ -210,7 +212,7 @@ void TutorialState::buildScene()
             //shift the root node out instead
             //so all our items leave.
             auto position = rootNode.getComponent<cro::Transform>().getPosition();
-            position.x = data.targetSize.x * cro::Util::Easing::easeInCubic(data.progress);
+            position.x = (data.targetSize.x * m_viewScale.x) * cro::Util::Easing::easeInCubic(data.progress);
             rootNode.getComponent<cro::Transform>().setPosition(position);
 
             if (data.progress == 1)

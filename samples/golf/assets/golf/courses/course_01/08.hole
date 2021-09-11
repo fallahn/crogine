@@ -6,4 +6,22 @@ hole 08
     target = 295, 160
     tee = 32, 50
     par = 3
+
+    crowd
+    {
+        position = 77.2,0,-62
+        rotation = 16.7
+    }
+
+    crowd
+    {
+        position = 131.2,0,-75
+        rotation = -5
+    }
+
+    crowd
+    {
+        position = 141.8,0,-43.5
+        rotation = 48.6
+    }
 }

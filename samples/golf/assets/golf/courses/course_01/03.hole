@@ -6,4 +6,22 @@ hole 03
     target = 185, 124
     tee = 17, 160
     par = 4
+
+    crowd
+    {
+        position - 107.6,0,88
+        rotation = -29
+    }
+
+    crowd
+    {
+        position = 132.8,0,90
+        rotation = 25
+    }
+
+    crowd
+    {
+        position = 149,0,59.5
+        rotation = 117
+    }
 }

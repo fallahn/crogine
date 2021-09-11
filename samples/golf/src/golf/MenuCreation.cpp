@@ -2197,7 +2197,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         struct ControlUserData final
         {
             std::size_t prevControllerCount = 0;
-            std::array<cro::Entity, 2u> arrowEntities = {};
+            std::array<cro::Entity, 3u> arrowEntities = {}; //includes number indicator
         };
 
         entity.addComponent<cro::Callback>().active = true;
@@ -2222,6 +2222,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
 
                     m_uiScene.destroyEntity(controlData.arrowEntities[0]);
                     m_uiScene.destroyEntity(controlData.arrowEntities[1]);
+                    m_uiScene.destroyEntity(controlData.arrowEntities[2]);
                     controlData.arrowEntities = {};
                 }
 
@@ -2267,8 +2268,6 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
                         m_avatarListEntities.push_back(ent);
                         controlData.arrowEntities[1] = ent;
 
-                        //TODO add UI input to above
-
                         //add indicator for current controller ID
                         ent = m_uiScene.createEntity();
                         ent.addComponent<cro::Transform>().setPosition({ 25.f, 4.f, 0.f });
@@ -2285,7 +2284,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
 
                         e.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
                         m_avatarListEntities.push_back(ent);
-                        controlData.arrowEntities[1] = ent;
+                        controlData.arrowEntities[2] = ent;
 
                         //auto select next available controller based on this player ID
                         m_sharedData.controllerIDs[i] = std::min(i, static_cast<std::uint32_t>(controllerCount) - 1);

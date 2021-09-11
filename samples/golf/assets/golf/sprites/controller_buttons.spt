@@ -1,0 +1,49 @@
+spritesheet controller
+{
+    src="assets/golf/images/controller_buttons.png"
+
+    sprite button_a
+    {
+        bounds = 0,0,16,16
+    }
+
+    sprite button_b
+    {
+        bounds = 16,0,16,16
+    }
+
+    sprite button_x
+    {
+        bounds = 32,0,16,16
+    }
+
+    sprite button_y
+    {
+        bounds = 48,0,16,16
+    }
+
+    sprite button_lb
+    {
+        bounds = 0,16,22,16
+    }
+
+    sprite button_rb
+    {
+        bounds = 22,16,22,16
+    }
+
+    sprite button_select
+    {
+        bounds = 48,16,16,16
+    }
+
+    sprite button_start
+    {
+        bounds = 64,16,16,16
+    }
+
+    sprite dpad
+    {
+        bounds = 64,32,16,16
+    }
+}
