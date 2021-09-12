@@ -66,5 +66,25 @@ spritesheet main_menu
             loop = true
             framerate = 12
         }
-    }    
+    }
+
+    sprite exit
+    {
+        bounds = 208,200,16,16
+    }
+
+    sprite continue
+    {
+        bounds = 208,184,16,16
+    }
+
+    sprite add_player
+    {
+        bounds = 208,168,16,16
+    }
+
+    sprite remove_player
+    {
+        bounds = 208,152,16,16
+    }
 }
