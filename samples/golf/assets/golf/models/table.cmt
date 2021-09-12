@@ -1,0 +1,17 @@
+model table
+{
+    mesh = "assets/golf/models/table.cmb"
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        blendmode = "none"
+        diffuse = "assets/golf/images/table.png"
+        alpha_clip = 0.127000
+
+    }
+}

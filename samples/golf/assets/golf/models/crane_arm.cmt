@@ -1,16 +1,16 @@
-model crane
+model crane_arm
 {
-    mesh = "assets/golf/models/crane.cmb"
+    mesh = "assets/golf/models/crane_arm.cmb"
     cast_shadows = false
 
     material Unlit
     {
-        name = "body"
+        name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
         repeat = true
         blendmode = "none"
-        diffuse = "assets/golf/images/crane_chassis.png"
+        diffuse = "assets/golf/images/crane_arm.png"
 
     }
     material VertexLit
@@ -18,15 +18,6 @@ model crane
         mask_colour = 1.000000,1.000000,0.000000,0.474510
         name = "glass"
         colour = 1.000000,1.000000,1.000000,0.321569
-        smooth = true
-        repeat = true
-        blendmode = "alpha"
-
-    }
-    material Unlit
-    {
-        name = "shadow"
-        colour = 0.266667,0.266667,0.266667,0.427451
         smooth = true
         repeat = true
         blendmode = "alpha"
