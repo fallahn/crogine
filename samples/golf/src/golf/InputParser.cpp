@@ -51,6 +51,7 @@ InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)
     m_inputFlags        (0),
     m_prevFlags         (0),
     m_enableFlags       (std::numeric_limits<std::uint16_t>::max()),
+    m_prevDisabledFlags (0),
     m_prevStick         (0),
     m_analogueAmount    (0.f),
     m_mouseWheel        (0),
@@ -321,13 +322,17 @@ void InputParser::resetPower()
 
 void InputParser::update(float dt)
 {
+    checkControllerInput();
+    checkMouseInput();
+
+    //catch the inputs that where filtered by the
+    //enable flags so we can raise their own event for them
+    auto disabledFlags = (m_inputFlags & ~m_enableFlags);
+
     if (m_active)
     {
-        checkControllerInput();
-        checkMouseInput();
 
         m_inputFlags &= m_enableFlags;
-
 
         switch (m_state)
         {
@@ -410,8 +415,27 @@ void InputParser::update(float dt)
             //do nothing, player's turn is complete
             break;
         }
+
+        //check the filtered inputs
+        if (disabledFlags)
+        {
+            for (auto i = 0u; i < 8u; ++i)
+            {
+                auto flag = (1 << i);
+                if ((disabledFlags & flag)
+                    && (m_prevDisabledFlags & flag) == 0)
+                {
+                    //button was pressed
+                    auto* msg = m_messageBus.post<SystemEvent>(MessageID::SystemMessage);
+                    msg->type = SystemEvent::InputActivated;
+                    msg->data = flag;
+                }
+            }
+        }
     }
+
     m_prevFlags = m_inputFlags;
+    m_prevDisabledFlags = disabledFlags;
 }
 
 bool InputParser::inProgress() const

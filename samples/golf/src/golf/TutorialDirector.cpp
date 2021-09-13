@@ -73,11 +73,11 @@ void TutorialDirector::handleMessage(const cro::Message& msg)
         break;
         }
     }
-    break;
+        break;
     case cro::Message::StateMessage:
     {
         //count the number of popped tutorials
-        //and apply any imput blocking as necessary
+        //and apply any input blocking as necessary
         const auto& data = msg.getData<cro::Message::StateEvent>();
         if (data.action == cro::Message::StateEvent::Popped
             && data.id == StateID::Tutorial)
@@ -91,10 +91,14 @@ void TutorialDirector::handleMessage(const cro::Message& msg)
                 //allow aiming
                 m_inputParser.setEnableFlags(~(InputFlag::Action | InputFlag::PrevClub | InputFlag::NextClub));
                 break;
+            case 3:
+                //allow all input
+                m_inputParser.setEnableFlags(InputFlag::All);
+                break;
             }
         }
     }
-    break;
+        break;
     case MessageID::GolfMessage:
     {
         const auto& data = msg.getData<GolfEvent>();
@@ -130,6 +134,27 @@ void TutorialDirector::handleMessage(const cro::Message& msg)
             }
         }
     }
-    break;
+        break;
+    case MessageID::SystemMessage:
+    {
+        const auto& data = msg.getData<SystemEvent>();
+        if (data.type == SystemEvent::InputActivated)
+        {
+            switch (data.data)
+            {
+            default: break;
+            case InputFlag::Action:
+                if (m_sharedData.tutorialIndex == 2)
+                {
+                    //player pressed action after setting aim
+                    auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
+                    msg2->data = StateID::Tutorial;
+                    msg2->type = SystemEvent::StateRequest;
+                }
+                break;
+            }
+        }
+    }
+        break;
     }
 }

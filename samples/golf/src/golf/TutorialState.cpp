@@ -755,14 +755,82 @@ void TutorialState::tutorialTwo(cro::Entity root)
 void TutorialState::tutorialThree(cro::Entity root)
 {
     /*
-    Press A to start your swing and A again to choose the power
-
-    Finally press A when the hook/slice indicator is in the centre
-
-
     power bar indicator appears at bottom and moves to middle of screen
-    then tutorial tips point to that.
+    upward motion is continued with first arrow / tip in the middle:
+
+    This is the stroke indicatior
+
+
+    next tip moves left to right, text then arrow
+
+    Press A to activate the swing
+
+    as the power bar reaches the right, draw next tip, left to right,
+    starting with arrow.
+
+    Press A to select power.
+
+    start the hook/slice indicator moving, then move down, arrow then text
+    aligned centre.
+
+    Press A when the hook/slice bar is centred.
+
     */
+
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
+
+    auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({windowSize.x / 2.f, 0.f});
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("power_bar");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    
+    struct PowerbarData final
+    {
+        float currentTime = 0.f;
+        enum
+        {
+            Wait, In, Hold
+        }state = Wait;
+    };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<PowerbarData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<PowerbarData>();
+        auto size = glm::vec2(cro::App::getWindow().getSize()) / m_viewScale;
+        switch (data.state)
+        {
+        default: break;
+        case PowerbarData::Wait:
+
+            if (!m_backgroundEnt.getComponent<cro::Callback>().active)
+            {
+                data.state = PowerbarData::In;
+            }
+            break;
+        case PowerbarData::In:
+            data.currentTime = std::min(1.f, data.currentTime + (dt * 2.f));
+            e.getComponent<cro::Transform>().setPosition({ size.x / 2.f, data.currentTime * (size.y / 2.f) });
+
+            if (data.currentTime == 1)
+            {
+                //TODO activate first label
+                data.state = PowerbarData::Hold;
+            }
+
+            break;
+        case PowerbarData::Hold:
+            e.getComponent<cro::Transform>().setPosition(size / 2.f);
+            break;
+        }
+    };
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void TutorialState::tutorialFour(cro::Entity root)

@@ -50,7 +50,7 @@ public:
     float getYaw() const;
 
     float getPower() const; //0-1 multiplied by selected club
-    float getHook() const; //-1 to -1 * some angle, probably club defined
+    float getHook() const; //-1 to -1 * some angle, club defined
 
     std::int32_t getClub() const;
 
@@ -69,6 +69,7 @@ private:
     std::uint16_t m_inputFlags;
     std::uint16_t m_prevFlags;
     std::uint16_t m_enableFlags;
+    std::uint16_t m_prevDisabledFlags; //< for raising events on disabled inputs
     std::uint16_t m_prevStick;
     float m_analogueAmount;
 

@@ -80,7 +80,8 @@ struct SystemEvent final
     enum
     {
         PostProcessToggled,
-        StateRequest
+        StateRequest,
+        InputActivated
     }type = PostProcessToggled;
     std::int32_t data = -1;
 };
