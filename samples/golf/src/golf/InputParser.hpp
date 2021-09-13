@@ -56,6 +56,7 @@ public:
 
     void setActive(bool);
     void setSuspended(bool);
+    void setEnableFlags(std::uint16_t); //bits which are set are *enabled*
     void resetPower();
     void update(float);
 
@@ -67,6 +68,7 @@ private:
 
     std::uint16_t m_inputFlags;
     std::uint16_t m_prevFlags;
+    std::uint16_t m_enableFlags;
     std::uint16_t m_prevStick;
     float m_analogueAmount;
 

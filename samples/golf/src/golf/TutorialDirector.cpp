@@ -30,12 +30,23 @@ source distribution.
 #include "TutorialDirector.hpp"
 #include "MessageIDs.hpp"
 #include "SharedStateData.hpp"
+#include "InputParser.hpp"
+#include "Clubs.hpp"
 #include "../StateIDs.hpp"
 
-TutorialDirector::TutorialDirector(SharedStateData& sd)
-    : m_sharedData(sd)
-{
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
+/*
+Tutorial 1 triggered on scene transition completion
+Tutorial 2 waits for the player to select the driver
+*/
+
+TutorialDirector::TutorialDirector(SharedStateData& sd, InputParser& ip)
+    : m_sharedData      (sd),
+    m_inputParser       (ip)
+{
+    ip.setEnableFlags(~(InputFlag::Action | InputFlag::Left | InputFlag::Right));
 }
 
 //public
@@ -62,5 +73,63 @@ void TutorialDirector::handleMessage(const cro::Message& msg)
         break;
         }
     }
+    break;
+    case cro::Message::StateMessage:
+    {
+        //count the number of popped tutorials
+        //and apply any imput blocking as necessary
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped
+            && data.id == StateID::Tutorial)
+        {
+            m_sharedData.tutorialIndex++;
+
+            switch (m_sharedData.tutorialIndex)
+            {
+            default: break;
+            case 2:
+                //allow aiming
+                m_inputParser.setEnableFlags(~(InputFlag::Action | InputFlag::PrevClub | InputFlag::NextClub));
+                break;
+            }
+        }
+    }
+    break;
+    case MessageID::GolfMessage:
+    {
+        const auto& data = msg.getData<GolfEvent>();
+        if (data.type == GolfEvent::ClubChanged
+            && m_sharedData.tutorialIndex == 1)
+        {
+            if (m_inputParser.getClub() == ClubID::Driver)
+            {
+                //hmmm this always assumes the tutorial hole
+                //needs a driver on the tee...
+
+                m_inputParser.setEnableFlags(0);
+
+                auto entity = getScene().createEntity();
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+                entity.getComponent<cro::Callback>().function =
+                    [&](cro::Entity e, float dt)
+                {
+                    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                    currTime = std::min(1.f, currTime + dt);
+
+                    if (currTime == 1)
+                    {
+                        auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
+                        msg2->data = StateID::Tutorial;
+                        msg2->type = SystemEvent::StateRequest;
+
+                        e.getComponent<cro::Callback>().active = false;
+                        getScene().destroyEntity(e);
+                    }
+                };
+            }
+        }
+    }
+    break;
     }
 }

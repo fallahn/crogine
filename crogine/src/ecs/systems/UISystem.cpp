@@ -540,10 +540,13 @@ void UISystem::onEntityRemoved(Entity entity)
     //remove the entity from its group
     auto group = entity.getComponent<UIInput>().m_group;
 
+    //hmm is there a possibility that this group is empty?
     if (m_activeGroup == group
         && m_groups[group][m_selectedIndex] == entity)
     {
-        selectPrev(1);
+        //selectPrev(1);
+        //we don't need to call the unselect callback so set the index directly
+        m_selectedIndex = std::min(m_selectedIndex - 1, m_groups[group].size() - 1);
     }
 
     m_groups[group].erase(std::remove_if(m_groups[group].begin(), m_groups[group].end(),

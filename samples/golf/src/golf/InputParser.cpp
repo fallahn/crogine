@@ -50,6 +50,7 @@ InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)
     m_messageBus        (mb),
     m_inputFlags        (0),
     m_prevFlags         (0),
+    m_enableFlags       (std::numeric_limits<std::uint16_t>::max()),
     m_prevStick         (0),
     m_analogueAmount    (0.f),
     m_mouseWheel        (0),
@@ -306,6 +307,11 @@ void InputParser::setSuspended(bool suspended)
 
 }
 
+void InputParser::setEnableFlags(std::uint16_t flags)
+{
+    m_enableFlags = flags;
+}
+
 void InputParser::resetPower()
 {
     m_power = 0.f;
@@ -319,6 +325,9 @@ void InputParser::update(float dt)
     {
         checkControllerInput();
         checkMouseInput();
+
+        m_inputFlags &= m_enableFlags;
+
 
         switch (m_state)
         {

@@ -1023,7 +1023,7 @@ void GolfState::addSystems()
 
     if (m_sharedData.tutorial)
     {
-        m_gameScene.addDirector<TutorialDirector>(m_sharedData);
+        m_gameScene.addDirector<TutorialDirector>(m_sharedData, m_inputParser);
     }
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
@@ -1855,25 +1855,32 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
 
     //self destructing ent to provide delay before popping up player name
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(1.5f);
-    entity.getComponent<cro::Callback>().function =
-        [&, localPlayer](cro::Entity e, float dt)
+    if (!m_sharedData.tutorial)
     {
-        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-        currTime -= dt;
-        if (currTime <= 0)
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(1.5f);
+        entity.getComponent<cro::Callback>().function =
+            [&, localPlayer](cro::Entity e, float dt)
         {
-            showMessageBoard(MessageBoardID::PlayerName);
-            e.getComponent<cro::Callback>().active = false;
-            m_uiScene.destroyEntity(e);
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime -= dt;
+            if (currTime <= 0)
+            {
+                showMessageBoard(MessageBoardID::PlayerName);
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(e);
 
-            m_inputParser.setActive(localPlayer);
-        }
-    };
-    
+                m_inputParser.setActive(localPlayer);
+            }
+        };
+    }
+    else
+    {
+        m_inputParser.setActive(localPlayer);
+    }
+
     //player UI name
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::PlayerName;

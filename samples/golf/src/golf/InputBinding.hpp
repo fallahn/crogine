@@ -36,7 +36,7 @@ source distribution.
 
 namespace InputFlag
 {
-    enum
+    enum 
     {
         Up         = 0x1,
         Down       = 0x2,
@@ -46,7 +46,9 @@ namespace InputFlag
         NextClub   = 0x20,
         PrevClub   = 0x40,
         Unused0    = 0x80,
-        Unused1    = 0x100
+        Unused1    = 0x100,
+
+        All = 0xFFFF
     };
 }
 
