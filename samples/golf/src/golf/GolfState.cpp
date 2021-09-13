@@ -636,7 +636,11 @@ void GolfState::loadAssets()
         spriteSheet.getSprite("female_iron"),
         spriteSheet.getSprite("female_iron"),
         spriteSheet.getSprite("male_iron"),
-        spriteSheet.getSprite("male_iron")
+        spriteSheet.getSprite("male_iron"),
+        spriteSheet.getSprite("female_iron_02"),
+        spriteSheet.getSprite("female_iron_02"),
+        spriteSheet.getSprite("male_iron_02"),
+        spriteSheet.getSprite("male_iron_02")
     };
 
     std::vector<cro::Sprite> woodSprites =
@@ -644,7 +648,11 @@ void GolfState::loadAssets()
         spriteSheet.getSprite("female_wood"),
         spriteSheet.getSprite("female_wood"),
         spriteSheet.getSprite("male_wood"),
-        spriteSheet.getSprite("male_wood")
+        spriteSheet.getSprite("male_wood"),
+        spriteSheet.getSprite("female_wood_02"),
+        spriteSheet.getSprite("female_wood_02"),
+        spriteSheet.getSprite("male_wood_02"),
+        spriteSheet.getSprite("male_wood_02")
     };
 
     for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)

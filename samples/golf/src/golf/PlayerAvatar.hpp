@@ -47,7 +47,7 @@ public:
 
     const cro::Texture& getTexture() const { return m_texture; }
 
-    static constexpr std::uint8_t MaxSkins = 4;
+    static constexpr std::uint8_t MaxSkins = 8;
     std::array<cro::FloatRect, MaxSkins> previewRects = {};
     std::uint8_t activePlayer = 0;
 

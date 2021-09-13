@@ -2079,6 +2079,10 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     m_playerAvatar.previewRects[1] = spriteSheet.getSprite("female_wood").getTextureRect();
     m_playerAvatar.previewRects[2] = spriteSheet.getSprite("male_wood").getTextureRect();
     m_playerAvatar.previewRects[3] = spriteSheet.getSprite("male_wood").getTextureRect();
+    m_playerAvatar.previewRects[4] = spriteSheet.getSprite("female_wood_02").getTextureRect();
+    m_playerAvatar.previewRects[5] = spriteSheet.getSprite("female_wood_02").getTextureRect();
+    m_playerAvatar.previewRects[6] = spriteSheet.getSprite("male_wood_02").getTextureRect();
+    m_playerAvatar.previewRects[7] = spriteSheet.getSprite("male_wood_02").getTextureRect();
 
     auto centre = m_playerAvatar.previewRects[0].width / 2.f;
     entity.getComponent<cro::Transform>().setOrigin({ centre, 0.f });
