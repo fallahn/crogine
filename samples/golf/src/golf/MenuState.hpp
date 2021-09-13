@@ -127,6 +127,10 @@ private:
             ButtonBanner,
             Cursor,
             Flag,
+            PrevMenu,
+            NextMenu,
+            AddPlayer,
+            RemovePlayer,
 
             Count
         };

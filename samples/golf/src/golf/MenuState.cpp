@@ -115,13 +115,14 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     sd.clientConnection.ready = false;
     std::fill(m_readyState.begin(), m_readyState.end(), false);
 
-    //reset the state if we came from the tutorial
+    //reset the state if we came from the tutorial (this is
+    //also set if the player quit the game from the pause menu)
     if (sd.tutorial)
     {
         sd.serverInstance.stop();
+        sd.hosting = false;
 
         sd.tutorial = false;
-        sd.hosting = false;
         sd.clientConnection.connected = false;
         sd.clientConnection.connectionID = 4;
         sd.clientConnection.ready = false;

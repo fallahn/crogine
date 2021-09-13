@@ -327,16 +327,10 @@ void PauseState::buildScene()
             {
                 if (activated(evt))
                 {
-                    if (m_sharedData.hosting)
-                    {
-                        m_sharedData.serverInstance.stop();
-                        m_sharedData.hosting = false;
-                    }
-
-                    m_sharedData.clientConnection.connected = false;
-                    m_sharedData.clientConnection.connectionID = 4;
-                    m_sharedData.clientConnection.ready = false;
-                    m_sharedData.clientConnection.netClient.disconnect();
+                    //this is a kludge which tells the
+                    //menu state to remove any existing connection/server instance
+                    //rather than disconnecting here which would raise an error message
+                    m_sharedData.tutorial = true;
 
                     requestStackClear();
                     requestStackPush(StateID::Menu);
