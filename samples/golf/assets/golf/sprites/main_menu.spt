@@ -87,4 +87,19 @@ spritesheet main_menu
     {
         bounds = 208,152,16,16
     }
+
+    sprite ready_up
+    {
+        bounds = 128, 200, 16,16
+    }
+
+    sprite start_game
+    {
+        bounds = 144, 200, 16,16
+    }
+
+    sprite connect
+    {
+        bounds = 160, 200, 32,16
+    }
 }
