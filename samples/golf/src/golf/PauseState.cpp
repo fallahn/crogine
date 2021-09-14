@@ -105,7 +105,8 @@ bool PauseState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONUP
         && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
     {
-        if (evt.cbutton.button == SDL_CONTROLLER_BUTTON_B)
+        if (evt.cbutton.button == cro::GameController::ButtonB
+            || evt.cbutton.button == cro::GameController::ButtonStart)
         {
             quitState();
             return false;

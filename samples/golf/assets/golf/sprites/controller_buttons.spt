@@ -53,15 +53,15 @@ spritesheet controller
 
         animation idle
         {
-            frame - 0,48,64,64
-            frame - 64,48,64,64
-            frame - 0,112,64,64
-            frame - 64,112,64,64
-            frame - 0,176,64,64
-            frame - 64,176,64,64
+            frame = 0,48,64,64
+            frame = 64,48,64,64
+            frame = 0,112,64,64
+            frame = 64,112,64,64
+            frame = 0,176,64,64
+            frame = 64,176,64,64
 
             loop = true
-            framerate = 16
+            framerate = 10
         }
     }
 }
