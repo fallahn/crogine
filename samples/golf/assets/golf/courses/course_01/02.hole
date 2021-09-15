@@ -25,4 +25,18 @@ hole 02
         position = 110, 0, 50
         rotation = -30
     }
+
+    prop
+    {
+        model = "assets/golf/models/lighthouse.cmt"
+        position = -115, 0, -126
+        rotation = 45
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = 19, 0, 53.4
+        rotation = 134
+    }
 }
