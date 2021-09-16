@@ -18,4 +18,18 @@ hole 04
         position = 69.6,0,75
         rotation = 49.4
     }
+
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = 86, 0, 19.4
+        rotation = -20.9
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 86, 0, 19.4
+        rotation = 5.9
+    }    
 }
