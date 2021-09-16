@@ -32,6 +32,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "InputParser.hpp"
 #include "Clubs.hpp"
+#include "Terrain.hpp"
 #include "../StateIDs.hpp"
 
 #include <crogine/ecs/Scene.hpp>
@@ -40,6 +41,7 @@ source distribution.
 /*
 Tutorial 1 triggered on scene transition completion
 Tutorial 2 waits for the player to select the driver
+Tutorial 3 lets the player take shots until they land on the green
 */
 
 TutorialDirector::TutorialDirector(SharedStateData& sd, InputParser& ip)
@@ -89,48 +91,12 @@ void TutorialDirector::handleMessage(const cro::Message& msg)
             default: break;
             case 2:
                 //allow aiming
-                m_inputParser.setEnableFlags(~(InputFlag::Action | InputFlag::PrevClub | InputFlag::NextClub));
+                m_inputParser.setEnableFlags(~(InputFlag::Action/* | InputFlag::PrevClub | InputFlag::NextClub*/));
                 break;
             case 3:
                 //allow all input
                 m_inputParser.setEnableFlags(InputFlag::All);
                 break;
-            }
-        }
-    }
-        break;
-    case MessageID::GolfMessage:
-    {
-        const auto& data = msg.getData<GolfEvent>();
-        if (data.type == GolfEvent::ClubChanged
-            && m_sharedData.tutorialIndex == 1)
-        {
-            if (m_inputParser.getClub() == ClubID::Driver)
-            {
-                //hmmm this always assumes the tutorial hole
-                //needs a driver on the tee...
-
-                m_inputParser.setEnableFlags(0);
-
-                auto entity = getScene().createEntity();
-                entity.addComponent<cro::Callback>().active = true;
-                entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-                entity.getComponent<cro::Callback>().function =
-                    [&](cro::Entity e, float dt)
-                {
-                    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-                    currTime = std::min(1.f, currTime + dt);
-
-                    if (currTime == 1)
-                    {
-                        auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
-                        msg2->data = StateID::Tutorial;
-                        msg2->type = SystemEvent::StateRequest;
-
-                        e.getComponent<cro::Callback>().active = false;
-                        getScene().destroyEntity(e);
-                    }
-                };
             }
         }
     }
@@ -144,15 +110,30 @@ void TutorialDirector::handleMessage(const cro::Message& msg)
             {
             default: break;
             case InputFlag::Action:
-                if (m_sharedData.tutorialIndex == 2)
+                if (m_sharedData.tutorialIndex == 1
+                  || m_sharedData.tutorialIndex == 2)
                 {
-                    //player pressed action after setting aim
+                    //player pressed action after setting club or setting aim
                     auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
                     msg2->data = StateID::Tutorial;
                     msg2->type = SystemEvent::StateRequest;
                 }
                 break;
             }
+        }
+    }
+        break;
+    case MessageID::GolfMessage:
+    {
+        const auto& data = msg.getData<GolfEvent>();
+        if (data.type == GolfEvent::SetNewPlayer
+            && data.terrain == TerrainID::Green
+            && m_sharedData.tutorialIndex == 3)
+        {
+            //final tutorial about putting
+            auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
+            msg2->data = StateID::Tutorial;
+            msg2->type = SystemEvent::StateRequest;
         }
     }
         break;

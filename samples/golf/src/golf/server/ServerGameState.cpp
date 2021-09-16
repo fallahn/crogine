@@ -59,7 +59,7 @@ GameState::GameState(SharedData& sd)
     : m_returnValue (StateID::Game),
     m_sharedData    (sd),
     m_mapDataValid  (false),
-    m_scene         (sd.messageBus),
+    m_scene         (sd.messageBus, 512),
     m_gameStarted   (false),
     m_currentHole   (0)
 {

@@ -1,0 +1,9 @@
+spritesheet tutorial
+{
+    src = "assets/golf/images/tutorial_title.png"
+
+    sprite title
+    {
+        bounds = 0,0,232,112
+    }
+}

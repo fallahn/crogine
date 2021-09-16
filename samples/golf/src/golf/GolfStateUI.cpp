@@ -698,7 +698,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::uint8_t>>(1.f, seconds);
     entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [&](cro::Entity e, float dt)
     {
         auto& [current, sec] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::uint8_t>>();
         current -= dt;
@@ -708,7 +708,14 @@ void GolfState::showCountdown(std::uint8_t seconds)
             sec--;
         }
 
-        e.getComponent<cro::Text>().setString("Return to lobby in: " + std::to_string(sec));
+        if (m_sharedData.tutorial)
+        {
+            e.getComponent<cro::Text>().setString("Returning to menu in: " + std::to_string(sec));
+        }
+        else
+        {
+            e.getComponent<cro::Text>().setString("Returning to lobby in: " + std::to_string(sec));
+        }
 
         auto bounds = cro::Text::getLocalBounds(e);
         bounds.width = std::floor(bounds.width / 2.f);

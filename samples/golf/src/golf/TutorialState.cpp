@@ -183,7 +183,7 @@ void TutorialState::buildScene()
     glm::vec2 size = cro::App::getWindow().getSize();
 
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, size.y), c),
@@ -534,14 +534,14 @@ void TutorialState::tutorialOne(cro::Entity root)
 
     //welcome title - TODO load from correct sprite sheet
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/main_menu.spt", m_sharedData.sharedResources->textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/tutorial.spt", m_sharedData.sharedResources->textures);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 10000.f, 10000.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, std::floor(bounds.height / 3.f) });
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
     entity.getComponent<cro::Callback>().function =
@@ -575,10 +575,11 @@ void TutorialState::tutorialOne(cro::Entity root)
                 break;
             case 2:
             {
-                currTime = std::max(0.f, currTime - (dt * 2.f));
+                currTime = std::max(0.f, currTime - (dt * 4.f));
 
-                auto scale = cro::Util::Easing::easeInBounce(currTime);
+                auto scale = cro::Util::Easing::easeOutQuad(currTime);
                 e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                e.getComponent<cro::Transform>().rotate(dt * 16.f * (2.f - scale));
 
                 if (currTime == 0)
                 {
@@ -726,7 +727,7 @@ void TutorialState::tutorialTwo(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("This is the wind indicator.\nThe strength ranges from\n1 to 2 knots.");
+    entity.addComponent<cro::Text>(font).setString("This is the wind indicator.\nThe strength ranges from\n0 to 2 knots.");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
@@ -963,9 +964,20 @@ void TutorialState::tutorialThree(cro::Entity root)
 
 
 
-
-
-
+    //used as a 'ping' by the hook/slice indicator
+    auto pingEnt = m_scene.createEntity();
+    pingEnt.addComponent<cro::Transform>();
+    pingEnt.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(-6.f, 24.f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(-6.f, -24.f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(6.f, 24.f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(6.f, -24.f), TextNormalColour)
+    };
+    pingEnt.getComponent<cro::Drawable2D>().updateLocalBounds();
+    pingEnt.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    pingEnt.getComponent<UIElement>().depth = -0.06f;
+    pingEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
 
 
     //hook/slice indicator
@@ -984,20 +996,30 @@ void TutorialState::tutorialThree(cro::Entity root)
         explicit HookData(float w) : Width(w) {}
     };
     entity.addComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [&,pingEnt](cro::Entity e, float dt) mutable
     {
         //it's important that the callback data here is
         //set when the entity is parented to the power bar
         //at the bottom of this function!
         auto& data = e.getComponent<cro::Callback>().getUserData<HookData>();
+
+
+        bool prev = ((0.5f - data.currentTime) * data.direction > 0);
         data.currentTime = std::min(1.f, std::max(0.f, data.currentTime + (dt * data.direction)));
+        bool current = ((0.5f - data.currentTime) * data.direction < 0);
 
-        auto position = e.getComponent<cro::Transform>().getPosition();
+        auto& tx = e.getComponent<cro::Transform>();
+        auto position = tx.getPosition();
         position.x = data.Width * data.currentTime;
-        e.getComponent<cro::Transform>().setPosition(position);
+        tx.setPosition(position);
 
-        if (data.currentTime == 1
-            || data.currentTime == 0)
+        if (prev && current)
+        {
+            //we crossed the centre
+            pingEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
+        }
+
+        if (std::fmod(data.currentTime, 1.f) == 0)
         {
             data.direction *= -1.f;
         }
@@ -1005,6 +1027,24 @@ void TutorialState::tutorialThree(cro::Entity root)
     //this ent is parented to power bar, below
     auto hookBar = entity;
 
+    pingEnt.addComponent<cro::Callback>().active = true;
+    pingEnt.getComponent<cro::Callback>().setUserData<float>(1.f);
+    pingEnt.getComponent<cro::Callback>().function =
+        [&,hookBar](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + (dt * 1.5f));
+
+        float alpha = 1.f - currTime;
+        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+        for (auto& v : verts)
+        {
+            v.colour.setAlpha(alpha);
+        }
+
+        e.getComponent<cro::Transform>().setScale(glm::vec2(currTime));
+    };
+    root.getComponent<cro::Transform>().addChild(pingEnt.getComponent<cro::Transform>());
 
     //second tip text
     entity = m_scene.createEntity();
@@ -1371,7 +1411,7 @@ void TutorialState::tutorialFour(cro::Entity root)
     /*
     Blue lines on the ground indicate the direction of the slope
 
-    The long the lines and the bluer they are the strong the effect of the slope.
+    The longer the lines and the bluer they are the strong the effect of the slope.
     */
 }
 

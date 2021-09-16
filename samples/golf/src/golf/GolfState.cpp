@@ -119,7 +119,7 @@ namespace
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
-    m_gameScene         (context.appInstance.getMessageBus()),
+    m_gameScene         (context.appInstance.getMessageBus(), 512),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
     m_wantsGameState    (true),
@@ -2068,6 +2068,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
     m_currentPlayer = player;
+
+    //announce player has changed
+    auto* msg2 = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+    msg2->position = m_currentPlayer.position;
+    msg2->terrain = m_currentPlayer.terrain;
+    msg2->type = GolfEvent::SetNewPlayer;
 }
 
 void GolfState::hitBall()
