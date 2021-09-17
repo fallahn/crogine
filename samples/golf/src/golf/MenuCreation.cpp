@@ -98,6 +98,18 @@ void MenuCallback::operator()(cro::Entity e, float dt)
             menuState.m_uiScene.getSystem<cro::UISystem>().setActiveGroup(menuData.targetMenu);
             menuState.m_currentMenu = menuData.targetMenu;
 
+            //if we're hosting a lobby update the stride
+            if ((menuData.targetMenu == MenuState::MenuID::Lobby
+                && menuState.m_sharedData.hosting)
+                /*|| menuData.targetMenu == MenuState::MenuID::Avatar*/)
+            {
+                menuState.m_uiScene.getSystem<cro::UISystem>().setColumnCount(2);
+            }
+            else
+            {
+                menuState.m_uiScene.getSystem<cro::UISystem>().setColumnCount(1);
+            }
+
             //start title animation
             cro::Command cmd;
             cmd.targetFlags = CommandID::Menu::TitleText;

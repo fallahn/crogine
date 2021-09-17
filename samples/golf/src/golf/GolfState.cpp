@@ -2083,7 +2083,21 @@ void GolfState::hitBall()
     auto yaw = m_inputParser.getYaw();
 
     //add hook/slice to yaw
-    yaw += MaxHook * m_inputParser.getHook();
+    auto hook = m_inputParser.getHook();
+    if (hook < -0.15f)
+    {
+        auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+        msg->type = GolfEvent::HookedBall;
+        floatingMessage("Hooked!");
+    }
+    else if (hook > 0.15f)
+    {
+        auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+        msg->type = GolfEvent::SlicedBall;
+        floatingMessage("Sliced!");
+    }
+
+    yaw += MaxHook * hook;
 
     glm::vec3 impulse(1.f, 0.f, 0.f);
     auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
