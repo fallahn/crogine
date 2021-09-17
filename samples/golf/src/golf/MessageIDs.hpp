@@ -52,11 +52,17 @@ struct GolfEvent final
         ClubSwing,
         SetNewPlayer,
         HookedBall,
-        SlicedBall
+        SlicedBall,
+        BallLanded,
+        Scored
     }type = HitBall;
 
     glm::vec3 position = glm::vec3(0.f);
-    std::uint8_t terrain = 0;
+    union
+    {
+        std::uint8_t terrain = 0;
+        std::uint8_t score;
+    };
     std::uint8_t club = 0;
 };
 

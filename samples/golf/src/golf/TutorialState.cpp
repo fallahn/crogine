@@ -296,7 +296,7 @@ void TutorialState::buildScene()
 
 
     cro::String str;
-    if (cro::GameController::getControllerCount() == 0)
+    if (cro::GameController::getControllerCount() != 0)
     {
         str = "Press  to Continue";
 

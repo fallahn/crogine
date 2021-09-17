@@ -38,7 +38,7 @@ source distribution.
 
 namespace
 {
-    constexpr float MinBallDist = (HoleRadius * 1.1f) * (HoleRadius * 1.1f);
+    constexpr float MinBallDist = (HoleRadius * 1.2f) * (HoleRadius * 1.2f);
 }
 
 ClientCollisionSystem::ClientCollisionSystem(cro::MessageBus& mb, const std::vector<HoleData>& hd)

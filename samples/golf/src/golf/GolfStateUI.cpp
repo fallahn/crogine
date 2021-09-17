@@ -36,6 +36,7 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "ScoreStrings.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -1190,6 +1191,10 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
             score++;
         }
 
+        auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+        msg->type = GolfEvent::Scored;
+        msg->score = static_cast<std::uint8_t>(score);
+
         if (score < ScoreID::Count)
         {
             textEnt.getComponent<cro::Text>().setString(ScoreStrings[score]);
@@ -1329,13 +1334,14 @@ void GolfState::floatingMessage(const std::string& msg)
     entity.getComponent<cro::Callback>().function =
         [&, position](cro::Entity e, float dt)
     {
-        static constexpr float MaxMove = 30.f;
+        static constexpr float MaxMove = 40.f;
         static constexpr float MaxTime = 3.f;
 
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime = std::min(MaxTime, currTime + dt);
 
-        float move = std::floor(currTime * MaxMove);
+        float progress = currTime / MaxTime;
+        float move = std::floor(cro::Util::Easing::easeOutQuint(progress) * MaxMove);
 
         auto pos = position;
         pos.y += move;
@@ -1347,7 +1353,7 @@ void GolfState::floatingMessage(const std::string& msg)
             m_uiScene.destroyEntity(e);
         }
 
-        float alpha = currTime / MaxTime;
+        float alpha = cro::Util::Easing::easeInCubic(progress);
         auto c = TextNormalColour;
         c.setAlpha(1.f - alpha);
         e.getComponent<cro::Text>().setFillColour(c);

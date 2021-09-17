@@ -31,6 +31,8 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "Terrain.hpp"
 #include "GameConsts.hpp"
+#include "ScoreStrings.hpp"
+#include "Clubs.hpp"
 
 #include <crogine/audio/AudioResource.hpp>
 
@@ -58,6 +60,36 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/ball/splash.wav",
         "assets/golf/sound/ball/drop.wav",
         "assets/golf/sound/ball/scrub.wav",
+
+        "assets/golf/sound/holes/albatross.wav",
+        "assets/golf/sound/holes/birdie.wav",
+        "assets/golf/sound/holes/bogie.wav",
+        "assets/golf/sound/holes/bogie_double.wav",
+        "assets/golf/sound/holes/bogie_triple.wav",
+        "assets/golf/sound/holes/eagle.wav",
+        "assets/golf/sound/holes/hole.wav",
+        "assets/golf/sound/holes/par.wav",
+
+        "assets/golf/sound/ball/applause.wav",
+
+        "assets/golf/sound/terrain/bunker01.wav",
+        "assets/golf/sound/terrain/bunker02.wav",
+        "assets/golf/sound/terrain/bunker03.wav",
+        "assets/golf/sound/terrain/bunker04.wav",
+        "assets/golf/sound/terrain/bunker05.wav",
+        "assets/golf/sound/terrain/fairway01.wav",
+        "assets/golf/sound/terrain/fairway02.wav",
+        "assets/golf/sound/terrain/green01.wav",
+        "assets/golf/sound/terrain/green02.wav",
+        "assets/golf/sound/terrain/rough01.wav",
+        "assets/golf/sound/terrain/rough02.wav",
+        "assets/golf/sound/terrain/scrub01.wav",
+        "assets/golf/sound/terrain/scrub02.wav",
+        "assets/golf/sound/terrain/scrub03.wav",
+        "assets/golf/sound/terrain/scrub04.wav",
+        "assets/golf/sound/terrain/water01.wav",
+        "assets/golf/sound/terrain/water02.wav",
+        "assets/golf/sound/terrain/water03.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -104,6 +136,70 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             }
         }
             break;
+        case GolfEvent::Scored:
+            switch (data.score)
+            {
+            default: 
+                //TODO this is probably way over par so play some sad sound
+                playSound(AudioID::ScoreHole, glm::vec3(0.f));
+                break; 
+            case ScoreID::Albatross:
+                playSound(AudioID::ScoreAlbatross, glm::vec3(0.f));
+                break;
+            case ScoreID::Birdie:
+                playSound(AudioID::ScoreBirdie, glm::vec3(0.f));
+                break;
+            case ScoreID::Bogie:
+                playSound(AudioID::ScoreBogie, glm::vec3(0.f));
+                break;
+            case ScoreID::DoubleBogie:
+                playSound(AudioID::ScoreDoubleBogie, glm::vec3(0.f));
+                break;
+            case ScoreID::Eagle:
+                playSound(AudioID::ScoreEagle, glm::vec3(0.f));
+                break;
+            case ScoreID::Par:
+                playSound(AudioID::ScorePar, glm::vec3(0.f));
+                break;
+            case ScoreID::TripleBogie:
+                playSound(AudioID::ScoreTripleBogie, glm::vec3(0.f));
+                break;
+            }
+
+            if (data.score <= ScoreID::Par)
+            {
+                playSound(AudioID::Applause, glm::vec3(0.f));
+            }
+            break;
+        case GolfEvent::BallLanded:
+            switch (data.terrain)
+            {
+            default: break;
+            case TerrainID::Bunker:
+                playSound(cro::Util::Random::value(AudioID::TerrainBunker01, AudioID::TerrainBunker05), glm::vec3(0.f));
+                break;
+            case TerrainID::Fairway:
+                playSound(cro::Util::Random::value(AudioID::TerrainFairway01, AudioID::TerrainFairway02), glm::vec3(0.f));
+                break;
+            case TerrainID::Scrub:
+                playSound(cro::Util::Random::value(AudioID::TerrainScrub01, AudioID::TerrainScrub04), glm::vec3(0.f));
+                break;
+            case TerrainID::Green:
+                //TODO we want to be able to tell if this is say 2 below par and say 'nice shot' or something
+                //TODO we only want to play this if we weren't already on the green
+                if (data.club != ClubID::Putter)
+                {
+                    playSound(cro::Util::Random::value(AudioID::TerrainGreen01, AudioID::TerrainGreen02), glm::vec3(0.f));
+                }
+                break;
+            case TerrainID::Water:
+                playSound(cro::Util::Random::value(AudioID::TerrainWater01, AudioID::TerrainWater03), glm::vec3(0.f));
+                break;
+            case TerrainID::Rough:
+                playSound(cro::Util::Random::value(AudioID::TerrainRough01, AudioID::TerrainRough02), glm::vec3(0.f));
+                break;
+            }
+            break;
         }
     }
         break;
@@ -112,7 +208,6 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<CollisionEvent>();
         if (data.type == CollisionEvent::Begin)
         {
-            
             switch (data.terrain)
             {
             default:
@@ -128,7 +223,6 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 playSound(AudioID::Scrub, data.position);
                 break;
             }
-            
         }
     }
         break;

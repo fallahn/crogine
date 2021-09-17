@@ -258,6 +258,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //showMessageBoard(MessageBoardID::Bunker);
             //updateMiniMap();
             //removeClient(1);
+            //floatingMessage("Hooked!");
             break;
 #endif
         }
@@ -385,6 +386,21 @@ void GolfState::handleMessage(const cro::Message& msg)
             msg2->club = static_cast<std::uint8_t>(getClub());
 
             cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 0.5f, 100);
+
+            //check if we hooked/sliced
+            auto hook = m_inputParser.getHook();
+            if (hook < -0.15f)
+            {
+                auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                msg2->type = GolfEvent::HookedBall;
+                floatingMessage("Hook");
+            }
+            else if (hook > 0.15f)
+            {
+                auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                msg2->type = GolfEvent::SlicedBall;
+                floatingMessage("Slice");
+            }
         }
     }
     break;
@@ -1452,6 +1468,11 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                 showMessageBoard(MessageBoardID::HoleScore);
                 break;
             }
+
+            auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+            msg->type = GolfEvent::BallLanded;
+            msg->terrain = terrain;
+            msg->club = getClub();
         }
             break;
         case PacketID::ClientDisconnected:
@@ -2083,21 +2104,7 @@ void GolfState::hitBall()
     auto yaw = m_inputParser.getYaw();
 
     //add hook/slice to yaw
-    auto hook = m_inputParser.getHook();
-    if (hook < -0.15f)
-    {
-        auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-        msg->type = GolfEvent::HookedBall;
-        floatingMessage("Hooked!");
-    }
-    else if (hook > 0.15f)
-    {
-        auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-        msg->type = GolfEvent::SlicedBall;
-        floatingMessage("Sliced!");
-    }
-
-    yaw += MaxHook * hook;
+    yaw += MaxHook * m_inputParser.getHook();
 
     glm::vec3 impulse(1.f, 0.f, 0.f);
     auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);

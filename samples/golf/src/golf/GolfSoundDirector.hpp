@@ -64,6 +64,36 @@ private:
             Ground,
             Scrub,
 
+            ScoreAlbatross,
+            ScoreBirdie,
+            ScoreBogie,
+            ScoreDoubleBogie,
+            ScoreTripleBogie,
+            ScoreEagle,
+            ScoreHole,
+            ScorePar,
+
+            Applause,
+
+            TerrainBunker01,
+            TerrainBunker02,
+            TerrainBunker03,
+            TerrainBunkre04,
+            TerrainBunker05,
+            TerrainFairway01,
+            TerrainFairway02,
+            TerrainGreen01,
+            TerrainGreen02,
+            TerrainRough01,
+            TerrainRough02,
+            TerrainScrub01,
+            TerrainScrub02,
+            TerrainScrub03,
+            TerrainScrub04,
+            TerrainWater01,
+            TerrainWater02,
+            TerrainWater03,
+
             Count
         };
     };
