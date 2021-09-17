@@ -131,6 +131,9 @@ private:
             NextMenu,
             AddPlayer,
             RemovePlayer,
+            ReadyUp,
+            StartGame,
+            Connect,
 
             Count
         };

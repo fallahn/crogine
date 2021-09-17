@@ -349,6 +349,9 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     m_sprites[SpriteID::RemovePlayer] = spriteSheet.getSprite("remove_player");
     m_sprites[SpriteID::PrevMenu] = spriteSheet.getSprite("exit");
     m_sprites[SpriteID::NextMenu] = spriteSheet.getSprite("continue");
+    m_sprites[SpriteID::ReadyUp] = spriteSheet.getSprite("ready_up");
+    m_sprites[SpriteID::StartGame] = spriteSheet.getSprite("start_game");
+    m_sprites[SpriteID::Connect] = spriteSheet.getSprite("connect");
 
     //title
     auto entity = m_uiScene.createEntity();
@@ -510,7 +513,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         [entity](cro::Entity e) mutable
         {
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
-            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + CursorOffset);
+            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + glm::vec3(-20.f, -7.f, 0.f));
         });
 
     static constexpr float TextOffset = 26.f;
@@ -833,7 +836,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
         [entity](cro::Entity e) mutable
         {
             //e.getComponent<cro::Text>().setFillColour(TextGoldColour);
-            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + glm::vec3(-20.f, 4.f, 0.f)/*CursorOffset*/);
+            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + CursorOffset);
             entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
@@ -842,7 +845,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
 
     //back
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 20.f, /*MenuBottomBorder*/8.f });
+    entity.addComponent<cro::Transform>().setPosition({ 20.f, MenuBottomBorder });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevMenu];
     entity.addComponent<cro::UIInput>().area = m_sprites[SpriteID::PrevMenu].getTextureBounds();
@@ -869,15 +872,11 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, /*MenuBottomBorder*/8.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, MenuBottomBorder };
     entity.getComponent<UIElement>().relativePosition = { 0.3334f, 0.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    /*entity.addComponent<cro::Text>(font).setString("Add Player");
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);*/
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::AddPlayer];
-    bounds = m_sprites[SpriteID::AddPlayer].getTextureBounds();// cro::Text::getLocalBounds(entity);
-    //entity.getComponent<cro::Transform>().move({ -360.f, 0.f });
+    bounds = m_sprites[SpriteID::AddPlayer].getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
@@ -909,15 +908,11 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, /*MenuBottomBorder*/8.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, MenuBottomBorder };
     entity.getComponent<UIElement>().relativePosition = { 0.6667f, 0.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    /*entity.addComponent<cro::Text>(font).setString("Remove Player");
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);*/
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::RemovePlayer];
-    bounds = m_sprites[SpriteID::RemovePlayer].getTextureBounds();// cro::Text::getLocalBounds(entity);
-    //entity.getComponent<cro::Transform>().move({ 10.f, 0.f });
+    bounds = m_sprites[SpriteID::RemovePlayer].getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
@@ -971,7 +966,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, /*MenuBottomBorder*/8.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, MenuBottomBorder };
     entity.getComponent<UIElement>().relativePosition = { 0.98f, 0.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextMenu];
@@ -1015,9 +1010,9 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
 
                                 cro::Command cmd;
                                 cmd.targetFlags = CommandID::Menu::ReadyButton;
-                                cmd.action = [](cro::Entity e, float)
+                                cmd.action = [&](cro::Entity e, float)
                                 {
-                                    e.getComponent<cro::Text>().setString("Start");
+                                    e.getComponent<cro::Sprite>() = m_sprites[SpriteID::StartGame];
                                 };
                                 m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -1275,16 +1270,13 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     mouseEnter = m_uiScene.getSystem<cro::UISystem>().addCallback(
         [entity](cro::Entity e) mutable
         {
-            e.getComponent<cro::Text>().setFillColour(TextGoldColour);
             entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + CursorOffset);
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
         });
 
     mouseExit = m_uiScene.getSystem<cro::UISystem>().addCallback(
-        [entity](cro::Entity e) mutable
+        [entity](cro::Entity) mutable
         {
-            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + CursorOffset);
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
 
@@ -1295,10 +1287,8 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<UIElement>().absolutePosition = { 20.f, MenuBottomBorder };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<cro::Text>(font).setString("Back");
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevMenu];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Join);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
@@ -1325,10 +1315,8 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.getComponent<UIElement>().relativePosition = { 0.98f, 0.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<cro::Text>(font).setString("Join");
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Connect];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Join);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
@@ -1351,9 +1339,9 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
                         cro::Command cmd;
                         cmd.targetFlags = CommandID::Menu::ReadyButton;
-                        cmd.action = [](cro::Entity e, float)
+                        cmd.action = [&](cro::Entity e, float)
                         {
-                            e.getComponent<cro::Text>().setString("Ready");
+                            e.getComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyUp];
                         };
                         m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
@@ -1536,15 +1524,13 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     mouseEnter = m_uiScene.getSystem<cro::UISystem>().addCallback(
         [entity](cro::Entity e) mutable
         {
-            e.getComponent<cro::Text>().setFillColour(TextGoldColour);
             entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + CursorOffset);
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
         });
 
     mouseExit = m_uiScene.getSystem<cro::UISystem>().addCallback(
-        [entity](cro::Entity e) mutable
+        [entity](cro::Entity) mutable
         {
-            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
 
@@ -1555,15 +1541,13 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 20.f, MenuBottomBorder };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<cro::Text>(font).setString("Leave");
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevMenu];
+    entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&/*, menuEntity*/](cro::Entity, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1576,14 +1560,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { -50.f, MenuBottomBorder };
+    entity.addComponent<UIElement>().absolutePosition = { -16.f, MenuBottomBorder };
     entity.getComponent<UIElement>().relativePosition = { 0.98f, 0.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::ReadyButton;
-    entity.addComponent<cro::Text>(font).setString("Start");
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    bounds = cro::Text::getLocalBounds(entity);
-    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.addComponent<cro::Sprite>(); //which sprite is set by sending a message to this ent when we know if we're hosting or joining
+    entity.addComponent<cro::UIInput>().area = m_sprites[SpriteID::ReadyUp].getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
