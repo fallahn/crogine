@@ -32,6 +32,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "CommonConsts.hpp"
 #include "CommandIDs.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -79,7 +80,7 @@ TutorialState::TutorialState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_currentAction (0),
     m_actionActive  (false)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setMouseCaptured(true);
 
     buildScene();
 
@@ -146,6 +147,16 @@ bool TutorialState::handleEvent(const cro::Event& evt)
 
 void TutorialState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped
+            && data.id == StateID::Pause)
+        {
+            cro::App::getWindow().setMouseCaptured(true);
+        }
+    }
+
     m_scene.forwardMessage(msg);
 }
 
@@ -1046,7 +1057,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     };
     root.getComponent<cro::Transform>().addChild(pingEnt.getComponent<cro::Transform>());
 
-    //second tip text
+    //third tip text
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f,0.f,0.f,0.f });
@@ -1088,7 +1099,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [&, bounds, hookBar](cro::Entity e, float dt) mutable
+        [&, bounds](cro::Entity e, float dt) mutable
     {
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime = std::min(1.f, currTime + (dt * 3.f));
@@ -1099,7 +1110,6 @@ void TutorialState::tutorialThree(cro::Entity root)
         if (currTime == 1)
         {
             e.getComponent<cro::Callback>().active = false;
-            hookBar.getComponent<cro::Callback>().active = true;
             showContinue();
         }
     };
@@ -1149,12 +1159,12 @@ void TutorialState::tutorialThree(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f,0.f,0.f,0.f });
     entity.addComponent<cro::Sprite>() = uiSprites.getSprite("power_bar_inner");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.addComponent<cro::Callback>().setUserData<std::pair<float, float>>(0.f, 1.f);
     entity.getComponent<cro::Callback>().function =
         [bounds, arrow03](cro::Entity e, float dt) mutable
     {
-        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-        currTime = std::min(currTime + (dt * 2.f), 1.f);
+        auto& [currTime, direction] = e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>();
+        currTime = std::max(0.f, std::min(currTime + (dt * direction), 1.f));
 
         auto area = bounds;
         area.width *= currTime;
@@ -1162,8 +1172,13 @@ void TutorialState::tutorialThree(cro::Entity root)
 
         if (currTime == 1)
         {
-            e.getComponent<cro::Callback>().active = false;
+            //e.getComponent<cro::Callback>().active = false;
             arrow03.getComponent<cro::Callback>().active = true;
+        }
+
+        if (std::fmod(currTime, 1.f) == 0)
+        {
+            direction *= -1.f;
         }
     };
 
@@ -1398,12 +1413,32 @@ void TutorialState::tutorialThree(cro::Entity root)
 
 
     m_actionCallbacks.push_back([text02]() mutable {text02.getComponent<cro::Callback>().active = true; });
-    m_actionCallbacks.push_back([arrow04, hookBar]() mutable 
+    m_actionCallbacks.push_back([arrow04, hookBar, powerbarInner]() mutable 
         {
-            hookBar.getComponent<cro::Callback>().active = false;
+            powerbarInner.getComponent<cro::Callback>().active = false;
+            hookBar.getComponent<cro::Callback>().active = true;
             arrow04.getComponent<cro::Callback>().active = true;
         });
-    m_actionCallbacks.push_back([&]() { quitState(); });
+    m_actionCallbacks.push_back([&, hookBar]() mutable
+        {
+            hookBar.getComponent<cro::Callback>().active = false;
+
+            auto e = m_scene.createEntity();
+            e.addComponent<cro::Callback>().active = true;
+            e.getComponent<cro::Callback>().setUserData<float>(0.f);
+            e.getComponent<cro::Callback>().function =
+                [&](cro::Entity d, float dt)
+            {
+                auto& currTime = d.getComponent<cro::Callback>().getUserData<float>();
+                currTime = std::min(1.f, currTime + dt);
+                if (currTime == 1)
+                {
+                    d.getComponent<cro::Callback>().active = false;
+                    m_scene.destroyEntity(d);
+                    quitState();
+                }
+            };
+        });
 }
 
 void TutorialState::tutorialFour(cro::Entity root)
