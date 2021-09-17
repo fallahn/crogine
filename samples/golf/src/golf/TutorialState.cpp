@@ -112,8 +112,11 @@ bool TutorialState::handleEvent(const cro::Event& evt)
     {
         switch (evt.key.keysym.sym)
         {
-        default: 
-            doCurrentAction();
+        default:
+            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+            {
+                doCurrentAction();
+            }
             break;
         case SDLK_p:
         case SDLK_ESCAPE:
@@ -275,20 +278,53 @@ void TutorialState::buildScene()
     m_backgroundEnt = entity;
 
 
+
+
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Press A Button");
-    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
+    entity.addComponent<cro::Text>(font).setFillColour(cro::Colour::Transparent);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    centreText(entity);
     entity.addComponent<UIElement>().absolutePosition = { 0.f, 32.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_messageEnt = entity;
+
+
+
+    cro::String str;
+    if (cro::GameController::getControllerCount() == 0)
+    {
+        str = "Press  to Continue";
+
+        cro::SpriteSheet spriteSheet;
+        spriteSheet.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
+        auto buttonEnt = m_scene.createEntity();
+        buttonEnt.addComponent<cro::Transform>().setPosition({ 40.f, -12.f, 0.1f });
+        buttonEnt.addComponent<cro::Drawable2D>();
+        buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_a");
+        buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        buttonEnt.addComponent<cro::Callback>().active = true;
+        buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
+        buttonEnt.getComponent<cro::Callback>().function =
+            [entity](cro::Entity e, float)
+        {
+            auto a = entity.getComponent<cro::Text>().getFillColour().getAlpha();
+            cro::Colour c(1.f, 1.f, 1.f, a);
+            e.getComponent<cro::Sprite>().setColour(c);
+        };
+        entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+    }
+    else
+    {
+        str = "Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to Continue";
+    }
+    entity.getComponent<cro::Text>().setString(str);
+    centreText(entity);
+
 
     //create the layout depending on the requested tutorial
     switch (m_sharedData.tutorialIndex)
@@ -566,7 +602,7 @@ void TutorialState::tutorialOne(cro::Entity root)
     auto bgMover = entity;
 
 
-    //welcome title - TODO load from correct sprite sheet
+    //welcome title
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/tutorial.spt", m_sharedData.sharedResources->textures);
 
@@ -627,6 +663,15 @@ void TutorialState::tutorialOne(cro::Entity root)
     };
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto title = entity;
+
+    spriteSheet.loadFromFile("assets/golf/sprites/main_menu.spt", m_sharedData.sharedResources->textures);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 117.f, 64.f, 0.001f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag");
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    title.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //activates first tips
     m_actionCallbacks.push_back([bgMover, title]() mutable
