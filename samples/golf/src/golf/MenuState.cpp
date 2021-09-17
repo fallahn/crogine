@@ -148,12 +148,12 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         };
         m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
-        cro::String buttonString;
+        std::int32_t spriteID = 0;
         cro::String connectionString;
 
         if (m_sharedData.hosting)
         {
-            buttonString = "Start";
+            spriteID = SpriteID::StartGame;
             connectionString = "Hosting on: localhost:" + std::to_string(ConstVal::GamePort);
 
             //auto ready up if host
@@ -190,15 +190,15 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         }
         else
         {
-            buttonString = "Ready";
+            spriteID = SpriteID::ReadyUp;
             connectionString = "Connected to: " + m_sharedData.targetIP + ":" + std::to_string(ConstVal::GamePort);
         }
 
 
         cmd.targetFlags = CommandID::Menu::ReadyButton;
-        cmd.action = [buttonString](cro::Entity e, float)
+        cmd.action = [&, spriteID](cro::Entity e, float)
         {
-            e.getComponent<cro::Text>().setString(buttonString);
+            e.getComponent<cro::Sprite>() = m_sprites[spriteID];
         };
         m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 

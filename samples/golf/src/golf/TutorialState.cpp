@@ -31,7 +31,10 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "MenuConsts.hpp"
 #include "CommonConsts.hpp"
+#include "GameConsts.hpp"
 #include "CommandIDs.hpp"
+#include "MessageIDs.hpp"
+#include "../ErrorCheck.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -58,6 +61,9 @@ source distribution.
 
 namespace
 {
+    std::int32_t timeUniform = -1;
+    std::uint32_t shaderID = 0;
+
     struct BackgroundCallbackData final
     {
         glm::vec2 targetSize = glm::vec2(0.f);
@@ -79,7 +85,7 @@ TutorialState::TutorialState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_currentAction (0),
     m_actionActive  (false)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    ctx.mainWindow.setMouseCaptured(true);
 
     buildScene();
 
@@ -106,14 +112,22 @@ bool TutorialState::handleEvent(const cro::Event& evt)
     {
         switch (evt.key.keysym.sym)
         {
-        default: 
-            doCurrentAction();
+        default:
+            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+            {
+                doCurrentAction();
+            }
             break;
         case SDLK_p:
         case SDLK_ESCAPE:
         case SDLK_BACKSPACE:
         case SDLK_PAUSE:
             requestStackPush(StateID::Pause);
+            break;
+            //make sure sysem buttons don't do anything
+        case SDLK_F1:
+        case SDLK_F5:
+
             break;
 #ifdef CRO_DEBUG_
         case SDLK_o:
@@ -146,18 +160,37 @@ bool TutorialState::handleEvent(const cro::Event& evt)
 
 void TutorialState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped
+            && data.id == StateID::Pause)
+        {
+            cro::App::getWindow().setMouseCaptured(true);
+        }
+    }
+
     m_scene.forwardMessage(msg);
 }
 
 bool TutorialState::simulate(float dt)
 {
+    static float accum = 0.f;
+    accum += dt;
+
+    glCheck(glUseProgram(shaderID));
+    glCheck(glUniform1f(timeUniform, accum * 10.f));
+    glCheck(glUseProgram(0));
+
     m_scene.simulate(dt);
     return true;
 }
 
 void TutorialState::render()
 {
+    glLineWidth(m_viewScale.y);
     m_scene.render(cro::App::getWindow());
+    glLineWidth(1.f);
 }
 
 //private
@@ -173,6 +206,10 @@ void TutorialState::buildScene()
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
 
+    //used to animate the slope line
+    auto& shader = m_sharedData.sharedResources->shaders.get(ShaderID::TutorialSlope);
+    timeUniform = shader.getUniformID("u_time");
+    shaderID = shader.getGLHandle();
 
     //root node is used to scale all attachments
     auto rootNode = m_scene.createEntity();
@@ -241,20 +278,53 @@ void TutorialState::buildScene()
     m_backgroundEnt = entity;
 
 
+
+
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Press A Button");
-    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
+    entity.addComponent<cro::Text>(font).setFillColour(cro::Colour::Transparent);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    centreText(entity);
     entity.addComponent<UIElement>().absolutePosition = { 0.f, 32.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_messageEnt = entity;
+
+
+
+    cro::String str;
+    if (cro::GameController::getControllerCount() == 0)
+    {
+        str = "Press  to Continue";
+
+        cro::SpriteSheet spriteSheet;
+        spriteSheet.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
+        auto buttonEnt = m_scene.createEntity();
+        buttonEnt.addComponent<cro::Transform>().setPosition({ 40.f, -12.f, 0.1f });
+        buttonEnt.addComponent<cro::Drawable2D>();
+        buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_a");
+        buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        buttonEnt.addComponent<cro::Callback>().active = true;
+        buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
+        buttonEnt.getComponent<cro::Callback>().function =
+            [entity](cro::Entity e, float)
+        {
+            auto a = entity.getComponent<cro::Text>().getFillColour().getAlpha();
+            cro::Colour c(1.f, 1.f, 1.f, a);
+            e.getComponent<cro::Sprite>().setColour(c);
+        };
+        entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+    }
+    else
+    {
+        str = "Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to Continue";
+    }
+    entity.getComponent<cro::Text>().setString(str);
+    centreText(entity);
+
 
     //create the layout depending on the requested tutorial
     switch (m_sharedData.tutorialIndex)
@@ -532,7 +602,7 @@ void TutorialState::tutorialOne(cro::Entity root)
     auto bgMover = entity;
 
 
-    //welcome title - TODO load from correct sprite sheet
+    //welcome title
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/tutorial.spt", m_sharedData.sharedResources->textures);
 
@@ -579,7 +649,7 @@ void TutorialState::tutorialOne(cro::Entity root)
 
                 auto scale = cro::Util::Easing::easeOutQuad(currTime);
                 e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-                e.getComponent<cro::Transform>().rotate(dt * 16.f * (2.f - scale));
+                e.getComponent<cro::Transform>().rotate(dt * 13.f * (2.f - scale));
 
                 if (currTime == 0)
                 {
@@ -593,6 +663,15 @@ void TutorialState::tutorialOne(cro::Entity root)
     };
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto title = entity;
+
+    spriteSheet.loadFromFile("assets/golf/sprites/main_menu.spt", m_sharedData.sharedResources->textures);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 117.f, 64.f, 0.001f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag");
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    title.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //activates first tips
     m_actionCallbacks.push_back([bgMover, title]() mutable
@@ -1046,7 +1125,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     };
     root.getComponent<cro::Transform>().addChild(pingEnt.getComponent<cro::Transform>());
 
-    //second tip text
+    //third tip text
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f,0.f,0.f,0.f });
@@ -1088,7 +1167,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [&, bounds, hookBar](cro::Entity e, float dt) mutable
+        [&, bounds](cro::Entity e, float dt) mutable
     {
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime = std::min(1.f, currTime + (dt * 3.f));
@@ -1099,7 +1178,6 @@ void TutorialState::tutorialThree(cro::Entity root)
         if (currTime == 1)
         {
             e.getComponent<cro::Callback>().active = false;
-            hookBar.getComponent<cro::Callback>().active = true;
             showContinue();
         }
     };
@@ -1149,12 +1227,12 @@ void TutorialState::tutorialThree(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f,0.f,0.f,0.f });
     entity.addComponent<cro::Sprite>() = uiSprites.getSprite("power_bar_inner");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.addComponent<cro::Callback>().setUserData<std::pair<float, float>>(0.f, 1.f);
     entity.getComponent<cro::Callback>().function =
         [bounds, arrow03](cro::Entity e, float dt) mutable
     {
-        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-        currTime = std::min(currTime + (dt * 2.f), 1.f);
+        auto& [currTime, direction] = e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>();
+        currTime = std::max(0.f, std::min(currTime + (dt * direction), 1.f));
 
         auto area = bounds;
         area.width *= currTime;
@@ -1162,8 +1240,12 @@ void TutorialState::tutorialThree(cro::Entity root)
 
         if (currTime == 1)
         {
-            e.getComponent<cro::Callback>().active = false;
             arrow03.getComponent<cro::Callback>().active = true;
+        }
+
+        if (std::fmod(currTime, 1.f) == 0)
+        {
+            direction *= -1.f;
         }
     };
 
@@ -1398,12 +1480,32 @@ void TutorialState::tutorialThree(cro::Entity root)
 
 
     m_actionCallbacks.push_back([text02]() mutable {text02.getComponent<cro::Callback>().active = true; });
-    m_actionCallbacks.push_back([arrow04, hookBar]() mutable 
+    m_actionCallbacks.push_back([arrow04, hookBar, powerbarInner]() mutable 
         {
-            hookBar.getComponent<cro::Callback>().active = false;
+            powerbarInner.getComponent<cro::Callback>().active = false;
+            hookBar.getComponent<cro::Callback>().active = true;
             arrow04.getComponent<cro::Callback>().active = true;
         });
-    m_actionCallbacks.push_back([&]() { quitState(); });
+    m_actionCallbacks.push_back([&, hookBar]() mutable
+        {
+            hookBar.getComponent<cro::Callback>().active = false;
+
+            auto e = m_scene.createEntity();
+            e.addComponent<cro::Callback>().active = true;
+            e.getComponent<cro::Callback>().setUserData<float>(0.f);
+            e.getComponent<cro::Callback>().function =
+                [&](cro::Entity d, float dt)
+            {
+                auto& currTime = d.getComponent<cro::Callback>().getUserData<float>();
+                currTime = std::min(1.f, currTime + dt);
+                if (currTime == 1)
+                {
+                    d.getComponent<cro::Callback>().active = false;
+                    m_scene.destroyEntity(d);
+                    quitState();
+                }
+            };
+        });
 }
 
 void TutorialState::tutorialFour(cro::Entity root)
@@ -1413,6 +1515,112 @@ void TutorialState::tutorialFour(cro::Entity root)
 
     The longer the lines and the bluer they are the strong the effect of the slope.
     */
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+
+    //first tip text
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
+    entity.addComponent<cro::Text>(font).setString("The moving lines indicate the strength and direction of the green's slope.");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    centreText(entity);
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, 66.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    auto bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float dt)
+    {
+        if (!m_backgroundEnt.getComponent<cro::Callback>().active)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::min(1.f, currTime + (dt * 3.f));
+            cro::FloatRect area(0.f, bounds.bottom - (bounds.height * (1.f - currTime)), bounds.width, bounds.height);
+            e.getComponent<cro::Drawable2D>().setCroppingArea(area);
+
+            if (currTime == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                showContinue();
+            }
+        }
+    };
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //blue line
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(-60.f, 5.f), cro::Colour(1.f, 1.f, 0.f, 0.f)),
+        cro::Vertex2D(glm::vec2(60.f, -5.f), cro::Colour(0.f, 0.25f, 1.f,01.f))
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);
+    entity.getComponent<cro::Drawable2D>().setShader(&m_sharedData.sharedResources->shaders.get(ShaderID::TutorialSlope));
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + dt);
+
+        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+        verts[0].colour.setAlpha(currTime * 0.5f);
+        verts[1].colour.setAlpha(currTime);
+
+        if (currTime == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //second tip text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
+    entity.addComponent<cro::Text>(font).setString("Use your aim to compensate for the slope.");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    centreText(entity);
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -52.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + (dt * 3.f));
+        cro::FloatRect area(0.f, bounds.bottom - (bounds.height * (1.f - currTime)), bounds.width, bounds.height);
+        e.getComponent<cro::Drawable2D>().setCroppingArea(area);
+
+        if (currTime == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            showContinue();
+        }
+    };
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto text02 = entity;
+
+    m_actionCallbacks.push_back([text02]() mutable { text02.getComponent<cro::Callback>().active = true; });
+    m_actionCallbacks.push_back([&]() { quitState(); });
 }
 
 void TutorialState::showContinue()

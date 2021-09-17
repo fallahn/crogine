@@ -29,62 +29,41 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/Message.hpp>
-#include <crogine/detail/glm/vec3.hpp>
+#include <string>
 
-namespace MessageID
-{
-    enum
+static const std::string TutorialVertexShader = R"(
+        uniform mat4 u_worldViewMatrix;
+        uniform mat4 u_projectionMatrix;
+
+        ATTRIBUTE vec2 a_position;
+        ATTRIBUTE MED vec2 a_texCoord0;
+        ATTRIBUTE LOW vec4 a_colour;
+
+        VARYING_OUT LOW vec4 v_colour;
+        VARYING_OUT MED vec2 v_position;
+
+        void main()
+        {
+            gl_Position = u_projectionMatrix * u_worldViewMatrix * vec4(a_position, 0.0, 1.0);
+            v_colour = a_colour;
+            v_position = a_position;
+        })";
+
+static const std::string TutorialSlopeShader =
+R"(
+    OUTPUT
+
+    uniform float u_time;
+
+    VARYING_IN vec4 v_colour;
+    VARYING_IN vec2 v_position;
+
+    void main()
     {
-        GolfMessage = 400,//cro::Message::Count
-        SceneMessage,
-        CollisionMessage,
-        SystemMessage
-    };
-}
+        float alpha = (sin((v_position.x * 0.5) - u_time) + 1.0) * 0.5;
+        alpha = step(0.5, alpha);
 
-struct GolfEvent final
-{
-    enum
-    {
-        HitBall,
-        ClubChanged,
-        ClubSwing,
-        SetNewPlayer,
-        HookedBall,
-        SlicedBall
-    }type = HitBall;
-
-    glm::vec3 position = glm::vec3(0.f);
-    std::uint8_t terrain = 0;
-    std::uint8_t club = 0;
-};
-
-struct SceneEvent
-{
-    enum
-    {
-        TransitionComplete
-    }type = TransitionComplete;
-};
-
-struct CollisionEvent final
-{
-    enum Type
-    {
-        Begin, End
-    }type = Begin;
-    glm::vec3 position = glm::vec3(0.f);
-    std::int32_t terrain = 0;
-};
-
-struct SystemEvent final
-{
-    enum
-    {
-        PostProcessToggled,
-        StateRequest,
-        InputActivated
-    }type = PostProcessToggled;
-    std::int32_t data = -1;
-};
+        FRAG_OUT = v_colour;
+        FRAG_OUT.a *= alpha;
+    }
+)";

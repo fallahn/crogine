@@ -50,6 +50,7 @@ source distribution.
 
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Random.hpp>
 
 namespace
 {
@@ -1305,6 +1306,52 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
         }
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+}
+
+void GolfState::floatingMessage(const std::string& msg)
+{
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    glm::vec2 size = glm::vec2(cro::App::getWindow().getSize());
+    glm::vec3 position((size.x / 2.f), (UIBarHeight + 14.f) * m_viewScale.y, 0.2f);
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.getComponent<cro::Transform>().setScale(m_viewScale);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString(msg);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    centreText(entity);
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, position](cro::Entity e, float dt)
+    {
+        static constexpr float MaxMove = 30.f;
+        static constexpr float MaxTime = 3.f;
+
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(MaxTime, currTime + dt);
+
+        float move = std::floor(currTime * MaxMove);
+
+        auto pos = position;
+        pos.y += move;
+        e.getComponent<cro::Transform>().setPosition(pos);
+
+        if (currTime == MaxTime)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        }
+
+        float alpha = currTime / MaxTime;
+        auto c = TextNormalColour;
+        c.setAlpha(1.f - alpha);
+        e.getComponent<cro::Text>().setFillColour(c);
+    };
 }
 
 void GolfState::updateMiniMap()

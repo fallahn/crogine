@@ -192,6 +192,7 @@ private:
         PlayerName, HoleScore
     };
     void showMessageBoard(MessageBoardID);
+    void floatingMessage(const std::string&);
 
     //-----------
 
