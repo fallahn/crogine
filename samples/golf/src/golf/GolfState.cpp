@@ -46,7 +46,7 @@ source distribution.
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/ConfigFile.hpp>
-#include <crogine/core/Gamecontroller.hpp>
+#include <crogine/core/GameController.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>

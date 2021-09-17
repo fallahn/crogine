@@ -38,6 +38,7 @@ source distribution.
 
 #include <cstdint>
 #include <array>
+#include <atomic>
 
 namespace sv
 {
