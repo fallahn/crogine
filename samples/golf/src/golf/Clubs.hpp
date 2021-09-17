@@ -52,7 +52,8 @@ struct ClubID final
     {
         Driver, ThreeWood,
         FiveIron, NineIron,
-        PitchWedge, Putter,
+        PitchWedge, SandWedge,
+        Putter,
 
         Count
     };
@@ -64,6 +65,7 @@ static const std::array<Club, ClubID::Count> Clubs =
     Club("3 Wood 180m", "180m", 42.02f, 45.f, 180.f),
     Club("5 Iron 140m", "140m", 37.35f, 40.f, 140.f),
     Club("9 Iron 100m", "100m", 31.56f, 40.f, 100.f),
-    Club("Pitch Wedge 10m", "10m", 10.65f, 60.f, 10.f),
+    Club("Pitch Wedge 30m", "30m", 17.8f, 60.f, 30.f),
+    Club("Sand Wedge 10m", "10m", 10.65f, 60.f, 10.f),
     Club("Putter 5m", "5m", 4.65f, 0.f, 5.f)
 };
