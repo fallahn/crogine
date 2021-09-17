@@ -308,6 +308,7 @@
     <None Include="src\golf\MinimapShader.inl" />
     <None Include="src\golf\PostProcess.inl" />
     <None Include="src\golf\TerrainShader.inl" />
+    <None Include="src\golf\TutorialShaders.inl" />
     <None Include="src\golf\WaterShader.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -50,7 +50,8 @@ source distribution.
 
 namespace
 {
-
+#include "golf/TutorialShaders.inl"
+#include "golf/TerrainShader.inl"
 }
 
 GolfGame::GolfGame()
@@ -164,6 +165,8 @@ bool GolfGame::initialise()
     //preload resources which will be used in dynamically loaded menus
     m_sharedData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
     m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
+
+    m_sharedData.sharedResources->shaders.loadFromString(ShaderID::TutorialSlope, TutorialVertexShader, TutorialSlopeShader);
 
     m_sharedData.resolutions = getWindow().getAvailableResolutions();
     std::reverse(m_sharedData.resolutions.begin(), m_sharedData.resolutions.end());
