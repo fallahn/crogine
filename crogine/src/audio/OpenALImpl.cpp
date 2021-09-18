@@ -112,6 +112,10 @@ void OpenALImpl::shutdown()
     //make sure to close any open streams
     for (auto i = 0u; i < m_streams.size(); ++i)
     {
+        if (m_streams[i].sourceID > 0)
+        {
+            alCheck(alSourceStop(m_streams[i].sourceID));
+        }
         deleteStream(i);
     }
 
@@ -271,6 +275,10 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
 void OpenALImpl::deleteStream(std::int32_t id)
 {
     auto& stream = m_streams[id];
+    if (stream.sourceID > 0)
+    {
+        alCheck(alSourceStop(stream.sourceID));
+    }
     stream.running = false;
 
     if (stream.thread)

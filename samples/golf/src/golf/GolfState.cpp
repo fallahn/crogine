@@ -339,13 +339,19 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
     {
-        //TODO check if any players are using the controller
+        //check if any players are using the controller
         //and reassign any still connected devices
         for (auto i = 0; i < 4; ++i)
         {
             if (evt.cdevice.which == cro::GameController::deviceID(i))
             {
-
+                for (auto& idx : m_sharedData.controllerIDs)
+                {
+                    idx = std::max(0, i - 1);
+                }
+                //update the input parser in case this player is active
+                m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer.player];
+                break;
             }
         }
     }
@@ -401,6 +407,21 @@ void GolfState::handleMessage(const cro::Message& msg)
                 msg2->type = GolfEvent::SlicedBall;
                 floatingMessage("Slice");
             }
+
+            if (getClub() != ClubID::Putter)
+            {
+                auto power = m_inputParser.getPower();
+                hook *= 20.f;
+                hook = std::round(hook);
+                hook /= 20.f;
+
+                if (power > 0.9
+                    && std::fabs(hook) < 0.05f)
+                {
+                    auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                    msg2->type = GolfEvent::NiceShot;
+                }
+            }            
         }
     }
     break;
@@ -1451,8 +1472,8 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
         default: break;
         case PacketID::BallLanded:
         {
-            auto terrain = evt.packet.as<std::uint8_t>();
-            switch (terrain)
+            auto update = evt.packet.as<BallUpdate>();
+            switch (update.terrain)
             {
             default: break;
             case TerrainID::Bunker:
@@ -1471,8 +1492,9 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
 
             auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
             msg->type = GolfEvent::BallLanded;
-            msg->terrain = terrain;
+            msg->terrain = update.terrain;
             msg->club = getClub();
+            msg->position = update.position - m_currentPlayer.position; //actually use this to see how far the ball went
         }
             break;
         case PacketID::ClientDisconnected:

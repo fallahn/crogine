@@ -90,6 +90,13 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/terrain/water01.wav",
         "assets/golf/sound/terrain/water02.wav",
         "assets/golf/sound/terrain/water03.wav",
+
+        "assets/golf/sound/kudos/swing01.wav",
+        "assets/golf/sound/kudos/swing02.wav",
+        "assets/golf/sound/kudos/swing03.wav",
+
+        "assets/golf/sound/kudos/hook.wav",
+        "assets/golf/sound/kudos/slice.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -111,6 +118,8 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
 //public
 void GolfSoundDirector::handleMessage(const cro::Message& msg)
 {
+    static constexpr float MinBallDistance = 10.f;
+
     switch (msg.id)
     {
     default: break;
@@ -120,6 +129,21 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case GolfEvent::HookedBall:
+            //if (glm::length(data.position) > MinBallDistance)
+            {
+                playSound(AudioID::Hook, glm::vec3(0.f));
+            }
+            break;
+        case GolfEvent::SlicedBall:
+            //if (glm::length(data.position) > MinBallDistance)
+            {
+                playSound(AudioID::Slice, glm::vec3(0.f));
+            }
+            break;
+        case GolfEvent::NiceShot:
+            playSound(cro::Util::Random::value(AudioID::NiceSwing01, AudioID::NiceSwing03), data.position);
+            break;
         case GolfEvent::ClubSwing:
         {
             if (data.terrain == TerrainID::Green)
@@ -172,32 +196,42 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             }
             break;
         case GolfEvent::BallLanded:
-            switch (data.terrain)
+            if (glm::length(data.position) > MinBallDistance)
             {
-            default: break;
-            case TerrainID::Bunker:
-                playSound(cro::Util::Random::value(AudioID::TerrainBunker01, AudioID::TerrainBunker05), glm::vec3(0.f));
-                break;
-            case TerrainID::Fairway:
-                playSound(cro::Util::Random::value(AudioID::TerrainFairway01, AudioID::TerrainFairway02), glm::vec3(0.f));
-                break;
-            case TerrainID::Scrub:
-                playSound(cro::Util::Random::value(AudioID::TerrainScrub01, AudioID::TerrainScrub04), glm::vec3(0.f));
-                break;
-            case TerrainID::Green:
-                //TODO we want to be able to tell if this is say 2 below par and say 'nice shot' or something
-                //TODO we only want to play this if we weren't already on the green
-                if (data.club != ClubID::Putter)
+                switch (data.terrain)
                 {
-                    playSound(cro::Util::Random::value(AudioID::TerrainGreen01, AudioID::TerrainGreen02), glm::vec3(0.f));
+                default: break;
+                case TerrainID::Bunker:
+                    playSound(cro::Util::Random::value(AudioID::TerrainBunker01, AudioID::TerrainBunker05), glm::vec3(0.f));
+                    break;
+                case TerrainID::Fairway:
+                    playSound(cro::Util::Random::value(AudioID::TerrainFairway01, AudioID::TerrainFairway02), glm::vec3(0.f));
+                    break;
+                case TerrainID::Scrub:
+                    playSound(cro::Util::Random::value(AudioID::TerrainScrub02, AudioID::TerrainScrub04), glm::vec3(0.f));
+                    break;
+                case TerrainID::Green:
+                    if (data.club != ClubID::Putter) //previous shot wasn't from green
+                    {
+                        playSound(cro::Util::Random::value(AudioID::TerrainGreen01, AudioID::TerrainGreen02), glm::vec3(0.f));
+                    }
+                    break;
+                case TerrainID::Water:
+                    playSound(cro::Util::Random::value(AudioID::TerrainWater01, AudioID::TerrainWater03), glm::vec3(0.f));
+                    break;
+                case TerrainID::Rough:
+                    playSound(cro::Util::Random::value(AudioID::TerrainRough01, AudioID::TerrainRough02), glm::vec3(0.f));
+                    break;
                 }
-                break;
-            case TerrainID::Water:
-                playSound(cro::Util::Random::value(AudioID::TerrainWater01, AudioID::TerrainWater03), glm::vec3(0.f));
-                break;
-            case TerrainID::Rough:
-                playSound(cro::Util::Random::value(AudioID::TerrainRough01, AudioID::TerrainRough02), glm::vec3(0.f));
-                break;
+            }
+            else
+            {
+                if (data.club != ClubID::Putter
+                    && cro::Util::Random::value(0, 4) == 0)
+                {
+                    //you're poop.
+                    playSound(AudioID::TerrainScrub01, glm::vec3(0.f));
+                }
             }
             break;
         }

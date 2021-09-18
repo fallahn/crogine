@@ -61,7 +61,7 @@ namespace PacketID
         ActorUpdate, //< ActorInfo - ball interpolation
         ActorSpawn, //< ActorInfo
         WindDirection, //< compressed vec3
-        BallLanded, //< uint8 terrain
+        BallLanded, //< BallUpdate struct
 
         EntityRemoved, //< uint32 entity ID
 

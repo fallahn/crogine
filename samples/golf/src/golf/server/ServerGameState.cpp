@@ -158,7 +158,10 @@ void GameState::handleMessage(const cro::Message& msg)
         else if (data.type == BallEvent::Landed)
         {
             //immediate, pre-pause event when the ball stops moving
-            m_sharedData.host.broadcastPacket(PacketID::BallLanded, std::uint8_t(data.terrain), cro::NetFlag::Reliable);
+            BallUpdate bu;
+            bu.terrain = data.terrain;
+            bu.position = data.position;
+            m_sharedData.host.broadcastPacket(PacketID::BallLanded, bu, cro::NetFlag::Reliable);
         }
     }
 

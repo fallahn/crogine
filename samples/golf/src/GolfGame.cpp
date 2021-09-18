@@ -184,7 +184,6 @@ bool GolfGame::initialise()
     s.loadFromFile("assets/golf/sprites/tutorial.spt", m_sharedData.sharedResources->textures);
 
 
-
 #ifdef CRO_DEBUG_
     m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::SplashScreen);

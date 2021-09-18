@@ -83,3 +83,9 @@ struct ScoreUpdate final
     std::uint8_t hole = 0;
     std::uint8_t score = 0;
 };
+
+struct BallUpdate final
+{
+    glm::vec3 position = glm::vec3(0.f);
+    std::uint8_t terrain = 0;
+};

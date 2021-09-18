@@ -5,5 +5,5 @@ hole 10
     pin = 247, 140
     target = 248, 140
     tee = 71, 77
-    par = 2
+    par = 3
 }

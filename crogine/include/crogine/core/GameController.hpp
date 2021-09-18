@@ -217,7 +217,10 @@ namespace cro
 
         /*!
         \brief Returns the number of currently connected GameControllers.
-        Note that this does not include any Joystick devices
+        Note that this does not include any Joystick devices. This will also
+        not be updated until AFTER a CONTROLLERDEVICEREMOVED event, so will
+        return at least 1 higher than the actual count when being queried during
+        an event handler. TODO fix this :3
         */
         static std::size_t getControllerCount();
 

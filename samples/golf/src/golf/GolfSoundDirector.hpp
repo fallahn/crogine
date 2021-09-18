@@ -94,6 +94,13 @@ private:
             TerrainWater02,
             TerrainWater03,
 
+            NiceSwing01,
+            NiceSwing02,
+            NiceSwing03,
+
+            Hook,
+            Slice,
+
             Count
         };
     };

@@ -431,16 +431,17 @@ void App::handleEvents()
                 ci.controller = SDL_GameControllerOpen(id);
                 if (ci.controller)
                 {
+                    //the actual index is different to the id of the event
+                    auto* j = SDL_GameControllerGetJoystick(ci.controller);
+                    ci.joystickID = SDL_JoystickInstanceID(j);                    
+                    
+                    
                     ci.haptic = SDL_HapticOpen(id);
 
                     if (ci.haptic)
                     {
                         ci.rumble = (SDL_HapticRumbleInit(ci.haptic) == 0);
                     }
-
-                    //the actual index is different to the id of the event
-                    auto* j = SDL_GameControllerGetJoystick(ci.controller);
-                    ci.joystickID = SDL_JoystickInstanceID(j);
 
                     m_controllers[id] = ci;
                     m_controllerCount++;
@@ -476,12 +477,29 @@ void App::handleEvents()
                 
                 SDL_GameControllerClose(m_controllers[controllerIndex].controller);
                 m_controllerCount--;
+                m_controllers[controllerIndex] = {};
 
                 
                 //all controller IDs after the ID removed now move down..
                 for (auto i = controllerIndex; i < GameController::MaxControllers - 1; ++i)
                 {
                     m_controllers[i] = m_controllers[i + 1];
+
+                    //and therefore we have to update all the haptic IDs...
+                    if (m_controllers[i].controller)
+                    {
+                        SDL_HapticClose(m_controllers[i].haptic);
+
+                        m_controllers[i].haptic = SDL_HapticOpen(i);
+                        if (m_controllers[i].haptic)
+                        {
+                            m_controllers[i].rumble = (SDL_HapticRumbleInit(m_controllers[i].haptic) == 0);
+                        }
+                        else
+                        {
+                            m_controllers[i].rumble = false;
+                        }
+                    }
                 }
                 m_controllers.back() = {};
             }

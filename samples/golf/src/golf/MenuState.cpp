@@ -292,6 +292,14 @@ bool MenuState::handleEvent(const cro::Event& evt)
             requestStackClear();
             requestStackPush(StateID::SplashScreen);
             break;
+        case SDLK_o:
+            cro::GameController::rumbleStart(0, 1, 1000);
+            LogI << cro::GameController::getName(0) << std::endl;
+            break;
+        case SDLK_p:
+            cro::GameController::rumbleStart(1, 1, 1000);
+            LogI << cro::GameController::getName(1) << std::endl;
+            break;
 #endif
         case SDLK_RETURN:
         case SDLK_RETURN2:

@@ -176,12 +176,12 @@ void GameController::rumbleStart(std::int32_t controllerIndex, float strength, s
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerIndex < MaxControllers, "");
 
-    if (controllerIndex > -1 && App::m_instance->m_controllers[controllerIndex].haptic)
+    if (controllerIndex > -1 && App::m_instance->m_controllers[controllerIndex].rumble)
     {
-        if (SDL_HapticRumblePlay(App::m_instance->m_controllers.at(controllerIndex).haptic, strength, duration) < 0)
+        if (SDL_HapticRumblePlay(App::m_instance->m_controllers[controllerIndex].haptic, strength, duration) != 0)
         {
             auto* error = SDL_GetError();
-            LogE << error << " on controller " << controllerIndex << std::endl;
+            LogE << error << " on controller " << controllerIndex << ": rumbleStart()" << std::endl;
         }
     }
 }
@@ -191,12 +191,12 @@ void GameController::rumbleStop(std::int32_t controllerIndex)
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerIndex < MaxControllers, "");
 
-    if (controllerIndex > -1 && App::m_instance->m_controllers[controllerIndex].haptic)
+    if (controllerIndex > -1 && App::m_instance->m_controllers[controllerIndex].rumble)
     {
-        if (SDL_HapticRumbleStop(App::m_instance->m_controllers.at(controllerIndex).haptic) < 0)
+        if (SDL_HapticRumbleStop(App::m_instance->m_controllers[controllerIndex].haptic) != 0)
         {
             auto* error = SDL_GetError();
-            LogE << error << " on controller " << controllerIndex << std::endl;
+            LogE << error << " on controller " << controllerIndex << ": rumbleEnd()" << std::endl;
         }
     }
 }
