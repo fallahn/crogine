@@ -128,13 +128,6 @@ namespace
 
         std::uint8_t channel = 0;
     };
-
-    std::array SliderRects =
-    {
-        cro::FloatRect(),
-        cro::FloatRect(),
-        cro::FloatRect()
-    };
 }
 
 OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -691,8 +684,6 @@ void OptionsState::buildScene()
 
 void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
 {
-    auto parentBounds = parent.getComponent<cro::Sprite>().getTextureBounds();
-
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
     auto createLabel = [&](glm::vec2 pos, const std::string& str)
@@ -914,7 +905,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                     && activated(evt))
                 {
                     m_updatingKeybind = true;
-                    infoEnt.getComponent<cro::Text>().setString("Press a Key");
+
+                    //we have to copy this because GCC thinks getComponent<>()
+                    //still returns an immutable reference
+                    auto b = infoEnt;
+                    b.getComponent<cro::Text>().setString("Press a Key");
                     centreText(infoEnt);
 
                     m_bindingIndex = keyIndex;

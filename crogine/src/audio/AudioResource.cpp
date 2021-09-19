@@ -40,7 +40,6 @@ using namespace cro;
 namespace
 {
     std::int32_t autoID = std::numeric_limits<std::int32_t>::max();
-    std::uint32_t uniquePathID = 0;
 }
 
 AudioResource::AudioResource()

@@ -56,12 +56,11 @@ static inline std::vector<std::uint8_t> serialiseString(const cro::String& str)
 
 static inline cro::String deserialiseString(const cro::NetEvent::Packet& packet)
 {
-    auto packetSize = packet.getSize();
-    CRO_ASSERT(packetSize > 0, "TODO we need better error handling");
+    CRO_ASSERT(packet.getSize() > 0, "TODO we need better error handling");
 
     std::uint8_t stringSize = 0;
     std::memcpy(&stringSize, packet.getData(), 1);
-    CRO_ASSERT(packetSize == stringSize + 1, "");
+    CRO_ASSERT(packet.getSize() == stringSize + 1, "");
     CRO_ASSERT(stringSize % sizeof(std::uint32_t) == 0, "");
     
     std::vector<std::uint32_t> buffer(stringSize / sizeof(std::uint32_t));

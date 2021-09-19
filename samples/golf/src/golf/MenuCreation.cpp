@@ -762,7 +762,6 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
     menuTransform.setPosition(-m_menuPositions[MenuID::Avatar]);
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     //title
     auto entity = m_uiScene.createEntity();

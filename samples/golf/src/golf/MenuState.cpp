@@ -882,12 +882,12 @@ void MenuState::handleTextEdit(const cro::Event& evt)
     }
 
     //update string origin
-    if (!m_textEdit.string->empty())
-    {
-        auto bounds = cro::Text::getLocalBounds(m_textEdit.entity);
-       // m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
-        //TODO make this scroll when we hit the edge of the input
-    }
+    //if (!m_textEdit.string->empty())
+    //{
+    //    //auto bounds = cro::Text::getLocalBounds(m_textEdit.entity);
+    //    //m_textEdit.entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -bounds.height / 2.f });
+    //    //TODO make this scroll when we hit the edge of the input
+    //}
 }
 
 void MenuState::applyTextEdit()

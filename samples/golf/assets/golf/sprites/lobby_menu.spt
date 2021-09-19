@@ -11,4 +11,59 @@ spritesheet lobby
     {
         bounds = 0,0,344,53
     }
+
+    sprite title
+    {
+        bounds = 0,212,84,50
+    }
+
+    sprite arrow_left
+    {
+        bounds = 256,112,24,8
+
+        animation idle
+        {
+            frame = 256,112,24,8
+            loop = true
+            framerate = 30
+        }
+
+        animation active
+        {
+            frame = 256,112,24,8
+            frame = 256,104,24,8
+            frame = 256,96,24,8
+            frame = 256,88,24,8
+            frame = 256,80,24,8
+            frame = 256,72,24,8
+
+            loop = true
+            framerate = 14
+        }
+    }
+
+    sprite arrow_right
+    {
+        bounds = 288,112,24,8
+
+        animation idle
+        {
+            frame = 288,112,24,8
+            loop = true
+            framerate = 30
+        }
+
+        animation active
+        {
+            frame = 288,112,24,8
+            frame = 288,104,24,8
+            frame = 288,96,24,8
+            frame = 288,88,24,8
+            frame = 288,80,24,8
+            frame = 288,72,24,8
+
+            loop = true
+            framerate = 14
+        }
+    }
 }

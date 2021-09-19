@@ -91,7 +91,6 @@ namespace
             auto& swapData = e.getComponent<cro::Callback>().getUserData<SwapData>();
             auto pos = e.getComponent<cro::Transform>().getPosition();
 
-            constexpr float Speed = 5.f;
             swapData.currentTime = std::min(SwapData::TransitionTime, swapData.currentTime + dt);
 
             pos.y = swapData.start + ((swapData.destination - swapData.start) * cro::Util::Easing::easeInOutQuint(swapData.currentTime / SwapData::TransitionTime));
@@ -123,10 +122,10 @@ namespace
 
 TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
     : m_holeData    (hd),
+    m_currentHole   (0),
     m_terrainBuffer ((MapSize.x * MapSize.y) / QuadsPerMetre),
     m_threadRunning (false),
-    m_wantsUpdate   (false),
-    m_currentHole   (0)
+    m_wantsUpdate   (false)
 {
 #ifdef CRO_DEBUG_
     //registerWindow([&]() 
