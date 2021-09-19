@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -201,6 +201,7 @@ namespace cro
         \param controllerIndex The index of the controller to start rumbling
         \param strength A float value 0-1 indicating the desired strength of the rumble
         \param duration The duration in milliseconds to rumble.
+        Currntly not working correctly in SDL 2.0.16, see https://github.com/libsdl-org/SDL/issues/4435
         */
         static void rumbleStart(std::int32_t controllerIndex, float strength, std::uint32_t duration);
 

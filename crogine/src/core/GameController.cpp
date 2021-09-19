@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -173,12 +173,13 @@ bool GameController::isHapticActive(HapticEffect effect)
 
 void GameController::rumbleStart(std::int32_t controllerIndex, float strength, std::uint32_t duration)
 {
+    //TODO fix this function up with appropriate parameters - waiting for it to be fixed in SDL though
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerIndex < MaxControllers, "");
 
-    if (controllerIndex > -1 && App::m_instance->m_controllers[controllerIndex].rumble)
+    if (controllerIndex > -1)
     {
-        if (SDL_HapticRumblePlay(App::m_instance->m_controllers[controllerIndex].haptic, strength, duration) != 0)
+        if (SDL_GameControllerRumble(App::m_instance->m_controllers[controllerIndex].controller, 60000u, 60000u, duration) != 0)
         {
             auto* error = SDL_GetError();
             LogE << error << " on controller " << controllerIndex << ": rumbleStart()" << std::endl;
@@ -191,9 +192,9 @@ void GameController::rumbleStop(std::int32_t controllerIndex)
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerIndex < MaxControllers, "");
 
-    if (controllerIndex > -1 && App::m_instance->m_controllers[controllerIndex].rumble)
+    if (controllerIndex > -1)
     {
-        if (SDL_HapticRumbleStop(App::m_instance->m_controllers[controllerIndex].haptic) != 0)
+        if (SDL_GameControllerRumble(App::m_instance->m_controllers[controllerIndex].controller, 0, 0, 0) != 0)
         {
             auto* error = SDL_GetError();
             LogE << error << " on controller " << controllerIndex << ": rumbleEnd()" << std::endl;
@@ -208,7 +209,8 @@ std::string GameController::getName(std::int32_t controllerIndex)
 
     if (App::m_instance->m_controllers[controllerIndex].controller)
     {
-        return SDL_GameControllerName(App::m_instance->m_controllers[controllerIndex].controller);
+        auto prodID = SDL_GameControllerGetProduct(App::m_instance->m_controllers[controllerIndex].controller);
+        return std::string(SDL_GameControllerName(App::m_instance->m_controllers[controllerIndex].controller)) + ", Vendor: " + std::to_string(prodID);
     }
     return "Unknown Device";
 }

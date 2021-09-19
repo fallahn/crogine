@@ -231,6 +231,11 @@ App::~App()
 //public
 void App::run()
 {
+    SDL_version v;
+    SDL_VERSION(&v);
+
+    LogI << "Using SDL " << (int)v.major << "." << (int)v.minor << "." << (int)v.patch << std::endl;
+
     auto settings = loadSettings();
 
     if (m_window.create(settings.width, settings.height, "crogine game", m_windowStyleFlags))
@@ -435,15 +440,8 @@ void App::handleEvents()
                     auto* j = SDL_GameControllerGetJoystick(ci.controller);
                     ci.joystickID = SDL_JoystickInstanceID(j);                    
                     
-                    
-                    ci.haptic = SDL_HapticOpen(id);
-
-                    if (ci.haptic)
-                    {
-                        ci.rumble = (SDL_HapticRumbleInit(ci.haptic) == 0);
-                    }
-
                     m_controllers[id] = ci;
+                    //SDL_GameControllerSetPlayerIndex(m_controllers[id].controller, id);
                     m_controllerCount++;
                 }
             }
@@ -484,22 +482,7 @@ void App::handleEvents()
                 for (auto i = controllerIndex; i < GameController::MaxControllers - 1; ++i)
                 {
                     m_controllers[i] = m_controllers[i + 1];
-
-                    //and therefore we have to update all the haptic IDs...
-                    if (m_controllers[i].controller)
-                    {
-                        SDL_HapticClose(m_controllers[i].haptic);
-
-                        m_controllers[i].haptic = SDL_HapticOpen(i);
-                        if (m_controllers[i].haptic)
-                        {
-                            m_controllers[i].rumble = (SDL_HapticRumbleInit(m_controllers[i].haptic) == 0);
-                        }
-                        else
-                        {
-                            m_controllers[i].rumble = false;
-                        }
-                    }
+                    //SDL_GameControllerSetPlayerIndex(m_controllers[i].controller, i);
                 }
                 m_controllers.back() = {};
             }

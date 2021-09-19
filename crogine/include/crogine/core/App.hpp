@@ -184,12 +184,11 @@ namespace cro
         struct ControllerInfo final
         {
             ControllerInfo() = default;
-            ControllerInfo(SDL_GameController* gc, SDL_Haptic* h)
-                : controller(gc), haptic(h) {}
+            ControllerInfo(SDL_GameController* gc)
+                : controller(gc) {}
 
             SDL_GameController* controller = nullptr;
             SDL_Haptic* haptic = nullptr;
-            bool rumble = false;
             std::int32_t joystickID = -1; //event IDs don't actually match the controllers
         };
 

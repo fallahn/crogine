@@ -391,7 +391,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             msg2->terrain = m_currentPlayer.terrain;
             msg2->club = static_cast<std::uint8_t>(getClub());
 
-            cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 0.5f, 100);
+            cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 0.5f, 200);
 
             //check if we hooked/sliced
             auto hook = m_inputParser.getHook();
