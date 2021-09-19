@@ -24,4 +24,32 @@ hole 05
         position = -130,0,26
         rotation = 27.6
     }
+
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = -82, 0, 69.5
+        rotation = 35.2
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = -82, 0, 69.5
+        rotation = -32.3
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = -107.6, 0, 3.6
+        rotation = 41.5
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 136.6, 0, -78.6
+        rotation = 18.8
+    }    
 }

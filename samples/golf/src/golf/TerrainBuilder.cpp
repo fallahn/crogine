@@ -470,7 +470,7 @@ void TerrainBuilder::threadFunc()
                     auto [terrain, height] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Scrub)
                     {
-                        float scale = static_cast<float>(cro::Util::Random::value(13, 18)) / 10.f;
+                        float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
 
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Pine, BillboardID::Birch)]);
                         bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards
@@ -487,9 +487,8 @@ void TerrainBuilder::threadFunc()
                         float scale = static_cast<float>(cro::Util::Random::value(9, 12)) / 10.f;
 
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Flowers03)]);
-                        bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards
+                        bb.position = { x, height + 0.05f, -y };
                         bb.size *= scale;
-                        //LogI << height << std::endl;
                     }
                 }
 

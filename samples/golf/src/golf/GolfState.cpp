@@ -394,28 +394,28 @@ void GolfState::handleMessage(const cro::Message& msg)
             cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 0.5f, 200);
 
             //check if we hooked/sliced
-            auto hook = m_inputParser.getHook();
-            if (hook < -0.15f)
-            {
-                auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-                msg2->type = GolfEvent::HookedBall;
-                floatingMessage("Hook");
-            }
-            else if (hook > 0.15f)
-            {
-                auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-                msg2->type = GolfEvent::SlicedBall;
-                floatingMessage("Slice");
-            }
-
             if (getClub() != ClubID::Putter)
             {
+                auto hook = m_inputParser.getHook();
+                if (hook < -0.15f)
+                {
+                    auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                    msg2->type = GolfEvent::HookedBall;
+                    floatingMessage("Hook");
+                }
+                else if (hook > 0.15f)
+                {
+                    auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                    msg2->type = GolfEvent::SlicedBall;
+                    floatingMessage("Slice");
+                }
+
                 auto power = m_inputParser.getPower();
                 hook *= 20.f;
                 hook = std::round(hook);
                 hook /= 20.f;
 
-                if (power > 0.9
+                if (power > 0.9f
                     && std::fabs(hook) < 0.05f)
                 {
                     auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);

@@ -24,4 +24,32 @@ hole 07
         position = 7.7,0,-39.8
         rotation = -29
     }
+
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = 99.9, 0,87.8
+        rotation = -175
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 99.9, 0,87.8
+        rotation = -109.3
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 142.8, 0,38.8
+        rotation = -39.1
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = 27.7, 1,-37.1
+        rotation = -28.6
+    }
 }

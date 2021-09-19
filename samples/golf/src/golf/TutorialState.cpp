@@ -143,13 +143,22 @@ bool TutorialState::handleEvent(const cro::Event& evt)
             switch (evt.cbutton.button)
             {
             default: break;
-            case cro::GameController::ButtonA:
             case cro::GameController::ButtonB:
                 doCurrentAction();
                 break;
             case cro::GameController::ButtonStart:
                 requestStackPush(StateID::Pause);
                 break;
+            }
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    {
+        if (evt.cbutton.which == cro::GameController::deviceID(0))
+        {
+            if (evt.cbutton.button == cro::GameController::ButtonA)
+            {
+                doCurrentAction();
             }
         }
     }
