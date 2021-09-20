@@ -19,23 +19,23 @@ spritesheet lobby
 
     sprite arrow_left
     {
-        bounds = 256,112,24,8
+        bounds = 256,110,24,8
 
         animation idle
         {
-            frame = 256,112,24,8
+            frame = 256,110,24,8
             loop = true
             framerate = 30
         }
 
         animation active
         {
-            frame = 256,112,24,8
-            frame = 256,104,24,8
-            frame = 256,96,24,8
-            frame = 256,88,24,8
-            frame = 256,80,24,8
-            frame = 256,72,24,8
+            frame = 256,110,24,8
+            frame = 256,102,24,8
+            frame = 256,94,24,8
+            frame = 256,86,24,8
+            frame = 256,78,24,8
+            frame = 256,70,24,8
 
             loop = true
             framerate = 14
@@ -44,23 +44,23 @@ spritesheet lobby
 
     sprite arrow_right
     {
-        bounds = 288,112,24,8
+        bounds = 288,110,24,8
 
         animation idle
         {
-            frame = 288,112,24,8
+            frame = 288,110,24,8
             loop = true
             framerate = 30
         }
 
         animation active
         {
-            frame = 288,112,24,8
-            frame = 288,104,24,8
-            frame = 288,96,24,8
-            frame = 288,88,24,8
-            frame = 288,80,24,8
-            frame = 288,72,24,8
+            frame = 288,110,24,8
+            frame = 288,102,24,8
+            frame = 288,94,24,8
+            frame = 288,86,24,8
+            frame = 288,78,24,8
+            frame = 288,70,24,8
 
             loop = true
             framerate = 14

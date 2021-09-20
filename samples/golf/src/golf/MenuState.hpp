@@ -111,7 +111,7 @@ private:
     std::vector<cro::Entity> m_avatarListEntities;
     PlayerAvatar m_playerAvatar;
     std::pair<std::uint32_t, std::uint32_t> m_avatarCallbacks;
-    std::pair<std::uint32_t, std::uint32_t> m_courseSelectCallbacks;
+    std::tuple<std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t> m_courseSelectCallbacks;
 
     struct SpriteID final
     {
@@ -134,6 +134,8 @@ private:
             ReadyUp,
             StartGame,
             Connect,
+            PrevCourse,
+            NextCourse,
 
             Count
         };
