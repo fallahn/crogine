@@ -34,16 +34,28 @@ source distribution.
 #include <crogine/detail/glm/gtx/norm.hpp>
 
 CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(CameraFollowSystem))
+    : cro::System(mb, typeid(CameraFollowSystem)),
+    m_closestCamera(0)
 {
     requireComponent<cro::Transform>();
     requireComponent<CameraFollower>();
 }
 
 //public
+void CameraFollowSystem::handleMessage(const cro::Message& msg)
+{
+    if (msg.id == MessageID::GolfMessage)
+    {
+        const auto& data = msg.getData<GolfEvent>();
+        if (data.type == GolfEvent::BallLanded)
+        {
+            m_closestCamera = 0; //reset to player camera
+        }
+    }
+}
+
 void CameraFollowSystem::process(float dt)
 {
-    auto closestID = 0;
     float currDist = std::numeric_limits<float>::max();
 
     auto& entities = getEntities();
@@ -68,7 +80,7 @@ void CameraFollowSystem::process(float dt)
             && dist < (follower.radius * follower.radius))
         {
             currDist = dist;
-            closestID = follower.id;
+            m_closestCamera = follower.id;
         }
 
 
@@ -78,5 +90,5 @@ void CameraFollowSystem::process(float dt)
     //send a message with desired camera ID
     auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
     msg->type = SceneEvent::RequestSwitchCamera;
-    msg->data = closestID;
+    msg->data = m_closestCamera;
 }

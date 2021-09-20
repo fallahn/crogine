@@ -171,15 +171,15 @@ bool GameController::isHapticActive(HapticEffect effect)
     return false;
 }
 
-void GameController::rumbleStart(std::int32_t controllerIndex, float strength, std::uint32_t duration)
+void GameController::rumbleStart(std::int32_t controllerIndex, std::uint16_t strengthLow, std::uint16_t strengthHigh, std::uint32_t duration)
 {
-    //TODO fix this function up with appropriate parameters - waiting for it to be fixed in SDL though
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerIndex < MaxControllers, "");
 
-    if (controllerIndex > -1/*TODO check controller is actually opened*/)
+
+    if (controllerIndex > -1 && App::m_instance->m_controllers[controllerIndex].controller)
     {
-        if (SDL_GameControllerRumble(App::m_instance->m_controllers[controllerIndex].controller, 60000u, 60000u, duration) != 0)
+        if (SDL_GameControllerRumble(App::m_instance->m_controllers[controllerIndex].controller, strengthLow, strengthHigh, duration) != 0)
         {
             auto* error = SDL_GetError();
             LogE << error << " on controller " << controllerIndex << ": rumbleStart()" << std::endl;
@@ -192,7 +192,7 @@ void GameController::rumbleStop(std::int32_t controllerIndex)
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerIndex < MaxControllers, "");
 
-    if (controllerIndex > -1)
+    if (controllerIndex > -1 && App::m_instance->m_controllers[controllerIndex].controller)
     {
         if (SDL_GameControllerRumble(App::m_instance->m_controllers[controllerIndex].controller, 0, 0, 0) != 0)
         {

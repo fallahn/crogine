@@ -402,7 +402,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             msg2->terrain = m_currentPlayer.terrain;
             msg2->club = static_cast<std::uint8_t>(getClub());
 
-            cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 0.5f, 200);
+
+            cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 50000, 35000, 200);
 
             //check if we hooked/sliced
             if (getClub() != ClubID::Putter)
@@ -1357,6 +1358,7 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 80.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
+    camEnt.addComponent<cro::AudioListener>();
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Sky] = camEnt;
 
@@ -1368,6 +1370,7 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 30.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
+    camEnt.addComponent<cro::AudioListener>();
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Green] = camEnt;
 
@@ -2462,6 +2465,7 @@ void GolfState::setActiveCamera(std::int32_t camID)
     {
         //set scene camera
         m_gameScene.setActiveCamera(m_cameras[camID]);
+        m_gameScene.setActiveListener(m_cameras[camID]);
         m_currentCamera = camID;
 
         //hide player based on cam id

@@ -199,11 +199,12 @@ namespace cro
         /*!
         \brief Starts a rumble effect on the controller with the given index, if it is supported
         \param controllerIndex The index of the controller to start rumbling
-        \param strength A float value 0-1 indicating the desired strength of the rumble
+        \param strengthLow Strength of the low frequency motor from 0 - 65335
+        \param strengthHigh Strength of the high frequency motor from 0 - 65335
         \param duration The duration in milliseconds to rumble.
-        Currntly not working correctly in SDL 2.0.16, see https://github.com/libsdl-org/SDL/issues/4435
+        Currently not working correctly in SDL 2.0.16, see https://github.com/libsdl-org/SDL/issues/4435
         */
-        static void rumbleStart(std::int32_t controllerIndex, float strength, std::uint32_t duration);
+        static void rumbleStart(std::int32_t controllerIndex, std::uint16_t strengthLow, std::uint16_t strengthHigh, std::uint32_t duration);
 
         /*!
         \brief Stops the rumble effect on the given controller, if it is active

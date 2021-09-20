@@ -47,8 +47,9 @@ class CameraFollowSystem final : public cro::System
 public:
     explicit CameraFollowSystem(cro::MessageBus&);
 
+    void handleMessage(const cro::Message&) override;
     void process(float) override;
 
 private:
-
+    std::int32_t m_closestCamera;
 };
