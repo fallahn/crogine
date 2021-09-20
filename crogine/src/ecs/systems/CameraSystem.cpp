@@ -93,7 +93,7 @@ void CameraSystem::process(float)
 
 const std::vector<Entity>& CameraSystem::getCameras() const
 {
-    return getEntities1();
+    return getEntities();
 }
 
 //private

@@ -51,5 +51,8 @@ void CameraFollowSystem::process(float dt)
         auto& tx = entity.getComponent<cro::Transform>();
         auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
         tx.setLocalTransform(glm::inverse(lookAt));
+
+
+        //TODO get ball hole distance and trigger zoom effect if < 6m
     }
 }

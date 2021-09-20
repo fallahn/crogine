@@ -147,7 +147,7 @@ private:
     std::int32_t getClub() const;
 
     //allows switch camera, TV style
-    struct CamID final
+    struct CameraID final
     {
         enum
         {
@@ -155,7 +155,7 @@ private:
             Count
         };
     };
-    std::array<cro::Entity, CamID::Count> m_cameras;
+    std::array<cro::Entity, CameraID::Count> m_cameras;
     void setActiveCamera(std::int32_t);
 
 

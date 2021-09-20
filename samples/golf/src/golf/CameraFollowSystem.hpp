@@ -39,6 +39,7 @@ struct CameraFollower final
     glm::vec3 target = glm::vec3(0.f);
     glm::vec3 currentTarget = glm::vec3(0.f); //used to interpolate
     float radius = 0.f; //camera becomes active when ball within this
+    std::int32_t id = -1;
 };
 
 class CameraFollowSystem final : public cro::System

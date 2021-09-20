@@ -166,7 +166,7 @@ void GameState::netBroadcast()
     //TODO don't send these until clients are all ready, a slow loading client
     //will get backed up messages from this which pops the message buffer :(
     auto timestamp = m_serverTime.elapsed().asMilliseconds();
-    const auto& actors = m_scene.getSystem<ActorSystem>().getEntities1();
+    const auto& actors = m_scene.getSystem<ActorSystem>().getEntities();
     for (auto e : actors)
     {
         const auto& actor = e.getComponent<Actor>();

@@ -45,6 +45,12 @@ T& Scene::getSystem()
     return m_systemManager.getSystem<T>();
 }
 
+template <typename T>
+void Scene::setSystemActive(bool active)
+{
+    m_systemManager.setSystemActive<T>(active);
+}
+
 template <typename T, typename... Args>
 T& Scene::addDirector(Args&&... args)
 {

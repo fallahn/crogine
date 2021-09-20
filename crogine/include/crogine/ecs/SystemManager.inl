@@ -44,9 +44,14 @@ T& SystemManager::addSystem(Args&&... args)
         return *(dynamic_cast<T*>(result->get()));
     }
 
-    m_systems.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
-    m_systems.back()->setScene(m_scene);
-    m_systems.back()->processTypes(m_componentManager);
+    auto& system = m_systems.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+    system->setScene(m_scene);
+    system->processTypes(m_componentManager);
+
+    system->m_updateIndex = m_activeSystems.size();
+    m_activeSystems.push_back(system.get());
+    system->m_active = true;
+
     return *(dynamic_cast<T*>(m_systems.back().get()));
 }
 
@@ -59,6 +64,45 @@ void SystemManager::removeSystem()
     {
         return sys->getType() == type;
     }), std::end(m_systems));
+
+    removeFromActive<T>();
+}
+
+template <typename T>
+void SystemManager::setSystemActive(bool active)
+{
+    //check if actually exists
+    UniqueType type(typeid(T));
+    auto result = std::find_if(std::begin(m_systems), std::end(m_systems),
+        [&type](const System::Ptr& sys)
+        {
+            return sys->getType() == type;
+        });
+
+    if (result != m_systems.end())
+    {
+        if (!active)
+        {
+            removeFromActive<T>();
+            (*result)->m_active = false;
+        }
+        else
+        {
+            //system exists - check not already active
+            if (!(*result)->m_active)
+            {
+                m_activeSystems.push_back((*result).get());
+                (*result)->m_active = true;
+
+                //return to correct order
+                std::sort(m_activeSystems.begin(), m_activeSystems.end(),
+                    [](const System* a, const System* b)
+                    {
+                        return a->m_updateIndex < b->m_updateIndex;
+                    });
+            }
+        }
+    }
 }
 
 template <typename T>
@@ -87,4 +131,16 @@ bool SystemManager::hasSystem() const
     });
 
     return result != m_systems.end();
+}
+
+//private
+template <typename T>
+void SystemManager::removeFromActive()
+{
+    UniqueType type(typeid(T));
+    m_activeSystems.erase(std::remove_if(std::begin(m_activeSystems), std::end(m_activeSystems),
+        [&type](const System* sys)
+        {
+            return sys->getType() == type;
+        }), std::end(m_activeSystems));
 }

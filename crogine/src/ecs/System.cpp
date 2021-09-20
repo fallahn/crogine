@@ -32,12 +32,25 @@ source distribution.
 
 using namespace cro;
 
-const std::vector<Entity>& System::getEntities1() const
+System::System(MessageBus& mb, UniqueType t)
+    : m_messageBus  (mb),
+    m_type          (t),
+    m_scene         (nullptr),
+    m_updateIndex   (0),
+    m_active        (false)
+{}
+
+//public
+std::vector<Entity>& System::getEntities()
 {
     return m_entities;
 }
 
-//public
+const std::vector<Entity>& System::getEntities() const
+{
+    return m_entities;
+}
+
 void System::addEntity(Entity entity)
 {
     m_entities.push_back(entity);
@@ -68,11 +81,6 @@ void System::handleMessage(const Message&) {}
 void System::process(float) {}
 
 //protected
-std::vector<Entity>& System::getEntities()
-{
-    return m_entities;
-}
-
 void System::setScene(Scene& scene)
 {
     m_scene = &scene;

@@ -61,8 +61,7 @@ namespace cro
         Pass in a type_index to the concrete implementation to generate
         a unique type ID for this system.
         */
-        System(MessageBus& mb, UniqueType t) 
-            : m_messageBus(mb), m_type(t), m_scene(nullptr){}
+        System(MessageBus& mb, UniqueType t);
 
         virtual ~System() = default;
 
@@ -74,7 +73,8 @@ namespace cro
         /*!
         \brief Returns a list of entities that this system is currently interested in
         */
-        const std::vector<Entity>& getEntities1() const;
+        std::vector<Entity>& getEntities();
+        const std::vector<Entity>& getEntities() const;
 
         /*!
         \brief Adds an entity to the list to process
@@ -102,6 +102,12 @@ namespace cro
         */
         virtual void process(float);
 
+        /*!
+        \brief Returns true if the system is currently active.
+        Systems can be activeated and deactivated with Scene::setSystemActive()
+        */
+        bool isActive() const { return m_active; }
+
     protected:
 
         /*!
@@ -110,8 +116,6 @@ namespace cro
         */
         template <typename T>
         void requireComponent();
-
-        std::vector<Entity>& getEntities();
 
         /*!
         \brief Optional callback performed when an entity is added
@@ -153,6 +157,9 @@ namespace cro
         std::vector<Entity> m_entities;
 
         Scene* m_scene;
+        std::size_t m_updateIndex; //ensures when the system is active that it is updated in the order in which is was added to the manager
+
+        bool m_active; //used by system manager to check if it has been added to the active list
 
         friend class SystemManager;
 
@@ -190,6 +197,15 @@ namespace cro
         void removeSystem();
 
         /*!
+        \brief Sets a system active or inactive by adding or removing it
+        from the active systems processing list.
+        \param active Set true to enable the system or false to disable.
+        If the systems does not exist this function has no effect.
+        */
+        template <typename T>
+        void setSystemActive(bool active);
+
+        /*!
         \brief Returns a reference to this system type, if it exists
         */
         template <typename T>
@@ -223,8 +239,12 @@ namespace cro
     private:
         Scene& m_scene;
         std::vector<std::unique_ptr<System>> m_systems;
+        std::vector<System*> m_activeSystems;
 
         ComponentManager& m_componentManager;
+
+        template <typename T>
+        void removeFromActive();
     };
 
 #include "System.inl"
