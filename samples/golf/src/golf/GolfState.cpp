@@ -126,6 +126,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_wantsGameState    (true),
     m_currentHole       (0),
     m_terrainBuilder    (m_holeData),
+    m_currentCamera     (CameraID::Player),
     m_camRotation       (0.f),
     m_roundEnded        (false),
     m_viewScale         (1.f),
@@ -431,6 +432,10 @@ void GolfState::handleMessage(const cro::Message& msg)
                     auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg2->type = GolfEvent::NiceShot;
                 }
+
+
+                //enable the camera following
+                m_gameScene.setSystemActive<CameraFollowSystem>(true);
             }            
         }
     }
@@ -445,6 +450,9 @@ void GolfState::handleMessage(const cro::Message& msg)
         {
             updateMiniMap();
         }
+            break;
+        case SceneEvent::RequestSwitchCamera:
+            setActiveCamera(data.data);
             break;
         }
     }
@@ -519,6 +527,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     m_gameScene.destroyEntity(e);
                 }
             };
+            m_gameScene.setSystemActive<CameraFollowSystem>(false);
         }
     }
     break;
@@ -1346,7 +1355,7 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
-    camEnt.addComponent<CameraFollower>().radius = 60.f;
+    camEnt.addComponent<CameraFollower>().radius = 80.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Sky] = camEnt;
@@ -1357,7 +1366,7 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
-    camEnt.addComponent<CameraFollower>().radius = 60.f;
+    camEnt.addComponent<CameraFollower>().radius = 30.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Green] = camEnt;
@@ -2448,10 +2457,12 @@ void GolfState::setActiveCamera(std::int32_t camID)
 {
     CRO_ASSERT(camID >= 0 && camID < CameraID::Count, "");
 
-    if (m_cameras[camID].isValid())
+    if (m_cameras[camID].isValid()
+        && camID != m_currentCamera)
     {
         //set scene camera
         m_gameScene.setActiveCamera(m_cameras[camID]);
+        m_currentCamera = camID;
 
         //hide player based on cam id
         cro::Command cmd;

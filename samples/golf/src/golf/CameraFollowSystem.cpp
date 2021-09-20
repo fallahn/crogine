@@ -28,8 +28,10 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "CameraFollowSystem.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(CameraFollowSystem))
@@ -41,6 +43,9 @@ CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
 //public
 void CameraFollowSystem::process(float dt)
 {
+    auto closestID = 0;
+    float currDist = std::numeric_limits<float>::max();
+
     auto& entities = getEntities();
     for (auto entity : entities)
     {
@@ -52,7 +57,26 @@ void CameraFollowSystem::process(float dt)
         auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
         tx.setLocalTransform(glm::inverse(lookAt));
 
+        //check the distance to the ball, and store it if closer than previous dist
+        //and if we fall within the camera's radius
+
+        //TODO dot product lookat with direction to player
+        //and don't switch if positive (ie when player is in front of the camera)
+
+        auto dist = glm::length2(tx.getPosition() - follower.target);
+        if (dist < currDist
+            && dist < (follower.radius * follower.radius))
+        {
+            currDist = dist;
+            closestID = follower.id;
+        }
+
 
         //TODO get ball hole distance and trigger zoom effect if < 6m
     }
+
+    //send a message with desired camera ID
+    auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
+    msg->type = SceneEvent::RequestSwitchCamera;
+    msg->data = closestID;
 }

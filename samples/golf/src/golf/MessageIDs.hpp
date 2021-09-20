@@ -71,8 +71,10 @@ struct SceneEvent
 {
     enum
     {
-        TransitionComplete
+        TransitionComplete,
+        RequestSwitchCamera
     }type = TransitionComplete;
+    std::int32_t data = -1;
 };
 
 struct CollisionEvent final

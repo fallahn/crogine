@@ -156,6 +156,7 @@ private:
         };
     };
     std::array<cro::Entity, CameraID::Count> m_cameras;
+    std::int32_t m_currentCamera;
     void setActiveCamera(std::int32_t);
 
 
