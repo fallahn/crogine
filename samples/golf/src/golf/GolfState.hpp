@@ -146,6 +146,18 @@ private:
     void createTransition(const ActivePlayer&);
     std::int32_t getClub() const;
 
+    //allows switch camera, TV style
+    struct CamID final
+    {
+        enum
+        {
+            Player, Sky, Green,
+            Count
+        };
+    };
+    std::array<cro::Entity, CamID::Count> m_cameras;
+    void setActiveCamera(std::int32_t);
+
 
     //UI stuffs - found in GolfStateUI.cpp
     struct SpriteID final

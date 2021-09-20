@@ -90,8 +90,8 @@ void GolfState::buildUI()
     auto courseEnt = entity;
 
 
-    auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-    camera.updateMatrices(m_gameScene.getActiveCamera().getComponent<cro::Transform>());
+    auto& camera = m_cameras[CamID::Player].getComponent<cro::Camera>();
+    camera.updateMatrices(m_cameras[CamID::Player].getComponent<cro::Transform>());
     auto pos = camera.coordsToPixel(m_holeData[0].tee, m_gameSceneTexture.getSize());
 
     //player sprite
@@ -601,7 +601,7 @@ void GolfState::buildUI()
         courseEnt.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, vpSize.x, vpSize.y });
 
         //update avatar position
-        const auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+        const auto& camera = m_cameras[CamID::Player].getComponent<cro::Camera>();
         auto pos = camera.coordsToPixel(m_currentPlayer.position, m_gameSceneTexture.getSize());
         playerEnt.getComponent<cro::Transform>().setPosition(pos);
 

@@ -177,7 +177,7 @@ void GameController::rumbleStart(std::int32_t controllerIndex, float strength, s
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerIndex < MaxControllers, "");
 
-    if (controllerIndex > -1)
+    if (controllerIndex > -1/*TODO check controller is actually opened*/)
     {
         if (SDL_GameControllerRumble(App::m_instance->m_controllers[controllerIndex].controller, 60000u, 60000u, duration) != 0)
         {

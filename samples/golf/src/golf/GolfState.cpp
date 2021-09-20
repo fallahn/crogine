@@ -43,6 +43,7 @@ source distribution.
 #include "PlayerAvatar.hpp"
 #include "GolfSoundDirector.hpp"
 #include "TutorialDirector.hpp"
+#include "CameraFollowSystem.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -259,6 +260,15 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //updateMiniMap();
             //removeClient(1);
             //floatingMessage("Hooked!");
+            break;
+        case SDLK_KP_0:
+            setActiveCamera(0);
+            break;
+        case SDLK_KP_1:
+            setActiveCamera(1);
+            break;
+        case SDLK_KP_2:
+            setActiveCamera(2);
             break;
 #endif
         }
@@ -490,6 +500,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
             };
             m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        }
+        else if (data.type == GolfEvent::BallLanded)
+        {
+            LogI << "Add a delay ent here" << std::endl;
+            setActiveCamera(CamID::Player);
         }
     }
     break;
@@ -1050,6 +1065,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
+    m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
@@ -1282,7 +1298,7 @@ void GolfState::buildScene()
         cmd.targetFlags = CommandID::UI::PlayerSprite;
         cmd.action = [&](cro::Entity e, float)
         {
-            const auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+            const auto& camera = m_cameras[CamID::Player].getComponent<cro::Camera>();
             auto pos = camera.coordsToPixel(m_currentPlayer.position, m_gameSceneTexture.getSize());
             e.getComponent<cro::Transform>().setPosition(pos);
         };
@@ -1290,15 +1306,46 @@ void GolfState::buildScene()
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
+    m_cameras[CamID::Player] = camEnt;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     updateView(cam);
-
 
     //used by transition callback to interp camera
     camEnt.addComponent<TargetInfo>().waterPlane = waterEnt;
     camEnt.getComponent<TargetInfo>().targetLookAt = m_holeData[0].target;
     cam.reflectionBuffer.create(1024, 1024);
+
+
+    //create an overhead camera
+    auto setPerspective = [](cro::Camera& cam)
+    {
+        auto vpSize = calcVPSize();
+
+        //the resize actually extends the target vertically so we need to maintain a
+        //horizontal FOV, not the vertical one expected by default.
+        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, 16.f, -static_cast<float>(MapSize.y) / 2.f });
+    camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
+    camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
+    camEnt.addComponent<CameraFollower>().radius = 60.f;
+    setPerspective(camEnt.getComponent<cro::Camera>());
+    m_cameras[CamID::Sky] = camEnt;
+
+    //and a green camera
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>();
+    camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
+    camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
+    camEnt.addComponent<CameraFollower>().radius = 60.f;
+    setPerspective(camEnt.getComponent<cro::Camera>());
+    m_cameras[CamID::Green] = camEnt;
+
 
     m_terrainBuilder.create(m_resources, m_gameScene);
 
@@ -1386,6 +1433,7 @@ void GolfState::initAudio()
 
 
     //put the new hole music on the cam for accessabilty
+    //this is done *before* m_cameras is updated 
     m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>() = as.getEmitter("music");
 }
 
@@ -1702,9 +1750,9 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
 
     //make sure we have the correct target position
-    m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetHeight = CameraStrokeHeight;
-    m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetOffset = CameraStrokeOffset;
-    m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetLookAt = m_holeData[m_currentHole].target;
+    m_cameras[CamID::Player].getComponent<TargetInfo>().targetHeight = CameraStrokeHeight;
+    m_cameras[CamID::Player].getComponent<TargetInfo>().targetOffset = CameraStrokeOffset;
+    m_cameras[CamID::Player].getComponent<TargetInfo>().targetLookAt = m_holeData[m_currentHole].target;
 
     //creates an entity which calls setCamPosition() in an
     //interpolated manner until we reach the dest,
@@ -1719,7 +1767,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
         auto currPos = e.getComponent<cro::Transform>().getPosition();
         auto travel = m_holeData[m_currentHole].tee - currPos;
 
-        auto& targetInfo = m_gameScene.getActiveCamera().getComponent<TargetInfo>();
+        auto& targetInfo = m_cameras[CamID::Player].getComponent<TargetInfo>();
 
         //if we're moving on to any other than the first hole, interp the
         //tee and hole position based on how close to the tee the camera is
@@ -1751,7 +1799,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             auto teePos = m_holeData[m_currentHole - 1].tee + (teeMove * percent);
 
             cmd.targetFlags = CommandID::Tee;
-            cmd.action = [&,teePos](cro::Entity e, float)
+            cmd.action = [&, teePos](cro::Entity e, float)
             {
                 e.getComponent<cro::Transform>().setPosition(teePos);
 
@@ -1777,7 +1825,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             auto targetDir = m_holeData[m_currentHole].target - currPos;
             m_camRotation = std::atan2(-targetDir.z, targetDir.x);
         }
-        
+
 
         if (glm::length2(travel) < 0.0001f)
         {
@@ -1809,7 +1857,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             m_gameScene.destroyEntity(e);
 
             //play the music
-            m_gameScene.getActiveCamera().getComponent<cro::AudioEmitter>().play();
+            m_cameras[CamID::Player].getComponent<cro::AudioEmitter>().play();
         }
         else
         {
@@ -1859,6 +1907,17 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     //set green cam position
     auto holePos = m_holeData[m_currentHole].pin;
     m_greenCam.getComponent<cro::Transform>().setPosition({ holePos.x, 0.9f, holePos.z });
+
+
+    //and the uh, other green cam. The spectator one
+    m_cameras[CamID::Green].getComponent<cro::Transform>().setPosition({ holePos.x, 2.f, holePos.z });
+    //TODO what's a reasonable way to find an offset for this?
+    //perhaps move at least 15m away in opposite direction from map centre?
+
+    auto centre = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
+    auto direction = holePos - centre;
+    direction = glm::normalize(direction) * 15.f;
+    m_cameras[CamID::Green].getComponent<cro::Transform>().move(direction);
 }
 
 void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)
@@ -1868,7 +1927,7 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     static constexpr float DistDiff = MaxDist - MinDist;
     float heightMultiplier = 1.f; //goes to -1.f at max dist
 
-    auto camEnt = m_gameScene.getActiveCamera();
+    auto camEnt = m_cameras[CamID::Player];
     auto& targetInfo = camEnt.getComponent<TargetInfo>();
     auto target = targetInfo.currentLookAt - position;
 
@@ -2000,7 +2059,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
     //if client is ours activate input/set initial stroke direction
-    auto target = m_gameScene.getActiveCamera().getComponent<TargetInfo>().targetLookAt;
+    auto target = m_cameras[CamID::Player].getComponent<TargetInfo>().targetLookAt;
     m_inputParser.resetPower();
     m_inputParser.setHoleDirection(target - player.position, m_currentPlayer != player); // this also selects the nearest club
 
@@ -2046,7 +2105,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             }
 
 
-            const auto& camera = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+            const auto& camera = m_cameras[CamID::Player].getComponent<cro::Camera>();
             auto pos = camera.coordsToPixel(player.position, m_gameSceneTexture.getSize());
             e.getComponent<cro::Transform>().setPosition(pos);
         }
@@ -2218,6 +2277,15 @@ void GolfState::updateActor(const ActorInfo& update)
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
         m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+
+
+        //update spectator camera
+        cmd.targetFlags = CommandID::SpectatorCam;
+        cmd.action = [update](cro::Entity e, float)
+        {
+            e.getComponent<CameraFollower>().target = update.position;
+        };
+        m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     }
 }
 
@@ -2240,7 +2308,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     };
     m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
 
-    auto& targetInfo = m_gameScene.getActiveCamera().getComponent<TargetInfo>();
+    auto& targetInfo = m_cameras[CamID::Player].getComponent<TargetInfo>();
     if (playerData.terrain == TerrainID::Green)
     {
         targetInfo.targetHeight = CameraPuttHeight;
@@ -2304,7 +2372,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
         auto currPos = e.getComponent<cro::Transform>().getPosition();
         auto travel = playerData.position - currPos;
-        auto& targetInfo = m_gameScene.getActiveCamera().getComponent<TargetInfo>();
+        auto& targetInfo = m_cameras[CamID::Player].getComponent<TargetInfo>();
 
         auto targetDir = targetInfo.currentLookAt - currPos;
         m_camRotation = std::atan2(-targetDir.z, targetDir.x);
@@ -2354,5 +2422,47 @@ std::int32_t GolfState::getClub() const
     default: return m_inputParser.getClub();
     case TerrainID::Bunker: return ClubID::PitchWedge + (m_inputParser.getClub() % 2);
     case TerrainID::Green: return ClubID::Putter;
+    }
+}
+
+void GolfState::setActiveCamera(std::int32_t camID)
+{
+    CRO_ASSERT(camID >= 0 && camID < CamID::Count, "");
+
+    if (m_cameras[camID].isValid())
+    {
+        //set scene camera
+        m_gameScene.setActiveCamera(m_cameras[camID]);
+
+        //hide player based on cam id
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::PlayerSprite;
+        cmd.action = [&,camID](cro::Entity e, float)
+        {
+            //show/hide player based on camera
+            if (m_avatars[m_currentPlayer.client][m_currentPlayer.player].flipped)
+            {
+                if (camID == CamID::Player)
+                {
+                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                }
+                else
+                {
+                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                }
+            }
+            else
+            {
+                if (camID == CamID::Player)
+                {
+                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                }
+                else
+                {
+                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                }
+            }
+        };
+        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     }
 }

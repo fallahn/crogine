@@ -153,6 +153,9 @@
     <ClCompile Include="src\golf\TutorialDirector.cpp">
       <Filter>Source Files\golf\client\directors</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\CameraFollowSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -304,6 +307,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\TutorialDirector.hpp">
       <Filter>Header Files\golf\client\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CameraFollowSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
