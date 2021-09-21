@@ -221,6 +221,7 @@ static const std::string CelFragmentShader = R"(
 
         colour.rgb *= amount;
         
+        //float check = mod(floor(gl_FragCoord.x / 3.0) + floor(gl_FragCoord.y / 3.0), 2.0) * checkAmount;
         float check = mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) * checkAmount;
         amount = (1.0 - check) + (check * amount);
         colour.rgb *= amount;

@@ -4,6 +4,6 @@ hole 15
     model = "assets/golf/models/course_01/15.cmt"
     pin = 29, 66
     target = 167, 66
-    tee = 304, 172
+    tee = 300, 168
     par = 3
 }

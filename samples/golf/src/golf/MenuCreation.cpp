@@ -297,9 +297,15 @@ void MenuState::createUI()
         rootNode.getComponent<cro::Transform>().setPosition(m_menuPositions[m_currentMenu] * m_viewScale);
 
         courseEnt.getComponent<cro::Transform>().setScale(m_viewScale);
-        courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -1.f));
         courseEnt.getComponent<cro::Transform>().setOrigin(vpSize / 2.f);
         courseEnt.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, vpSize.x, vpSize.y });
+
+        /*auto texSize = glm::vec2(m_backgroundTexture.getSize());
+        courseEnt.getComponent<cro::Transform>().setScale(glm::vec2(2.f));
+        courseEnt.getComponent<cro::Transform>().setOrigin(texSize / 2.f);
+        courseEnt.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, texSize.x, texSize.y });*/
+
+        courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -1.f));
 
         //updates any text objects / buttons with a relative position
         cro::Command cmd;

@@ -593,16 +593,21 @@ void GolfState::buildUI()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         auto vpSize = calcVPSize();
-
         m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
-        courseEnt.getComponent<cro::Transform>().setScale(m_viewScale);
+        auto texSize = glm::vec2(m_gameSceneTexture.getSize());
+
         courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -0.1f));
+        
+        courseEnt.getComponent<cro::Transform>().setScale(m_viewScale);
         courseEnt.getComponent<cro::Transform>().setOrigin(vpSize / 2.f);
         courseEnt.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, vpSize.x, vpSize.y });
+        
+        /*courseEnt.getComponent<cro::Transform>().setOrigin(texSize / 2.f);
+        courseEnt.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, texSize.x, texSize.y });*/
 
         //update avatar position
         const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
-        auto pos = camera.coordsToPixel(m_currentPlayer.position, m_gameSceneTexture.getSize());
+        auto pos = camera.coordsToPixel(m_currentPlayer.position, texSize);
         playerEnt.getComponent<cro::Transform>().setPosition(pos);
 
         //update minimap

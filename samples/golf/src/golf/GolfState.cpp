@@ -1311,7 +1311,16 @@ void GolfState::buildScene()
     auto updateView = [&](cro::Camera& cam)
     {
         auto vpSize = calcVPSize();
+
+        //alt version for high res 3D
+        /*auto winSize = glm::vec2(cro::App::getWindow().getSize());
+        float scale = std::floor(winSize.y / vpSize.y);
+        auto texSize = vpSize * scale;
+        m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));*/
+
+
         m_gameSceneTexture.create(static_cast<std::uint32_t>(vpSize.x), static_cast<std::uint32_t>(vpSize.y));
+
 
         //the resize actually extends the target vertically so we need to maintain a
         //horizontal FOV, not the vertical one expected by default.
