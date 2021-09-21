@@ -71,13 +71,12 @@ void CameraFollowSystem::process(float dt)
 
         //check the distance to the ball, and store it if closer than previous dist
         //and if we fall within the camera's radius
-
-        //TODO dot product lookat with direction to player
-        //and don't switch if positive (ie when player is in front of the camera)
-
+        //and if the play isn't standing too close
         auto dist = glm::length2(tx.getPosition() - follower.target);
+        auto dist2 = glm::length2(tx.getPosition() - follower.playerPosition);
         if (dist < currDist
-            && dist < (follower.radius * follower.radius))
+            && dist < follower.radius
+            && dist2 > follower.radius)
         {
             currDist = dist;
             m_closestCamera = follower.id;

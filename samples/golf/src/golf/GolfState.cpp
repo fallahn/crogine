@@ -1356,7 +1356,7 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
-    camEnt.addComponent<CameraFollower>().radius = 80.f;
+    camEnt.addComponent<CameraFollower>().radius = 80.f * 80.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
     camEnt.addComponent<cro::AudioListener>();
     setPerspective(camEnt.getComponent<cro::Camera>());
@@ -1368,7 +1368,7 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
-    camEnt.addComponent<CameraFollower>().radius = 30.f;
+    camEnt.addComponent<CameraFollower>().radius = 30.f * 30.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
     camEnt.addComponent<cro::AudioListener>();
     setPerspective(camEnt.getComponent<cro::Camera>());
@@ -2312,9 +2312,10 @@ void GolfState::updateActor(const ActorInfo& update)
 
         //update spectator camera
         cmd.targetFlags = CommandID::SpectatorCam;
-        cmd.action = [update](cro::Entity e, float)
+        cmd.action = [&,update](cro::Entity e, float)
         {
             e.getComponent<CameraFollower>().target = update.position;
+            e.getComponent<CameraFollower>().playerPosition = m_currentPlayer.position;
         };
         m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     }
