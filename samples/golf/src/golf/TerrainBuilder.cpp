@@ -457,7 +457,7 @@ void TerrainBuilder::threadFunc()
                     auto [terrain, height] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Rough)
                     {
-                        float scale = static_cast<float>(cro::Util::Random::value(9, 11)) / 10.f;
+                        float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
 
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                         bb.position = { x, height, -y };
@@ -484,7 +484,7 @@ void TerrainBuilder::threadFunc()
                     if (terrain == TerrainID::Scrub
                         /*&& height > 0.6f*/)
                     {
-                        float scale = static_cast<float>(cro::Util::Random::value(9, 12)) / 10.f;
+                        float scale = static_cast<float>(cro::Util::Random::value(13, 17)) / 10.f;
 
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Flowers03)]);
                         bb.position = { x, height + 0.05f, -y };

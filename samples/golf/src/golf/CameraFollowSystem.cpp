@@ -31,6 +31,7 @@ source distribution.
 #include "MessageIDs.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
 CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
@@ -38,6 +39,7 @@ CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
     m_closestCamera(0)
 {
     requireComponent<cro::Transform>();
+    requireComponent<cro::Camera>();
     requireComponent<CameraFollower>();
 }
 
@@ -62,6 +64,26 @@ void CameraFollowSystem::process(float dt)
     for (auto entity : entities)
     {
         auto& follower = entity.getComponent<CameraFollower>();
+
+        //TODO get ball hole distance and trigger zoom effect if < 6m
+        //TODO stop movement while doing this
+        //TODO work out best trigger to reset - perhaps when this cam not closest cam?
+
+        if (follower.id == m_closestCamera)
+        {
+            if (follower.fov < follower.currentFov)
+            {
+                follower.currentFov -= dt;
+                entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
+            }
+        }
+        else if (follower.currentFov != 1)
+        {
+            follower.currentFov = 1.f;
+            follower.fov = 1.f;
+            entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
+        }
+
         auto diff = follower.target - follower.currentTarget;
         follower.currentTarget += diff * (dt * 4.f);
 
@@ -81,9 +103,6 @@ void CameraFollowSystem::process(float dt)
             currDist = dist;
             m_closestCamera = follower.id;
         }
-
-
-        //TODO get ball hole distance and trigger zoom effect if < 6m
     }
 
     //send a message with desired camera ID

@@ -1353,7 +1353,13 @@ void GolfState::buildScene()
     };
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, 16.f, -static_cast<float>(MapSize.y) / 2.f });
-    camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
+    camEnt.addComponent<cro::Camera>().resizeCallback = 
+        [camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
+    {
+        auto vpSize = calcVPSize();
+        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().currentFov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 80.f * 80.f;
@@ -1365,7 +1371,13 @@ void GolfState::buildScene()
     //and a green camera
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
-    camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
+    camEnt.addComponent<cro::Camera>().resizeCallback =
+        [camEnt](cro::Camera& cam)
+    {
+        auto vpSize = calcVPSize();
+        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().currentFov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 30.f * 30.f;
