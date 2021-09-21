@@ -236,6 +236,7 @@ void SplashState::loadAssets()
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::AudioEmitter>(m_audioResource.get(id));
+        entity.getComponent<cro::AudioEmitter>().setMixerChannel(2);
         entity.getComponent<cro::AudioEmitter>().play();
     }
 
