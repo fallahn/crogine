@@ -59,54 +59,70 @@ void CameraFollowSystem::handleMessage(const cro::Message& msg)
 void CameraFollowSystem::process(float dt)
 {
     float currDist = std::numeric_limits<float>::max();
+    auto lastCam = m_closestCamera;
 
     auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& follower = entity.getComponent<CameraFollower>();
 
-        //TODO get ball hole distance and trigger zoom effect if < 6m
-        //TODO stop movement while doing this
-        //TODO work out best trigger to reset - perhaps when this cam not closest cam?
-
-        if (follower.id == m_closestCamera)
+        switch (follower.state)
         {
+        default: break;
+        case CameraFollower::Track:
+        {
+            auto diff = follower.target - follower.currentTarget;
+            follower.currentTarget += diff * (dt * 4.f);
+
+            auto& tx = entity.getComponent<cro::Transform>();
+            auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
+            tx.setLocalTransform(glm::inverse(lookAt));
+
+            //check the distance to the ball, and store it if closer than previous dist
+            //and if we fall within the camera's radius
+            //and if the play isn't standing too close
+            auto dist = glm::length2(tx.getPosition() - follower.target);
+            auto dist2 = glm::length2(tx.getPosition() - follower.playerPosition);
+            if (dist < currDist
+                && dist < follower.radius
+                && dist2 > follower.radius)
+            {
+                currDist = dist;
+                m_closestCamera = follower.id;
+            }
+
+            if (m_closestCamera != follower.id)
+            {
+                follower.state = CameraFollower::Reset;
+            }
+        }
+            break;
+        case CameraFollower::Zoom:
             if (follower.fov < follower.currentFov)
             {
                 follower.currentFov -= dt;
                 entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
             }
-        }
-        else if (follower.currentFov != 1)
-        {
+            else
+            {
+                follower.state = CameraFollower::Track;
+            }
+            break;
+        case CameraFollower::Reset:
             follower.currentFov = 1.f;
             follower.fov = 1.f;
             entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
-        }
 
-        auto diff = follower.target - follower.currentTarget;
-        follower.currentTarget += diff * (dt * 4.f);
-
-        auto& tx = entity.getComponent<cro::Transform>();
-        auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
-        tx.setLocalTransform(glm::inverse(lookAt));
-
-        //check the distance to the ball, and store it if closer than previous dist
-        //and if we fall within the camera's radius
-        //and if the play isn't standing too close
-        auto dist = glm::length2(tx.getPosition() - follower.target);
-        auto dist2 = glm::length2(tx.getPosition() - follower.playerPosition);
-        if (dist < currDist
-            && dist < follower.radius
-            && dist2 > follower.radius)
-        {
-            currDist = dist;
-            m_closestCamera = follower.id;
+            follower.state = CameraFollower::Track;
+            break;
         }
     }
 
     //send a message with desired camera ID
-    auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
-    msg->type = SceneEvent::RequestSwitchCamera;
-    msg->data = m_closestCamera;
+    if (m_closestCamera != lastCam)
+    {
+        auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
+        msg->type = SceneEvent::RequestSwitchCamera;
+        msg->data = m_closestCamera;
+    }
 }

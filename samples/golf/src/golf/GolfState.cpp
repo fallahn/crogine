@@ -267,6 +267,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_1:
             setActiveCamera(1);
+            m_cameras[CameraID::Sky].getComponent<CameraFollower>().fov = 0.3f;
+            m_cameras[CameraID::Sky].getComponent<CameraFollower>().state = CameraFollower::Zoom;
             break;
         case SDLK_KP_2:
             setActiveCamera(2);
