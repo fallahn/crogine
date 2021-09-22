@@ -81,7 +81,7 @@ void CameraFollowSystem::handleMessage(const cro::Message& msg)
                     for (auto ent : ents)
                     {
                         //a bit kludgy but we don't want this on the green cam
-                        if (m_closestCamera == CameraID::Sky &&
+                        if (/*m_closestCamera == CameraID::Sky &&*/
                             ent.getComponent<CameraFollower>().id == CameraID::Sky)
                         {
                             ent.getComponent<CameraFollower>().state = CameraFollower::Zoom;
@@ -152,7 +152,7 @@ void CameraFollowSystem::process(float dt)
             }
             else
             {
-                follower.zoom.progress = std::min(1.f, follower.zoom.progress + (dt * 2.f));
+                follower.zoom.progress = std::min(1.f, follower.zoom.progress + (dt /** 2.f*/));
                 follower.zoom.fov = glm::mix(1.f, follower.zoom.target, cro::Util::Easing::easeOutExpo(follower.zoom.progress));
                 entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
 

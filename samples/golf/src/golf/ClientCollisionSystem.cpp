@@ -77,7 +77,7 @@ void ClientCollisionSystem::process(float)
             }
         };
 
-        static constexpr float CollisionLevel = 0.15f;
+        static constexpr float CollisionLevel = 0.25f;
         auto position = tx.getPosition();
         std::int32_t direction = 0;
         if (position.y < collider.previousPosition.y)

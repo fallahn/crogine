@@ -127,7 +127,7 @@ void BallSystem::process(float dt)
                 //add wind
                 ball.velocity += m_windDirection * m_windStrength * dt;
 
-                //add air friction?
+                //TODO add air friction?
 
                 //move by velocity
                 auto& tx = entity.getComponent<cro::Transform>();
@@ -355,12 +355,14 @@ void BallSystem::doCollision(cro::Entity entity)
             ball.velocity *= 0.25f;
 
             //if low bounce start rolling
-            if (ball.velocity.y > -0.1f)
+            if (ball.velocity.y > -0.2f)
             {
+                auto len = glm::length(ball.velocity);
                 ball.velocity.y = 0.f;
-                //ball.velocity *= 0.5f;
+                ball.velocity = glm::normalize(ball.velocity) * len * 4.f; //fake physics to simulate momentum
                 ball.state = Ball::State::Putt;
                 ball.delay = 0.f;
+
                 return;
             }
             else //bounce
