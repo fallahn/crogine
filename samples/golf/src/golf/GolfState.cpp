@@ -43,7 +43,6 @@ source distribution.
 #include "PlayerAvatar.hpp"
 #include "GolfSoundDirector.hpp"
 #include "TutorialDirector.hpp"
-#include "CameraFollowSystem.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -267,7 +266,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_1:
             setActiveCamera(1);
-            m_cameras[CameraID::Sky].getComponent<CameraFollower>().fov = 0.3f;
             m_cameras[CameraID::Sky].getComponent<CameraFollower>().state = CameraFollower::Zoom;
             break;
         case SDLK_KP_2:
@@ -1097,6 +1095,8 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
 
+    m_gameScene.setSystemActive<CameraFollowSystem>(false);
+
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures);
     m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio);
 
@@ -1368,7 +1368,7 @@ void GolfState::buildScene()
         [camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
         auto vpSize = calcVPSize();
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().currentFov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
@@ -1386,7 +1386,7 @@ void GolfState::buildScene()
         [camEnt](cro::Camera& cam)
     {
         auto vpSize = calcVPSize();
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().currentFov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
@@ -2339,6 +2339,7 @@ void GolfState::updateActor(const ActorInfo& update)
         {
             e.getComponent<CameraFollower>().target = update.position;
             e.getComponent<CameraFollower>().playerPosition = m_currentPlayer.position;
+            e.getComponent<CameraFollower>().holePosition = m_holeData[m_currentHole].pin;
         };
         m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
     }

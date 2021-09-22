@@ -34,6 +34,15 @@ source distribution.
 
 //updates specator cameras to follow the active ball
 
+struct CameraID final
+{
+    enum
+    {
+        Player, Sky, Green,
+        Count
+    };
+};
+
 struct CameraFollower final
 {
     enum State
@@ -45,11 +54,19 @@ struct CameraFollower final
 
     glm::vec3 target = glm::vec3(0.f);
     glm::vec3 currentTarget = glm::vec3(0.f); //used to interpolate
+    glm::vec3 holePosition = glm::vec3(0.f);
     glm::vec3 playerPosition = glm::vec3(0.f);
     float radius = 0.f; //camera becomes active when ball within this (should be ^2)
-    float fov = 1.f;
-    float currentFov = 1.f;
+
     std::int32_t id = -1;
+
+    struct ZoomData final
+    {
+        static constexpr float target = 0.25f;
+        float fov = 1.f;
+        float progress = 0.f;
+        bool done = false;
+    }zoom;
 };
 
 class CameraFollowSystem final : public cro::System

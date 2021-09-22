@@ -33,6 +33,7 @@ source distribution.
 #include "HoleData.hpp"
 #include "InputParser.hpp"
 #include "TerrainBuilder.hpp"
+#include "CameraFollowSystem.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -146,15 +147,7 @@ private:
     void createTransition(const ActivePlayer&);
     std::int32_t getClub() const;
 
-    //allows switch camera, TV style
-    struct CameraID final
-    {
-        enum
-        {
-            Player, Sky, Green,
-            Count
-        };
-    };
+    //allows switching camera, TV style
     std::array<cro::Entity, CameraID::Count> m_cameras;
     std::int32_t m_currentCamera;
     void setActiveCamera(std::int32_t);

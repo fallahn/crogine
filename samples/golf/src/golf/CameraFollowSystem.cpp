@@ -29,14 +29,20 @@ source distribution.
 
 #include "CameraFollowSystem.hpp"
 #include "MessageIDs.hpp"
+#include "Terrain.hpp"
 
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
+#include <crogine/detail/glm/common.hpp>
+
+#include <crogine/util/Easings.hpp>
 
 CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(CameraFollowSystem)),
-    m_closestCamera(0)
+    : cro::System   (mb, typeid(CameraFollowSystem)),
+    m_closestCamera (CameraID::Player)
 {
     requireComponent<cro::Transform>();
     requireComponent<cro::Camera>();
@@ -51,7 +57,41 @@ void CameraFollowSystem::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<GolfEvent>();
         if (data.type == GolfEvent::BallLanded)
         {
-            m_closestCamera = 0; //reset to player camera
+            m_closestCamera = CameraID::Player; //reset to player camera
+        }
+    }
+    else if (msg.id == MessageID::CollisionMessage)
+    {
+        const auto& data = msg.getData<CollisionEvent>();
+        if (data.type == CollisionEvent::Begin
+            && (data.terrain == TerrainID::Bunker
+                || data.terrain == TerrainID::Rough))
+        {
+            auto ent = getScene()->createEntity();
+            ent.addComponent<cro::Callback>().active = true;
+            ent.getComponent<cro::Callback>().setUserData<float>(0.5f);
+            ent.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+            {
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime -= dt;
+                if (currTime < 0.f)
+                {
+                    auto& ents = getEntities();
+                    for (auto ent : ents)
+                    {
+                        //a bit kludgy but we don't want this on the green cam
+                        if (m_closestCamera == CameraID::Sky &&
+                            ent.getComponent<CameraFollower>().id == CameraID::Sky)
+                        {
+                            ent.getComponent<CameraFollower>().state = CameraFollower::Zoom;
+                        }
+                    }
+
+                    e.getComponent<cro::Callback>().active = false;
+                    getScene()->destroyEntity(e);
+                }
+            };
         }
     }
 }
@@ -72,7 +112,7 @@ void CameraFollowSystem::process(float dt)
         case CameraFollower::Track:
         {
             auto diff = follower.target - follower.currentTarget;
-            follower.currentTarget += diff * (dt * 4.f);
+            follower.currentTarget += diff * (dt * (4.f + (4.f * follower.zoom.progress)));
 
             auto& tx = entity.getComponent<cro::Transform>();
             auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
@@ -91,6 +131,14 @@ void CameraFollowSystem::process(float dt)
                 m_closestCamera = follower.id;
             }
 
+            //zoom if ball goes near the hole
+            dist = glm::length2(follower.target - follower.holePosition);
+            if (dist < 4.f)
+            {
+                follower.state = CameraFollower::Zoom;
+            }
+
+
             if (m_closestCamera != follower.id)
             {
                 follower.state = CameraFollower::Reset;
@@ -98,19 +146,34 @@ void CameraFollowSystem::process(float dt)
         }
             break;
         case CameraFollower::Zoom:
-            if (follower.fov < follower.currentFov)
-            {
-                follower.currentFov -= dt;
-                entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
-            }
-            else
+            if (follower.zoom.done)
             {
                 follower.state = CameraFollower::Track;
             }
+            else
+            {
+                follower.zoom.progress = std::min(1.f, follower.zoom.progress + (dt * 2.f));
+                follower.zoom.fov = glm::mix(1.f, follower.zoom.target, cro::Util::Easing::easeOutExpo(follower.zoom.progress));
+                entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
+
+                if (follower.zoom.progress == 1)
+                {
+                    follower.zoom.done = true;
+                    follower.state = CameraFollower::Track;
+                }
+
+                auto diff = follower.target - follower.currentTarget;
+                follower.currentTarget += diff * (dt * (2.f + (2.f * follower.zoom.progress)));
+
+                auto& tx = entity.getComponent<cro::Transform>();
+                auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
+                tx.setLocalTransform(glm::inverse(lookAt));
+            }
             break;
         case CameraFollower::Reset:
-            follower.currentFov = 1.f;
-            follower.fov = 1.f;
+            follower.zoom.fov = 1.f;
+            follower.zoom.progress = 0.f;
+            follower.zoom.done = false;
             entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
 
             follower.state = CameraFollower::Track;
