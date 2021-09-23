@@ -62,9 +62,10 @@ struct CameraFollower final
 
     struct ZoomData final
     {
-        static constexpr float target = 0.25f;
+        float target = 0.25f;
         float fov = 1.f;
         float progress = 0.f;
+        float speed = 1.f;
         bool done = false;
     }zoom;
 };

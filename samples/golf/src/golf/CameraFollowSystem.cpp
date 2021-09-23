@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/detail/glm/common.hpp>
 
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Random.hpp>
 
 CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
     : cro::System   (mb, typeid(CameraFollowSystem)),
@@ -65,7 +66,8 @@ void CameraFollowSystem::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<CollisionEvent>();
         if (data.type == CollisionEvent::Begin
             && (data.terrain == TerrainID::Bunker
-                || data.terrain == TerrainID::Rough))
+                || data.terrain == TerrainID::Rough
+                || (cro::Util::Random::value(0, 3) == 0)))
         {
             auto ent = getScene()->createEntity();
             ent.addComponent<cro::Callback>().active = true;
@@ -153,7 +155,7 @@ void CameraFollowSystem::process(float dt)
             else
             {
                 follower.zoom.progress = std::min(1.f, follower.zoom.progress + (dt /** 2.f*/));
-                follower.zoom.fov = glm::mix(1.f, follower.zoom.target, cro::Util::Easing::easeOutExpo(follower.zoom.progress));
+                follower.zoom.fov = glm::mix(1.f, follower.zoom.target, cro::Util::Easing::easeOutExpo(cro::Util::Easing::easeInQuad(follower.zoom.progress)));
                 entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
 
                 if (follower.zoom.progress == 1)
