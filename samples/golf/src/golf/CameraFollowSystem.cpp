@@ -134,8 +134,10 @@ void CameraFollowSystem::process(float dt)
             }
 
             //zoom if ball goes near the hole
+            static constexpr float ZoomRadius = 3.f;
+            static constexpr float ZoomRadiusSqr = ZoomRadius * ZoomRadius;
             dist = glm::length2(follower.target - follower.holePosition);
-            if (dist < 4.f)
+            if (dist < ZoomRadiusSqr)
             {
                 follower.state = CameraFollower::Zoom;
             }

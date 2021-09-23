@@ -1596,7 +1596,8 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             msg->type = GolfEvent::BallLanded;
             msg->terrain = update.terrain;
             msg->club = getClub();
-            msg->position = update.position - m_currentPlayer.position; //actually use this to see how far the ball went
+            msg->travelDistance = glm::length2(update.position - m_currentPlayer.position);
+            msg->pinDistance = glm::length2(update.position - m_holeData[m_currentHole].pin);
         }
             break;
         case PacketID::ClientDisconnected:

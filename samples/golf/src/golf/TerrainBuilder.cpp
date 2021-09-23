@@ -71,7 +71,7 @@ namespace
 
     constexpr std::uint32_t QuadsPerMetre = 1;
 
-    constexpr float MaxShrubOffset = MaxTerrainHeight + 10.5f;
+    constexpr float MaxShrubOffset = MaxTerrainHeight + 13.f;
 
     //callback data
     struct SwapData final

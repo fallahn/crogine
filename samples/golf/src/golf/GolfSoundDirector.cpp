@@ -36,8 +36,10 @@ source distribution.
 
 #include <crogine/audio/AudioResource.hpp>
 
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/util/Random.hpp>
 
@@ -118,7 +120,8 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
 //public
 void GolfSoundDirector::handleMessage(const cro::Message& msg)
 {
-    static constexpr float MinBallDistance = 10.f;
+    static constexpr float MinBallDistance = 100.f; //dist sqr
+    static constexpr float MinHoleDistance = 9.f; //dist to hole sqr
 
     switch (msg.id)
     {
@@ -196,7 +199,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             }
             break;
         case GolfEvent::BallLanded:
-            if (glm::length(data.position) > MinBallDistance)
+            if (data.travelDistance > MinBallDistance)
             {
                 switch (data.terrain)
                 {
@@ -214,6 +217,11 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     if (data.club != ClubID::Putter) //previous shot wasn't from green
                     {
                         playSound(cro::Util::Random::value(AudioID::TerrainGreen01, AudioID::TerrainGreen02), glm::vec3(0.f));
+
+                        if (data.pinDistance < MinHoleDistance)
+                        {
+                            playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f);
+                        }
                     }
                     break;
                 case TerrainID::Water:
@@ -272,4 +280,25 @@ void GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, float vol
     ent.getComponent<cro::AudioEmitter>().setVolume(volume);
     ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
     ent.getComponent<cro::Transform>().setPosition(position);
+}
+
+void GolfSoundDirector::playSoundDelayed(std::int32_t id, glm::vec3 position, float delay, float volume)
+{
+    auto entity = getScene().createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(delay);
+    entity.getComponent<cro::Callback>().function =
+        [&, id, position, volume](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime -= dt;
+
+        if (currTime < 0)
+        {
+            playSound(id, position, volume);
+
+            e.getComponent<cro::Callback>().active = false;
+            getScene().destroyEntity(e);
+        }
+    };
 }

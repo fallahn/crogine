@@ -107,4 +107,5 @@ private:
     std::array<const cro::AudioSource*, AudioID::Count> m_audioSources = {};
 
     void playSound(std::int32_t, glm::vec3, float = 1.f);
+    void playSoundDelayed(std::int32_t, glm::vec3, float, float = 1.f);
 };

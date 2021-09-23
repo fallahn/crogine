@@ -59,6 +59,8 @@ struct GolfEvent final
     }type = HitBall;
 
     glm::vec3 position = glm::vec3(0.f);
+    float travelDistance = 0.f; //this is sqr
+    float pinDistance = 0.f; //this is sqr
     union
     {
         std::uint8_t terrain = 0;
