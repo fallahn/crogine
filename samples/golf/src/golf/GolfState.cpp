@@ -528,7 +528,6 @@ void GolfState::handleMessage(const cro::Message& msg)
                     m_gameScene.destroyEntity(e);
                 }
             };
-            m_gameScene.setSystemActive<CameraFollowSystem>(false);
         }
     }
     break;
@@ -2234,6 +2233,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     msg2->position = m_currentPlayer.position;
     msg2->terrain = m_currentPlayer.terrain;
     msg2->type = GolfEvent::SetNewPlayer;
+
+    m_gameScene.setSystemActive<CameraFollowSystem>(false);
 }
 
 void GolfState::hitBall()

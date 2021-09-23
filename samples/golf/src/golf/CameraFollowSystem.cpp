@@ -156,7 +156,7 @@ void CameraFollowSystem::process(float dt)
             }
             else
             {
-                follower.zoom.progress = std::min(1.f, follower.zoom.progress + (dt /** 2.f*/));
+                follower.zoom.progress = std::min(1.f, follower.zoom.progress + (dt *  follower.zoom.speed));
                 follower.zoom.fov = glm::mix(1.f, follower.zoom.target, cro::Util::Easing::easeOutExpo(cro::Util::Easing::easeInQuad(follower.zoom.progress)));
                 entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
 
