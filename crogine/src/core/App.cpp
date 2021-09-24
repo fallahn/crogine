@@ -402,10 +402,28 @@ void App::handleEvents()
             if (evt.key.keysym.sym == SDLK_F1)
             {
                 Console::show();
+                if (!Console::isVisible())
+                {
+                    saveSettings();
+                }
             }
             else if (evt.key.keysym.sym == SDLK_F5)
             {
                 saveScreenshot();
+            }
+            else if (evt.key.keysym.sym == SDLK_RETURN
+                && evt.key.keysym.mod & KMOD_ALT)
+            {
+                auto fs = m_window.isFullscreen();
+                fs = !fs;
+                m_window.setFullScreen(fs);
+                
+                //hack to hide console if it's open as the full screen
+                //checkbox won't be updated
+                if (Console::isVisible())
+                {
+                    Console::show();
+                }
             }
 
             break;

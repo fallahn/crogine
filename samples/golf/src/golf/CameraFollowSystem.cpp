@@ -56,7 +56,7 @@ void CameraFollowSystem::handleMessage(const cro::Message& msg)
     if (msg.id == MessageID::GolfMessage)
     {
         const auto& data = msg.getData<GolfEvent>();
-        if (data.type == GolfEvent::BallLanded)
+        if (data.type == GolfEvent::/*BallLanded*/SetNewPlayer)
         {
             m_closestCamera = CameraID::Player; //reset to player camera
         }
