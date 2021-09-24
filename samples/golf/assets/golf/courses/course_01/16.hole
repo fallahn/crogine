@@ -6,4 +6,71 @@ hole 16
     target = 149, 83
     tee = 39, 173
     par = 3
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 146.629044,-0.000000,67.546715
+        rotation = -492.613773
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 143.419891,-0.000000,70.628311
+        rotation = -501.253188
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = -86.771919,-0.000000,-68.809685
+        rotation = -38.641449
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = 113.072289,-0.000000,31.000092
+        rotation = -174.353362
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 113.072289,-0.000000,31.000092
+        rotation = 112.359838
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = 146.657822,-0.000004,77.076134
+        rotation = -873.310013
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 139.968124,-0.000000,73.950867
+        rotation = -492.613773
+    }
+
+    crowd
+    {
+        position = 148.219864,-0.000000,63.656071
+        rotation = -508.106855
+    }
+
+    crowd
+    {
+        position = 149.520523,0.000000,42.294971
+        rotation = -214.935319
+    }
+
+    crowd
+    {
+        position = -80.525406,0.000005,-60.983116
+        rotation = 123.751034
+    }
 }

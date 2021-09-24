@@ -28,15 +28,15 @@ hole 05
     prop
     {
         model = "assets/golf/models/crane.cmt"
-        position = -82, 0, 69.5
-        rotation = 35.2
+        position = -49.753857,0.000000,60.488426
+        rotation = 186.614444
     }
 
     prop
     {
         model = "assets/golf/models/crane_arm.cmt"
-        position = -82, 0, 69.5
-        rotation = -32.3
+        position = -49.753857,0.000000,60.488426
+        rotation = -107.697259
     }
 
     prop
@@ -49,7 +49,7 @@ hole 05
     prop
     {
         model = "assets/golf/models/scoreboard.cmt"
-        position = 136.6, 0, -78.6
-        rotation = 18.8
+        position = -211.716568,-0.000000,94.811996
+        rotation = 33.126875
     }    
 }

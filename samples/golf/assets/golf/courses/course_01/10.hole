@@ -6,4 +6,64 @@ hole 10
     target = 248, 140
     tee = 71, 77
     par = 3
+
+    prop
+    {
+        model = "assets/golf/models/cart.cmt"
+        position = 45.158054,0.000000,-50.519764
+        rotation = 57.503883
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 44.478928,0.000000,-47.608276
+        rotation = 31.359022
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 47.585896,0.000000,-50.479115
+        rotation = 49.450063
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 104.771767,-0.000000,-57.632458
+        rotation = -32.612089
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = 49.926674,0.000000,3.637621
+        rotation = -157.061634
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 49.926674,0.000000,3.637621
+        rotation = -141.709145
+    }
+
+    crowd
+    {
+        position = 93.741455,0.000000,-13.140978
+        rotation = 25.458860
+    }
+
+    crowd
+    {
+        position = 108.607780,0.000000,-54.343670
+        rotation = -50.813687
+    }
+
+    crowd
+    {
+        position = -51.891281,0.000000,-5.978869
+        rotation = 1.038276
+    }
 }

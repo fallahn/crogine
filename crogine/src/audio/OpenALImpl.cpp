@@ -546,7 +546,7 @@ void OpenALStream::updateStream()
                 for (auto i = 0; i < processed; ++i)
                 {
                     //fill buffer
-                    auto data = audioFile->getData(STREAM_CHUNK_SIZE, looped);
+                    const auto& data = audioFile->getData(STREAM_CHUNK_SIZE, looped);
                     if (data.size > 0) //only update if we have data else we'll loop even if we don't want to
                     {
                         //unqueue

@@ -81,7 +81,7 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
-    m_window = SDL_CreateWindow(title.c_str(),SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, styleMask);
+    m_window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, styleMask);
 
     if (!m_window)
     {
@@ -284,7 +284,7 @@ namespace
     {
         SDL_Window* window = nullptr;
         SDL_GLContext context = nullptr;
-        SDL_atomic_t threadFlag;
+        SDL_atomic_t threadFlag = {};
         LoadingScreen* loadingScreen = nullptr;
     };
 

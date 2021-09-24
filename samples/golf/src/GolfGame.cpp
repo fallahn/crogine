@@ -149,6 +149,7 @@ bool GolfGame::initialise()
             }
         });
 
+
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Golf Game");
 

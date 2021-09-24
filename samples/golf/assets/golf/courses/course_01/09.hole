@@ -24,4 +24,46 @@ hole 09
         position = -108,0,-76
         rotation = 1.4
     }
+
+    prop
+    {
+        model = "assets/golf/models/cart.cmt"
+        position = -77.701538,0.000000,-77.570496
+        rotation = 0.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = -80.521835,0.000000,-76.578583
+        rotation = -26.144862
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = -76.431091,0.000000,-75.501190
+        rotation = -8.053820
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = 95.413589,0.000000,-10.457118
+        rotation = 105.208100
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 95.413589,0.000000,-10.457118
+        rotation = 97.613055
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = 67.615555,0.000000,66.780640
+        rotation = -247.774042
+    }
 }

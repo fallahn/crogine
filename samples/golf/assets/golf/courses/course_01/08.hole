@@ -24,4 +24,46 @@ hole 08
         position = 141.8,0,-43.5
         rotation = 48.6
     }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 136.104889,0.000000,-37.292198
+        rotation = -155.304469
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 132.687317,0.000000,-34.799175
+        rotation = -137.213431
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 114.840942,-0.000000,-74.603622
+        rotation = 9.791537
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = 46.550526,0.000000,-60.352119
+        rotation = 43.984252
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 46.550526,0.000000,-60.352119
+        rotation = 65.509979
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = 137.748093,0.000000,-33.613167
+        rotation = -186.422643
+    }    
 }

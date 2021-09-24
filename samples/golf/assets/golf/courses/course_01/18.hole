@@ -6,4 +6,78 @@ hole 18
     target = 144, 122
     tee = 27, 30
     par = 4
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = -93.820068,-0.000000,68.582153
+        rotation = -502.830768
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = -97.524857,-0.000000,71.045784
+        rotation = -511.470128
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = -130.230194,-0.000000,48.073860
+        rotation = 32.277579
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = 131.564392,-0.000000,-96.939407
+        rotation = 14.811081
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 131.564392,-0.000000,-96.939407
+        rotation = 49.455432
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = -95.459641,-0.000004,74.710869
+        rotation = -873.310013
+    }
+
+    prop
+    {
+        model = "assets/golf/models/menu_pavilion.cmt"
+        position = 75.780106,0.000000,-95.752716
+        rotation = 15.507873
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = -101.511147,-0.000000,73.703529
+        rotation = -502.830768
+    }
+
+    crowd
+    {
+        position = -121.303185,-0.000000,42.459763
+        rotation = -508.106855
+    }
+
+    crowd
+    {
+        position = 142.979599,0.000000,-86.698746
+        rotation = -214.935319
+    }
+
+    crowd
+    {
+        position = 148.407669,0.000005,-76.284187
+        rotation = 99.403025
+    }
 }

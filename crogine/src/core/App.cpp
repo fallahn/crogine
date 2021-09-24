@@ -520,7 +520,7 @@ void App::handleMessages()
 {
     while (!m_messageBus.empty())
     {
-        auto msg = m_messageBus.poll();
+        const auto& msg = m_messageBus.poll();
 
         /*switch (msg.id)
         {
