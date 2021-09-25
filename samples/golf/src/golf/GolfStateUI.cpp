@@ -157,7 +157,6 @@ void GolfState::buildUI()
 
 
     //info panel background - vertices are set in resize callback
-    auto windowSize = glm::vec2(cro::App::getWindow().getSize());
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();

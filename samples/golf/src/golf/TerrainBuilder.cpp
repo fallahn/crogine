@@ -448,7 +448,7 @@ void TerrainBuilder::threadFunc()
                 auto seed = static_cast<std::uint32_t>(std::time(nullptr));
                 auto grass = pd::PoissonDiskSampling(GrassDensity, MinBounds, MaxBounds, 30u, seed);
                 auto trees = pd::PoissonDiskSampling(TreeDensity, MinBounds, MaxBounds);
-                auto flowers = pd::PoissonDiskSampling(TreeDensity, MinBounds, MaxBounds, 30u, seed / 2);
+                auto flowers = pd::PoissonDiskSampling(TreeDensity * 1.5f, MinBounds, MaxBounds, 30u, seed / 2);
 
                 //filter distribution by map area
                 m_billboardBuffer.clear();

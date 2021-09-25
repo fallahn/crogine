@@ -1025,6 +1025,7 @@ void GolfState::loadAssets()
                                 ent.getComponent<cro::Model>().setMaterial(0, texturedMat);
                             }
                             ent.getComponent<cro::Model>().setHidden(true);
+                            ent.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
 
                             holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
                             holeData.propEntities.push_back(ent);
