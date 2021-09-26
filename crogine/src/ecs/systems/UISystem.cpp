@@ -290,9 +290,13 @@ void UISystem::process(float)
                 m_movementCallbacks[input.callbacks[UIInput::Enter]](e, m_movementDelta, m);
             }
 
-            unselect(m_selectedIndex);
-            m_selectedIndex = currentIndex;
-            select(m_selectedIndex);
+            //only fire thetse events if the selection actually changed.
+            if (m_selectedIndex != currentIndex)
+            {
+                unselect(m_selectedIndex);
+                m_selectedIndex = currentIndex;
+                select(m_selectedIndex);
+            }
 
             for (const auto& m : m_motionEvents)
             {
