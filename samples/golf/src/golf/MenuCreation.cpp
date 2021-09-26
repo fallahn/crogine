@@ -241,7 +241,7 @@ void MenuState::createUI()
         [](cro::Entity e) mutable
         {
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
-            //e.getComponent<cro::AudioEmitter>().play();
+            e.getComponent<cro::AudioEmitter>().play();
         });
     auto mouseExitCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
@@ -843,6 +843,9 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     menuTransform.addChild(entity.getComponent<cro::Transform>());
     auto cursorEnt = entity;
 
+    cro::AudioScape as;
+    as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
+
     //this callback is overriden for the avatar previews
     mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity, avatarEnt](cro::Entity e) mutable
@@ -852,6 +855,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
 
             static constexpr glm::vec3 Offset(52.f, -7.f, 0.f);
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+            //e.getComponent<cro::AudioEmitter>().play();
             entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + basePos + Offset);
             entity.getComponent<cro::Transform>().setScale(glm::vec2(-1.f, 1.f));
             entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -865,6 +869,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
         [entity](cro::Entity e) mutable
         {
             //e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+            e.getComponent<cro::AudioEmitter>().play();
             entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + CursorOffset);
             entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
@@ -875,6 +880,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     //back
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 20.f, MenuBottomBorder });
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevMenu];
     entity.addComponent<cro::UIInput>().area = m_sprites[SpriteID::PrevMenu].getTextureBounds();
@@ -900,6 +906,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     //add player button
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 0.f, MenuBottomBorder };
     entity.getComponent<UIElement>().relativePosition = { 0.3334f, 0.f };
@@ -936,6 +943,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     //remove player button
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 0.f, MenuBottomBorder };
     entity.getComponent<UIElement>().relativePosition = { 0.6667f, 0.f };
@@ -992,6 +1000,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
         [](cro::Entity e)
         {
             e.getComponent<cro::SpriteAnimation>().play(1);
+            //e.getComponent<cro::AudioEmitter>().play();
         });
 
     auto courseExit = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -1006,6 +1015,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     //continue
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 0.f, MenuBottomBorder };
     entity.getComponent<UIElement>().relativePosition = { 0.98f, 0.f };
