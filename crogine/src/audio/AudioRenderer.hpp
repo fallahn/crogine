@@ -68,6 +68,8 @@ namespace cro
         virtual void setListenerVolume(float) = 0;
         virtual void setListenerVelocity(glm::vec3) = 0;
 
+        virtual glm::vec3 getListenerPosition() const = 0;
+
         virtual std::int32_t requestNewBuffer(const std::string&) = 0;
         virtual std::int32_t requestNewBuffer(const Detail::PCMData&) = 0;
         virtual void deleteBuffer(std::int32_t) = 0;
@@ -160,6 +162,11 @@ namespace cro
         By default this is in metres per second.
         */
         static void setListenerVelocity(glm::vec3 velocity);
+
+        /*!
+        \brief Returns the current position of the listener in world units
+        */
+        static glm::vec3 getListenerPosition();
 
         /*!
         \brief Requests a new buffer be created from the file at the given string.

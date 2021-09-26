@@ -83,6 +83,8 @@ namespace cro
             void setListenerVolume(float) override;
             void setListenerVelocity(glm::vec3) override;
 
+            glm::vec3 getListenerPosition() const override;
+
             std::int32_t requestNewBuffer(const std::string& path) override;
             std::int32_t requestNewBuffer(const PCMData&) override;
             void deleteBuffer(std::int32_t) override;

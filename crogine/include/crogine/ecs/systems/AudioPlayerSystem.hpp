@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,19 +35,20 @@ namespace cro
 {
     /*!
     \brief Processes the Scene's AudioEmitter components
-    based on the Scene's active AudioListener.
-    Because the audio subsystem at a hardware level only has a 
+    without 3D spatialisation.
+    Because the audio subsystem at a hardware level only has a
     single listener point when using multiple scenes (for
     example a second 2D scene to render a UI) only one of
     these scenes should have an AudioSystem active within it.
-    To render non-positional audio, such as music or a UI in
-    a secondary Scene and AudioPlayerSystem should be used instead.
-    \see AudioPlayerSystem
+    Using this system with secondary scenes such as those playing
+    music or rendering a UI will play unpositioned audio without
+    interfering with positional audio in other scenes.
+    \see AudioSystem
     */
-    class CRO_EXPORT_API AudioSystem final : public System
+    class CRO_EXPORT_API AudioPlayerSystem final : public System
     {
     public:
-        explicit AudioSystem(MessageBus&);
+        explicit AudioPlayerSystem(MessageBus&);
 
         void process(float) override;
 

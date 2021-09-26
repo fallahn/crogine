@@ -28,6 +28,32 @@ audioscape menu
         mixer_channel = 1
         attenuation = 0.1
         looped = true
-        volume = 2
+    }
+
+    emitter accept
+    {
+        path = "assets/golf/sound/menu/accept.wav"
+        streaming = false
+        volume = 1
+        mixer_channel = 2
+        looped = false
+    }
+
+    emitter back
+    {
+        path = "assets/golf/sound/menu/back.wav"
+        streaming = false
+        volume = 1
+        mixer_channel = 2
+        looped = false
+    }
+
+    emitter switch
+    {
+        path = "assets/golf/sound/menu/switch.wav"
+        streaming = false
+        volume = 1
+        mixer_channel = 2
+        looped = false
     }
 }

@@ -38,6 +38,7 @@ source distribution.
 
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/audio/AudioScape.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Text.hpp>
@@ -48,6 +49,7 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/systems/UISystem.hpp>
 
@@ -239,6 +241,7 @@ void MenuState::createUI()
         [](cro::Entity e) mutable
         {
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+            //e.getComponent<cro::AudioEmitter>().play();
         });
     auto mouseExitCallback = m_uiScene.getSystem<cro::UISystem>().addCallback(
         [](cro::Entity e)
@@ -370,6 +373,9 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     m_sprites[SpriteID::ReadyUp] = spriteSheet.getSprite("ready_up");
     m_sprites[SpriteID::StartGame] = spriteSheet.getSprite("start_game");
     m_sprites[SpriteID::Connect] = spriteSheet.getSprite("connect");
+
+    cro::AudioScape as;
+    as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
 
     //title
     auto entity = m_uiScene.createEntity();
@@ -531,6 +537,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         [entity](cro::Entity e) mutable
         {
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+            e.getComponent<cro::AudioEmitter>().play();
             entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + glm::vec3(-20.f, -7.f, 0.f));
         });
 
@@ -543,6 +550,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         //host
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(textPos);
+        entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(font).setString("Create Game");
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -569,6 +577,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         //join
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(textPos);
+        entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(font).setString("Join Game");
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -595,6 +604,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         //tutorial
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(textPos);
+        entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(font).setString("Tutorial");
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -668,6 +678,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     //options
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(textPos);
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Options");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -690,6 +701,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     //quit
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(textPos);
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Quit");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);

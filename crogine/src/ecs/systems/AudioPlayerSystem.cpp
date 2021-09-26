@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -26,51 +26,31 @@ and must not be misrepresented as being the original software.
 source distribution.
 
 -----------------------------------------------------------------------*/
+
 #include "../../audio/AudioRenderer.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
-
-#include <crogine/ecs/systems/AudioSystem.hpp>
+#include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
-#include <crogine/ecs/components/AudioListener.hpp>
-#include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/Scene.hpp>
-
-#include <crogine/core/Clock.hpp>
-#include <crogine/core/App.hpp>
-#include <crogine/util/Matrix.hpp>
 
 using namespace cro;
 
-AudioSystem::AudioSystem(MessageBus& mb)
-    : System(mb, typeid(AudioSystem))
+AudioPlayerSystem::AudioPlayerSystem(cro::MessageBus& mb)
+    : System(mb, typeid(AudioPlayerSystem))
 {
     requireComponent<AudioEmitter>();
 }
 
 //public
-void AudioSystem::process(float)
+void AudioPlayerSystem::process(float)
 {
-    //update the scene's listener details
-    const auto& listener = getScene()->getActiveListener();
-    AudioRenderer::setListenerVolume(listener.getComponent<AudioListener>().getVolume() * AudioMixer::m_masterVol);
-    AudioRenderer::setListenerVelocity(listener.getComponent<AudioListener>().getVelocity());
-    
-    const auto& tx = listener.getComponent<Transform>();
-    
-    auto worldPos = tx.getWorldPosition();
-    AudioRenderer::setListenerPosition(worldPos);
+    auto listnenerPosition = AudioRenderer::getListenerPosition();
 
-    const auto& worldTx = tx.getWorldTransform();
-    AudioRenderer::setListenerOrientation(Util::Matrix::getForwardVector(worldTx), Util::Matrix::getUpVector(worldTx));
-    //DPRINT("Listener Position", std::to_string(worldPos.x) + ", " + std::to_string(worldPos.y) + ", " + std::to_string(worldPos.z));
-
-    //for each entity
-    auto& entities = getEntities();
-    for (auto& entity : entities)
+    auto entities = getEntities();
+    for (auto entity : entities)
     {
         auto& audioSource = entity.getComponent<AudioEmitter>();
-        
+
         if (audioSource.m_dataSourceID < 0) //we don't have a valid buffer yet (remember streams are 0 based)
         {
             continue;
@@ -119,26 +99,19 @@ void AudioSystem::process(float)
             //hmm these are static funcs so could be called directly by component setters, no?
             AudioRenderer::setSourcePitch(audioSource.m_ID, audioSource.m_pitch);
             AudioRenderer::setSourceVolume(audioSource.m_ID, audioSource.m_volume * AudioMixer::m_channels[audioSource.m_mixerChannel] * AudioMixer::m_prefadeChannels[audioSource.m_mixerChannel]);
-            AudioRenderer::setSourceRolloff(audioSource.m_ID, audioSource.m_rolloff);
-            AudioRenderer::setSourceVelocity(audioSource.m_ID, audioSource.m_velocity);
-
-            //check its position and update
-            if (entity.hasComponent<Transform>())
-            {
-                //set position
-                auto pos = entity.getComponent<Transform>().getWorldPosition();
-                AudioRenderer::setSourcePosition(audioSource.m_ID, pos);
-            }
+            //AudioRenderer::setSourceRolloff(audioSource.m_ID, audioSource.m_rolloff);
+            //AudioRenderer::setSourceVelocity(audioSource.m_ID, audioSource.m_velocity);
+            AudioRenderer::setSourcePosition(audioSource.m_ID, listnenerPosition);
         }
     }
 }
 
 //private
-void AudioSystem::onEntityAdded(Entity entity)
+void AudioPlayerSystem::onEntityAdded(Entity entity)
 {
     //check if buffer already added and summon new audio source
     auto& audioSource = entity.getComponent<AudioEmitter>();
-    if(AudioRenderer::isValid())
+    if (AudioRenderer::isValid())
     {
         if (audioSource.m_newDataSource)
         {

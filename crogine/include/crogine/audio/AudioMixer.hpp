@@ -124,6 +124,7 @@ namespace cro
         static std::array<float, MaxChannels> m_prefadeChannels;
         static float m_masterVol;
 
+        friend class AudioPlayerSystem;
         friend class AudioSystem;
     };
 }

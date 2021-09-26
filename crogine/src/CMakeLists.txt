@@ -64,6 +64,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/components/Text.cpp
   ${PROJECT_DIR}/ecs/components/Transform.cpp
 
+  ${PROJECT_DIR}/ecs/systems/AudioPlayerSystem.cpp
   ${PROJECT_DIR}/ecs/systems/AudioSystem.cpp
   ${PROJECT_DIR}/ecs/systems/BillboardSystem.cpp
   ${PROJECT_DIR}/ecs/systems/CallbackSystem.cpp

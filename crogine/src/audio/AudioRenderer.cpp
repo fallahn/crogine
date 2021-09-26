@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -89,6 +89,11 @@ void AudioRenderer::setListenerVolume(float volume)
 void AudioRenderer::setListenerVelocity(glm::vec3 velocity)
 {
     m_impl->setListenerVelocity(velocity);
+}
+
+glm::vec3 AudioRenderer::getListenerPosition()
+{
+    return m_impl->getListenerPosition();
 }
 
 std::int32_t AudioRenderer::requestNewBuffer(const std::string& path)

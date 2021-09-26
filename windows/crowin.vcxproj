@@ -114,6 +114,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\Scene.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Sunlight.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\System.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\AudioPlayerSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\AudioSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\BillboardSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CallbackSystem.hpp" />
@@ -289,6 +290,7 @@
     <ClCompile Include="..\crogine\src\ecs\Sunlight.cpp" />
     <ClCompile Include="..\crogine\src\ecs\System.cpp" />
     <ClCompile Include="..\crogine\src\ecs\SystemManager.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\systems\AudioPlayerSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\AudioSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\BillboardSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\CallbackSystem.cpp" />

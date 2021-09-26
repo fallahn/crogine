@@ -73,6 +73,7 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
+#include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <cstring>
 
@@ -464,6 +465,7 @@ void MenuState::addSystems()
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
+    m_uiScene.addSystem<cro::AudioPlayerSystem>(mb);
 }
 
 void MenuState::loadAssets()

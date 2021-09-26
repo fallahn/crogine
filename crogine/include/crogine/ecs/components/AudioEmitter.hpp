@@ -179,6 +179,7 @@ namespace cro
 
     private:
 
+        friend class AudioPlayerSystem;
         friend class AudioSystem;
 
         State m_state;

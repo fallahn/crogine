@@ -145,6 +145,13 @@ void OpenALImpl::setListenerVelocity(glm::vec3 velocity)
     alCheck(alListener3f(AL_VELOCITY, velocity.x, velocity.y, velocity.z));
 }
 
+glm::vec3 OpenALImpl::getListenerPosition() const
+{
+    glm::vec3 ret(0.f);
+    alCheck(alGetListenerfv(AL_POSITION, &ret[0]));
+    return ret;
+}
+
 std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
 {
     auto path = FileSystem::getResourcePath() + filePath;

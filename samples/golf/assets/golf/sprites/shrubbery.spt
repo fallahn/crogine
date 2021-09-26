@@ -9,7 +9,7 @@ spritesheet shrubbery
 
     sprite willow
     {
-        bounds = 112,0,188,176
+        bounds = 112,0,96,176
     }
 
     sprite grass01
