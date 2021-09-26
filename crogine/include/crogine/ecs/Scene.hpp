@@ -136,13 +136,14 @@ namespace cro
         \see Director
         */
         template <typename T, typename... Args>
-        T& addDirector(Args&&... args);
+        T* addDirector(Args&&... args);
 
         /*!
-        \brief Returns a reference to the the requested Director, if it exists
+        \brief Returns a pointer to the the requested Director, if it exists
+        else returns a nullptr
         */
         template <typename T>
-        T& getDirector();
+        T* getDirector();
 
         /*!
         \brief Adds a post process effect to the scene.

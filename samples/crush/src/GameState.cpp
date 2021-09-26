@@ -646,7 +646,7 @@ void GameState::loadAssets()
 #endif
 
     //set up the particle director
-    auto& particleDirector = m_gameScene.getDirector<ParticleDirector>();
+    auto* particleDirector = m_gameScene.getDirector<ParticleDirector>();
     enum ParticleID
     {
         Squish01,
@@ -662,24 +662,24 @@ void GameState::loadAssets()
     };
     std::array<std::size_t, ParticleID::Count> ids{};
 
-    ids[ParticleID::Squish01] = particleDirector.loadSettings("assets/particles/squish.xyp");
-    particleDirector.getSettings(ids[ParticleID::Squish01]).colour = PlayerColours[0];
+    ids[ParticleID::Squish01] = particleDirector->loadSettings("assets/particles/squish.xyp");
+    particleDirector->getSettings(ids[ParticleID::Squish01]).colour = PlayerColours[0];
 
-    ids[ParticleID::Squish02] = particleDirector.loadSettings("assets/particles/squish.xyp");
-    particleDirector.getSettings(ids[ParticleID::Squish02]).colour = PlayerColours[1];
+    ids[ParticleID::Squish02] = particleDirector->loadSettings("assets/particles/squish.xyp");
+    particleDirector->getSettings(ids[ParticleID::Squish02]).colour = PlayerColours[1];
 
-    ids[ParticleID::Squish03] = particleDirector.loadSettings("assets/particles/squish.xyp");
-    particleDirector.getSettings(ids[ParticleID::Squish03]).colour = PlayerColours[2];
+    ids[ParticleID::Squish03] = particleDirector->loadSettings("assets/particles/squish.xyp");
+    particleDirector->getSettings(ids[ParticleID::Squish03]).colour = PlayerColours[2];
 
-    ids[ParticleID::Squish04] = particleDirector.loadSettings("assets/particles/squish.xyp");
-    particleDirector.getSettings(ids[ParticleID::Squish04]).colour = PlayerColours[3];
+    ids[ParticleID::Squish04] = particleDirector->loadSettings("assets/particles/squish.xyp");
+    particleDirector->getSettings(ids[ParticleID::Squish04]).colour = PlayerColours[3];
 
-    ids[ParticleID::Squish05] = particleDirector.loadSettings("assets/particles/squish.xyp");
-    particleDirector.getSettings(ids[ParticleID::Squish05]).colour = cro::Colour(std::uint8_t(230), 188, 20);
+    ids[ParticleID::Squish05] = particleDirector->loadSettings("assets/particles/squish.xyp");
+    particleDirector->getSettings(ids[ParticleID::Squish05]).colour = cro::Colour(std::uint8_t(230), 188, 20);
 
-    ids[ParticleID::Sprockets] = particleDirector.loadSettings("assets/particles/box.xyp");
-    ids[ParticleID::Spark] = particleDirector.loadSettings("assets/particles/spark.xyp");
-    ids[ParticleID::Fire] = particleDirector.loadSettings("assets/particles/fire.xyp");
+    ids[ParticleID::Sprockets] = particleDirector->loadSettings("assets/particles/box.xyp");
+    ids[ParticleID::Spark] = particleDirector->loadSettings("assets/particles/spark.xyp");
+    ids[ParticleID::Fire] = particleDirector->loadSettings("assets/particles/fire.xyp");
 
     auto particleHandler = [ids](const cro::Message& msg) -> std::optional<ParticleEvent>
     {
@@ -760,7 +760,7 @@ void GameState::loadAssets()
         
         return std::nullopt;
     };
-    particleDirector.setMessageHandler(particleHandler);
+    particleDirector->setMessageHandler(particleHandler);
 }
 
 void GameState::createScene()
@@ -1211,7 +1211,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         LogW << "Server: " << sv::LogStrings[packet.as<std::int32_t>()] << std::endl;
         break;
     case PacketID::DayNightUpdate:
-        m_gameScene.getDirector<DayNightDirector>().setTimeOfDay(cro::Util::Net::decompressFloat(packet.as<std::int16_t>(), 8));
+        m_gameScene.getDirector<DayNightDirector>()->setTimeOfDay(cro::Util::Net::decompressFloat(packet.as<std::int16_t>(), 8));
         break;
     case PacketID::EntityRemoved:
     {
@@ -1579,7 +1579,7 @@ void GameState::spawnPlayer(PlayerInfo info)
 
     
 
-    m_uiScene.getDirector<UIDirector>().addPlayer(); //just tracks the player count
+    m_uiScene.getDirector<UIDirector>()->addPlayer(); //just tracks the player count
 }
 
 void GameState::removePlayer(std::uint8_t id)

@@ -719,7 +719,7 @@ void GameState::resetCrate(cro::Entity owner)
 
 void GameState::startGame()
 {
-    m_scene.getDirector<GameRuleDirector>().startGame();
+    m_scene.getDirector<GameRuleDirector>()->startGame();
 
     //send all the crates / other actors
     for (auto spawn : m_crateSpawns)
