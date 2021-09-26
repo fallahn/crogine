@@ -224,7 +224,7 @@ void ModelState::addSystems()
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     if (m_useDeferred)
     {
-        m_scene.addSystem<cro::DeferredRenderSystem>(mb).setEnvironmentMap(m_environmentMap);
+        m_scene.addSystem<cro::DeferredRenderSystem>(mb)->setEnvironmentMap(m_environmentMap);
     }
     else
     {
@@ -236,7 +236,7 @@ void ModelState::addSystems()
 
     if (m_useDeferred)
     {
-        m_previewScene.addSystem<cro::DeferredRenderSystem>(mb).setEnvironmentMap(m_environmentMap);
+        m_previewScene.addSystem<cro::DeferredRenderSystem>(mb)->setEnvironmentMap(m_environmentMap);
     }
     else
     {

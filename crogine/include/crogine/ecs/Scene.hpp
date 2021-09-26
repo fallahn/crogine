@@ -107,17 +107,18 @@ namespace cro
         \brief Creates a new system of the given type.
         All systems need to be fully created before adding entities, else
         entities will not be correctly processed by desired systems.
-        \returns Reference to newly created system (or existing system
+        \returns A pointer to newly created system (or existing system
         if it has been previously created)
         */
         template <typename T, typename... Args>
-        T& addSystem(Args&&... args);
+        T* addSystem(Args&&... args);
 
         /*!
-        \brief Returns a reference to the Scene's system of this type, if it exists
+        \brief Returns a pointer to the Scene's system of this type, if it exists
+        else returns nullptr
         */
         template <typename T>
-        T& getSystem();
+        T* getSystem();
 
         /*!
         \brief Sets the given system type active or inactive in the scene.

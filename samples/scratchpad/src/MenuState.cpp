@@ -93,7 +93,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    m_scene.getSystem<cro::UISystem>().handleEvent(evt);
+    m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
 
     m_scene.forwardEvent(evt);
     return true;
@@ -157,12 +157,12 @@ void MenuState::createScene()
     entity.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
     entity.getComponent<cro::Text>().setOutlineThickness(1.5f);
 
-    auto& uiSystem = m_scene.getSystem<cro::UISystem>();
-    auto selected = uiSystem.addCallback([](cro::Entity e)
+    auto* uiSystem = m_scene.getSystem<cro::UISystem>();
+    auto selected = uiSystem->addCallback([](cro::Entity e)
         {
             e.getComponent<cro::Text>().setOutlineColour(cro::Colour::Red);
         });
-    auto unselected = uiSystem.addCallback([](cro::Entity e)
+    auto unselected = uiSystem->addCallback([](cro::Entity e)
         {
             e.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
         });
@@ -179,7 +179,7 @@ void MenuState::createScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -200,7 +200,7 @@ void MenuState::createScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -224,7 +224,7 @@ void MenuState::createScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem->addCallback([](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {

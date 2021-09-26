@@ -102,7 +102,7 @@ bool PauseState::handleEvent(const cro::Event& evt)
         }
     }
 
-    m_scene.getSystem<cro::UISystem>().handleEvent(evt);
+    m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
     m_scene.forwardEvent(evt);
     return false;
 }
@@ -148,12 +148,12 @@ void PauseState::buildScene()
     entity.addComponent<cro::Sprite>(m_backgroundTexture);
     entity.addComponent<cro::Drawable2D>();
 
-    auto mouseEnter = m_scene.getSystem<cro::UISystem>().addCallback(
+    auto mouseEnter = m_scene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e) 
         {
             e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
         });
-    auto mouseExit = m_scene.getSystem<cro::UISystem>().addCallback(
+    auto mouseExit = m_scene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
             e.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -180,7 +180,7 @@ void PauseState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback(
+        m_scene.getSystem<cro::UISystem>()->addCallback(
             [&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -201,7 +201,7 @@ void PauseState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback(
+        m_scene.getSystem<cro::UISystem>()->addCallback(
             [&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -223,7 +223,7 @@ void PauseState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_scene.getSystem<cro::UISystem>().addCallback(
+        m_scene.getSystem<cro::UISystem>()->addCallback(
             [&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))

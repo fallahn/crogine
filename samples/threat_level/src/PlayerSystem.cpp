@@ -102,7 +102,7 @@ void PlayerSystem::handleMessage(const cro::Message& msg)
                         msg->value = static_cast<float>(playerInfo.lives);
                     }
                 };
-                getScene()->getSystem<cro::CommandSystem>().sendCommand(cmd);
+                getScene()->getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
 
             auto* scoreMsg = postMessage<StatsEvent>(MessageID::StatsMessage);

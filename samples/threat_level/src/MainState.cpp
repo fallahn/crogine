@@ -191,13 +191,13 @@ void MainState::addSystems()
     m_backgroundScene.addPostProcess<cro::PostChromeAB>();
 #endif
     
-    m_commandSystem = &m_menuScene.addSystem<cro::CommandSystem>(mb);
+    m_commandSystem = m_menuScene.addSystem<cro::CommandSystem>(mb);
     m_menuScene.addSystem<SliderSystem>(mb);
     m_menuScene.addSystem<cro::CallbackSystem>(mb);
     m_menuScene.addSystem<cro::SpriteSystem2D>(mb);
     m_menuScene.addSystem<cro::TextSystem>(mb);
     m_menuScene.addSystem<cro::RenderSystem2D>(mb);
-    m_uiSystem = &m_menuScene.addSystem<cro::UISystem>(mb);
+    m_uiSystem = m_menuScene.addSystem<cro::UISystem>(mb);
 
     m_menuScene.addSystem<cro::CameraSystem>(mb);
 }

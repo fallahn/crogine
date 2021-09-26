@@ -287,7 +287,7 @@ void NpcDirector::process(float dt)
         if (m_npcCount == 0)
         {
             m_roundDelay -= dt;
-            getScene().getSystem<BackgroundSystem>().setColourAngle(-50.f);
+            getScene().getSystem<BackgroundSystem>()->setColourAngle(-50.f);
 
             if (m_roundDelay < 0)
             {

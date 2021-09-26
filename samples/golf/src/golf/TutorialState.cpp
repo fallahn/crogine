@@ -398,7 +398,7 @@ void TutorialState::buildScene()
 
             e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
         };
-        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
     auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
     camCallback(cam);

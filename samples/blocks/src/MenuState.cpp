@@ -98,9 +98,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cmd.action = [&](cro::Entity e, float)
         {
             e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
-            m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
+            m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Lobby);
         };
-        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
 }
 
@@ -152,7 +152,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         handleTextEdit(evt);
     }
 
-    m_scene.getSystem<cro::UISystem>().handleEvent(evt);
+    m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
 
     m_scene.forwardEvent(evt);
     return true;
@@ -213,7 +213,7 @@ void MenuState::createScene()
             ImGui::SetNextWindowSize({ 400.f, 100.f });
             if (ImGui::Begin("Main Menu"))
             {
-                if (m_scene.getSystem<cro::UISystem>().getActiveGroup() == GroupID::Main)
+                if (m_scene.getSystem<cro::UISystem>()->getActiveGroup() == GroupID::Main)
                 {
                     if (ImGui::Button("Host"))
                     {
@@ -245,13 +245,13 @@ void MenuState::createScene()
                             cmd.action = [&](cro::Entity e, float)
                             {
                                 e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Join]);
-                                m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Join);
+                                m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Join);
                             };
-                            m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                            m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                         }
                     }
                 }
-                else if (m_scene.getSystem<cro::UISystem>().getActiveGroup() == GroupID::Join)
+                else if (m_scene.getSystem<cro::UISystem>()->getActiveGroup() == GroupID::Join)
                 {
                     static char buffer[20] = "127.0.0.1";
                     ImGui::InputText("Address", buffer, 20);
@@ -278,9 +278,9 @@ void MenuState::createScene()
                         cmd.action = [&](cro::Entity e, float)
                         {
                             e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
-                            m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
+                            m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Main);
                         };
-                        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                        m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                     }
                 }
                 else
@@ -306,9 +306,9 @@ void MenuState::createScene()
                         cmd.action = [&](cro::Entity e, float)
                         {
                             e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
-                            m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
+                            m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Main);
                         };
-                        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                        m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                     }
                 }
 
@@ -317,12 +317,12 @@ void MenuState::createScene()
         });
 #endif //CRO_DEBUG_
 
-    auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>().addCallback(
+    auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
             e.getComponent<cro::Text>().setFillColour(TextHighlightColour);        
         });
-    auto mouseExitCallback = m_scene.getSystem<cro::UISystem>().addCallback(
+    auto mouseExitCallback = m_scene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e) 
         {
             e.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -387,9 +387,9 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 cmd.action = [&](cro::Entity e, float)
                 {
                     e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Lobby]);
-                    m_scene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Lobby);
+                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Lobby);
                 };
-                m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                 if (m_sharedData.serverInstance.running())
                 {

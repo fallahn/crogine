@@ -176,13 +176,13 @@ void GameOverState::load()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
-    m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
+    m_uiSystem = m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 
-    commandSystem = &m_uiScene.addSystem<cro::CommandSystem>(mb);
+    commandSystem = m_uiScene.addSystem<cro::CommandSystem>(mb);
 
     auto& font = m_sharedResources.fonts.get(FontID::MenuFont);
 

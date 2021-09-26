@@ -185,7 +185,7 @@ bool GameState::handleEvent(const cro::Event& evt)
             {
                 entity.getComponent<cro::Callback>().active = true;
             };
-            m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
             break;
         case SDLK_3:
@@ -300,7 +300,7 @@ void GameState::addSystems()
 
     //UI scene
     m_uiScene.addSystem<HudSystem>(mb);
-    m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
+    m_uiSystem = m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::ModelRenderer>(mb);

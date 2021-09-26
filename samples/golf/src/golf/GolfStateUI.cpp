@@ -664,7 +664,7 @@ void GolfState::buildUI()
 
             e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, e.getComponent<UIElement>().depth));
         };
-        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
         //relocate the power bar if we're the current client.
         auto localPlayer = (m_currentPlayer.client == m_sharedData.clientConnection.connectionID);
@@ -688,7 +688,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     {
         e.getComponent<cro::Transform>().setPosition(UIHiddenPosition);
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //show the scores
     updateScoreboard();
@@ -735,7 +735,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     {
         e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void GolfState::createScoreboard()
@@ -1035,7 +1035,7 @@ void GolfState::updateScoreboard()
 
         ents.back().getComponent<cro::Text>().setString(totalString);
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void GolfState::showScoreboard(bool visible)
@@ -1067,7 +1067,7 @@ void GolfState::showScoreboard(bool visible)
         e.getComponent<cro::Callback>().active = true;
         e.getComponent<cro::Callback>().setUserData<std::int32_t>(target);
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
     std::int32_t step = -19;
@@ -1083,7 +1083,7 @@ void GolfState::showScoreboard(bool visible)
         e.getComponent<cro::Callback>().getUserData<std::int32_t>() = step;
         e.getComponent<cro::Callback>().active = true;
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void GolfState::updateWindDisplay(glm::vec3 direction)
@@ -1100,7 +1100,7 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
         currRotation += cro::Util::Maths::shortestRotation(currRotation, r) * dt;
         e.getComponent<cro::Transform>().setRotation(currRotation);
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     cmd.targetFlags = CommandID::UI::WindString;
     cmd.action = [direction](cro::Entity e, float dt)
@@ -1131,7 +1131,7 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
             e.getComponent<cro::Text>().setFillColour(TextOrangeColour);
         }
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     cmd.targetFlags = CommandID::Flag;
     cmd.action = [rotation](cro::Entity e, float dt)
@@ -1140,7 +1140,7 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
         currRotation += cro::Util::Maths::shortestRotation(currRotation, rotation) * dt;
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
     };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void GolfState::showMessageBoard(MessageBoardID messageType)
@@ -1314,7 +1314,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
             }
         }
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void GolfState::floatingMessage(const std::string& msg)
@@ -1373,5 +1373,5 @@ void GolfState::updateMiniMap()
         //trigger animation
         en.getComponent<cro::Callback>().active = true;
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

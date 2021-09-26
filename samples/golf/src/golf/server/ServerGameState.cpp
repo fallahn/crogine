@@ -221,7 +221,7 @@ void GameState::netBroadcast()
         }
     }
 
-    auto wind = cro::Util::Net::compressVec3(m_scene.getSystem<BallSystem>().getWindDirection());
+    auto wind = cro::Util::Net::compressVec3(m_scene.getSystem<BallSystem>()->getWindDirection());
     m_sharedData.host.broadcastPacket(PacketID::WindDirection, wind, cro::NetFlag::Unreliable);
 }
 
@@ -423,7 +423,7 @@ void GameState::setNextHole()
         }
 
         //tell the local ball system which hole we're on
-        m_scene.getSystem<BallSystem>().setHoleData(m_holeData[m_currentHole]);
+        m_scene.getSystem<BallSystem>()->setHoleData(m_holeData[m_currentHole]);
 
         //tell clients to set up next hole
         m_sharedData.host.broadcastPacket(PacketID::SetHole, m_currentHole, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -621,7 +621,7 @@ void GameState::initScene()
 
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
-    m_scene.addSystem<BallSystem>(mb, m_currentMap).setHoleData(m_holeData[0]);
+    m_scene.addSystem<BallSystem>(mb, m_currentMap)->setHoleData(m_holeData[0]);
 }
 
 void GameState::buildWorld()

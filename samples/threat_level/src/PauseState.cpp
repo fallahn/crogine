@@ -138,8 +138,8 @@ void PauseState::load()
 
     //add systems to scene
     m_uiScene.addSystem<SliderSystem>(mb);
-    m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
-    commandSystem = &m_uiScene.addSystem<cro::CommandSystem>(mb);
+    m_uiSystem = m_uiScene.addSystem<cro::UISystem>(mb);
+    commandSystem = m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
@@ -232,7 +232,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
                 slider.destination = e.getComponent<cro::Transform>().getPosition() + glm::vec3(-sceneSize.x, 0.f, 0.f);
             };
             commandSystem->sendCommand(cmd);
-            m_uiScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Options);
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Options);
         }
     });
     entity.getComponent<cro::UIInput>().area.width = buttonNormalArea.width;
@@ -277,7 +277,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
             };
             commandSystem->sendCommand(cmd);
 
-            m_uiScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Confirm);
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Confirm);
         }
     });
     entity.getComponent<cro::UIInput>().area.width = buttonNormalArea.width;
@@ -427,7 +427,7 @@ void PauseState::createMenu(const cro::SpriteSheet& spriteSheet, const cro::Spri
             };
             commandSystem->sendCommand(cmd);
 
-            m_uiScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Pause);
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Pause);
         }
     });
     buttonEntity.getComponent<cro::UIInput>().area.width = buttonNormalArea.width;
@@ -487,7 +487,7 @@ void PauseState::createOptions(const cro::SpriteSheet& spriteSheet, const cro::S
             };
             commandSystem->sendCommand(cmd);
 
-            m_uiScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Pause);
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Pause);
         }
     });
     entity.getComponent<cro::UIInput>().area.width = buttonNormalArea.width;

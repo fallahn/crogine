@@ -97,7 +97,7 @@ void MenuCallback::operator()(cro::Entity e, float dt)
             //stop here
             menuData.direction = MenuData::Out;
             e.getComponent<cro::Callback>().active = false;
-            menuState.m_uiScene.getSystem<cro::UISystem>().setActiveGroup(menuData.targetMenu);
+            menuState.m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(menuData.targetMenu);
             menuState.m_currentMenu = menuData.targetMenu;
 
             //if we're hosting a lobby update the stride
@@ -105,11 +105,11 @@ void MenuCallback::operator()(cro::Entity e, float dt)
                 && menuState.m_sharedData.hosting)
                 /*|| menuData.targetMenu == MenuState::MenuID::Avatar*/)
             {
-                menuState.m_uiScene.getSystem<cro::UISystem>().setColumnCount(2);
+                menuState.m_uiScene.getSystem<cro::UISystem>()->setColumnCount(2);
             }
             else
             {
-                menuState.m_uiScene.getSystem<cro::UISystem>().setColumnCount(1);
+                menuState.m_uiScene.getSystem<cro::UISystem>()->setColumnCount(1);
             }
 
             //start title animation
@@ -120,7 +120,7 @@ void MenuCallback::operator()(cro::Entity e, float dt)
                 t.getComponent<cro::Callback>().setUserData<float>(0.f);
                 t.getComponent<cro::Callback>().active = true;
             };
-            menuState.m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            menuState.m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
     }
     else
@@ -145,7 +145,7 @@ void MenuCallback::operator()(cro::Entity e, float dt)
             {
                 n.getComponent<cro::Transform>().setPosition(positions->at(menuData.targetMenu) * viewScale);
             };
-            menuState.m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            menuState.m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             menuState.m_menuEntities[menuData.targetMenu].getComponent<cro::Callback>().active = true;
             menuState.m_menuEntities[menuData.targetMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = menuData.targetMenu;
@@ -156,7 +156,7 @@ void MenuCallback::operator()(cro::Entity e, float dt)
             {
                 t.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
             };
-            menuState.m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            menuState.m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
     }
 }
@@ -237,13 +237,13 @@ void MenuState::createUI()
 {
     parseCourseDirectory();
 
-    auto mouseEnterCallback = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    auto mouseEnterCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e) mutable
         {
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
             //e.getComponent<cro::AudioEmitter>().play();
         });
-    auto mouseExitCallback = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    auto mouseExitCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
             e.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -325,7 +325,7 @@ void MenuState::createUI()
 
             e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
         };
-        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
         //and resizes banners horizontally
         cmd.targetFlags = CommandID::Menu::UIBanner;
@@ -335,7 +335,7 @@ void MenuState::createUI()
             //e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
             e.getComponent<cro::Callback>().active = true;
         };
-        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
     entity = m_uiScene.createEntity();
@@ -434,7 +434,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 //else we'll be going straight to the lobby
                 if (!m_sharedData.clientConnection.connected)
                 {
-                    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Main);
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
                 }
             }
         }
@@ -533,7 +533,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::SpriteAnimation>().play(0);
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    mouseEnter = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity](cro::Entity e) mutable
         {
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
@@ -560,13 +560,13 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-            m_uiScene.getSystem<cro::UISystem>().addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+            m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
                     if (activated(evt))
                     {
                         m_sharedData.hosting = true;
 
-                        m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                         menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
                         menuEntity.getComponent<cro::Callback>().active = true;
                     }
@@ -587,13 +587,13 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-            m_uiScene.getSystem<cro::UISystem>().addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+            m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
                     if (activated(evt))
                     {
                         m_sharedData.hosting = false;
 
-                        m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                         menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
                         menuEntity.getComponent<cro::Callback>().active = true;
                     }
@@ -614,7 +614,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-            m_uiScene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
                 {
                     //TODO check stuff like current connection status (must be disconnected)
                     //and whether or not the tutorial course data exists.
@@ -688,7 +688,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -711,7 +711,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -844,7 +844,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     auto cursorEnt = entity;
 
     //this callback is overriden for the avatar previews
-    mouseEnter = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity, avatarEnt](cro::Entity e) mutable
         {
             auto basePos = avatarEnt.getComponent<cro::Transform>().getPosition();
@@ -861,7 +861,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
 
 
     //and this one is used for regular text.
-    auto mouseEnterCursor = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    auto mouseEnterCursor = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity](cro::Entity e) mutable
         {
             //e.getComponent<cro::Text>().setFillColour(TextGoldColour);
@@ -881,14 +881,14 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback(
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
                     applyTextEdit();
 
-                    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                     menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
                     menuEntity.getComponent<cro::Callback>().active = true;
                 }
@@ -911,7 +911,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback(
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, mouseEnter, mouseExit](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
@@ -947,7 +947,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback(
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, mouseEnter, mouseExit](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
@@ -963,7 +963,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-    auto prevCourse = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    auto prevCourse = m_uiScene.getSystem<cro::UISystem>()->addCallback(
                         [&](cro::Entity, const cro::ButtonEvent& evt)
                         {
                             if (activated(evt))
@@ -975,7 +975,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
                             }
                         });
-    auto nextCourse = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    auto nextCourse = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity, const cro::ButtonEvent& evt)
         {
             if (activated(evt))
@@ -988,13 +988,13 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             }
         });
     
-    auto courseEnter = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    auto courseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
             e.getComponent<cro::SpriteAnimation>().play(1);
         });
 
-    auto courseExit = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    auto courseExit = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
             e.getComponent<cro::SpriteAnimation>().play(0);
@@ -1016,7 +1016,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback(
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
@@ -1055,14 +1055,14 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                                 {
                                     e.getComponent<cro::Sprite>() = m_sprites[SpriteID::StartGame];
                                 };
-                                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                                 cmd.targetFlags = CommandID::Menu::ServerInfo;
                                 cmd.action = [](cro::Entity e, float)
                                 {
                                     e.getComponent<cro::Text>().setString("Hosting on: localhost:" + std::to_string(ConstVal::GamePort));
                                 };
-                                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                                 
                                 //enable the course selection in the lobby
                                 addCourseSelectButtons();
@@ -1082,7 +1082,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
 
                                     e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
                                 };
-                                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
                                 //send the initially selected map/course
@@ -1094,7 +1094,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                     }
                     else
                     {
-                        m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                         menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Join;
                         menuEntity.getComponent<cro::Callback>().active = true;
                     }
@@ -1105,7 +1105,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
 
     //we need to create the controller icon callbacks here
     //so we can assign/reassign them dynamically if needs be
-    auto& uiSystem = m_uiScene.getSystem<cro::UISystem>();
+    auto& uiSystem = *m_uiScene.getSystem<cro::UISystem>();
     m_controllerCallbackIDs[ControllerCallbackID::EnterLeft] =
         uiSystem.addCallback([&, cursorEnt](cro::Entity e) mutable
             {
@@ -1251,11 +1251,11 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Join);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([highlight](cro::Entity) mutable { highlight.getComponent<cro::Sprite>().setColour(cro::Colour::White); });
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([highlight](cro::Entity) mutable { highlight.getComponent<cro::Sprite>().setColour(cro::Colour::White); });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([highlight](cro::Entity) mutable { highlight.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([highlight](cro::Entity) mutable { highlight.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback(
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
@@ -1308,14 +1308,14 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::SpriteAnimation>().play(0);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-    mouseEnter = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity](cro::Entity e) mutable
         {
             entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + CursorOffset);
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
         });
 
-    mouseExit = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    mouseExit = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity](cro::Entity) mutable
         {
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -1335,13 +1335,13 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
                     applyTextEdit();
 
-                    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                     menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
                     menuEntity.getComponent<cro::Callback>().active = true;
                 }
@@ -1363,7 +1363,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&, parent](cro::Entity, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, parent](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1384,14 +1384,14 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                         {
                             e.getComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyUp];
                         };
-                        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                         cmd.targetFlags = CommandID::Menu::ServerInfo;
                         cmd.action = [&](cro::Entity e, float)
                         {
                             e.getComponent<cro::Text>().setString("Connected to: " + m_sharedData.targetIP + ":" + std::to_string(ConstVal::GamePort));
                         };
-                        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                         //disable the course selection in the lobby
                         cmd.targetFlags = CommandID::Menu::CourseSelect;
@@ -1399,7 +1399,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                         {
                             m_uiScene.destroyEntity(e);
                         };
-                        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                     }
                 }
             });
@@ -1565,14 +1565,14 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::SpriteAnimation>().play(0);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-    mouseEnter = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity](cro::Entity e) mutable
         {
             entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + CursorOffset);
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
         });
 
-    mouseExit = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    mouseExit = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity](cro::Entity) mutable
         {
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -1591,7 +1591,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1613,7 +1613,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&, parent](cro::Entity, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, parent](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1722,12 +1722,12 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     fadeNode.getComponent<cro::Transform>().setPosition(bgNode.getComponent<cro::Transform>().getOrigin());
     bgNode.getComponent<cro::Transform>().addChild(fadeNode.getComponent<cro::Transform>());
 
-    auto selected = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    auto selected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e) 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
         });
-    auto unselected = m_uiScene.getSystem<cro::UISystem>().addCallback(
+    auto unselected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -1783,7 +1783,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     entity = createButton({ 74.f, 159.f }, "name_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback(
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
@@ -1834,7 +1834,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     //c1 left
     entity = createButton({ 19.f, 127.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&, arrowLeftCallback](cro::Entity, const cro::ButtonEvent& evt)
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowLeftCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
                 arrowLeftCallback(evt, pc::ColourKey::Hair);
             });
@@ -1843,7 +1843,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     //c1 right
     entity = createButton({ 52.f, 127.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&, arrowRightCallback](cro::Entity, const cro::ButtonEvent& evt)
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowRightCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
                 arrowRightCallback(evt, pc::ColourKey::Hair);
             });
@@ -1853,7 +1853,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     //c2 left
     entity = createButton({ 19.f, 102.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&, arrowLeftCallback](cro::Entity, const cro::ButtonEvent& evt)
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowLeftCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
                 arrowLeftCallback(evt, pc::ColourKey::Skin);
             });
@@ -1862,7 +1862,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     //c2 right
     entity = createButton({ 52.f, 102.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&, arrowRightCallback](cro::Entity, const cro::ButtonEvent& evt)
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowRightCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
                 arrowRightCallback(evt, pc::ColourKey::Skin);
             });
@@ -1872,7 +1872,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     //c3 left
     entity = createButton({ 19.f, 77.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&, arrowLeftCallback](cro::Entity, const cro::ButtonEvent& evt)
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowLeftCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
                 arrowLeftCallback(evt, pc::ColourKey::Top);
             });
@@ -1881,7 +1881,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     //c3 right
     entity = createButton({ 52.f, 77.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&, arrowRightCallback](cro::Entity, const cro::ButtonEvent& evt)
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowRightCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
                 arrowRightCallback(evt, pc::ColourKey::Top);
             });
@@ -1891,7 +1891,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     //c4 left
     entity = createButton({ 19.f, 52.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&, arrowLeftCallback](cro::Entity, const cro::ButtonEvent& evt)
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowLeftCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
                 arrowLeftCallback(evt, pc::ColourKey::Bottom);
             });
@@ -1900,7 +1900,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     //c4 right
     entity = createButton({ 52.f, 52.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&, arrowRightCallback](cro::Entity, const cro::ButtonEvent& evt)
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowRightCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
                 arrowRightCallback(evt, pc::ColourKey::Bottom);
             });
@@ -1945,7 +1945,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     //skin left
     entity = createButton({ 90.f, 92.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -1972,7 +1972,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
                             en.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
                         }
                     };
-                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1980,7 +1980,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     //skin right
     entity = createButton({ 172.f, 92.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -2007,7 +2007,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
                             en.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
                         }
                     };
-                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2016,7 +2016,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     //random
     entity = createButton({ 42.f, 15.f }, "button_highlight");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback(
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, textEnt](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -2068,7 +2068,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
                             en.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
                         }
                     };
-                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2077,7 +2077,7 @@ void MenuState::createPlayerConfigMenu(std::uint32_t mouseEnter, std::uint32_t m
     //done
     entity = createButton({ 107.f, 15.f }, "button_highlight");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>().addCallback(
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, mouseEnter, mouseExit](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -2204,7 +2204,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-            m_uiScene.getSystem<cro::UISystem>().addCallback(
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
                 [&, i](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
                     if (activated(evt))
@@ -2427,7 +2427,7 @@ void MenuState::updateLobbyAvatars()
             h++;
         }
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
@@ -2442,9 +2442,9 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
         std::size_t menu = visible ? MenuID::PlayerConfig : MenuID::Avatar;
 
         e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>().second = target;
-        m_uiScene.getSystem<cro::UISystem>().setActiveGroup(menu);
+        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(menu);
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     cmd.targetFlags = CommandID::Menu::PlayerName;
     cmd.action = [&](cro::Entity e, float)
@@ -2452,7 +2452,7 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
         e.getComponent<cro::Text>().setString(m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].name);
         e.getComponent<cro::Callback>().setUserData<std::uint8_t>(m_playerAvatar.activePlayer);
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     cmd.targetFlags = CommandID::Menu::PlayerAvatar;
     cmd.action = [&](cro::Entity e, float)
@@ -2472,7 +2472,7 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
             e.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
         }
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //apply all the current indices to the player avatar
     if (visible)
@@ -2510,7 +2510,7 @@ void MenuState::quitLobby()
         m_sharedData.hosting = false;
     }
 
-    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
 
@@ -2523,7 +2523,7 @@ void MenuState::quitLobby()
     {
         m_uiScene.destroyEntity(b);
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void MenuState::addCourseSelectButtons()

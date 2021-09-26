@@ -175,7 +175,7 @@ std::vector<cro::Entity> PlayerState::doBroadPhase(cro::Entity entity, cro::Scen
 
     std::vector<cro::Entity> collisions;
 
-    auto entities = scene.getSystem<cro::DynamicTreeSystem>().query(bb, CollisionID::Crate);
+    auto entities = scene.getSystem<cro::DynamicTreeSystem>()->query(bb, CollisionID::Crate);
     for (auto other : entities)
     {
         //this assumes that we only got crates returned, and that the crate

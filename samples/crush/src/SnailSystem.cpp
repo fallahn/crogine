@@ -551,7 +551,7 @@ std::vector<cro::Entity> SnailSystem::doBroadPhase(cro::Entity entity)
     std::vector<cro::Entity> collisions;
 
     //broadphase
-    auto entities = getScene()->getSystem<cro::DynamicTreeSystem>().query(bb, (entity.getComponent<Snail>().collisionLayer + 1));
+    auto entities = getScene()->getSystem<cro::DynamicTreeSystem>()->query(bb, (entity.getComponent<Snail>().collisionLayer + 1));
     for (auto e : entities)
     {
         //make sure we skip our own ent

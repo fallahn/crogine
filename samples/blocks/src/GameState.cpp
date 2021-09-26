@@ -222,7 +222,7 @@ bool GameState::handleEvent(const cro::Event& evt)
                     chunkComponent.needsUpdate = true;
                 }
             };
-            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             LOG("Switched to naive mesh", cro::Logger::Type::Info);
         }
             break;
@@ -239,7 +239,7 @@ bool GameState::handleEvent(const cro::Event& evt)
                     chunkComponent.needsUpdate = true;
                 }
             };
-            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             LOG("Switched to greedy mesh", cro::Logger::Type::Info);
         }
         break;
@@ -252,7 +252,7 @@ bool GameState::handleEvent(const cro::Event& evt)
             {
                 e.getComponent<cro::Model>().setHidden(!e.getComponent<cro::Model>().isHidden());
             };
-            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
         break;
 
@@ -434,7 +434,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
                 m_gameScene.destroyEntity(e);
             }
         };
-        m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
         break;
     case PacketID::PlayerSpawn:
@@ -445,7 +445,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         break;
     case PacketID::PlayerUpdate:
         //we assume we're only receiving our own
-        m_gameScene.getSystem<PlayerSystem>().reconcile(m_inputParser.getEntity(), packet.as<PlayerUpdate>());
+        m_gameScene.getSystem<PlayerSystem>()->reconcile(m_inputParser.getEntity(), packet.as<PlayerUpdate>());
         break;
     case PacketID::ActorUpdate:
     {
@@ -461,7 +461,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
                 interp.setTarget({ update.position, cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
             }
         };
-        m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
         break;
     case PacketID::ServerCommand:
@@ -489,7 +489,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         m_sharedData.playerData[packet.as<std::uint8_t>()].name.clear();
         break;
     case PacketID::ChunkData:
-        m_gameScene.getSystem<ChunkSystem>().parseChunkData(packet);
+        m_gameScene.getSystem<ChunkSystem>()->parseChunkData(packet);
         break;
     }
 }
@@ -648,7 +648,7 @@ void GameState::spawnPlayer(PlayerInfo info)
                 m_uiScene.destroyEntity(e);
                 //cro::Logger::log("Fix deleting texts!", cro::Logger::Type::Warning);
             };
-            m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
     }
     else
@@ -686,7 +686,7 @@ void GameState::updateCameraPosition()
                     e.getComponent<cro::Model>().setHidden(true);
                 }
             };
-            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
 
         break;
@@ -704,7 +704,7 @@ void GameState::updateCameraPosition()
                     e.getComponent<cro::Model>().setHidden(false);
                 }
             };
-            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
 
         break;

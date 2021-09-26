@@ -383,7 +383,7 @@ void GameState::loadAssets()
     m_gameScene.setCubemap(m_skyMap);
     //m_gameScene.setCubemap("assets/images/cubemap/sky.ccm");
 
-    m_materialIDs[MaterialID::Sea] = m_gameScene.getSystem<SeaSystem>().loadResources(m_resources);
+    m_materialIDs[MaterialID::Sea] = m_gameScene.getSystem<SeaSystem>()->loadResources(m_resources);
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_depthMap", m_islandTexture);
     m_resources.materials.get(m_materialIDs[MaterialID::Sea]).setProperty("u_foamMap", m_foamEffect.getTexture());
 
@@ -476,7 +476,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
                 m_gameScene.destroyEntity(e);
             }
         };
-        m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
         break;
     case PacketID::PlayerSpawn:
@@ -491,7 +491,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         auto update = packet.as<PlayerUpdate>();
         if (m_inputParsers.count(update.playerID))
         {
-            m_gameScene.getSystem<PlayerSystem>().reconcile(m_inputParsers.at(update.playerID).getEntity(), update);
+            m_gameScene.getSystem<PlayerSystem>()->reconcile(m_inputParsers.at(update.playerID).getEntity(), update);
         }
     }
         break;
@@ -509,7 +509,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
                 interp.setTarget({ update.position, cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
             }
         };
-        m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
         break;
     case PacketID::ServerCommand:
@@ -727,7 +727,7 @@ void GameState::updateHeightmap(const cro::NetEvent::Packet& packet)
     {
         std::memcpy(m_heightmap.data(), packet.getData(), size);
 
-        m_gameScene.getSystem<PlayerSystem>().setHeightmap(m_heightmap);
+        m_gameScene.getSystem<PlayerSystem>()->setHeightmap(m_heightmap);
 
         //preview texture / height map
         cro::Image img;

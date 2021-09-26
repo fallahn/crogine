@@ -226,7 +226,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             e.getComponent<cro::Callback>().getUserData<std::int32_t>() = step;
             e.getComponent<cro::Callback>().active = true;
         };
-        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
     if (evt.type == SDL_KEYUP)
@@ -474,7 +474,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 float scale = Clubs[getClub()].power / Clubs[ClubID::Driver].power;
                 e.getComponent<cro::Transform>().setScale({ scale, 1.f });
             };
-            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             //update the sprite with correct club
             cmd.targetFlags = CommandID::UI::PlayerSprite;
@@ -491,7 +491,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
                 e.getComponent<cro::Sprite>().setColour(colour);
             };
-            m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             //update club text colour based on distance
             cmd.targetFlags = CommandID::UI::ClubName;
@@ -508,7 +508,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::Text>().setFillColour(TextNormalColour);
                 }
             };
-            m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
         else if (data.type == GolfEvent::BallLanded)
         {
@@ -1337,7 +1337,7 @@ void GolfState::buildScene()
             auto pos = camera.coordsToPixel(m_currentPlayer.position, m_gameSceneTexture.getSize());
             e.getComponent<cro::Transform>().setPosition(pos);
         };
-        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
@@ -1639,7 +1639,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             {
                 e.getComponent<cro::SpriteAnimation>().play(animID);
             };
-            m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
             break;
         case PacketID::WindDirection:
@@ -1682,7 +1682,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                     m_gameScene.destroyEntity(e);
                 }
             };
-            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
             break;
         }
@@ -1741,7 +1741,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     }
 
     m_terrainBuilder.update(hole);
-    m_gameScene.getSystem<ClientCollisionSystem>().setMap(hole);
+    m_gameScene.getSystem<ClientCollisionSystem>()->setMap(hole);
 
     //create hole model transition
     auto* propModels = &m_holeData[m_currentHole].propEntities;
@@ -1847,7 +1847,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             {
                 e.getComponent<cro::Transform>().setPosition(pinPos);
             };
-            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
             auto teeMove = m_holeData[m_currentHole].tee - m_holeData[m_currentHole - 1].tee;
@@ -1862,7 +1862,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                 auto rotation = std::atan2(-pinDir.z, pinDir.x);
                 e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
             };
-            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             auto targetDir = m_holeData[m_currentHole].target - currPos;
             m_camRotation = std::atan2(-targetDir.z, targetDir.x);
@@ -1873,7 +1873,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             {
                 e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.5f);
             };
-            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
         else
         {
@@ -1898,14 +1898,14 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             {
                 en.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
             };
-            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             cmd.targetFlags = CommandID::Tee;
             cmd.action = [&](cro::Entity en, float)
             {
                 en.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].tee);
             };
-            m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             //remove the transition ent
             e.getComponent<cro::Callback>().active = false;
@@ -1944,7 +1944,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
         e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
         e.getComponent<cro::Callback>().active = true;
     };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //update the UI
     cmd.targetFlags = CommandID::UI::HoleNumber;
@@ -1955,7 +1955,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
         data.string = "Hole: " + std::to_string(m_currentHole + 1);
         e.getComponent<cro::Callback>().active = true;
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     m_terrainBuilder.setSlopePosition(m_holeData[m_currentHole].pin);
 
@@ -2048,7 +2048,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         data.string = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name;
         e.getComponent<cro::Callback>().active = true;
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);    
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);    
 
 
     cmd.targetFlags = CommandID::UI::PinDistance;
@@ -2074,7 +2074,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         bounds.width = std::floor(bounds.width / 2.f);
         e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     cmd.targetFlags = CommandID::UI::MiniBall;
     cmd.action =
@@ -2086,7 +2086,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         //play the callback animation
         e.getComponent<cro::Callback>().active = true;
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
     //show ui if this is our client    
@@ -2099,7 +2099,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         auto uiPos = localPlayer ? glm::vec2(sizeX / 2.f, UIBarHeight / 2.f) : UIHiddenPosition;
         e.getComponent<cro::Transform>().setPosition(uiPos);
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
     //stroke indicator is in model scene...
@@ -2111,7 +2111,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         e.getComponent<cro::Transform>().setPosition(position);
         e.getComponent<cro::Model>().setHidden(!localPlayer);
     };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //if client is ours activate input/set initial stroke direction
     auto target = m_cameras[CameraID::Player].getComponent<TargetInfo>().targetLookAt;
@@ -2168,7 +2168,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             setActiveCamera(CameraID::Player);
         }
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //show or hide the slope indicator depending if we're on the green
     cmd.targetFlags = CommandID::SlopeIndicator;
@@ -2188,7 +2188,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             e.getComponent<cro::Callback>().active = true;
         }
     };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //update player shadow position
     cmd.targetFlags = CommandID::PlayerShadow;
@@ -2206,7 +2206,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         e.getComponent<cro::Model>().setHidden(player.terrain == TerrainID::Green);
         e.getComponent<cro::Callback>().active = true;
     };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //also check if we need to display mini map for green
     cmd.targetFlags = CommandID::UI::MiniGreen;
@@ -2225,7 +2225,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             e.getComponent<cro::Callback>().active = true;
         }
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     m_currentPlayer = player;
 
@@ -2277,7 +2277,7 @@ void GolfState::hitBall()
     {
         e.getComponent<cro::Model>().setHidden(true);
     };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void GolfState::updateActor(const ActorInfo& update)
@@ -2295,7 +2295,7 @@ void GolfState::updateActor(const ActorInfo& update)
             }
         }
     };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     if (update == m_currentPlayer)
     {
@@ -2322,7 +2322,7 @@ void GolfState::updateActor(const ActorInfo& update)
             bounds.width = std::floor(bounds.width / 2.f);
             e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
         };
-        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
         cmd.targetFlags = CommandID::UI::MiniBall;
         cmd.action =
@@ -2336,7 +2336,7 @@ void GolfState::updateActor(const ActorInfo& update)
             float scale = 1.f + ((update.position.y / MaxHeight) * 2.f);
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
-        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
         //update spectator camera
@@ -2347,7 +2347,7 @@ void GolfState::updateActor(const ActorInfo& update)
             e.getComponent<CameraFollower>().playerPosition = m_currentPlayer.position;
             e.getComponent<CameraFollower>().holePosition = m_holeData[m_currentHole].pin;
         };
-        m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
 }
 
@@ -2360,7 +2360,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     {
         e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, 0.f));
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //hide hud
     cmd.targetFlags = CommandID::UI::Root;
@@ -2368,7 +2368,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     {
         e.getComponent<cro::Transform>().setPosition(UIHiddenPosition);
     };
-    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
     if (playerData.terrain == TerrainID::Green)
@@ -2528,6 +2528,6 @@ void GolfState::setActiveCamera(std::int32_t camID)
                 }
             }
         };
-        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
 }

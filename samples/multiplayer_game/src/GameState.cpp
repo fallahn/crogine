@@ -332,7 +332,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
                 m_gameScene.destroyEntity(e);
             }
         };
-        m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
         break;
     case PacketID::PlayerSpawn:
@@ -343,7 +343,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         break;
     case PacketID::PlayerUpdate:
         //we assume we're only receiving our own
-        m_gameScene.getSystem<PlayerSystem>().reconcile(m_inputParser.getEntity(), packet.as<PlayerUpdate>());
+        m_gameScene.getSystem<PlayerSystem>()->reconcile(m_inputParser.getEntity(), packet.as<PlayerUpdate>());
         break;
     case PacketID::ActorUpdate:
     {
@@ -359,7 +359,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
                 interp.setTarget({ update.position, cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
             }
         };
-        m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
         break;
     case PacketID::ServerCommand:

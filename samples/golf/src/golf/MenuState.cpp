@@ -143,11 +143,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cmd.targetFlags = CommandID::Menu::RootNode;
         cmd.action = [&](cro::Entity e, float)
         {
-            m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
         };
-        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
         std::int32_t spriteID = 0;
         cro::String connectionString;
@@ -181,7 +181,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
                 e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
             };
-            m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
             //send the initially selected map/course
@@ -201,14 +201,14 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             e.getComponent<cro::Sprite>() = m_sprites[spriteID];
         };
-        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
         cmd.targetFlags = CommandID::Menu::ServerInfo;
         cmd.action = [connectionString](cro::Entity e, float)
         {
             e.getComponent<cro::Text>().setString(connectionString);
         };
-        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
     else
     {
@@ -346,13 +346,13 @@ bool MenuState::handleEvent(const cro::Event& evt)
             {
             default: break;
             case MenuID::Avatar:
-                m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                 m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
                 m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
                 break;
             case MenuID::Join:
                 applyTextEdit();
-                m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                 m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
                 m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
                 break;
@@ -369,7 +369,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         }
     }
 
-    m_uiScene.getSystem<cro::UISystem>().handleEvent(evt);
+    m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
 
     m_uiScene.forwardEvent(evt);
     return true;
@@ -694,11 +694,11 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 cmd.targetFlags = CommandID::Menu::RootNode;
                 cmd.action = [&](cro::Entity e, float)
                 {
-                    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Dummy);
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
                     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
                 };
-                m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                 if (m_sharedData.serverInstance.running())
                 {
@@ -783,7 +783,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                         e.getComponent<cro::Text>().setString(data->title);
                         centreText(e);
                     };
-                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                     cmd.targetFlags = CommandID::Menu::CourseDesc;
                     cmd.action = [data](cro::Entity e, float)
@@ -792,7 +792,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                         e.getComponent<cro::Text>().setString(data->description);
                         centreText(e);
                     };
-                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                     cmd.targetFlags = CommandID::Menu::CourseHoles;
                     cmd.action = [data](cro::Entity e, float)
@@ -800,7 +800,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                         e.getComponent<cro::Text>().setString(data->holeCount);
                         centreText(e);
                     };
-                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                 }
                 else
                 {
@@ -812,7 +812,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                         e.getComponent<cro::Text>().setString(course);
                         centreText(e);
                     };
-                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                     cmd.targetFlags = CommandID::Menu::CourseDesc;
                     cmd.action = [course](cro::Entity e, float)
@@ -821,14 +821,14 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                         e.getComponent<cro::Text>().setString("Course Data Not Found");
                         centreText(e);
                     };
-                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                     cmd.targetFlags = CommandID::Menu::CourseHoles;
                     cmd.action = [data](cro::Entity e, float)
                     {
                         e.getComponent<cro::Text>().setString(" ");
                     };
-                    m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                 }
             }
         }
@@ -853,7 +853,7 @@ void MenuState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size
     //block input to menu
     m_prevMenu = m_currentMenu;
     m_currentMenu = MenuID::Dummy;
-    m_uiScene.getSystem<cro::UISystem>().setActiveGroup(m_currentMenu);
+    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(m_currentMenu);
 
     SDL_StartTextInput();
 }
@@ -927,11 +927,11 @@ void MenuState::applyTextEdit()
             cmd2.action = [&](cro::Entity, float)
             {
                 m_currentMenu = m_prevMenu;
-                m_uiScene.getSystem<cro::UISystem>().setActiveGroup(m_currentMenu);
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(m_currentMenu);
             };
-            m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd2);
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd2);
         };
-        m_uiScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         SDL_StopTextInput();
     }
     m_textEdit = {};

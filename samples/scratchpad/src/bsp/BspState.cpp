@@ -160,7 +160,7 @@ void BspState::addSystems()
 
     m_scene.addSystem<FpsCameraSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
-    m_scene.addSystem<Q3BspSystem>(mb).loadMap("assets/maps/overkill.bsp");
+    m_scene.addSystem<Q3BspSystem>(mb)->loadMap("assets/maps/overkill.bsp");
 }
 
 void BspState::loadAssets()
@@ -185,7 +185,7 @@ void BspState::createScene()
     camEnt.addComponent<FpsCamera>();
     m_inputParser.setEntity(camEnt);
 
-    const auto& spawnPoints = m_scene.getSystem<Q3BspSystem>().getSpawnPoints();
+    const auto& spawnPoints = m_scene.getSystem<Q3BspSystem>()->getSpawnPoints();
 
     if (spawnPoints.size() > 1)
     {

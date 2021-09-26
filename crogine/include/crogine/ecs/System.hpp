@@ -206,10 +206,11 @@ namespace cro
         void setSystemActive(bool active);
 
         /*!
-        \brief Returns a reference to this system type, if it exists
+        \brief Returns a pointer to this system type, if it exists
+        else returns nullptr
         */
         template <typename T>
-        T& getSystem();
+        T* getSystem();
 
         /*!
         \brief Returns true if a system of this type exists within the manager

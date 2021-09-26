@@ -166,7 +166,7 @@ void GameState::netBroadcast()
     //TODO don't send these until clients are all ready, a slow loading client
     //will get backed up messages from this which pops the message buffer :(
     auto timestamp = m_serverTime.elapsed().asMilliseconds();
-    const auto& actors = m_scene.getSystem<ActorSystem>().getEntities();
+    const auto& actors = m_scene.getSystem<ActorSystem>()->getEntities();
     for (auto e : actors)
     {
         const auto& actor = e.getComponent<Actor>();
@@ -314,5 +314,5 @@ void GameState::buildWorld()
     //create the world data
     m_islandGenerator.generate();
 
-    m_scene.getSystem<PlayerSystem>().setHeightmap(m_islandGenerator.getHeightmap());
+    m_scene.getSystem<PlayerSystem>()->setHeightmap(m_islandGenerator.getHeightmap());
 }

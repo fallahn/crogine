@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -52,7 +52,7 @@ T& SystemManager::addSystem(Args&&... args)
     m_activeSystems.push_back(system.get());
     system->m_active = true;
 
-    return *(dynamic_cast<T*>(m_systems.back().get()));
+    return *(static_cast<T*>(system.get()));
 }
 
 template <typename T>
@@ -106,9 +106,9 @@ void SystemManager::setSystemActive(bool active)
 }
 
 template <typename T>
-T& SystemManager::getSystem()
+T* SystemManager::getSystem()
 {
-    CRO_ASSERT(hasSystem<T>(), "System index out of range");
+    //CRO_ASSERT(hasSystem<T>(), "System index out of range");
 
     UniqueType type(typeid(T));
     auto result = std::find_if(std::begin(m_systems), std::end(m_systems),
@@ -117,7 +117,7 @@ T& SystemManager::getSystem()
         return sys->getType() == type;
     });
 
-    return *(dynamic_cast<T*>(result->get()));
+    return result == m_systems.end() ? nullptr : static_cast<T*>(result->get());
 }
 
 template <typename T>

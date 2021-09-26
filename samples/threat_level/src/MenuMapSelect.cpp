@@ -302,7 +302,7 @@ void MainState::createMapSelect(cro::Entity parentEnt,
             };
             m_commandSystem->sendCommand(cmd);
 
-            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
+            m_menuScene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Main);
         }
     });
 

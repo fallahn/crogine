@@ -126,7 +126,7 @@ void GameState::netBroadcast()
 
     //broadcast other actor transforms
     auto timestamp = m_serverTime.elapsed().asMilliseconds();
-    const auto& actors = m_scene.getSystem<ActorSystem>().getEntities();
+    const auto& actors = m_scene.getSystem<ActorSystem>()->getEntities();
     for (auto e : actors)
     {
         const auto& actor = e.getComponent<Actor>();

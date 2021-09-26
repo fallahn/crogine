@@ -561,7 +561,7 @@ std::vector<cro::Entity> CrateSystem::doBroadPhase(cro::Entity entity)
     std::vector<cro::Entity> collisions;
 
     //broadphase
-    auto entities = getScene()->getSystem<cro::DynamicTreeSystem>().query(bb, (entity.getComponent<Crate>().collisionLayer + 1)/* | CollisionID::Crate*/);
+    auto entities = getScene()->getSystem<cro::DynamicTreeSystem>()->query(bb, (entity.getComponent<Crate>().collisionLayer + 1)/* | CollisionID::Crate*/);
     for (auto e : entities)
     {
         //make sure we skip our own ent

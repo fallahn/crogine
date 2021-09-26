@@ -133,8 +133,8 @@ void RoundEndState::load()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
-    m_uiSystem = &m_uiScene.addSystem<cro::UISystem>(mb);
-    commandSystem = &m_uiScene.addSystem<cro::CommandSystem>(mb);
+    m_uiSystem = m_uiScene.addSystem<cro::UISystem>(mb);
+    commandSystem = m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);

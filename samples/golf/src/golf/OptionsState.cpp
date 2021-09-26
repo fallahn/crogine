@@ -169,7 +169,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     if (!m_updatingKeybind
         && !m_activeSlider.isValid())
     {
-        m_scene.getSystem<cro::UISystem>().handleEvent(evt);
+        m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
     }
 
 
@@ -340,7 +340,7 @@ void OptionsState::updateKeybind(SDL_Keycode key)
             e.getComponent<cro::Text>().setString(msg);
             centreText(e);
         };
-        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
         return;
     }
@@ -388,7 +388,7 @@ void OptionsState::updateKeybind(SDL_Keycode key)
         //and set the wrong string
         e.getComponent<cro::Callback>().active = false;
     };
-    m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void OptionsState::buildScene()
@@ -397,7 +397,7 @@ void OptionsState::buildScene()
     //only problem here is if player changes between opening
     //pause menu and opening options menu changes the active controller
     //as the game isn't actually paused. Not much we can do about this though?
-    m_scene.addSystem<cro::UISystem>(mb).setActiveControllerID(m_sharedData.inputBinding.controllerID);
+    m_scene.addSystem<cro::UISystem>(mb)->setActiveControllerID(m_sharedData.inputBinding.controllerID);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
@@ -494,7 +494,7 @@ void OptionsState::buildScene()
     auto bgEnt = entity;
     auto bgSize = glm::vec2(bounds.width, bounds.height);
 
-    auto& uiSystem = m_scene.getSystem<cro::UISystem>();
+    auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
     auto selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Text>().setFillColour(TextGoldColour); });
     auto unselectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Text>().setFillColour(TextNormalColour); });
 
@@ -676,7 +676,7 @@ void OptionsState::buildScene()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        m_scene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Controls);
+        m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Controls);
         e.getComponent<cro::Callback>().active = false;
         m_scene.destroyEntity(e);
     };
@@ -742,7 +742,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     createSlider(MixerChannel::Effects, glm::vec2(24.f, 64.f));
     createSlider(MixerChannel::Menu, glm::vec2(24.f, 39.f));
 
-    auto& uiSystem = m_scene.getSystem<cro::UISystem>();
+    auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
     auto selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); });
     auto unselectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
 
@@ -876,7 +876,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     parent.getComponent<cro::Transform>().addChild(infoEnt.getComponent<cro::Transform>());
 
-    auto& uiSystem = m_scene.getSystem<cro::UISystem>();
+    auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
     auto unselectID = uiSystem.addCallback(
         [infoEnt](cro::Entity e) mutable
         {
@@ -1018,7 +1018,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::uint32_t selectedID, std::uint32_t unselectedID)
 {
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
-    auto& uiSystem = m_scene.getSystem<cro::UISystem>();
+    auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
 
     //advanced
     auto entity = m_scene.createEntity();

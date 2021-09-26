@@ -113,7 +113,7 @@ bool PauseState::handleEvent(const cro::Event& evt)
         }
     }
 
-    m_scene.getSystem<cro::UISystem>().handleEvent(evt);
+    m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
     m_scene.forwardEvent(evt);
     return false;
 }
@@ -138,7 +138,7 @@ void PauseState::render()
 void PauseState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb).setActiveControllerID(m_sharedData.inputBinding.controllerID);
+    m_scene.addSystem<cro::UISystem>(mb)->setActiveControllerID(m_sharedData.inputBinding.controllerID);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
@@ -242,7 +242,7 @@ void PauseState::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(confirmEntity.getComponent<cro::Transform>());
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
-    auto& uiSystem = m_scene.getSystem<cro::UISystem>();
+    auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
 
     auto selectedID = uiSystem.addCallback([](cro::Entity e) { e.getComponent<cro::Text>().setFillColour(TextHighlightColour); });
     auto unselectedID = uiSystem.addCallback([](cro::Entity e) { e.getComponent<cro::Text>().setFillColour(TextNormalColour); });
@@ -300,7 +300,7 @@ void PauseState::buildScene()
                     confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
                     menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
 
-                    m_scene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Confirm);
+                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Confirm);
                 }
             });
 
@@ -316,7 +316,7 @@ void PauseState::buildScene()
                     menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
                     confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
 
-                    m_scene.getSystem<cro::UISystem>().setActiveGroup(MenuID::Main);
+                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
                 }
             });
 
@@ -376,7 +376,7 @@ void PauseState::buildScene()
 
             e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
         };
-        m_scene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+        m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
     entity = m_scene.createEntity();

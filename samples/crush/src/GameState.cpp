@@ -279,7 +279,7 @@ bool GameState::handleEvent(const cro::Event& evt)
 #ifdef CRO_DEBUG_
         case SDLK_F4:
         {
-            auto flags = m_gameScene.getSystem<cro::RenderSystem2D>().getFilterFlags();
+            auto flags = m_gameScene.getSystem<cro::RenderSystem2D>()->getFilterFlags();
             if (flags & TwoDeeFlags::Debug)
             {
                 flags &= ~TwoDeeFlags::Debug;
@@ -288,7 +288,7 @@ bool GameState::handleEvent(const cro::Event& evt)
             {
                 flags |= TwoDeeFlags::Debug;
             }
-            m_gameScene.getSystem<cro::RenderSystem2D>().setFilterFlags(flags);
+            m_gameScene.getSystem<cro::RenderSystem2D>()->setFilterFlags(flags);
         }
             break;
         /*case SDLK_1:
@@ -354,11 +354,11 @@ void GameState::handleMessage(const cro::Message& msg)
         {
         default: break;
         case AvatarEvent::Died:
-            cro::GameController::rumbleStart(m_sharedData.inputBindings[data.playerID].controllerID, 0.95f, 200);
+            cro::GameController::rumbleStart(m_sharedData.inputBindings[data.playerID].controllerID, 60000, 50000, 200);
             break;
         case AvatarEvent::Teleported:
         case AvatarEvent::Spawned:
-            cro::GameController::rumbleStart(m_sharedData.inputBindings[data.playerID].controllerID, 0.8f, 100);
+            cro::GameController::rumbleStart(m_sharedData.inputBindings[data.playerID].controllerID, 55000, 48000, 100);
             break;
         }
     }
@@ -533,7 +533,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     //m_gameScene.addSystem<cro::DeferredRenderSystem>(mb).setEnvironmentMap(m_environmentMap);
 #ifdef CRO_DEBUG_
-    m_gameScene.addSystem<cro::RenderSystem2D>(mb).setFilterFlags(~TwoDeeFlags::Debug);
+    m_gameScene.addSystem<cro::RenderSystem2D>(mb)->setFilterFlags(~TwoDeeFlags::Debug);
 #endif
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
 
@@ -1231,7 +1231,7 @@ void GameState::handlePacket(const cro::NetEvent::Packet& packet)
         auto update = packet.as<PlayerUpdate>();
         if (m_inputParsers.count(update.getPlayerID()))
         {
-            m_gameScene.getSystem<PlayerSystem>().reconcile(m_inputParsers.at(update.getPlayerID()).getEntity(), update);
+            m_gameScene.getSystem<PlayerSystem>()->reconcile(m_inputParsers.at(update.getPlayerID()).getEntity(), update);
         }
     }
         break;
@@ -1685,7 +1685,7 @@ void GameState::updateActor(ActorUpdate update)
                 update.timestamp });
         }
     };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void GameState::updateIdleActor(ActorIdleUpdate update)
@@ -1703,7 +1703,7 @@ void GameState::updateIdleActor(ActorIdleUpdate update)
             interp.setTarget({ tx.getPosition(), tx.getRotation(), update.timestamp });
         }
     };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void GameState::updateView(cro::Camera&)
@@ -1917,7 +1917,7 @@ void GameState::crateUpdate(const CrateState& data)
 #endif //DEBUG
         }
     };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void GameState::snailUpdate(const SnailState& data)
@@ -1943,7 +1943,7 @@ void GameState::snailUpdate(const SnailState& data)
             }
         }
     };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void GameState::avatarUpdate(const PlayerStateChange& data)
@@ -2033,5 +2033,5 @@ void GameState::removeEntity(ActorRemoved actor)
             }
         }
     };
-    m_gameScene.getSystem<cro::CommandSystem>().sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

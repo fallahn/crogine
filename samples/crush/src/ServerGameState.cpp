@@ -269,7 +269,7 @@ void GameState::netBroadcast()
     //don't send these until clients are all ready, a slow loading client
     //will get backed up messages from this which pops the message buffer :(
     auto timestamp = m_serverTime.elapsed().asMilliseconds();
-    const auto& actors = m_scene.getSystem<ActorSystem>().getEntities();
+    const auto& actors = m_scene.getSystem<ActorSystem>()->getEntities();
     for (auto e : actors)
     {
         const auto& actor = e.getComponent<Actor>();
@@ -313,7 +313,7 @@ void GameState::netBroadcast()
 std::int32_t GameState::process(float dt)
 {
     //flush dead crates
-    const auto& crates = m_scene.getSystem<CrateSystem>().getDeadCrates();
+    const auto& crates = m_scene.getSystem<CrateSystem>()->getDeadCrates();
     for (auto crateEnt : crates)
     {
         if (cro::Util::Random::value(0, 10) == 0)
@@ -331,7 +331,7 @@ std::int32_t GameState::process(float dt)
     }
 
     //and dead snails
-    const auto& snails = m_scene.getSystem<SnailSystem>().getDeadSnails();
+    const auto& snails = m_scene.getSystem<SnailSystem>()->getDeadSnails();
     for (auto snailEnt : snails)
     {
         auto snailID = snailEnt.getIndex();

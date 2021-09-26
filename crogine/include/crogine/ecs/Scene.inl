@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -28,7 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 template <typename T, typename... Args>
-T& Scene::addSystem(Args&&... args)
+T* Scene::addSystem(Args&&... args)
 {
     static_assert(std::is_base_of<System, T>::value, "Must be a system type");
     auto& system = m_systemManager.addSystem<T>(std::forward<Args>(args)...);
@@ -36,11 +36,11 @@ T& Scene::addSystem(Args&&... args)
     {
         m_renderables.push_back(static_cast<Renderable*>(&system));
     }
-    return system;
+    return &system;
 }
 
 template <typename T>
-T& Scene::getSystem()
+T* Scene::getSystem()
 {
     return m_systemManager.getSystem<T>();
 }
@@ -63,7 +63,7 @@ T& Scene::addDirector(Args&&... args)
         addSystem<CommandSystem>(m_messageBus);
     }
 
-    m_directors.back()->m_commandSystem = &m_systemManager.getSystem<CommandSystem>();
+    m_directors.back()->m_commandSystem = m_systemManager.getSystem<CommandSystem>();
     m_directors.back()->m_messageBus = &m_messageBus;
     m_directors.back()->m_scene = this;
 

@@ -216,13 +216,13 @@ void BatcatState::addSystems()
 
     m_scene.addDirector<PlayerDirector>();
 
-    uiSystem = &m_overlayScene.addSystem<cro::UISystem>(mb);
+    uiSystem = m_overlayScene.addSystem<cro::UISystem>(mb);
     m_overlayScene.addSystem<cro::CameraSystem>(mb);
     m_overlayScene.addSystem<cro::SpriteSystem2D>(mb);
     m_overlayScene.addSystem<cro::TextSystem>(mb);
     m_overlayScene.addSystem<cro::RenderSystem2D>(mb);
 
-    commandSystem = &m_overlayScene.addSystem<cro::CommandSystem>(mb);
+    commandSystem = m_overlayScene.addSystem<cro::CommandSystem>(mb);
 }
 
 void BatcatState::loadAssets()

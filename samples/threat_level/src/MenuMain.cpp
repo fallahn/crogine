@@ -109,7 +109,7 @@ void MainState::createMainMenu(std::uint32_t mouseEnterCallback, std::uint32_t m
             };
             m_commandSystem->sendCommand(cmd);
 
-            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::MapSelect);
+            m_menuScene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::MapSelect);
         }
     });
     gameControl.area.width = buttonNormalArea.width;
@@ -166,7 +166,7 @@ void MainState::createMainMenu(std::uint32_t mouseEnterCallback, std::uint32_t m
             };
             m_commandSystem->sendCommand(cmd);
 
-            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Options);
+            m_menuScene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Options);
         }
     });
 
@@ -216,7 +216,7 @@ void MainState::createMainMenu(std::uint32_t mouseEnterCallback, std::uint32_t m
             };
             m_commandSystem->sendCommand(cmd);
 
-            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Scores);
+            m_menuScene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Scores);
         }
     });
     scoreControl.callbacks[cro::UIInput::ButtonUp] = scoreCallback;
@@ -276,7 +276,7 @@ void MainState::createMainMenu(std::uint32_t mouseEnterCallback, std::uint32_t m
             };
             m_commandSystem->sendCommand(cmd);
 
-            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::QuitConfirm);
+            m_menuScene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::QuitConfirm);
         }
     });
     auto& quitControl = entity.addComponent<cro::UIInput>();
@@ -390,7 +390,7 @@ void MainState::createMainMenu(std::uint32_t mouseEnterCallback, std::uint32_t m
             };
             m_commandSystem->sendCommand(cmd);
 
-            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
+            m_menuScene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Main);
         }
     });
     auto& cancelControl = buttonEnt.addComponent<cro::UIInput>();

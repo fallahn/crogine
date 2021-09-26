@@ -125,7 +125,7 @@ void MainState::createOptionsMenu(std::uint32_t mouseEnterCallback, std::uint32_
             };
             m_commandSystem->sendCommand(cmd);
 
-            m_menuScene.getSystem<cro::UISystem>().setActiveGroup(GroupID::Main);
+            m_menuScene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Main);
         }
     });
     auto& backControl = entity.addComponent<cro::UIInput>();
