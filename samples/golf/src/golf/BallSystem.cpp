@@ -355,11 +355,16 @@ void BallSystem::doCollision(cro::Entity entity)
             ball.velocity *= 0.28f;
 
             //if low bounce start rolling
-            if (ball.velocity.y > -0.1f)
+            if (ball.velocity.y > -0.05f)
             {
+                float momentum = 1.f - glm::dot(-cro::Transform::Y_AXIS, glm::normalize(ball.velocity));
+                static constexpr float MaxMomentum = 20.f;
+                momentum *= MaxMomentum;
+
+
                 auto len = glm::length(ball.velocity);
                 ball.velocity.y = 0.f;
-                ball.velocity = glm::normalize(ball.velocity) * len * 4.f; //fake physics to simulate momentum
+                ball.velocity = glm::normalize(ball.velocity) * len * momentum; //fake physics to simulate momentum
                 ball.state = Ball::State::Putt;
                 ball.delay = 0.f;
 
