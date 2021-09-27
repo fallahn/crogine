@@ -49,6 +49,7 @@ source distribution.
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -57,6 +58,7 @@ source distribution.
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Easings.hpp>
 #include <crogine/audio/AudioMixer.hpp>
@@ -95,8 +97,8 @@ namespace
 
     struct SliderDownCallback final
     {
-        explicit SliderDownCallback(std::uint8_t chan)
-            : channel(chan) { }
+        SliderDownCallback(std::uint8_t chan, cro::Entity audio)
+            : channel(chan), audioEnt(audio) { }
 
         void operator() (cro::Entity e, cro::ButtonEvent evt)
         {
@@ -105,16 +107,19 @@ namespace
                 float vol = cro::AudioMixer::getVolume(channel);
                 vol = std::max(0.f, vol - 0.1f);
                 cro::AudioMixer::setVolume(vol, channel);
+
+                audioEnt.getComponent<cro::AudioEmitter>().play();
             }
         }
 
         std::uint8_t channel = 0;
+        cro::Entity audioEnt;
     };
 
     struct SliderUpCallback final
     {
-        explicit SliderUpCallback(std::uint8_t chan)
-            : channel(chan) { }
+        SliderUpCallback(std::uint8_t chan, cro::Entity audio)
+            : channel(chan), audioEnt(audio) { }
 
         void operator() (cro::Entity e, cro::ButtonEvent evt)
         {
@@ -123,10 +128,12 @@ namespace
                 float vol = cro::AudioMixer::getVolume(channel);
                 vol = std::min(1.f, vol + 0.1f);
                 cro::AudioMixer::setVolume(vol, channel);
+                audioEnt.getComponent<cro::AudioEmitter>().play();
             }
         }
 
         std::uint8_t channel = 0;
+        cro::Entity audioEnt;
     };
 }
 
@@ -404,6 +411,7 @@ void OptionsState::buildScene()
     m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
+    m_scene.addSystem<cro::AudioPlayerSystem>(mb);
 
     struct RootCallbackData final
     {
@@ -495,8 +503,14 @@ void OptionsState::buildScene()
     auto bgSize = glm::vec2(bounds.width, bounds.height);
 
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
-    auto selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Text>().setFillColour(TextGoldColour); });
+    auto selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Text>().setFillColour(TextGoldColour); e.getComponent<cro::AudioEmitter>().play(); });
     auto unselectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Text>().setFillColour(TextNormalColour); });
+
+    m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
+    m_audioEnts[AudioID::Accept] = m_scene.createEntity();
+    m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
+    m_audioEnts[AudioID::Back] = m_scene.createEntity();
+    m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
     //video options
     entity = m_scene.createEntity();
@@ -586,12 +600,13 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Dummy);
 
-    selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); });
+    selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); e.getComponent<cro::AudioEmitter>().play(); });
     unselectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
 
     //tab button to switch to video
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 130.f, 0.2f));
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -600,7 +615,7 @@ void OptionsState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&uiSystem, tabEnt, videoButtonEnt, controlButtonEnt](cro::Entity e, cro::ButtonEvent evt)  mutable
+        [&, tabEnt, videoButtonEnt, controlButtonEnt](cro::Entity e, cro::ButtonEvent evt)  mutable
     {
             if (activated(evt))
             {
@@ -612,6 +627,8 @@ void OptionsState::buildScene()
 
                 //set the active group to a dummy until animation is complete
                 uiSystem.setActiveGroup(MenuID::Dummy);
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
     });
     controlButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -619,6 +636,7 @@ void OptionsState::buildScene()
     //tab button to switch to controls
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(100.f, 130.f, 0.2f));
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -627,7 +645,7 @@ void OptionsState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&uiSystem, tabEnt, videoButtonEnt, controlButtonEnt](cro::Entity e, cro::ButtonEvent evt)  mutable
+        [&, tabEnt, videoButtonEnt, controlButtonEnt](cro::Entity e, cro::ButtonEvent evt)  mutable
         {
             if (activated(evt))
             {
@@ -639,6 +657,8 @@ void OptionsState::buildScene()
 
                 //set the active group to a dummy until animation is complete
                 uiSystem.setActiveGroup(MenuID::Dummy);
+
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         });
     videoButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -743,13 +763,14 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     createSlider(MixerChannel::Menu, glm::vec2(24.f, 39.f));
 
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
-    auto selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); });
+    auto selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); e.getComponent<cro::AudioEmitter>().play(); });
     auto unselectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
 
     auto createHighlight = [&](glm::vec2 pos)
     {
         auto ent = m_scene.createEntity();
         ent.addComponent<cro::Transform>().setPosition(pos);
+        ent.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         ent.addComponent<cro::Drawable2D>();
         ent.addComponent<cro::Sprite>() = spriteSheet.getSprite("square_highlight");
         ent.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -765,29 +786,29 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //music down
     auto entity = createHighlight(glm::vec2(7.f, 83.f));
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(MixerChannel::Music));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(MixerChannel::Music, m_audioEnts[AudioID::Back]));
 
     //music up
     entity = createHighlight(glm::vec2(174.f, 83.f));
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(MixerChannel::Music));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(MixerChannel::Music, m_audioEnts[AudioID::Accept]));
 
 
     //effects down
     entity = createHighlight(glm::vec2(7.f, 58.f));
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(MixerChannel::Effects));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(MixerChannel::Effects, m_audioEnts[AudioID::Accept]));
 
     //effect up
     entity = createHighlight(glm::vec2(174.f, 58.f));
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(MixerChannel::Effects));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(MixerChannel::Effects, m_audioEnts[AudioID::Accept]));
 
 
     //menu down
     entity = createHighlight(glm::vec2(7.f, 33.f));
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(MixerChannel::Menu));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(MixerChannel::Menu, m_audioEnts[AudioID::Accept]));
 
     //menu up
     entity = createHighlight(glm::vec2(174.f, 33.f));
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(MixerChannel::Menu));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(MixerChannel::Menu, m_audioEnts[AudioID::Accept]));
 
 
     //res down
@@ -800,6 +821,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             {
                 m_videoSettings.resolutionIndex = (m_videoSettings.resolutionIndex + (m_sharedData.resolutions.size() - 1)) % m_sharedData.resolutions.size();
                 resLabel.getComponent<cro::Text>().setString(m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
 
@@ -813,6 +836,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 {
                     m_videoSettings.resolutionIndex = (m_videoSettings.resolutionIndex + 1) % m_sharedData.resolutions.size();
                     resLabel.getComponent<cro::Text>().setString(m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -824,6 +849,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 if (activated(evt))
                 {
                     m_videoSettings.fullScreen = !m_videoSettings.fullScreen;
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -890,6 +916,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     {
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight");
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -913,6 +940,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                     centreText(infoEnt);
 
                     m_bindingIndex = keyIndex;
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -927,6 +956,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         [infoEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
             infoEnt.getComponent<cro::Text>().setString("Previous Club");
             centreText(infoEnt);
         });
@@ -938,6 +968,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         [infoEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
             infoEnt.getComponent<cro::Text>().setString("Next Club");
             centreText(infoEnt);
         });
@@ -948,6 +979,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         [infoEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
             infoEnt.getComponent<cro::Text>().setString("Aim Left");
             centreText(infoEnt);
         });
@@ -958,6 +990,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         [infoEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
             infoEnt.getComponent<cro::Text>().setString("Aim Right");
             centreText(infoEnt);
         });
@@ -968,6 +1001,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         [infoEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
             infoEnt.getComponent<cro::Text>().setString("Take Shot");
             centreText(infoEnt);
         });
@@ -1023,6 +1057,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     //advanced
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(8.f, 14.f));
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Advanced");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1033,11 +1068,12 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [](cro::Entity e, cro::ButtonEvent evt)
+        [&](cro::Entity e, cro::ButtonEvent evt)
         {
             if (activated(evt))
             {
                 cro::Console::show();
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
 
@@ -1046,6 +1082,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     //apply
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(103.f, 14.f));
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Apply");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1062,6 +1099,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
             {
                 cro::App::getWindow().setSize(m_sharedData.resolutions[m_videoSettings.resolutionIndex]);
                 cro::App::getWindow().setFullScreen(m_videoSettings.fullScreen);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
 
@@ -1070,6 +1108,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     //close
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(154.f, 14.f));
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Close");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1085,6 +1124,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
             if (activated(evt))
             {
                 quitState();
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
 

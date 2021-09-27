@@ -1191,6 +1191,14 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                     }
                 });
 
+        m_avatarEditCallbacks[i] =
+            uiSystem.addCallback([&, i](cro::Entity e, const cro::ButtonEvent& evt)
+                {
+                    if (activated(evt))
+                    {
+                        showPlayerConfig(true, i);
+                    }
+                });
     }
 
 
@@ -2265,15 +2273,9 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-            m_uiScene.getSystem<cro::UISystem>()->addCallback(
-                [&, i](cro::Entity, const cro::ButtonEvent& evt) mutable
-                {
-                    if (activated(evt))
-                    {
-                        showPlayerConfig(true, i);
-                    }
-                });
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_avatarEditCallbacks[i];
+
+        auto& cb = entity.getComponent<cro::UIInput>().callbacks;
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
 

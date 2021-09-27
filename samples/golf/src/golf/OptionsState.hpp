@@ -32,7 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 
 #include <crogine/core/State.hpp>
-
+#include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 
 struct SharedStateData;
@@ -61,6 +61,17 @@ private:
 
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
+    cro::AudioScape m_menuSounds;
+    struct AudioID final
+    {
+        enum
+        {
+            Accept, Back,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
     struct VideoSettings final
     {

@@ -125,6 +125,7 @@ private:
     PlayerAvatar m_playerAvatar;
     std::pair<std::uint32_t, std::uint32_t> m_avatarCallbacks;
     std::tuple<std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t> m_courseSelectCallbacks;
+    std::array<std::uint32_t, 4u> m_avatarEditCallbacks = {};
 
     struct SpriteID final
     {
