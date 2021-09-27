@@ -44,7 +44,8 @@ namespace
 ClientCollisionSystem::ClientCollisionSystem(cro::MessageBus& mb, const std::vector<HoleData>& hd)
     : cro::System   (mb, typeid(ClientCollisionSystem)),
     m_holeData      (hd),
-    m_holeIndex     (0)
+    m_holeIndex     (0),
+    m_club          (-1)
 {
     requireComponent<cro::Transform>();
     requireComponent<ClientCollider>();
@@ -65,6 +66,7 @@ void ClientCollisionSystem::process(float)
             msg->type = type;
             msg->position = position;
             msg->terrain = readMap(m_currentMap, position.x, -position.z).first;
+            msg->clubID = m_club;
 
             if (msg->terrain == TerrainID::Green)
             {

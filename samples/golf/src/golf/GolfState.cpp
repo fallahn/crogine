@@ -402,6 +402,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             msg2->terrain = m_currentPlayer.terrain;
             msg2->club = static_cast<std::uint8_t>(getClub());
 
+            m_gameScene.getSystem<ClientCollisionSystem>()->setActiveClub(getClub());
 
             cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 50000, 35000, 200);
 
