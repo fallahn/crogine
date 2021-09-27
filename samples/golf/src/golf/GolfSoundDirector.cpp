@@ -133,7 +133,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         {
         default: break;
         case GolfEvent::ClubChanged:
-            //playSound(cro::Util::Random::value(AudioID::Putt01, AudioID::Putt03), data.position);
+            if (data.score != 0)
+            {
+                playSound(AudioID::Putt01, data.position);
+            }
             break;
         case GolfEvent::HookedBall:
             //if (glm::length(data.position) > MinBallDistance)

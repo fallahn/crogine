@@ -70,6 +70,7 @@ namespace
     }
 
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
+    static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
 }
 
 BallSystem::BallSystem(cro::MessageBus& mb, const cro::Image& mapData)
@@ -227,7 +228,7 @@ void BallSystem::process(float dt)
                         ball.state = Ball::State::Paused;
                     }
 
-                    ball.delay = 2.f;
+                    ball.delay = BallTurnDelay;
 
                     auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
                     msg->type = BallEvent::Landed;
@@ -393,7 +394,7 @@ void BallSystem::doCollision(cro::Entity entity)
             {
                 ball.state = Ball::State::Paused;
             }
-            ball.delay = 2.f;
+            ball.delay = BallTurnDelay;
             ball.terrain = terrain;
             ball.velocity = glm::vec3(0.f);
 

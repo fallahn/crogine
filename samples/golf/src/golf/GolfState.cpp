@@ -514,7 +514,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         {
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+            entity.getComponent<cro::Callback>().setUserData<float>(1.5f);
             entity.getComponent<cro::Callback>().function =
                 [&](cro::Entity e, float dt)
             {

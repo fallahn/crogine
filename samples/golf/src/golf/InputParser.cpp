@@ -363,6 +363,7 @@ void InputParser::update(float dt)
 
                 auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
+                msg->score = 1; //tag this with a value so we know the input triggered this and should play a sound.
             }
 
             if ((m_prevFlags & InputFlag::NextClub) == 0
@@ -372,6 +373,7 @@ void InputParser::update(float dt)
 
                 auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
+                msg->score = 1;
             }
         }
         break;
