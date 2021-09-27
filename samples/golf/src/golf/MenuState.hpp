@@ -34,6 +34,7 @@ source distribution.
 #include "PlayerAvatar.hpp"
 #include "Billboard.hpp"
 
+#include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/core/String.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -88,6 +89,18 @@ private:
     cro::RenderTexture m_postBuffer;
     cro::SimpleQuad m_postQuad;
     cro::Shader m_postShader;
+
+    cro::AudioScape m_menuSounds;
+    struct AudioID final
+    {
+        enum
+        {
+            Accept, Back,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
     cro::RenderTexture m_backgroundTexture;
     struct MaterialID final
@@ -196,7 +209,7 @@ private:
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
-    void createPlayerConfigMenu(std::uint32_t, std::uint32_t);
+    void createPlayerConfigMenu();
 
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);
