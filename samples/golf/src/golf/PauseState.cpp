@@ -47,6 +47,7 @@ source distribution.
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -55,6 +56,7 @@ source distribution.
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Easings.hpp>
 
@@ -145,6 +147,15 @@ void PauseState::buildScene()
     m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
+    m_scene.addSystem<cro::AudioPlayerSystem>(mb);
+
+    m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
+    m_audioEnts[AudioID::Accept] = m_scene.createEntity();
+    m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
+    m_audioEnts[AudioID::Back] = m_scene.createEntity();
+    m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+
+    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
     struct RootCallbackData final
     {
@@ -244,14 +255,14 @@ void PauseState::buildScene()
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
 
-    auto selectedID = uiSystem.addCallback([](cro::Entity e) { e.getComponent<cro::Text>().setFillColour(TextHighlightColour); });
+    auto selectedID = uiSystem.addCallback([](cro::Entity e) { e.getComponent<cro::Text>().setFillColour(TextHighlightColour); e.getComponent<cro::AudioEmitter>().play(); });
     auto unselectedID = uiSystem.addCallback([](cro::Entity e) { e.getComponent<cro::Text>().setFillColour(TextNormalColour); });
     
-    //options button
     auto createItem = [&](glm::vec2 position, const std::string label, cro::Entity parent) 
     {
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(position);
+        e.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         e.addComponent<cro::Drawable2D>();
         e.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
         e.getComponent<cro::Text>().setString(label);
@@ -265,6 +276,7 @@ void PauseState::buildScene()
         return e;
     };
 
+    //options button
     entity = createItem(glm::vec2(0.f, 10.f), "Options", menuEntity);
     entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
@@ -293,7 +305,7 @@ void PauseState::buildScene()
     entity = createItem(glm::vec2(0.f, -10.f), "Quit", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&,menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
+        uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {
@@ -389,4 +401,5 @@ void PauseState::buildScene()
 void PauseState::quitState()
 {
     m_rootNode.getComponent<cro::Callback>().active = true;
+    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }
