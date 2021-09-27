@@ -117,8 +117,12 @@ void BallSystem::process(float dt)
         switch (ball.state)
         {
         default: break;
+        case Ball::State::Idle:
+            ball.hadAir = false;
+            break;
         case Ball::State::Flight:
         {
+            ball.hadAir = false;
             ball.delay -= dt;
             if (ball.delay < 0)
             {
@@ -150,23 +154,30 @@ void BallSystem::process(float dt)
                 auto [terrain, normal] = getTerrain(tx.getPosition());
 
                 //test distance to pin
-                auto len2 = glm::length2(position - m_holeData->pin);
-                if (len2 < MinBallDistance
-                    || position.y > 0)
+                auto len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
+                if (len2 < MinBallDistance)
                 {
                     //over hole or in the air
+                    static constexpr float MinFallVelocity = 2.1f;
+                    float gravityAmount = 1.f - std::min(1.f, glm::length2(ball.velocity) / MinFallVelocity);
 
                     //this is some fudgy non-physics.
                     //if the ball falls low enough when
                     //over the hole we'll put it in.
-                    ball.velocity += Gravity * dt;
+                    ball.velocity += (gravityAmount * Gravity) * dt;
+
+                    //TODO we could also test to see which side of the hole the ball
+                    //currently is and add some 'side spin' to the velocity.
+
+                    ball.hadAir = true;
                 }
                 else //we're on the green so roll
                 {
-                    //if the ball has registered some depth but is not over
+
+                    //if the ball has registered some air but is not over
                     //the hole reset the depth and slow it down as if it
                     //bumped the far edge
-                    if (position.y < 0)
+                    if (ball.hadAir)
                     {
                         //these are all just a wild stab
                         //destined for some tweaking - basically puts the ball back along its vector
@@ -180,17 +191,26 @@ void BallSystem::process(float dt)
                         {
                             //lets the ball continue travelling, ie overshoot
                             ball.velocity *= 0.7f;
-                            ball.velocity.y = 0.f;
-                            //ball.velocity.y *= -1.f;
-
+                            ball.velocity.y = glm::length2(ball.velocity) * 0.4f;
                             position.y = 0.f;
                             tx.setPosition(position);
                         }
                     }
-
-                    //TODO we could also test to see which side of the hole the ball
-                    //currently is and add some 'side spin' to the velocity.
-
+                    else
+                    {
+                        if (position.y > 0)
+                        {
+                            //we had a bump so add gravity
+                            ball.velocity += Gravity * dt;
+                        }
+                        else if (position.y < 0)
+                        {
+                            ball.velocity.y = 0.f;
+                            position.y = 0.f;
+                            tx.setPosition(position);
+                        }
+                    }
+                    ball.hadAir = false;
 
                     //move by slope from normal map
                     auto velLength = glm::length(ball.velocity);
@@ -214,7 +234,7 @@ void BallSystem::process(float dt)
                 //if we've slowed down or fallen more than the
                 //ball's diameter (radius??) stop the ball
                 if (glm::length2(ball.velocity) < 0.01f
-                    || (position.y < -(Ball::Radius * 1.5f)))
+                    || (position.y < -(Ball::Radius * 2.5f)))
                 {
                     ball.velocity = glm::vec3(0.f);
                     

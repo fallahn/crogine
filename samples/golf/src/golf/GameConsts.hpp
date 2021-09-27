@@ -48,7 +48,7 @@ static constexpr float BallPointSize = 1.4f;
 
 static constexpr float MaxHook = -0.25f;
 static constexpr float KnotsPerMetre = 1.94384f;
-static constexpr float HoleRadius = 0.053f;
+static constexpr float HoleRadius = 0.058f;
 
 static constexpr float WaterLevel = -0.02f;
 static constexpr float TerrainLevel = WaterLevel - 0.03f;
