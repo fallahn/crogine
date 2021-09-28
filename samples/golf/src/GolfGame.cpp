@@ -39,6 +39,7 @@ source distribution.
 #include "golf/MessageIDs.hpp"
 #include "LoadingScreen.hpp"
 #include "SplashScreenState.hpp"
+#include "ErrorCheck.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/Clock.hpp>
@@ -52,6 +53,7 @@ namespace
 {
 #include "golf/TutorialShaders.inl"
 #include "golf/TerrainShader.inl"
+#include "golf/PostProcess.inl"
 }
 
 GolfGame::GolfGame()
@@ -106,6 +108,29 @@ void GolfGame::handleMessage(const cro::Message& msg)
             }
         }
     }
+    else if (msg.id == MessageID::SystemMessage)
+    {
+        const auto& data = msg.getData<SystemEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case SystemEvent::PostProcessToggled:
+            m_sharedData.usePostProcess = !m_sharedData.usePostProcess;
+
+            if (m_sharedData.usePostProcess)
+            {
+                auto windowSize = cro::App::getWindow().getSize();
+
+                m_postBuffer->create(windowSize.x, windowSize.y, false);
+                m_postQuad->setTexture(m_postBuffer->getTexture());
+                auto shaderRes = glm::vec2(windowSize);
+                glCheck(glUseProgram(m_postShader->getGLHandle()));
+                glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
+            }
+
+            break;
+        }
+    }
 
     m_stateStack.handleMessage(msg);
 }
@@ -117,7 +142,18 @@ void GolfGame::simulate(float dt)
 
 void GolfGame::render()
 {
-    m_stateStack.render();
+    /*if (m_sharedData.usePostProcess)
+    {
+        m_postBuffer->clear();
+        m_stateStack.render();
+        m_postBuffer->display();
+
+        m_postQuad->draw();
+    }
+    else*/
+    {
+        m_stateStack.render();
+    }
 }
 
 bool GolfGame::initialise()
@@ -138,7 +174,7 @@ bool GolfGame::initialise()
             if (ImGui::IsItemHovered())
             {
                 ImGui::BeginTooltip();
-                ImGui::Text("Not fully implemented, cos it's a bit crap.");
+                ImGui::Text("Not fully implemented, cos I haven't decided how to capture the entire state stack to the buffer.");
                 ImGui::EndTooltip();
             }
 
@@ -185,6 +221,22 @@ bool GolfGame::initialise()
     s.loadFromFile("assets/golf/sprites/tutorial.spt", m_sharedData.sharedResources->textures);
 
 
+    //set up the post process
+    auto windowSize = cro::App::getWindow().getSize();
+    m_postBuffer = std::make_unique<cro::RenderTexture>();
+    m_postBuffer->create(windowSize.x, windowSize.y, false);
+    m_postShader = std::make_unique<cro::Shader>();
+    m_postShader->loadFromString(PostVertex, PostFragment);
+    auto shaderRes = glm::vec2(windowSize);
+    glCheck(glUseProgram(m_postShader->getGLHandle()));
+    glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
+    
+    m_postQuad = std::make_unique<cro::SimpleQuad>();
+    m_postQuad->setTexture(m_postBuffer->getTexture());
+    m_postQuad->setShader(*m_postShader);
+
+
+
 #ifdef CRO_DEBUG_
     m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::SplashScreen);
@@ -210,6 +262,9 @@ void GolfGame::finalise()
         }
     }
     m_sharedData.sharedResources.reset();
+    m_postQuad.reset();
+    m_postShader.reset();
+    m_postBuffer.reset();
 }
 
 void GolfGame::loadPreferences()

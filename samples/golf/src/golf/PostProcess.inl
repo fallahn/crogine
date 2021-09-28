@@ -230,3 +230,86 @@ void main()
   FRAG_OUT.a = 1.0;  
   FRAG_OUT.rgb = ToSrgb(FRAG_OUT.rgb);
 })";
+
+static const std::string FXAAFrag = R"(
+
+uniform sampler2D u_texture; 
+
+uniform vec2 u_texelStep = vec2(1.0) / vec2(1920.0, 1080.0); //normalised output resolution ie vec2(1.0) / res
+
+uniform float u_lumaThreshold = 0.5; //0.0 - 1.0
+uniform float u_mulReduce = 1.0 / 8.0; //1.0 / 1 - 256
+uniform float u_minReduce = 1.0 / 128.0; //1.0 / 1 - 512
+uniform float u_maxSpan = 8.0; //1.0 - 16.0
+
+VARYING_IN vec2 v_texCoord;
+VARYING_IN vec4 v_colour;
+
+OUTPUT
+
+// see FXAA
+// http://developer.download.nvidia.com/assets/gamedev/files/sdk/11/FXAA_WhitePaper.pdf
+// http://iryoku.com/aacourse/downloads/09-FXAA-3.11-in-15-Slides.pdf
+// http://horde3d.org/wiki/index.php5?title=Shading_Technique_-_FXAA
+// https://github.com/McNopper/OpenGL/blob/master/Example42/shader/fxaa.frag.glsl
+
+void main(void)
+{
+    vec3 rgbM = TEXTURE(u_texture, v_texCoord).rgb;
+
+    vec3 rgbNW = textureOffset(u_texture, v_texCoord, ivec2(-1, 1)).rgb;
+    vec3 rgbNE = textureOffset(u_texture, v_texCoord, ivec2(1, 1)).rgb;
+    vec3 rgbSW = textureOffset(u_texture, v_texCoord, ivec2(-1, -1)).rgb;
+    vec3 rgbSE = textureOffset(u_texture, v_texCoord, ivec2(1, -1)).rgb;
+
+    // see http://en.wikipedia.org/wiki/Grayscale
+    const vec3 toLuma = vec3(0.299, 0.587, 0.114);
+    
+    float lumaNW = dot(rgbNW, toLuma);
+    float lumaNE = dot(rgbNE, toLuma);
+    float lumaSW = dot(rgbSW, toLuma);
+    float lumaSE = dot(rgbSE, toLuma);
+    float lumaM = dot(rgbM, toLuma);
+
+    float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
+    float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
+    
+    if (lumaMax - lumaMin <= lumaMax * u_lumaThreshold)
+    {
+        FRAG_OUT = vec4(rgbM, 1.0);
+        return;
+    }  
+    
+    vec2 samplingDirection = vec2(0.0); 
+    samplingDirection.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
+    samplingDirection.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));
+    
+    float samplingDirectionReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * 0.25 * u_mulReduce, u_minReduce);
+
+    float minSamplingDirectionFactor = 1.0 / (min(abs(samplingDirection.x), abs(samplingDirection.y)) + samplingDirectionReduce);
+    
+    samplingDirection = clamp(samplingDirection * minSamplingDirectionFactor, vec2(-u_maxSpan), vec2(u_maxSpan)) * u_texelStep;
+    
+    vec3 rgbSampleNeg = TEXTURE(u_texture, v_texCoord + samplingDirection * (1.0/3.0 - 0.5)).rgb;
+    vec3 rgbSamplePos = TEXTURE(u_texture, v_texCoord + samplingDirection * (2.0/3.0 - 0.5)).rgb;
+
+    vec3 rgbTwoTab = (rgbSamplePos + rgbSampleNeg) * 0.5;  
+
+    vec3 rgbSampleNegOuter = TEXTURE(u_texture, v_texCoord + samplingDirection * (0.0/3.0 - 0.5)).rgb;
+    vec3 rgbSamplePosOuter = TEXTURE(u_texture, v_texCoord + samplingDirection * (3.0/3.0 - 0.5)).rgb;
+    
+    vec3 rgbFourTab = (rgbSamplePosOuter + rgbSampleNegOuter) * 0.25 + rgbTwoTab * 0.5;   
+    
+    float lumaFourTab = dot(rgbFourTab, toLuma);
+    
+    if (lumaFourTab < lumaMin || lumaFourTab > lumaMax)
+    {
+        FRAG_OUT = vec4(rgbTwoTab, 1.0); 
+    }
+    else
+    {
+        FRAG_OUT = vec4(rgbFourTab, 1.0);
+    }
+
+    FRAG_OUT *= v_colour;
+})";

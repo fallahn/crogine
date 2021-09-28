@@ -1410,7 +1410,6 @@ void GolfState::buildScene()
 
         m_gameSceneTexture.create(static_cast<std::uint32_t>(vpSize.x), static_cast<std::uint32_t>(vpSize.y));
 
-
         //the resize actually extends the target vertically so we need to maintain a
         //horizontal FOV, not the vertical one expected by default.
         cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);

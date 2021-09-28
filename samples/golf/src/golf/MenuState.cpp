@@ -80,7 +80,6 @@ source distribution.
 namespace
 {
 #include "TerrainShader.inl"
-#include "PostProcess.inl"
 
     constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 }
@@ -377,30 +376,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
 
 void MenuState::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == MessageID::SystemMessage)
-    {
-        const auto& data = msg.getData<SystemEvent>();
-        switch (data.type)
-        {
-        default: break;
-        case SystemEvent::PostProcessToggled:
-            m_sharedData.usePostProcess = !m_sharedData.usePostProcess;
-
-            if (m_sharedData.usePostProcess)
-            {
-                auto windowSize = cro::App::getWindow().getSize();
-
-                m_postBuffer.create(windowSize.x, windowSize.y, false);
-                m_postQuad.setTexture(m_postBuffer.getTexture());
-                auto shaderRes = glm::vec2(windowSize/* / 2u*/);
-                glCheck(glUseProgram(m_postShader.getGLHandle()));
-                glCheck(glUniform2f(m_postShader.getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
-            }
-
-            break;
-        }
-    }
-
     m_backgroundScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
@@ -429,18 +404,7 @@ void MenuState::render()
     m_backgroundScene.render(m_backgroundTexture);
     m_backgroundTexture.display();
 
-    if (m_sharedData.usePostProcess)
-    {
-        m_postBuffer.clear();
-        m_uiScene.render(m_postBuffer);
-        m_postBuffer.display();
-
-        m_postQuad.draw();
-    }
-    else
-    {
-        m_uiScene.render(cro::App::getWindow());
-    }
+    m_uiScene.render(cro::App::getWindow());
 }
 
 //private
@@ -470,9 +434,6 @@ void MenuState::addSystems()
 
 void MenuState::loadAssets()
 {
-    m_postShader.loadFromString(PostVertex, PostFragment);
-    m_postQuad.setShader(m_postShader);
-
     m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
 
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");

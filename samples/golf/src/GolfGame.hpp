@@ -34,7 +34,11 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/StateStack.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/gui/GuiClient.hpp>
+
+#include <memory>
 
 class GolfGame final : public cro::App, public cro::GuiClient
 {
@@ -45,6 +49,10 @@ private:
     
     SharedStateData m_sharedData;
     cro::StateStack m_stateStack;
+
+    std::unique_ptr<cro::RenderTexture> m_postBuffer;
+    std::unique_ptr<cro::SimpleQuad> m_postQuad;
+    std::unique_ptr<cro::Shader> m_postShader;
 
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
