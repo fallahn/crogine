@@ -2396,15 +2396,20 @@ void GolfState::updateActor(const ActorInfo& update)
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+
     if (update == m_currentPlayer)
     {
+        //set the green cam zoom as appropriate
+        float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
+        m_greenCam.getComponent<cro::Callback>().getUserData<MiniCamData>().targetSize = ballDist < MiniCamData::MinSize ? MiniCamData::MinSize : MiniCamData::MaxSize;
+
+
         //this is the active ball so update the UI
         cmd.targetFlags = CommandID::UI::PinDistance;
-        cmd.action = [&, update](cro::Entity e, float)
+        cmd.action = [&, update, ballDist](cro::Entity e, float)
         {
             //if we're on the green convert to cm
             std::int32_t distance = 0;
-            float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
 
             if (ballDist > 5)
             {

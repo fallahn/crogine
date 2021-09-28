@@ -467,7 +467,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Sprite>(); //updated by the camera callback with correct texture
     entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
     entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [&](cro::Entity e, float dt) mutable
     {
         static constexpr float Speed = 2.f;
         auto& [currTime, state] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
@@ -482,6 +482,9 @@ void GolfState::buildUI()
             {
                 state = 1;
                 e.getComponent<cro::Callback>().active = false;
+
+                //start the cam view updater
+                m_greenCam.getComponent<cro::Callback>().active = true;
             }
         }
         else
@@ -495,6 +498,8 @@ void GolfState::buildUI()
             {
                 state = 0;
                 e.getComponent<cro::Callback>().active = false;
+
+                m_greenCam.getComponent<cro::Callback>().active = false;
             }
         }
     };
@@ -569,9 +574,6 @@ void GolfState::buildUI()
         greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
 
         greenEnt.getComponent<cro::Transform>().setOrigin({ texSize / 2, texSize / 2 }); //must divide to a whole pixel!
-
-        greenCam.setOrthographic(-0.5f, 0.5f, -0.5f, 0.5f, -0.15f, 1.f);
-        greenCam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
     m_greenCam = m_gameScene.createEntity();
@@ -581,7 +583,19 @@ void GolfState::buildUI()
     greenCam.resizeCallback = updateGreenView;
     updateGreenView(greenCam);
 
+    m_greenCam.addComponent<cro::Callback>().active = true;
+    m_greenCam.getComponent<cro::Callback>().setUserData<MiniCamData>();
+    m_greenCam.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<MiniCamData>();
+        auto diff = data.targetSize - data.currentSize;
+        data.currentSize += diff * (dt * 3.f);
 
+        auto& cam = e.getComponent<cro::Camera>();
+        cam.setOrthographic(-data.currentSize, data.currentSize, -data.currentSize, data.currentSize, -0.15f, 1.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
 
 
     //callback for the UI camera when window is resized

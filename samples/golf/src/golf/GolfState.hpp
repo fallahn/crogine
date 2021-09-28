@@ -53,6 +53,15 @@ namespace cro
     struct NetEvent;
 }
 
+//callback data for green overhead view
+struct MiniCamData final
+{
+    static constexpr float MaxSize = 1.5f;
+    static constexpr float MinSize = 0.5f;
+    float targetSize = MinSize;
+    float currentSize = MinSize;
+};
+
 class GolfState final : public cro::State, public cro::GuiClient
 {
 public:
