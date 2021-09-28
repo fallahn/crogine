@@ -1480,11 +1480,13 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Transform>();
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.9f };
     entity.getComponent<UIElement>().depth = 0.2f;
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function = TitleTextCallback();
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
     //background
@@ -2086,15 +2088,16 @@ void MenuState::createPlayerConfigMenu()
     entity = createButton({ 42.f, 15.f }, "button_highlight");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, textEnt](cro::Entity, const cro::ButtonEvent& evt)
+            [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
                     //randomise name
                     const auto& callback = textEnt.getComponent<cro::Callback>();
-                    m_sharedData.localConnectionData.playerData[callback.getUserData<std::uint8_t>()].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
-                    beginTextEdit(textEnt, &m_sharedData.localConnectionData.playerData[callback.getUserData<std::uint8_t>()].name, ConstVal::MaxNameChars);
-                    applyTextEdit();
+                    auto idx = cro::Util::Random::value(0u, RandomNames.size() - 1);
+                    m_sharedData.localConnectionData.playerData[callback.getUserData<std::uint8_t>()].name = RandomNames[idx];
+                    textEnt.getComponent<cro::Text>().setString(RandomNames[idx]);
+
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                     //random colours
