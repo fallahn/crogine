@@ -92,6 +92,7 @@ private:
         enum
         {
             WireFrame,
+            WireFrameCulled,
             Water,
             Cel,
             CelTextured,

@@ -389,6 +389,7 @@
     <None Include="src\golf\TerrainShader.inl" />
     <None Include="src\golf\TutorialShaders.inl" />
     <None Include="src\golf\WaterShader.inl" />
+    <None Include="src\golf\WireframeShader.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

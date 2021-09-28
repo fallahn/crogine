@@ -97,6 +97,7 @@ namespace
 #include "WaterShader.inl"
 #include "TerrainShader.inl"
 #include "MinimapShader.inl"
+#include "WireframeShader.inl"
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
@@ -113,6 +114,14 @@ namespace
         glm::vec3 prevLookAt = glm::vec3(0.f);
 
         cro::Entity waterPlane;
+    };
+
+    //use to move the flag as the player approaches
+    struct FlagCallbackData final
+    {
+        static constexpr float MaxHeight = 1.f;
+        float targetHeight = 0.f;
+        float currentHeight = 0.f;
     };
 }
 
@@ -271,6 +280,30 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_KP_2:
             setActiveCamera(2);
             break;
+        case SDLK_PAGEUP:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Flag;
+            cmd.action = [](cro::Entity e, float)
+            {
+                e.getComponent<cro::Callback>().getUserData<FlagCallbackData>().targetHeight = FlagCallbackData::MaxHeight;
+                e.getComponent<cro::Callback>().active = true;
+            };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+            break;
+        case SDLK_PAGEDOWN:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Flag;
+            cmd.action = [](cro::Entity e, float)
+            {
+                e.getComponent<cro::Callback>().getUserData<FlagCallbackData>().targetHeight = 0.f;
+                e.getComponent<cro::Callback>().active = true;
+            };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+        break;
 #endif
         }
     }
@@ -611,6 +644,32 @@ bool GolfState::simulate(float dt)
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 
+
+    //tell the flag to raise or lower
+    if (m_currentPlayer.terrain == TerrainID::Green)
+    {
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Flag;
+        cmd.action = [&](cro::Entity e, float)
+        {
+            auto camDist = glm::length2(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getPosition() - m_holeData[m_currentHole].pin);
+            auto& data = e.getComponent<cro::Callback>().getUserData<FlagCallbackData>();
+            if (data.targetHeight < FlagCallbackData::MaxHeight
+                && camDist < FlagRaiseDistance)
+            {
+                data.targetHeight = FlagCallbackData::MaxHeight;
+                e.getComponent<cro::Callback>().active = true;
+            }
+            else if (data.targetHeight > 0
+                && camDist > FlagRaiseDistance)
+            {
+                data.targetHeight = 0.f;
+                e.getComponent<cro::Callback>().active = true;
+            }
+        };
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
+
     return true;
 }
 
@@ -668,9 +727,13 @@ void GolfState::loadAssets()
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
 
-    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
-    m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
+    m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]).blendMode = cro::Material::BlendMode::Alpha;
+
+    m_resources.shaders.loadFromString(ShaderID::WireframeCulled, WireframeVertex, WireframeFragment, "#define CULLED\n");
+    m_materialIDs[MaterialID::WireFrameCulled] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulled));
+    m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulled]).blendMode = cro::Material::BlendMode::Alpha;
 
     m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment);
 
@@ -749,7 +812,7 @@ void GolfState::loadAssets()
     //at a distance, and as a model when closer
     glCheck(glPointSize(BallPointSize));
 
-    shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
     m_ballResources.materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
     m_ballResources.ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
     m_ballResources.shadowMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
@@ -1142,6 +1205,31 @@ void GolfState::buildScene()
     {
         entity.getComponent<cro::Skeleton>().play(0);
     }
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<FlagCallbackData>();
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto pos = e.getComponent<cro::Transform>().getPosition();
+        auto& data = e.getComponent<cro::Callback>().getUserData<FlagCallbackData>();
+        if (data.currentHeight < data.targetHeight)
+        {
+            data.currentHeight = std::min(FlagCallbackData::MaxHeight, data.currentHeight + dt);
+            pos.y = cro::Util::Easing::easeOutExpo(data.currentHeight / FlagCallbackData::MaxHeight);
+        }
+        else
+        {
+            data.currentHeight = std::max(0.f, data.currentHeight - dt);
+            pos.y = cro::Util::Easing::easeInExpo(data.currentHeight / FlagCallbackData::MaxHeight);
+        }
+        
+        e.getComponent<cro::Transform>().setPosition(pos);
+
+        if (data.currentHeight == data.targetHeight)
+        {
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
 
     auto flagEntity = entity;
 
@@ -1160,7 +1248,6 @@ void GolfState::buildScene()
 
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
-    material.blendMode = cro::Material::BlendMode::Alpha;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
 
@@ -1192,6 +1279,7 @@ void GolfState::buildScene()
 
     //draw the flag pole as a single line which can be
     //see from a distance - hole and model are also attached to this
+    material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulled]);
     meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Hole;
@@ -1974,6 +2062,16 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     auto direction = holePos - centre;
     direction = glm::normalize(direction) * 15.f;
     m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
+
+
+    //reset the flag
+    cmd.targetFlags = CommandID::Flag;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().getUserData<FlagCallbackData>().targetHeight = 0.f;
+        e.getComponent<cro::Callback>().active = true;
+    };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)
@@ -2305,8 +2403,8 @@ void GolfState::updateActor(const ActorInfo& update)
         cmd.action = [&, update](cro::Entity e, float)
         {
             //if we're on the green convert to cm
-            float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
             std::int32_t distance = 0;
+            float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
 
             if (ballDist > 5)
             {
@@ -2338,7 +2436,6 @@ void GolfState::updateActor(const ActorInfo& update)
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
 
         //update spectator camera
         cmd.targetFlags = CommandID::SpectatorCam;

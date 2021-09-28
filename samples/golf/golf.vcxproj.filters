@@ -328,5 +328,8 @@
     <None Include="src\golf\TutorialShaders.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
+    <None Include="src\golf\WireframeShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
