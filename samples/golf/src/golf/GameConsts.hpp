@@ -56,6 +56,7 @@ static constexpr float TerrainLevel = WaterLevel - 0.03f;
 static constexpr float MaxTerrainHeight = 3.5f;
 
 static constexpr float FlagRaiseDistance = 3.5f * 3.5f;
+static constexpr float PlayerShadowOffset = 0.04f;
 
 static constexpr glm::uvec2 MapSize(320, 200);
 

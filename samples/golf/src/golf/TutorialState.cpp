@@ -679,6 +679,16 @@ void TutorialState::tutorialOne(cro::Entity root)
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag");
     entity.addComponent<cro::SpriteAnimation>().play(0);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, title](cro::Entity e, float)
+    {
+        if (title.destroyed())
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_scene.destroyEntity(e);
+        }
+    };
     title.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 

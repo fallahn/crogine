@@ -257,6 +257,16 @@ void MenuState::createUI()
     entity.addComponent<cro::Sprite>(m_backgroundTexture.getTexture());
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    entity.addComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+    {
+        //this is activated once to make sure the
+        //sprite is up to date with any texture buffer resize
+        glm::vec2 texSize = e.getComponent<cro::Sprite>().getTexture()->getSize();
+        e.getComponent<cro::Sprite>().setTextureRect({ glm::vec2(0.f), texSize });
+        e.getComponent<cro::Transform>().setOrigin(texSize / 2.f);
+        e.getComponent<cro::Callback>().active = false;
+    };
     auto courseEnt = entity;
 
     entity = m_uiScene.createEntity();
@@ -292,14 +302,7 @@ void MenuState::createUI()
         rootNode.getComponent<cro::Transform>().setPosition(m_menuPositions[m_currentMenu] * m_viewScale);
 
         courseEnt.getComponent<cro::Transform>().setScale(m_viewScale);
-        courseEnt.getComponent<cro::Transform>().setOrigin(vpSize / 2.f);
-        courseEnt.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, vpSize.x, vpSize.y });
-
-        /*auto texSize = glm::vec2(m_backgroundTexture.getSize());
-        courseEnt.getComponent<cro::Transform>().setScale(glm::vec2(2.f));
-        courseEnt.getComponent<cro::Transform>().setOrigin(texSize / 2.f);
-        courseEnt.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, texSize.x, texSize.y });*/
-
+        courseEnt.getComponent<cro::Callback>().active = true; //makes sure to delay so updating the texture size is complete first
         courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -1.f));
 
         //updates any text objects / buttons with a relative position
