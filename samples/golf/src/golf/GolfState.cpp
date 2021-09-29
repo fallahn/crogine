@@ -1418,7 +1418,7 @@ void GolfState::buildScene()
 
         //the resize actually extends the target vertically so we need to maintain a
         //horizontal FOV, not the vertical one expected by default.
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(FOV * (texSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         //because we don't know in which order the cam callbacks are raised
