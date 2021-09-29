@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "Terrain.hpp"
+#include "../GolfGame.hpp"
 
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Image.hpp>
@@ -82,6 +83,19 @@ struct ShaderID final
         WireframeCulled
     };
 };
+
+static constexpr float ViewportHeight = 360.f;
+static constexpr float ViewportHeightWide = 300.f;
+
+static inline glm::vec2 calcVPSize()
+{
+    glm::vec2 size(GolfGame::getActiveTarget()->getSize());
+    const float ratio = size.x / size.y;
+    static constexpr float Widescreen = 16.f / 9.f;
+    static constexpr float ViewportWidth = 640.f;
+
+    return glm::vec2(ViewportWidth, ratio < Widescreen ? ViewportHeightWide : ViewportHeight);
+}
 
 static inline void setTexture(const cro::ModelDefinition& modelDef, cro::Material::Data& dest)
 {

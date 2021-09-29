@@ -31,6 +31,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
 #include "MenuConsts.hpp"
+#include "GameConsts.hpp"
 #include "Utility.hpp"
 #include "CommandIDs.hpp"
 #include "../ErrorCheck.hpp"
@@ -278,7 +279,7 @@ void MenuState::createUI()
     //is scaled to best-fit to maintain pixel accuracy of text.
     auto updateView = [&, rootNode, courseEnt](cro::Camera& cam) mutable
     {
-        auto windowSize = cro::App::getWindow().getSize();
+        auto windowSize = GolfGame::getActiveTarget()->getSize();
         glm::vec2 size(windowSize);
 
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
@@ -411,7 +412,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
             e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, scale));
 
             auto rect = textureRect;
-            rect.width = currTime * (static_cast<float>(cro::App::getWindow().getSize().x) / m_viewScale.x);
+            rect.width = currTime * (static_cast<float>(GolfGame::getActiveTarget()->getSize().x) / m_viewScale.x);
             e.getComponent<cro::Sprite>().setTextureRect(rect);
 
             if (currTime == 1)
@@ -431,7 +432,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         {
             //fit to size
             auto rect = textureRect;
-            rect.width = static_cast<float>(cro::App::getWindow().getSize().x) / m_viewScale.x;
+            rect.width = static_cast<float>(GolfGame::getActiveTarget()->getSize().x) / m_viewScale.x;
             e.getComponent<cro::Sprite>().setTextureRect(rect);
             e.getComponent<cro::Callback>().active = false;
         }
@@ -804,7 +805,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
         [&,spriteRect](cro::Entity e, float)
     {
         auto rect = spriteRect;
-        rect.width = static_cast<float>(cro::App::getWindow().getSize().x) * m_viewScale.x;
+        rect.width = static_cast<float>(GolfGame::getActiveTarget()->getSize().x) * m_viewScale.x;
         e.getComponent<cro::Sprite>().setTextureRect(rect);
         e.getComponent<cro::Callback>().active = false;
     };
@@ -1082,7 +1083,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                                 addCourseSelectButtons();
 
                                 //send a UI refresh to correctly place buttons
-                                glm::vec2 size(cro::App::getWindow().getSize());
+                                glm::vec2 size(GolfGame::getActiveTarget()->getSize());
                                 cmd.targetFlags = CommandID::Menu::UIElement;
                                 cmd.action =
                                     [&, size](cro::Entity e, float)
@@ -1324,7 +1325,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         [&, spriteRect](cro::Entity e, float)
     {
         auto rect = spriteRect;
-        rect.width = static_cast<float>(cro::App::getWindow().getSize().x) * m_viewScale.x;
+        rect.width = static_cast<float>(GolfGame::getActiveTarget()->getSize().x) * m_viewScale.x;
         e.getComponent<cro::Sprite>().setTextureRect(rect);
         e.getComponent<cro::Callback>().active = false;
     };
@@ -1591,7 +1592,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         [&, spriteRect](cro::Entity e, float)
     {
         auto rect = spriteRect;
-        rect.width = static_cast<float>(cro::App::getWindow().getSize().x) * m_viewScale.x;
+        rect.width = static_cast<float>(GolfGame::getActiveTarget()->getSize().x) * m_viewScale.x;
         e.getComponent<cro::Sprite>().setTextureRect(rect);
         e.getComponent<cro::Callback>().active = false;
     };
@@ -1760,7 +1761,7 @@ void MenuState::createPlayerConfigMenu()
             scale = cro::Util::Easing::easeOutQuint(current);
         }
 
-        auto size = glm::vec2(cro::App::getWindow().getSize());
+        auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         e.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, 1.f));
         e.getComponent<cro::Transform>().setScale(m_viewScale * scale);
 

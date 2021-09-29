@@ -198,7 +198,7 @@ bool TutorialState::simulate(float dt)
 void TutorialState::render()
 {
     glLineWidth(m_viewScale.y);
-    m_scene.render(cro::App::getWindow());
+    m_scene.render(*GolfGame::getActiveTarget());
     glLineWidth(1.f);
 }
 
@@ -226,7 +226,7 @@ void TutorialState::buildScene()
 
     //load background
     cro::Colour c(0.f, 0.f, 0.f, BackgroundAlpha);
-    glm::vec2 size = cro::App::getWindow().getSize();
+    glm::vec2 size = GolfGame::getActiveTarget()->getSize();
 
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
@@ -359,7 +359,7 @@ void TutorialState::buildScene()
     //set up camera / resize callback
     auto camCallback = [&, rootNode](cro::Camera& cam) mutable
     {
-        glm::vec2 size = cro::App::getWindow().getSize();
+        glm::vec2 size = GolfGame::getActiveTarget()->getSize();
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.5f, 5.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
@@ -628,7 +628,7 @@ void TutorialState::tutorialOne(cro::Entity root)
     {
         if (!m_backgroundEnt.getComponent<cro::Callback>().active)
         {
-            auto size = glm::vec2(cro::App::getWindow().getSize()) / m_viewScale;
+            auto size = glm::vec2(GolfGame::getActiveTarget()->getSize()) / m_viewScale;
             auto& [currTime, state] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
 
             switch (state)
@@ -1450,7 +1450,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         [&, arrow01](cro::Entity e, float dt) mutable
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<PowerbarData>();
-        auto size = glm::vec2(cro::App::getWindow().getSize()) / m_viewScale;
+        auto size = glm::vec2(GolfGame::getActiveTarget()->getSize()) / m_viewScale;
         switch (data.state)
         {
         default: break;
@@ -1675,7 +1675,7 @@ void TutorialState::quitState()
     auto& data = m_backgroundEnt.getComponent<cro::Callback>().getUserData<BackgroundCallbackData>();
     data.progress = 0.f;
     data.state = BackgroundCallbackData::Out;
-    data.targetSize = cro::App::getWindow().getSize();
+    data.targetSize = GolfGame::getActiveTarget()->getSize();
     data.targetSize /= m_viewScale;
     m_backgroundEnt.getComponent<cro::Callback>().active = true;
 }

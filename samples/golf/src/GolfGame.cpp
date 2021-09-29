@@ -56,6 +56,8 @@ namespace
 #include "golf/PostProcess.inl"
 }
 
+cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
+
 GolfGame::GolfGame()
     : m_stateStack({*this, getWindow()})
 {
@@ -74,8 +76,12 @@ GolfGame::GolfGame()
 //public
 void GolfGame::handleEvent(const cro::Event& evt)
 {
+    if (evt.type == SDL_WINDOWEVENT_SIZE_CHANGED)
+    {
+        
+    }
 #ifdef CRO_DEBUG_
-    if (evt.type == SDL_KEYUP)
+    else if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
         {
@@ -108,6 +114,17 @@ void GolfGame::handleMessage(const cro::Message& msg)
             }
         }
     }
+    else if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            if (m_sharedData.usePostProcess)
+            {
+                recreatePostProcess();
+            }
+        }
+    }
     else if (msg.id == MessageID::SystemMessage)
     {
         const auto& data = msg.getData<SystemEvent>();
@@ -117,17 +134,24 @@ void GolfGame::handleMessage(const cro::Message& msg)
         case SystemEvent::PostProcessToggled:
             m_sharedData.usePostProcess = !m_sharedData.usePostProcess;
 
+            auto windowSize = cro::App::getWindow().getSize();
             if (m_sharedData.usePostProcess)
             {
-                auto windowSize = cro::App::getWindow().getSize();
-
-                m_postBuffer->create(windowSize.x, windowSize.y, false);
-                m_postQuad->setTexture(m_postBuffer->getTexture());
-                auto shaderRes = glm::vec2(windowSize);
-                glCheck(glUseProgram(m_postShader->getGLHandle()));
-                glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
+                recreatePostProcess();
+                m_renderTarget = m_postBuffer.get();
+            }
+            else
+            {
+                m_renderTarget = &cro::App::getWindow();
             }
 
+            //create a fake resize event to trigger any camera callbacks.
+            SDL_Event resizeEvent;
+            resizeEvent.type = SDL_WINDOWEVENT_SIZE_CHANGED;
+            resizeEvent.window.windowID = 0;
+            resizeEvent.window.data1 = windowSize.x;
+            resizeEvent.window.data2 = windowSize.y;
+            SDL_PushEvent(&resizeEvent);
             break;
         }
     }
@@ -142,7 +166,7 @@ void GolfGame::simulate(float dt)
 
 void GolfGame::render()
 {
-    /*if (m_sharedData.usePostProcess)
+    if (m_sharedData.usePostProcess)
     {
         m_postBuffer->clear();
         m_stateStack.render();
@@ -150,7 +174,7 @@ void GolfGame::render()
 
         m_postQuad->draw();
     }
-    else*/
+    else
     {
         m_stateStack.render();
     }
@@ -174,7 +198,7 @@ bool GolfGame::initialise()
             if (ImGui::IsItemHovered())
             {
                 ImGui::BeginTooltip();
-                ImGui::Text("Not fully implemented, cos I haven't decided how to capture the entire state stack to the buffer.");
+                ImGui::Text("PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER\nby Timothy Lottes");
                 ImGui::EndTooltip();
             }
 
@@ -188,6 +212,7 @@ bool GolfGame::initialise()
 
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Golf Game");
+    m_renderTarget = &getWindow();
 
     cro::AudioMixer::setLabel("Music", MixerChannel::Music);
     cro::AudioMixer::setLabel("Effects", MixerChannel::Effects);
@@ -235,7 +260,7 @@ bool GolfGame::initialise()
     m_postQuad->setTexture(m_postBuffer->getTexture());
     m_postQuad->setShader(*m_postShader);
 
-
+    setClearColour(cro::Colour::CornflowerBlue);
 
 #ifdef CRO_DEBUG_
     m_stateStack.pushState(StateID::Menu);
@@ -338,4 +363,15 @@ void GolfGame::savePreferences()
     {
         SDL_RWwrite(file.file, &m_sharedData.inputBinding, sizeof(InputBinding), 1);
     }
+}
+
+void GolfGame::recreatePostProcess()
+{
+    auto windowSize = cro::App::getWindow().getSize();
+    m_postBuffer->create(windowSize.x, windowSize.y, false);
+    m_postQuad->setTexture(m_postBuffer->getTexture()); //resizes the quad's view
+
+    auto shaderRes = glm::vec2(windowSize);
+    glCheck(glUseProgram(m_postShader->getGLHandle()));
+    glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
 }

@@ -28,7 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "LoadingScreen.hpp"
-#include "golf/CommonConsts.hpp"
+#include "golf/GameConsts.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/detail/OpenGL.hpp>

@@ -437,7 +437,10 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             m_gameScene.getSystem<ClientCollisionSystem>()->setActiveClub(getClub());
 
-            cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 50000, 35000, 200);
+            if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+            {
+                cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 50000, 35000, 200);
+            }
 
             //check if we hooked/sliced
             if (getClub() != ClubID::Putter)
@@ -704,7 +707,7 @@ void GolfState::render()
         m_gameScene.setActiveCamera(oldCam);
     }
 
-    m_uiScene.render(cro::App::getWindow());
+    m_uiScene.render(*GolfGame::getActiveTarget());
 }
 
 //private
@@ -2191,7 +2194,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.targetFlags = CommandID::UI::Root;
     cmd.action = [&,localPlayer](cro::Entity e, float)
     {
-        float sizeX = static_cast<float>(cro::App::getWindow().getSize().x);
+        float sizeX = static_cast<float>(GolfGame::getActiveTarget()->getSize().x);
         sizeX /= m_viewScale.x;
 
         auto uiPos = localPlayer ? glm::vec2(sizeX / 2.f, UIBarHeight / 2.f) : UIHiddenPosition;

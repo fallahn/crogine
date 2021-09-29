@@ -45,6 +45,8 @@ class GolfGame final : public cro::App, public cro::GuiClient
 public:
     GolfGame();
 
+    static cro::RenderTarget* getActiveTarget() { return m_renderTarget; }
+
 private:
     
     SharedStateData m_sharedData;
@@ -53,6 +55,8 @@ private:
     std::unique_ptr<cro::RenderTexture> m_postBuffer;
     std::unique_ptr<cro::SimpleQuad> m_postQuad;
     std::unique_ptr<cro::Shader> m_postShader;
+
+    static cro::RenderTarget* m_renderTarget;
 
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
@@ -63,4 +67,5 @@ private:
 
     void loadPreferences();
     void savePreferences();
+    void recreatePostProcess();
 };

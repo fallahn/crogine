@@ -30,6 +30,8 @@ source distribution.
 #include "ErrorState.hpp"
 #include "SharedStateData.hpp"
 #include "MenuConsts.hpp"
+#include "GameConsts.hpp"
+#include "../GolfGame.hpp"
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/Window.hpp>
@@ -112,7 +114,7 @@ bool ErrorState::simulate(float dt)
 
 void ErrorState::render()
 {
-    m_scene.render(cro::App::getWindow());
+    m_scene.render(*GolfGame::getActiveTarget());
 }
 
 //private
@@ -192,7 +194,7 @@ void ErrorState::buildScene()
     entity.getComponent<cro::Callback>().function =
         [&, rootNode](cro::Entity e, float)
     {
-        auto size = glm::vec2(cro::App::getWindow().getSize());
+        auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         e.getComponent<cro::Transform>().setScale(size);
         e.getComponent<cro::Transform>().setPosition(size / 2.f);
 
@@ -255,7 +257,7 @@ void ErrorState::buildScene()
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
-        glm::vec2 size(cro::App::getWindow().getSize());
+        glm::vec2 size(GolfGame::getActiveTarget()->getSize());
 
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

@@ -166,7 +166,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             addCourseSelectButtons();
 
             //send a UI refresh to correctly place buttons
-            glm::vec2 size(cro::App::getWindow().getSize());
+            glm::vec2 size(GolfGame::getActiveTarget()->getSize());
             cmd.targetFlags = CommandID::Menu::UIElement;
             cmd.action =
                 [&, size](cro::Entity e, float)
@@ -404,7 +404,7 @@ void MenuState::render()
     m_backgroundScene.render(m_backgroundTexture);
     m_backgroundTexture.display();
 
-    m_uiScene.render(cro::App::getWindow());
+    m_uiScene.render(*GolfGame::getActiveTarget());
 }
 
 //private

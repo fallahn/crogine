@@ -37,19 +37,6 @@ source distribution.
 #include <array>
 #include <string>
 
-static constexpr float ViewportHeight = 360.f;
-static constexpr float ViewportHeightWide = 300.f;
-
-static inline glm::vec2 calcVPSize()
-{
-    glm::vec2 size(cro::App::getWindow().getSize());
-    const float ratio = size.x / size.y;
-    static constexpr float Widescreen = 16.f / 9.f;
-    static constexpr float ViewportWidth = 640.f;
-
-    return glm::vec2(ViewportWidth, ratio < Widescreen ? ViewportHeightWide : ViewportHeight);
-}
-
 namespace ConstVal
 {
     //max string vars for name/limiting packet size

@@ -601,7 +601,7 @@ void GolfState::buildUI()
     //callback for the UI camera when window is resized
     auto updateView = [&, playerEnt, courseEnt, infoEnt, windEnt, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
     {
-        auto size = glm::vec2(cro::App::getWindow().getSize());
+        auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.5f, 1.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
@@ -757,7 +757,7 @@ void GolfState::createScoreboard()
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
 
-    auto size = glm::vec2(cro::App::getWindow().getSize());
+    auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     size.x /= 2.f;
     size.y -= size.y / 2.f;
 
@@ -770,7 +770,7 @@ void GolfState::createScoreboard()
     {
         static constexpr float Speed = 10.f;
 
-        auto size = glm::vec2(cro::App::getWindow().getSize());
+        auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         auto target = glm::vec3(size / 2.f, 0.22f);
         target.y -= e.getComponent<cro::Callback>().getUserData<std::int32_t>() * size.y;
 
@@ -1160,7 +1160,7 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
 void GolfState::showMessageBoard(MessageBoardID messageType)
 {
     auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();
-    auto size = glm::vec2(cro::App::getWindow().getSize());
+    auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     auto position = glm::vec3(size.x / 2.f, size.y / 2.f /*- (((bounds.height / 2.f) + UIBarHeight + 2.f) * m_viewScale.y)*/, 0.05f);
 
     auto entity = m_uiScene.createEntity();
@@ -1335,7 +1335,7 @@ void GolfState::floatingMessage(const std::string& msg)
 {
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
-    glm::vec2 size = glm::vec2(cro::App::getWindow().getSize());
+    glm::vec2 size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     glm::vec3 position((size.x / 2.f), (UIBarHeight + 14.f) * m_viewScale.y, 0.2f);
 
     auto entity = m_uiScene.createEntity();
