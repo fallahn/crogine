@@ -260,8 +260,6 @@ bool GolfGame::initialise()
     m_postQuad->setTexture(m_postBuffer->getTexture());
     m_postQuad->setShader(*m_postShader);
 
-    setClearColour(cro::Colour::CornflowerBlue);
-
 #ifdef CRO_DEBUG_
     m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::SplashScreen);

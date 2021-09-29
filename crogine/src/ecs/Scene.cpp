@@ -253,43 +253,45 @@ void Scene::enableSkybox()
         if (m_skyboxShaders[SkyboxType::Coloured].getGLHandle() ||
             m_skyboxShaders[SkyboxType::Coloured].loadFromString(skyboxVertex, skyboxFrag))
         {
-            //only using positions
+            //only using positions - remember we looking from
+            //the inside so wind the verts accordingly...
             std::array<float, 108> verts = {
+                 //far
                 -0.5f,  0.5f, -0.5f,
                 -0.5f, -0.5f, -0.5f,
                  0.5f, -0.5f, -0.5f,
                  0.5f, -0.5f, -0.5f,
                  0.5f,  0.5f, -0.5f,
                 -0.5f,  0.5f, -0.5f,
-
+                 //left
                 -0.5f, -0.5f,  0.5f,
                 -0.5f, -0.5f, -0.5f,
                 -0.5f,  0.5f, -0.5f,
                 -0.5f,  0.5f, -0.5f,
                 -0.5f,  0.5f,  0.5f,
                 -0.5f, -0.5f,  0.5f,
-
+                 //right
                  0.5f, -0.5f, -0.5f,
                  0.5f, -0.5f,  0.5f,
                  0.5f,  0.5f,  0.5f,
                  0.5f,  0.5f,  0.5f,
                  0.5f,  0.5f, -0.5f,
                  0.5f, -0.5f, -0.5f,
-
+                 //front
                 -0.5f, -0.5f,  0.5f,
                 -0.5f,  0.5f,  0.5f,
                  0.5f,  0.5f,  0.5f,
                  0.5f,  0.5f,  0.5f,
                  0.5f, -0.5f,  0.5f,
                 -0.5f, -0.5f,  0.5f,
-
+                 //top
                 -0.5f,  0.5f, -0.5f,
                  0.5f,  0.5f, -0.5f,
                  0.5f,  0.5f,  0.5f,
                  0.5f,  0.5f,  0.5f,
                 -0.5f,  0.5f,  0.5f,
                 -0.5f,  0.5f, -0.5f,
-
+                 //bottom
                 -0.5f, -0.5f, -0.5f,
                 -0.5f, -0.5f,  0.5f,
                  0.5f, -0.5f, -0.5f,
@@ -622,6 +624,8 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
             //change depth function so depth test passes when values are equal to depth buffer's content
             glCheck(glDepthFunc(GL_LEQUAL));
             glCheck(glEnable(GL_DEPTH_TEST));
+            glCheck(glEnable(GL_CULL_FACE));
+            glCheck(glCullFace(pass.getCullFace()));
 
             //remove translation from the view matrix
             auto view = glm::mat4(glm::mat3(pass.viewMatrix)) * m_skybox.modelMatrix;
@@ -676,7 +680,6 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
         {
             r->render(cameraList[i], rt);
         }
-
     }
 
     //restore old view port
