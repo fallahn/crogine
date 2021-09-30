@@ -30,7 +30,9 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/core/String.hpp>
 #include <crogine/detail/SDLResource.hpp>
+#include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Texture.hpp>
 
 #include <map>
@@ -43,11 +45,24 @@ namespace cro
 {
     class Image;
 
+    //used internally so not exported
     struct Glyph final
     {
         float advance = 0.f;
         FloatRect bounds; //< relative to baseline
         FloatRect textureBounds; //< relative to texture atlas
+    };
+
+    class Font;
+    struct TextContext final
+    {
+        String string;
+        const Font* font = nullptr;
+        std::uint32_t charSize = 30u;
+        float verticalSpacing = 0.f;
+        Colour fillColour = Colour::White;
+        Colour outlineColour = Colour::Black;
+        float outlineThickness = 0.f;
     };
 
     /*!

@@ -53,19 +53,19 @@ void TextSystem::process(float)
         auto& drawable = entity.getComponent<Drawable2D>();
         auto& text = entity.getComponent<Text>();
 
-        CRO_ASSERT(text.m_font, "no font has been assigned");
-        bool isPageUpdate = text.m_font->pageUpdated(text.getCharacterSize());
+        CRO_ASSERT(text.m_context.font, "no font has been assigned");
+        bool isPageUpdate = text.m_context.font->pageUpdated(text.getCharacterSize());
         if (text.m_dirtyFlags || isPageUpdate)
         {
             if (text.m_dirtyFlags == Text::DirtyFlags::Colour)
             {
                 //don't rebuild the entire array
                 auto& verts = drawable.getVertexData();
-                if (text.m_outlineThickness == 0)
+                if (text.m_context.outlineThickness == 0)
                 {
                     for (auto& v : verts)
                     {
-                        v.colour = text.m_fillColour;
+                        v.colour = text.m_context.fillColour;
                     }
                 }
                 else
@@ -74,11 +74,11 @@ void TextSystem::process(float)
                     {
                         if (i < verts.size() / 2)
                         {
-                            verts[i].colour = text.m_outlineColour;
+                            verts[i].colour = text.m_context.outlineColour;
                         }
                         else
                         {
-                            verts[i].colour = text.m_fillColour;
+                            verts[i].colour = text.m_context.fillColour;
                         }
                     }
                 }

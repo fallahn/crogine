@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/core/String.hpp>
+#include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Vertex2D.hpp>
@@ -41,7 +42,6 @@ source distribution.
 namespace cro
 {
     struct Glyph;
-    class Font;
     class Drawable2D;
 
     /*!
@@ -164,14 +164,7 @@ namespace cro
 
     private:
 
-        String m_string;
-        const Font* m_font;
-        std::uint32_t m_charSize;
-        float m_verticalSpacing;
-        Colour m_fillColour;
-
-        Colour m_outlineColour;
-        float m_outlineThickness;
+        TextContext m_context;
 
         struct DirtyFlags final
         {
@@ -189,7 +182,6 @@ namespace cro
         Alignment m_alignment;
 
         void updateVertices(Drawable2D&);
-        void addQuad(std::vector<Vertex2D>&, glm::vec2 position, Colour, const Glyph& glyph, glm::vec2 textureSize, float = 0.f);
 
         friend class TextSystem;
     };
