@@ -70,7 +70,7 @@ class ParticleDirector : public cro::Director
 public:
     ParticleDirector();
 
-    virtual void handleMessage(const cro::Message&) = 0;
+    virtual void handleMessage(const cro::Message&) override = 0;
 
     void process(float) override;
 

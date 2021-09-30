@@ -146,7 +146,7 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
 void Camera::updateMatrices(const Transform& tx, float level)
 {
     auto& finalPass = m_passes[Camera::Pass::Final];
-    auto& reflectionPass =m_passes[Camera::Pass::Reflection];
+    auto& reflectionPass = m_passes[Camera::Pass::Reflection];
 
     finalPass.viewMatrix = glm::inverse(tx.getWorldTransform());
     finalPass.viewProjectionMatrix = m_projectionMatrix * finalPass.viewMatrix;

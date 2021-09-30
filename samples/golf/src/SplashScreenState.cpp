@@ -135,8 +135,6 @@ namespace
     constexpr float ScanlineCount = 6500.f;
     constexpr float FadeTime = 1.f;
     constexpr float HoldTime = 3.5f;
-
-    constexpr float ButtonTimeout = 2.f;
 }
 
 SplashState::SplashState(cro::StateStack& stack, cro::State::Context context)

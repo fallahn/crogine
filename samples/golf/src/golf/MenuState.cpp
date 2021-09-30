@@ -793,7 +793,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                     cmd.targetFlags = CommandID::Menu::CourseHoles;
-                    cmd.action = [data](cro::Entity e, float)
+                    cmd.action = [](cro::Entity e, float)
                     {
                         e.getComponent<cro::Text>().setString(" ");
                     };

@@ -325,7 +325,7 @@ void MenuState::createUI()
         //and resizes banners horizontally
         cmd.targetFlags = CommandID::Menu::UIBanner;
         cmd.action =
-            [size](cro::Entity e, float)
+            [](cro::Entity e, float)
         {
             //e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
             e.getComponent<cro::Callback>().active = true;
@@ -1403,7 +1403,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, parent](cro::Entity, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1662,7 +1662,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, parent](cro::Entity, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -2273,7 +2273,6 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_avatarEditCallbacks[i];
 
-        auto& cb = entity.getComponent<cro::UIInput>().callbacks;
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
 

@@ -165,50 +165,10 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
     //            ImGui::Text("Cam Rotation: %3.3f", m_camRotation);
 
-    //            //static float sunRot = 0.f;
-    //            //auto prevRot = sunRot;
-    //            //if (ImGui::SliderFloat("Sun", &sunRot, -90.f, 90.f))
-    //            //{
-    //            //    m_greenCam.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, (prevRot - sunRot) * cro::Util::Const::degToRad);
-    //            //    //shadowEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, sunRot * cro::Util::Const::degToRad);
-    //            //}
-    //            //ImGui::Text("Shadow Rot: %3.3f", sunRot * cro::Util::Const::degToRad);
+    //            auto pos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition();
+    //            ImGui::Text("Cam Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
 
-    //            /*auto rot = m_inputParser.getYaw();
-    //            ImGui::Text("Rotation %3.2f", rot);
-
-    //            auto power = m_inputParser.getPower();
-    //            ImGui::Text("Power: %3.3f", power);
-
-    //            auto hook = m_inputParser.getHook();
-    //            ImGui::Text("Hook: %3.3f", hook);*/
-
-    //            /*static float scale = 1.f;
-    //            if (ImGui::SliderFloat("Scale", &scale, 0.f, 1.f))
-    //            {
-    //                m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
-    //            }
-
-    //            float height = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getPosition().y;
-    //            ImGui::Text("Cam height: %3.3f", height);
-
-    //            auto club = Clubs[getClub()];
-    //            ImGui::Text("Club: %s", club);
-
-    //            ImGui::Text("Terrain: %s", TerrainStrings[m_currentPlayer.terrain]);
-
-    //            for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
-    //            {
-    //                if (m_sharedData.connectionData[i].playerCount > 0)
-    //                {
-    //                    for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
-    //                    {
-    //                        ImGui::Image(m_sharedData.avatarTextures[i][j], { 338.f, 112.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //                    }
-    //                }
-    //            }*/
-
-    //            ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //            //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
     //            //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
     //        }
     //        ImGui::End();
