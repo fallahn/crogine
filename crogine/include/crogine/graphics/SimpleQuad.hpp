@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/graphics/MaterialData.hpp>
+#include <crogine/graphics/Transformable2D.hpp>
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
@@ -43,7 +44,7 @@ namespace cro
     The Simple Quad draws a textured quad to the active target, in target coordinates.
     Useful for quick previewing of textures. SimpleQuads are non-copyable.
     */
-    class CRO_EXPORT_API SimpleQuad final : public Detail::SDLResource
+    class CRO_EXPORT_API SimpleQuad final : public Transformable2D, public Detail::SDLResource
     {
     public:
         /*!
@@ -92,38 +93,6 @@ namespace cro
         const cro::Colour& getColour() const { return m_colour; }
 
         /*!
-        \brief Sets the position of the quad, in screen coordinates.
-        */
-        void setPosition(glm::vec2 position);
-
-        /*!
-        \brief Returns the current position of the quad
-        */
-        glm::vec2 getPosition() const { return m_position; }
-
-        /*!
-        \brief Set the rotation in degrees of the quad
-        This rotates about the origin point at the bottom left
-        */
-        void setRotation(float rotation);
-
-        /*!
-        \brief Returns the current rotation in degrees
-        */
-        float getRotation() const;
-
-        /*!
-        \brief Set the scale of the quad
-        \param scale A vec2 comtinaing the scale in the x and y axis
-        */
-        void setScale(glm::vec2 scale);
-
-        /*!
-        \brief Returns the current scale
-        */
-        glm::vec2 getScale() const { return m_scale; }
-
-        /*!
         \brief Return the current size of the quad.
         This will be the size of the assigned texture in pixels
         or zero if no texture is assigned.
@@ -159,11 +128,6 @@ namespace cro
         void draw() const;
 
     private:
-
-        glm::vec2 m_position;
-        float m_rotation;
-        glm::vec2 m_scale;
-        glm::mat4 m_modelMatrix;
         cro::Colour m_colour;
         glm::vec2 m_size;
         cro::FloatRect m_uvRect;
@@ -186,6 +150,5 @@ namespace cro
 
         void updateVertexData();
         void applyBlendMode() const;
-        void updateTransform();
     };
 }

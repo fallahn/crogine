@@ -116,6 +116,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/StaticMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/Texture.cpp
   ${PROJECT_DIR}/graphics/TextureResource.cpp
+  ${PROJECT_DIR}/graphics/Transformable2D.cpp
   
   ${PROJECT_DIR}/graphics/postprocess/PostChromeAB.cpp
   ${PROJECT_DIR}/graphics/postprocess/PostProcess.cpp

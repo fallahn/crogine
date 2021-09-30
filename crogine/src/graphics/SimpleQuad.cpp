@@ -31,13 +31,10 @@ source distribution.
 
 #include <crogine/core/App.hpp>
 
-#include <crogine/ecs/components/Transform.hpp>
-
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/Texture.hpp>
-
-#include <crogine/util/Constants.hpp>
+#include <crogine/graphics/Vertex2D.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 #include <memory>
@@ -87,11 +84,7 @@ namespace
 }
 
 SimpleQuad::SimpleQuad()
-    : m_position    (0.f),
-    m_rotation      (0.f),
-    m_scale         (1.f),
-    m_modelMatrix   (1.f),
-    m_colour        (cro::Colour::White),
+    : m_colour      (cro::Colour::White),
     m_size          (0.f),
     m_vbo           (0),
 #ifdef PLATFORM_DESKTOP
@@ -135,8 +128,6 @@ SimpleQuad::SimpleQuad()
     glCheck(glBindVertexArray(0));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 #endif
-
-    updateTransform();
 }
 
 SimpleQuad::SimpleQuad(const cro::Texture& texture)
@@ -206,29 +197,6 @@ void SimpleQuad::setColour(const cro::Colour& colour)
     updateVertexData();
 }
 
-void SimpleQuad::setPosition(glm::vec2 position)
-{
-    m_position = position;
-    updateTransform();
-}
-
-void SimpleQuad::setRotation(float rotation)
-{
-    m_rotation = cro::Util::Const::degToRad * rotation;
-    updateTransform();
-}
-
-float SimpleQuad::getRotation() const
-{
-    return m_rotation * cro::Util::Const::radToDeg;
-}
-
-void SimpleQuad::setScale(glm::vec2 scale)
-{
-    m_scale = scale;
-    updateTransform();
-}
-
 void SimpleQuad::setShader(const cro::Shader& shader)
 {
     auto uniforms = shader.getUniformMap();
@@ -295,7 +263,7 @@ void SimpleQuad::draw() const
         //bind shader
         glCheck(glUseProgram(m_uniforms.shaderID));
         glCheck(glUniform1i(m_uniforms.texture, 0));
-        glCheck(glUniformMatrix4fv(m_uniforms.worldMatrix, 1, GL_FALSE, &m_modelMatrix[0][0]));
+        glCheck(glUniformMatrix4fv(m_uniforms.worldMatrix, 1, GL_FALSE, &getTransform()[0][0]));
         glCheck(glUniformMatrix4fv(m_uniforms.projectionMatrix, 1, GL_FALSE, &projectionMatrix[0][0]));
 
         //draw
@@ -343,32 +311,16 @@ void SimpleQuad::updateVertexData()
     //to make updating only what's changed faster
     //but probably not worth it.
 
-    auto r = m_colour.getRed();
-    auto g = m_colour.getGreen();
-    auto b = m_colour.getBlue();
-    auto a = m_colour.getAlpha();
-
-    std::vector<float> verts =
+    std::vector<Vertex2D> vertexData =
     {
-        0.f, m_size.y,
-        m_uvRect.left, m_uvRect.bottom + m_uvRect.height,
-        r,g,b,a,
-
-        0.f, 0.f,
-        m_uvRect.left, m_uvRect.bottom,
-        r,g,b,a,
-
-        m_size.x, m_size.y,
-        m_uvRect.left + m_uvRect.width, m_uvRect.bottom + m_uvRect.height,
-        r,g,b,a,
-
-        m_size.x, 0.f,
-        m_uvRect.left + m_uvRect.width, m_uvRect.bottom,
-        r,g,b,a
+        Vertex2D(glm::vec2(0.f, m_size.y), glm::vec2(m_uvRect.left, m_uvRect.bottom + m_uvRect.height), m_colour),
+        Vertex2D(glm::vec2(0.f), glm::vec2(m_uvRect.left, m_uvRect.bottom), m_colour),
+        Vertex2D(m_size, glm::vec2(m_uvRect.left + m_uvRect.width, m_uvRect.bottom + m_uvRect.height), m_colour),
+        Vertex2D(glm::vec2(m_size.x, 0.f), glm::vec2(m_uvRect.left + m_uvRect.width, m_uvRect.bottom), m_colour),
     };
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(Vertex2D), vertexData.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
@@ -396,11 +348,4 @@ void SimpleQuad::applyBlendMode() const
         glCheck(glDisable(GL_BLEND));
         break;
     }
-}
-
-void SimpleQuad::updateTransform()
-{
-    m_modelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(m_position, 0.f));
-    m_modelMatrix = glm::rotate(m_modelMatrix, m_rotation, cro::Transform::Z_AXIS);
-    m_modelMatrix = glm::scale(m_modelMatrix, glm::vec3(m_scale, 1.f));
 }
