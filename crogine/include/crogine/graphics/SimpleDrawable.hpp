@@ -62,20 +62,15 @@ namespace cro
 
 
         /*!
-        \brief Set the blend mode with which to draw the quad
+        \brief Sets the blend mode with which to draw
         Defaults to Material::BlendMode::Alpha
         */
         void setBlendMode(Material::BlendMode blendMode) { m_blendMode = blendMode; }
 
         /*!
-        \brief Returns the current blend mode for this quad
+        \brief Returns the current blend mode
         */
         Material::BlendMode getBlendMode() const { return m_blendMode; }
-
-        /*!
-        \brief Sets the Texture to be used when rendering
-        */
-        void setTexture(const Texture& texture);
 
         /*!
         \brief Sets a custom shader with which to draw.
@@ -85,19 +80,35 @@ namespace cro
         vec4 Colour
 
         Custom vertex shaders should expect this layout.
+        \returns true if the shader was successfully set, else returns false
         \see Vertex2D
         */
-        void setShader(const Shader& shader);
+        bool setShader(const Shader& shader);
 
         /*!
         \brief Draws the geometry to the active target
         This must be overridden and proves an opportunity
-        to submit a derving class's transform to the protected
+        to update any vertex data as well as to submit a
+        deriving class's transform to the protected
         drawGeometry() function
         */
-        virtual void draw() const = 0;
+        virtual void draw() = 0;
 
     protected:
+        /*!
+        \brief Sets the Texture to be used when rendering
+        */
+        void setTexture(const Texture& texture);
+        
+        /*!
+        \brief Sets the OpenGL primitive type with which to
+        render the vertex data
+        Must be GL_TRIANGLES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN
+        GL_LINES, GL_LINE_LOOP, GL_LINE_STRIP, or GL_POINTS
+        Defaults to GL_TRIANGLE_STRIP
+        */
+        void setPrimitiveType(std::uint32_t primitiveType);
+
         /*!
         \brief Sets the vertex data with which to draw
         */
@@ -109,11 +120,13 @@ namespace cro
         void drawGeometry(const glm::mat4& worldTransform) const;
 
     private:
-
+        std::uint32_t m_primitiveType;
         std::uint32_t m_vbo;
 #ifdef PLATFORM_DESKTOP
         std::uint32_t m_vao;
 #endif
+        std::uint32_t m_vertexCount;
+
         std::uint32_t m_textureID;
         Material::BlendMode m_blendMode;
 

@@ -168,6 +168,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\Shape2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\SimpleDrawable.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\SimpleQuad.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\SimpleText.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Spatial.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\SphereBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\SpriteSheet.hpp" />
@@ -342,6 +343,7 @@
     <ClCompile Include="..\crogine\src\graphics\Shape2D.cpp" />
     <ClCompile Include="..\crogine\src\graphics\SimpleDrawable.cpp" />
     <ClCompile Include="..\crogine\src\graphics\SimpleQuad.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\SimpleText.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Spatial.cpp" />
     <ClCompile Include="..\crogine\src\graphics\SpriteSheet.cpp" />
     <ClCompile Include="..\crogine\src\graphics\StaticMeshBuilder.cpp" />

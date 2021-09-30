@@ -94,7 +94,7 @@ namespace cro
         /*!
         \brief Draws the quad to the active target
         */
-        void draw() const override;
+        void draw() override;
 
     private:
         cro::Colour m_colour;

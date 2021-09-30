@@ -83,12 +83,14 @@ namespace
 }
 
 SimpleDrawable::SimpleDrawable()
-    : m_vbo     (0),
+    : m_primitiveType   (GL_TRIANGLE_STRIP),
+    m_vbo               (0),
 #ifdef PLATFORM_DESKTOP
-    m_vao       (0),
+    m_vao               (0),
 #endif
-    m_textureID (0),
-    m_blendMode (Material::BlendMode::Alpha)
+    m_vertexCount       (0),
+    m_textureID         (0),
+    m_blendMode         (Material::BlendMode::Alpha)
 {
     if (activeCount == 0)
     {
@@ -149,14 +151,34 @@ SimpleDrawable::~SimpleDrawable()
 }
 
 //public
-void SimpleDrawable::setTexture(const Texture& texture)
+bool SimpleDrawable::setShader(const Shader& shader)
 {
-    m_textureID = texture.getGLHandle();
-}
+    const auto& attribs = shader.getAttribMap();
+    if (attribs[Mesh::Position] == -1)
+    {
+        LogE << "No position attribute was found in shader" << std::endl;
+        LogI << "SimpleDrawable expects vec2 a_position" << std::endl;
+        return false;
+    }
 
-void SimpleDrawable::setShader(const Shader& shader)
-{
+    if (attribs[Mesh::Colour] == -1)
+    {
+        LogE << "No colour attribute was found in shader" << std::endl;
+        LogI << "SimpleDrawable expects vec4 a_colour" << std::endl;
+        return false;
+    }
+
+    if (attribs[Mesh::UV0] == -1)
+    {
+        LogE << "No texture coordinate attribute was found in shader" << std::endl;
+        LogI << "SimpleDrawable expects vec2 a_texCoord0" << std::endl;
+        return false;
+    }
+
+    //TODO the above doesn't actually check that the attribs are the correct *order*
+
     auto uniforms = shader.getUniformMap();
+    m_uniforms = {};
     if (uniforms.count("u_projectionMatrix"))
     {
         m_uniforms.projectionMatrix = uniforms.at("u_projectionMatrix");
@@ -164,7 +186,7 @@ void SimpleDrawable::setShader(const Shader& shader)
     else
     {
         m_uniforms.projectionMatrix = -1;
-        LogW << "Uniform u_projectionMatrix not found in SimpleQuad shader" << std::endl;
+        LogW << "Uniform u_projectionMatrix not found in SimpleDrawble shader" << std::endl;
     }
 
     if (uniforms.count("u_worldMatrix"))
@@ -174,7 +196,7 @@ void SimpleDrawable::setShader(const Shader& shader)
     else
     {
         m_uniforms.worldMatrix = -1;
-        LogW << "Uniform u_worldMatrix not found in SimpleQuad shader" << std::endl;
+        LogW << "Uniform u_worldMatrix not found in SimpleDrawable shader" << std::endl;
     }
 
     if (uniforms.count("u_texture"))
@@ -184,26 +206,40 @@ void SimpleDrawable::setShader(const Shader& shader)
     else
     {
         m_uniforms.texture = -1;
-        LogW << "Uniform u_texture not found in SimpleQuad shader" << std::endl;
+        LogW << "Uniform u_texture not found in SimpleDrawable shader" << std::endl;
     }
 
     m_uniforms.shaderID = shader.getGLHandle();
+    return true;
 }
 
 //protected
+void SimpleDrawable::setTexture(const Texture& texture)
+{
+    m_textureID = texture.getGLHandle();
+}
+
+void SimpleDrawable::setPrimitiveType(std::uint32_t primitiveType)
+{
+    CRO_ASSERT(primitiveType >= GL_POINTS && primitiveType <= GL_TRIANGLE_FAN, "");
+    m_primitiveType = primitiveType;
+}
+
 void SimpleDrawable::setVertexData(const std::vector<Vertex2D>& vertexData)
 {
     CRO_ASSERT(m_vbo, "");
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
     glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(Vertex2D), vertexData.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    m_vertexCount = vertexData.size();
 }
 
 void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
 {
     if (m_textureID)
     {
-        //check if screen size changed
+        //check if screen size changed - TODO this should be checking the active buffer, not window
         auto size = App::getWindow().getSize();
         if (size != screenSize)
         {
@@ -235,7 +271,7 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
         //draw
 #ifdef PLATFORM_DESKTOP
         glCheck(glBindVertexArray(m_vao));
-        glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+        glCheck(glDrawArrays(m_primitiveType, 0, m_vertexCount));
         glCheck(glBindVertexArray(0));
 #else
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
@@ -254,7 +290,7 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
         glCheck(glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, (void*)(4 * sizeof(float))));
         glCheck(glEnableVertexAttribArray(2));
 
-        glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+        glCheck(glDrawArrays(m_primitiveType, 0, m_vertexCount));
 
         glCheck(glDisableVertexAttribArray(1));
         glCheck(glDisableVertexAttribArray(0));

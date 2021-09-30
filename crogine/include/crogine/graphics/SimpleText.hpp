@@ -30,43 +30,34 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
-#include <crogine/core/String.hpp>
+#include <crogine/graphics/Transformable2D.hpp>
+#include <crogine/graphics/SimpleDrawable.hpp>
 #include <crogine/graphics/Font.hpp>
-#include <crogine/graphics/Rectangle.hpp>
-#include <crogine/graphics/Colour.hpp>
-#include <crogine/graphics/Vertex2D.hpp>
-#include <crogine/ecs/Entity.hpp>
-
-#include <crogine/detail/glm/vec2.hpp>
 
 namespace cro
 {
-    struct Glyph;
-    class Drawable2D;
+    class String;
 
     /*!
-    \brief 2D Text component.
-    Text components, when used in conjunction with Transformable
-    and Drawable2D components are used to render strings of Text
-    with a RenderSystem2D. The draw order of Text components can
-    be set with their Y or Z transform position, depending on
-    the sort order set in RenderSystem2D. If a text component
-    appears to not render then check that its sort order value is
-    above that of any other Drawable2D types, such as Sprites,
-    currently being rendered by the same RenderSystem2D.
-    Text components also require a TextSystem in the active Scene.
-    \see RenderSystem2D::setSortOrder()
+    \brief SimpleText class.
+    This class can be used to render text string to the active target
+    without the need for a Scene or ECS. However, unlike the ECS equivalent,
+    the SimpleText class is less flexible. SimpleText is rendered at the
+    current target resolution with one pixel per-unit.
     */
-    class CRO_EXPORT_API Text final
+    class CRO_EXPORT_API SimpleText final : public cro::Transformable2D, public cro::SimpleDrawable
     {
     public:
-        Text();
+        /*!
+        \brief Default constructor.
+        A font must be set before this text will render.
+        */
+        SimpleText();
 
         /*!
-        \brief Construct a Text component with a given Font
-        \param font Font to use when rendering
+        \brief Construxt a SimpleText with the given Font.
         */
-        Text(const Font& font);
+        SimpleText(const Font& font);
 
         /*!
         \brief Set the font to be used with this Text
@@ -155,33 +146,11 @@ namespace cro
         \brief Gets the thickness of the text outline
         */
         float getOutlineThickness() const;
-        
-        /*!
-        \brief Returns the AABB of the Text component
-        The given entity must have at least a Text and
-        Drawable2D component attached to it
-        */
-        static FloatRect getLocalBounds(Entity);
 
-        enum class Alignment
-        {
-            Left, Right, Centre
-        };
 
-        /*!
-        \brief Sets whether the Text should be aligned Left,
-        Right, or Centre about its origin. Only affects the
-        X axis
-        */
-        void setAlignment(Alignment);
-
-        /*!
-        \brief Returns the Text's current Alignment
-        */
-        Alignment getAlignment() const { return m_alignment; }
+        void draw() override;
 
     private:
-
         TextContext m_context;
 
         struct DirtyFlags final
@@ -189,18 +158,14 @@ namespace cro
             enum
             {
                 Colour = 0x1,
-                Font   = 0x2,
+                Font = 0x2,
                 String = 0x4,
 
                 All = Colour | Font | String
             };
         };
-        std::uint16_t m_dirtyFlags;
+        mutable std::uint16_t m_dirtyFlags;
 
-        Alignment m_alignment;
-
-        void updateVertices(Drawable2D&);
-
-        friend class TextSystem;
+        void updateVertices();
     };
 }

@@ -86,7 +86,7 @@ void SimpleQuad::setColour(const cro::Colour& colour)
     updateVertexData();
 }
 
-void SimpleQuad::draw() const
+void SimpleQuad::draw()
 {
     drawGeometry(getTransform());
 }

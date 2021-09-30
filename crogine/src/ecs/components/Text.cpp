@@ -27,17 +27,17 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "../../detail/TextConstruction.hpp"
+#include "../../detail/glad.hpp"
+
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
-
-#include "../../detail/glad.hpp"
-#include "../../detail/TextConstruction.hpp"
 
 using namespace cro;
 
 Text::Text()
-    : m_dirtyFlags      (DirtyFlags::All),
-    m_alignment         (Alignment::Left)
+    : m_dirtyFlags  (DirtyFlags::All),
+    m_alignment     (Alignment::Left)
 {
 
 }

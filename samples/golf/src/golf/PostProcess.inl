@@ -229,6 +229,7 @@ void main()
   FRAG_OUT.rgb = Tri(v_texCoord) * Mask(gl_FragCoord.xy);
   FRAG_OUT.a = 1.0;  
   FRAG_OUT.rgb = ToSrgb(FRAG_OUT.rgb);
+  FRAG_OUT *= v_colour;
 })";
 
 static const std::string FXAAFrag = R"(

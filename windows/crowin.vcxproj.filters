@@ -633,6 +633,9 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\SimpleDrawable.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\SimpleText.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1041,6 +1044,9 @@
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\SimpleDrawable.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\SimpleText.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
