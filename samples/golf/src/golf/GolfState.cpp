@@ -815,8 +815,7 @@ void GolfState::loadAssets()
     //at a distance, and as a model when closer
     glCheck(glPointSize(BallPointSize));
 
-    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
-    m_ballResources.materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    m_ballResources.materialID = m_materialIDs[MaterialID::WireFrameCulled];
     m_ballResources.ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
     m_ballResources.shadowMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
 

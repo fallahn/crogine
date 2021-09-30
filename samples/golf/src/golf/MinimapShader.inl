@@ -56,14 +56,14 @@ static const std::string MinimapFragment = R"(
         VARYING_IN MED vec2 v_texCoord;
         OUTPUT
         
-        const float stepPos = (0.5 * 0.5);
+        const float stepPos = (0.44 * 0.44);
         const float borderPos = (0.48 * 0.48);
 
         const vec3 borderColour = vec3(0.314,0.157,0.184);
 
 //these ought to be uniforms for texture
 //res and screen scale
-const float res = 66.0;
+const float res = 100.0;// 66.0;
 const float scale = 2.0;
 
         void main()

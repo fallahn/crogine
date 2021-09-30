@@ -53,6 +53,7 @@ static const std::array RandomNames =
     cro::String("Mackeriah"),
     cro::String("Daniel-San"),
     cro::String("Tobias"),
+    cro::String("Jamz"),
     cro::String("JS"),
     cro::String("Stefan"),
     cro::String("Kim"),

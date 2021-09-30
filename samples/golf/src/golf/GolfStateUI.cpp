@@ -522,9 +522,9 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
-        cro::Vertex2D(glm::vec2(32.f, -1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(32.f, 1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(22.f, 0.f), TextGoldColour)
+        cro::Vertex2D(glm::vec2(42.f, -1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(42.f, 1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(32.f, 0.f), TextGoldColour)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;
@@ -579,7 +579,7 @@ void GolfState::buildUI()
     //and the mini view of the green
     auto updateGreenView = [&, greenEnt](cro::Camera& greenCam) mutable
     {
-        auto texSize = MapSize.y / 3u;
+        auto texSize = MapSize.y / 2u;
         m_greenBuffer.create(texSize, texSize); //yes, it's square
         greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
 
@@ -600,7 +600,7 @@ void GolfState::buildUI()
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<MiniCamData>();
         auto diff = data.targetSize - data.currentSize;
-        data.currentSize += diff * (dt * 3.f);
+        data.currentSize += diff * (dt * 4.f);
 
         auto& cam = e.getComponent<cro::Camera>();
         cam.setOrthographic(-data.currentSize, data.currentSize, -data.currentSize, data.currentSize, -0.15f, 1.f);
@@ -635,7 +635,7 @@ void GolfState::buildUI()
         mapSize /= 2.f;
         mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y, uiSize.y - (mapSize.x) - (UIBarHeight * 1.5f) }); //map sprite is rotated 90
 
-        greenEnt.getComponent<cro::Transform>().setPosition({ 4.f, uiSize.y - (MapSize.y / 3) - UIBarHeight - 4.f });
+        greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - (MapSize.y / 2) - UIBarHeight - 2.f });
         greenEnt.getComponent<cro::Transform>().move(greenEnt.getComponent<cro::Transform>().getOrigin());
 
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(uiSize.x + WindIndicatorPosition.x, WindIndicatorPosition.y));

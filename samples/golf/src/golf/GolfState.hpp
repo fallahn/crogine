@@ -56,8 +56,8 @@ namespace cro
 //callback data for green overhead view
 struct MiniCamData final
 {
-    static constexpr float MaxSize = 1.5f;
-    static constexpr float MinSize = 0.5f;
+    static constexpr float MaxSize = 2.25f;
+    static constexpr float MinSize = 0.75f;
     float targetSize = MinSize;
     float currentSize = MinSize;
 };
