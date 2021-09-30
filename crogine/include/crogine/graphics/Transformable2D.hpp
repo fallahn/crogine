@@ -42,6 +42,7 @@ namespace cro
     {
     public:
         Transformable2D();
+        virtual ~Transformable2D() = default;
 
         /*!
         \brief Sets the position of the transform
