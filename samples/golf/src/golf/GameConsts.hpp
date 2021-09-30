@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Easings.hpp>
 
 #include <cstdint>
 
@@ -87,6 +88,29 @@ struct ShaderID final
 
 static constexpr float ViewportHeight = 360.f;
 static constexpr float ViewportHeightWide = 300.f;
+
+static inline glm::vec3 interpolate(glm::vec3 a, glm::vec3 b, float t)
+{
+    auto diff = b - a;
+    return a + (diff * cro::Util::Easing::easeOutElastic(t));
+}
+
+static inline constexpr float interpolate(float a, float b, float t)
+{
+    auto diff = b - a;
+    return a + (diff * t);
+}
+
+static inline constexpr float clamp(float t)
+{
+    return std::min(1.f, std::max(0.f, t));
+}
+
+static inline constexpr float smoothstep(float edge0, float edge1, float x)
+{
+    float t = clamp((x - edge0) / (edge1 - edge0));
+    return t * t * (3.f - 2.f * t);
+}
 
 static inline glm::vec2 calcVPSize()
 {

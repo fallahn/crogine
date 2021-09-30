@@ -46,29 +46,6 @@ namespace
 {
     constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
 
-    glm::vec3 interpolate(glm::vec3 a, glm::vec3 b, float t)
-    {
-        auto diff = b - a;
-        return a + (diff * cro::Util::Easing::easeOutElastic(t));
-    }
-
-    float interpolate(float a, float b, float t)
-    {
-        auto diff = b - a;
-        return a + (diff * t);
-    }
-
-    float clamp(float t)
-    {
-        return std::min(1.f, std::max(0.f, t));
-    }
-
-    float smoothstep(float edge0, float edge1, float x)
-    {
-        float t = clamp((x - edge0) / (edge1 - edge0));
-        return t * t * (3.f - 2.f * t);
-    }
-
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
 }

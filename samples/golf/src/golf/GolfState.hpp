@@ -58,7 +58,7 @@ struct MiniCamData final
 {
     static constexpr float MaxSize = 2.25f;
     static constexpr float MinSize = 0.75f;
-    float targetSize = MinSize;
+    float targetSize = MaxSize;
     float currentSize = MinSize;
 };
 

@@ -2405,8 +2405,8 @@ void GolfState::updateActor(const ActorInfo& update)
     {
         //set the green cam zoom as appropriate
         float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
-        m_greenCam.getComponent<cro::Callback>().getUserData<MiniCamData>().targetSize = ballDist < MiniCamData::MinSize ? MiniCamData::MinSize : MiniCamData::MaxSize;
-
+        m_greenCam.getComponent<cro::Callback>().getUserData<MiniCamData>().targetSize =
+            interpolate(MiniCamData::MinSize, MiniCamData::MaxSize, smoothstep(MiniCamData::MinSize, MiniCamData::MaxSize, ballDist));
 
         //this is the active ball so update the UI
         cmd.targetFlags = CommandID::UI::PinDistance;
