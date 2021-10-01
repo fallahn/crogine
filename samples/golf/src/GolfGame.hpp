@@ -55,6 +55,8 @@ private:
     std::unique_ptr<cro::RenderTexture> m_postBuffer;
     std::unique_ptr<cro::SimpleQuad> m_postQuad;
     std::unique_ptr<cro::Shader> m_postShader;
+    std::int32_t m_postProcessIndex;
+    std::int32_t m_activeIndex;
 
     static cro::RenderTarget* m_renderTarget;
 

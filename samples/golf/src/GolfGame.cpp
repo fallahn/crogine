@@ -54,12 +54,30 @@ namespace
 #include "golf/TutorialShaders.inl"
 #include "golf/TerrainShader.inl"
 #include "golf/PostProcess.inl"
+
+    struct ShaderDescription final
+    {
+        const char* fragmentString = nullptr;
+        std::string description;
+        std::string toolTip;
+
+        ShaderDescription(const char* frag, std::string desc, std::string tip)
+            : fragmentString(frag), description(desc), toolTip(tip) {}
+    };
+
+    const std::array PostShaders =
+    {
+        ShaderDescription(PostFragment.c_str(), "CRT Effect", "PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER\nby Timothy Lottes"),
+        ShaderDescription(FXAAFrag.c_str(), "FXAA", "https://github.com/McNopper/OpenGL/blob/master/Example42/")
+    };
 }
 
 cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
 
 GolfGame::GolfGame()
-    : m_stateStack({*this, getWindow()})
+    : m_stateStack      ({*this, getWindow()}),
+    m_postProcessIndex  (0),
+    m_activeIndex       (0)
 {
     //must be sest before anything else cfg is still loaded from default path
     setApplicationStrings("trederia", "golf");
@@ -112,6 +130,14 @@ void GolfGame::handleMessage(const cro::Message& msg)
                 saveSettings();
                 break;
             }
+        }
+    }
+    else if (msg.id == cro::Message::ConsoleMessage)
+    {
+        const auto& data = msg.getData<cro::Message::ConsoleEvent>();
+        if (data.type == cro::Message::ConsoleEvent::Closed)
+        {
+            savePreferences();
         }
     }
     else if (msg.id == cro::Message::WindowMessage)
@@ -192,20 +218,60 @@ bool GolfGame::initialise()
                 //set the shared data property, in case we need to first create the buffer
 
                 //raise a message to resize the post process buffers
-                auto* msg = getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
-                msg->type = SystemEvent::PostProcessToggled;
+                if (m_postShader->getGLHandle() != 0)
+                {
+                    auto* msg = getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+                    msg->type = SystemEvent::PostProcessToggled;
+                }
             }
+
+            ImGui::PushItemWidth(180.f);
+            if (ImGui::BeginCombo("Shader", PostShaders[m_postProcessIndex].description.c_str()))
+            {
+                for (auto i = 0u; i < PostShaders.size(); ++i)
+                {
+                    bool selected = (m_postProcessIndex == static_cast<std::int32_t>(i));
+                    if (ImGui::Selectable(PostShaders[i].description.c_str(), selected))
+                    {
+                        m_postProcessIndex = static_cast<std::int32_t>(i);
+                    }
+
+                    if (selected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+            ImGui::PopItemWidth();
+
             if (ImGui::IsItemHovered())
             {
                 ImGui::BeginTooltip();
-                ImGui::Text("PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER\nby Timothy Lottes");
+                ImGui::Text("%s", PostShaders[m_postProcessIndex].toolTip.c_str());
                 ImGui::EndTooltip();
             }
 
-
-            if (ImGui::Button("Choose Shader"))
+            if (ImGui::Button("Apply"))
             {
-                cro::FileSystem::showMessageBox("", "Maybe I'll implement this one day");
+                if (m_activeIndex != m_postProcessIndex)
+                {
+                    std::unique_ptr<cro::Shader> shader = std::make_unique<cro::Shader>();
+                    if (shader->loadFromString(PostVertex, PostShaders[m_postProcessIndex].fragmentString))
+                    {
+                        //if the shader loaded successfully
+                        //swap with current shader.
+                        m_postShader.swap(shader);
+                        m_postQuad->setShader(*m_postShader);
+
+                        m_sharedData.usePostProcess = false; //message handler flips this???
+                        auto* msg = getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+                        msg->type = SystemEvent::PostProcessToggled;
+
+                        m_activeIndex = m_postProcessIndex;
+                    }
+                }
             }
         });
 
@@ -251,7 +317,7 @@ bool GolfGame::initialise()
     m_postBuffer = std::make_unique<cro::RenderTexture>();
     m_postBuffer->create(windowSize.x, windowSize.y, false);
     m_postShader = std::make_unique<cro::Shader>();
-    m_postShader->loadFromString(PostVertex, PostFragment);
+    m_postShader->loadFromString(PostVertex, /*PostFragment*/PostShaders[m_postProcessIndex].fragmentString);
     auto shaderRes = glm::vec2(windowSize);
     glCheck(glUseProgram(m_postShader->getGLHandle()));
     glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
@@ -259,6 +325,8 @@ bool GolfGame::initialise()
     m_postQuad = std::make_unique<cro::SimpleQuad>();
     m_postQuad->setTexture(m_postBuffer->getTexture());
     m_postQuad->setShader(*m_postShader);
+
+    m_activeIndex = m_postProcessIndex;
 
 #ifdef CRO_DEBUG_
     m_stateStack.pushState(StateID::Menu);
@@ -306,6 +374,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.usePostProcess = prop.getValue<bool>();
                 }
+                else if (name == "post_index")
+                {
+                    m_postProcessIndex = std::max(0, std::min(static_cast<std::int32_t>(PostShaders.size()) - 1, prop.getValue<std::int32_t>()));
+                }
                 else if (name == "last_ip")
                 {
                     auto str = prop.getValue<std::string>();
@@ -349,6 +421,7 @@ void GolfGame::savePreferences()
 
     //advanced options
     cfg.addProperty("use_post_process").setValue(m_sharedData.usePostProcess);
+    cfg.addProperty("post_index").setValue(m_postProcessIndex);
     cfg.addProperty("last_ip").setValue(m_sharedData.targetIP.toAnsiString());
     cfg.save(path);
 

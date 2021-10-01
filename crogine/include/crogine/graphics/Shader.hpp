@@ -75,7 +75,7 @@ namespace cro
         \param defines Optional list of newline delimited defines for the GLSL preprocessor
         \returns true on success, else returns false.
         NOTE to ensure correct version number for specific platforms (100 for ES2,
-        330 for desktop) these are automatically appended here. Therefore #version
+        410 for desktop) these are automatically appended here. Therefore #version
         directives should be omitted from any source code.
         */
         bool loadFromString(const std::string& vertex, const std::string& fragment, const std::string& defines = "");
