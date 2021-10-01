@@ -147,24 +147,40 @@ namespace cro
         */
         float getOutlineThickness() const;
 
+        /*!
+        \brief Get the enclosing AABB
+        */
+        FloatRect getLocalBounds();
 
+        /*!
+        \brief Get the enclosing AABB taking into account any transform
+        */
+        FloatRect getGlobalBounds();
+
+        /*!
+        \brief Draw the text to the active buffer
+        */
         void draw() override;
 
     private:
         TextContext m_context;
+        FloatRect m_localBounds;
+        glm::uvec2 m_lastTextureSize;
+        const Texture* m_fontTexture;
 
         struct DirtyFlags final
         {
             enum
             {
-                Colour = 0x1,
-                Font = 0x2,
-                String = 0x4,
+                ColourInner = 0x1,
+                ColourOuter = 0x2,
+                Font        = 0x4,
+                String      = 0x8,
 
-                All = Colour | Font | String
+                All = ColourInner | ColourOuter | Font | String
             };
         };
-        mutable std::uint16_t m_dirtyFlags;
+        std::uint16_t m_dirtyFlags;
 
         void updateVertices();
     };

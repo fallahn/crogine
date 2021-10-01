@@ -59,7 +59,7 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
     std::vector<Vertex2D> outlineVerts;
     std::vector<Vertex2D> characterVerts;
 
-    glm::vec2 textureSize = context.font->getTexture(context.charSize).getSize();
+    const auto& texture = context.font->getTexture(context.charSize);
     float xOffset = static_cast<float>(context.font->getGlyph(L' ', context.charSize, context.outlineThickness).advance);
     float yOffset = static_cast<float>(context.font->getLineHeight(context.charSize));
     float x = 0.f;
@@ -120,7 +120,7 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
             float bottom = glyph.bounds.bottom;*/
 
             //add the outline glyph to the vertices
-            Detail::Text::addQuad(outlineVerts, glm::vec2(x, y), context.outlineColour, glyph, textureSize, context.outlineThickness);
+            Detail::Text::addQuad(outlineVerts, glm::vec2(x, y), context.outlineColour, glyph, texture.getSize(), context.outlineThickness);
 
             /*minX = std::min(minX, x + left - m_outlineThickness);
             maxX = std::max(maxX, x + right + m_outlineThickness);
@@ -135,10 +135,10 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
         {
             addOutline();
         }
-        Detail::Text::addQuad(characterVerts, glm::vec2(x, y), context.fillColour, glyph, textureSize);
+        Detail::Text::addQuad(characterVerts, glm::vec2(x, y), context.fillColour, glyph, texture.getSize());
 
         //only do this if not outlined
-        //if (m_outlineThickness == 0)
+        //if (context.outlineThickness == 0)
         {
             float left = glyph.bounds.left;
             float top = glyph.bounds.bottom + glyph.bounds.height;

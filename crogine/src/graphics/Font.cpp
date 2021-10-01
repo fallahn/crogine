@@ -68,7 +68,7 @@ namespace
     }
     std::uint64_t combine(float outlineThickness, bool bold, std::uint32_t index)
     {
-        return (static_cast<std::uint64_t>(reinterpret<std::uint32_t>(outlineThickness)) << 32) | (static_cast<std::uint64_t>(bold) << 31) | index;
+        return (static_cast<std::uint64_t>(reinterpret<std::uint32_t>(outlineThickness)) << 32) /*| (static_cast<std::uint64_t>(bold) << 31)*/ | index;
     }
 }
 

@@ -35,7 +35,6 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/Font.hpp>
 
-
 namespace sp
 {
     class MenuState final : public cro::State

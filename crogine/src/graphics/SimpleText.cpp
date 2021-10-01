@@ -35,7 +35,9 @@ source distribution.
 using namespace cro;
 
 SimpleText::SimpleText()
-    : m_dirtyFlags(DirtyFlags::All)
+    : m_lastTextureSize (0),
+    m_fontTexture       (nullptr),
+    m_dirtyFlags        (DirtyFlags::All)
 {
     setPrimitiveType(GL_TRIANGLES);
 }
@@ -78,8 +80,12 @@ void SimpleText::setFillColour(Colour colour)
 {
     if (m_context.fillColour != colour)
     {
+        //hmm if we cached vertex data we
+        //could just update the colour property rather
+        //than rebuild the entire thing if only
+        //the colour flag is set
         m_context.fillColour = colour;
-        m_dirtyFlags |= DirtyFlags::Colour;
+        m_dirtyFlags |= DirtyFlags::ColourInner;
     }
 }
 
@@ -88,7 +94,7 @@ void SimpleText::setOutlineColour(Colour colour)
     if (m_context.outlineColour != colour)
     {
         m_context.outlineColour = colour;
-        m_dirtyFlags |= DirtyFlags::Colour;
+        m_dirtyFlags |= DirtyFlags::ColourOuter;
     }
 }
 
@@ -136,9 +142,25 @@ float SimpleText::getOutlineThickness() const
     return m_context.outlineThickness;
 }
 
-void SimpleText::draw()
+FloatRect SimpleText::getLocalBounds()
 {
     if (m_dirtyFlags)
+    {
+        m_dirtyFlags = 0;
+        updateVertices();
+    }
+    return m_localBounds;
+}
+
+FloatRect SimpleText::getGlobalBounds()
+{
+    return getLocalBounds().transform(getTransform());
+}
+
+void SimpleText::draw()
+{
+    if (m_dirtyFlags
+        || (m_fontTexture && m_fontTexture->getSize() != m_lastTextureSize))
     {
         m_dirtyFlags = 0;
         updateVertices();
@@ -149,12 +171,16 @@ void SimpleText::draw()
 //private
 void SimpleText::updateVertices()
 {
-    std::vector<Vertex2D> verts;
-    Detail::Text::updateVertices(verts, m_context);
-    setVertexData(verts);
-
     if (m_context.font)
     {
-        setTexture(m_context.font->getTexture(m_context.charSize));
+        //do this first because the update below may
+        //resize the texture and we want to know about it :)
+        m_fontTexture = &m_context.font->getTexture(m_context.charSize);
+        m_lastTextureSize = m_fontTexture->getSize();
+        setTexture(*m_fontTexture);
     }
+    
+    std::vector<Vertex2D> verts;
+    m_localBounds = Detail::Text::updateVertices(verts, m_context);
+    setVertexData(verts);
 }

@@ -144,7 +144,7 @@ void MenuState::createScene()
         cro::Vertex2D(glm::vec2(ViewSize.x, 0.f), cro::Colour::CornflowerBlue)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-
+ 
 
 
     //menu
@@ -231,9 +231,6 @@ void MenuState::createScene()
                     cro::App::quit();
                 }
             });
-
-
-
 
 
 

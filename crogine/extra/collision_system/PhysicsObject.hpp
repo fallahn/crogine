@@ -93,7 +93,7 @@ namespace cro
 
         /*!
         \brief Optional rotation of shape.
-        This is only applied to shapes which are atatched to an object
+        This is only applied to shapes which are attached to an object
         with more than one Physics shape. The shape is rotated around 
         the PhysicsShape position
         */
