@@ -192,12 +192,11 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
     switch (type)
     {
     default:
-    case BuiltIn::BillboardUnlit:
-        success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::Billboard::Unlit, defines);
-        break;
     case BuiltIn::BillboardVertexLit:
         defines += "#define VERTEX_LIT\n";
-        success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::VertexLit::Fragment, defines);
+        [[fallthrough]];
+    case BuiltIn::BillboardUnlit:
+        success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::Billboard::Fragment, defines);
         break;
     case BuiltIn::Unlit:
         success = loadFromString(id, Shaders::Unlit::Vertex, Shaders::Unlit::Fragment, defines);

@@ -67,9 +67,8 @@ namespace cro::Shaders::Billboard
         #if defined (VERTEX_LIT)
         VARYING_OUT vec3 v_normalVector;
         VARYING_OUT vec3 v_worldPosition;
-        #else
-        VARYING_OUT float v_ditherAmount;
         #endif
+        VARYING_OUT float v_ditherAmount;
 
         void main()
         {
@@ -115,6 +114,8 @@ namespace cro::Shaders::Billboard
 
             #if defined (VERTEX_COLOUR)
                 v_colour = a_colour;
+            #endif
+
                 const float minDistance = 2.0;
                 const float nearFadeDistance = 12.0; //TODO make this a uniform
                 const float farFadeDistance = 150.f;
@@ -125,7 +126,6 @@ namespace cro::Shaders::Billboard
 
                 v_colour.rgb *= (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 
-            #endif
             #if defined (TEXTURED)
                 v_texCoord0 = a_texCoord0;
             #endif
@@ -143,7 +143,7 @@ namespace cro::Shaders::Billboard
     channel, which is then discarded based on the alpha clip value.
     */
 
-    static const std::string Unlit = R"(
+    static const std::string Fragment = R"(
         OUTPUT
         #if defined (TEXTURED)
         uniform sampler2D u_diffuseMap;
@@ -153,6 +153,20 @@ namespace cro::Shaders::Billboard
         #endif
         #if defined(COLOURED)
         uniform LOW vec4 u_colour;
+        #endif
+
+        #if defined(MASK_MAP)
+        uniform sampler2D u_maskMap;
+        #else
+        uniform LOW vec4 u_maskColour;
+        #endif
+
+        #if defined(VERTEX_LIT)
+        uniform samplerCube u_skybox;
+
+        uniform HIGH vec3 u_lightDirection;
+        uniform LOW vec4 u_lightColour;
+        uniform HIGH vec3 u_cameraWorldPosition;
         #endif
 
         #if defined (RX_SHADOWS)
@@ -167,6 +181,8 @@ namespace cro::Shaders::Billboard
         #endif
 
         VARYING_IN float v_ditherAmount;
+        VARYING_IN vec3 v_normalVector;
+        VARYING_IN HIGH vec3 v_worldPosition;
 
         #if defined(RX_SHADOWS)
         VARYING_IN LOW vec4 v_lightWorldPosition;
@@ -239,6 +255,25 @@ namespace cro::Shaders::Billboard
         #endif
         #endif
 
+        #if defined(VERTEX_LIT)
+        LOW vec4 diffuseColour = vec4(1.0);
+        HIGH vec3 eyeDirection;
+        LOW vec4 mask = vec4(1.0, 1.0, 0.0, 1.0);
+        vec3 calcLighting(vec3 normal, vec3 lightDirection, vec3 lightDiffuse, vec3 lightSpecular, float falloff)
+        {
+            MED float diffuseAmount = max(dot(normal, lightDirection), 0.0);
+            //diffuseAmount = pow((diffuseAmount * 0.5) + 5.0, 2.0);
+            MED vec3 mixedColour = diffuseColour.rgb * lightDiffuse * diffuseAmount * falloff;
+
+            MED vec3 halfVec = normalize(eyeDirection + lightDirection);
+            MED float specularAngle = clamp(dot(normal, halfVec), 0.0, 1.0);
+            LOW vec3 specularColour = lightSpecular * vec3(pow(specularAngle, ((254.0 * mask.r) + 1.0))) * falloff;
+
+            return clamp(mixedColour + (specularColour * mask.g), 0.0, 1.0);
+        }
+        #endif
+
+
         //function based on example by martinsh.blogspot.com
         const int MatrixSize = 8;
         float findClosest(int x, int y, float c0)
@@ -275,6 +310,48 @@ namespace cro::Shaders::Billboard
 
         void main()
         {
+        //vertex lit calc
+        #if defined (VERTEX_LIT)
+        #if defined (DIFFUSE_MAP)
+            diffuseColour *= TEXTURE(u_diffuseMap, v_texCoord0);
+
+        #if defined(ALPHA_CLIP)
+        if(diffuseColour.a < u_alphaClip) discard;
+        #endif
+        #endif
+
+        #if defined(MASK_MAP)
+            mask = TEXTURE(u_maskMap, v_texCoord0);
+        #else
+            mask = u_maskColour;
+        #endif
+
+        #if defined(COLOURED)
+            diffuseColour *= u_colour;
+        #endif
+                
+        #if defined(VERTEX_COLOUR)
+            diffuseColour *= v_colour;
+        #endif
+
+            LOW vec3 blendedColour = diffuseColour.rgb * 0.2; //ambience
+            eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+
+            MED vec3 normal = normalize(v_normalVector);
+            blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, vec3(1.0), 1.0);
+        #if defined (RX_SHADOWS)
+            blendedColour *= shadowAmount(v_lightWorldPosition);
+        #endif
+
+            FRAG_OUT.rgb = mix(blendedColour, diffuseColour.rgb, mask.b);
+            FRAG_OUT.a = diffuseColour.a;
+
+            vec3 I = normalize(v_worldPosition - u_cameraWorldPosition);
+            vec3 R = reflect(I, normal);
+            FRAG_OUT.rgb = mix(TEXTURE_CUBE(u_skybox, R).rgb, FRAG_OUT.rgb, mask.a);
+
+        #else
+        //unlit calc
         #if defined (VERTEX_COLOUR)
             FRAG_OUT = v_colour;
         #else
@@ -290,6 +367,7 @@ namespace cro::Shaders::Billboard
 
         #if defined (RX_SHADOWS)
             FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition);
+        #endif
         #endif
 
 

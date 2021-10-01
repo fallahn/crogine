@@ -135,7 +135,7 @@ Models in crogine are described in a text format that can be loaded via the `Mod
             //channel controls the specular amount, and the blue channel controls self illumination.
             //The alpha channel controls the amount of reflection of the Scene's skybox, if it
             //has one, else reflections appear black. An alpha value of 0 is full reflection,
-            //and 1 is no reflection, so by default materials arenot reflective.
+            //and 1 is no reflection, so by default materials are not reflective.
             mask = "path/to/mask.png"
 
             //Alternatively a mask colour can be provided in normalised 4 component format. This
