@@ -65,9 +65,12 @@ namespace
             : fragmentString(frag), description(desc), toolTip(tip) {}
     };
 
+    const std::string TerminalDistorted = "#define DISTORTION\n" + TerminalFragment;
+
     const std::array PostShaders =
     {
-        ShaderDescription(TerminalFragment.c_str(), "Terminal Display", "Mostly Hairless."),
+        ShaderDescription(TerminalFragment.c_str(), "Terminal Display", "by Mostly Hairless."),
+        ShaderDescription(TerminalDistorted.c_str(), "Terminal Display (Extreme)", "by Mostly Hairless."),
         ShaderDescription(CRTFragment.c_str(), "CRT Effect", "PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER\nby Timothy Lottes"),
     };
 }
@@ -235,7 +238,7 @@ bool GolfGame::initialise()
                 }
             }
 
-            ImGui::PushItemWidth(180.f);
+            ImGui::PushItemWidth(260.f);
             if (ImGui::BeginCombo("Shader", PostShaders[m_postProcessIndex].description.c_str()))
             {
                 for (auto i = 0u; i < PostShaders.size(); ++i)
