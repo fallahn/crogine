@@ -67,8 +67,8 @@ namespace
 
     const std::array PostShaders =
     {
-        ShaderDescription(PostFragment.c_str(), "CRT Effect", "PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER\nby Timothy Lottes"),
-        ShaderDescription(FXAAFrag.c_str(), "FXAA", "https://github.com/McNopper/OpenGL/blob/master/Example42/")
+        ShaderDescription(TerminalFragment.c_str(), "Terminal Display", "Mostly Hairless."),
+        ShaderDescription(CRTFragment.c_str(), "CRT Effect", "PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER\nby Timothy Lottes"),
     };
 }
 
@@ -187,6 +187,16 @@ void GolfGame::handleMessage(const cro::Message& msg)
 
 void GolfGame::simulate(float dt)
 {
+    if (m_sharedData.usePostProcess)
+    {
+        //update optional uniforms (should be -1 if not loaded)
+        static float accum = 0.f;
+        accum += dt;
+
+        glUseProgram(m_postShader->getGLHandle());
+        glUniform1f(m_uniformIDs[UniformID::Time], accum * 0.1f);
+    }
+
     m_stateStack.simulate(dt);
 }
 
@@ -321,6 +331,7 @@ bool GolfGame::initialise()
     auto shaderRes = glm::vec2(windowSize);
     glCheck(glUseProgram(m_postShader->getGLHandle()));
     glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
+    m_uniformIDs[UniformID::Time] = m_postShader->getUniformID("u_time");
     
     m_postQuad = std::make_unique<cro::SimpleQuad>();
     m_postQuad->setTexture(m_postBuffer->getTexture());
@@ -445,4 +456,6 @@ void GolfGame::recreatePostProcess()
     auto shaderRes = glm::vec2(windowSize);
     glCheck(glUseProgram(m_postShader->getGLHandle()));
     glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
+
+    m_uniformIDs[UniformID::Time] = m_postShader->getUniformID("u_time");
 }

@@ -58,6 +58,17 @@ private:
     std::int32_t m_postProcessIndex;
     std::int32_t m_activeIndex;
 
+    struct UniformID final
+    {
+        enum
+        {
+            Time,
+
+            Count
+        };
+    };
+    std::array<std::int32_t, UniformID::Count> m_uniformIDs = {};
+
     static cro::RenderTarget* m_renderTarget;
 
     void handleEvent(const cro::Event&) override;
