@@ -1576,7 +1576,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         else
         {
             auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
-            ballPos.y = 0.003f; //just to prevent z-fighting
+            ballPos.y = std::min(0.003f, ballPos.y); //just to prevent z-fighting
             e.getComponent<cro::Transform>().setPosition(ballPos);
         }
     };

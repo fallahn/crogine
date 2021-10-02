@@ -723,8 +723,8 @@ void TutorialState::tutorialTwo(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.addComponent<UIElement>().absolutePosition = { -160.f, 160.f };
-    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.f };
+    entity.addComponent<UIElement>().absolutePosition = { -160.f, 0.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
 
@@ -797,8 +797,8 @@ void TutorialState::tutorialTwo(cro::Entity root)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, 130.f };
-    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -30.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);

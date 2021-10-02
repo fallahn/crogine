@@ -405,7 +405,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool useDeferredShad
         {
             if (shaderType == ShaderResource::VertexLit
                 || shaderType == ShaderResource::VertexLitDeferred
-                || m_billboard)
+                || shaderType == ShaderResource::BillboardVertexLit)
             {
                 material.setProperty("u_maskColour", cro::Colour::Yellow);
             }
