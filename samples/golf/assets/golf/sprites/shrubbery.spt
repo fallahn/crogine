@@ -4,12 +4,12 @@ spritesheet shrubbery
 
     sprite pine
     {
-        bounds = 0,0,112,232
+        bounds = 0,0,96,184
     }
 
     sprite willow
     {
-        bounds = 112,0,96,176
+        bounds = 96,0,128,172
     }
 
     sprite grass01
@@ -24,7 +24,7 @@ spritesheet shrubbery
 
     sprite birch
     {
-        bounds = 300,0,138,200
+        bounds = 304,0,134,192
     }
 
     sprite flowers01

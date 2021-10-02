@@ -253,6 +253,7 @@ void BallSystem::process(float dt)
                     if (terrain != TerrainID::Water
                         && terrain != TerrainID::Scrub)
                     {
+                        ballPos.y = 0.f;
                         tx.setPosition(ballPos);
                         break;
                     }
@@ -340,9 +341,12 @@ void BallSystem::doCollision(cro::Entity entity)
         switch (terrain)
         {
         default: break;
-        case TerrainID::Bunker:
         case TerrainID::Water:
         case TerrainID::Scrub:
+            pos.y = -Ball::Radius * 2.f;
+            tx.setPosition(pos);
+            [[fallthrough]];
+        case TerrainID::Bunker:
             ball.velocity = glm::vec3(0.f);
             break;
         case TerrainID::Fairway:

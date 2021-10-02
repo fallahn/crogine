@@ -23,13 +23,25 @@ hole 01
 
     crowd
     {
-        position = -146, 0 , -84
-        rotation = 13
+        position = -111.2, 0 , -86
+        rotation = 134
     }
 
     crowd
     {
         position = 80, 0 , 77
         rotation = 170
+    }
+
+    crowd
+    {
+        position = -124, 0 , -92
+        rotation = -195
+    }
+
+    crowd
+    {
+        position = -132.1, 0 , -93.8
+        rotation = -540
     }    
 }
