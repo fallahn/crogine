@@ -50,6 +50,31 @@ R"(
         v_colour = a_colour;
     })";
 
+static const std::string BWFragment =
+R"(
+    uniform sampler2D u_texture;
+    uniform float u_time = 1.0;
+    uniform vec2 u_scale = vec2(1.0);
+
+    VARYING_IN vec2 v_texCoord;
+    VARYING_IN vec4 v_colour;
+
+    OUTPUT
+
+    float rand(vec2 pos)
+    {
+        return fract(sin(dot(pos, vec2(12.9898, 4.1414) + u_time)) * 43758.5453);
+    }
+
+    void main()
+    {
+        vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
+        float grey = dot(colour.rgb, vec3(0.299, 0.587, 0.114));
+
+        float noise = rand(floor(gl_FragCoord.xy / u_scale));
+        FRAG_OUT = vec4(mix(vec3(grey), vec3(noise), 0.07), colour.a); 
+    })";
+
 static const std::string TerminalFragment =
 R"(
     uniform sampler2D u_texture;

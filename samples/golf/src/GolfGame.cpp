@@ -71,6 +71,7 @@ namespace
     {
         ShaderDescription(TerminalFragment.c_str(), "Terminal Display", "by Mostly Hairless."),
         ShaderDescription(TerminalDistorted.c_str(), "Terminal Display (Extreme)", "by Mostly Hairless."),
+        ShaderDescription(BWFragment.c_str(), "Black and White", "by Mostly Hairless."),
         ShaderDescription(CRTFragment.c_str(), "CRT Effect", "PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER\nby Timothy Lottes"),
     };
 }
@@ -330,10 +331,12 @@ bool GolfGame::initialise()
     m_postBuffer = std::make_unique<cro::RenderTexture>();
     m_postBuffer->create(windowSize.x, windowSize.y, false);
     m_postShader = std::make_unique<cro::Shader>();
-    m_postShader->loadFromString(PostVertex, /*PostFragment*/PostShaders[m_postProcessIndex].fragmentString);
+    m_postShader->loadFromString(PostVertex, PostShaders[m_postProcessIndex].fragmentString);
     auto shaderRes = glm::vec2(windowSize);
     glCheck(glUseProgram(m_postShader->getGLHandle()));
     glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
+    float scale = std::floor(shaderRes.y / calcVPSize().y);
+    glCheck(glUniform2f(m_postShader->getUniformID("u_scale"), scale, scale));
     m_uniformIDs[UniformID::Time] = m_postShader->getUniformID("u_time");
     
     m_postQuad = std::make_unique<cro::SimpleQuad>();
@@ -452,6 +455,9 @@ void GolfGame::savePreferences()
 
 void GolfGame::recreatePostProcess()
 {
+    m_uniformIDs[UniformID::Time] = m_postShader->getUniformID("u_time");
+    m_uniformIDs[UniformID::Scale] = m_postShader->getUniformID("u_scale");
+
     auto windowSize = cro::App::getWindow().getSize();
     m_postBuffer->create(windowSize.x, windowSize.y, false);
     m_postQuad->setTexture(m_postBuffer->getTexture()); //resizes the quad's view
@@ -460,5 +466,6 @@ void GolfGame::recreatePostProcess()
     glCheck(glUseProgram(m_postShader->getGLHandle()));
     glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
 
-    m_uniformIDs[UniformID::Time] = m_postShader->getUniformID("u_time");
+    float scale = std::floor(shaderRes.y / calcVPSize().y);
+    glCheck(glUniform2f(m_postShader->getUniformID("u_scale"), scale, scale));
 }

@@ -63,6 +63,7 @@ private:
         enum
         {
             Time,
+            Scale,
 
             Count
         };
