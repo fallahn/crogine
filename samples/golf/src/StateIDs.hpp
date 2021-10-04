@@ -39,6 +39,7 @@ struct StateID final
         Pause,
         Error,
         SplashScreen,
-        Tutorial
+        Tutorial,
+        Keyboard
     };
 };

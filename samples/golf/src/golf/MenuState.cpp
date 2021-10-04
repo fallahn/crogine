@@ -825,6 +825,8 @@ void MenuState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size
     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(m_currentMenu);
 
     SDL_StartTextInput();
+
+    requestStackPush(StateID::Keyboard);
 }
 
 void MenuState::handleTextEdit(const cro::Event& evt)
@@ -858,7 +860,6 @@ void MenuState::handleTextEdit(const cro::Event& evt)
             && m_textEdit.string->size() < m_textEdit.maxLen)
         {
             auto codePoints = cro::Util::String::getCodepoints(evt.text.text);
-
             *m_textEdit.string += cro::String::fromUtf32(codePoints.begin(), codePoints.end());
         }
     }

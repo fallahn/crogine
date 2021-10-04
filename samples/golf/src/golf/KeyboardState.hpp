@@ -35,12 +35,12 @@ source distribution.
 
 #include <crogine/ecs/Scene.hpp>
 
-struct SharedStateData;
+#include <crogine/graphics/TextureResource.hpp>
 
-class ErrorState final : public cro::State
+class KeyboardState final : public cro::State
 {
 public:
-    ErrorState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    KeyboardState(cro::StateStack&, cro::State::Context);
 
     bool handleEvent(const cro::Event&) override;
 
@@ -50,15 +50,33 @@ public:
 
     void render() override;
 
-    cro::StateID getStateID() const override { return StateID::Error; }
+    cro::StateID getStateID() const override { return StateID::Keyboard; }
 
 private:
 
     cro::Scene m_scene;
-    SharedStateData& m_sharedData;
-    cro::Entity m_rootNode;
-    glm::vec2 m_viewScale;
+    cro::TextureResource m_textures;
+    cro::Entity m_keyboardEntity;
+    cro::Entity m_highlightEntity;
+
+    struct KeyboardLayout final
+    {
+        cro::FloatRect bounds;
+        std::array<std::function<void()>, 30> callbacks = {};
+
+        enum
+        {
+            Lower, Upper, Symbol,
+            Count
+        };
+    };
+    std::array<KeyboardLayout, KeyboardLayout::Count> m_keyboardLayouts = {};
+    std::size_t m_activeLayout;
+    std::int32_t m_selectedIndex;
 
     void buildScene();
+    void initCallbacks();
     void quitState();
+
+    void setCursorPosition();
 };

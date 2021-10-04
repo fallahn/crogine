@@ -34,6 +34,7 @@ source distribution.
 #include "golf/OptionsState.hpp"
 #include "golf/PauseState.hpp"
 #include "golf/TutorialState.hpp"
+#include "golf/KeyboardState.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
@@ -87,6 +88,7 @@ GolfGame::GolfGame()
     setApplicationStrings("trederia", "golf");
 
     m_stateStack.registerState<SplashState>(StateID::SplashScreen);
+    m_stateStack.registerState<KeyboardState>(StateID::Keyboard);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData);
     m_stateStack.registerState<GolfState>(StateID::Game, m_sharedData);
     m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);
@@ -346,6 +348,7 @@ bool GolfGame::initialise()
     m_activeIndex = m_postProcessIndex;
 
 #ifdef CRO_DEBUG_
+    //m_stateStack.pushState(StateID::Keyboard);
     m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::SplashScreen);
 #else
