@@ -53,7 +53,6 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
-#include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -1118,7 +1117,6 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
-    m_gameScene.addSystem<cro::SpriteSystem3D>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
@@ -1623,24 +1621,47 @@ void GolfState::spawnBall(const ActorInfo& info)
     //name label for the ball's owner
     glm::vec2 texSize(LabelTextureSize);
     const float scale = 0.2f / texSize.x; //scale to ~20cm wide
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -(texSize.x * scale) / 2.f, Ball::Radius * 2.f, 0.f });
-    entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-    entity.addComponent<cro::Model>();
+    auto playerID = info.playerID;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, 0.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[info.clientID].getTexture());
-    entity.getComponent<cro::Sprite>().setTextureRect({ 0.f, info.playerID * (texSize.y / 4.f), texSize.x, texSize.y / 4.f });
-    ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //apparently we have to wait a frame before updating the material for the label
-    //so let's use the ol' delayed callback trick
-    auto ent = m_gameScene.createEntity();
-    ent.addComponent<cro::Callback>().active = true;
-    ent.getComponent<cro::Callback>().function =
-        [&, entity](cro::Entity e, float)
+    entity.getComponent<cro::Sprite>().setTextureRect({ 0.f, playerID * (texSize.y / 4.f), texSize.x, texSize.y / 4.f });
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 1.f, 1.f, 0.f));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, ballEnt, playerID](cro::Entity e, float dt)
     {
+        auto terrain = ballEnt.getComponent<ClientCollider>().terrain;
+        auto colour = e.getComponent<cro::Sprite>().getColour();
 
-        e.getComponent<cro::Callback>().active = false;
-        m_gameScene.destroyEntity(e);
+        auto position = ballEnt.getComponent<cro::Transform>().getPosition();
+        position.y += Ball::Radius * 2.f;
+        e.getComponent<cro::Transform>().setPosition(m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position));
+
+        if (terrain == TerrainID::Green)
+        {
+            if (m_currentPlayer.player != playerID)
+            {
+                //calc target fade based on distance
+                auto len2 = glm::length2(position - m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition());
+                static constexpr float MinLength = 25.f; //5m^2
+                float alpha = 1.f - std::min(1.f, std::max(0.f, len2 / MinLength));
+
+                colour.setAlpha(std::min(alpha, colour.getAlpha() + dt));
+            }
+            else
+            {
+                //set target fade to zero
+                colour.setAlpha(std::max(0.f, colour.getAlpha() - dt));
+            }
+            e.getComponent<cro::Sprite>().setColour(colour);
+        }
+        else
+        {
+            colour.setAlpha(std::max(0.f, colour.getAlpha() - dt));
+            e.getComponent<cro::Sprite>().setColour(colour);
+        }
     };
 }
 

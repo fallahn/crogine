@@ -59,28 +59,35 @@ void ClientCollisionSystem::process(float)
     {
         auto& collider = entity.getComponent<ClientCollider>();
         const auto& tx = entity.getComponent<cro::Transform>();
+        auto position = tx.getPosition();
+        collider.terrain = readMap(m_currentMap, position.x, -position.z).first;
+        if (collider.terrain == TerrainID::Green)
+        {
+            //check if we're in the hole
+            glm::vec2 pin(m_holeData[m_holeIndex].pin.x, m_holeData[m_holeIndex].pin.z);
+            glm::vec2 pos(position.x, position.z);
+            
+            auto len2 = glm::length2(pin - pos);
+            if (len2 < MinBallDist)
+            {
+                collider.terrain = TerrainID::Hole;
+            }
+        }
+
 
         const auto notify = [&](CollisionEvent::Type type, glm::vec3 position)
         {
             auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
             msg->type = type;
             msg->position = position;
-            msg->terrain = readMap(m_currentMap, position.x, -position.z).first;
+            msg->terrain = collider.terrain;
             msg->clubID = m_club;
 
-            if (msg->terrain == TerrainID::Green)
-            {
-                //check if we're in the hole
-                auto len2 = glm::length2(m_holeData[m_holeIndex].pin - position);
-                if (len2 < MinBallDist)
-                {
-                    msg->terrain = TerrainID::Hole;
-                }
-            }
+            
         };
 
         static constexpr float CollisionLevel = 0.25f;
-        auto position = tx.getPosition();
+
         std::int32_t direction = 0;
         if (position.y < collider.previousPosition.y)
         {
