@@ -291,6 +291,17 @@ bool GolfGame::initialise()
             }
         });
 
+    registerConsoleTab("Credits",
+        []()
+        {
+            ImGui::Text("Credits:");
+            ImGui::Text("OPL VST synthesiser: https://github.com/jpcima/ADLplug");
+            ImGui::Text("Sound Effects: https://freesound.org (see assets directory for specific credits)");
+            ImGui::Text("Artwork: Blender and Aseprite https://blender.org https://aseprite.org");
+            ImGui::Text("Programming: Matt Marchant, source available here: https://github.com/fallahn/crogine");
+            ImGui::NewLine();
+            ImGui::Text("Check out other games available from https://fallahn.itch.io !");
+        });
 
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Golf Game");

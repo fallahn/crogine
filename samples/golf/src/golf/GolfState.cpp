@@ -847,7 +847,7 @@ void GolfState::loadAssets()
                 bbPos.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
 
                 //images are a little oversized at 2.5m...
-                auto bb = billboards[(i % billboards.size()) + cro::Util::Random::value(0, 2)];
+                auto bb = billboards[(i + cro::Util::Random::value(0, 2)) % billboards.size()];
                 bb.size *= static_cast<float>(cro::Util::Random::value(65, 75)) / 100.f;
                 bb.position = bbPos;
                 ent.getComponent<cro::BillboardCollection>().addBillboard(bb);
