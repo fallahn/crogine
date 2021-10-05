@@ -269,6 +269,7 @@ void GameState::sendInitialGameState(std::uint8_t clientID)
             info.serverID = static_cast<std::uint32_t>(ball.getIndex());
             info.position = ball.getComponent<cro::Transform>().getPosition();
             info.clientID = player.client;
+            info.playerID = player.player;
             info.timestamp = timestamp;
             m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ActorSpawn, info, cro::NetFlag::Reliable);
         }

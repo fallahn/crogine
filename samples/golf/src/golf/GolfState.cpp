@@ -43,6 +43,7 @@ source distribution.
 #include "PlayerAvatar.hpp"
 #include "GolfSoundDirector.hpp"
 #include "TutorialDirector.hpp"
+#include "BallSystem.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -52,6 +53,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -1116,6 +1118,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
+    m_gameScene.addSystem<cro::SpriteSystem3D>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
@@ -1615,6 +1618,30 @@ void GolfState::spawnBall(const ActorInfo& info)
     m_modelDefs[ModelID::Ball]->createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //name label for the ball's owner
+    glm::vec2 texSize(LabelTextureSize);
+    const float scale = 0.2f / texSize.x; //scale to ~20cm wide
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -(texSize.x * scale) / 2.f, Ball::Radius * 2.f, 0.f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+    entity.addComponent<cro::Model>();
+    entity.addComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[info.clientID].getTexture());
+    entity.getComponent<cro::Sprite>().setTextureRect({ 0.f, info.playerID * (texSize.y / 4.f), texSize.x, texSize.y / 4.f });
+    ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //apparently we have to wait a frame before updating the material for the label
+    //so let's use the ol' delayed callback trick
+    auto ent = m_gameScene.createEntity();
+    ent.addComponent<cro::Callback>().active = true;
+    ent.getComponent<cro::Callback>().function =
+        [&, entity](cro::Entity e, float)
+    {
+
+        e.getComponent<cro::Callback>().active = false;
+        m_gameScene.destroyEntity(e);
+    };
 }
 
 void GolfState::handleNetEvent(const cro::NetEvent& evt)
