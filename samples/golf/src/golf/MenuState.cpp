@@ -220,51 +220,19 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     }
 
 #ifdef CRO_DEBUG_
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("Debug"))
-    //        {
-    //            /*auto camPos = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
-    //            ImGui::Text("Cam Pos %3.3f, %3.3f, %3.3f", camPos.x, camPos.y, camPos.z);*/
-
-    //            /*static float sunRot = 0.f;
-    //            float prevRot = sunRot;
-    //            if (ImGui::SliderFloat("Sun", &sunRot, -180.f, 180.f))
-    //            {
-    //                m_backgroundScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, sunRot * cro::Util::Const::degToRad);
-    //            }*/
-
-    //            auto group = m_uiScene.getSystem<cro::UISystem>().getActiveGroup();
-    //            switch (group)
-    //            {
-    //            default:
-    //                ImGui::Text("No Menu???");
-    //                break;
-    //            case MenuID::Avatar:
-    //                ImGui::Text("Avatar");
-    //                break;
-    //            case MenuID::Dummy:
-    //                ImGui::Text("Dummy");
-    //                break;
-    //            case MenuID::Join:
-    //                ImGui::Text("Join");
-    //                break;
-    //            case MenuID::Lobby:
-    //                ImGui::Text("Lobby");
-    //                break;
-    //            case MenuID::Main:
-    //                ImGui::Text("Main");
-    //                break;
-    //            }
-
-    //            if (group != m_currentMenu)
-    //            {
-    //                ImGui::Text("Group is %lu but menu is %lu", group, m_currentMenu);
-    //            }
-    //        }
-    //        ImGui::End();
-    //    
-    //    });
+    /*registerWindow([&]() 
+        {
+            if (ImGui::Begin("Debug"))
+            {
+                ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+            }
+            ImGui::End();
+        });*/
 #endif
 }
 

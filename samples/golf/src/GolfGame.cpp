@@ -317,6 +317,12 @@ bool GolfGame::initialise()
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
     std::fill(m_sharedData.controllerIDs.begin(), m_sharedData.controllerIDs.end(), 0);
 
+    //texture used to hold name tags
+    for (auto& t : m_sharedData.nameTextures)
+    {
+        t.create(LabelTextureSize.x, LabelTextureSize.y, false);
+    }
+
     //preload resources which will be used in dynamically loaded menus
     m_sharedData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
     m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
@@ -383,6 +389,12 @@ void GolfGame::finalise()
             t = {};
         }
     }
+
+    for (auto& t : m_sharedData.nameTextures)
+    {
+        t = {};
+    }
+
     m_sharedData.sharedResources.reset();
     m_postQuad.reset();
     m_postShader.reset();

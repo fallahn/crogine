@@ -75,6 +75,8 @@ AudioEmitter::~AudioEmitter()
 {
     if (m_ID > 0)
     {
+        stop();
+        AudioRenderer::stopSource(m_ID);
         AudioRenderer::deleteAudioSource(m_ID);
     }
 }

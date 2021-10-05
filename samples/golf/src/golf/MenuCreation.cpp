@@ -55,6 +55,7 @@ source distribution.
 #include <crogine/ecs/systems/UISystem.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/graphics/SimpleText.hpp>
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Random.hpp>
 
@@ -2441,17 +2442,33 @@ void MenuState::updateLobbyAvatars()
             m_playerAvatar.apply();
         };
         const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+        cro::SimpleText simpleText(font);
+        simpleText.setCharacterSize(UITextSize);
+        simpleText.setFillColour(TextNormalColour);
 
         glm::vec2 textPos(0.f);
         std::int32_t h = 0;
         for (const auto& c : m_sharedData.connectionData)
         {
+            if (c.connectionID < m_sharedData.nameTextures.size())
+            {
+                m_sharedData.nameTextures[c.connectionID].clear(cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha));
+                
+                for (auto i = 0u; i < c.playerCount; ++i)
+                {
+                    simpleText.setString(c.playerData[i].name);
+                    auto bounds = simpleText.getLocalBounds().width;
+                    simpleText.setPosition({ std::round((LabelTextureSize.x - bounds) / 2.f), (i * (LabelTextureSize.y / 4)) + 4.f });
+                    simpleText.draw();
+                }
+                m_sharedData.nameTextures[c.connectionID].display();
+            }
+
             //create a list of names on the connected client
             cro::String str;
             for (auto i = 0u; i < c.playerCount; ++i)
             {
                 str += c.playerData[i].name + "\n";
-
                 applyTexture(m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
             }
 

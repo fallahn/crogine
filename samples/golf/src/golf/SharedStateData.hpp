@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/network/NetClient.hpp>
 #include <crogine/core/String.hpp>
 #include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
 #include <string>
@@ -80,6 +81,7 @@ struct SharedStateData final
     std::array<ConnectionData, 4u> connectionData = {};
 
     std::array<std::array<cro::Texture, 4u>, 4u> avatarTextures = {};
+    std::array<cro::RenderTexture, 4u> nameTextures = {};
 
     //our local player data
     ConnectionData localConnectionData;
