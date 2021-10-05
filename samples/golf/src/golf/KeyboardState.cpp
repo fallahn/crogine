@@ -324,14 +324,14 @@ void KeyboardState::buildScene()
     m_highlightEntity = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 63.f, 105.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 63.f, 27.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 0.835f, 0.f));
     m_keyboardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 757.f, 105.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 757.f, 27.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 0.f, 0.2f));
@@ -355,10 +355,9 @@ void KeyboardState::initCallbacks()
     //and works across then up
 
     auto& lowerCallbacks = m_keyboardLayouts[KeyboardLayout::Lower].callbacks;
-    lowerCallbacks[0] = std::bind(&KeyboardState::nextLayout, this);
-    lowerCallbacks[9] = std::bind(&KeyboardState::sendBackspace, this);
-
-    //zxcvbnm,
+    
+    //<zxcvbnm,.
+    lowerCallbacks[0] = SendCodepoint(0x3c, 0);
     lowerCallbacks[1] = SendCodepoint(0x7a, 0);
     lowerCallbacks[2] = SendCodepoint(0x78, 0);
     lowerCallbacks[3] = SendCodepoint(0x63, 0);
@@ -367,8 +366,10 @@ void KeyboardState::initCallbacks()
     lowerCallbacks[6] = SendCodepoint(0x6e, 0);
     lowerCallbacks[7] = SendCodepoint(0x6d, 0);
     lowerCallbacks[8] = SendCodepoint(0x2c, 0);
+    lowerCallbacks[9] = SendCodepoint(0x2e, 0);
 
-    //asdfghjkl.
+
+    //asdfghjkl>
     lowerCallbacks[10] = SendCodepoint(0x61, 0);
     lowerCallbacks[11] = SendCodepoint(0x73, 0);
     lowerCallbacks[12] = SendCodepoint(0x64, 0);
@@ -378,7 +379,7 @@ void KeyboardState::initCallbacks()
     lowerCallbacks[16] = SendCodepoint(0x6a, 0);
     lowerCallbacks[17] = SendCodepoint(0x6b, 0);
     lowerCallbacks[18] = SendCodepoint(0x6c, 0);
-    lowerCallbacks[19] = SendCodepoint(0x2e, 0);
+    lowerCallbacks[19] = SendCodepoint(0x3e, 0);
 
     //qwertyuiop
     lowerCallbacks[20] = SendCodepoint(0x71, 0);
@@ -393,10 +394,9 @@ void KeyboardState::initCallbacks()
     lowerCallbacks[29] = SendCodepoint(0x70, 0);
 
     auto& upperCallbacks = m_keyboardLayouts[KeyboardLayout::Upper].callbacks;
-    upperCallbacks[0] = std::bind(&KeyboardState::nextLayout, this);
-    upperCallbacks[9] = std::bind(&KeyboardState::sendBackspace, this);
-
-    //ZXCVBNM/
+    
+    //\ZXCVBNM/?
+    upperCallbacks[0] = SendCodepoint(0x5c, 0);
     upperCallbacks[1] = SendCodepoint(0x5a, 0);
     upperCallbacks[2] = SendCodepoint(0x58, 0);
     upperCallbacks[3] = SendCodepoint(0x43, 0);
@@ -405,6 +405,7 @@ void KeyboardState::initCallbacks()
     upperCallbacks[6] = SendCodepoint(0x4e, 0);
     upperCallbacks[7] = SendCodepoint(0x4d, 0);
     upperCallbacks[8] = SendCodepoint(0x2f, 0);
+    upperCallbacks[9] = SendCodepoint(0x3f, 0);
 
     //ASDFGHJKL:
     upperCallbacks[10] = SendCodepoint(0x41, 0);
@@ -431,10 +432,9 @@ void KeyboardState::initCallbacks()
     upperCallbacks[29] = SendCodepoint(0x50, 0);
 
     auto& symbolCallbacks = m_keyboardLayouts[KeyboardLayout::Symbol].callbacks;
-    symbolCallbacks[0] = std::bind(&KeyboardState::nextLayout, this);
-    symbolCallbacks[9] = std::bind(&KeyboardState::sendBackspace, this);
-
-    //_-+=;@# euro
+    
+    //~_-+=;@# euro.
+    symbolCallbacks[0] = SendCodepoint(0x7e, 0);
     symbolCallbacks[1] = SendCodepoint(0x5f, 0);
     symbolCallbacks[2] = SendCodepoint(0x2d, 0);
     symbolCallbacks[3] = SendCodepoint(0x2b, 0);
@@ -443,6 +443,7 @@ void KeyboardState::initCallbacks()
     symbolCallbacks[6] = SendCodepoint(0x40, 0);
     symbolCallbacks[7] = SendCodepoint(0x23, 0);
     symbolCallbacks[8] = SendCodepoint(-30, -126, -84);
+    symbolCallbacks[9] = SendCodepoint(0x2e, 0);
 
     //1234567890
     symbolCallbacks[10] = SendCodepoint(0x31, 0);
@@ -451,7 +452,7 @@ void KeyboardState::initCallbacks()
     symbolCallbacks[13] = SendCodepoint(0x34, 0);
     symbolCallbacks[14] = SendCodepoint(0x35, 0);
     symbolCallbacks[15] = SendCodepoint(0x36, 0);
-    symbolCallbacks[16] = SendCodepoint(0x36, 0);
+    symbolCallbacks[16] = SendCodepoint(0x37, 0);
     symbolCallbacks[17] = SendCodepoint(0x38, 0);
     symbolCallbacks[18] = SendCodepoint(0x39, 0);
     symbolCallbacks[19] = SendCodepoint(0x30, 0);
