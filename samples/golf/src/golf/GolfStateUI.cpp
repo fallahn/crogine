@@ -86,7 +86,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_gameSceneTexture.getTexture());
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, 0.5f));
     entity.addComponent<cro::Callback>().function =
         [](cro::Entity e, float)
     {
@@ -612,7 +612,7 @@ void GolfState::buildUI()
     auto updateView = [&, playerEnt, courseEnt, infoEnt, windEnt, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-        cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.5f, 1.f);
+        cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.5f, 2.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         auto vpSize = calcVPSize();
@@ -812,7 +812,7 @@ void GolfState::createScoreboard()
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.getComponent<cro::Transform>().setOrigin({ -6.f, 253.f, -0.1});
+    entity.getComponent<cro::Transform>().setOrigin({ -6.f, 253.f, -0.2f});
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     cro::FloatRect bgCrop({ 0.f, bounds.height - 266.f, 389.f, 266.f });
@@ -864,7 +864,7 @@ void GolfState::createScoreboard()
     for (auto& e : ents)
     {
         e = m_uiScene.createEntity();
-        e.addComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions[i], 0.2f));
+        e.addComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions[i], 1.3f));
         e.addComponent<cro::Drawable2D>();
         e.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
         e.getComponent<cro::Text>().setVerticalSpacing(6.f);

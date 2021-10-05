@@ -1622,6 +1622,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     glm::vec2 texSize(LabelTextureSize);
     const float scale = 0.2f / texSize.x; //scale to ~20cm wide
     auto playerID = info.playerID;
+    auto clientID = info.clientID;
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, 0.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
@@ -1630,18 +1631,31 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 1.f, 1.f, 0.f));
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&, ballEnt, playerID](cro::Entity e, float dt)
+        [&, ballEnt, playerID, clientID](cro::Entity e, float dt)
     {
+        if (ballEnt.destroyed())
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        }
+
         auto terrain = ballEnt.getComponent<ClientCollider>().terrain;
         auto colour = e.getComponent<cro::Sprite>().getColour();
 
         auto position = ballEnt.getComponent<cro::Transform>().getPosition();
         position.y += Ball::Radius * 2.f;
-        e.getComponent<cro::Transform>().setPosition(m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position));
+        e.getComponent<cro::Transform>().setPosition(m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position/*, m_gameSceneTexture.getSize()*/));
+        e.getComponent<cro::Transform>().setScale(m_viewScale);
 
         if (terrain == TerrainID::Green)
         {
-            if (m_currentPlayer.player != playerID)
+            if (m_currentPlayer.player == playerID
+                && m_sharedData.clientConnection.connectionID == clientID)
+            {
+                 //set target fade to zero
+                colour.setAlpha(std::max(0.f, colour.getAlpha() - dt));               
+            }
+            else
             {
                 //calc target fade based on distance
                 auto len2 = glm::length2(position - m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition());
@@ -1649,11 +1663,6 @@ void GolfState::spawnBall(const ActorInfo& info)
                 float alpha = 1.f - std::min(1.f, std::max(0.f, len2 / MinLength));
 
                 colour.setAlpha(std::min(alpha, colour.getAlpha() + dt));
-            }
-            else
-            {
-                //set target fade to zero
-                colour.setAlpha(std::max(0.f, colour.getAlpha() - dt));
             }
             e.getComponent<cro::Sprite>().setColour(colour);
         }
