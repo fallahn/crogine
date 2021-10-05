@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/core/GameController.hpp>
 
 #include <crogine/util/Easings.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -54,6 +55,30 @@ namespace
             In, Hold, Out
         }state = In;
 
+    };
+
+    struct SendCodepoint final
+    {
+        void operator()()
+        {
+            if (SDL_IsTextInputActive())
+            {
+                SDL_Event evt;
+                evt.text.windowID = 0;
+                evt.text.timestamp = 0;
+                evt.type = SDL_TEXTINPUT;
+                evt.text.text[0] = bytes[0];
+                evt.text.text[1] = bytes[1];
+                evt.text.text[2] = bytes[2];
+                evt.text.text[3] = 0;
+
+                SDL_PushEvent(&evt);
+            }
+        };
+
+        SendCodepoint(std::int8_t first, std::int8_t second, std::int8_t third = 0)
+            : bytes({ first, second, third }) {}
+        const std::array<std::int8_t, 3u> bytes = {};
     };
 
     constexpr glm::vec2 GridOffset(19.f, 108.f);
@@ -99,10 +124,43 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDL_CONTROLLERBUTTONDOWN:
+            switch (evt.cbutton.button)
+            {
+            default: break;
+            case cro::GameController::DPadDown:
+                down();
+                break;
+            case cro::GameController::DPadLeft:
+                left();
+                break;
+            case cro::GameController::DPadRight:
+                right();
+                break;
+            case cro::GameController::DPadUp:
+                up();
+                break;
+            case cro::GameController::ButtonA:
+                activate();
+                break;
+            case cro::GameController::ButtonB:
+                sendBackspace();
+                break;
+            case cro::GameController::ButtonX:
+                sendSpace();
+                break;
+            case cro::GameController::ButtonY:
+                nextLayout();
+                break;
+            case cro::GameController::ButtonStart:
+                quitState();
+                break;
+            }
+            return false;
         case SDL_CONTROLLERBUTTONUP:
+            
+            return false;
         case SDL_CONTROLLERAXISMOTION:
-
-
+            
             return false;
 #ifdef CRO_DEBUG_
         case SDL_KEYDOWN:
@@ -110,23 +168,19 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             {
             default: break;
             case SDLK_LEFT:
-                m_selectedIndex = (m_selectedIndex + (GridSize - 1)) % GridSize;
-                setCursorPosition();
+                left();
                 break;
             case SDLK_RIGHT:
-                m_selectedIndex = (m_selectedIndex + 1) % GridSize;
-                setCursorPosition();
+                right();
                 break;
             case SDLK_UP:
-                m_selectedIndex = (m_selectedIndex + GridX) % GridSize;
-                setCursorPosition();
+                up();
                 break;
             case SDLK_DOWN:
-                m_selectedIndex = (m_selectedIndex + (GridSize - GridX)) % GridSize;
-                setCursorPosition();
+                down();
                 break;
             case SDLK_RETURN:
-                m_keyboardLayouts[m_activeLayout].callbacks[m_selectedIndex]();
+                activate();
                 return false;
             }
             break;
@@ -249,8 +303,46 @@ void KeyboardState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::Callback>().setUserData<float>(0.1f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime -= dt;
+
+        if (currTime < 0)
+        {
+            auto rect = e.getComponent<cro::Sprite>().getTextureRect();
+            rect.left = 0.f;
+            e.getComponent<cro::Sprite>().setTextureRect(rect);
+
+            currTime = 0.1f;
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
     m_keyboardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_highlightEntity = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 63.f, 105.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 0.835f, 0.f));
+    m_keyboardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 757.f, 105.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 0.f, 0.2f));
+    m_keyboardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 524.f, 27.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour(0.f, 0.4667f, 1.f));
+    m_keyboardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     m_keyboardLayouts[KeyboardLayout::Lower].bounds = spriteSheet.getSprite("lower").getTextureRect();
     m_keyboardLayouts[KeyboardLayout::Upper].bounds = spriteSheet.getSprite("upper").getTextureRect();
@@ -259,54 +351,12 @@ void KeyboardState::buildScene()
 
 void KeyboardState::initCallbacks()
 {
-    auto nextLayout = [&]() mutable
-    {
-        m_activeLayout = (m_activeLayout + 1) % KeyboardLayout::Count;
-        m_keyboardEntity.getComponent<cro::Sprite>().setTextureRect(m_keyboardLayouts[m_activeLayout].bounds);
-    };
-
-    auto sendBackspace = []() 
-    {
-        SDL_Event evt;
-        evt.type = SDL_KEYDOWN;
-        evt.key.keysym.sym = SDLK_BACKSPACE;
-        evt.key.timestamp = 0;
-        evt.key.repeat = 0;
-        evt.key.windowID = 0;
-        evt.key.state = SDL_RELEASED;
-
-        SDL_PushEvent(&evt);
-    };
-
-    struct SendCodepoint final
-    {
-        void operator()()
-        {
-            if (SDL_IsTextInputActive())
-            {
-                SDL_Event evt;
-                evt.text.windowID = 0;
-                evt.text.timestamp = 0;
-                evt.type = SDL_TEXTINPUT;
-                evt.text.text[0] = bytes.first;
-                evt.text.text[1] = bytes.second;
-                evt.text.text[2] = 0;
-
-                SDL_PushEvent(&evt);
-            }
-        };
-
-        SendCodepoint(std::int8_t first, std::int8_t second)
-            : bytes(first, second) {}
-        const std::pair<std::int8_t, std::int8_t> bytes = { 0,0 };
-    };
-
     //each callback starts at bottom left
     //and works across then up
 
     auto& lowerCallbacks = m_keyboardLayouts[KeyboardLayout::Lower].callbacks;
-    lowerCallbacks[0] = nextLayout;
-    lowerCallbacks[9] = sendBackspace;
+    lowerCallbacks[0] = std::bind(&KeyboardState::nextLayout, this);
+    lowerCallbacks[9] = std::bind(&KeyboardState::sendBackspace, this);
 
     //zxcvbnm,
     lowerCallbacks[1] = SendCodepoint(0x7a, 0);
@@ -343,8 +393,8 @@ void KeyboardState::initCallbacks()
     lowerCallbacks[29] = SendCodepoint(0x70, 0);
 
     auto& upperCallbacks = m_keyboardLayouts[KeyboardLayout::Upper].callbacks;
-    upperCallbacks[0] = nextLayout;
-    upperCallbacks[9] = sendBackspace;
+    upperCallbacks[0] = std::bind(&KeyboardState::nextLayout, this);
+    upperCallbacks[9] = std::bind(&KeyboardState::sendBackspace, this);
 
     //ZXCVBNM/
     upperCallbacks[1] = SendCodepoint(0x5a, 0);
@@ -381,8 +431,8 @@ void KeyboardState::initCallbacks()
     upperCallbacks[29] = SendCodepoint(0x50, 0);
 
     auto& symbolCallbacks = m_keyboardLayouts[KeyboardLayout::Symbol].callbacks;
-    symbolCallbacks[0] = nextLayout;
-    symbolCallbacks[9] = sendBackspace;
+    symbolCallbacks[0] = std::bind(&KeyboardState::nextLayout, this);
+    symbolCallbacks[9] = std::bind(&KeyboardState::sendBackspace, this);
 
     //_-+=;@# euro
     symbolCallbacks[1] = SendCodepoint(0x5f, 0);
@@ -392,7 +442,7 @@ void KeyboardState::initCallbacks()
     symbolCallbacks[5] = SendCodepoint(0x3b, 0);
     symbolCallbacks[6] = SendCodepoint(0x40, 0);
     symbolCallbacks[7] = SendCodepoint(0x23, 0);
-    symbolCallbacks[8] = SendCodepoint(0xc2, 0x80); //can't find a definitive answer to this...
+    symbolCallbacks[8] = SendCodepoint(-30, -126, -84);
 
     //1234567890
     symbolCallbacks[10] = SendCodepoint(0x31, 0);
@@ -409,7 +459,7 @@ void KeyboardState::initCallbacks()
     //!"£$%^&*()
     symbolCallbacks[20] = SendCodepoint(0x21, 0);
     symbolCallbacks[21] = SendCodepoint(0x22, 0);
-    symbolCallbacks[22] = SendCodepoint(0xc2, 0xa3);
+    symbolCallbacks[22] = SendCodepoint(-62, -93);
     symbolCallbacks[23] = SendCodepoint(0x24, 0);
     symbolCallbacks[24] = SendCodepoint(0x25, 0);
     symbolCallbacks[25] = SendCodepoint(0x5e, 0);
@@ -436,4 +486,71 @@ void KeyboardState::setCursorPosition()
     pos += GridOffset;
 
     m_highlightEntity.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.1f));
+}
+
+void KeyboardState::left()
+{
+    m_selectedIndex = ((m_selectedIndex + (GridSize - 1)) % GridX) + ((m_selectedIndex / GridX) * GridX);
+    setCursorPosition();
+}
+
+void KeyboardState::right()
+{
+    m_selectedIndex = ((m_selectedIndex + 1) % GridX) + ((m_selectedIndex / GridX) * GridX);
+    setCursorPosition();
+}
+
+void KeyboardState::up()
+{
+    m_selectedIndex = (m_selectedIndex + GridX) % GridSize;
+    setCursorPosition();
+}
+
+void KeyboardState::down()
+{
+    m_selectedIndex = (m_selectedIndex + (GridSize - GridX)) % GridSize;
+    setCursorPosition();
+}
+
+void KeyboardState::activate()
+{
+    m_keyboardLayouts[m_activeLayout].callbacks[m_selectedIndex]();
+
+    auto rect = m_highlightEntity.getComponent<cro::Sprite>().getTextureRect();
+    rect.left = rect.width;
+    m_highlightEntity.getComponent<cro::Sprite>().setTextureRect(rect);
+    m_highlightEntity.getComponent<cro::Callback>().active = true;
+}
+
+void KeyboardState::nextLayout()
+{
+    m_activeLayout = (m_activeLayout + 1) % KeyboardLayout::Count;
+    m_keyboardEntity.getComponent<cro::Sprite>().setTextureRect(m_keyboardLayouts[m_activeLayout].bounds);
+};
+
+void KeyboardState::sendKeystroke(std::int32_t key)
+{
+    SDL_Event evt;
+    evt.type = SDL_KEYDOWN;
+    evt.key.keysym.sym = key;
+    evt.key.keysym.scancode = SDL_GetScancodeFromKey(key);
+    evt.key.timestamp = 0;
+    evt.key.repeat = 0;
+    evt.key.windowID = 0;
+    evt.key.state = SDL_RELEASED;
+
+    SDL_PushEvent(&evt);
+};
+
+void KeyboardState::sendBackspace()
+{
+    sendKeystroke(SDLK_BACKSPACE);
+}
+
+void KeyboardState::sendSpace()
+{
+    //sendKeystroke(SDLK_SPACE);
+
+    SendCodepoint space(0x20, 0);
+    space();
 }

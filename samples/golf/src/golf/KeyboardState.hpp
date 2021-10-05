@@ -79,4 +79,14 @@ private:
     void quitState();
 
     void setCursorPosition();
+    void left();
+    void right();
+    void up();
+    void down();
+    void activate();
+
+    void nextLayout();
+    void sendKeystroke(std::int32_t);
+    void sendBackspace(); //have to make this separate to be compatible with callbacks...
+    void sendSpace();
 };

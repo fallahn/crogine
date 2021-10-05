@@ -825,8 +825,6 @@ void MenuState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size
     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(m_currentMenu);
 
     SDL_StartTextInput();
-
-    requestStackPush(StateID::Keyboard);
 }
 
 void MenuState::handleTextEdit(const cro::Event& evt)

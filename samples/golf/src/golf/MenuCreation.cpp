@@ -1299,6 +1299,11 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     {
                         beginTextEdit(textEnt, &m_sharedData.targetIP, ConstVal::MaxIPChars);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                        if (evt.type == SDL_CONTROLLERBUTTONUP)
+                        {
+                            requestStackPush(StateID::Keyboard);
+                        }
                     }
                     else
                     {
@@ -1854,6 +1859,11 @@ void MenuState::createPlayerConfigMenu()
                     {
                         beginTextEdit(textEnt, &m_sharedData.localConnectionData.playerData[callback.getUserData<std::uint8_t>()].name, ConstVal::MaxNameChars);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                        if (evt.type == SDL_CONTROLLERBUTTONUP)
+                        {
+                            requestStackPush(StateID::Keyboard);
+                        }
                     }
                     else
                     {
