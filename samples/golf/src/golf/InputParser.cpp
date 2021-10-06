@@ -208,7 +208,7 @@ void InputParser::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    /*else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
@@ -229,7 +229,7 @@ void InputParser::handleEvent(const cro::Event& evt)
         {
             m_inputFlags &= ~InputFlag::NextClub;
         }
-    }  
+    }*/  
 
     else if (evt.type == SDL_MOUSEWHEEL)
     {

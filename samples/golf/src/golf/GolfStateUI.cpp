@@ -98,7 +98,7 @@ void GolfState::buildUI()
         e.getComponent<cro::Callback>().active = false;
     };
     auto courseEnt = entity;
-
+    m_courseEnt = courseEnt;
 
     auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
     camera.updateMatrices(m_cameras[CameraID::Player].getComponent<cro::Transform>());

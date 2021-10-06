@@ -1652,9 +1652,9 @@ void GolfState::spawnBall(const ActorInfo& info)
         auto colour = e.getComponent<cro::Sprite>().getColour();
 
         auto position = ballEnt.getComponent<cro::Transform>().getPosition();
-        position.y += Ball::Radius * 2.f;
-        e.getComponent<cro::Transform>().setPosition(m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position/*, m_gameSceneTexture.getSize()*/));
-        e.getComponent<cro::Transform>().setScale(m_viewScale);
+        position.y += Ball::Radius * 3.f;
+
+        e.getComponent<cro::Transform>().setPosition(m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position, m_gameSceneTexture.getSize()));
 
         if (terrain == TerrainID::Green)
         {
@@ -1666,10 +1666,21 @@ void GolfState::spawnBall(const ActorInfo& info)
             }
             else
             {
-                //calc target fade based on distance
-                auto len2 = glm::length2(position - m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition());
+                //calc target fade based on distance to the camera
+                const auto& camTx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
+                auto camPos = camTx.getPosition();
+                auto ballVec = position - camPos;
+                auto len2 = glm::length2(ballVec);
                 static constexpr float MinLength = 25.f; //5m^2
                 float alpha = 1.f - std::min(1.f, std::max(0.f, len2 / MinLength));
+
+                //fade slightly near the centre of the screen
+                //prevent blocking the view
+                float halfWidth = m_gameSceneTexture.getSize().x / 2.f;
+                float halfPos = e.getComponent<cro::Transform>().getPosition().x - halfWidth;
+                float amount = std::min(1.f, std::max(0.f, std::abs(halfPos) / halfWidth));
+                amount = smoothstep(0.2f, 0.4f, amount); //remember tex size is probably a lot wider than the window
+                alpha *= amount;
 
                 colour.setAlpha(std::min(alpha, colour.getAlpha() + dt));
             }
@@ -1681,6 +1692,7 @@ void GolfState::spawnBall(const ActorInfo& info)
             e.getComponent<cro::Sprite>().setColour(colour);
         }
     };
+    m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void GolfState::handleNetEvent(const cro::NetEvent& evt)

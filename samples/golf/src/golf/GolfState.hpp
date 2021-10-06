@@ -195,6 +195,8 @@ private:
     glm::vec2 m_viewScale;
     std::size_t m_scoreColumnCount;
 
+    cro::Entity m_courseEnt;
+
     void buildUI();
     void showCountdown(std::uint8_t);
     void createScoreboard();
