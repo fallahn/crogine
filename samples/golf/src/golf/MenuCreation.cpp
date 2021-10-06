@@ -1762,7 +1762,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     if (!names.empty())
     {
         str = "Last Round's Top Scorers: " + names[0];
-        for (auto i = 1u; i < /*names.size()*/4u; ++i)
+        for (auto i = 1u; i < names.size() && i < 4u; ++i)
         {
             str += " - " + names[i];
         }

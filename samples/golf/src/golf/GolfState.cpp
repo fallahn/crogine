@@ -1671,7 +1671,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                 auto camPos = camTx.getPosition();
                 auto ballVec = position - camPos;
                 auto len2 = glm::length2(ballVec);
-                static constexpr float MinLength = 25.f; //5m^2
+                static constexpr float MinLength = 64.f; //8m^2
                 float alpha = 1.f - std::min(1.f, std::max(0.f, len2 / MinLength));
 
                 //fade slightly near the centre of the screen
@@ -1679,7 +1679,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                 float halfWidth = m_gameSceneTexture.getSize().x / 2.f;
                 float halfPos = e.getComponent<cro::Transform>().getPosition().x - halfWidth;
                 float amount = std::min(1.f, std::max(0.f, std::abs(halfPos) / halfWidth));
-                amount = smoothstep(0.2f, 0.4f, amount); //remember tex size is probably a lot wider than the window
+                amount = 0.1f + (smoothstep(0.1f, 0.25f, amount) * 0.85f); //remember tex size is probably a lot wider than the window
                 alpha *= amount;
 
                 colour.setAlpha(std::min(alpha, colour.getAlpha() + dt));
