@@ -81,6 +81,25 @@ namespace
         const std::array<std::int8_t, 3u> bytes = {};
     };
 
+    struct ButtonAnimationCallback final
+    {
+        void operator() (cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            float scale = cro::Util::Easing::easeInBounce(currTime) * 0.4f;
+            scale += 1.f;
+            e.getComponent<cro::Transform>().setScale({ scale, scale });
+
+            currTime = std::max(0.f, currTime - (dt * 2.f));
+            if (currTime == 0)
+            {
+                currTime = 1.f;
+                e.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+    };
+
     constexpr glm::vec2 GridOffset(19.f, 108.f);
     constexpr glm::vec2 GridSpacing(77.f, 88.f);
 
@@ -182,17 +201,37 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             case SDLK_RETURN:
                 activate();
                 return false;
+            case SDLK_SPACE:
+                sendSpace();
+                return false;
+            /*case SDLK_BACKSPACE:
+                sendBackspace();
+                return false;*/
+            case SDLK_TAB:
+                nextLayout();
+                return false;
             }
             break;
         case SDL_KEYUP:
             switch (evt.key.keysym.sym)
             {
             default: break;
-            case SDLK_RETURN: return false;
+            case SDLK_BACKSPACE:
+                sendBackspace();
+                [[fallthrough]];
+            case SDLK_RETURN: 
+            case SDLK_SPACE:
+            case SDLK_TAB:
+                return false;
             }
             break;
 #endif
         }
+    }
+
+    if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    {
+        quitState();
     }
 
     m_scene.forwardEvent(evt);
@@ -324,25 +363,38 @@ void KeyboardState::buildScene()
     m_highlightEntity = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 63.f, 27.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 78.f, 27.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 0.835f, 0.f));
+    entity.addComponent<cro::Callback>().function = ButtonAnimationCallback();
+    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     m_keyboardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_buttonEnts[ButtonID::Shift] = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 757.f, 27.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 772.f, 27.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 0.f, 0.2f));
+    entity.addComponent<cro::Callback>().function = ButtonAnimationCallback();
+    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     m_keyboardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_buttonEnts[ButtonID::Backspace] = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 524.f, 27.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 539.f, 27.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour(0.f, 0.4667f, 1.f));
+    entity.addComponent<cro::Callback>().function = ButtonAnimationCallback();
+    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     m_keyboardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_buttonEnts[ButtonID::Space] = entity;
 
     m_keyboardLayouts[KeyboardLayout::Lower].bounds = spriteSheet.getSprite("lower").getTextureRect();
     m_keyboardLayouts[KeyboardLayout::Upper].bounds = spriteSheet.getSprite("upper").getTextureRect();
@@ -527,6 +579,9 @@ void KeyboardState::nextLayout()
 {
     m_activeLayout = (m_activeLayout + 1) % KeyboardLayout::Count;
     m_keyboardEntity.getComponent<cro::Sprite>().setTextureRect(m_keyboardLayouts[m_activeLayout].bounds);
+
+    m_buttonEnts[ButtonID::Shift].getComponent<cro::Callback>().active = true;
+    m_buttonEnts[ButtonID::Shift].getComponent<cro::Callback>().setUserData<float>(1.f);
 };
 
 void KeyboardState::sendKeystroke(std::int32_t key)
@@ -546,6 +601,8 @@ void KeyboardState::sendKeystroke(std::int32_t key)
 void KeyboardState::sendBackspace()
 {
     sendKeystroke(SDLK_BACKSPACE);
+    m_buttonEnts[ButtonID::Backspace].getComponent<cro::Callback>().active = true;
+    m_buttonEnts[ButtonID::Backspace].getComponent<cro::Callback>().setUserData<float>(1.f);
 }
 
 void KeyboardState::sendSpace()
@@ -554,4 +611,7 @@ void KeyboardState::sendSpace()
 
     SendCodepoint space(0x20, 0);
     space();
+
+    m_buttonEnts[ButtonID::Space].getComponent<cro::Callback>().active = true;
+    m_buttonEnts[ButtonID::Space].getComponent<cro::Callback>().setUserData<float>(1.f);
 }

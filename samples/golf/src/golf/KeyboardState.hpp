@@ -59,6 +59,16 @@ private:
     cro::Entity m_keyboardEntity;
     cro::Entity m_highlightEntity;
 
+    struct ButtonID final
+    {
+        enum
+        {
+            Backspace, Space, Shift,
+            Count
+        };
+    };
+    std::array<cro::Entity, ButtonID::Count> m_buttonEnts = {};
+
     struct KeyboardLayout final
     {
         cro::FloatRect bounds;
