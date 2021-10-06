@@ -1605,6 +1605,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         e.getComponent<cro::Sprite>().setTextureRect(rect);
         e.getComponent<cro::Callback>().active = false;
     };
+    auto bannerEnt = entity;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
 
@@ -1723,6 +1724,89 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::White);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+
+    //running scores
+    struct ScoreInfo final
+    {
+        std::uint8_t clientID = 0;
+        std::uint8_t playerID = 0;
+        std::uint8_t score = 0;
+    };
+
+    std::vector<ScoreInfo> scoreInfo;
+
+    for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+    {
+        for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
+        {
+            auto& info = scoreInfo.emplace_back();
+            info.clientID = i;
+            info.playerID = j;
+            info.score = m_sharedData.connectionData[i].playerData[j].score;
+        }
+    }
+
+    std::sort(scoreInfo.begin(), scoreInfo.end(), [](const ScoreInfo& a, const ScoreInfo& b) {return a.score < b.score; });
+
+    std::vector<cro::String> names;
+    for (const auto& score : scoreInfo)
+    {
+        if (score.score != 0)
+        {
+            names.push_back(m_sharedData.connectionData[score.clientID].playerData[score.playerID].name);
+        }
+    }
+
+    cro::String str;
+    if (!names.empty())
+    {
+        str = "Last Round's Top Scorers: " + names[0];
+        for (auto i = 1u; i < names.size(); ++i)
+        {
+            str += " - " + names[i];
+        }
+    }
+    else
+    {
+        str = "Welcome To VGA Tour Golf!";
+    }
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString(str);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float dt)
+    {
+        if (m_currentMenu == MenuID::Lobby)
+        {
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+
+            pos.x -= 20.f * dt;
+            pos.y = 15.f;
+            pos.z = 0.3f;
+
+            static constexpr float Offset = 50.f;
+            if (pos.x < -bounds.width + Offset)
+            {
+                pos.x = cro::App::getWindow().getSize().x / m_viewScale.x;
+                pos.x -= Offset;
+            }
+
+            e.getComponent<cro::Transform>().setPosition(pos);
+
+                
+            cro::FloatRect cropping = { -pos.x + Offset, -16.f, (cro::App::getWindow().getSize().x / m_viewScale.x) - (Offset * 2.f), 18.f };
+            e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+        }
+    };
+
+    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void MenuState::createPlayerConfigMenu()

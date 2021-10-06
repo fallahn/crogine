@@ -402,6 +402,8 @@ void GameState::setNextHole()
         su.hole = m_currentHole;
         su.score = player.totalScore;
         su.stroke = player.holeScore[m_currentHole];
+
+        m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 
 
