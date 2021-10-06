@@ -1762,14 +1762,14 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     if (!names.empty())
     {
         str = "Last Round's Top Scorers: " + names[0];
-        for (auto i = 1u; i < names.size(); ++i)
+        for (auto i = 1u; i < /*names.size()*/4u; ++i)
         {
             str += " - " + names[i];
         }
     }
     else
     {
-        str = "Welcome To VGA Tour Golf!";
+        str = "Welcome To VGA Golf!";
     }
 
     entity = m_uiScene.createEntity();
@@ -2535,6 +2535,12 @@ void MenuState::updateLobbyAvatars()
         simpleText.setCharacterSize(UITextSize);
         simpleText.setFillColour(TextNormalColour);
 
+        cro::Image img;
+        img.create(8, 8, cro::Colour::White);
+        cro::Texture texture;
+        texture.loadFromImage(img);
+        cro::SimpleQuad simpleQuad(texture);
+
         glm::vec2 textPos(0.f);
         std::int32_t h = 0;
         for (const auto& c : m_sharedData.connectionData)
@@ -2549,6 +2555,14 @@ void MenuState::updateLobbyAvatars()
                     auto bounds = simpleText.getLocalBounds().width;
                     simpleText.setPosition({ std::round((LabelTextureSize.x - bounds) / 2.f), (i * (LabelTextureSize.y / 4)) + 4.f });
                     simpleText.draw();
+
+                    simpleQuad.setPosition({ 4.f,(i * (LabelTextureSize.y / 4)) + 4.f });
+                    simpleQuad.setColour(cro::Colour(pc::Palette[c.playerData[i].avatarFlags[1]].light));
+                    simpleQuad.draw();
+
+                    simpleQuad.move({ 112.f, 0.f });
+                    simpleQuad.setColour(cro::Colour(pc::Palette[c.playerData[i].avatarFlags[0]].light));
+                    simpleQuad.draw();
                 }
                 m_sharedData.nameTextures[c.connectionID].display();
             }
