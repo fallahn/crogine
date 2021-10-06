@@ -206,12 +206,20 @@ void GolfState::buildUI()
     entity.addComponent<UIElement>().relativePosition = ClubTextPosition;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        e.getComponent<cro::Text>().setString(Clubs[getClub()].name);
-    };
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().function =
+    //    [&](cro::Entity e, float)
+    //{
+    //    //TODO would this work better on the club changed callback?
+    //    /*if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+    //    {
+    //        e.getComponent<cro::Text>().setString(Clubs[getClub()].name);
+    //    }
+    //    else
+    //    {
+    //        e.getComponent<cro::Text>().setString(" ");
+    //    }*/
+    //};
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //current stroke

@@ -763,8 +763,16 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     createSlider(MixerChannel::Menu, glm::vec2(24.f, 39.f));
 
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
-    auto selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); e.getComponent<cro::AudioEmitter>().play(); });
-    auto unselectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
+    auto selectedID = uiSystem.addCallback([](cro::Entity e) 
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+            e.getComponent<cro::Callback>().active = true;
+        });
+    auto unselectedID = uiSystem.addCallback([](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); 
+        });
 
     auto createHighlight = [&](glm::vec2 pos)
     {
@@ -775,9 +783,14 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         ent.addComponent<cro::Sprite>() = spriteSheet.getSprite("square_highlight");
         ent.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         ent.addComponent<cro::UIInput>().setGroup(MenuID::Video);
-        ent.getComponent<cro::UIInput>().area = ent.getComponent<cro::Sprite>().getTextureBounds();
+        auto bounds = ent.getComponent<cro::Sprite>().getTextureBounds();
+        ent.getComponent<cro::UIInput>().area = bounds;
         ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
         ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+
+        ent.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+        ent.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        ent.getComponent<cro::Transform>().move({ bounds.width / 2.f, bounds.height / 2.f });
 
         parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 

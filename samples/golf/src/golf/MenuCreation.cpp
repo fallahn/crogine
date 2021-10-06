@@ -1791,13 +1791,13 @@ void MenuState::createPlayerConfigMenu()
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
+            e.getComponent<cro::Callback>().active = true;
         });
     auto unselected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
-
 
     static constexpr float ButtonDepth = 0.1f;
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -1840,6 +1840,11 @@ void MenuState::createPlayerConfigMenu()
         entity.getComponent<cro::UIInput>().setGroup(MenuID::PlayerConfig);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+        entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        entity.getComponent<cro::Transform>().move({ bounds.width / 2.f, bounds.height / 2.f });
+
         bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
         return entity;

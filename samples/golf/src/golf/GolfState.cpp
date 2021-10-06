@@ -495,15 +495,24 @@ void GolfState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::UI::ClubName;
             cmd.action = [&](cro::Entity e, float)
             {
-                auto dist = glm::length(m_currentPlayer.position - m_holeData[m_currentHole].pin) * 1.67f;
-                if (getClub() < ClubID::NineIron &&
-                    Clubs[getClub()].target > dist)
+                if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                 {
-                    e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+                    e.getComponent<cro::Text>().setString(Clubs[getClub()].name);
+
+                    auto dist = glm::length(m_currentPlayer.position - m_holeData[m_currentHole].pin) * 1.67f;
+                    if (getClub() < ClubID::NineIron &&
+                        Clubs[getClub()].target > dist)
+                    {
+                        e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                    }
                 }
                 else
                 {
-                    e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                    e.getComponent<cro::Text>().setString(" ");
                 }
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

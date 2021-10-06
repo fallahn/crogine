@@ -33,6 +33,8 @@ source distribution.
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
+#include <crogine/util/Easings.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
 struct FontID final
@@ -115,3 +117,23 @@ static inline void centreText(cro::Entity entity)
     bounds.width = std::floor(bounds.width / 2.f);
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
 }
+
+struct HighlightAnimationCallback final
+{
+    float currTime = 1.f;
+
+    void operator() (cro::Entity e, float dt)
+    {
+        float scale = cro::Util::Easing::easeInBounce(currTime) * 0.2f;
+        scale += 1.f;
+        e.getComponent<cro::Transform>().setScale({ scale, scale });
+
+        currTime = std::max(0.f, currTime - (dt * 2.f));
+        if (currTime == 0)
+        {
+            currTime = 1.f;
+            e.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+            e.getComponent<cro::Callback>().active = false;
+        }
+    }
+};
