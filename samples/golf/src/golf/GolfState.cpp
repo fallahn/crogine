@@ -1632,8 +1632,15 @@ void GolfState::spawnBall(const ActorInfo& info)
     switch (month)
     {
     default:
-        //TODO read player index and clamp to ball ID
-        m_modelDefs[ModelID::Ball]->createModel(entity);
+        //read player index and clamp to ball ID
+    {
+        auto id = m_sharedData.connectionData[info.clientID].playerData[info.playerID].ballID;
+        if (id >= BallID::Count)
+        {
+            id = 0;
+        }
+        m_modelDefs[ModelID::Ball + id]->createModel(entity);
+    }
         break;
     case 10:
         //spoopy.

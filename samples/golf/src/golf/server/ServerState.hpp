@@ -47,6 +47,7 @@ namespace sv
         cro::String name;
         std::array<std::uint8_t, 4> avatarFlags = {}; //not really flags per se, but let's at least keep naming consistent
         std::uint8_t skinID = 0;
+        std::uint8_t ballID = 0;
     };
 
     struct ClientConnection final

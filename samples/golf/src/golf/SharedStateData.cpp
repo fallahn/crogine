@@ -13,6 +13,7 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
 
         sizes[i] += sizeof(playerData[i].avatarFlags);
         sizes[i] += sizeof(playerData[i].skinID);
+        sizes[i] += sizeof(playerData[i].ballID);
 
         totalSize += sizes[i];
     }
@@ -34,7 +35,10 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         std::memcpy(&buffer[offset], &playerData[i].skinID, sizeof(playerData[i].skinID));
         offset += sizeof(playerData[i].skinID);
 
-        //do string last as its not fixed size
+        std::memcpy(&buffer[offset], &playerData[i].ballID, sizeof(playerData[i].ballID));
+        offset += sizeof(playerData[i].ballID);
+
+        //do string last as it's not fixed size
         auto stringSize = playerData[i].name.size() * sizeof(std::uint32_t);
         std::memcpy(&buffer[offset], playerData[i].name.data(), stringSize);
         offset += stringSize;
@@ -105,7 +109,9 @@ bool ConnectionData::deserialise(const cro::NetEvent::Packet& packet)
         offset += sizeof(playerData[i].skinID);
         stringSize -= sizeof(playerData[i].skinID);
         
-
+        std::memcpy(&playerData[i].ballID, ptr + offset, sizeof(playerData[i].ballID));
+        offset += sizeof(playerData[i].ballID);
+        stringSize -= sizeof(playerData[i].ballID);
 
         //check remaining size is valid
         if (stringSize % sizeof(std::uint32_t) != 0

@@ -1062,7 +1062,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                 {
                     applyTextEdit();
                     saveAvatars();
-
+                    
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                     if (m_sharedData.hosting)
@@ -2797,6 +2797,7 @@ void MenuState::saveAvatars()
         auto* avatar = cfg.addObject("avatar");
         avatar->addProperty("name", player.name.empty() ? "Player" : player.name.toAnsiString()); //hmmm shame we can't save the encoding here
         avatar->addProperty("skin_id").setValue(player.skinID);
+        avatar->addProperty("ball_id").setValue(player.ballID);
         avatar->addProperty("flags0").setValue(player.avatarFlags[0]);
         avatar->addProperty("flags1").setValue(player.avatarFlags[1]);
         avatar->addProperty("flags2").setValue(player.avatarFlags[2]);
@@ -2835,6 +2836,12 @@ void MenuState::loadAvatars()
                         auto id = prop.getValue<std::int32_t>();
                         id = std::min(PlayerAvatar::MaxSkins - 1, std::max(0, id));
                         m_sharedData.localConnectionData.playerData[i].skinID = id;
+                    }
+                    else if (name == "ball_id")
+                    {
+                        auto id = prop.getValue<std::int32_t>();
+                        id = std::min(BallID::Count - 1, std::max(0, id));
+                        m_sharedData.localConnectionData.playerData[i].ballID = id;
                     }
                     else if (name == "flags0")
                     {
