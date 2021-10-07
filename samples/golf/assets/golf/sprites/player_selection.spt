@@ -4,26 +4,26 @@ spritesheet player_selection
 
     sprite background
     {
-        bounds = 0,0,208,208
+        bounds = 0,0,288,208
     }
 
     sprite name_highlight
     {
-        bounds = 208,0,104,17
+        bounds = 288,0,104,17
     }
 
     sprite button_highlight
     {
-        bounds = 208,17,59,17
+        bounds = 288,17,59,17
     }
 
     sprite arrow_left
     {
-        bounds = 272,17,16,15
+        bounds = 352,17,16,15
     }
 
     sprite arrow_right
     {
-        bounds = 288,17,16,15
+        bounds = 368,17,16,15
     }
 }

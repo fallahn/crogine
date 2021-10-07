@@ -230,7 +230,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //            ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
     //            ImGui::SameLine();
     //            ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
-    //            ImGui::Image(m_ballTexture.getTexture(), { 128, 128 }, { 0,1 }, { 1,0 });
+    //            ImGui::Image(m_ballTexture.getTexture(), { 64, 64 }, { 0,1 }, { 1,0 });
     //        }
     //        ImGui::End();
     //    });

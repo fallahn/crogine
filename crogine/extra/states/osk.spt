@@ -1,0 +1,29 @@
+spritesheet osk
+{
+    src = "assets/images/osk.png"
+
+    sprite symbols
+    {
+        bounds = 0,0,800,392
+    }
+
+    sprite upper
+    {
+        bounds = 0,392,800,392
+    }
+
+    sprite lower
+    {
+        bounds = 0,784,800,392
+    }
+
+    sprite highlight
+    {
+        bounds = 0,1176,70,75
+    }
+
+    sprite button
+    {
+        bounds = 212, 1178, 30,30
+    }
+}
