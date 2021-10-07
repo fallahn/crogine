@@ -100,6 +100,14 @@ struct BallID final
     };
 };
 
+static const std::array<cro::Colour, BallID::Count> BallTints =
+{
+    cro::Colour(1.f,0.937f,0.752f),
+    cro::Colour(1.f,0.364f,0.015f),
+    cro::Colour(0.015f,0.031f,1.f),
+    cro::Colour(0.964f,1.f,0.878f)
+};
+
 static constexpr float ViewportHeight = 360.f;
 static constexpr float ViewportHeightWide = 300.f;
 

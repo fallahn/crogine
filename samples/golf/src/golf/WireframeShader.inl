@@ -66,11 +66,12 @@ static const std::string WireframeVertex = R"(
 
 static const std::string WireframeFragment = R"(
     OUTPUT
+    uniform vec4 u_colour = vec4(1.0);
 
     VARYING_IN vec4 v_colour;
 
     void main()
     {
-        FRAG_OUT = v_colour;
+        FRAG_OUT = v_colour * u_colour;
     }
 )";

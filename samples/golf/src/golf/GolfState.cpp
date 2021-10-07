@@ -797,7 +797,7 @@ void GolfState::loadAssets()
     auto* meshData = &m_resources.meshes.getMesh(m_ballResources.ballMeshID);
     std::vector<float> verts =
     {
-        0.f, 0.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f
+        0.f, 0.f, 0.f,   1.f,1.f,1.f,1.f// LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f
     };
     std::vector<std::uint32_t> indices =
     {
@@ -1257,6 +1257,7 @@ void GolfState::buildScene()
     //draw the flag pole as a single line which can be
     //see from a distance - hole and model are also attached to this
     material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulled]);
+    material.setProperty("u_colour", cro::Colour::White);
     meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Hole;
@@ -1561,8 +1562,27 @@ void GolfState::initAudio()
 
 void GolfState::spawnBall(const ActorInfo& info)
 {
+    auto ballID = m_sharedData.connectionData[info.clientID].playerData[info.playerID].ballID;
+    if (ballID >= BallID::Count)
+    {
+        ballID = 0;
+    }
+    auto month = cro::SysTime::now().months();
+    switch (month)
+    {
+    default: break;
+    case 10:
+        //spoopy.
+        ballID = BallID::Pumpkin;
+        break;
+    case 12:
+        ballID = BallID::Snowman;
+        break;
+    }
+
     //render the ball as a point so no perspective is applied to the scale
     auto material = m_resources.materials.get(m_ballResources.materialID);
+    material.setProperty("u_colour", BallTints[ballID]);
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(info.position);
@@ -1628,28 +1648,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         }
     };
 
-    auto month = cro::SysTime::now().months();
-    switch (month)
-    {
-    default:
-        //read player index and clamp to ball ID
-    {
-        auto id = m_sharedData.connectionData[info.clientID].playerData[info.playerID].ballID;
-        if (id >= BallID::Count)
-        {
-            id = 0;
-        }
-        m_modelDefs[ModelID::Ball + id]->createModel(entity);
-    }
-        break;
-    case 10:
-        //spoopy.
-        m_modelDefs[ModelID::Ball + BallID::Pumpkin]->createModel(entity);
-        break;
-    case 12:
-        m_modelDefs[ModelID::Ball + BallID::Snowman]->createModel(entity);
-        break;
-    }
+    m_modelDefs[ModelID::Ball + ballID]->createModel(entity);
     
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

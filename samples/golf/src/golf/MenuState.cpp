@@ -220,20 +220,20 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     }
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("Debug"))
-            {
-                /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-                ImGui::SameLine();
-                ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-                ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-                ImGui::SameLine();
-                ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
-                ImGui::Image(m_ballTexture.getTexture(), { 128, 128 }, { 0,1 }, { 1,0 });
-            }
-            ImGui::End();
-        });
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Debug"))
+    //        {
+    //            /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+    //            ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
+    //            ImGui::Image(m_ballTexture.getTexture(), { 128, 128 }, { 0,1 }, { 1,0 });
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
@@ -632,11 +632,11 @@ void MenuState::createScene()
 void MenuState::createBallScene()
 {
     static constexpr float RootPoint = 100.f;
-    static constexpr float BallSpacing = 0.07f;
+    static constexpr float BallSpacing = 0.09f;
 
     m_ballCam = m_backgroundScene.createEntity();
-    m_ballCam.addComponent<cro::Transform>().setPosition({ RootPoint, 0.04f, 0.085f });
-    m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.02f);
+    m_ballCam.addComponent<cro::Transform>().setPosition({ RootPoint, 0.045f, 0.095f });
+    m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
     m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, 1.f, 0.001f, 2.f);
     m_ballCam.addComponent<cro::Callback>().active = true;
     m_ballCam.getComponent<cro::Callback>().setUserData<std::int32_t>(BallID::Normal);
