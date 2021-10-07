@@ -220,19 +220,20 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     }
 
 #ifdef CRO_DEBUG_
-    /*registerWindow([&]() 
+    registerWindow([&]() 
         {
             if (ImGui::Begin("Debug"))
             {
-                ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
                 ImGui::SameLine();
                 ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
                 ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
                 ImGui::SameLine();
-                ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
+                ImGui::Image(m_ballTexture.getTexture(), { 128, 128 }, { 0,1 }, { 1,0 });
             }
             ImGui::End();
-        });*/
+        });
 #endif
 }
 
@@ -271,6 +272,13 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_KP_2:
             cro::GameController::rumbleStart(2, 65000, 65000, 1000);
             LogI << cro::GameController::getName(2) << std::endl;
+            break;
+        case SDLK_KP_9:
+        {
+            static std::int32_t id = BallID::Normal;
+            id = (id + 1) % BallID::Count;
+            m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = id;
+        }
             break;
 #endif
         case SDLK_RETURN:
@@ -377,8 +385,14 @@ bool MenuState::simulate(float dt)
 
 void MenuState::render()
 {
-    //draw any renderable systems
-    m_backgroundTexture.clear(cro::Colour::Blue);
+    //render ball preview first
+    auto oldCam = m_backgroundScene.setActiveCamera(m_ballCam);
+    m_ballTexture.clear(cro::Colour::Magenta);
+    m_backgroundScene.render(m_ballTexture);
+    m_ballTexture.display();
+
+    m_backgroundScene.setActiveCamera(oldCam);
+    m_backgroundTexture.clear();
     m_backgroundScene.render(m_backgroundTexture);
     m_backgroundTexture.display();
 
@@ -608,7 +622,75 @@ void MenuState::createScene()
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-0.967f*/-40.56f * cro::Util::Const::degToRad);
     //sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -80.7f * cro::Util::Const::degToRad);
 
+
+    //set up cam / models for ball preview
+    createBallScene();    
+
     createUI();
+}
+
+void MenuState::createBallScene()
+{
+    static constexpr float RootPoint = 100.f;
+    static constexpr float BallSpacing = 0.07f;
+
+    m_ballCam = m_backgroundScene.createEntity();
+    m_ballCam.addComponent<cro::Transform>().setPosition({ RootPoint, 0.04f, 0.085f });
+    m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.02f);
+    m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, 1.f, 0.001f, 2.f);
+    m_ballCam.addComponent<cro::Callback>().active = true;
+    m_ballCam.getComponent<cro::Callback>().setUserData<std::int32_t>(BallID::Normal);
+    m_ballCam.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto id = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+        float target = RootPoint + (BallSpacing * id);
+
+        auto pos = e.getComponent<cro::Transform>().getPosition();
+        auto diff = target - pos.x;
+        pos.x += diff * (dt * 10.f);
+
+        e.getComponent<cro::Transform>().setPosition(pos);
+    };
+
+    m_ballTexture.create(64, 64);
+
+
+    std::array<cro::ModelDefinition, BallID::Count> ballDefs = 
+    {
+        cro::ModelDefinition(m_resources),
+        cro::ModelDefinition(m_resources),
+        cro::ModelDefinition(m_resources),
+        cro::ModelDefinition(m_resources)
+    };
+    ballDefs[BallID::Normal].loadFromFile("assets/golf/models/ball.cmt");
+    ballDefs[BallID::Pumpkin].loadFromFile("assets/golf/models/ball02.cmt");
+    ballDefs[BallID::Bowling].loadFromFile("assets/golf/models/ball03.cmt");
+    ballDefs[BallID::Snowman].loadFromFile("assets/golf/models/ball04.cmt");
+
+    cro::ModelDefinition shadowDef(m_resources);
+    shadowDef.loadFromFile("assets/golf/models/ball_shadow.cmt");
+
+    for (auto i = 0; i < BallID::Count; ++i)
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ (i * BallSpacing) + RootPoint, 0.f, 0.f });
+        ballDefs[i].createModel(entity);
+        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+        {
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.3f * dt);
+        };
+
+        auto ballEnt = entity;
+        entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        shadowDef.createModel(entity);
+        ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
 }
 
 void MenuState::handleNetEvent(const cro::NetEvent& evt)

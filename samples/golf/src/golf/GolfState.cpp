@@ -48,6 +48,7 @@ source distribution.
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/SysTime.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -725,6 +726,9 @@ void GolfState::loadAssets()
         md = std::make_unique<cro::ModelDefinition>(m_resources);
     }
     m_modelDefs[ModelID::Ball]->loadFromFile("assets/golf/models/ball.cmt");
+    m_modelDefs[ModelID::Ball01]->loadFromFile("assets/golf/models/ball02.cmt");
+    m_modelDefs[ModelID::Ball02]->loadFromFile("assets/golf/models/ball03.cmt");
+    m_modelDefs[ModelID::Ball03]->loadFromFile("assets/golf/models/ball04.cmt");
     m_modelDefs[ModelID::BallShadow]->loadFromFile("assets/golf/models/ball_shadow.cmt");
 
     //UI stuffs
@@ -1623,7 +1627,23 @@ void GolfState::spawnBall(const ActorInfo& info)
             m_gameScene.destroyEntity(e);
         }
     };
-    m_modelDefs[ModelID::Ball]->createModel(entity);
+
+    auto month = cro::SysTime::now().months();
+    switch (month)
+    {
+    default:
+        //TODO read player index and clamp to ball ID
+        m_modelDefs[ModelID::Ball]->createModel(entity);
+        break;
+    case 10:
+        //spoopy.
+        m_modelDefs[ModelID::Ball + BallID::Pumpkin]->createModel(entity);
+        break;
+    case 12:
+        m_modelDefs[ModelID::Ball + BallID::Snowman]->createModel(entity);
+        break;
+    }
+    
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

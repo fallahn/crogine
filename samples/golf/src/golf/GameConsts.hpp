@@ -87,6 +87,19 @@ struct ShaderID final
     };
 };
 
+struct BallID final
+{
+    enum
+    {
+        Normal,
+        Pumpkin,
+        Bowling,
+        Snowman,
+
+        Count
+    };
+};
+
 static constexpr float ViewportHeight = 360.f;
 static constexpr float ViewportHeightWide = 300.f;
 

@@ -117,6 +117,9 @@ private:
         enum
         {
             Ball,
+            Ball01,
+            Ball02,
+            Ball03,
             BallShadow,
 
             Count

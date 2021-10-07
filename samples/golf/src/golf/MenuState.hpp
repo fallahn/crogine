@@ -200,6 +200,10 @@ private:
     std::vector<CourseData> m_courseData;
     void parseCourseDirectory();
 
+    cro::Entity m_ballCam;
+    cro::RenderTexture m_ballTexture;
+    void createBallScene();
+
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
