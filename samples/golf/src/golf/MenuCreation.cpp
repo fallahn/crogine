@@ -58,6 +58,7 @@ source distribution.
 #include <crogine/graphics/SimpleText.hpp>
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
 
@@ -66,6 +67,27 @@ source distribution.
 namespace
 {
 #include "RandNames.hpp"
+
+    struct CursorAnimationCallback final
+    {
+        static std::vector<float> WaveTable;
+        std::size_t index = 0;
+
+        void operator()(cro::Entity e, float dt)
+        {
+            e.getComponent<cro::Transform>().move({ WaveTable[index] * dt, 0.f });
+            index = (index + 1) % WaveTable.size();
+        }
+
+        CursorAnimationCallback()
+        {
+            if (WaveTable.empty())
+            {
+                WaveTable = cro::Util::Wavetable::sine(3.f, 40.f);
+            }
+        }
+    };
+    std::vector<float> CursorAnimationCallback::WaveTable;
 
     struct TitleTextCallback final
     {

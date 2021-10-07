@@ -298,6 +298,7 @@ bool GolfGame::initialise()
             ImGui::Text("OPL VST synthesiser: https://github.com/jpcima/ADLplug");
             ImGui::Text("Sound Effects: https://freesound.org (see assets directory for specific credits)");
             ImGui::Text("Artwork: Blender and Aseprite https://blender.org https://aseprite.org");
+            ImGui::Text("Colour Palette: Colordome32 https://lospec.com/palette-list/colordome-32");
             ImGui::Text("Programming: Matt Marchant, source available here: https://github.com/fallahn/crogine");
             ImGui::NewLine();
             ImGui::Text("Check out other games available from https://fallahn.itch.io !");

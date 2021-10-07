@@ -87,6 +87,7 @@ source distribution.
 #include <crogine/util/Network.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Maths.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include "../ErrorCheck.hpp"
@@ -1654,7 +1655,21 @@ void GolfState::spawnBall(const ActorInfo& info)
         auto position = ballEnt.getComponent<cro::Transform>().getPosition();
         position.y += Ball::Radius * 3.f;
 
-        e.getComponent<cro::Transform>().setPosition(m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position, m_gameSceneTexture.getSize()));
+        auto labelPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position, m_gameSceneTexture.getSize());
+        const float halfWidth = m_gameSceneTexture.getSize().x / 2.f;
+        
+        /*static constexpr float MaxLabelOffset = 70.f;
+        float diff = labelPos.x - halfWidth;
+        if (diff < -1)
+        {
+            labelPos.x = std::min(labelPos.x, halfWidth - MaxLabelOffset);
+        }
+        else
+        {
+            labelPos.x = std::max(labelPos.x, halfWidth + MaxLabelOffset);
+        }*/
+
+        e.getComponent<cro::Transform>().setPosition(labelPos);
 
         if (terrain == TerrainID::Green)
         {
@@ -1672,17 +1687,17 @@ void GolfState::spawnBall(const ActorInfo& info)
                 auto ballVec = position - camPos;
                 auto len2 = glm::length2(ballVec);
                 static constexpr float MinLength = 64.f; //8m^2
-                float alpha = 1.f - std::min(1.f, std::max(0.f, len2 / MinLength));
+                float alpha = smoothstep(0.05f, 0.5f, 1.f - std::min(1.f, std::max(0.f, len2 / MinLength)));
 
                 //fade slightly near the centre of the screen
                 //prevent blocking the view
-                float halfWidth = m_gameSceneTexture.getSize().x / 2.f;
-                float halfPos = e.getComponent<cro::Transform>().getPosition().x - halfWidth;
+                float halfPos = labelPos.x - halfWidth;
                 float amount = std::min(1.f, std::max(0.f, std::abs(halfPos) / halfWidth));
-                amount = 0.1f + (smoothstep(0.1f, 0.25f, amount) * 0.85f); //remember tex size is probably a lot wider than the window
+                amount = 0.1f + (smoothstep(0.12f, 0.26f, amount) * 0.85f); //remember tex size is probably a lot wider than the window
                 alpha *= amount;
 
-                colour.setAlpha(std::min(alpha, colour.getAlpha() + dt));
+                float currentAlpha = colour.getAlpha();
+                colour.setAlpha(std::max(0.f, std::min(1.f, currentAlpha + (dt * cro::Util::Maths::sgn(alpha - currentAlpha)))));
             }
             e.getComponent<cro::Sprite>().setColour(colour);
         }
