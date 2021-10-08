@@ -1567,18 +1567,22 @@ void GolfState::spawnBall(const ActorInfo& info)
     {
         ballID = 0;
     }
-    auto month = cro::SysTime::now().months();
-    switch (month)
-    {
-    default: break;
-    case 10:
-        //spoopy.
-        ballID = BallID::Pumpkin;
-        break;
-    case 12:
-        ballID = BallID::Snowman;
-        break;
-    }
+
+    //nice idea but seems a bit unfair to override a player's
+    //existing selection
+    
+    //auto month = cro::SysTime::now().months();
+    //switch (month)
+    //{
+    //default: break;
+    //case 10:
+    //    //spoopy.
+    //    ballID = BallID::Pumpkin;
+    //    break;
+    //case 12:
+    //    ballID = BallID::Snowman;
+    //    break;
+    //}
 
     //render the ball as a point so no perspective is applied to the scale
     auto material = m_resources.materials.get(m_ballResources.materialID);

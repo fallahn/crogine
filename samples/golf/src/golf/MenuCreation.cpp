@@ -1910,7 +1910,7 @@ void MenuState::createPlayerConfigMenu()
 
     //player name text
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 79.f, 171.f, ButtonDepth });
+    entity.addComponent<cro::Transform>().setPosition({ 97.f, 171.f, ButtonDepth });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1951,13 +1951,13 @@ void MenuState::createPlayerConfigMenu()
         entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
         entity.getComponent<cro::Transform>().move({ bounds.width / 2.f, bounds.height / 2.f });
 
-        bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        //bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
         return entity;
     };
 
     //I need to finish the layout editor :3
-    entity = createButton({ 74.f, 159.f }, "name_highlight");
+    entity = createButton({ 92.f, 159.f }, "name_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -2018,7 +2018,7 @@ void MenuState::createPlayerConfigMenu()
     };
 
     //c1 left
-    entity = createButton({ 19.f, 127.f }, "arrow_left");
+    entity = createButton({ 24.f, 127.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowLeftCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2027,7 +2027,7 @@ void MenuState::createPlayerConfigMenu()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //c1 right
-    entity = createButton({ 52.f, 127.f }, "arrow_right");
+    entity = createButton({ 57.f, 127.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowRightCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2037,7 +2037,7 @@ void MenuState::createPlayerConfigMenu()
 
 
     //c2 left
-    entity = createButton({ 19.f, 102.f }, "arrow_left");
+    entity = createButton({ 24.f, 102.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowLeftCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2046,7 +2046,7 @@ void MenuState::createPlayerConfigMenu()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //c2 right
-    entity = createButton({ 52.f, 102.f }, "arrow_right");
+    entity = createButton({ 57.f, 102.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowRightCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2056,7 +2056,7 @@ void MenuState::createPlayerConfigMenu()
 
 
     //c3 left
-    entity = createButton({ 19.f, 77.f }, "arrow_left");
+    entity = createButton({ 24.f, 77.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowLeftCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2065,7 +2065,7 @@ void MenuState::createPlayerConfigMenu()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //c3 right
-    entity = createButton({ 52.f, 77.f }, "arrow_right");
+    entity = createButton({ 57.f, 77.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowRightCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2075,7 +2075,7 @@ void MenuState::createPlayerConfigMenu()
 
 
     //c4 left
-    entity = createButton({ 19.f, 52.f }, "arrow_left");
+    entity = createButton({ 24.f, 52.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowLeftCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2084,7 +2084,7 @@ void MenuState::createPlayerConfigMenu()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //c4 right
-    entity = createButton({ 52.f, 52.f }, "arrow_right");
+    entity = createButton({ 57.f, 52.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowRightCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2094,7 +2094,7 @@ void MenuState::createPlayerConfigMenu()
 
 
     //colour preview
-    auto position = glm::vec2(36.f, 52.f);
+    auto position = glm::vec2(41.f, 52.f);
     for (auto i = 0u; i < 4u; ++i)
     {
         entity = m_uiScene.createEntity();
@@ -2129,7 +2129,7 @@ void MenuState::createPlayerConfigMenu()
 
 
     //skin left
-    entity = createButton({ 90.f, 92.f }, "arrow_left");
+    entity = createButton({ 95.f, 92.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2165,7 +2165,7 @@ void MenuState::createPlayerConfigMenu()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //skin right
-    entity = createButton({ 172.f, 92.f }, "arrow_right");
+    entity = createButton({ 177.f, 92.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2202,7 +2202,7 @@ void MenuState::createPlayerConfigMenu()
 
 
     //random
-    entity = createButton({ 42.f, 15.f }, "button_highlight");
+    entity = createButton({ 82.f, 15.f }, "button_highlight");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
@@ -2264,7 +2264,7 @@ void MenuState::createPlayerConfigMenu()
 
 
     //done
-    entity = createButton({ 107.f, 15.f }, "button_highlight");
+    entity = createButton({ 147.f, 15.f }, "button_highlight");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&](cro::Entity, const cro::ButtonEvent& evt)
@@ -2277,6 +2277,53 @@ void MenuState::createPlayerConfigMenu()
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //ball preview
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 206.f, 75.f, ButtonDepth });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_ballTexture.getTexture());
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //ball select left
+    entity = createButton({ 213.f, 54.f }, "arrow_left");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    applyTextEdit();
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                    auto ballID = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID;
+                    ballID = (ballID + (BallID::Count - 1)) % BallID::Count;
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = ballID;
+
+                    m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = ballID;
+                }
+            });
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //ball select right
+    entity = createButton({ 246.f, 54.f }, "arrow_right");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    applyTextEdit();
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                    auto ballID = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID;
+                    ballID = (ballID + 1) % BallID::Count;
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = ballID;
+
+                    m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = ballID;
+                }
+            });
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //player preview
     spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_resources.textures);
@@ -2698,6 +2745,8 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
         m_playerAvatar.setColour(pc::ColourKey::Hair, m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags[3]);
 
         m_currentMenu = MenuID::PlayerConfig;
+
+        m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID;
     }
     else
     {

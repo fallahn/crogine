@@ -682,7 +682,7 @@ void MenuState::createBallScene()
         entity.getComponent<cro::Callback>().function =
             [](cro::Entity e, float dt)
         {
-            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.3f * dt);
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, /*0.3f **/ dt);
         };
 
         auto ballEnt = entity;
