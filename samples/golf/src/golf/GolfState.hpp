@@ -146,6 +146,7 @@ private:
     void buildScene();
     void initAudio();
 
+    void createWeather();
     void spawnBall(const struct ActorInfo&);
 
     void handleNetEvent(const cro::NetEvent&);

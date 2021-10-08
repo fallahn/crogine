@@ -326,6 +326,7 @@
     <ClCompile Include="src\golf\TerrainBuilder.cpp" />
     <ClCompile Include="src\golf\TutorialDirector.cpp" />
     <ClCompile Include="src\golf\TutorialState.cpp" />
+    <ClCompile Include="src\golf\Weather.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\GolfGame.cpp" />

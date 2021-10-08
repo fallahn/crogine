@@ -797,7 +797,7 @@ void GolfState::loadAssets()
     auto* meshData = &m_resources.meshes.getMesh(m_ballResources.ballMeshID);
     std::vector<float> verts =
     {
-        0.f, 0.f, 0.f,   1.f,1.f,1.f,1.f// LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f
+        0.f, 0.f, 0.f,   1.f, 1.f, 1.f, 1.f
     };
     std::vector<std::uint32_t> indices =
     {
@@ -1420,7 +1420,6 @@ void GolfState::buildScene()
     camEnt.getComponent<TargetInfo>().targetLookAt = m_holeData[0].target;
     cam.reflectionBuffer.create(1024, 1024);
 
-
     //create an overhead camera
     auto setPerspective = [](cro::Camera& cam)
     {
@@ -1481,6 +1480,10 @@ void GolfState::buildScene()
     auto sunEnt = m_gameScene.getSunlight();
     //sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, /*-0.967f*/-45.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-1.5f*/-38.746f * cro::Util::Const::degToRad);
+
+#ifdef CRO_DEBUG_
+    createWeather();
+#endif 
 }
 
 void GolfState::initAudio()

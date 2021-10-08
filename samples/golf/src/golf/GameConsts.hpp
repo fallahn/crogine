@@ -83,7 +83,8 @@ struct ShaderID final
         Minimap,
         TutorialSlope,
         Wireframe,
-        WireframeCulled
+        WireframeCulled,
+        Weather
     };
 };
 

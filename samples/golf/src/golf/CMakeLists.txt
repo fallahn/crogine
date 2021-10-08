@@ -25,6 +25,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/TerrainBuilder.cpp
   ${PROJECT_DIR}/golf/TutorialDirector.cpp
   ${PROJECT_DIR}/golf/TutorialState.cpp
+  ${PROJECT_DIR}/golf/Weather.cpp
 
   ${PROJECT_DIR}/golf/server/Server.cpp
   ${PROJECT_DIR}/golf/server/ServerGameState.cpp
