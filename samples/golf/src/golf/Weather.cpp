@@ -30,6 +30,7 @@ source distribution.
 #include "GolfState.hpp"
 #include "PoissonDisk.hpp"
 #include "GameConsts.hpp"
+#include "MenuConsts.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -59,18 +60,37 @@ namespace
 
     VARYING_OUT LOW vec4 v_colour;
 
-const float SystemHeight = 10.0;
+    const float SystemHeight = 80.0;
+
+#if defined(EASE_SNOW)
+    const float PI = 3.1412;
+    float ease(float i)
+    {
+        return sin((i * PI) / 2.0);
+    }
+
+#else
+    float ease(float i)
+    {
+        return sqrt(1.0 - pow(i - 1.0, 2.0));
+    }
+#endif
 
     void main()
     {
         mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
         vec4 position = a_position;
 
-position.y -= u_time;
-position.y = mod(position.y, SystemHeight);
-position.y -= (SystemHeight - position.y) * 5.0;
+        float p = position.y - u_time;
+        p = mod(p, SystemHeight);
+        //p = ease(0.2 + ((p / SystemHeight) * 0.8));
+        p = ease((p / SystemHeight));
+
+        position.y  = p * SystemHeight;
+
 
         gl_Position = wvp * position;
+        gl_PointSize = u_projectionMatrix[1][1] / gl_Position.w * 10.0;
 
         vec4 worldPos = u_worldMatrix * position;
         v_colour = a_colour;
@@ -85,14 +105,14 @@ position.y -= (SystemHeight - position.y) * 5.0;
 )";
 
 
-    const std::array<float, 3u> AreaStart = { 0.f, 0.f, -10.f };
-    const std::array<float, 3u> AreaEnd = { 10.f, 10.f, 0.f };
+    const std::array<float, 3u> AreaStart = { 0.f, 0.f, -20.f };
+    const std::array<float, 3u> AreaEnd = { 20.f, 80.f, 0.f };
 }
 
 void GolfState::createWeather()
 {
     cro::Clock clock;
-    auto points = pd::PoissonDiskSampling(1.6f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
+    auto points = pd::PoissonDiskSampling(2.3f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
 
     auto t = static_cast<float>(clock.elapsed().asMilliseconds()) / 1000.f;
     LogI << "Generated " << points.size() << " in " << t << " seconds" << std::endl;
@@ -108,8 +128,8 @@ void GolfState::createWeather()
         verts.push_back(points[i][1]);
         verts.push_back(points[i][2]);
         verts.push_back(1.f);
-        verts.push_back(0.f);
-        verts.push_back(0.5f);
+        verts.push_back(1.f);
+        verts.push_back(1.f);
         verts.push_back(1.f);
 
         /*
@@ -144,14 +164,27 @@ void GolfState::createWeather()
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-    m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, WireframeFragment);
+    meshData->boundingBox[0] = { AreaStart[0], AreaStart[1], AreaStart[2] };
+    meshData->boundingBox[1] = { AreaEnd[0], AreaEnd[1], AreaEnd[2] };
+    meshData->boundingSphere.centre = meshData->boundingBox[0] + ((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
+    meshData->boundingSphere.radius = glm::length((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
+
+    m_resources.shaders.loadFromString(ShaderID::Weather, "#define EASE_SNOW\n" + WeatherVertex, WireframeFragment);
     auto& shader = m_resources.shaders.get(ShaderID::Weather);
     auto materialID = m_resources.materials.add(shader);
+    auto material = m_resources.materials.get(materialID);
+    material.setProperty("u_colour", LeaderboardTextLight);
+    //material.setProperty("u_colour", WaterColour);
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(250.f, 0.f, -28.f));
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialID));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
 
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(220.f, 0.f, -28.f));
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
 
     //hax to update uniform
     auto uniformID = shader.getUniformID("u_time");
@@ -165,6 +198,6 @@ void GolfState::createWeather()
         accum += dt;
 
         glCheck(glUseProgram(shaderID));
-        glCheck(glUniform1f(uniformID, accum));
+        glCheck(glUniform1f(uniformID, accum * 3.f));
     };
 }

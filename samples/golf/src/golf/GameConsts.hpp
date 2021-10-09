@@ -62,6 +62,8 @@ static constexpr float PlayerShadowOffset = 0.04f;
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::uvec2 LabelTextureSize(128u, 64u);
 
+static const cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
+
 struct MixerChannel final
 {
     enum
@@ -94,6 +96,8 @@ struct BallID final
     {
         Normal,
         Pumpkin,
+        Planet,
+        Snail,
         Bowling,
         Snowman,
 
@@ -105,6 +109,8 @@ static const std::array<cro::Colour, BallID::Count> BallTints =
 {
     cro::Colour(1.f,0.937f,0.752f),
     cro::Colour(1.f,0.364f,0.015f),
+    cro::Colour(0.1176f, 0.2f, 0.45f),
+    cro::Colour(0.937f, 0.76f, 0.235f),
     cro::Colour(0.015f,0.031f,1.f),
     cro::Colour(0.964f,1.f,0.878f)
 };

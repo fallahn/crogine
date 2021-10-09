@@ -1835,7 +1835,7 @@ void MenuState::createPlayerConfigMenu()
 {
     cro::Colour c(0.f, 0.f, 0.f, BackgroundAlpha);
     auto fadeNode = m_uiScene.createEntity();
-    fadeNode.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.4f }); //relative to bgNode!
+    fadeNode.addComponent<cro::Transform>(); //relative to bgNode!
     fadeNode.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(-0.5f, 0.5f), c),
@@ -1890,6 +1890,7 @@ void MenuState::createPlayerConfigMenu()
     };
 
     fadeNode.getComponent<cro::Transform>().setPosition(bgNode.getComponent<cro::Transform>().getOrigin());
+    fadeNode.getComponent<cro::Transform>().move({ 0.f, 0.f, -0.4f });
     bgNode.getComponent<cro::Transform>().addChild(fadeNode.getComponent<cro::Transform>());
 
     auto selected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -2258,6 +2259,12 @@ void MenuState::createPlayerConfigMenu()
                         }
                     };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                    //random ball
+                    auto ballID = cro::Util::Random::value(0, BallID::Count - 1);
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = ballID;
+
+                    m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = ballID;
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2281,13 +2288,13 @@ void MenuState::createPlayerConfigMenu()
 
     //ball preview
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 206.f, 75.f, ButtonDepth });
+    entity.addComponent<cro::Transform>().setPosition({ 206.f, 70.f, ButtonDepth });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_ballTexture.getTexture());
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //ball select left
-    entity = createButton({ 213.f, 54.f }, "arrow_left");
+    entity = createButton({ 213.f, 49.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2306,7 +2313,7 @@ void MenuState::createPlayerConfigMenu()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //ball select right
-    entity = createButton({ 246.f, 54.f }, "arrow_right");
+    entity = createButton({ 246.f, 49.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {

@@ -292,12 +292,12 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", resources.textures);
     m_billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
     m_billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
-    m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("flowers01"));
-    m_billboardTemplates[BillboardID::Flowers02] = spriteToBillboard(spriteSheet.getSprite("flowers02"));
+    m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("hedge01"));
+    m_billboardTemplates[BillboardID::Flowers02] = spriteToBillboard(spriteSheet.getSprite("hedge02"));
     m_billboardTemplates[BillboardID::Flowers03] = spriteToBillboard(spriteSheet.getSprite("flowers03"));
     m_billboardTemplates[BillboardID::Pine] = spriteToBillboard(spriteSheet.getSprite("pine"));
-    m_billboardTemplates[BillboardID::Willow] = spriteToBillboard(spriteSheet.getSprite("willow"));
-    m_billboardTemplates[BillboardID::Birch] = spriteToBillboard(spriteSheet.getSprite("birch"));
+    m_billboardTemplates[BillboardID::Willow] = spriteToBillboard(spriteSheet.getSprite("birch01"));
+    m_billboardTemplates[BillboardID::Birch] = spriteToBillboard(spriteSheet.getSprite("birch02"));
 
 
     //create a mesh to display the slope data
@@ -448,7 +448,7 @@ void TerrainBuilder::threadFunc()
                 auto seed = static_cast<std::uint32_t>(std::time(nullptr));
                 auto grass = pd::PoissonDiskSampling(GrassDensity, MinBounds, MaxBounds, 30u, seed);
                 auto trees = pd::PoissonDiskSampling(TreeDensity, MinBounds, MaxBounds);
-                auto flowers = pd::PoissonDiskSampling(TreeDensity * 1.5f, MinBounds, MaxBounds, 30u, seed / 2);
+                auto flowers = pd::PoissonDiskSampling(TreeDensity * 0.75f, MinBounds, MaxBounds, 30u, seed / 2);
 
                 //filter distribution by map area
                 m_billboardBuffer.clear();

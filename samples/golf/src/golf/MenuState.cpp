@@ -443,8 +443,8 @@ void MenuState::loadAssets()
     m_billboardTemplates[BillboardID::Flowers02] = spriteToBillboard(spriteSheet.getSprite("flowers02"));
     m_billboardTemplates[BillboardID::Flowers03] = spriteToBillboard(spriteSheet.getSprite("flowers03"));
     m_billboardTemplates[BillboardID::Pine] = spriteToBillboard(spriteSheet.getSprite("pine"));
-    m_billboardTemplates[BillboardID::Willow] = spriteToBillboard(spriteSheet.getSprite("willow"));
-    m_billboardTemplates[BillboardID::Birch] = spriteToBillboard(spriteSheet.getSprite("birch"));
+    m_billboardTemplates[BillboardID::Willow] = spriteToBillboard(spriteSheet.getSprite("birch01"));
+    m_billboardTemplates[BillboardID::Birch] = spriteToBillboard(spriteSheet.getSprite("birch02"));
 
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
@@ -661,12 +661,16 @@ void MenuState::createBallScene()
         cro::ModelDefinition(m_resources),
         cro::ModelDefinition(m_resources),
         cro::ModelDefinition(m_resources),
+        cro::ModelDefinition(m_resources),
+        cro::ModelDefinition(m_resources),
         cro::ModelDefinition(m_resources)
     };
     ballDefs[BallID::Normal].loadFromFile("assets/golf/models/ball.cmt");
     ballDefs[BallID::Pumpkin].loadFromFile("assets/golf/models/ball02.cmt");
     ballDefs[BallID::Bowling].loadFromFile("assets/golf/models/ball03.cmt");
     ballDefs[BallID::Snowman].loadFromFile("assets/golf/models/ball04.cmt");
+    ballDefs[BallID::Planet].loadFromFile("assets/golf/models/ball05.cmt");
+    ballDefs[BallID::Snail].loadFromFile("assets/golf/models/ball06.cmt");
 
     cro::ModelDefinition shadowDef(m_resources);
     shadowDef.loadFromFile("assets/golf/models/ball_shadow.cmt");

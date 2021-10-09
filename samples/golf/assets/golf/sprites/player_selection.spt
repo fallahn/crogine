@@ -14,16 +14,16 @@ spritesheet player_selection
 
     sprite button_highlight
     {
-        bounds = 288,17,59,17
+        bounds = 292,21,59,17
     }
 
     sprite arrow_left
     {
-        bounds = 352,17,16,15
+        bounds = 356,21,16,15
     }
 
     sprite arrow_right
     {
-        bounds = 368,17,16,15
+        bounds = 372,21,16,15
     }
 }

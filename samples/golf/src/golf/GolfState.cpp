@@ -665,6 +665,7 @@ void GolfState::render()
     cam.viewport = oldVP;
 
     //then render scene
+    glCheck(glEnable(GL_PROGRAM_POINT_SIZE));
     m_gameSceneTexture.clear();
     m_gameScene.render(m_gameSceneTexture);
     m_gameSceneTexture.display();
@@ -725,10 +726,12 @@ void GolfState::loadAssets()
     {
         md = std::make_unique<cro::ModelDefinition>(m_resources);
     }
-    m_modelDefs[ModelID::Ball]->loadFromFile("assets/golf/models/ball.cmt");
+    m_modelDefs[ModelID::Ball]->loadFromFile("assets/golf/models/ball.cmt"); //TODO make these more coherant as it's not clear wtf we're loading
     m_modelDefs[ModelID::Ball01]->loadFromFile("assets/golf/models/ball02.cmt");
-    m_modelDefs[ModelID::Ball02]->loadFromFile("assets/golf/models/ball03.cmt");
-    m_modelDefs[ModelID::Ball03]->loadFromFile("assets/golf/models/ball04.cmt");
+    m_modelDefs[ModelID::Ball02]->loadFromFile("assets/golf/models/ball05.cmt");
+    m_modelDefs[ModelID::Ball03]->loadFromFile("assets/golf/models/ball06.cmt");
+    m_modelDefs[ModelID::Ball04]->loadFromFile("assets/golf/models/ball03.cmt");
+    m_modelDefs[ModelID::Ball05]->loadFromFile("assets/golf/models/ball04.cmt");
     m_modelDefs[ModelID::BallShadow]->loadFromFile("assets/golf/models/ball_shadow.cmt");
 
     //UI stuffs
@@ -1482,7 +1485,7 @@ void GolfState::buildScene()
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-1.5f*/-38.746f * cro::Util::Const::degToRad);
 
 #ifdef CRO_DEBUG_
-    createWeather();
+    //createWeather();
 #endif 
 }
 
