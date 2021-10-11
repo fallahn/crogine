@@ -458,9 +458,9 @@ void MenuState::loadAssets()
     m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("flowers01"));
     m_billboardTemplates[BillboardID::Flowers02] = spriteToBillboard(spriteSheet.getSprite("flowers02"));
     m_billboardTemplates[BillboardID::Flowers03] = spriteToBillboard(spriteSheet.getSprite("flowers03"));
-    m_billboardTemplates[BillboardID::Pine] = spriteToBillboard(spriteSheet.getSprite("pine"));
-    m_billboardTemplates[BillboardID::Willow] = spriteToBillboard(spriteSheet.getSprite("birch01"));
-    m_billboardTemplates[BillboardID::Birch] = spriteToBillboard(spriteSheet.getSprite("birch02"));
+    m_billboardTemplates[BillboardID::Tree01] = spriteToBillboard(spriteSheet.getSprite("tree01"));
+    m_billboardTemplates[BillboardID::Tree02] = spriteToBillboard(spriteSheet.getSprite("tree02"));
+    m_billboardTemplates[BillboardID::Tree03] = spriteToBillboard(spriteSheet.getSprite("tree03"));
 
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
@@ -545,7 +545,7 @@ void MenuState::createScene()
         {
             float scale = static_cast<float>(cro::Util::Random::value(8, 12)) / 10.f;
 
-            auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Pine, BillboardID::Willow)];
+            auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)];
             bb.position = { x, 0.f, -y };
             bb.size *= scale;
             collection.addBillboard(bb);
@@ -625,7 +625,8 @@ void MenuState::createScene()
     cam.resizeCallback = updateView;
     updateView(cam);
 
-    camEnt.getComponent<cro::Transform>().setPosition(CameraBasePosition);
+    //camEnt.getComponent<cro::Transform>().setPosition(CameraBasePosition);
+    camEnt.getComponent<cro::Transform>().setPosition({ -17.8273, 4.9, 25.0144 });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -34.f * cro::Util::Const::degToRad);
     //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -0.84f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);

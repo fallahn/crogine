@@ -900,6 +900,8 @@ void GolfState::loadAssets()
         error = true;
     }
 
+    std::string billboardPath;
+    std::string billboardSprites;
     std::vector<std::string> holeStrings;
     const auto& props = courseFile.getProperties();
     for (const auto& prop : props)
@@ -919,8 +921,28 @@ void GolfState::loadAssets()
             glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
             glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
         }
+        else if (name == "billboard_model")
+        {
+            billboardPath = prop.getValue<std::string>();
+        }
+        else if (name == "billboard_sprites")
+        {
+            billboardSprites = prop.getValue<std::string>();
+        }
     }
-
+    
+    if (billboardPath.empty()
+        || !cro::FileSystem::fileExists(billboardPath))
+    {
+        LogE << "Missing or invalid billboard model definition" << std::endl;
+        error = true;
+    }
+    if (billboardSprites.empty()
+        || !cro::FileSystem::fileExists(billboardSprites))
+    {
+        LogE << "Missing or invalid billboard sprite sheet" << std::endl;
+        error = true;
+    }
     if (holeStrings.empty())
     {
         LOG("No hole files in course data", cro::Logger::Type::Error);
@@ -1111,7 +1133,10 @@ void GolfState::loadAssets()
         m_sharedData.errorMessage = "Failed to load course data";
         requestStackPush(StateID::Error);
     }
-
+    //else
+    {
+        m_terrainBuilder.create(m_resources, m_gameScene, billboardPath, billboardSprites);
+    }
 
     //reserve the slots for each hole score
     for (auto& client : m_sharedData.connectionData)
@@ -1474,9 +1499,6 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::AudioListener>();
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Green] = camEnt;
-
-
-    m_terrainBuilder.create(m_resources, m_gameScene);
 
     m_currentPlayer.position = m_holeData[m_currentHole].tee; //prevents the initial camera movement
 

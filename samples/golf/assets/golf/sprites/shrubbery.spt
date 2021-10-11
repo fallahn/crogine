@@ -2,15 +2,6 @@ spritesheet shrubbery
 {
     src = "assets/golf/images/shrubbery.png"
 
-    sprite pine01
-    {
-        bounds = 96,0,128,172
-    }
-
-    sprite pine02
-    {
-        bounds = 224,0,80,136
-    }
 
     sprite grass01
     {
@@ -22,12 +13,23 @@ spritesheet shrubbery
         bounds = 144,176,32,24
     }
 
-    sprite birch01
+
+    sprite tree01
+    {
+        bounds = 96,0,128,172
+    }
+
+    sprite tree02
+    {
+        bounds = 224,0,80,136
+    }
+
+    sprite tree03
     {
         bounds = 0,0,96,184
     }
 
-    sprite birch02
+    sprite tree04
     {
         bounds = 304,0,134,192
     }

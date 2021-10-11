@@ -63,7 +63,7 @@ namespace
 
     //params for poisson disk samples
     constexpr float GrassDensity = 1.7f; //radius for PD sampler
-    constexpr float TreeDensity = 4.8f;
+    constexpr float TreeDensity = 4.f;
 
     //TODO for grass billboard we could shrink the area slightly as we prefer trees further away
     constexpr std::array MinBounds = { 0.f, 0.f };
@@ -169,7 +169,7 @@ TerrainBuilder::~TerrainBuilder()
 }
 
 //public
-void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scene)
+void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scene, const std::string& bbModel, const std::string& bbSprites)
 {
     //create a mesh for the height map - this is actually one quad short
     //top and left - but hey you didn't notice until you read this did you? :)
@@ -262,42 +262,50 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     for (auto& entity : m_billboardEntities)
     {
         //reload the the model def each time to ensure unique VBOs
-        billboardDef.loadFromFile("assets/golf/models/shrubbery.cmt");
-
-        entity = scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, -MaxShrubOffset, 0.f });
-        billboardDef.createModel(entity);
-        //if the model def failed to load for some reason this will be
-        //missing, so we'll add it here just to stop the thread exploding
-        //if it can't find the component
-        if (!entity.hasComponent<cro::BillboardCollection>())
+        if (billboardDef.loadFromFile(bbModel))
         {
-            entity.addComponent<cro::BillboardCollection>();
-        }
+            //TODO if this fails to load we won't crash but the terrain
+            //transition won't complete either so the gam eeffectively gets stuck
 
-        if (entity.hasComponent<cro::Model>())
-        {
-            auto transition = ShrubTransition();
-            transition.terrainEntity = m_terrainEntity;
+            entity = scene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({ 0.f, -MaxShrubOffset, 0.f });
+            billboardDef.createModel(entity);
+            //if the model def failed to load for some reason this will be
+            //missing, so we'll add it here just to stop the thread exploding
+            //if it can't find the component
+            if (!entity.hasComponent<cro::BillboardCollection>())
+            {
+                entity.addComponent<cro::BillboardCollection>();
+            }
 
-            entity.getComponent<cro::Model>().setHidden(true);
-            entity.addComponent<cro::Callback>().function = transition;
+            if (entity.hasComponent<cro::Model>())
+            {
+                auto transition = ShrubTransition();
+                transition.terrainEntity = m_terrainEntity;
 
-            m_terrainEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                entity.getComponent<cro::Model>().setHidden(true);
+                entity.addComponent<cro::Callback>().function = transition;
+
+                m_terrainEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            }
         }
     }
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", resources.textures);
+    spriteSheet.loadFromFile(bbSprites, resources.textures);
     m_billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
     m_billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
-    m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("hedge01"));
-    m_billboardTemplates[BillboardID::Flowers02] = spriteToBillboard(spriteSheet.getSprite("hedge02"));
+    m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("flowers01"));
+    m_billboardTemplates[BillboardID::Flowers02] = spriteToBillboard(spriteSheet.getSprite("flowers02"));
     m_billboardTemplates[BillboardID::Flowers03] = spriteToBillboard(spriteSheet.getSprite("flowers03"));
-    m_billboardTemplates[BillboardID::Pine] = spriteToBillboard(spriteSheet.getSprite("pine"));
-    m_billboardTemplates[BillboardID::Willow] = spriteToBillboard(spriteSheet.getSprite("birch01"));
-    m_billboardTemplates[BillboardID::Birch] = spriteToBillboard(spriteSheet.getSprite("birch02"));
+    m_billboardTemplates[BillboardID::Bush01] = spriteToBillboard(spriteSheet.getSprite("hedge01"));
+    m_billboardTemplates[BillboardID::Bush02] = spriteToBillboard(spriteSheet.getSprite("hedge02"));
+
+    m_billboardTemplates[BillboardID::Tree01] = spriteToBillboard(spriteSheet.getSprite("tree01"));
+    m_billboardTemplates[BillboardID::Tree02] = spriteToBillboard(spriteSheet.getSprite("tree02"));
+    m_billboardTemplates[BillboardID::Tree03] = spriteToBillboard(spriteSheet.getSprite("tree03"));
+    m_billboardTemplates[BillboardID::Tree04] = spriteToBillboard(spriteSheet.getSprite("tree04"));
 
 
     //create a mesh to display the slope data
@@ -371,20 +379,24 @@ void TerrainBuilder::update(std::size_t holeIndex)
         auto first = (holeIndex + 1) % 2;
         auto second = holeIndex % 2;
 
-        //update the billboard data
-        SwapData swapData;
-        swapData.start = m_billboardEntities[first].getComponent<cro::Transform>().getPosition().y;
-        swapData.destination = 0.f;
-        swapData.currentTime = 0.f;
-        m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
-        m_billboardEntities[first].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
+        if (m_billboardEntities[first].isValid()
+            && m_billboardEntities[second].isValid())
+        {
+            //update the billboard data
+            SwapData swapData;
+            swapData.start = m_billboardEntities[first].getComponent<cro::Transform>().getPosition().y;
+            swapData.destination = 0.f;
+            swapData.currentTime = 0.f;
+            m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
+            m_billboardEntities[first].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
 
-        swapData.start = m_billboardEntities[second].getComponent<cro::Transform>().getPosition().y;
-        swapData.destination = -MaxShrubOffset;
-        swapData.otherEnt = m_billboardEntities[first];
-        swapData.currentTime = 0.f;
-        m_billboardEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
-        m_billboardEntities[second].getComponent<cro::Callback>().active = true;
+            swapData.start = m_billboardEntities[second].getComponent<cro::Transform>().getPosition().y;
+            swapData.destination = -MaxShrubOffset;
+            swapData.otherEnt = m_billboardEntities[first];
+            swapData.currentTime = 0.f;
+            m_billboardEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
+            m_billboardEntities[second].getComponent<cro::Callback>().active = true;
+        }
 
         //upload terrain data
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_terrainProperties.vbo));
@@ -448,7 +460,7 @@ void TerrainBuilder::threadFunc()
                 auto seed = static_cast<std::uint32_t>(std::time(nullptr));
                 auto grass = pd::PoissonDiskSampling(GrassDensity, MinBounds, MaxBounds, 30u, seed);
                 auto trees = pd::PoissonDiskSampling(TreeDensity, MinBounds, MaxBounds);
-                auto flowers = pd::PoissonDiskSampling(TreeDensity * 0.75f, MinBounds, MaxBounds, 30u, seed / 2);
+                auto flowers = pd::PoissonDiskSampling(TreeDensity * 0.5f, MinBounds, MaxBounds, 30u, seed / 2);
 
                 //filter distribution by map area
                 m_billboardBuffer.clear();
@@ -472,7 +484,7 @@ void TerrainBuilder::threadFunc()
                     {
                         float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
 
-                        auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Pine, BillboardID::Willow)]);
+                        auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)]);
                         bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards
                         bb.size *= scale;
                     }
@@ -486,7 +498,7 @@ void TerrainBuilder::threadFunc()
                     {
                         float scale = static_cast<float>(cro::Util::Random::value(13, 17)) / 10.f;
 
-                        auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Flowers03)]);
+                        auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Bush02)]);
                         bb.position = { x, height + 0.05f, -y };
                         bb.size *= scale;
                     }

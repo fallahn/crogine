@@ -6,7 +6,9 @@ A course folder should contain one file with the course.data. It has the followi
 
     course course_01 //name or identifier, doesn't have to be unique
     {
-        skybox = "assets/images/skybox/sky.ccm" //a path to the skybox to use when the course is loaded
+        skybox = "assets/golf/images/skybox/sky.ccm" //a path to the skybox to use when the course is loaded
+        billboard_model = "assets/golf/models/shrubbery.cmt" //path to the model definition for the billboard file containing the trees/shrubs
+        billboard_sprites = "assets/golf/sprites/shrubbery.spt" //path to the spritesheet containing the sprite definitions for each billboard in the billboard model
 
         title = "St. Billybob's links, Isle of Wibble" //course title, shown in the game lobby
         description = "This is a test course. Why not have a play?" //a brief description, shown in the game lobby

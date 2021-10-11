@@ -41,12 +41,18 @@ struct BillboardID final
     {
         Grass01,
         Grass02,
+
         Flowers01,
         Flowers02,
         Flowers03,
-        Pine,
-        Birch,
-        Willow,
+        Bush01,
+        Bush02,
+        Bush03,
+
+        Tree01,
+        Tree02,
+        Tree03,
+        Tree04,
 
         Count
     };
