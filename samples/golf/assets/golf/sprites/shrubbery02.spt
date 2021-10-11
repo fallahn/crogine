@@ -1,0 +1,61 @@
+spritesheet shrubbery
+{
+    src = "assets/golf/images/shrubbery02.png"
+
+
+    sprite grass01
+    {
+        bounds = 0,176,48,16
+    }
+
+    sprite grass02
+    {
+        bounds = 0,208,48,16
+    }
+
+
+    sprite tree01
+    {
+        bounds = 0,0,88,174
+    }
+
+    sprite tree02
+    {
+        bounds = 88,0,100,232
+    }
+
+    sprite tree03
+    {
+        bounds = 188,0,168,254
+    }
+
+    sprite tree04
+    {
+        bounds = 368,0,160,240
+    }
+
+    sprite flowers01
+    {
+        bounds = 0,320,80,30
+    }
+
+    sprite flowers02
+    {
+        bounds = 89,320,102,40
+    }
+
+    sprite flowers03
+    {
+        bounds = 192,320,80,32
+    }
+
+    sprite hedge01
+    {
+        bounds = 288,336,48,32
+    }
+
+    sprite hedge02
+    {
+        bounds = 0, 352, 80, 32
+    }
+}

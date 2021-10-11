@@ -1,0 +1,16 @@
+model ball06
+{
+    mesh = "assets/golf/models/ball06.cmb"
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,0.999990,1.000000,1.000000
+        smooth = true
+        repeat = true
+        vertex_coloured = true
+        blendmode = "none"
+
+    }
+}

@@ -1,0 +1,11 @@
+model shrubbery02
+{
+    mesh = billboard
+
+    material Unlit
+    {
+        diffuse = "assets/golf/images/shrubbery02.png"
+        alpha_clip = 0.2
+        blendmode = "none"
+    }
+}
