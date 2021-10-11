@@ -2263,7 +2263,7 @@ void MenuState::createPlayerConfigMenu()
 
                     //random ball
                     idx = cro::Util::Random::value(0u, m_sharedData.ballModels.size() - 1);
-                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = m_sharedData.ballModels[idx].first;
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = m_sharedData.ballModels[idx].uid;
 
                     m_ballIndices[m_playerAvatar.activePlayer] = idx;
                     m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = static_cast<std::int32_t>(idx);
@@ -2307,7 +2307,7 @@ void MenuState::createPlayerConfigMenu()
 
                     auto idx = m_ballIndices[m_playerAvatar.activePlayer];
                     idx = (idx + (m_sharedData.ballModels.size() - 1)) % m_sharedData.ballModels.size();
-                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = m_sharedData.ballModels[idx].first;
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = m_sharedData.ballModels[idx].uid;
                     m_ballIndices[m_playerAvatar.activePlayer] = idx;
 
                     m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = static_cast<std::int32_t>(idx);
@@ -2327,7 +2327,7 @@ void MenuState::createPlayerConfigMenu()
 
                     auto idx = m_ballIndices[m_playerAvatar.activePlayer];
                     idx = (idx + 1) % m_sharedData.ballModels.size();
-                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = m_sharedData.ballModels[idx].first;
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = m_sharedData.ballModels[idx].uid;
                     m_ballIndices[m_playerAvatar.activePlayer] = idx;
 
                     m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = static_cast<std::int32_t>(idx);

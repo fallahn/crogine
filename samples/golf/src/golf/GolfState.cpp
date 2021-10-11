@@ -726,16 +726,10 @@ void GolfState::loadAssets()
     {
         md = std::make_unique<cro::ModelDefinition>(m_resources);
     }
-    //m_modelDefs[ModelID::Ball]->loadFromFile("assets/golf/models/ball.cmt"); //TODO make these more coherant as it's not clear wtf we're loading
-    //m_modelDefs[ModelID::Ball01]->loadFromFile("assets/golf/models/ball02.cmt");
-    //m_modelDefs[ModelID::Ball02]->loadFromFile("assets/golf/models/ball05.cmt");
-    //m_modelDefs[ModelID::Ball03]->loadFromFile("assets/golf/models/ball06.cmt");
-    //m_modelDefs[ModelID::Ball04]->loadFromFile("assets/golf/models/ball03.cmt");
-    //m_modelDefs[ModelID::Ball05]->loadFromFile("assets/golf/models/ball04.cmt");
     m_modelDefs[ModelID::BallShadow]->loadFromFile("assets/golf/models/ball_shadow.cmt");
 
     //ball models - the menu should never have let us get this far if it found no ball files
-    for (const auto& [uid, path] : m_sharedData.ballModels)
+    for (const auto& [colour, uid, path] : m_sharedData.ballModels)
     {
         std::unique_ptr<cro::ModelDefinition> def = std::make_unique<cro::ModelDefinition>(m_resources);
         if (def->loadFromFile(path))
@@ -1582,7 +1576,15 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     //render the ball as a point so no perspective is applied to the scale
     auto material = m_resources.materials.get(m_ballResources.materialID);
-    //material.setProperty("u_colour", BallTints[ballID]); //TODO how to sample this from the model? Load from the ball file?
+    auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
+        [ballID](const SharedStateData::BallInfo& ballPair)
+        {
+            return ballPair.uid == ballID;
+        });
+    if (ball != m_sharedData.ballModels.end())
+    {
+        material.setProperty("u_colour", ball->tint);
+    }
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(info.position);

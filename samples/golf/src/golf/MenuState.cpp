@@ -682,10 +682,12 @@ void MenuState::createBallScene()
     for (const auto& file : ballFiles)
     {
         cro::ConfigFile cfg;
-        if (cfg.loadFromFile("assets/golf/balls/" + file))
+        if (cro::FileSystem::getFileExtension(file) == ".ball"
+            && cfg.loadFromFile("assets/golf/balls/" + file))
         {
             std::int32_t uid = -1;
             std::string modelPath;
+            cro::Colour colour = cro::Colour::White;
 
             const auto& props = cfg.getProperties();
             for (const auto& p : props)
@@ -699,20 +701,24 @@ void MenuState::createBallScene()
                 {
                     uid = p.getValue<std::int32_t>();
                 }
+                else if (name == "tint")
+                {
+                    colour = p.getValue<cro::Colour>();
+                }
             }
 
             if (uid > -1
                 && (!modelPath.empty() && cro::FileSystem::fileExists(modelPath)))
             {
                 auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
-                    [uid](const std::pair<std::int32_t, std::string>& ballPair)
+                    [uid](const SharedStateData::BallInfo& ballPair)
                     {
-                        return ballPair.first == uid;
+                        return ballPair.uid == uid;
                     });
 
                 if (ball == m_sharedData.ballModels.end())
                 {
-                    m_sharedData.ballModels.emplace_back(std::make_pair(uid, modelPath));
+                    m_sharedData.ballModels.emplace_back(colour, uid, modelPath);
                 }
                 else
                 {
@@ -729,7 +735,7 @@ void MenuState::createBallScene()
 
     for (auto i = 0u; i < m_sharedData.ballModels.size(); ++i)
     {
-        if (ballDef.loadFromFile(m_sharedData.ballModels[i].second))
+        if (ballDef.loadFromFile(m_sharedData.ballModels[i].modelPath))
         {
             auto entity = m_backgroundScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition({ (i * BallSpacing) + RootPoint, 0.f, 0.f });
@@ -758,9 +764,9 @@ void MenuState::createBallScene()
 std::int32_t MenuState::indexFromBallID(std::uint8_t ballID)
 {
     auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
-        [ballID](const std::pair<std::int32_t, std::string>& ballPair)
+        [ballID](const SharedStateData::BallInfo& ballPair)
         {
-            return ballPair.first == ballID;
+            return ballPair.uid == ballID;
         });
 
     if (ball != m_sharedData.ballModels.end())

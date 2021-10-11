@@ -5,7 +5,6 @@ model ball02
 
     material Unlit
     {
-        mask_colour = 0.000000,1.000000,1.000000,1.000000
         name = "Untitled"
         colour = 1.000000,0.999990,1.000000,1.000000
         smooth = true

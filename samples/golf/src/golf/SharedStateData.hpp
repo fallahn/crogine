@@ -86,7 +86,15 @@ struct SharedStateData final
     std::array<cro::RenderTexture, 4u> nameTextures = {};
 
     //available ball models mapped to ID
-    std::vector<std::pair<std::int32_t, std::string>> ballModels;
+    struct BallInfo final
+    {
+        cro::Colour tint;
+        std::int32_t uid = -1;
+        std::string modelPath;
+        BallInfo(cro::Colour c, std::int32_t i, const std::string& str)
+            : tint(c), uid(i), modelPath(str) {}
+    };
+    std::vector<BallInfo> ballModels;
 
     //our local player data
     ConnectionData localConnectionData;
