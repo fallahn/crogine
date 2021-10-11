@@ -726,13 +726,23 @@ void GolfState::loadAssets()
     {
         md = std::make_unique<cro::ModelDefinition>(m_resources);
     }
-    m_modelDefs[ModelID::Ball]->loadFromFile("assets/golf/models/ball.cmt"); //TODO make these more coherant as it's not clear wtf we're loading
-    m_modelDefs[ModelID::Ball01]->loadFromFile("assets/golf/models/ball02.cmt");
-    m_modelDefs[ModelID::Ball02]->loadFromFile("assets/golf/models/ball05.cmt");
-    m_modelDefs[ModelID::Ball03]->loadFromFile("assets/golf/models/ball06.cmt");
-    m_modelDefs[ModelID::Ball04]->loadFromFile("assets/golf/models/ball03.cmt");
-    m_modelDefs[ModelID::Ball05]->loadFromFile("assets/golf/models/ball04.cmt");
+    //m_modelDefs[ModelID::Ball]->loadFromFile("assets/golf/models/ball.cmt"); //TODO make these more coherant as it's not clear wtf we're loading
+    //m_modelDefs[ModelID::Ball01]->loadFromFile("assets/golf/models/ball02.cmt");
+    //m_modelDefs[ModelID::Ball02]->loadFromFile("assets/golf/models/ball05.cmt");
+    //m_modelDefs[ModelID::Ball03]->loadFromFile("assets/golf/models/ball06.cmt");
+    //m_modelDefs[ModelID::Ball04]->loadFromFile("assets/golf/models/ball03.cmt");
+    //m_modelDefs[ModelID::Ball05]->loadFromFile("assets/golf/models/ball04.cmt");
     m_modelDefs[ModelID::BallShadow]->loadFromFile("assets/golf/models/ball_shadow.cmt");
+
+    //ball models - the menu should never have let us get this far if it found no ball files
+    for (const auto& [uid, path] : m_sharedData.ballModels)
+    {
+        std::unique_ptr<cro::ModelDefinition> def = std::make_unique<cro::ModelDefinition>(m_resources);
+        if (def->loadFromFile(path))
+        {
+            m_ballModels.insert(std::make_pair(uid, std::move(def)));
+        }
+    }
 
     //UI stuffs
     cro::SpriteSheet spriteSheet;
@@ -1569,30 +1579,10 @@ void GolfState::initAudio()
 void GolfState::spawnBall(const ActorInfo& info)
 {
     auto ballID = m_sharedData.connectionData[info.clientID].playerData[info.playerID].ballID;
-    if (ballID >= BallID::Count)
-    {
-        ballID = 0;
-    }
-
-    //nice idea but seems a bit unfair to override a player's
-    //existing selection
-    
-    //auto month = cro::SysTime::now().months();
-    //switch (month)
-    //{
-    //default: break;
-    //case 10:
-    //    //spoopy.
-    //    ballID = BallID::Pumpkin;
-    //    break;
-    //case 12:
-    //    ballID = BallID::Snowman;
-    //    break;
-    //}
 
     //render the ball as a point so no perspective is applied to the scale
     auto material = m_resources.materials.get(m_ballResources.materialID);
-    material.setProperty("u_colour", BallTints[ballID]);
+    //material.setProperty("u_colour", BallTints[ballID]); //TODO how to sample this from the model? Load from the ball file?
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(info.position);
@@ -1604,6 +1594,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     //ball shadow
     auto ballEnt = entity;
+    material.setProperty("u_colour", cro::Colour::White);
     material.blendMode = cro::Material::BlendMode::Multiply;
 
     //point shadow seen from distance
@@ -1658,7 +1649,17 @@ void GolfState::spawnBall(const ActorInfo& info)
         }
     };
 
-    m_modelDefs[ModelID::Ball + ballID]->createModel(entity);
+    if (m_ballModels.count(ballID) != 0)
+    {
+        m_ballModels[ballID]->createModel(entity);
+    }
+    else
+    {
+        //a bit dangerous assuming we're not empty, but we
+        //shouldn't have made it this far without loading at least something...
+        LogW << "Ball with ID " << (int)ballID << " not found" << std::endl;
+        m_ballModels.begin()->second->createModel(entity);
+    }
     
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

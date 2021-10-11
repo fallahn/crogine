@@ -561,7 +561,8 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     static constexpr float LineSpacing = 10.f;
     glm::vec3 textPos = { TextOffset, 54.f, 0.1f };
 
-    if (!m_courseData.empty())
+    if (!m_courseData.empty()
+        && !m_sharedData.ballModels.empty())
     {
         //host
         entity = m_uiScene.createEntity();
@@ -689,7 +690,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(textPos);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString("Error: No Course Data Found.");
+        entity.addComponent<cro::Text>(font).setString("Error: No Course Data Found\nOr Missing Ball Data.");
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
         entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
 
@@ -2261,10 +2262,11 @@ void MenuState::createPlayerConfigMenu()
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                     //random ball
-                    auto ballID = cro::Util::Random::value(0, BallID::Count - 1);
-                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = ballID;
+                    idx = cro::Util::Random::value(0u, m_sharedData.ballModels.size() - 1);
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = m_sharedData.ballModels[idx].first;
 
-                    m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = ballID;
+                    m_ballIndices[m_playerAvatar.activePlayer] = idx;
+                    m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = static_cast<std::int32_t>(idx);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2303,11 +2305,12 @@ void MenuState::createPlayerConfigMenu()
                     applyTextEdit();
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 
-                    auto ballID = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID;
-                    ballID = (ballID + (BallID::Count - 1)) % BallID::Count;
-                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = ballID;
+                    auto idx = m_ballIndices[m_playerAvatar.activePlayer];
+                    idx = (idx + (m_sharedData.ballModels.size() - 1)) % m_sharedData.ballModels.size();
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = m_sharedData.ballModels[idx].first;
+                    m_ballIndices[m_playerAvatar.activePlayer] = idx;
 
-                    m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = ballID;
+                    m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = static_cast<std::int32_t>(idx);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2322,11 +2325,12 @@ void MenuState::createPlayerConfigMenu()
                     applyTextEdit();
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 
-                    auto ballID = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID;
-                    ballID = (ballID + 1) % BallID::Count;
-                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = ballID;
+                    auto idx = m_ballIndices[m_playerAvatar.activePlayer];
+                    idx = (idx + 1) % m_sharedData.ballModels.size();
+                    m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID = m_sharedData.ballModels[idx].first;
+                    m_ballIndices[m_playerAvatar.activePlayer] = idx;
 
-                    m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = ballID;
+                    m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = static_cast<std::int32_t>(idx);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2753,7 +2757,7 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
 
         m_currentMenu = MenuID::PlayerConfig;
 
-        m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID;
+        m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = static_cast<std::int32_t>(m_ballIndices[m_playerAvatar.activePlayer]);// indexFromBallID(m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID);
     }
     else
     {
@@ -2896,7 +2900,9 @@ void MenuState::loadAvatars()
                     else if (name == "ball_id")
                     {
                         auto id = prop.getValue<std::int32_t>();
-                        id = std::min(BallID::Count - 1, std::max(0, id));
+                        //id = std::min(BallID::Count - 1, std::max(0, id));
+                        //this is corrected if not found when loading the state
+                        //see the constructor.
                         m_sharedData.localConnectionData.playerData[i].ballID = id;
                     }
                     else if (name == "flags0")

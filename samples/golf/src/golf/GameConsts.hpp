@@ -90,29 +90,14 @@ struct ShaderID final
     };
 };
 
-struct BallID final
+static const std::array BallTints =
 {
-    enum
-    {
-        Normal,
-        Pumpkin,
-        Planet,
-        Snail,
-        Bowling,
-        Snowman,
-
-        Count
-    };
-};
-
-static const std::array<cro::Colour, BallID::Count> BallTints =
-{
-    cro::Colour(1.f,0.937f,0.752f),
-    cro::Colour(1.f,0.364f,0.015f),
-    cro::Colour(0.1176f, 0.2f, 0.45f),
-    cro::Colour(0.937f, 0.76f, 0.235f),
-    cro::Colour(0.015f,0.031f,1.f),
-    cro::Colour(0.964f,1.f,0.878f)
+    cro::Colour(1.f,0.937f,0.752f), //default
+    cro::Colour(1.f,0.364f,0.015f), //pumpkin
+    cro::Colour(0.1176f, 0.2f, 0.45f), //planet
+    cro::Colour(0.937f, 0.76f, 0.235f), //snail
+    cro::Colour(0.015f,0.031f,1.f), //bowling
+    cro::Colour(0.964f,1.f,0.878f) //snowman
 };
 
 static constexpr float ViewportHeight = 360.f;

@@ -115,6 +115,24 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     sd.clientConnection.ready = false;
     std::fill(m_readyState.begin(), m_readyState.end(), false);
 
+    std::fill(m_ballIndices.begin(), m_ballIndices.end(), 0);
+    
+    //remap the selected ball model indices - this is always applied
+    //as the avatar IDs are loaded from the config, above
+    for (auto i = 0u; i < 4u; ++i)
+    {
+        auto idx = indexFromBallID(m_sharedData.localConnectionData.playerData[i].ballID);
+
+        if (idx > -1)
+        {
+            m_ballIndices[i] = idx;
+        }
+        else
+        {
+            m_sharedData.localConnectionData.playerData[i].ballID = 0;
+        }
+    }
+
     //reset the state if we came from the tutorial (this is
     //also set if the player quit the game from the pause menu)
     if (sd.tutorial)
@@ -275,9 +293,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_9:
         {
-            static std::int32_t id = BallID::Normal;
-            id = (id + 1) % BallID::Count;
-            m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = id;
+
         }
             break;
 #endif
@@ -639,7 +655,7 @@ void MenuState::createBallScene()
     m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
     m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, 1.f, 0.001f, 2.f);
     m_ballCam.addComponent<cro::Callback>().active = true;
-    m_ballCam.getComponent<cro::Callback>().setUserData<std::int32_t>(BallID::Normal);
+    m_ballCam.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
     m_ballCam.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
     {
@@ -655,46 +671,104 @@ void MenuState::createBallScene()
 
     m_ballTexture.create(64, 64);
 
-
-    std::array<cro::ModelDefinition, BallID::Count> ballDefs = 
+    auto ballFiles = cro::FileSystem::listFiles("assets/golf/balls");
+    if (ballFiles.empty())
     {
-        cro::ModelDefinition(m_resources),
-        cro::ModelDefinition(m_resources),
-        cro::ModelDefinition(m_resources),
-        cro::ModelDefinition(m_resources),
-        cro::ModelDefinition(m_resources),
-        cro::ModelDefinition(m_resources)
-    };
-    ballDefs[BallID::Normal].loadFromFile("assets/golf/models/ball.cmt");
-    ballDefs[BallID::Pumpkin].loadFromFile("assets/golf/models/ball02.cmt");
-    ballDefs[BallID::Bowling].loadFromFile("assets/golf/models/ball03.cmt");
-    ballDefs[BallID::Snowman].loadFromFile("assets/golf/models/ball04.cmt");
-    ballDefs[BallID::Planet].loadFromFile("assets/golf/models/ball05.cmt");
-    ballDefs[BallID::Snail].loadFromFile("assets/golf/models/ball06.cmt");
+        LogE << "No ball files were found" << std::endl;
+    }
+
+    m_sharedData.ballModels.clear();
+    
+    for (const auto& file : ballFiles)
+    {
+        cro::ConfigFile cfg;
+        if (cfg.loadFromFile("assets/golf/balls/" + file))
+        {
+            std::int32_t uid = -1;
+            std::string modelPath;
+
+            const auto& props = cfg.getProperties();
+            for (const auto& p : props)
+            {
+                const auto& name = p.getName();
+                if (name == "model")
+                {
+                    modelPath = p.getValue<std::string>();
+                }
+                else if (name == "uid")
+                {
+                    uid = p.getValue<std::int32_t>();
+                }
+            }
+
+            if (uid > -1
+                && (!modelPath.empty() && cro::FileSystem::fileExists(modelPath)))
+            {
+                auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
+                    [uid](const std::pair<std::int32_t, std::string>& ballPair)
+                    {
+                        return ballPair.first == uid;
+                    });
+
+                if (ball == m_sharedData.ballModels.end())
+                {
+                    m_sharedData.ballModels.emplace_back(std::make_pair(uid, modelPath));
+                }
+                else
+                {
+                    LogE << file << ": a ball already exists with UID " << uid << std::endl;
+                }
+            }
+        }
+    }
+
+    cro::ModelDefinition ballDef(m_resources);
 
     cro::ModelDefinition shadowDef(m_resources);
-    shadowDef.loadFromFile("assets/golf/models/ball_shadow.cmt");
+    auto shadow = shadowDef.loadFromFile("assets/golf/models/ball_shadow.cmt");
 
-    for (auto i = 0; i < BallID::Count; ++i)
+    for (auto i = 0u; i < m_sharedData.ballModels.size(); ++i)
     {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ (i * BallSpacing) + RootPoint, 0.f, 0.f });
-        ballDefs[i].createModel(entity);
-        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
-
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [](cro::Entity e, float dt)
+        if (ballDef.loadFromFile(m_sharedData.ballModels[i].second))
         {
-            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, /*0.3f **/ dt);
-        };
+            auto entity = m_backgroundScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({ (i * BallSpacing) + RootPoint, 0.f, 0.f });
+            ballDef.createModel(entity);
+            entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
 
-        auto ballEnt = entity;
-        entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        shadowDef.createModel(entity);
-        ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+            {
+                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, /*0.3f **/ dt);
+            };
+
+            if (shadow)
+            {
+                auto ballEnt = entity;
+                entity = m_backgroundScene.createEntity();
+                entity.addComponent<cro::Transform>();
+                shadowDef.createModel(entity);
+                ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            }
+        }
     }
+}
+
+std::int32_t MenuState::indexFromBallID(std::uint8_t ballID)
+{
+    auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
+        [ballID](const std::pair<std::int32_t, std::string>& ballPair)
+        {
+            return ballPair.first == ballID;
+        });
+
+    if (ball != m_sharedData.ballModels.end())
+    {
+        return static_cast<std::int32_t>(std::distance(m_sharedData.ballModels.begin(), ball));
+    }
+
+    return -1;
 }
 
 void MenuState::handleNetEvent(const cro::NetEvent& evt)

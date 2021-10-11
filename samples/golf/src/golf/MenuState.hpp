@@ -198,11 +198,13 @@ private:
         cro::String holeCount = "0";
     };
     std::vector<CourseData> m_courseData;
+    std::array<std::size_t, 4u> m_ballIndices = {}; //index into the model list, not ballID
     void parseCourseDirectory();
 
     cro::Entity m_ballCam;
     cro::RenderTexture m_ballTexture;
     void createBallScene();
+    std::int32_t indexFromBallID(std::uint8_t);
 
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);

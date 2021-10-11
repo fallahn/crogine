@@ -54,12 +54,16 @@ struct BillboardID final
 
 static inline cro::Billboard spriteToBillboard(const cro::Sprite& sprite)
 {
-    auto bounds = sprite.getTextureRect();
-    auto texSize = glm::vec2(sprite.getTexture()->getSize());
+    if (sprite.getTexture())
+    {
+        auto bounds = sprite.getTextureRect();
+        auto texSize = glm::vec2(sprite.getTexture()->getSize());
 
-    cro::Billboard bb;
-    bb.size = { bounds.width / PixelPerMetre, bounds.height / PixelPerMetre };
-    bb.textureRect = { bounds.left / texSize.x, bounds.bottom / texSize.y, bounds.width / texSize.x, bounds.height / texSize.y };
-    bb.origin = { bb.size.x / 2.f, 0.f };
-    return bb;
+        cro::Billboard bb;
+        bb.size = { bounds.width / PixelPerMetre, bounds.height / PixelPerMetre };
+        bb.textureRect = { bounds.left / texSize.x, bounds.bottom / texSize.y, bounds.width / texSize.x, bounds.height / texSize.y };
+        bb.origin = { bb.size.x / 2.f, 0.f };
+        return bb;
+    }
+    return {};
 };

@@ -47,6 +47,7 @@ source distribution.
 #include <crogine/graphics/SimpleQuad.hpp>
 
 #include <array>
+#include <unordered_map>
 
 namespace cro
 {
@@ -116,19 +117,19 @@ private:
     {
         enum
         {
-            Ball,
-            Ball01,
-            Ball02,
-            Ball03,
-            Ball04,
-            Ball05,
+            //Ball,
+            //Ball01,
+            //Ball02,
+            //Ball03,
+            //Ball04,
+            //Ball05,
             BallShadow,
 
             Count
         };
     };
     std::array<std::unique_ptr<cro::ModelDefinition>, ModelID::Count> m_modelDefs = {};
-
+    std::unordered_map<std::int32_t, std::unique_ptr<cro::ModelDefinition>> m_ballModels;
 
     struct WaterShader final
     {

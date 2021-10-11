@@ -41,6 +41,7 @@ source distribution.
 #include <string>
 #include <array>
 #include <memory>
+#include <unordered_map>
 
 struct PlayerData final
 {
@@ -83,6 +84,9 @@ struct SharedStateData final
 
     std::array<std::array<cro::Texture, 4u>, 4u> avatarTextures = {};
     std::array<cro::RenderTexture, 4u> nameTextures = {};
+
+    //available ball models mapped to ID
+    std::vector<std::pair<std::int32_t, std::string>> ballModels;
 
     //our local player data
     ConnectionData localConnectionData;

@@ -1,0 +1,5 @@
+ball
+{
+    model = "assets/golf/models/ball04.cmt"
+    uid = 3
+}
