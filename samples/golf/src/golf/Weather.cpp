@@ -33,6 +33,8 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "../ErrorCheck.hpp"
 
+#include <crogine/ecs/Scene.hpp>
+
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -105,8 +107,11 @@ namespace
 )";
 
 
-    const std::array<float, 3u> AreaStart = { 0.f, 0.f, -20.f };
-    const std::array<float, 3u> AreaEnd = { 20.f, 80.f, 0.f };
+    constexpr std::array<float, 3u> AreaStart = { 0.f, 0.f, 0.f };
+    constexpr std::array<float, 3u> AreaEnd = { 20.f, 80.f, 20.f };
+
+    constexpr std::int32_t GridX = 3;
+    constexpr std::int32_t GridY = 3;
 }
 
 void GolfState::createWeather()
@@ -176,20 +181,44 @@ void GolfState::createWeather()
     material.setProperty("u_colour", LeaderboardTextLight);
     //material.setProperty("u_colour", WaterColour);
 
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(250.f, 0.f, -28.f));
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+    constexpr glm::vec3 Offset(AreaEnd[0] * -1.5f, 0.f, AreaEnd[2] * -1.5f);
+    for (auto y = 0; y < GridY; ++y)
+    {
+        for (auto x = 0; x < GridX; ++x)
+        {
+            glm::vec3 basePos(AreaEnd[0] * x, 0.f, AreaEnd[2] * y);
+            basePos += Offset;
 
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(220.f, 0.f, -28.f));
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+            entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+
+            //TODO replace this with a System?
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&, basePos](cro::Entity e, float)
+            {
+                //if this was in a system we'd only have to work out the cam pos
+                //once per update...
+                auto camPos = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
+                camPos.x = std::floor(camPos.x / AreaEnd[0]);
+                camPos.z = std::floor(camPos.z / AreaEnd[2]);
+
+                camPos.x *= AreaEnd[0];
+                camPos.y = 0.f;
+                camPos.z *= AreaEnd[2];
+
+                e.getComponent<cro::Transform>().setPosition(basePos + camPos);
+            };
+        }
+    }
+
 
     //hax to update uniform
     auto uniformID = shader.getUniformID("u_time");
     auto shaderID = shader.getGLHandle();
-    entity = m_gameScene.createEntity();
+    auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [uniformID, shaderID](cro::Entity, float dt)
