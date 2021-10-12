@@ -31,12 +31,16 @@ source distribution.
 #include <crogine/util/Network.hpp>
 
 #ifdef _WIN32
-//#include <winsock2.h>
 #include <iphlpapi.h>
 
 #define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
 #define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
 
+#else
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <ifaddrs.h>
+#include <stdio.h>
 #endif
 
 #ifdef _WIN32
@@ -77,11 +81,11 @@ std::vector<std::string> cro::Util::Net::getLocalAddresses()
         {
             if (pAdapter->Type == MIB_IF_TYPE_ETHERNET)
             {
-                retVal.push_back(pAdapter->IpAddressList.IpAddress.String);
+                retVal.emplace_back(pAdapter->IpAddressList.IpAddress.String);
                 IP_ADDR_STRING* add = pAdapter->IpAddressList.Next;
                 while (add)
                 {
-                    retVal.push_back(add->IpAddress.String);
+                    retVal.emplace_back(add->IpAddress.String);
                     add = add->Next;
                 }
             }
@@ -99,7 +103,26 @@ std::vector<std::string> cro::Util::Net::getLocalAddresses()
 #else
 std::vector<std::string> getLocalAddresses()
 {
-    LogI << "Not implemented on this platform" << std::endl;
-    return {"255.255.255.255"};
+    std::vector<std::string> retVal;
+
+    struct ifaddrs* ifap, * ifa;
+    struct sockaddr_in* sa;
+    char* addr = nullptr;
+
+    getifaddrs(&ifap);
+    for (ifa = ifap; ifa; ifa = ifa->ifa_next)
+    {
+        if (ifa->ifa_addr
+            && ifa->ifa_addr->sa_family == AF_INET)
+        {
+            sa = (struct sockaddr_in*)ifa->ifa_addr;
+            addr = inet_ntoa(sa->sin_addr);
+            retVal.emplace_back(addr);
+        }
+    }
+
+    freeifaddrs(ifap);
+
+    return retVal;
 }
 #endif
