@@ -52,6 +52,8 @@ private:
     SharedStateData m_sharedData;
     cro::StateStack m_stateStack;
 
+    std::vector<std::string> m_hostAddresses;
+
     std::unique_ptr<cro::RenderTexture> m_postBuffer;
     std::unique_ptr<cro::SimpleQuad> m_postQuad;
     std::unique_ptr<cro::Shader> m_postShader;

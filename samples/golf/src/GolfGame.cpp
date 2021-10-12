@@ -226,9 +226,17 @@ void GolfGame::render()
 
 bool GolfGame::initialise()
 {
+    m_hostAddresses = cro::Util::Net::getLocalAddresses();
+    if (m_hostAddresses.empty())
+    {
+        LogE << "No suitable host addresses were found" << std::endl;
+        return false;
+    }
+
     registerConsoleTab("Advanced",
         [&]()
         {
+            ImGui::Text("Post Process:");
             bool usePost = m_sharedData.usePostProcess;
             if (ImGui::Checkbox("PostProcess", &usePost))
             {
@@ -291,6 +299,46 @@ bool GolfGame::initialise()
                     }
                 }
             }
+
+            /*ImGui::NewLine();
+            ImGui::Separator();
+            ImGui::NewLine();
+            ImGui::Text("Networking:");
+
+            if (m_sharedData.serverInstance.running())
+            {
+                ImGui::Text("Options not available while server is running");
+            }
+            else
+            {
+                ImGui::Text("Some computers have multiple adapters available. Select the desired IP\naddress below on which to host the game.");
+
+                auto currentAddress = m_sharedData.serverInstance.getPreferredIP();
+                if (currentAddress.empty())
+                {
+                    currentAddress = "127.0.0.1";
+                }
+                ImGui::PushItemWidth(260.f);
+                if (ImGui::BeginCombo("Host Address", currentAddress.c_str()))
+                {
+                    for (auto i = 0u; i < m_hostAddresses.size(); ++i)
+                    {
+                        bool selected = (m_hostAddresses[i] == currentAddress);
+                        if (ImGui::Selectable(m_hostAddresses[i].c_str(), selected))
+                        {
+                            m_sharedData.serverInstance.setPreferredIP(m_hostAddresses[i]);
+                        }
+
+                        if (selected)
+                        {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+
+                    ImGui::EndCombo();
+                }
+                ImGui::PopItemWidth();
+            }*/
         });
 
     registerConsoleTab("Credits",
@@ -374,9 +422,6 @@ bool GolfGame::initialise()
 #else
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
-
-    auto addresses = cro::Util::Net::getLocalAddresses();
-    for (const auto& a : addresses) LogI << a << std::endl;
 
     return true;
 }

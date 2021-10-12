@@ -52,7 +52,12 @@ public:
 
     void setHostID(std::uint32_t id);
 
+    //note this is not atomic!
+    void setPreferredIP(const std::string& ip) { m_preferredIP = ip; }
+    const std::string& getPreferredIP() const { return m_preferredIP; }
+
 private:
+    std::string m_preferredIP;
     std::atomic_bool m_running;
     std::unique_ptr<std::thread> m_thread;
 
