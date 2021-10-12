@@ -169,7 +169,7 @@ TerrainBuilder::~TerrainBuilder()
 }
 
 //public
-void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scene, const std::string& bbModel, const std::string& bbSprites)
+void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scene, const ThemeSettings& theme)
 {
     //create a mesh for the height map - this is actually one quad short
     //top and left - but hey you didn't notice until you read this did you? :)
@@ -180,6 +180,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
         m_terrainBuffer[i].position = { static_cast<float>(x * QuadsPerMetre), 0.f, -static_cast<float>(y * QuadsPerMetre) };
         m_terrainBuffer[i].targetPosition = m_terrainBuffer[i].position;
+        m_terrainBuffer[i].colour = theme.grassColour.getVec4();
     }
 
     constexpr auto xCount = static_cast<std::uint32_t>(MapSize.x / QuadsPerMetre);
@@ -262,7 +263,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     for (auto& entity : m_billboardEntities)
     {
         //reload the the model def each time to ensure unique VBOs
-        if (billboardDef.loadFromFile(bbModel))
+        if (billboardDef.loadFromFile(theme.billboardModel))
         {
             //TODO if this fails to load we won't crash but the terrain
             //transition won't complete either so the gam eeffectively gets stuck
@@ -293,7 +294,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile(bbSprites, resources.textures);
+    spriteSheet.loadFromFile(theme.billboardSprites, resources.textures);
     m_billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
     m_billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
     m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("flowers01"));

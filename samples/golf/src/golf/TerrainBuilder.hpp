@@ -51,6 +51,13 @@ namespace cro
     class Image;
 }
 
+struct ThemeSettings final
+{
+    std::string billboardModel;
+    std::string billboardSprites;
+    cro::Colour grassColour = cro::Colour(0.1568f, 0.305f, 0.2627f, 1.f);
+};
+
 class TerrainBuilder final : public cro::GuiClient
 {
 public:
@@ -63,7 +70,7 @@ public:
     TerrainBuilder& operator = (TerrainBuilder&&) = delete;
 
 
-    void create(cro::ResourceCollection&, cro::Scene&, const std::string&, const std::string&); //initial creation
+    void create(cro::ResourceCollection&, cro::Scene&, const ThemeSettings&); //initial creation
 
     void update(std::size_t); //loads the configured data into the existing scene and signals the thread to queue upcoming data
 

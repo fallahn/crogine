@@ -900,8 +900,7 @@ void GolfState::loadAssets()
         error = true;
     }
 
-    std::string billboardPath;
-    std::string billboardSprites;
+    ThemeSettings theme;
     std::vector<std::string> holeStrings;
     const auto& props = courseFile.getProperties();
     for (const auto& prop : props)
@@ -923,22 +922,26 @@ void GolfState::loadAssets()
         }
         else if (name == "billboard_model")
         {
-            billboardPath = prop.getValue<std::string>();
+            theme.billboardModel = prop.getValue<std::string>();
         }
         else if (name == "billboard_sprites")
         {
-            billboardSprites = prop.getValue<std::string>();
+            theme.billboardSprites = prop.getValue<std::string>();
+        }
+        else if (name == "grass")
+        {
+            theme.grassColour = prop.getValue<cro::Colour>();
         }
     }
     
-    if (billboardPath.empty()
-        || !cro::FileSystem::fileExists(billboardPath))
+    if (theme.billboardModel.empty()
+        || !cro::FileSystem::fileExists(theme.billboardModel))
     {
         LogE << "Missing or invalid billboard model definition" << std::endl;
         error = true;
     }
-    if (billboardSprites.empty()
-        || !cro::FileSystem::fileExists(billboardSprites))
+    if (theme.billboardSprites.empty()
+        || !cro::FileSystem::fileExists(theme.billboardSprites))
     {
         LogE << "Missing or invalid billboard sprite sheet" << std::endl;
         error = true;
@@ -1135,7 +1138,7 @@ void GolfState::loadAssets()
     }
     //else
     {
-        m_terrainBuilder.create(m_resources, m_gameScene, billboardPath, billboardSprites);
+        m_terrainBuilder.create(m_resources, m_gameScene, theme);
     }
 
     //reserve the slots for each hole score
