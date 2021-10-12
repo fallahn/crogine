@@ -102,7 +102,7 @@ void Server::run()
     std::int32_t nextState = m_currentState->stateID();
 
     //network broadcasts are called less regularly
-    //that logic updates to the scene
+    //than logic updates to the scene
     const cro::Time netFrameTime = cro::milliseconds(50);
     cro::Clock netFrameClock;
     cro::Time netAccumulatedTime;

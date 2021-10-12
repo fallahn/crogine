@@ -145,6 +145,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/network/NetPeer.cpp
 
   ${PROJECT_DIR}/util/Matrix.cpp
+  ${PROJECT_DIR}/util/Network.cpp
   ${PROJECT_DIR}/util/Random.cpp)
 
 SET(project_src_openal

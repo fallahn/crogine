@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <crogine/Config.hpp>
+
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/vec2.hpp>
@@ -37,6 +39,8 @@ source distribution.
 #include <limits>
 #include <cmath>
 #include <array>
+#include <vector>
+#include <string>
 
 namespace cro
 {
@@ -177,6 +181,11 @@ namespace cro
 
                 return { x, y };
             }
+
+            /*!
+            \brief Returns a list of IPv4 Addresses associated with available network adapters
+            */
+            std::vector<std::string> CRO_EXPORT_API getLocalAddresses();
         }
     }
 }

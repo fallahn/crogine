@@ -122,7 +122,7 @@ if(NOT TARGET crogine)
   endif()
 
   if(WIN32)
-    target_link_libraries(${PROJECT_NAME} winmm ws2_32)
+    target_link_libraries(${PROJECT_NAME} winmm ws2_32 IPHLPAPI)
   endif()
 
   target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

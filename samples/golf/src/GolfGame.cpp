@@ -50,6 +50,8 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/detail/Types.hpp>
 
+#include <crogine/util/Network.hpp>
+
 namespace
 {
 #include "golf/TutorialShaders.inl"
@@ -372,6 +374,9 @@ bool GolfGame::initialise()
 #else
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
+
+    auto addresses = cro::Util::Net::getLocalAddresses();
+    for (const auto& a : addresses) LogI << a << std::endl;
 
     return true;
 }
