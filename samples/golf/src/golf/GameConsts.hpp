@@ -238,10 +238,11 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
 //TODO use this for interpolating slope height on a height map
 static inline float readHeightmap(glm::vec3 position, const std::vector<float>& heightmap)
 {
-    const auto lerp = [](float a, float b, float t) constexpr
+    return 0.f;
+    /*const auto lerp = [](float a, float b, float t) constexpr
     {
         return a + t * (b - a);
-    };
+    };*/
 
     //const auto getHeightAt = [&](std::int32_t x, std::int32_t y)
     //{

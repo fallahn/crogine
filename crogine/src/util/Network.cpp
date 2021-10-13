@@ -101,7 +101,7 @@ std::vector<std::string> cro::Util::Net::getLocalAddresses()
     return retVal;
 }
 #else
-std::vector<std::string> getLocalAddresses()
+std::vector<std::string> cro::Util::Net::getLocalAddresses()
 {
     std::vector<std::string> retVal;
 

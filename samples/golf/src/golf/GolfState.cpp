@@ -1694,7 +1694,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     //name label for the ball's owner
     glm::vec2 texSize(LabelTextureSize);
-    const float scale = 0.2f / texSize.x; //scale to ~20cm wide
+
     auto playerID = info.playerID;
     auto clientID = info.clientID;
     entity = m_uiScene.createEntity();
