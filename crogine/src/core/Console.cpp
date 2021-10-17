@@ -342,8 +342,10 @@ void Console::draw()
                     for (auto i = 0u; i < AudioMixer::MaxChannels; ++i)
                     {
                         channelVol[i] = AudioMixer::getVolume(i);
-                        ui::SliderFloat(AudioMixer::getLabel(i).c_str(), &channelVol[i], 0.f, 1.f);
-                        AudioMixer::setVolume(channelVol[i], i);
+                        if (ui::SliderFloat(AudioMixer::getLabel(i).c_str(), &channelVol[i], 0.f, 1.f))
+                        {
+                            AudioMixer::setVolume(channelVol[i], i);
+                        }
                     }
                     ui::EndTabItem();
                 }

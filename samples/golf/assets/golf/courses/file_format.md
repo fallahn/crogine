@@ -9,7 +9,7 @@ A course folder should contain one file with the course.data. It has the followi
         skybox = "assets/golf/images/skybox/sky.ccm" //a path to the skybox to use when the course is loaded
         billboard_model = "assets/golf/models/shrubbery.cmt" //path to the model definition for the billboard file containing the trees/shrubs
         billboard_sprites = "assets/golf/sprites/shrubbery.spt" //path to the spritesheet containing the sprite definitions for each billboard in the billboard model
-        grass = 1,0.5,0,1 //surrounding grass coplour. This is optional and will default to dark green from the colordome-32 palette
+        grass = 1,0.5,0,1 //surrounding grass colour. This is optional and will default to dark green from the colordome-32 palette
 
         title = "St. Billybob's links, Isle of Wibble" //course title, shown in the game lobby
         description = "This is a test course. Why not have a play?" //a brief description, shown in the game lobby
@@ -23,7 +23,7 @@ A course folder should contain one file with the course.data. It has the followi
 The course file contains a list of paths to *.hole files which describe the individual holes that make up a course. This way holes can be recycled thoughout different course layouts should it be so desired. Up to 18 holes can be added to a course (any further holes will be ignored when the course file is loaded).
 
 ###### Hole file
-Hole files describe which models/assets make up the hole, as well as the position of the tee, the hole and the par for that hole. Optionally prop objects can be added to the hole to display models as props in the game. Crowd objetcs can also optionally be added to place a small crowd of spectators. By default they are aligned left to right along the X axis and can be rotated with the `rotation` property.
+Hole files describe which models/assets make up the hole, as well as the position of the tee, the hole and the par for that hole. Optionally prop objects can be added to the hole to display models as props in the game. Crowd objects can also optionally be added to place a small crowd of spectators. By default they are aligned left to right along the X axis and can be rotated with the `rotation` property.
 
     hole 01 //hole ID
     {

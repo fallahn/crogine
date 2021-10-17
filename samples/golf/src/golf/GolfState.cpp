@@ -2184,6 +2184,21 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     direction = glm::normalize(direction) * 15.f;
     m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
 
+    //we also have to check the camera hasn't ended up too close to the centre one, else the
+    //camera director gets confused as to which should be active when the ball is in both radii
+    auto distVec = m_cameras[CameraID::Sky].getComponent<cro::Transform>().getPosition();
+    distVec -= m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition();
+    auto len2 = glm::length2(distVec);
+    auto minLen = m_cameras[CameraID::Sky].getComponent<CameraFollower>().radius + m_cameras[CameraID::Green].getComponent<CameraFollower>().radius;
+    if (len2 < minLen)
+    {
+        auto len = std::sqrt(len2);
+        auto diff = std::sqrt(minLen) - len;
+        distVec /= len;
+        distVec *= (diff * 1.1f);
+        m_cameras[CameraID::Green].getComponent<cro::Transform>().move(-distVec);
+    }
+
 
     //reset the flag
     cmd.targetFlags = CommandID::Flag;
@@ -2383,7 +2398,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
             auto pos = camera.coordsToPixel(player.position, m_gameSceneTexture.getSize());
             e.getComponent<cro::Transform>().setPosition(pos);
-
+            
             //make sure we reset to player camera just in case
             setActiveCamera(CameraID::Player);
         }
