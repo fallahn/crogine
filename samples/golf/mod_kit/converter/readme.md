@@ -1,0 +1,1 @@
+build the 'editor' project in this repository for the model converter, or download Windows binaries from http://fallahn.itch.io/vga-golf
