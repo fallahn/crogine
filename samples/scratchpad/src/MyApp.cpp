@@ -43,9 +43,7 @@ namespace
 MyApp::MyApp()
     : m_stateStack({*this, getWindow()})
 {
-    m_stateStack.registerState<sp::MenuState>(States::ScratchPad::MainMenu);
-    m_stateStack.registerState<BatcatState>(States::ScratchPad::BatCat);
-    m_stateStack.registerState<BspState>(States::ScratchPad::BSP);
+
 }
 
 //public
@@ -87,6 +85,10 @@ bool MyApp::initialise()
 {
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Scratchpad Browser");
+
+    m_stateStack.registerState<sp::MenuState>(States::ScratchPad::MainMenu);
+    m_stateStack.registerState<BatcatState>(States::ScratchPad::BatCat);
+    m_stateStack.registerState<BspState>(States::ScratchPad::BSP);
 
 #ifdef CRO_DEBUG_
     m_stateStack.pushState(States::ScratchPad::MainMenu);

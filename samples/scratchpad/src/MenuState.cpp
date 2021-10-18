@@ -43,6 +43,9 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
+#include <fstream>
+#include <iomanip>
+#include <crogine/graphics/Image.hpp>
 using namespace sp;
 
 namespace

@@ -41,6 +41,7 @@ source distribution.
 #include "LoadingScreen.hpp"
 #include "SplashScreenState.hpp"
 #include "ErrorCheck.hpp"
+#include "icon.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/Clock.hpp>
@@ -356,6 +357,7 @@ bool GolfGame::initialise()
 
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Golf Game");
+    getWindow().setIcon(icon);
     m_renderTarget = &getWindow();
 
     cro::AudioMixer::setLabel("Music", MixerChannel::Music);
@@ -364,7 +366,7 @@ bool GolfGame::initialise()
 
     loadPreferences();
 
-    m_sharedData.clientConnection.netClient.create(4);
+    m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
     std::fill(m_sharedData.controllerIDs.begin(), m_sharedData.controllerIDs.end(), 0);
 
