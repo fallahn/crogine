@@ -2537,6 +2537,12 @@ void GolfState::updateActor(const ActorInfo& update)
     {
         //set the green cam zoom as appropriate
         float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
+
+        if (ballDist < 0)
+        {
+            LogE << "Ball dist is wrong! value: " << ballDist << " with position " << update.position << std::endl;
+        }
+
         m_greenCam.getComponent<cro::Callback>().getUserData<MiniCamData>().targetSize =
             interpolate(MiniCamData::MinSize, MiniCamData::MaxSize, smoothstep(MiniCamData::MinSize, MiniCamData::MaxSize, ballDist));
 
@@ -2550,6 +2556,11 @@ void GolfState::updateActor(const ActorInfo& update)
             if (ballDist > 5)
             {
                 distance = static_cast<std::int32_t>(ballDist);
+                if (distance < 0)
+                {
+                    LogE << "Distance got mangled, now: " << distance << std::endl;
+                }
+
                 e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
             }
             else
