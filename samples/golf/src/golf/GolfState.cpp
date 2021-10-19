@@ -103,6 +103,7 @@ namespace
 #include "WireframeShader.inl"
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
+    const cro::Time MouseHideTime = cro::seconds(3.f);
 
     //used to set the camera target
     struct TargetInfo final
@@ -133,6 +134,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_sharedData        (sd),
     m_gameScene         (context.appInstance.getMessageBus(), 512),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
+    m_mouseVisible      (true),
     m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
     m_wantsGameState    (true),
     m_currentHole       (0),
@@ -150,7 +152,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         buildScene();
         });
 
-    context.mainWindow.setMouseCaptured(true);
     sd.baseState = StateID::Game;
 
     //glLineWidth(1.5f);
@@ -363,6 +364,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
     }
 
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
+        m_mouseVisible = true;
+        m_mouseClock.restart();
+    }
 
     m_inputParser.handleEvent(evt);
 
@@ -643,6 +650,17 @@ bool GolfState::simulate(float dt)
             }
         };
         m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
+
+    //auto hide the mouse
+    if (m_mouseVisible
+        && getStateCount() == 1)
+    {
+        if (m_mouseClock.elapsed() > MouseHideTime)
+        {
+            m_mouseVisible = false;
+            cro::App::getWindow().setMouseCaptured(true);
+        }
     }
 
     return true;

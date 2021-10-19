@@ -37,6 +37,7 @@ source distribution.
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
+#include <crogine/core/Clock.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <crogine/ecs/Scene.hpp>
@@ -82,6 +83,9 @@ private:
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
+
+    cro::Clock m_mouseClock;
+    bool m_mouseVisible;
 
     InputParser m_inputParser;
 
