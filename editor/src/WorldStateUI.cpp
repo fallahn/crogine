@@ -36,10 +36,15 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Model.hpp>
 
+#include <crogine/graphics/Image.hpp>
+
 #include <crogine/util/Matrix.hpp>
 #include <crogine/util/Constants.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+
+#include <fstream>
+#include <iomanip>
 
 namespace
 {
@@ -57,6 +62,33 @@ namespace
     {
         std::make_pair(glm::vec2(), glm::vec2())
     };
+
+    void outputIcon(const cro::Image& img, const std::string& outPath)
+    {
+        CRO_ASSERT(img.getFormat() == cro::ImageFormat::RGBA, "");
+        std::stringstream ss;
+        ss << "static const unsigned char icon[] = {" << std::endl;
+        ss << std::showbase << std::internal << std::setfill('0');
+
+        auto i = 0;
+        for (auto y = 0; y < 16; ++y)
+        {
+            for (auto x = 0; x < 16; ++x)
+            {
+                ss << std::hex << (int)img.getPixelData()[i++] << ", ";
+                ss << std::hex << (int)img.getPixelData()[i++] << ", ";
+                ss << std::hex << (int)img.getPixelData()[i++] << ", ";
+                ss << std::hex << (int)img.getPixelData()[i++] << ", ";
+            }
+            ss << std::endl;
+        }
+
+        ss << "};";
+
+        std::ofstream file(outPath);
+        file << ss.rdbuf();
+        file.close();
+    }
 }
 
 void WorldState::initUI()
@@ -134,6 +166,38 @@ void WorldState::drawMenuBar()
                 unregisterWindows();
             }
 
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Tools"))
+        {
+            if (ImGui::MenuItem("Convert Icon"))
+            {
+                auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
+                if (!path.empty())
+                {
+                    cro::Image img(true);
+                    if (img.loadFromFile(path))
+                    {
+                        if (img.getSize().x == 16 &&
+                            img.getSize().y == 16)
+                        {
+                            path.clear();
+                            path = cro::FileSystem::saveFileDialogue("", "hpp");
+                            if (!path.empty())
+                            {
+                                outputIcon(img, path);
+                            }
+                        }
+                        else
+                        {
+                            cro::FileSystem::showMessageBox("","Image not 16x16");
+                        }
+                    }
+                }
+            }
+            ImGui::SameLine();
+            uiConst::showToolTip("Convert a 16x16 image to byte array");
             ImGui::EndMenu();
         }
 
