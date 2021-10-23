@@ -307,7 +307,7 @@ void ShadowMapRenderer::render()
 
 #ifdef PLATFORM_DESKTOP
                 const auto& indexData = model.m_meshData.indexData[i];
-                glCheck(glBindVertexArray(indexData.vao[Mesh::IndexData::Shadow]));
+                glCheck(glBindVertexArray(model.m_vaos[i][Mesh::IndexData::Shadow]));
                 glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
 #else
                 //bind attribs

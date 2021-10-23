@@ -42,7 +42,12 @@ Model::Model()
     m_renderFlags   (std::numeric_limits<std::uint64_t>::max()),
     m_skeleton      (nullptr),
     m_jointCount    (0)
-{}
+{
+    for (auto& pair : m_vaos)
+    {
+        std::fill(pair.begin(), pair.end(), 0);
+    }
+}
 
 Model::Model(Mesh::Data data, Material::Data material)
     : m_visible     (true),
@@ -52,6 +57,11 @@ Model::Model(Mesh::Data data, Material::Data material)
     m_skeleton      (nullptr),
     m_jointCount    (0)
 {
+    for (auto& pair : m_vaos)
+    {
+        std::fill(pair.begin(), pair.end(), 0);
+    }
+
     //sets all materials to given default
     bindMaterial(material);
     for (auto& mat : m_materials[Mesh::IndexData::Final])
@@ -67,6 +77,71 @@ Model::Model(Mesh::Data data, Material::Data material)
 #endif //DESKTOP
 }
 
+#ifdef PLATFORM_DESKTOP
+Model::~Model()
+{
+    for (auto& pair : m_vaos)
+    {
+        if (pair[0])
+        {
+            glCheck(glDeleteVertexArrays(1, &pair[0]));
+        }
+
+        if (pair[1])
+        {
+            glCheck(glDeleteVertexArrays(1, &pair[1]));
+        }
+    }
+}
+
+Model::Model(Model&& other) noexcept
+    : Model()
+{
+    //we can swap because we initialised to nothing
+    std::swap(m_visible, other.m_visible);
+    std::swap(m_hidden, other.m_hidden);
+    std::swap(m_renderFlags, other.m_renderFlags);
+
+    std::swap(m_meshData, other.m_meshData);
+    std::swap(m_materials, other.m_materials);
+
+    std::swap(m_vaos, other.m_vaos);
+
+    std::swap(m_skeleton, other.m_skeleton);
+    std::swap(m_jointCount, other.m_jointCount);
+}
+
+Model& Model::operator=(Model&& other) noexcept
+{
+    if (&other != this)
+    {
+        m_visible = other.m_visible;
+        m_hidden = other.m_hidden;
+        m_renderFlags = other.m_renderFlags;
+
+        m_meshData = other.m_meshData;
+        other.m_meshData = {};
+        m_materials = other.m_materials;
+        other.m_materials = {};
+
+        m_vaos = other.m_vaos;
+        for (auto& pair : other.m_vaos)
+        {
+            std::fill(pair.begin(), pair.end(), 0);
+        }
+
+        m_skeleton = other.m_skeleton;
+        other.m_skeleton = nullptr;
+
+        m_jointCount = other.m_jointCount;
+        other.m_jointCount = 0;
+    }
+
+    return* this;
+}
+#endif
+
+//public
 void Model::setMaterial(std::size_t idx, Material::Data data)
 {
     CRO_ASSERT(idx < m_materials[Mesh::IndexData::Final].size(), "Index out of range");
@@ -140,18 +215,19 @@ void Model::bindMaterial(Material::Data& material)
 void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
 {
     auto& submesh = m_meshData.indexData[idx];
+    auto& vaoPair = m_vaos[idx];
 
     //I guess we have to remove any old binding
     //if there's an existing material
-    if (submesh.vao[passIndex] != 0)
+    if (vaoPair[passIndex] != 0)
     {
-        glCheck(glDeleteVertexArrays(1, &submesh.vao[passIndex]));
-        submesh.vao[passIndex] = 0;
+        glCheck(glDeleteVertexArrays(1, &vaoPair[passIndex]));
+        vaoPair[passIndex] = 0;
     }
 
-    glCheck(glGenVertexArrays(1, &submesh.vao[passIndex]));
+    glCheck(glGenVertexArrays(1, &vaoPair[passIndex]));
 
-    glCheck(glBindVertexArray(submesh.vao[passIndex]));
+    glCheck(glBindVertexArray(vaoPair[passIndex]));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vbo));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
 

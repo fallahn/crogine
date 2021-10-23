@@ -44,6 +44,17 @@ namespace cro
         Model();
         Model(Mesh::Data, Material::Data); //applied to all meshes by default
         
+#ifdef PLATFORM_DESKTOP
+        //on desktop we own our VAO so we need to manage the handle
+        ~Model();
+
+        Model(const Model&) = delete;
+        Model& operator = (const Model&) = delete;
+
+        Model(Model&&) noexcept;
+        Model& operator = (Model&&) noexcept;
+#endif
+
         /*!
         \brief Applies the given material to the given sub-mesh index
         \param idx The index of the sub-mesh to which to apply the material
@@ -134,12 +145,15 @@ namespace cro
 
 
     private:
-        bool m_visible = false;
-        bool m_hidden = false;
+        bool m_visible;
+        bool m_hidden;
         std::uint64_t m_renderFlags;
 
         Mesh::Data m_meshData;
-        std::array<std::array<Material::Data, Mesh::IndexData::MaxBuffers>, Mesh::IndexData::Count> m_materials{};       
+        std::array<std::array<Material::Data, Mesh::IndexData::MaxBuffers>, Mesh::IndexData::Count> m_materials = {};       
+
+        using VAOPair = std::array<std::uint32_t, Mesh::IndexData::Pass::Count>;
+        std::array<VAOPair, Mesh::IndexData::MaxBuffers> m_vaos = {};
 
         void bindMaterial(Material::Data&);
         
