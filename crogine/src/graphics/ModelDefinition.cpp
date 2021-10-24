@@ -630,7 +630,12 @@ bool ModelDefinition::createModel(Entity entity)
 
         if (m_instanced)
         {
-            //TODO add a single identity matrix so we at least render one instance
+            //add a single identity matrix so we at least render one instance
+            std::vector<glm::mat4> tx =
+            {
+                glm::mat4(1.f)
+            };
+            entity.getComponent<cro::Model>().setInstanceTransforms(tx);
         }
 
         if (hasSkeleton())

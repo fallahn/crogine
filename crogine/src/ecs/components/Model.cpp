@@ -198,6 +198,21 @@ const Material::Data& Model::getMaterialData(Mesh::IndexData::Pass pass, std::si
     return m_materials[pass][submesh];
 }
 
+void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
+{
+#ifdef PLATFORM_DESKTOP
+    //create VBOs is needed
+
+    //upload transform data
+
+    //calc normal matrices and upload
+
+    //TODO update move ctor/assignment
+
+    //TODO update VAOs if material is set
+#endif
+}
+
 //private
 void Model::bindMaterial(Material::Data& material)
 {
@@ -247,6 +262,8 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
     }
 
     glCheck(glGenVertexArrays(1, &vaoPair[passIndex]));
+
+    //TODO check if we're instanced
 
     glCheck(glBindVertexArray(vaoPair[passIndex]));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vbo));

@@ -145,6 +145,21 @@ namespace cro
         */
         const Material::Data& getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh) const;
 
+        /*
+        \brief Sets the transform data for instanced models
+        \param transforms A std::vector of glm::mat containing the transforms
+        for each instance.
+
+        To enable this make sure to load the model with a ModelDefinition constructed
+        with the 'instanced' parameter set to true, or with a material that has a compatible
+        instancing shader.
+        Note that it is not generally recommended to update this frequently as the VBO
+        containing the transform and normal matrix data is completely recalculated, which
+        can take a long time for large arrays.
+        Transform data is copied from the vector, so the data may safely be disgarded
+        */
+        void setInstanceTransforms(const std::vector<glm::mat4>& transforms);
+
 #ifdef PLATFORM_DESKTOP
         /*!
         \brief Used to implement custom draw functions for the Model.
