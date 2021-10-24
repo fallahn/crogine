@@ -156,7 +156,7 @@ namespace cro
         Note that it is not generally recommended to update this frequently as the VBO
         containing the transform and normal matrix data is completely recalculated, which
         can take a long time for large arrays.
-        Transform data is copied from the vector, so the data may safely be disgarded
+        Transform data is copied from the vector, so the data may safely be discarded
         */
         void setInstanceTransforms(const std::vector<glm::mat4>& transforms);
 
@@ -192,6 +192,21 @@ namespace cro
             const Model& m_model;
             DrawSingle(const Model& m) : m_model(m) {}
         };
+
+        struct DrawInstanced final
+        {
+            void operator()(std::int32_t, std::int32_t) const;
+
+            const Model& m_model;
+            DrawInstanced(const Model& m) : m_model(m) {}
+        };
+
+        struct InstanceBuffers final
+        {
+            std::uint32_t transformBuffer = 0;
+            std::uint32_t normalBuffer = 0;
+            std::uint32_t instanceCount = 0;
+        }m_instanceBuffers;
 #endif //DESKTOP
 
         glm::mat4* m_skeleton = nullptr;

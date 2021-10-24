@@ -32,6 +32,8 @@ source distribution.
 #include "../../detail/glad.hpp"
 #include "../../detail/GLCheck.hpp"
 
+#include <crogine/detail/glm/gtc/matrix_inverse.hpp>
+
 #include <algorithm>
 
 using namespace cro;
@@ -92,6 +94,13 @@ Model::~Model()
             glCheck(glDeleteVertexArrays(1, &p2));
         }
     }
+
+    if (m_instanceBuffers.instanceCount != 0)
+    {
+        glCheck(glDeleteBuffers(1, &m_instanceBuffers.normalBuffer));
+        glCheck(glDeleteBuffers(1, &m_instanceBuffers.transformBuffer));
+        m_instanceBuffers.instanceCount = 0;
+    }
 }
 
 Model::Model(Model&& other) noexcept
@@ -110,8 +119,17 @@ Model::Model(Model&& other) noexcept
     std::swap(m_skeleton, other.m_skeleton);
     std::swap(m_jointCount, other.m_jointCount);
 
-    //TODO check the other property to see which draw func we need
-    draw = DrawSingle(*this);
+    std::swap(m_instanceBuffers, other.m_instanceBuffers);
+
+    //check the other property to see which draw func we need
+    if (m_instanceBuffers.instanceCount != 0)
+    {
+        draw = DrawInstanced(*this);
+    }
+    else
+    {
+        draw = DrawSingle(*this);
+    }
     other.draw = {};
 }
 
@@ -153,8 +171,23 @@ Model& Model::operator=(Model&& other) noexcept
         m_jointCount = other.m_jointCount;
         other.m_jointCount = 0;
 
-        //TODO make sure we use the correct function
-        draw = DrawSingle(*this);
+        if (m_instanceBuffers.instanceCount != 0)
+        {
+            glCheck(glDeleteBuffers(1, &m_instanceBuffers.normalBuffer));
+            glCheck(glDeleteBuffers(1, &m_instanceBuffers.transformBuffer));
+            m_instanceBuffers.instanceCount = 0;
+        }
+        m_instanceBuffers = other.m_instanceBuffers;
+        other.m_instanceBuffers = {};
+
+        if (m_instanceBuffers.instanceCount)
+        {
+            draw = DrawInstanced(*this);
+        }
+        else
+        {
+            draw = DrawSingle(*this);
+        }
         other.draw = {};
     }
 
@@ -200,16 +233,41 @@ const Material::Data& Model::getMaterialData(Mesh::IndexData::Pass pass, std::si
 
 void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
 {
+    //TODO check we have a material which supports this...
+
 #ifdef PLATFORM_DESKTOP
-    //create VBOs is needed
+    //create VBOs if needed
+    if (m_instanceBuffers.instanceCount == 0)
+    {
+        glCheck(glGenBuffers(1, &m_instanceBuffers.normalBuffer));
+        glCheck(glGenBuffers(1, &m_instanceBuffers.transformBuffer));
+    }
+    m_instanceBuffers.instanceCount = static_cast<std::uint32_t>(transforms.size());
 
     //upload transform data
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, m_instanceBuffers.instanceCount * sizeof(glm::mat4), transforms.data(), GL_STATIC_DRAW));
 
     //calc normal matrices and upload
+    std::vector<glm::mat3> normalMatrices(transforms.size());
+    for (auto i = 0u; i < normalMatrices.size(); ++i)
+    {
+        normalMatrices[i] = glm::inverseTranspose(transforms[i]);
+    }
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, m_instanceBuffers.instanceCount * sizeof(glm::mat3), normalMatrices.data(), GL_STATIC_DRAW));
 
-    //TODO update move ctor/assignment
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    //TODO update VAOs if material is set
+    //update VAOs if material is set
+    for (auto i = 0u; i < m_meshData.submeshCount; ++i)
+    {
+        updateVAO(i, Mesh::IndexData::Final);
+
+        //TODO we need to update shadow materials if they exist (might not match the regular material count)
+        //TODO check if we need to modify bindMaterial with the new transform attribs. This might only be relevant
+        //to non-vao rendering/interleaved vertex attribs
+    }
 #endif
 }
 
@@ -263,8 +321,6 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
 
     glCheck(glGenVertexArrays(1, &vaoPair[passIndex]));
 
-    //TODO check if we're instanced
-
     glCheck(glBindVertexArray(vaoPair[passIndex]));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vbo));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
@@ -277,13 +333,30 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
             GL_FLOAT, GL_FALSE, static_cast<GLsizei>(m_meshData.vertexSize),
             reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
     }
-    //glCheck(glEnableVertexAttribArray(0));
+    
+    //bind instance buffers if they exist
+    if (m_instanceBuffers.instanceCount != 0)
+    {
+        //TODO we need to query the material for attrib position
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
+        glCheck(glEnableVertexAttribArray(?));
+        glCheck(glVertexAttribPointer(?, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec3), reinterpret_cast<void*>(static_cast<intptr_t>(0)));
+
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
+        glCheck(glEnableVertexAttribArray(?));
+        glCheck(glVertexAttribPointer(?, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
+
+        
+        draw = DrawInstanced(*this);
+    }
+    else
+    {
+        draw = DrawSingle(*this);
+    }
 
     glCheck(glBindVertexArray(0));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-    draw = DrawSingle(*this);
 }
 
 //draw functions
@@ -291,7 +364,14 @@ void Model::DrawSingle::operator()(std::int32_t matID, std::int32_t pass) const
 {
     const auto& indexData = m_model.m_meshData.indexData[matID];
     glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
-    glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+    glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), NULL));
+}
+
+void Model::DrawInstanced::operator()(std::int32_t matID, std::int32_t pass) const
+{
+    const auto& indexData = m_model.m_meshData.indexData[matID];
+    glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
+    glCheck(glDrawElementsInstanced(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), NULL, m_model.m_instanceBuffers.instanceCount));
 }
 
 #endif //DESKTOP
