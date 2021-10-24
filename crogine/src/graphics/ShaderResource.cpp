@@ -182,6 +182,10 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
     {
         defines += "\n#define LOCK_SCALE";
     }
+    if (flags & BuiltInFlags::Instanced)
+    {
+        defines += "\n#define INSTANCING";
+    }
     if (needUVs)
     {
         defines += "\n#define TEXTURED";

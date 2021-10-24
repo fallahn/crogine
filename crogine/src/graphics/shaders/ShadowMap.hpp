@@ -36,36 +36,36 @@ namespace cro::Shaders::ShadowMap
     static const std::string Vertex = R"(
         ATTRIBUTE vec4 a_position;
 
-        #if defined (ALPHA_CLIP)
+    #if defined (ALPHA_CLIP)
         ATTRIBUTE vec2 a_texCoord0;
-        #endif
+    #endif
 
-        #if defined(INSTANCING)
+    #if defined(INSTANCING)
         ATTRIBUTE mat4 a_instanceWorldMatrix;
-        #endif
+    #endif
 
-        #if defined(SKINNED)
+    #if defined(SKINNED)
         ATTRIBUTE vec4 a_boneIndices;
         ATTRIBUTE vec4 a_boneWeights;
         uniform mat4 u_boneMatrices[MAX_BONES];
-        #endif
+    #endif
 
-        #if defined(INSTANCING)
+    #if defined(INSTANCING)
         uniform mat4 u_viewMatrix;        
-        #else
+    #else
         uniform mat4 u_worldMatrix;
         uniform mat4 u_worldViewMatrix;
-        #endif
+    #endif
         uniform mat4 u_projectionMatrix;
         uniform vec4 u_clipPlane;
 
-        #if defined (MOBILE)
+    #if defined (MOBILE)
         VARYING_OUT vec4 v_position;
-        #endif
+    #endif
 
-        #if defined (ALPHA_CLIP)
+    #if defined (ALPHA_CLIP)
         VARYING_OUT vec2 v_texCoord0;
-        #endif
+    #endif
 
         void main()
         {

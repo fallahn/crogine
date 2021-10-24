@@ -75,7 +75,8 @@ namespace cro
             RxShadows         = 0x800,
             AlphaClip         = 0x1000,
             LockRotation      = 0x2000,
-            LockScale         = 0x4000
+            LockScale         = 0x4000,
+            Instanced         = 0x8000,
         };
         
         ShaderResource();
