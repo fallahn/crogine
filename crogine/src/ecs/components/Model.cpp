@@ -80,16 +80,16 @@ Model::Model(Mesh::Data data, Material::Data material)
 #ifdef PLATFORM_DESKTOP
 Model::~Model()
 {
-    for (auto& pair : m_vaos)
+    for (auto& [p1, p2] : m_vaos)
     {
-        if (pair[0])
+        if (p1)
         {
-            glCheck(glDeleteVertexArrays(1, &pair[0]));
+            glCheck(glDeleteVertexArrays(1, &p1));
         }
 
-        if (pair[1])
+        if (p2)
         {
-            glCheck(glDeleteVertexArrays(1, &pair[1]));
+            glCheck(glDeleteVertexArrays(1, &p2));
         }
     }
 }
@@ -123,6 +123,19 @@ Model& Model::operator=(Model&& other) noexcept
         other.m_meshData = {};
         m_materials = other.m_materials;
         other.m_materials = {};
+
+        for (auto& [p1, p2] : m_vaos)
+        {
+            if (p1)
+            {
+                glCheck(glDeleteVertexArrays(1, &p1));
+            }
+
+            if (p2)
+            {
+                glCheck(glDeleteVertexArrays(1, &p2));
+            }
+        }
 
         m_vaos = other.m_vaos;
         for (auto& pair : other.m_vaos)

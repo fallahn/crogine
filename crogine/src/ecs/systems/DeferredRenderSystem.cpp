@@ -308,7 +308,7 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
             glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldView)))));
 
             const auto& indexData = model.m_meshData.indexData[i];
-            glCheck(glBindVertexArray(indexData.vao[Mesh::IndexData::Final]));
+            glCheck(glBindVertexArray(model.m_vaos[i][Mesh::IndexData::Final]));
             glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
         }
     }
@@ -361,7 +361,7 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
 
             //and... draw.
             const auto& indexData = model.m_meshData.indexData[i];
-            glCheck(glBindVertexArray(indexData.vao[Mesh::IndexData::Final]));
+            glCheck(glBindVertexArray(model.m_vaos[i][Mesh::IndexData::Final]));
             glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
         }
     }
