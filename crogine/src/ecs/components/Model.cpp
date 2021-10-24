@@ -109,6 +109,10 @@ Model::Model(Model&& other) noexcept
 
     std::swap(m_skeleton, other.m_skeleton);
     std::swap(m_jointCount, other.m_jointCount);
+
+    //TODO check the other property to see which draw func we need
+    draw = DrawSingle(*this);
+    other.draw = {};
 }
 
 Model& Model::operator=(Model&& other) noexcept
@@ -148,6 +152,10 @@ Model& Model::operator=(Model&& other) noexcept
 
         m_jointCount = other.m_jointCount;
         other.m_jointCount = 0;
+
+        //TODO make sure we use the correct function
+        draw = DrawSingle(*this);
+        other.draw = {};
     }
 
     return* this;
@@ -257,5 +265,16 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
     glCheck(glBindVertexArray(0));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    draw = DrawSingle(*this);
 }
+
+//draw functions
+void Model::DrawSingle::operator()(std::int32_t matID, std::int32_t pass) const
+{
+    const auto& indexData = m_model.m_meshData.indexData[matID];
+    glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
+    glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+}
+
 #endif //DESKTOP

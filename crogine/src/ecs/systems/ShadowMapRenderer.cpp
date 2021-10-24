@@ -306,9 +306,7 @@ void ShadowMapRenderer::render()
                 //glCheck(glUniformMatrix4fv(mat.uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camera.depthViewProjectionMatrix)));
 
 #ifdef PLATFORM_DESKTOP
-                const auto& indexData = model.m_meshData.indexData[i];
-                glCheck(glBindVertexArray(model.m_vaos[i][Mesh::IndexData::Shadow]));
-                glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+                model.draw(i, Mesh::IndexData::Shadow);
 #else
                 //bind attribs
                 const auto& attribs = mat.attribs;

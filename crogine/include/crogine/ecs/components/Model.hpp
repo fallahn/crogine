@@ -36,6 +36,8 @@ source distribution.
 
 #include <crogine/detail/glm/mat4x4.hpp>
 
+#include <functional>
+
 namespace cro
 {
     class CRO_EXPORT_API Model final
@@ -143,6 +145,14 @@ namespace cro
         */
         const Material::Data& getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh) const;
 
+#ifdef PLATFORM_DESKTOP
+        /*!
+        \brief Used to implement custom draw functions for the Model.
+        This is used internally to set whether the Model is drawn with instancing
+        or not. Overriding this yourself probably won't do what  you expect
+        */
+        std::function<void(std::int32_t, std::int32_t)> draw;
+#endif
 
     private:
         bool m_visible;
@@ -159,6 +169,14 @@ namespace cro
         
 #ifdef PLATFORM_DESKTOP
         void updateVAO(std::size_t materialIndex, std::int32_t passIndex);
+
+        struct DrawSingle final
+        {
+            void operator()(std::int32_t, std::int32_t) const;
+
+            const Model& m_model;
+            DrawSingle(const Model& m) : m_model(m) {}
+        };
 #endif //DESKTOP
 
         glm::mat4* m_skeleton = nullptr;
@@ -167,5 +185,7 @@ namespace cro
         friend class ModelRenderer;
         friend class ShadowMapRenderer;
         friend class DeferredRenderSystem;
+
+
     };
 }

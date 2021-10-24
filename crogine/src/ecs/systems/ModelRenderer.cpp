@@ -235,9 +235,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             }
 
 #ifdef PLATFORM_DESKTOP
-            const auto& indexData = model.m_meshData.indexData[i];
-            glCheck(glBindVertexArray(model.m_vaos[i][Mesh::IndexData::Final]));
-            glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+            model.draw(i, Mesh::IndexData::Final);
 
 #else //GLES 2 doesn't have VAO support without extensions
 
