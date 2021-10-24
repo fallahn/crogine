@@ -50,6 +50,11 @@ namespace cro::Shaders::VertexLit
         ATTRIBUTE MED vec2 a_texCoord1;
         #endif
 
+        #if defined(INSTANCING)
+        ATTRIBUTE mat4 a_instanceWorldMatrix;
+        ATTRIBUTE mat3 a_instanceNormalMatrix;
+        #endif
+
         #if defined(SKINNED)
         ATTRIBUTE vec4 a_boneIndices;
         ATTRIBUTE vec4 a_boneWeights;
@@ -62,9 +67,13 @@ namespace cro::Shaders::VertexLit
         uniform LOW int u_projectionMapCount; //how many to actually draw
         #endif
 
+        #if defined(INSTANCING)
+        uniform mat4 u_viewMatrix;
+        #else
         uniform mat4 u_worldMatrix;
         uniform mat4 u_worldViewMatrix;
         uniform mat3 u_normalMatrix;
+        #endif
         uniform mat4 u_projectionMatrix;
 
         uniform vec4 u_clipPlane;
@@ -99,13 +108,24 @@ namespace cro::Shaders::VertexLit
 
         void main()
         {
-            mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
+        #if defined(INSTANCING)
+            mat4 worldMatrix = a_instanceWorldMatrix;
+            mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
+            mat3 normalMatrix = a_instanceNormalMatrix;
+        #else
+            mat4 worldMatrix = u_worldMatrix;
+            mat4 worldViewMatrix = u_worldViewMatrix;
+            mat3 normalMatrix = u_normalMatrix;
+        #endif
+
+
+            mat4 wvp = u_projectionMatrix * worldViewMatrix;
             vec4 position = a_position;
 
         #if defined(PROJECTIONS)
             for(int i = 0; i < u_projectionMapCount; ++i)
             {
-                v_projectionCoords[i] = u_projectionMapMatrix[i] * u_worldMatrix * a_position;
+                v_projectionCoords[i] = u_projectionMapMatrix[i] * worldMatrix * a_position;
             }
         #endif
 
@@ -120,10 +140,10 @@ namespace cro::Shaders::VertexLit
             gl_Position = wvp * position;
 
         #if defined (RX_SHADOWS)
-            v_lightWorldPosition = u_lightViewProjectionMatrix * u_worldMatrix * position;
+            v_lightWorldPosition = u_lightViewProjectionMatrix * worldMatrix * position;
         #endif
 
-            v_worldPosition = (u_worldMatrix * position).xyz;
+            v_worldPosition = (worldMatrix * position).xyz;
         #if defined(VERTEX_COLOUR)
             v_colour = a_colour;
         #endif
@@ -141,16 +161,16 @@ namespace cro::Shaders::VertexLit
             tangent = skinMatrix * tangent;
             bitangent = skinMatrix * bitangent;
         #endif
-            //v_tbn[0] = normalize(u_worldMatrix * tangent).xyz;
-            //v_tbn[1] = normalize(u_worldMatrix * bitangent).xyz;
-            //v_tbn[2] = normalize(u_worldMatrix * vec4(normal, 0.0)).xyz;
+            //v_tbn[0] = normalize(worldMatrix * tangent).xyz;
+            //v_tbn[1] = normalize(worldMatrix * bitangent).xyz;
+            //v_tbn[2] = normalize(worldMatrix * vec4(normal, 0.0)).xyz;
 
-            v_tbn[0] = normalize(u_normalMatrix * tangent.xyz);
-            v_tbn[1] = normalize(u_normalMatrix * bitangent.xyz);
-            v_tbn[2] = normalize(u_normalMatrix * normal);
+            v_tbn[0] = normalize(normalMatrix * tangent.xyz);
+            v_tbn[1] = normalize(normalMatrix * bitangent.xyz);
+            v_tbn[2] = normalize(normalMatrix * normal);
 
         #else
-            v_normalVector = u_normalMatrix * normal;
+            v_normalVector = normalMatrix * normal;
         #endif
 
         #if defined(TEXTURED)
@@ -167,7 +187,7 @@ namespace cro::Shaders::VertexLit
         #if defined (MOBILE)
 
         #else
-            gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
+            gl_ClipDistance[0] = dot(worldMatrix * position, u_clipPlane);
         #endif
         })";
 
