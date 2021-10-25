@@ -144,7 +144,7 @@ Model& Model::operator=(Model&& other) noexcept
         m_hidden = other.m_hidden;
         m_renderFlags = other.m_renderFlags;
         m_boundingSphere = other.m_boundingSphere;
-        other.m_boundingSphere = {};
+        other.m_boundingSphere = Sphere();
 
         m_meshData = other.m_meshData;
         other.m_meshData = {};
