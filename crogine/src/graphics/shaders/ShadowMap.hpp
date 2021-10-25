@@ -53,9 +53,9 @@ namespace cro::Shaders::ShadowMap
     #if defined(INSTANCING)
         uniform mat4 u_viewMatrix;        
     #else
-        uniform mat4 u_worldMatrix;
         uniform mat4 u_worldViewMatrix;
     #endif
+        uniform mat4 u_worldMatrix;
         uniform mat4 u_projectionMatrix;
         uniform vec4 u_clipPlane;
 
@@ -70,7 +70,7 @@ namespace cro::Shaders::ShadowMap
         void main()
         {
         #if defined(INSTANCING)
-            mat4 worldMatrix = a_instanceWorldMatrix;
+            mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
             mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
         #else
             mat4 worldMatrix = u_worldMatrix;

@@ -70,10 +70,10 @@ namespace cro::Shaders::VertexLit
     #if defined(INSTANCING)
         uniform mat4 u_viewMatrix;
     #else
-        uniform mat4 u_worldMatrix;
         uniform mat4 u_worldViewMatrix;
         uniform mat3 u_normalMatrix;
     #endif
+        uniform mat4 u_worldMatrix;
         uniform mat4 u_projectionMatrix;
 
         uniform vec4 u_clipPlane;
@@ -109,9 +109,9 @@ namespace cro::Shaders::VertexLit
         void main()
         {
         #if defined(INSTANCING)
-            mat4 worldMatrix = a_instanceWorldMatrix;
+            mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
             mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
-            mat3 normalMatrix = a_instanceNormalMatrix;
+            mat3 normalMatrix = mat3(u_worldMatrix) * a_instanceNormalMatrix;
         #else
             mat4 worldMatrix = u_worldMatrix;
             mat4 worldViewMatrix = u_worldViewMatrix;

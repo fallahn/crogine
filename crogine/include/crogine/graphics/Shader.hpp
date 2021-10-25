@@ -48,6 +48,17 @@ namespace cro
     class CRO_EXPORT_API Shader : public Detail::SDLResource
     {
     public:
+        struct AttributeID final
+        {
+            enum
+            {
+                InstanceTransform = Mesh::Attribute::Total,
+                InstanceNormal,
+
+                Count
+            };
+        };        
+        
         Shader();
         ~Shader();
 
@@ -89,7 +100,7 @@ namespace cro
         \brief Returns the shader's available vertex attributes mapped
         to the Mesh::Attribute layout
         */
-        const std::array<std::int32_t, Mesh::Attribute::Total>& getAttribMap() const;
+        const std::array<std::int32_t, Shader::AttributeID::Count>& getAttribMap() const;
 
         /*!
         \brief Returns a list of active uniforms mapped to their locations
@@ -102,9 +113,10 @@ namespace cro
         */
         std::int32_t getUniformID(const std::string& uniformName) const;
 
+
     private:
         std::uint32_t m_handle;
-        std::array<std::int32_t, Mesh::Attribute::Total> m_attribMap;
+        std::array<std::int32_t, AttributeID::Count> m_attribMap;
         bool fillAttribMap();
         void resetAttribMap();
         std::unordered_map<std::string, std::int32_t> m_uniformMap;

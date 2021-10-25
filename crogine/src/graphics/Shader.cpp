@@ -265,7 +265,7 @@ std::uint32_t Shader::getGLHandle() const
     return m_handle;
 }
 
-const std::array<std::int32_t, Mesh::Attribute::Total>& Shader::getAttribMap() const
+const std::array<std::int32_t, Shader::AttributeID::Count>& Shader::getAttribMap() const
 {
     return m_attribMap;
 }
@@ -343,6 +343,14 @@ bool Shader::fillAttribMap()
                 {
                     m_attribMap[Mesh::BlendWeights] = attribLocation;
                 }
+                else if (name == "a_instanceWorldMatrix")
+                {
+                    m_attribMap[AttributeID::InstanceTransform] = attribLocation;
+                }
+                else if (name == "a_instanceNormalMatrix")
+                {
+                    m_attribMap[AttributeID::InstanceNormal] = attribLocation;
+                }
                 else
                 {
                     if (name.find("gl_") != 0)
@@ -362,7 +370,8 @@ bool Shader::fillAttribMap()
 
 void Shader::resetAttribMap()
 {
-    std::memset(m_attribMap.data(), -1, m_attribMap.size() * sizeof(std::int32_t));
+    //std::memset(m_attribMap.data(), -1, m_attribMap.size() * sizeof(std::int32_t));
+    std::fill(m_attribMap.begin(), m_attribMap.end(), -1);
 }
 
 void Shader::fillUniformMap()

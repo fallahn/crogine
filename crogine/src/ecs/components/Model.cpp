@@ -233,8 +233,6 @@ const Material::Data& Model::getMaterialData(Mesh::IndexData::Pass pass, std::si
 
 void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
 {
-    //TODO check we have a material which supports this...
-
 #ifdef PLATFORM_DESKTOP
     //create VBOs if needed
     if (m_instanceBuffers.instanceCount == 0)
@@ -262,11 +260,18 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
     //update VAOs if material is set
     for (auto i = 0u; i < m_meshData.submeshCount; ++i)
     {
-        updateVAO(i, Mesh::IndexData::Final);
+        auto instanceAttrib = m_materials[Mesh::IndexData::Final][i].attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index];
+        
+        if (instanceAttrib != -1)
+        {
+            updateVAO(i, Mesh::IndexData::Final);
+        }
 
-        //TODO we need to update shadow materials if they exist (might not match the regular material count)
-        //TODO check if we need to modify bindMaterial with the new transform attribs. This might only be relevant
-        //to non-vao rendering/interleaved vertex attribs
+        instanceAttrib = m_materials[Mesh::IndexData::Shadow][i].attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index];
+        if (instanceAttrib != -1)
+        {
+            updateVAO(i, Mesh::IndexData::Shadow);
+        }
     }
 #endif
 }
@@ -337,16 +342,27 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
     //bind instance buffers if they exist
     if (m_instanceBuffers.instanceCount != 0)
     {
-        //TODO we need to query the material for attrib position
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
-        glCheck(glEnableVertexAttribArray(?));
-        glCheck(glVertexAttribPointer(?, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec3), reinterpret_cast<void*>(static_cast<intptr_t>(0)));
+        auto attribIndex = attribs[Shader::AttributeID::InstanceNormal][Material::Data::Index];
+
+        //attribs are labelled as mat3/4 in shader but are actually 3*vec3 and 4*vec4
+        if (attribIndex != -1)
+        {
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
+            for (auto j = 0u; j < 3u; ++j)
+            {
+                glCheck(glEnableVertexAttribArray(attribIndex + j));
+                glCheck(glVertexAttribPointer(attribIndex + j, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec3), reinterpret_cast<void*>(static_cast<intptr_t>(j * sizeof(glm::vec3)))));
+                glCheck(glVertexAttribDivisor(attribIndex + j, 1));
+            }
+        }
 
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
-        glCheck(glEnableVertexAttribArray(?));
-        glCheck(glVertexAttribPointer(?, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), reinterpret_cast<void*>(static_cast<intptr_t>(0))));
-
-        
+        for (auto j = 0u; j < 4u; ++j)
+        {
+            glCheck(glEnableVertexAttribArray(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j));
+            glCheck(glVertexAttribPointer(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), reinterpret_cast<void*>(static_cast<intptr_t>(j * sizeof(glm::vec4)))));
+            glCheck(glVertexAttribDivisor(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j, 1));
+        }
         draw = DrawInstanced(*this);
     }
     else

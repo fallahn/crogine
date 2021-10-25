@@ -565,6 +565,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         if (m_castShadows)
         {
             flags = ShaderResource::DepthMap | (flags & (ShaderResource::Skinning | ShaderResource::AlphaClip));
+            if (instanced)
+            {
+                flags |= ShaderResource::Instanced;
+            }
 
             shaderID = m_resources.shaders.loadBuiltIn(m_billboard ? ShaderResource::BillboardShadowMap : ShaderResource::ShadowMap, flags);
             matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
@@ -635,6 +639,7 @@ bool ModelDefinition::createModel(Entity entity)
             {
                 glm::mat4(1.f)
             };
+
             entity.getComponent<cro::Model>().setInstanceTransforms(tx);
         }
 

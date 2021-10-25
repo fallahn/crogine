@@ -120,7 +120,7 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
 
                 if (ImGui::Begin("Window of funnage"))
                 {
-                    //ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                     ImGui::DragFloat("Rate", &fireRate, 0.1f, 0.1f, 10.f);
                     ImGui::DragFloat("Position", &sourcePosition.x, 0.1f, -19.f, 19.f);
@@ -232,13 +232,13 @@ void BatcatState::loadAssets()
         md = std::make_unique<cro::ModelDefinition>(m_resources);
     }
 
-    m_modelDefs[GameModelID::BatCat]->loadFromFile("assets/batcat/models/batcat.cmt");
+    m_modelDefs[GameModelID::BatCat]->loadFromFile("assets/batcat/models/batcat.cmt", true);
     m_modelDefs[GameModelID::TestRoom]->loadFromFile("assets/batcat/models/scene03.cmt");
-    m_modelDefs[GameModelID::Moon]->loadFromFile("assets/batcat/models/moon.cmt");
+    m_modelDefs[GameModelID::Moon]->loadFromFile("assets/batcat/models/moon.cmt", true);
     m_modelDefs[GameModelID::Stars]->loadFromFile("assets/batcat/models/stars.cmt");
 
     m_modelDefs[GameModelID::Cube]->loadFromFile("assets/batcat/models/cube.cmt");
-    m_modelDefs[GameModelID::Arrow]->loadFromFile("assets/batcat/models/arrow.cmt");
+    m_modelDefs[GameModelID::Arrow]->loadFromFile("assets/batcat/models/arrow.cmt", true);
     m_modelDefs[GameModelID::Billboards]->loadFromFile("assets/batcat/models/tree.cmt");
 
     //CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
@@ -248,6 +248,13 @@ void BatcatState::loadAssets()
 
 void BatcatState::createScene()
 {
+    std::vector<glm::mat4> tx =
+    {
+        glm::mat4(1.f),
+        glm::mat4(1.f)
+    };
+    tx[1] = glm::translate(tx[1], glm::vec3(0.f, 0.f, 280.f));
+
     //dat cat man
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec3(0.03f));
@@ -257,6 +264,7 @@ void BatcatState::createScene()
     entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Run);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
+    entity.getComponent<cro::Model>().setInstanceTransforms(tx);
 
 
     //load terrain chunks
@@ -318,6 +326,7 @@ void BatcatState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ -60.f, 70.f, -180.f });
     entity.getComponent<cro::Transform>().setScale(glm::vec3(6.f));
     m_modelDefs[GameModelID::Moon]->createModel(entity);
+    entity.getComponent<cro::Model>().setInstanceTransforms(tx);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.5, -200.f });
