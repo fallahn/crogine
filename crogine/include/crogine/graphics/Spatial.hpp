@@ -43,6 +43,10 @@ namespace cro
     {
         float radius = 0.f;
         glm::vec3 centre = glm::vec3(0.f);
+
+        Sphere();
+        explicit Sphere(const Box&);
+        Sphere& operator = (const Box&);
     };
 
     enum class Planar
@@ -76,6 +80,5 @@ namespace cro
         \return cro::Box containing the AABB of thenewly updated frustum
         */
         cro::Box CRO_EXPORT_API updateFrustum(std::array<Plane, 6u>& frustum, glm::mat4 viewProj);
-
     }
 }

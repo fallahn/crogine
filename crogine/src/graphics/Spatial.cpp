@@ -34,6 +34,25 @@ source distribution.
 
 using namespace cro;
 
+Sphere::Sphere()
+    : radius(0.f),
+    centre  (0.f) {}
+
+Sphere::Sphere(const Box& box)
+{
+    auto rad = (box[1] - box[0]) / 2.f;
+    centre = box[0] + rad;
+    radius = glm::length(rad);
+}
+
+Sphere& Sphere::operator=(const Box& box)
+{
+    auto rad = (box[1] - box[0]) / 2.f;
+    centre = box[0] + rad;
+    radius = glm::length(rad);
+    return *this;
+}
+
 namespace
 {
     //used to calculate the AABB for a frustum.

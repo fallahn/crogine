@@ -234,11 +234,11 @@ void BatcatState::loadAssets()
 
     m_modelDefs[GameModelID::BatCat]->loadFromFile("assets/batcat/models/batcat.cmt", true);
     m_modelDefs[GameModelID::TestRoom]->loadFromFile("assets/batcat/models/scene03.cmt");
-    m_modelDefs[GameModelID::Moon]->loadFromFile("assets/batcat/models/moon.cmt", true);
+    m_modelDefs[GameModelID::Moon]->loadFromFile("assets/batcat/models/moon.cmt");
     m_modelDefs[GameModelID::Stars]->loadFromFile("assets/batcat/models/stars.cmt");
 
     m_modelDefs[GameModelID::Cube]->loadFromFile("assets/batcat/models/cube.cmt");
-    m_modelDefs[GameModelID::Arrow]->loadFromFile("assets/batcat/models/arrow.cmt", true);
+    m_modelDefs[GameModelID::Arrow]->loadFromFile("assets/batcat/models/arrow.cmt");
     m_modelDefs[GameModelID::Billboards]->loadFromFile("assets/batcat/models/tree.cmt");
 
     //CRO_ASSERT(m_modelDefs[GameModelID::BatCat].hasSkeleton(), "missing batcat anims");
@@ -248,24 +248,47 @@ void BatcatState::loadAssets()
 
 void BatcatState::createScene()
 {
-    std::vector<glm::mat4> tx =
+    std::vector<glm::mat4> tx;
+    for (auto i = 0; i < 7; ++i)
     {
-        glm::mat4(1.f),
-        glm::mat4(1.f)
-    };
-    tx[1] = glm::translate(tx[1], glm::vec3(0.f, 0.f, 280.f));
+        float x = 120.f * i;
+        for (auto j = 0; j < 10; ++j)
+        {
+            float z = 160.f * j;
+            tx.push_back(glm::translate(glm::mat4(1.f), glm::vec3(-x, 0.f, z)));
+        }
+    }
+    std::reverse(tx.begin(), tx.end());
 
     //dat cat man
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec3(0.03f));
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f);
-    entity.getComponent<cro::Transform>().setPosition({ -19.f, 0.f, 6.f });
+    entity.getComponent<cro::Transform>().setPosition({ -21.f, 0.f, -6.f });
     m_modelDefs[GameModelID::BatCat]->createModel(entity);
     entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Run);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
     entity.addComponent<Player>();
     entity.getComponent<cro::Model>().setInstanceTransforms(tx);
 
+    /*for (auto p : tx)
+    {
+        auto pos = glm::vec3(p[3]);
+        auto z = -pos.x;
+        pos.x = pos.z;
+        pos.z = z;
+
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(0.03f));
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f);
+        entity.getComponent<cro::Transform>().setPosition({ -21.f, 0.f, -6.f });
+        entity.getComponent<cro::Transform>().move(pos * 0.03f);
+        m_modelDefs[GameModelID::BatCat]->createModel(entity);
+        entity.getComponent<cro::Skeleton>().play(AnimationID::BatCat::Run);
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::Player;
+        entity.addComponent<Player>();
+        entity.getComponent<cro::Model>().setInstanceTransforms(tx);
+    }*/
 
     //load terrain chunks
     entity = m_scene.createEntity();
@@ -326,7 +349,6 @@ void BatcatState::createScene()
     entity.addComponent<cro::Transform>().setPosition({ -60.f, 70.f, -180.f });
     entity.getComponent<cro::Transform>().setScale(glm::vec3(6.f));
     m_modelDefs[GameModelID::Moon]->createModel(entity);
-    entity.getComponent<cro::Model>().setInstanceTransforms(tx);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.5, -200.f });

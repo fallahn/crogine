@@ -392,9 +392,15 @@ void GameState::loadAssets()
         md = std::make_unique<cro::ModelDefinition>(m_resources, &m_environmentMap);
     }
 
-    m_modelDefs[GameModelID::GroundBush]->loadFromFile("assets/models/ground_plant01.cmt");
-    m_modelDefs[GameModelID::Palm]->loadFromFile("assets/models/palm01.cmt");
-    m_modelDefs[GameModelID::Shrub]->loadFromFile("assets/models/shrub01.cmt");
+    m_modelDefs[GameModelID::GroundBush]->loadFromFile("assets/models/ground_plant01.cmt", true);
+    m_modelDefs[GameModelID::Palm01]->loadFromFile("assets/models/palm01.cmt", true);
+    m_modelDefs[GameModelID::Palm02]->loadFromFile("assets/models/palm02.cmt", true);
+    m_modelDefs[GameModelID::Shrub01]->loadFromFile("assets/models/shrub01.cmt", true);
+    m_modelDefs[GameModelID::Shrub02]->loadFromFile("assets/models/shrub02.cmt", true);
+    m_modelDefs[GameModelID::Shrub03]->loadFromFile("assets/models/shrub03.cmt", true);
+    m_modelDefs[GameModelID::Shrub04]->loadFromFile("assets/models/shrub04.cmt", true);
+    m_modelDefs[GameModelID::Shrub05]->loadFromFile("assets/models/shrub05.cmt", true);
+    m_modelDefs[GameModelID::Shrub06]->loadFromFile("assets/models/shrub06.cmt", true);
    
 
     loadIslandAssets();
@@ -782,18 +788,7 @@ void GameState::updateBushmap(const cro::NetEvent::Packet& packet)
         m_dataRequestCount++;
     }
     else
-    {
-        //entity to hold our batch
-        auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>();
-
-        //simpler to load from the model def because material and vertex
-        //properties are automagically configured for us
-        m_modelDefs[GameModelID::Shrub]->createModel(entity);
-        
-        auto& meshData = entity.getComponent<cro::Model>().getMeshData();
-        cro::MeshBatch batch(meshData.attributeFlags);
-
+    {       
         std::vector<std::vector<glm::mat4>> transforms(6);
         std::vector<glm::mat4> shrubTransforms;
 
@@ -828,22 +823,26 @@ void GameState::updateBushmap(const cro::NetEvent::Packet& packet)
             }
         }
 
-        batch.addMesh("assets/models/shrub01.cmf", transforms[0]);
-        batch.addMesh("assets/models/shrub02.cmf", transforms[1]);
-        batch.addMesh("assets/models/shrub03.cmf", transforms[2]);
-        batch.addMesh("assets/models/shrub04.cmf", transforms[3]);
-        batch.addMesh("assets/models/shrub05.cmf", transforms[4]);
-        batch.addMesh("assets/models/shrub06.cmf", transforms[5]);
-        batch.updateMeshData(meshData);
+        auto i = 0;
+        for (auto& tx : transforms)
+        {
+            std::sort(tx.begin(), tx.end(),
+                [](const glm::mat4& a, const glm::mat4& b)
+                {
+                    return a[3].z > b[3].z;
+                });
 
-        entity = m_gameScene.createEntity();
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            m_modelDefs[GameModelID::Shrub01 + i]->createModel(entity);
+            entity.getComponent<cro::Model>().setInstanceTransforms(tx);
+            i++;
+        }
+
+        auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         m_modelDefs[GameModelID::GroundBush]->createModel(entity);
-        auto& bushData = entity.getComponent<cro::Model>().getMeshData();
-
-        cro::MeshBatch bushBatch(bushData.attributeFlags);
-        bushBatch.addMesh("assets/models/ground_plant01.cmf", shrubTransforms);
-        bushBatch.updateMeshData(bushData);
+        entity.getComponent<cro::Model>().setInstanceTransforms(shrubTransforms);
 
         m_requestFlags |= ClientRequestFlags::BushMap;
     }
@@ -859,18 +858,10 @@ void GameState::updateTreemap(const cro::NetEvent::Packet& packet)
     }
     else
     {
-        auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        m_modelDefs[GameModelID::Palm]->createModel(entity);
-
-        auto& meshData = entity.getComponent<cro::Model>().getMeshData();
-
-        std::vector<std::vector<glm::mat4>> transforms(3);
-        cro::MeshBatch batch(meshData.attributeFlags);
-
         std::vector<glm::vec2> positions(size / sizeof(glm::vec2));
         std::memcpy(positions.data(), packet.getData(), size);
 
+        std::vector<std::vector<glm::mat4>> transforms(2);
         for (auto i = 0u; i < positions.size(); ++i)
         {
             auto p = positions[i];
@@ -882,13 +873,25 @@ void GameState::updateTreemap(const cro::NetEvent::Packet& packet)
             glm::mat4 tx = glm::translate(glm::mat4(1.f), glm::vec3(p.x, y, p.y));
             tx = glm::rotate(tx, cro::Util::Const::TAU / cro::Util::Random::value(1, 8), cro::Transform::Y_AXIS);
             tx = glm::scale(tx, glm::vec3(2.f + static_cast<float>(cro::Util::Random::value(-23, 24)) / 100.f));
-            transforms[i % 3].push_back(tx);
+            transforms[i%2].push_back(tx);
         }
 
-        batch.addMesh("assets/models/palm01.cmf", transforms[0]);
-        batch.addMesh("assets/models/palm02.cmf", transforms[1]);
-        batch.addMesh("assets/models/palm01.cmf", transforms[2]);
-        batch.updateMeshData(meshData);
+        auto i = 0;
+        for (auto& tx : transforms)
+        {
+            //sort from front to back
+            std::sort(tx.begin(), tx.end(),
+                [](const glm::mat4& a, const glm::mat4& b)
+                {
+                    return a[3].z > b[3].z;
+                });
+
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            m_modelDefs[GameModelID::Palm01 + i]->createModel(entity);
+            entity.getComponent<cro::Model>().setInstanceTransforms(tx);
+            i++;
+        }
 
         m_requestFlags |= ClientRequestFlags::TreeMap;
     }

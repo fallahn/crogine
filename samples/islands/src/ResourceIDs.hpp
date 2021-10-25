@@ -65,9 +65,15 @@ namespace GameModelID
 {
     enum
     {
-        Palm,
+        Palm01,
+        Palm02,
 
-        Shrub,
+        Shrub01,
+        Shrub02,
+        Shrub03,
+        Shrub04,
+        Shrub05,
+        Shrub06,
 
         GroundBush,
 

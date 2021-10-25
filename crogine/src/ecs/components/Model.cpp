@@ -55,6 +55,8 @@ Model::Model(Mesh::Data data, Material::Data material)
     : m_visible     (true),
     m_hidden        (false),
     m_renderFlags   (std::numeric_limits<std::uint64_t>::max()),
+    m_boundingSphere(data.boundingSphere),
+    m_boundingBox   (data.boundingBox),
     m_meshData      (data),
     m_skeleton      (nullptr),
     m_jointCount    (0)
@@ -110,6 +112,7 @@ Model::Model(Model&& other) noexcept
     std::swap(m_visible, other.m_visible);
     std::swap(m_hidden, other.m_hidden);
     std::swap(m_renderFlags, other.m_renderFlags);
+    std::swap(m_boundingSphere, other.m_boundingSphere);
 
     std::swap(m_meshData, other.m_meshData);
     std::swap(m_materials, other.m_materials);
@@ -140,6 +143,8 @@ Model& Model::operator=(Model&& other) noexcept
         m_visible = other.m_visible;
         m_hidden = other.m_hidden;
         m_renderFlags = other.m_renderFlags;
+        m_boundingSphere = other.m_boundingSphere;
+        other.m_boundingSphere = {};
 
         m_meshData = other.m_meshData;
         other.m_meshData = {};
@@ -234,6 +239,12 @@ const Material::Data& Model::getMaterialData(Mesh::IndexData::Pass pass, std::si
 void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
 {
 #ifdef PLATFORM_DESKTOP
+    if (transforms.empty())
+    {
+        LogW << "Attempt to set empty instance transform array on model" << std::endl;
+        return;
+    }
+
     //create VBOs if needed
     if (m_instanceBuffers.instanceCount == 0)
     {
@@ -246,12 +257,21 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_instanceBuffers.instanceCount * sizeof(glm::mat4), transforms.data(), GL_STATIC_DRAW));
 
+    auto bb = m_meshData.boundingBox;
+    cro::Box newBB;
+
     //calc normal matrices and upload
     std::vector<glm::mat3> normalMatrices(transforms.size());
     for (auto i = 0u; i < normalMatrices.size(); ++i)
     {
+        //while we're here we can update the AABB/sphere
+        newBB = cro::Box::merge(newBB, transforms[i] * bb);
+
         normalMatrices[i] = glm::inverseTranspose(transforms[i]);
     }
+    m_boundingBox = newBB;
+    m_boundingSphere = newBB;
+
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_instanceBuffers.instanceCount * sizeof(glm::mat3), normalMatrices.data(), GL_STATIC_DRAW));
 

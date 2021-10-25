@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/MaterialData.hpp>
+#include <crogine/graphics/Spatial.hpp>
 
 #include <crogine/detail/glm/mat4x4.hpp>
 
@@ -145,7 +146,7 @@ namespace cro
         */
         const Material::Data& getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh) const;
 
-        /*
+        /*!
         \brief Sets the transform data for instanced models
         \param transforms A std::vector of glm::mat containing the transforms
         for each instance.
@@ -160,6 +161,22 @@ namespace cro
         */
         void setInstanceTransforms(const std::vector<glm::mat4>& transforms);
 
+        /*!
+        \brief Returns the bounding sphere of the Model
+        Note that this may not necessarily be the same as the of the Model's
+        MeshData, as it is expanded to include any instanced geometry.
+        Useful for render culling.
+        */
+        cro::Sphere getBoundingSphere() const { return m_boundingSphere; }
+
+        /*!
+        \brief Returns the bounding AABB of the Model
+        Note that this may not necessarily be the same as the of the Model's
+        MeshData, as it is expanded to include any instanced geometry.
+        Useful for render culling.
+        */
+        cro::Box getAABB() const { return m_boundingBox; }
+
 #ifdef PLATFORM_DESKTOP
         /*!
         \brief Used to implement custom draw functions for the Model.
@@ -173,6 +190,8 @@ namespace cro
         bool m_visible;
         bool m_hidden;
         std::uint64_t m_renderFlags;
+        cro::Sphere m_boundingSphere;
+        cro::Box m_boundingBox;
 
         Mesh::Data m_meshData;
         std::array<std::array<Material::Data, Mesh::IndexData::MaxBuffers>, Mesh::IndexData::Count> m_materials = {};       

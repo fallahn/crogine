@@ -192,7 +192,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                 continue;
             }
 
-            auto sphere = model.m_meshData.boundingSphere;
+            auto sphere = model.getBoundingSphere();
             const auto& tx = entity.getComponent<Transform>();
 
             sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
