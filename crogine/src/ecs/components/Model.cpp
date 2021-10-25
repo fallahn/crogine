@@ -32,6 +32,8 @@ source distribution.
 #include "../../detail/glad.hpp"
 #include "../../detail/GLCheck.hpp"
 
+#include <crogine/detail/glm/gtc/matrix_inverse.hpp>
+
 #include <algorithm>
 
 using namespace cro;
@@ -42,16 +44,28 @@ Model::Model()
     m_renderFlags   (std::numeric_limits<std::uint64_t>::max()),
     m_skeleton      (nullptr),
     m_jointCount    (0)
-{}
+{
+    for (auto& pair : m_vaos)
+    {
+        std::fill(pair.begin(), pair.end(), 0);
+    }
+}
 
 Model::Model(Mesh::Data data, Material::Data material)
     : m_visible     (true),
     m_hidden        (false),
     m_renderFlags   (std::numeric_limits<std::uint64_t>::max()),
+    m_boundingSphere(data.boundingSphere),
+    m_boundingBox   (data.boundingBox),
     m_meshData      (data),
     m_skeleton      (nullptr),
     m_jointCount    (0)
 {
+    for (auto& pair : m_vaos)
+    {
+        std::fill(pair.begin(), pair.end(), 0);
+    }
+
     //sets all materials to given default
     bindMaterial(material);
     for (auto& mat : m_materials[Mesh::IndexData::Final])
@@ -67,6 +81,126 @@ Model::Model(Mesh::Data data, Material::Data material)
 #endif //DESKTOP
 }
 
+#ifdef PLATFORM_DESKTOP
+Model::~Model()
+{
+    for (auto& [p1, p2] : m_vaos)
+    {
+        if (p1)
+        {
+            glCheck(glDeleteVertexArrays(1, &p1));
+        }
+
+        if (p2)
+        {
+            glCheck(glDeleteVertexArrays(1, &p2));
+        }
+    }
+
+    if (m_instanceBuffers.instanceCount != 0)
+    {
+        glCheck(glDeleteBuffers(1, &m_instanceBuffers.normalBuffer));
+        glCheck(glDeleteBuffers(1, &m_instanceBuffers.transformBuffer));
+        m_instanceBuffers.instanceCount = 0;
+    }
+}
+
+Model::Model(Model&& other) noexcept
+    : Model()
+{
+    //we can swap because we initialised to nothing
+    std::swap(m_visible, other.m_visible);
+    std::swap(m_hidden, other.m_hidden);
+    std::swap(m_renderFlags, other.m_renderFlags);
+    std::swap(m_boundingSphere, other.m_boundingSphere);
+
+    std::swap(m_meshData, other.m_meshData);
+    std::swap(m_materials, other.m_materials);
+
+    std::swap(m_vaos, other.m_vaos);
+
+    std::swap(m_skeleton, other.m_skeleton);
+    std::swap(m_jointCount, other.m_jointCount);
+
+    std::swap(m_instanceBuffers, other.m_instanceBuffers);
+
+    //check the other property to see which draw func we need
+    if (m_instanceBuffers.instanceCount != 0)
+    {
+        draw = DrawInstanced(*this);
+    }
+    else
+    {
+        draw = DrawSingle(*this);
+    }
+    other.draw = {};
+}
+
+Model& Model::operator=(Model&& other) noexcept
+{
+    if (&other != this)
+    {
+        m_visible = other.m_visible;
+        m_hidden = other.m_hidden;
+        m_renderFlags = other.m_renderFlags;
+        m_boundingSphere = other.m_boundingSphere;
+        other.m_boundingSphere = Sphere();
+
+        m_meshData = other.m_meshData;
+        other.m_meshData = {};
+        m_materials = other.m_materials;
+        other.m_materials = {};
+
+        for (auto& [p1, p2] : m_vaos)
+        {
+            if (p1)
+            {
+                glCheck(glDeleteVertexArrays(1, &p1));
+            }
+
+            if (p2)
+            {
+                glCheck(glDeleteVertexArrays(1, &p2));
+            }
+        }
+
+        m_vaos = other.m_vaos;
+        for (auto& pair : other.m_vaos)
+        {
+            std::fill(pair.begin(), pair.end(), 0);
+        }
+
+        m_skeleton = other.m_skeleton;
+        other.m_skeleton = nullptr;
+
+        m_jointCount = other.m_jointCount;
+        other.m_jointCount = 0;
+
+        if (m_instanceBuffers.instanceCount != 0)
+        {
+            glCheck(glDeleteBuffers(1, &m_instanceBuffers.normalBuffer));
+            glCheck(glDeleteBuffers(1, &m_instanceBuffers.transformBuffer));
+            m_instanceBuffers.instanceCount = 0;
+        }
+        m_instanceBuffers = other.m_instanceBuffers;
+        other.m_instanceBuffers = {};
+
+        if (m_instanceBuffers.instanceCount)
+        {
+            draw = DrawInstanced(*this);
+        }
+        else
+        {
+            draw = DrawSingle(*this);
+        }
+        other.draw = {};
+    }
+
+    return* this;
+}
+#endif
+
+//public
 void Model::setMaterial(std::size_t idx, Material::Data data)
 {
     CRO_ASSERT(idx < m_materials[Mesh::IndexData::Final].size(), "Index out of range");
@@ -100,6 +234,66 @@ const Material::Data& Model::getMaterialData(Mesh::IndexData::Pass pass, std::si
 {
     CRO_ASSERT(submesh < m_materials[pass].size(), "submesh index out of range");
     return m_materials[pass][submesh];
+}
+
+void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
+{
+#ifdef PLATFORM_DESKTOP
+    if (transforms.empty())
+    {
+        LogW << "Attempt to set empty instance transform array on model" << std::endl;
+        return;
+    }
+
+    //create VBOs if needed
+    if (m_instanceBuffers.instanceCount == 0)
+    {
+        glCheck(glGenBuffers(1, &m_instanceBuffers.normalBuffer));
+        glCheck(glGenBuffers(1, &m_instanceBuffers.transformBuffer));
+    }
+    m_instanceBuffers.instanceCount = static_cast<std::uint32_t>(transforms.size());
+
+    //upload transform data
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, m_instanceBuffers.instanceCount * sizeof(glm::mat4), transforms.data(), GL_STATIC_DRAW));
+
+    auto bb = m_meshData.boundingBox;
+    cro::Box newBB;
+
+    //calc normal matrices and upload
+    std::vector<glm::mat3> normalMatrices(transforms.size());
+    for (auto i = 0u; i < normalMatrices.size(); ++i)
+    {
+        //while we're here we can update the AABB/sphere
+        newBB = cro::Box::merge(newBB, transforms[i] * bb);
+
+        normalMatrices[i] = glm::inverseTranspose(transforms[i]);
+    }
+    m_boundingBox = newBB;
+    m_boundingSphere = newBB;
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, m_instanceBuffers.instanceCount * sizeof(glm::mat3), normalMatrices.data(), GL_STATIC_DRAW));
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    //update VAOs if material is set
+    for (auto i = 0u; i < m_meshData.submeshCount; ++i)
+    {
+        auto instanceAttrib = m_materials[Mesh::IndexData::Final][i].attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index];
+        
+        if (instanceAttrib != -1)
+        {
+            updateVAO(i, Mesh::IndexData::Final);
+        }
+
+        instanceAttrib = m_materials[Mesh::IndexData::Shadow][i].attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index];
+        if (instanceAttrib != -1)
+        {
+            updateVAO(i, Mesh::IndexData::Shadow);
+        }
+    }
+#endif
 }
 
 //private
@@ -140,18 +334,19 @@ void Model::bindMaterial(Material::Data& material)
 void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
 {
     auto& submesh = m_meshData.indexData[idx];
+    auto& vaoPair = m_vaos[idx];
 
     //I guess we have to remove any old binding
     //if there's an existing material
-    if (submesh.vao[passIndex] != 0)
+    if (vaoPair[passIndex] != 0)
     {
-        glCheck(glDeleteVertexArrays(1, &submesh.vao[passIndex]));
-        submesh.vao[passIndex] = 0;
+        glCheck(glDeleteVertexArrays(1, &vaoPair[passIndex]));
+        vaoPair[passIndex] = 0;
     }
 
-    glCheck(glGenVertexArrays(1, &submesh.vao[passIndex]));
+    glCheck(glGenVertexArrays(1, &vaoPair[passIndex]));
 
-    glCheck(glBindVertexArray(submesh.vao[passIndex]));
+    glCheck(glBindVertexArray(vaoPair[passIndex]));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vbo));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo));
 
@@ -163,10 +358,56 @@ void Model::updateVAO(std::size_t idx, std::int32_t passIndex)
             GL_FLOAT, GL_FALSE, static_cast<GLsizei>(m_meshData.vertexSize),
             reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
     }
-    //glCheck(glEnableVertexAttribArray(0));
+    
+    //bind instance buffers if they exist
+    if (m_instanceBuffers.instanceCount != 0)
+    {
+        auto attribIndex = attribs[Shader::AttributeID::InstanceNormal][Material::Data::Index];
+
+        //attribs are labelled as mat3/4 in shader but are actually 3*vec3 and 4*vec4
+        if (attribIndex != -1)
+        {
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
+            for (auto j = 0u; j < 3u; ++j)
+            {
+                glCheck(glEnableVertexAttribArray(attribIndex + j));
+                glCheck(glVertexAttribPointer(attribIndex + j, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::vec3), reinterpret_cast<void*>(static_cast<intptr_t>(j * sizeof(glm::vec3)))));
+                glCheck(glVertexAttribDivisor(attribIndex + j, 1));
+            }
+        }
+
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
+        for (auto j = 0u; j < 4u; ++j)
+        {
+            glCheck(glEnableVertexAttribArray(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j));
+            glCheck(glVertexAttribPointer(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), reinterpret_cast<void*>(static_cast<intptr_t>(j * sizeof(glm::vec4)))));
+            glCheck(glVertexAttribDivisor(attribs[Shader::AttributeID::InstanceTransform][Material::Data::Index] + j, 1));
+        }
+        draw = DrawInstanced(*this);
+    }
+    else
+    {
+        draw = DrawSingle(*this);
+    }
 
     glCheck(glBindVertexArray(0));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
+
+//draw functions
+void Model::DrawSingle::operator()(std::int32_t matID, std::int32_t pass) const
+{
+    const auto& indexData = m_model.m_meshData.indexData[matID];
+    glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
+    glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), NULL));
+}
+
+void Model::DrawInstanced::operator()(std::int32_t matID, std::int32_t pass) const
+{
+    const auto& indexData = m_model.m_meshData.indexData[matID];
+    glCheck(glBindVertexArray(m_model.m_vaos[matID][pass]));
+    glCheck(glDrawElementsInstanced(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), NULL, m_model.m_instanceBuffers.instanceCount));
+}
+
 #endif //DESKTOP

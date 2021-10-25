@@ -226,16 +226,6 @@ void SpriteSystem3D::onEntityRemoved(Entity entity)
         {
             glCheck(glDeleteBuffers(1, &id.ibo));
         }
-
-#ifdef PLATFORM_DESKTOP
-        for (auto& vao : id.vao)
-        {
-            if (vao)
-            {
-                glCheck(glDeleteVertexArrays(1, &vao));
-            }
-        }
-#endif
     }
     //delete vertex buffer
     if (meshData.vbo)

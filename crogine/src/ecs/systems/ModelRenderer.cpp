@@ -84,7 +84,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         //render flags are tested when drawing as the flags may have changed
         //between draw calls but without updating the visiblity list.
 
-        auto sphere = model.m_meshData.boundingSphere;
+        auto sphere = model.getBoundingSphere();
         const auto& tx = entity.getComponent<Transform>();
 
         sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
@@ -235,9 +235,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             }
 
 #ifdef PLATFORM_DESKTOP
-            const auto& indexData = model.m_meshData.indexData[i];
-            glCheck(glBindVertexArray(indexData.vao[Mesh::IndexData::Final]));
-            glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+            model.draw(i, Mesh::IndexData::Final);
 
 #else //GLES 2 doesn't have VAO support without extensions
 

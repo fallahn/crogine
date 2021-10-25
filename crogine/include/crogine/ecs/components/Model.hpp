@@ -33,8 +33,11 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/MaterialData.hpp>
+#include <crogine/graphics/Spatial.hpp>
 
 #include <crogine/detail/glm/mat4x4.hpp>
+
+#include <functional>
 
 namespace cro
 {
@@ -44,6 +47,17 @@ namespace cro
         Model();
         Model(Mesh::Data, Material::Data); //applied to all meshes by default
         
+#ifdef PLATFORM_DESKTOP
+        //on desktop we own our VAO so we need to manage the handle
+        ~Model();
+
+        Model(const Model&) = delete;
+        Model& operator = (const Model&) = delete;
+
+        Model(Model&&) noexcept;
+        Model& operator = (Model&&) noexcept;
+#endif
+
         /*!
         \brief Applies the given material to the given sub-mesh index
         \param idx The index of the sub-mesh to which to apply the material
@@ -132,19 +146,86 @@ namespace cro
         */
         const Material::Data& getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh) const;
 
+        /*!
+        \brief Sets the transform data for instanced models
+        \param transforms A std::vector of glm::mat containing the transforms
+        for each instance.
+
+        To enable this make sure to load the model with a ModelDefinition constructed
+        with the 'instanced' parameter set to true, or with a material that has a compatible
+        instancing shader.
+        Note that it is not generally recommended to update this frequently as the VBO
+        containing the transform and normal matrix data is completely recalculated, which
+        can take a long time for large arrays.
+        Transform data is copied from the vector, so the data may safely be discarded
+        */
+        void setInstanceTransforms(const std::vector<glm::mat4>& transforms);
+
+        /*!
+        \brief Returns the bounding sphere of the Model
+        Note that this may not necessarily be the same as the of the Model's
+        MeshData, as it is expanded to include any instanced geometry.
+        Useful for render culling.
+        */
+        cro::Sphere getBoundingSphere() const { return m_boundingSphere; }
+
+        /*!
+        \brief Returns the bounding AABB of the Model
+        Note that this may not necessarily be the same as the of the Model's
+        MeshData, as it is expanded to include any instanced geometry.
+        Useful for render culling.
+        */
+        cro::Box getAABB() const { return m_boundingBox; }
+
+#ifdef PLATFORM_DESKTOP
+        /*!
+        \brief Used to implement custom draw functions for the Model.
+        This is used internally to set whether the Model is drawn with instancing
+        or not. Overriding this yourself probably won't do what  you expect
+        */
+        std::function<void(std::int32_t, std::int32_t)> draw;
+#endif
 
     private:
-        bool m_visible = false;
-        bool m_hidden = false;
+        bool m_visible;
+        bool m_hidden;
         std::uint64_t m_renderFlags;
+        cro::Sphere m_boundingSphere;
+        cro::Box m_boundingBox;
 
         Mesh::Data m_meshData;
-        std::array<std::array<Material::Data, Mesh::IndexData::MaxBuffers>, Mesh::IndexData::Count> m_materials{};       
+        std::array<std::array<Material::Data, Mesh::IndexData::MaxBuffers>, Mesh::IndexData::Count> m_materials = {};       
+
+        using VAOPair = std::array<std::uint32_t, Mesh::IndexData::Pass::Count>;
+        std::array<VAOPair, Mesh::IndexData::MaxBuffers> m_vaos = {};
 
         void bindMaterial(Material::Data&);
         
 #ifdef PLATFORM_DESKTOP
         void updateVAO(std::size_t materialIndex, std::int32_t passIndex);
+
+        struct DrawSingle final
+        {
+            void operator()(std::int32_t, std::int32_t) const;
+
+            const Model& m_model;
+            DrawSingle(const Model& m) : m_model(m) {}
+        };
+
+        struct DrawInstanced final
+        {
+            void operator()(std::int32_t, std::int32_t) const;
+
+            const Model& m_model;
+            DrawInstanced(const Model& m) : m_model(m) {}
+        };
+
+        struct InstanceBuffers final
+        {
+            std::uint32_t transformBuffer = 0;
+            std::uint32_t normalBuffer = 0;
+            std::uint32_t instanceCount = 0;
+        }m_instanceBuffers;
 #endif //DESKTOP
 
         glm::mat4* m_skeleton = nullptr;
@@ -153,5 +234,7 @@ namespace cro
         friend class ModelRenderer;
         friend class ShadowMapRenderer;
         friend class DeferredRenderSystem;
+
+
     };
 }

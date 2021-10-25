@@ -36,32 +36,48 @@ namespace cro::Shaders::ShadowMap
     static const std::string Vertex = R"(
         ATTRIBUTE vec4 a_position;
 
-        #if defined (ALPHA_CLIP)
+    #if defined (ALPHA_CLIP)
         ATTRIBUTE vec2 a_texCoord0;
-        #endif
+    #endif
 
-        #if defined(SKINNED)
+    #if defined(INSTANCING)
+        ATTRIBUTE mat4 a_instanceWorldMatrix;
+    #endif
+
+    #if defined(SKINNED)
         ATTRIBUTE vec4 a_boneIndices;
         ATTRIBUTE vec4 a_boneWeights;
         uniform mat4 u_boneMatrices[MAX_BONES];
-        #endif
+    #endif
 
-        uniform mat4 u_worldMatrix;
+    #if defined(INSTANCING)
+        uniform mat4 u_viewMatrix;        
+    #else
         uniform mat4 u_worldViewMatrix;
+    #endif
+        uniform mat4 u_worldMatrix;
         uniform mat4 u_projectionMatrix;
         uniform vec4 u_clipPlane;
 
-        #if defined (MOBILE)
+    #if defined (MOBILE)
         VARYING_OUT vec4 v_position;
-        #endif
+    #endif
 
-        #if defined (ALPHA_CLIP)
+    #if defined (ALPHA_CLIP)
         VARYING_OUT vec2 v_texCoord0;
-        #endif
+    #endif
 
         void main()
         {
-            mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
+        #if defined(INSTANCING)
+            mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
+            mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
+        #else
+            mat4 worldMatrix = u_worldMatrix;
+            mat4 worldViewMatrix = u_worldViewMatrix;
+        #endif
+
+            mat4 wvp = u_projectionMatrix * worldViewMatrix;
             vec4 position = a_position;
 
         #if defined (SKINNED)
@@ -80,7 +96,7 @@ namespace cro::Shaders::ShadowMap
 
 
         #else
-            gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
+            gl_ClipDistance[0] = dot(worldMatrix * position, u_clipPlane);
         #endif
 
         #if defined (ALPHA_CLIP)

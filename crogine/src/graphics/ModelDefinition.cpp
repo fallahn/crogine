@@ -61,7 +61,12 @@ namespace
 ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap, const std::string& workingDir)
     : m_resources   (rc),
     m_envMap        (envMap),
-    m_workingDir    (workingDir)
+    m_workingDir    (workingDir),
+    m_materialCount (0),
+    m_castShadows   (false),
+    m_billboard     (false),
+    m_instanced     (false),
+    m_modelLoaded   (false)
 {
     if (!workingDir.empty())
     {
@@ -73,14 +78,19 @@ ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap,
     }
 }
 
-bool ModelDefinition::loadFromFile(const std::string& path, bool useDeferredShaders, bool forceReload)
+bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool useDeferredShaders, bool forceReload)
 {
+#ifdef PLATFORM_MOBILE
+    instanced = false
+#endif
+
     if (m_modelLoaded)
     {
         //cro::Logger::log("This definition already has a model loaded", cro::Logger::Type::Error);
         //return false;
         reset();
     }
+    m_instanced = instanced;
 
     if (FileSystem::getFileExtension(path) != ".cmt")
     {
@@ -172,6 +182,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool useDeferredShad
         auto flags = VertexProperty::Position | VertexProperty::Normal | VertexProperty::Colour | VertexProperty::UV0 | VertexProperty::UV1;
         meshBuilder = std::make_unique<DynamicMeshBuilder>(flags, 1, GL_TRIANGLES);
         m_billboard = true;
+        LOG("Multiple billboards created from the same definition will share the same mesh data!", cro::Logger::Type::Warning);
 
         if (auto* prop = cfg.findProperty("lock_rotation"); prop != nullptr)
         {
@@ -273,7 +284,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool useDeferredShad
 
         //enable shader attribs based on what the material requests
         //TODO this doesn't check valid combinations
-        std::int32_t flags = 0;
+        std::int32_t flags = instanced ? ShaderResource::Instanced : 0;
         bool smoothTextures = false;
         bool repeatTextures = false;
         const auto& properties = mat.getProperties();
@@ -554,6 +565,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool useDeferredShad
         if (m_castShadows)
         {
             flags = ShaderResource::DepthMap | (flags & (ShaderResource::Skinning | ShaderResource::AlphaClip));
+            if (instanced)
+            {
+                flags |= ShaderResource::Instanced;
+            }
 
             shaderID = m_resources.shaders.loadBuiltIn(m_billboard ? ShaderResource::BillboardShadowMap : ShaderResource::ShadowMap, flags);
             matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
@@ -615,7 +630,17 @@ bool ModelDefinition::createModel(Entity entity)
         if (m_billboard)
         {
             entity.addComponent<BillboardCollection>();
-            LOG("Multiple billboards created from the same definition will share the same mesh data!", cro::Logger::Type::Warning);
+        }
+
+        if (m_instanced)
+        {
+            //add a single identity matrix so we at least render one instance
+            std::vector<glm::mat4> tx =
+            {
+                glm::mat4(1.f)
+            };
+
+            entity.getComponent<cro::Model>().setInstanceTransforms(tx);
         }
 
         if (hasSkeleton())
@@ -648,6 +673,7 @@ void ModelDefinition::reset()
     Skeleton m_skeleton = {};
     m_castShadows = false;
     m_billboard = false;
+    m_instanced = false;
 
     m_modelLoaded = false;
 }

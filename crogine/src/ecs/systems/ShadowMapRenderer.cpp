@@ -192,7 +192,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                 continue;
             }
 
-            auto sphere = model.m_meshData.boundingSphere;
+            auto sphere = model.getBoundingSphere();
             const auto& tx = entity.getComponent<Transform>();
 
             sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
@@ -299,16 +299,14 @@ void ShadowMapRenderer::render()
                     }
                 }
 
-                //glCheck(glUniformMatrix4fv(mat.uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
-                //glCheck(glUniformMatrix4fv(mat.uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camera.depthViewMatrix)));
+                glCheck(glUniformMatrix4fv(mat.uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
+                glCheck(glUniformMatrix4fv(mat.uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camera.shadowViewMatrix)));
                 glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
                 glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camera.shadowProjectionMatrix)));
                 //glCheck(glUniformMatrix4fv(mat.uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camera.depthViewProjectionMatrix)));
 
 #ifdef PLATFORM_DESKTOP
-                const auto& indexData = model.m_meshData.indexData[i];
-                glCheck(glBindVertexArray(indexData.vao[Mesh::IndexData::Shadow]));
-                glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+                model.draw(i, Mesh::IndexData::Shadow);
 #else
                 //bind attribs
                 const auto& attribs = mat.attribs;

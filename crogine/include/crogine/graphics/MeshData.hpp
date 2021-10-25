@@ -85,7 +85,14 @@ namespace cro
             {
                 Final, Shadow, Count
             };
-            std::array<std::uint32_t, Pass::Count> vao = {0,0}; //< required for core profile on desktop, ignored on mobile (one for each pass)
+
+            //the VAOs here are only included for convenience when rendering
+            //custom meshes (such as the BSP renderer) and are not used by
+            //Model components when rendering. They are managed by the 
+            //MeshResource however - and will be deleted when the IBO/VBO is
+            //deleted for a given Mesh::Data struct. For this reason care should
+            //be taken for lifetime management when copying this data...
+            std::array<std::uint32_t, Pass::Count> vao = {0,0};
             std::uint32_t primitiveType = 0;
             std::uint32_t indexCount = 0;
             std::uint32_t format = 0;

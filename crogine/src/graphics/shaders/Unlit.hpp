@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,78 +35,98 @@ namespace cro::Shaders::Unlit
 {
     static const std::string Vertex = R"(
         ATTRIBUTE vec4 a_position;
-        #if defined(VERTEX_COLOUR)
+    #if defined(VERTEX_COLOUR)
         ATTRIBUTE vec4 a_colour;
-        #endif
+    #endif
         ATTRIBUTE vec3 a_normal;
 
-        #if defined(TEXTURED)
+    #if defined(TEXTURED)
         ATTRIBUTE MED vec2 a_texCoord0;
-        #endif
-        #if defined(LIGHTMAPPED)
+    #endif
+    #if defined(LIGHTMAPPED)
         ATTRIBUTE MED vec2 a_texCoord1;
-        #endif
+    #endif
 
-        #if defined(SKINNED)
+    #if defined(INSTANCING)
+        ATTRIBUTE mat4 a_instanceWorldMatrix;
+        ATTRIBUTE mat3 a_instanceNormalMatrix;
+    #endif
+
+
+    #if defined(SKINNED)
         ATTRIBUTE vec4 a_boneIndices;
         ATTRIBUTE vec4 a_boneWeights;
         uniform mat4 u_boneMatrices[MAX_BONES];
-        #endif
+    #endif
 
-        #if defined(PROJECTIONS)
-        #define MAX_PROJECTIONS 4
+    #if defined(PROJECTIONS)
+    #define MAX_PROJECTIONS 4
         uniform mat4 u_projectionMapMatrix[MAX_PROJECTIONS]; //VP matrices for texture projection
         uniform LOW int u_projectionMapCount; //how many to actually draw
-        #endif
+    #endif
 
-        uniform mat4 u_worldMatrix;
+    #if defined(INSTANCING)
+        uniform mat4 u_viewMatrix;
+    #else
         uniform mat4 u_worldViewMatrix;
         uniform mat3 u_normalMatrix;
+    #endif
+        uniform mat4 u_worldMatrix;
         uniform mat4 u_projectionMatrix;
         uniform vec4 u_clipPlane;
 
-        #if defined(RX_SHADOWS)
+    #if defined(RX_SHADOWS)
         uniform mat4 u_lightViewProjectionMatrix;
-        #endif
+    #endif
 
-        #if defined (SUBRECTS)
+    #if defined (SUBRECTS)
         uniform MED vec4 u_subrect;
-        #endif
+    #endif
                 
-        #if defined (RIMMING)
+    #if defined (RIMMING)
         VARYING_OUT vec3 v_worldPosition;
         VARYING_OUT vec3 v_normalVector;
-        #endif
+    #endif
 
-        #if defined (VERTEX_COLOUR)
+    #if defined (VERTEX_COLOUR)
         VARYING_OUT LOW vec4 v_colour;
-        #endif
+    #endif
 
-        #if defined (TEXTURED)
+    #if defined (TEXTURED)
         VARYING_OUT MED vec2 v_texCoord0;
-        #endif
+    #endif
 
-        #if defined (LIGHTMAPPED)
+    #if defined (LIGHTMAPPED)
         VARYING_OUT MED vec2 v_texCoord1;
-        #endif
+    #endif
 
-        #if defined(PROJECTIONS)
+    #if defined(PROJECTIONS)
         VARYING_OUT LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
-        #endif
+    #endif
 
-        #if defined(RX_SHADOWS)
+    #if defined(RX_SHADOWS)
         VARYING_OUT LOW vec4 v_lightWorldPosition;
-        #endif
+    #endif
 
         void main()
         {
-            mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
+        #if defined (INSTANCING)
+            mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
+            mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
+            mat3 normalMatrix = mat3(u_worldMatrix) * a_instanceNormalMatrix;            
+        #else
+            mat4 worldMatrix = u_worldMatrix;
+            mat4 worldViewMatrix = u_worldViewMatrix;
+            mat3 normalMatrix = u_normalMatrix;
+        #endif
+
+            mat4 wvp = u_projectionMatrix * worldViewMatrix;
             vec4 position = a_position;
 
         #if defined(PROJECTIONS)
             for(int i = 0; i < u_projectionMapCount; ++i)
             {
-                v_projectionCoords[i] = u_projectionMapMatrix[i] * u_worldMatrix * a_position;
+                v_projectionCoords[i] = u_projectionMapMatrix[i] * worldMatrix * a_position;
             }
         #endif
 
@@ -128,12 +148,12 @@ namespace cro::Shaders::Unlit
             gl_Position = wvp * position;
 
         #if defined (RX_SHADOWS)
-            v_lightWorldPosition = u_lightViewProjectionMatrix * u_worldMatrix * position;
+            v_lightWorldPosition = u_lightViewProjectionMatrix * worldMatrix * position;
         #endif
 
         #if defined (RIMMING)
-            v_normalVector = u_normalMatrix * normal;
-            v_worldPosition = (u_worldMatrix * position).xyz;
+            v_normalVector = normalMatrix * normal;
+            v_worldPosition = (worldMatrix * position).xyz;
         #endif
 
         #if defined (VERTEX_COLOUR)
@@ -153,70 +173,70 @@ namespace cro::Shaders::Unlit
         #if defined (MOBILE)
 
         #else
-            gl_ClipDistance[0] = dot(u_worldMatrix * position, u_clipPlane);
+            gl_ClipDistance[0] = dot(worldMatrix * position, u_clipPlane);
         #endif
         })";
 
     static const std::string Fragment = R"(
         OUTPUT
-        #if defined (TEXTURED)
+    #if defined (TEXTURED)
         uniform sampler2D u_diffuseMap;
-        #if defined(ALPHA_CLIP)
+    #if defined(ALPHA_CLIP)
         uniform float u_alphaClip;
-        #endif
-        #endif
-        #if defined (LIGHTMAPPED)
+    #endif
+    #endif
+    #if defined (LIGHTMAPPED)
         uniform sampler2D u_lightMap;
-        #endif
-        #if defined(COLOURED)
+    #endif
+    #if defined(COLOURED)
         uniform LOW vec4 u_colour;
-        #endif
-        #if defined(PROJECTIONS)
-        #define MAX_PROJECTIONS 4
+    #endif
+    #if defined(PROJECTIONS)
+    #define MAX_PROJECTIONS 4
         uniform sampler2D u_projectionMap;
         uniform LOW int u_projectionMapCount;
-        #endif
+    #endif
 
-        #if defined (RX_SHADOWS)
+    #if defined (RX_SHADOWS)
         uniform sampler2D u_shadowMap;
-        #endif
+    #endif
 
-        #if defined(RIMMING)
+    #if defined(RIMMING)
         uniform LOW vec4 u_rimColour;
         uniform LOW float u_rimFalloff;
         uniform HIGH vec3 u_cameraWorldPosition;
-        #endif
+    #endif
 
-        #if defined (VERTEX_COLOUR)
+    #if defined (VERTEX_COLOUR)
         VARYING_IN LOW vec4 v_colour;
-        #endif
-        #if defined (TEXTURED)
+    #endif
+    #if defined (TEXTURED)
         VARYING_IN MED vec2 v_texCoord0;
-        #endif
-        #if defined (LIGHTMAPPED)
+    #endif
+    #if defined (LIGHTMAPPED)
         VARYING_IN MED vec2 v_texCoord1;
-        #endif
-        #if defined(RIMMING)
+    #endif
+    #if defined(RIMMING)
         VARYING_IN HIGH vec3 v_normalVector;
         VARYING_IN HIGH vec3 v_worldPosition;
-        #endif
+    #endif
 
-        #if defined(PROJECTIONS)
+    #if defined(PROJECTIONS)
         VARYING_IN LOW vec4 v_projectionCoords[MAX_PROJECTIONS];
-        #endif
+    #endif
 
-        #if defined(RX_SHADOWS)
+    #if defined(RX_SHADOWS)
         VARYING_IN LOW vec4 v_lightWorldPosition;
 
-        #if defined(MOBILE)
-        #if defined (GL_FRAGMENT_PRECISION_HIGH)
-        #define PREC highp
-        #else
-        #define PREC mediump
-        #endif
-        #else
-        #define PREC
-        #endif
+    #if defined(MOBILE)
+    #if defined (GL_FRAGMENT_PRECISION_HIGH)
+    #define PREC highp
+    #else
+    #define PREC mediump
+    #endif
+    #else
+    #define PREC
+    #endif
 
         PREC float unpack(PREC vec4 colour)
         {
@@ -224,7 +244,7 @@ namespace cro::Shaders::Unlit
             return dot(colour, bitshift);
         }
                 
-        #if defined(MOBILE)
+    #if defined(MOBILE)
         PREC float shadowAmount(LOW vec4 lightWorldPos)
         {
             PREC vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
@@ -233,7 +253,7 @@ namespace cro::Shaders::Unlit
             PREC float currDepth = projectionCoords.z - 0.005;
             return (currDepth < depthSample) ? 1.0 : 0.4;
         }
-        #else
+    #else
         //some fancier pcf on desktop
         const vec2 kernel[16] = vec2[](
             vec2(-0.94201624, -0.39906216),
@@ -273,9 +293,9 @@ namespace cro::Shaders::Unlit
             }
             return 1.0 - (shadow / 9.0);
         }
-        #endif
+    #endif
 
-        #endif
+    #endif
 
         void main()
         {

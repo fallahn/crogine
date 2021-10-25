@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/graphics/Shader.hpp>
 
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/vec4.hpp>
@@ -77,7 +78,6 @@ namespace cro
     };
 
     class Texture;
-    class Shader;
     namespace Material
     {
         /*
@@ -274,7 +274,7 @@ namespace cro
 
             std::uint32_t shader = 0;
             //maps attrib location to attrib size between shader and mesh - index, size, pointer offset
-            std::array<std::array<std::int32_t, 3u>, Mesh::Attribute::Total> attribs{};
+            std::array<std::array<std::int32_t, 3u>, Shader::AttributeID::Count> attribs{};
             std::size_t attribCount = 0; //< count of attributes successfully mapped
             //maps uniform locations by indexing via Uniform enum
             std::array<std::int32_t, Uniform::Total> uniforms{-1,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};

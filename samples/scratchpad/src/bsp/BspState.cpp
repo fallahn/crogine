@@ -160,7 +160,7 @@ void BspState::addSystems()
 
     m_scene.addSystem<FpsCameraSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
-    m_scene.addSystem<Q3BspSystem>(mb)->loadMap("assets/maps/overkill.bsp");
+    m_scene.addSystem<Q3BspSystem>(mb)->loadMap("assets/bsp/bloodstream.bsp");
 }
 
 void BspState::loadAssets()

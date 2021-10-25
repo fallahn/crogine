@@ -122,13 +122,15 @@ namespace cro
         \brief Attempts to load a definition from a ConfigFile at a given path.
         \param path String containing the path to a configuration file. These are
         specially formatted files containing data about a model.
+        \param instanced set this to true if the model will be used with instanced
+        rendering. Defaults to false
         \param useDeferredShaders Set this to true if using the DeferredRenderingSystem
         \param forceReload Forces the ResourceCollection to reload any mesh data from
         file, rather than recycling any existing VBO. Generally should be false.
         \returns true if the configuration file was parsed without error.
         \see ConfigFile, EnvironmentMap
         */
-        bool loadFromFile(const std::string& path, bool useDeferredShaders = false, bool forceReload = false);
+        bool loadFromFile(const std::string& path, bool instanced = false, bool useDeferredShaders = false, bool forceReload = false);
 
         /*!
         \brief Creates a Model component from the loaded config on the given entity.
@@ -142,6 +144,7 @@ namespace cro
         need to be reloaded each time.
         \param entity A valid entity with a Transform component to which the Model
         component should be attached
+
         */
         bool createModel(Entity entity);
 
@@ -181,10 +184,11 @@ namespace cro
         std::array<std::int32_t, Mesh::IndexData::MaxBuffers> m_materialIDs = {}; //!< list of material IDs in the order in which they appear on the model
         std::array<std::int32_t, Mesh::IndexData::MaxBuffers> m_shadowIDs = {}; //!< IDs of shadow map materials if this model casts shadows
 
-        std::size_t m_materialCount = 0; //!< number of active materials
+        std::size_t m_materialCount; //!< number of active materials
         Skeleton m_skeleton; //!< overloaded operator bool indicates if currently valid
-        bool m_castShadows = false; //!< if this is true the model entity also requires a shadow cast component
-        bool m_billboard = false; //!< if this is true then the model is a dynamically created set of billboards
+        bool m_castShadows; //!< if this is true the model entity also requires a shadow cast component
+        bool m_billboard; //!< if this is true then the model is a dynamically created set of billboards
+        bool m_instanced;
 
         bool m_modelLoaded = false;
 
