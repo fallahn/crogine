@@ -832,17 +832,28 @@ void GameState::updateBushmap(const cro::NetEvent::Packet& packet)
                     return a[3].z > b[3].z;
                 });
 
-            auto entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Transform>();
-            m_modelDefs[GameModelID::Shrub01 + i]->createModel(entity);
-            entity.getComponent<cro::Model>().setInstanceTransforms(tx);
+            std::vector<std::vector<glm::mat4>> slices(4);
+            static constexpr float SliceWidth = IslandSize / 4.f;
+            for (const auto& t : tx)
+            {
+                auto idx = static_cast<std::int32_t>(std::floor((t[3].x + (IslandSize / 2.f)) / SliceWidth));
+                slices[idx].push_back(t);
+            }
+
+            for (auto j = 0u; j < slices.size(); ++j)
+            {
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Transform>();
+                m_modelDefs[GameModelID::Shrub01 + i]->createModel(entity);
+                entity.getComponent<cro::Model>().setInstanceTransforms(slices[j]);
+            }
             i++;
         }
 
-        auto entity = m_gameScene.createEntity();
+        /*auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         m_modelDefs[GameModelID::GroundBush]->createModel(entity);
-        entity.getComponent<cro::Model>().setInstanceTransforms(shrubTransforms);
+        entity.getComponent<cro::Model>().setInstanceTransforms(shrubTransforms);*/
 
         m_requestFlags |= ClientRequestFlags::BushMap;
     }
@@ -886,10 +897,10 @@ void GameState::updateTreemap(const cro::NetEvent::Packet& packet)
                     return a[3].z > b[3].z;
                 });
 
-            auto entity = m_gameScene.createEntity();
+            /*auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>();
             m_modelDefs[GameModelID::Palm01 + i]->createModel(entity);
-            entity.getComponent<cro::Model>().setInstanceTransforms(tx);
+            entity.getComponent<cro::Model>().setInstanceTransforms(tx);*/
             i++;
         }
 
