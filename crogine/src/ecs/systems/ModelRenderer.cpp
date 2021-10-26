@@ -109,11 +109,13 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
                 auto opaque = std::make_pair(entity, SortData());
                 auto transparent = std::make_pair(entity, SortData());
 
+                //this is a good approximation of distance based on the centre
+                //of the model (large models might suffer without face sorting...)
+                //assuming the forward vector is normalised - though WHY would you
+                //scale the view matrix???
                 auto direction = (sphere.centre - cameraPos);
                 float distance = glm::dot(forwardVector, direction);
-                //TODO a large model with a centre behind the camera
-                //might still intersect the view but register as being
-                //further away than smaller objects in front
+
 
                 //foreach material
                 //add ent/index pair to alpha or opaque list
@@ -165,7 +167,16 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
 
 void ModelRenderer::process(float)
 {
-
+    //TODO this might be worth just doing on the current drawlist (or even in the draw list calc??)
+    auto& entities = getEntities();
+    for (auto entity : entities)
+    {
+        auto& model = entity.getComponent<Model>();
+        if (model.m_meshBox != model.m_meshData.boundingBox)
+        {
+            model.updateBounds();
+        }
+    }
 }
 
 void ModelRenderer::render(Entity camera, const RenderTarget& rt)

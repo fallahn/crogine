@@ -192,6 +192,7 @@ namespace cro
         std::uint64_t m_renderFlags;
         cro::Sphere m_boundingSphere;
         cro::Box m_boundingBox;
+        cro::Box m_meshBox; //AABB received from mesh data
 
         Mesh::Data m_meshData;
         std::array<std::array<Material::Data, Mesh::IndexData::MaxBuffers>, Mesh::IndexData::Count> m_materials = {};       
@@ -200,6 +201,7 @@ namespace cro
         std::array<VAOPair, Mesh::IndexData::MaxBuffers> m_vaos = {};
 
         void bindMaterial(Material::Data&);
+        void updateBounds();
         
 #ifdef PLATFORM_DESKTOP
         void updateVAO(std::size_t materialIndex, std::int32_t passIndex);
@@ -234,7 +236,5 @@ namespace cro
         friend class ModelRenderer;
         friend class ShadowMapRenderer;
         friend class DeferredRenderSystem;
-
-
     };
 }

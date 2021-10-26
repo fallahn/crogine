@@ -68,6 +68,7 @@ Model::Model(Mesh::Data data, Material::Data material)
 
     //sets all materials to given default
     bindMaterial(material);
+    updateBounds();
     for (auto& mat : m_materials[Mesh::IndexData::Final])
     {
         mat = material;
@@ -329,6 +330,26 @@ void Model::bindMaterial(Material::Data& material)
         material.attribCount++;
     }
 }
+
+void Model::updateBounds()
+{
+    //we can't currently do this is we've got instancing enabled
+    //as the instance AABB requires keeping a copy of the transform data...
+#ifdef PLATFORM_DESKTOP
+    if (m_instanceBuffers.instanceCount != 0)
+    {
+        return;
+    }
+#endif
+
+    //unfortunately we need to keep a copy of this as it's the only
+    //way of comparing against the mesh data to see if it was updated
+    m_meshBox = m_meshData.boundingBox;
+    //and yet another copy which may be modified by instancing (and is what's actually returned as the model bounds)
+    m_boundingBox = m_meshData.boundingBox;
+    m_boundingSphere = m_boundingBox;
+}
+
     //if we're on desktop core opengl profile requires VAOs
 #ifdef PLATFORM_DESKTOP
 void Model::updateVAO(std::size_t idx, std::int32_t passIndex)

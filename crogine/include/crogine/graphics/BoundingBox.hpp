@@ -104,6 +104,16 @@ namespace cro
         */
         void operator += (glm::vec3 position) { m_points[0] += position; m_points[1] += position; }
 
+        bool operator == (const Box& other) const
+        {
+            return (&other == this) || (m_points[0] == other.m_points[0] && m_points[1] == other.m_points[1]);
+        }
+
+        bool operator != (const Box& other) const
+        {
+            return !(*this == other);
+        }
+
         /*!
         \brief Returns a new box created by merging the two given boxes
         */
