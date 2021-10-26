@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/MultiRenderTexture.hpp>
 #include <crogine/graphics/DepthTexture.hpp>
+#include <crogine/util/Frustum.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/mat4x4.hpp>
@@ -210,7 +211,7 @@ namespace cro
 
             /*!
             \brief Returns which direction the water plane should be facing.
-            When implementing a custom render which uses the reflect/refract passes
+            When implementing a custom renderer which uses the reflect/refract passes
             multiply the Scene's water plane by this value so that it points in
             the correct direction for clipping.
             */
@@ -426,6 +427,13 @@ namespace cro
         */
         glm::vec3 pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize = cro::App::getWindow().getSize());
 
+        /*!
+        \brief Returns the FrustumData needed to test AABBs against
+        this Camera's frustum, using cro::Util::Frustum::visible()
+        */
+        FrustumData getFrustumData() const { return m_frustumData; }
+
+
 #ifdef CRO_DEBUG_
         //l,r,b,t,n,f
         std::array<float, 6u> depthDebug = {};
@@ -446,6 +454,7 @@ namespace cro
         float m_farPlane;
 
         bool m_orthographic;
+        FrustumData m_frustumData;
 
         friend class ShadowMapRenderer;
     };

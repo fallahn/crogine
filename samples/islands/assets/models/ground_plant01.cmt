@@ -1,7 +1,7 @@
 model ground_plant01
 {
     mesh = "assets/models/ground_plant01.cmf"
-    cast_shadows = true
+    cast_shadows = false
 
     material PBR
     {

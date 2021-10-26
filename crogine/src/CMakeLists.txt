@@ -144,6 +144,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/network/NetHost.cpp
   ${PROJECT_DIR}/network/NetPeer.cpp
 
+  ${PROJECT_DIR}/util/Frustum.cpp
   ${PROJECT_DIR}/util/Matrix.cpp
   ${PROJECT_DIR}/util/Network.cpp
   ${PROJECT_DIR}/util/Random.cpp)

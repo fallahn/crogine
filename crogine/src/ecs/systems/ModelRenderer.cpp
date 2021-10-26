@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/util/Matrix.hpp>
+#include <crogine/util/Frustum.hpp>
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
@@ -84,6 +85,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         //render flags are tested when drawing as the flags may have changed
         //between draw calls but without updating the visiblity list.
 
+        //use the bounding sphere for depth testing
         auto sphere = model.getBoundingSphere();
         const auto& tx = entity.getComponent<Transform>();
 
@@ -91,18 +93,19 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         auto scale = tx.getScale();
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
-
+        //for each pass in the list (different passes may use different cameras, eg reflections)
         for (auto p = 0u; p < m_visibleEnts.size(); ++p)
         {
-            const auto& frustum = camComponent.getPass(p).getFrustum();
-            auto forwardVector = cro::Util::Matrix::getForwardVector(camComponent.getPass(p).viewMatrix);
+            /*const auto& frustum = camComponent.getPass(p).getFrustum();
 
             model.m_visible = true;
-            std::size_t i = 0;
-            while (model.m_visible && i < frustum.size())
+            std::size_t j = 0;
+            while (model.m_visible && j < frustum.size())
             {
-                model.m_visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
-            }
+                model.m_visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
+            }*/
+
+            model.m_visible = cro::Util::Frustum::visible(camComponent.getFrustumData(), camComponent.getPass(p).viewMatrix * tx.getWorldTransform(), model.getAABB());
 
             if (model.m_visible)
             {
@@ -114,12 +117,13 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
                 //assuming the forward vector is normalised - though WHY would you
                 //scale the view matrix???
                 auto direction = (sphere.centre - cameraPos);
+                auto forwardVector = cro::Util::Matrix::getForwardVector(camComponent.getPass(p).viewMatrix);
                 float distance = glm::dot(forwardVector, direction);
 
 
                 //foreach material
                 //add ent/index pair to alpha or opaque list
-                for (i = 0u; i < model.m_meshData.submeshCount; ++i)
+                for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
                 {
                     if (model.m_materials[Mesh::IndexData::Final][i].blendMode != Material::BlendMode::None)
                     {

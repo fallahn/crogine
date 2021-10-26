@@ -190,6 +190,7 @@
     <ClInclude Include="..\crogine\include\crogine\network\NetHost.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Constants.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Easings.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\util\Frustum.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Maths.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Matrix.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Network.hpp" />
@@ -368,6 +369,7 @@
     <ClCompile Include="..\crogine\src\network\NetEvent.cpp" />
     <ClCompile Include="..\crogine\src\network\NetHost.cpp" />
     <ClCompile Include="..\crogine\src\network\NetPeer.cpp" />
+    <ClCompile Include="..\crogine\src\util\Frustum.cpp" />
     <ClCompile Include="..\crogine\src\util\Matrix.cpp" />
     <ClCompile Include="..\crogine\src\util\Network.cpp" />
     <ClCompile Include="..\crogine\src\util\Random.cpp" />

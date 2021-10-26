@@ -131,6 +131,12 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
     m_orthographic = false;
+
+    auto fovTan = std::tan(fov / 2.f);
+    m_frustumData.farPlane = -farPlane;
+    m_frustumData.nearPlane = -nearPlane;
+    m_frustumData.nearRight = aspect * nearPlane * fov;
+    m_frustumData.nearTop = nearPlane * fov;
 }
 
 void Camera::setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane)
@@ -141,6 +147,12 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
     m_orthographic = true;
+
+    //TODO fix this
+    m_frustumData.farPlane = -farPlane;
+    m_frustumData.nearPlane = -nearPlane;
+    m_frustumData.nearRight = nearPlane;
+    m_frustumData.nearTop = nearPlane;
 }
 
 void Camera::updateMatrices(const Transform& tx, float level)

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -38,6 +38,7 @@ source distribution.
 
 #include <crogine/graphics/Spatial.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/util/Frustum.hpp>
 
 #include "../../detail/GLCheck.hpp"
 
@@ -192,8 +193,8 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                 continue;
             }
 
-            auto sphere = model.getBoundingSphere();
             const auto& tx = entity.getComponent<Transform>();
+            auto sphere = model.getBoundingSphere();
 
             sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
             auto scale = tx.getScale();
@@ -205,6 +206,9 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             {
                 model.m_visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
             }
+
+            //needs fixing for ortho projection
+            //model.m_visible = cro::Util::Frustum::visible(camera.getFrustumData(), camera.shadowViewMatrix * tx.getWorldTransform(), model.getAABB());
 
             if (model.m_visible)
             {
@@ -219,6 +223,8 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             {
                 return a > b;
             });
+
+        DPRINT("Visible 3D shadow ents", std::to_string(drawList.size()));
     }
 }
 

@@ -1,7 +1,7 @@
 model shrub05
 {
     mesh = "assets/models/shrub05.cmf"
-    cast_shadows = true
+    cast_shadows = false
 
     material PBR
     {
