@@ -29,24 +29,29 @@ SET (OpenGL_GL_PREFERENCE "GLVND")
 find_package(CROGINE REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(Bullet REQUIRED)
 
 include_directories(
   ${CROGINE_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
+  ${BULLET_INCLUDE_DIRS}
   src)
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 include(${PROJECT_DIR}/batcat/CMakeLists.txt)
 include(${PROJECT_DIR}/bsp/CMakeLists.txt)
+include(${PROJECT_DIR}/collision/CMakeLists.txt)
 
 add_executable(${PROJECT_NAME}
                ${PROJECT_SRC}
                ${BATCAT_SRC}
-               ${BSP_SRC})
+               ${BSP_SRC}
+               ${COLLISION_SRC})
 
 target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}
   ${SDL2_LIBRARY}
+  ${BULLET_LIBRARIES}
   ${OPENGL_LIBRARIES})

@@ -25,6 +25,12 @@
     <Filter Include="Source Files\bsp">
       <UniqueIdentifier>{ea1ac335-4c3b-4a0b-bc09-98e40e9fc36f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\mesh collision">
+      <UniqueIdentifier>{bd762731-ba3f-4925-9368-451a265dd41a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mesh collision">
+      <UniqueIdentifier>{90326cfc-31b0-4076-b523-a93cbdf858a0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -62,6 +68,9 @@
     </ClCompile>
     <ClCompile Include="src\bsp\Q3BspSystem.cpp">
       <Filter>Source Files\bsp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\collision\CollisionState.cpp">
+      <Filter>Source Files\mesh collision</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +136,9 @@
     </ClInclude>
     <ClInclude Include="src\bsp\Q3BspSystem.hpp">
       <Filter>Header Files\bsp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\collision\CollisionState.hpp">
+      <Filter>Header Files\mesh collision</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

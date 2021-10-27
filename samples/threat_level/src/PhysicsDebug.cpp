@@ -71,7 +71,8 @@ BulletDebug::BulletDebug()
     : m_vboID       (0),
     m_vertexCount   (0),
     m_uniformIndex  (-1),
-    m_debugFlags    (0)
+    m_debugFlags    (0),
+    m_clearVerts    (true)
 {
     if (m_shader.loadFromString(vertex, fragment))
     {
@@ -111,6 +112,13 @@ BulletDebug::~BulletDebug()
 //public
 void BulletDebug::drawLine(const btVector3& start, const btVector3& end, const btVector3& colour)
 {
+    if (m_clearVerts)
+    {
+        //rewind
+        m_vertexCount = 0;
+        m_clearVerts = false;
+    }
+
     if (m_vertexCount < maxVertices)
     {
         m_vertexData[m_vertexCount++] = start.x();
@@ -186,7 +194,5 @@ void BulletDebug::render(glm::mat4 viewProjection)
     glCheck(glDisable(GL_DEPTH_TEST));
 
     //DPRINT("Vert Count", std::to_string(m_vertexCount));
-
-    //rewind
-    m_vertexCount = 0;
+    m_clearVerts = true;
 }

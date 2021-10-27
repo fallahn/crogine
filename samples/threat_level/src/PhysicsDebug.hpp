@@ -75,6 +75,8 @@ namespace cro
             Shader m_shader;
             std::int32_t m_uniformIndex;
             std::int32_t m_debugFlags;
+
+            bool m_clearVerts;
         };
     }
 }

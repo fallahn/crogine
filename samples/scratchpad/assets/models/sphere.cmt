@@ -1,0 +1,15 @@
+model sphere
+{
+    mesh = sphere
+    radius = 0.5
+
+    material VertexLit
+    {
+        mask_colour = 1.000000,1.000000,0.000000,1
+        name = "Untitled"
+        colour = 0.0,0.000000,1.000000,1
+        smooth = true
+        repeat = true
+        blendmode = "none"
+    }
+}

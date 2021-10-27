@@ -31,6 +31,7 @@ source distribution.
 #include "MenuState.hpp"
 #include "batcat/BatcatState.hpp"
 #include "bsp/BspState.hpp"
+#include "collision/CollisionState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -89,9 +90,10 @@ bool MyApp::initialise()
     m_stateStack.registerState<sp::MenuState>(States::ScratchPad::MainMenu);
     m_stateStack.registerState<BatcatState>(States::ScratchPad::BatCat);
     m_stateStack.registerState<BspState>(States::ScratchPad::BSP);
+    m_stateStack.registerState<CollisionState>(States::ScratchPad::MeshCollision);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::BatCat);
+    m_stateStack.pushState(States::ScratchPad::MeshCollision);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
 #endif

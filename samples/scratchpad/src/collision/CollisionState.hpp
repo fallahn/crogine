@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2021
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,18 +29,29 @@ source distribution.
 
 #pragma once
 
-namespace States
-{
-    struct ScratchPad final
-    {
-        enum
-        {
-            MainMenu,
-            BatCat,
-            BSP,
-            MeshCollision,
+#include "../StateIDs.hpp"
 
-            Count
-        };
-    };
-}
+#include <crogine/core/State.hpp>
+#include <crogine/ecs/Scene.hpp>
+
+#include <crogine/graphics/ModelDefinition.hpp>
+
+class CollisionState final : public cro::State
+{
+public:
+    CollisionState(cro::StateStack&, cro::State::Context);
+
+    cro::StateID getStateID() const override { return States::ScratchPad::MeshCollision; }
+
+    bool handleEvent(const cro::Event&) override;
+    void handleMessage(const cro::Message&) override;
+    bool simulate(float) override;
+    void render() override;
+
+private:
+
+    cro::Scene m_scene;
+    cro::ResourceCollection m_resources;
+
+    void buildScene();
+};
