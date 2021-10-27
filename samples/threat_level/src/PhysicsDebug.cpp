@@ -146,6 +146,8 @@ int BulletDebug::getDebugMode() const
 
 void BulletDebug::render(glm::mat4 viewProjection)
 {
+    //TODO use VAOs on desktop
+
     if (m_vertexCount == 0) return;
 
     //blend modes/depth testing

@@ -333,8 +333,8 @@ void Model::bindMaterial(Material::Data& material)
 
 void Model::updateBounds()
 {
-    //we can't currently do this is we've got instancing enabled
-    //as the instance AABB requires keeping a copy of the transform data...
+    //we can't currently do this if we've got instancing enabled
+    //as the instance AABB would require keeping a copy of the transform data...
 #ifdef PLATFORM_DESKTOP
     if (m_instanceBuffers.instanceCount != 0)
     {

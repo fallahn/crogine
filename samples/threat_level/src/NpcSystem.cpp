@@ -457,7 +457,7 @@ void NpcSystem::onEntityAdded(cro::Entity entity)
         status.elite.destination = m_elitePositions[0];
         status.elite.movementCount = cro::Util::Random::value(4, 8);
         status.elite.pauseTime = cro::Util::Random::value(1.2f, 2.2f);
-        status.elite.idleIndex = cro::Util::Random::value(0u, m_eliteIdlePositions.size());
+        status.elite.idleIndex = cro::Util::Random::value(0u, m_eliteIdlePositions.size() - 1);
         status.elite.maxEmitRate = entity.getComponent<cro::ParticleEmitter>().settings.emitRate;
         status.scoreValue = eliteScore;
         break;
