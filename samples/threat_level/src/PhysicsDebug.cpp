@@ -176,7 +176,7 @@ void BulletDebug::render(glm::mat4 viewProjection)
     glCheck(glVertexAttribPointer(m_attribIndices[0], 3, GL_FLOAT, GL_FALSE, vertexStride, 0));
 
     glCheck(glEnableVertexAttribArray(m_attribIndices[1]));
-    glCheck(glVertexAttribPointer(m_attribIndices[1], 3, GL_FLOAT, GL_FALSE, vertexStride, reinterpret_cast<void*>(static_cast<intptr_t>(vertexColourOffset))));
+    glCheck(glVertexAttribPointer(m_attribIndices[1], 3, GL_FLOAT, GL_FALSE, vertexStride, reinterpret_cast<void*>(static_cast<std::intptr_t>(vertexColourOffset))));
 
     //draw arrays
     glCheck(glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(m_vertexCount)));

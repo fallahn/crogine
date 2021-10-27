@@ -40,7 +40,8 @@ source distribution.
 
 CollisionState::CollisionState(cro::StateStack& ss, cro::State::Context ctx)
     : cro::State(ss, ctx),
-    m_scene(ctx.appInstance.getMessageBus())
+    m_scene(ctx.appInstance.getMessageBus()),
+    m_shape(0.5f, 1.5f)
 {
     buildScene();
 }
@@ -62,6 +63,11 @@ bool CollisionState::simulate(float dt)
 {
     m_scene.simulate(dt);
 
+
+    //TODO we'd update the collision world with out ent positions here
+    m_collisionWorld->performDiscreteCollisionDetection();
+    m_collisionWorld->debugDrawWorld();
+
     return false;
 }
 
@@ -69,11 +75,17 @@ void CollisionState::render()
 {
     auto& rw = cro::App::getWindow();
     m_scene.render(rw);
+
+    //render the debug stuff
+    auto viewProj = m_scene.getActiveCamera().getComponent<cro::Camera>().getActivePass().viewProjectionMatrix;
+    m_debugDrawer.render(viewProj);
 }
 
 //private
 void CollisionState::buildScene()
 {
+    setupCollisionWorld();
+
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_scene.addSystem<cro::CameraSystem>(mb);
@@ -84,7 +96,7 @@ void CollisionState::buildScene()
     md.loadFromFile("assets/models/sphere.cmt");
 
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -5.f });
+    entity.addComponent<cro::Transform>();
     md.createModel(entity);
 
 
@@ -97,4 +109,20 @@ void CollisionState::buildScene()
     auto& camera = m_scene.getActiveCamera().getComponent<cro::Camera>();
     camera.resizeCallback = callback;
     callback(camera);
+
+    m_scene.getActiveCamera().getComponent<cro::Transform>().move({ 0.f, 0.f, 5.f });
+}
+
+void CollisionState::setupCollisionWorld()
+{
+    m_collisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
+    m_collisionDispatcher = std::make_unique<btCollisionDispatcher>(m_collisionConfiguration.get());
+
+    m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
+    m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionConfiguration.get());
+
+    m_collisionWorld->setDebugDrawer(&m_debugDrawer);
+
+    m_ghostObject.setCollisionShape(&m_shape);
+    m_collisionWorld->addCollisionObject(&m_ghostObject);
 }

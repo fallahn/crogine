@@ -237,7 +237,7 @@ void CollisionSystem::process(float dt)
     }
     //DPRINT("Collision count", std::to_string(manifoldCount));
 
-    m_collisionWorld->debugDrawWorld();  
+    m_collisionWorld->debugDrawWorld();
 }
 
 void CollisionSystem::render(Entity camera, const RenderTarget& rt)

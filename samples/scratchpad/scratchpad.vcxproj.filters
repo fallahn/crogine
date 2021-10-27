@@ -72,6 +72,9 @@
     <ClCompile Include="src\collision\CollisionState.cpp">
       <Filter>Source Files\mesh collision</Filter>
     </ClCompile>
+    <ClCompile Include="src\collision\DebugDraw.cpp">
+      <Filter>Source Files\mesh collision</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -138,6 +141,9 @@
       <Filter>Header Files\bsp</Filter>
     </ClInclude>
     <ClInclude Include="src\collision\CollisionState.hpp">
+      <Filter>Header Files\mesh collision</Filter>
+    </ClInclude>
+    <ClInclude Include="src\collision\DebugDraw.hpp">
       <Filter>Header Files\mesh collision</Filter>
     </ClInclude>
   </ItemGroup>

@@ -65,7 +65,7 @@ namespace cro
             void setDebugMode(int) override;
             int getDebugMode() const override;
 
-            void render(glm::mat4);
+            void render(glm::mat4 viewProjection);
 
         private:
             std::uint32_t m_vboID;

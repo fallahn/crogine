@@ -30,11 +30,17 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "DebugDraw.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 
 #include <crogine/graphics/ModelDefinition.hpp>
+
+#include <btBulletCollisionCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+
+#include <memory>
 
 class CollisionState final : public cro::State
 {
@@ -53,5 +59,16 @@ private:
     cro::Scene m_scene;
     cro::ResourceCollection m_resources;
 
+    BulletDebug m_debugDrawer;
+    std::unique_ptr<btCollisionConfiguration> m_collisionConfiguration;
+    std::unique_ptr<btCollisionDispatcher> m_collisionDispatcher;
+    std::unique_ptr<btBroadphaseInterface> m_broadphaseInterface;
+    std::unique_ptr<btCollisionWorld> m_collisionWorld;
+
+
+    btPairCachingGhostObject m_ghostObject;
+    btCapsuleShape m_shape;
+
     void buildScene();
+    void setupCollisionWorld();
 };
