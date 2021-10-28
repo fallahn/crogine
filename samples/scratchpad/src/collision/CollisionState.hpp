@@ -72,7 +72,6 @@ private:
     btPairCachingGhostObject m_groundObject;
     std::unique_ptr<btTriangleIndexVertexArray> m_groundVertices;
     std::unique_ptr<btBvhTriangleMeshShape> m_groundShape;
-    std::unique_ptr<btIndexedMesh> m_groundMesh;
 
     std::vector<float> m_vertexData;
     std::vector<std::vector<std::uint32_t>> m_indexData;

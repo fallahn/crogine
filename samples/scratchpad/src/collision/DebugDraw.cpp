@@ -68,6 +68,7 @@ BulletDebug::BulletDebug()
     m_debugFlags    (DBG_MAX_DEBUG_DRAW_MODE),
     m_clearVerts    (true)
 {
+#ifdef PLATFORM_DESKTOP
     if (m_shader.loadFromString(vertex, fragment))
     {
         m_vertexData.resize(MaxVertices);
@@ -93,11 +94,15 @@ BulletDebug::BulletDebug()
             glCheck(glBindVertexArray(0));
         }
     }
+#else
+#pragma warn("Debug draw not available on mobile")
+#endif
 }
 
 //public
 BulletDebug::~BulletDebug()
 {
+#ifdef PLATFORM_DESKTOP
     if (m_meshData.vbo)
     {
         glCheck(glDeleteBuffers(1, &m_meshData.vbo));
@@ -107,6 +112,7 @@ BulletDebug::~BulletDebug()
     {
         glCheck(glDeleteVertexArrays(1, &m_meshData.vao));
     }
+#endif
 }
 
 //public
@@ -146,6 +152,7 @@ int BulletDebug::getDebugMode() const
 
 void BulletDebug::render(glm::mat4 viewProjection)
 {
+#ifdef PLATFORM_DESKTOP
     if (m_vertexCount == 0) return;
 
     //blend modes/depth testing
@@ -155,7 +162,7 @@ void BulletDebug::render(glm::mat4 viewProjection)
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData.vbo));
 
     //update VBO
-    glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, m_vertexCount * sizeof(float), (void*)m_vertexData.data()));
+    glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, m_vertexCount * sizeof(Vertex), (void*)m_vertexData.data()));
 
     //bind shader / set projection uniform
     glCheck(glUseProgram(m_shader.getGLHandle()));
@@ -171,4 +178,5 @@ void BulletDebug::render(glm::mat4 viewProjection)
 
     //DPRINT("Vert Count", std::to_string(m_vertexCount));
     m_clearVerts = true;
+#endif
 }

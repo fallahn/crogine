@@ -303,6 +303,7 @@
     <ClCompile Include="src\bsp\InputParser.cpp" />
     <ClCompile Include="src\bsp\Patch.cpp" />
     <ClCompile Include="src\bsp\Q3BspSystem.cpp" />
+    <ClCompile Include="src\collision\BallSystem.cpp" />
     <ClCompile Include="src\collision\CollisionState.cpp" />
     <ClCompile Include="src\collision\DebugDraw.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
@@ -325,6 +326,7 @@
     <ClInclude Include="src\bsp\Patch.hpp" />
     <ClInclude Include="src\bsp\Q3Bsp.hpp" />
     <ClInclude Include="src\bsp\Q3BspSystem.hpp" />
+    <ClInclude Include="src\collision\BallSystem.hpp" />
     <ClInclude Include="src\collision\CollisionState.hpp" />
     <ClInclude Include="src\collision\DebugDraw.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />

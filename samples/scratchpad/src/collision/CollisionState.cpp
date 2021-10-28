@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "CollisionState.hpp"
+#include "BallSystem.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -66,7 +67,6 @@ bool CollisionState::simulate(float dt)
 {
     m_scene.simulate(dt);
 
-    m_collisionWorld->performDiscreteCollisionDetection();
     m_collisionWorld->debugDrawWorld();
 
     return false;
@@ -87,6 +87,7 @@ void CollisionState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
+    m_scene.addSystem<BallSystem>(mb, m_collisionWorld);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
@@ -99,16 +100,8 @@ void CollisionState::buildScene()
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 12.f, 0.f });
     md.createModel(entity);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        const auto& tx = e.getComponent<cro::Transform>();
-        auto rot = tx.getRotation();
-        auto pos = tx.getWorldPosition();
-        btTransform btXf(btQuaternion(rot.x, rot.y, rot.z, rot.w), btVector3(pos.x, pos.y, pos.z));
-        m_ballObject.setWorldTransform(btXf);
-    };
+    entity.addComponent<Ball>().collisionObject = &m_ballObject;
+    m_ballObject.setUserPointer(&entity.getComponent<Ball>());
 
     md.loadFromFile("assets/collision/models/physics_test.cmt");
     entity = m_scene.createEntity();
@@ -149,28 +142,25 @@ void CollisionState::setupCollisionWorld(const cro::Mesh::Data& meshData)
 
 
     cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
+    m_groundVertices = std::make_unique<btTriangleIndexVertexArray>();
+
 
     //for (const auto& indexData : m_indexData)
     {
-        m_groundMesh = std::make_unique<btIndexedMesh>();
-        m_groundMesh->m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
-        m_groundMesh->m_numVertices = meshData.vertexCount;
-        m_groundMesh->m_vertexStride = meshData.vertexSize;
+        btIndexedMesh groundMesh;
+        groundMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
+        groundMesh.m_numVertices = meshData.vertexCount;
+        groundMesh.m_vertexStride = meshData.vertexSize;
 
-        m_groundMesh->m_numTriangles = meshData.indexData[0].indexCount / 3;
-        m_groundMesh->m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[0].data());
-        m_groundMesh->m_triangleIndexStride = 3 * sizeof(std::uint32_t);
+        groundMesh.m_numTriangles = meshData.indexData[0].indexCount / 3;
+        groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[0].data());
+        groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
+
+        m_groundVertices->addIndexedMesh(groundMesh);
     }
-
-    m_groundVertices = std::make_unique<btTriangleIndexVertexArray>();
-    m_groundVertices->addIndexedMesh(*m_groundMesh);
 
     m_groundShape = std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.get(), false);
     m_groundObject.setCollisionShape(m_groundShape.get());
 
     m_collisionWorld->addCollisionObject(&m_groundObject);
-
-    //we don't need to keep the mesh struct around
-    //but we do need to maintain the vertex data.
-    m_groundMesh.reset();
 }
