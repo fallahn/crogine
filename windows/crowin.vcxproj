@@ -332,6 +332,7 @@
     <ClCompile Include="..\crogine\src\graphics\MaterialResource.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MeshBatch.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MeshBuilder.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\MeshData.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MeshResource.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MultiRenderTexture.cpp" />
     <ClCompile Include="..\crogine\src\graphics\postprocess\PostChromeAB.cpp" />
@@ -383,6 +384,7 @@
     <None Include="..\crogine\include\crogine\ecs\Scene.inl" />
     <None Include="..\crogine\include\crogine\ecs\System.inl" />
     <None Include="..\crogine\include\crogine\ecs\SystemManager.inl" />
+    <None Include="..\crogine\include\crogine\graphics\MeshData.inl" />
     <None Include="..\crogine\include\crogine\graphics\Rectangle.inl" />
     <None Include="..\crogine\include\crogine\network\NetClient.inl" />
     <None Include="..\crogine\include\crogine\network\NetData.inl" />

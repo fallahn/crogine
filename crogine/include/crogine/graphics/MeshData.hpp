@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -37,6 +37,7 @@ source distribution.
 
 #include <cctype>
 #include <array>
+#include <vector>
 
 namespace cro
 {
@@ -119,5 +120,12 @@ namespace cro
             Box boundingBox;
             Sphere boundingSphere;
         };
+
+        /*!
+        \brief Utility to read back vertex data and index data
+        */
+        void CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint8_t>>& destIndices);
+        void CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint16_t>>& destIndices);
+        void CRO_EXPORT_API readVertexData(const Data& meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint32_t>>& destIndices);
     }
 }

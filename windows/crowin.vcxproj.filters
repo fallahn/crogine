@@ -1058,6 +1058,9 @@
     <ClCompile Include="..\crogine\src\util\Frustum.cpp">
       <Filter>Source Files\util</Filter>
     </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\MeshData.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\crogine\include\crogine\ecs\Entity.inl">
@@ -1098,6 +1101,9 @@
     </None>
     <None Include="..\crogine\include\crogine\core\Utf.inl">
       <Filter>Header Files\core</Filter>
+    </None>
+    <None Include="..\crogine\include\crogine\graphics\MeshData.inl">
+      <Filter>Header Files\graphics</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -1,0 +1,16 @@
+model physics_test
+{
+    mesh = "assets/collision/models/physics_test.cmb"
+    cast_shadows = false
+
+    material VertexLit
+    {
+        mask_colour = 0.733333,0.301961,0.000000,1.000000
+        name = "Untitled"
+        colour = 0.300885,1.000000,0.000000,1.000000
+        smooth = true
+        repeat = true
+        blendmode = "none"
+        rx_shadows = true
+    }
+}

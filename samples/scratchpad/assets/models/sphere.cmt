@@ -2,6 +2,7 @@ model sphere
 {
     mesh = sphere
     radius = 0.5
+    cast_shadows = true
 
     material VertexLit
     {
