@@ -68,6 +68,7 @@ private:
 
     btPairCachingGhostObject m_ballObject;
     btSphereShape m_ballShape;
+    cro::Entity m_ballEntity;
 
     btPairCachingGhostObject m_groundObject;
     std::unique_ptr<btTriangleIndexVertexArray> m_groundVertices;

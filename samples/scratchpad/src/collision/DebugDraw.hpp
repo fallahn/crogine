@@ -55,7 +55,7 @@ public:
 
     void drawContactPoint(const btVector3& point, const btVector3& normal, btScalar distance, int lifetime, const btVector3& colour) override {}
     void reportErrorWarning(const char*) override;
-    void draw3dText(const btVector3&, const char*) override {}
+    void draw3dText(const btVector3&, const char*) override;
     void setDebugMode(int) override;
     int getDebugMode() const override;
 

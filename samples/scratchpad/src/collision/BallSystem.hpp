@@ -39,9 +39,12 @@ struct Ball final
 {
     glm::vec3 velocity = glm::vec3(0.f);
     btPairCachingGhostObject* collisionObject = nullptr;
+    cro::Entity entity;
 
-    glm::vec3 normal = glm::vec3(0.f);
-    float penetration = 0.f;
+    enum State
+    {
+        Awake, Sleep
+    }state = Awake;
 };
 
 class BallSystem final : public cro::System

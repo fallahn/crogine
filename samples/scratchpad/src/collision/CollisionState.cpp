@@ -53,6 +53,21 @@ CollisionState::CollisionState(cro::StateStack& ss, cro::State::Context ctx)
 //public
 bool CollisionState::handleEvent(const cro::Event& evt)
 {
+    if (evt.type == SDL_KEYUP)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_l:
+        {
+            auto& ball = m_ballEntity.getComponent<Ball>();
+            ball.state = Ball::Awake;
+            ball.velocity += glm::vec3(0.01f, 20.f, -0.02f);
+        }
+            break;
+        }
+    }
+
     m_scene.forwardEvent(evt);
 
     return false;
@@ -101,7 +116,9 @@ void CollisionState::buildScene()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 12.f, 0.f });
     md.createModel(entity);
     entity.addComponent<Ball>().collisionObject = &m_ballObject;
+    entity.getComponent<Ball>().entity = entity;
     m_ballObject.setUserPointer(&entity.getComponent<Ball>());
+    m_ballEntity = entity;
 
     md.loadFromFile("assets/collision/models/physics_test.cmt");
     entity = m_scene.createEntity();
