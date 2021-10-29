@@ -65,7 +65,7 @@ namespace
 BulletDebug::BulletDebug()
     : m_vertexCount (0),
     m_uniformIndex  (-1),
-    m_debugFlags    (std::numeric_limits<std::uint32_t>::max()),
+    m_debugFlags    (0),
     m_clearVerts    (true)
 {
 #ifdef PLATFORM_DESKTOP
@@ -148,6 +148,7 @@ void BulletDebug::draw3dText(const btVector3& position, const char* text)
 void BulletDebug::setDebugMode(int mode)
 {
     m_debugFlags = mode;
+    m_vertexCount = 0;
 }
 
 int BulletDebug::getDebugMode() const

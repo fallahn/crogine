@@ -42,10 +42,15 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 
+namespace
+{
+    bool showDebug = false;
+}
+
 CollisionState::CollisionState(cro::StateStack& ss, cro::State::Context ctx)
     : cro::State    (ss, ctx),
     m_scene         (ctx.appInstance.getMessageBus()),
-    m_ballShape     (0.51f)
+    m_ballShape     (0.22f)
 {
     buildScene();
 }
@@ -61,10 +66,13 @@ bool CollisionState::handleEvent(const cro::Event& evt)
         case SDLK_l:
         {
             auto& ball = m_ballEntity.getComponent<Ball>();
-            ball.state = Ball::Awake;
-            ball.velocity += glm::vec3(0.01f, 20.f, -0.02f);
+            ball.state = Ball::State::Awake;
+            ball.velocity += glm::vec3(0.01f, 25.f, -0.02f);
         }
             break;
+        case SDLK_p:
+            showDebug = !showDebug;
+            m_debugDrawer.setDebugMode(showDebug ? std::numeric_limits<std::int32_t>::max() : 0);
         }
     }
 

@@ -53,90 +53,110 @@ BallSystem::BallSystem(cro::MessageBus& mb, std::unique_ptr<btCollisionWorld>& c
 //public
 void BallSystem::process(float dt)
 {
+    const std::int32_t StepCount = 2;
+    float stepTime = dt / StepCount;
+
     auto& entities = getEntities();
-    for (auto entity : entities)
+
+    for (auto step = 0; step < StepCount; ++step)
     {
-        auto& ball = entity.getComponent<Ball>();
-        if (ball.state == Ball::Awake)
+        for (auto entity : entities)
         {
-            auto& tx = entity.getComponent<cro::Transform>();
-
-            ball.velocity += Gravity;
-            tx.move(ball.velocity * dt);
-
-            if (tx.getPosition().y < -2.f)
+            auto& ball = entity.getComponent<Ball>();
+            if (ball.state == Ball::State::Awake)
             {
-                ball.velocity = Gravity;
-                tx.setPosition(glm::vec3(cro::Util::Random::value(-0.2f, 0.3f), 8.f, cro::Util::Random::value(-0.2f, 0.3f)));
-            }
-
-            auto rot = tx.getRotation();
-            auto pos = tx.getWorldPosition();
-            btTransform btXf(btQuaternion(rot.x, rot.y, rot.z, rot.w), btVector3(pos.x, pos.y, pos.z));
-            ball.collisionObject->setWorldTransform(btXf);
-
-            if (glm::length2(ball.velocity) < 0.1f)
-            {
-                ball.state = Ball::Sleep;
-            }
-        }
-    }
+                auto& tx = entity.getComponent<cro::Transform>();
 
 
-    m_collisionWorld->performDiscreteCollisionDetection();
+                ball.velocity += Gravity / static_cast<float>(StepCount);
 
-    auto manifoldCount = m_collisionWorld->getDispatcher()->getNumManifolds();
-
-    for (auto i = 0; i < manifoldCount; ++i)
-    {
-        auto manifold = m_collisionWorld->getDispatcher()->getManifoldByIndexInternal(i);
-        auto body0 = manifold->getBody0();
-        auto body1 = manifold->getBody1();
-        Ball* ball = nullptr;
-        glm::vec3 sumReflection = glm::vec3(0.f);
-
-        auto contactCount = manifold->getNumContacts();
-        for (auto j = 0; j < contactCount; ++j)
-        {
-            const auto& point = manifold->getContactPoint(j);
-            auto normal = point.m_normalWorldOnB;
-            auto penetration = point.getDistance();
-
-
-            if (body0->getUserPointer() != nullptr)
-            {
-                ball = static_cast<Ball*>(body0->getUserPointer());
-
-                if (ball->state == Ball::Awake)
+                if(ball.contactCount != 0)
                 {
-                    sumReflection += glm::reflect(ball->velocity, glm::vec3(normal.x(), normal.y(), normal.z()));
+                    if (step == 0)
+                    {
+                        ball.velocity *= 0.99999f;
+                    }
 
-                    auto& tx = ball->entity.getComponent<cro::Transform>();
-                    normal *= -penetration;
-                    tx.move({ normal.x(), normal.y(), normal.z() });
+                    if (glm::length2(ball.velocity) < 0.001f)
+                    {
+                        ball.state = Ball::State::Sleep;
+                    }
                 }
-            }
-            else if (body1->getUserPointer() != nullptr)
-            {
-                ball = static_cast<Ball*>(body0->getUserPointer());
+                ball.contactCount = 0;
+                tx.move(ball.velocity * stepTime);
 
-                if (ball->state == Ball::Awake)
+                if (tx.getPosition().y < -2.f)
                 {
-                    sumReflection += glm::reflect(ball->velocity, glm::vec3(-normal.x(), -normal.y(), -normal.z()));
-
-                    auto& tx = ball->entity.getComponent<cro::Transform>();
-                    normal *= penetration;
-                    tx.move({ normal.x(), normal.y(), normal.z() });
+                    ball.velocity = Gravity;
+                    tx.setPosition(glm::vec3(cro::Util::Random::value(-0.2f, 0.3f), 8.f, cro::Util::Random::value(-0.2f, 0.3f)));
                 }
+
+                auto rot = tx.getRotation();
+                auto pos = tx.getWorldPosition();
+                btTransform btXf(btQuaternion(rot.x, rot.y, rot.z, rot.w), btVector3(pos.x, pos.y, pos.z));
+                ball.collisionObject->setWorldTransform(btXf);
+
+
             }
         }
 
-        if (ball &&
-            contactCount)
+
+        m_collisionWorld->performDiscreteCollisionDetection();
+
+        auto manifoldCount = m_collisionWorld->getDispatcher()->getNumManifolds();
+
+        for (auto i = 0; i < manifoldCount; ++i)
         {
-            sumReflection /= contactCount;
-            ball->velocity = sumReflection;
-            ball->velocity *= 0.7f;
+            auto manifold = m_collisionWorld->getDispatcher()->getManifoldByIndexInternal(i);
+            auto body0 = manifold->getBody0();
+            auto body1 = manifold->getBody1();
+            Ball* ball = nullptr;
+            glm::vec3 sumNormal = glm::vec3(0.f);
+
+            auto contactCount = manifold->getNumContacts();
+            for (auto j = 0; j < contactCount; ++j)
+            {
+                const auto& point = manifold->getContactPoint(j);
+                auto normal = point.m_normalWorldOnB;
+                auto penetration = point.getDistance();
+
+
+                if (body0->getUserPointer() != nullptr)
+                {
+                    ball = static_cast<Ball*>(body0->getUserPointer());
+
+                    if (ball->state == Ball::State::Awake)
+                    {
+                        sumNormal += glm::vec3(normal.x(), normal.y(), normal.z());
+
+                        auto& tx = ball->entity.getComponent<cro::Transform>();
+                        normal *= -penetration;
+                        tx.move({ normal.x(), normal.y(), normal.z() });
+                    }
+                }
+                else if (body1->getUserPointer() != nullptr)
+                {
+                    ball = static_cast<Ball*>(body0->getUserPointer());
+
+                    if (ball->state == Ball::State::Awake)
+                    {
+                        sumNormal += glm::vec3(-normal.x(), -normal.y(), -normal.z());
+
+                        auto& tx = ball->entity.getComponent<cro::Transform>();
+                        normal *= penetration;
+                        tx.move({ normal.x(), normal.y(), normal.z() });
+                    }
+                }
+            }
+
+            if (ball &&
+                contactCount)
+            {
+                sumNormal /= contactCount;
+                ball->velocity = glm::reflect(ball->velocity, sumNormal);
+                ball->velocity *= 0.7f;
+                ball->contactCount = contactCount;
+            }
         }
     }
 }

@@ -40,11 +40,12 @@ struct Ball final
     glm::vec3 velocity = glm::vec3(0.f);
     btPairCachingGhostObject* collisionObject = nullptr;
     cro::Entity entity;
+    std::int32_t contactCount = 0;
 
-    enum State
+    enum class State
     {
         Awake, Sleep
-    }state = Awake;
+    }state = State::Awake;
 };
 
 class BallSystem final : public cro::System
