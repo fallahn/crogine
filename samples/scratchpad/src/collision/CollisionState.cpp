@@ -40,7 +40,9 @@ source distribution.
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
+#include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/gui/Gui.hpp>
 
 namespace
 {
@@ -49,10 +51,32 @@ namespace
 
 CollisionState::CollisionState(cro::StateStack& ss, cro::State::Context ctx)
     : cro::State    (ss, ctx),
-    m_scene         (ctx.appInstance.getMessageBus()),
-    m_ballShape     (0.22f)
+    m_scene         (ctx.appInstance.getMessageBus())
 {
     buildScene();
+
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Stats"))
+            {
+                const auto& ball = m_ballEntity.getComponent<Ball>();
+                ImGui::Text("Velocity %3.3f, %3.3f, %3.3f", ball.velocity.x, ball.velocity.y, ball.velocity.z);
+                ImGui::Text("Length2: %3.3f", glm::length2(ball.velocity));
+
+                switch (ball.state)
+                {
+                default:break;
+                case Ball::State::Awake:
+                    ImGui::Text("State: Awake");
+                    break;
+                case Ball::State::Sleep:
+                    ImGui::Text("State: Sleeping");
+                    break;
+                }
+
+            }
+            ImGui::End();        
+        });
 }
 
 //public
@@ -67,7 +91,7 @@ bool CollisionState::handleEvent(const cro::Event& evt)
         {
             auto& ball = m_ballEntity.getComponent<Ball>();
             ball.state = Ball::State::Awake;
-            ball.velocity += glm::vec3(0.01f, 25.f, -0.02f);
+            ball.velocity += glm::vec3(cro::Util::Random::value(-0.05f, 0.05f), 25.f, -0.02f);
         }
             break;
         case SDLK_p:
@@ -121,11 +145,10 @@ void CollisionState::buildScene()
     md.loadFromFile("assets/models/sphere.cmt");
 
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 12.f, 0.f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 5.f, 0.f });
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.021f, 0.f });
     md.createModel(entity);
-    entity.addComponent<Ball>().collisionObject = &m_ballObject;
-    entity.getComponent<Ball>().entity = entity;
-    m_ballObject.setUserPointer(&entity.getComponent<Ball>());
+    entity.addComponent<Ball>();
     m_ballEntity = entity;
 
     md.loadFromFile("assets/collision/models/physics_test.cmt");
@@ -145,8 +168,8 @@ void CollisionState::buildScene()
     camera.shadowMapBuffer.create(1024, 1024);
     callback(camera);
 
-    m_scene.getActiveCamera().getComponent<cro::Transform>().move({ 0.f, 10.f, 11.f });
-    m_scene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -20.f * cro::Util::Const::degToRad);
+    m_scene.getActiveCamera().getComponent<cro::Transform>().move({ 0.f, 5.f, 5.f });
+    m_scene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -28.f * cro::Util::Const::degToRad);
 
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -25.f * cro::Util::Const::degToRad);
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -25.f * cro::Util::Const::degToRad);
@@ -161,9 +184,6 @@ void CollisionState::setupCollisionWorld(const cro::Mesh::Data& meshData)
     m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionConfiguration.get());
 
     m_collisionWorld->setDebugDrawer(&m_debugDrawer);
-
-    m_ballObject.setCollisionShape(&m_ballShape);
-    m_collisionWorld->addCollisionObject(&m_ballObject);
 
 
     cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);

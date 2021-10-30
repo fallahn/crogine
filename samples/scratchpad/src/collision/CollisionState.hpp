@@ -34,7 +34,7 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
-
+#include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
 #include <btBulletCollisionCommon.h>
@@ -42,7 +42,7 @@ source distribution.
 
 #include <memory>
 
-class CollisionState final : public cro::State
+class CollisionState final : public cro::State, public cro::GuiClient
 {
 public:
     CollisionState(cro::StateStack&, cro::State::Context);
@@ -65,9 +65,6 @@ private:
     std::unique_ptr<btBroadphaseInterface> m_broadphaseInterface;
     std::unique_ptr<btCollisionWorld> m_collisionWorld;
 
-
-    btPairCachingGhostObject m_ballObject;
-    btSphereShape m_ballShape;
     cro::Entity m_ballEntity;
 
     btPairCachingGhostObject m_groundObject;

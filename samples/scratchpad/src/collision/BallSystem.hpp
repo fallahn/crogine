@@ -38,9 +38,6 @@ class btCollisionWorld;
 struct Ball final
 {
     glm::vec3 velocity = glm::vec3(0.f);
-    btPairCachingGhostObject* collisionObject = nullptr;
-    cro::Entity entity;
-    std::int32_t contactCount = 0;
 
     enum class State
     {
