@@ -29,6 +29,8 @@ source distribution.
 
 #include "DebugDraw.hpp"
 
+#include <crogine/core/App.hpp>
+
 #include <string>
 
 #include "../ErrorCheck.hpp"
@@ -160,6 +162,9 @@ void BulletDebug::render(glm::mat4 viewProjection)
 {
 #ifdef PLATFORM_DESKTOP
     if (m_vertexCount == 0) return;
+
+    auto windowSize = cro::App::getWindow().getSize();
+    glCheck(glViewport(0, 0, windowSize.x, windowSize.y));
 
     //blend modes/depth testing
     glCheck(glEnable(GL_DEPTH_TEST));

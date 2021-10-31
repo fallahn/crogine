@@ -5,14 +5,48 @@ model physics_test
 
     material PBR
     {
+        mask = "assets/images/grass01/mask.jpg"
         normal = "assets/images/grass01/normal.jpg"
-        name = "Untitled"
+        name = "Rough"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
         repeat = true
         rx_shadows = true
         blendmode = "none"
         diffuse = "assets/images/grass01/albedo.jpg"
-        mask = "assets/images/grass01/mask.jpg"
+
+    }
+    material PBR
+    {
+        mask_colour = 0.000000,1.000000,1.000000,1.000000
+        name = "Bunker"
+        colour = 1.000000,0.769911,0.000000,1.000000
+        smooth = true
+        repeat = true
+        rx_shadows = true
+        blendmode = "none"
+
+    }
+    material PBR
+    {
+        mask_colour = 0.000000,1.000000,1.000000,1.000000
+        name = "Fairway"
+        colour = 0.185356,0.442478,0.168377,1.000000
+        smooth = true
+        repeat = true
+        rx_shadows = true
+        blendmode = "none"
+
+    }
+    material PBR
+    {
+        mask_colour = 0.000000,1.000000,1.000000,1.000000
+        name = "Green"
+        colour = 0.264967,0.707965,0.119038,1.000000
+        smooth = true
+        repeat = true
+        rx_shadows = true
+        blendmode = "none"
+
     }
 }

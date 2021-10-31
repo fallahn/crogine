@@ -103,6 +103,8 @@ void BallSystem::process(float dt)
 
                 ball.velocity = glm::reflect(ball.velocity, -toGLM(res.m_hitNormalWorld));
                 ball.velocity *= 0.35f; //TODO this should be variable based on the terrain
+
+                ball.currentTerrain = res.m_collisionObject->getUserIndex();
             }
 
             if (glm::length2(ball.velocity) < 0.1f)

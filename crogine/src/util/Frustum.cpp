@@ -299,7 +299,7 @@ bool cro::Util::Frustum::visible(FrustumData frustum, const glm::mat4& viewSpace
                 float MoY = std::abs(M[m].y);
                 float MoZ = M[m].z;
 
-                static constexpr float epsilon = 1e-4;
+                static constexpr float epsilon = 1e-4f;
                 if (MoX < epsilon && MoY < epsilon && std::abs(MoZ) < epsilon)
                 {
                     continue;
@@ -337,7 +337,6 @@ bool cro::Util::Frustum::visible(FrustumData frustum, const glm::mat4& viewSpace
             }
         }
     }
-
 
     return true;
 }

@@ -46,6 +46,8 @@ struct Ball final
     {
         Awake, Sleep
     }state = State::Awake;
+
+    std::int32_t currentTerrain = 1;
 };
 
 class BallSystem final : public cro::System

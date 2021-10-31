@@ -47,6 +47,7 @@ class CollisionState final : public cro::State, public cro::GuiClient
 {
 public:
     CollisionState(cro::StateStack&, cro::State::Context);
+    ~CollisionState();
 
     cro::StateID getStateID() const override { return States::ScratchPad::MeshCollision; }
 
@@ -69,13 +70,13 @@ private:
 
     cro::Entity m_ballEntity;
 
-    btPairCachingGhostObject m_groundObject;
-    std::unique_ptr<btTriangleIndexVertexArray> m_groundVertices;
-    std::unique_ptr<btBvhTriangleMeshShape> m_groundShape;
+    std::vector<std::unique_ptr<btPairCachingGhostObject>> m_groundObjects;
+    std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_groundVertices;
+    std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_groundShapes;
 
     std::vector<float> m_vertexData;
     std::vector<std::vector<std::uint32_t>> m_indexData;
 
     void buildScene();
-    void setupCollisionWorld(const cro::Mesh::Data&);
+    void setupCollisionWorld(const cro::Mesh::Data&, glm::mat4);
 };

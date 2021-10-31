@@ -32,6 +32,8 @@ source distribution.
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
 #include "../ModelState.hpp" //includes tinygltf
+#include "../SrgbTransform.hpp"
+#include "../UIConsts.hpp"
 
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
@@ -77,7 +79,7 @@ namespace
 
     //TODO this should be a member really
     std::vector<Anim> animations;
-
+    bool convertVertexColourspace = true;
 
     glm::mat4 rootTransform = glm::mat4(1.f);
 }
@@ -108,6 +110,10 @@ void ModelState::showGLTFBrowser()
                 {
                     importAnim = false;
                 }
+                ImGui::Checkbox("Convert Vertex Colourspace", &convertVertexColourspace);
+                ImGui::SameLine();
+                uiConst::showToolTip("Converts incoming vertex colour data from sRGB to linear space.");
+
                 auto buttonLabel = "Import##" + IDString;
                 if (ImGui::Button(buttonLabel.c_str()))
                 {
@@ -801,7 +807,7 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
                         glm::vec3 normal(normalData[normalIndex], normalData[normalIndex + 1], normalData[normalIndex + 2]);
                         glm::vec3 tan(data[index], data[index + 1], data[index + 2]);
                         //tan = normalMat * tan;
-                        float sign = data[index + 3];
+                        float sign = std::min(1.f, std::max(-1.f, data[index + 3]));
 
                         normal = glm::normalize(normal);
                         tan = glm::normalize(tan);
@@ -826,6 +832,26 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
                     uv.t = 1.f - uv.t;
                     vertices.push_back(uv.s);
                     vertices.push_back(uv.t);
+                }
+                else if (j == cro::Mesh::Colour)
+                {
+                    //blender converts colour to sRGB space
+                    //and we mostly want linear (at least, I do :) )
+                    auto index = i * size;
+                    if (convertVertexColourspace)
+                    {
+                        vertices.push_back(srgb::linearToSrgb(data[index]));
+                        vertices.push_back(srgb::linearToSrgb(data[index + 1]));
+                        vertices.push_back(srgb::linearToSrgb(data[index + 2]));
+                        vertices.push_back(srgb::linearToSrgb(data[index + 3]));
+                    }
+                    else
+                    {
+                        vertices.push_back(data[index]);
+                        vertices.push_back(data[index+1]);
+                        vertices.push_back(data[index+2]);
+                        vertices.push_back(data[index+3]);
+                    }
                 }
                 else
                 {

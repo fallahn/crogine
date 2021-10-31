@@ -40,6 +40,8 @@ source distribution.
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
+#include <crogine/graphics/MeshBuilder.hpp>
+
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -77,10 +79,34 @@ CollisionState::CollisionState(cro::StateStack& ss, cro::State::Context ctx)
                     ImGui::Text("State: Sleeping");
                     break;
                 }
-                ImGui::Text("Current Terrain: TODO");
+                
+                switch (ball.currentTerrain)
+                {
+                default: break;
+                case 0:
+                    ImGui::Text("Terrain: Rough");
+                    break;
+                case 1:
+                    ImGui::Text("Terrain: Fairway");
+                    break;
+                case 2:
+                    ImGui::Text("Terrain: Green");
+                    break;
+                case 3:
+                    ImGui::Text("Terrain: Bunker");
+                    break;
+                }
             }
             ImGui::End();        
         });
+}
+
+CollisionState::~CollisionState()
+{
+    for (auto& o : m_groundObjects)
+    {
+        m_collisionWorld->removeCollisionObject(o.get());
+    }
 }
 
 //public
@@ -164,7 +190,7 @@ void CollisionState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
-    setupCollisionWorld(entity.getComponent<cro::Model>().getMeshData());
+    setupCollisionWorld(entity.getComponent<cro::Model>().getMeshData(), entity.getComponent<cro::Transform>().getLocalTransform());
 
     auto callback = [](cro::Camera& cam)
     {
@@ -184,7 +210,7 @@ void CollisionState::buildScene()
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -25.f * cro::Util::Const::degToRad);
 }
 
-void CollisionState::setupCollisionWorld(const cro::Mesh::Data& meshData)
+void CollisionState::setupCollisionWorld(const cro::Mesh::Data& meshData, glm::mat4 groundTransform)
 {
     m_collisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
     m_collisionDispatcher = std::make_unique<btCollisionDispatcher>(m_collisionConfiguration.get());
@@ -196,25 +222,43 @@ void CollisionState::setupCollisionWorld(const cro::Mesh::Data& meshData)
 
 
     cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
-    m_groundVertices = std::make_unique<btTriangleIndexVertexArray>();
 
+    if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
+    {
+        LogE << "Mesh has no colour property in vertices. Ground will not be created." << std::endl;
+    }
 
-    //for (const auto& indexData : m_indexData)
+    std::int32_t colourOffset = 0;
+    for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
+    {
+        colourOffset += meshData.attributes[i];
+    }
+
+    btTransform transform;
+    transform.setFromOpenGLMatrix(&groundTransform[0][0]);
+
+    //we have to create a specific object for each sub mesh
+    //to be able to tag it with a different terrain...
+    for (auto i = 0u; i < m_indexData.size(); ++i)
     {
         btIndexedMesh groundMesh;
         groundMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
         groundMesh.m_numVertices = meshData.vertexCount;
         groundMesh.m_vertexStride = meshData.vertexSize;
 
-        groundMesh.m_numTriangles = meshData.indexData[0].indexCount / 3;
-        groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[0].data());
+        groundMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
+        groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
         groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
 
-        m_groundVertices->addIndexedMesh(groundMesh);
+        
+        float terrain = m_vertexData[(m_indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset] * 255.f;
+        terrain = std::floor(terrain / 10.f);
+
+        m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh);
+        m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
+        m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
+        m_groundObjects.back()->setWorldTransform(transform);
+        m_groundObjects.back()->setUserIndex(static_cast<std::int32_t>(terrain)); // set the terrain type
+        m_collisionWorld->addCollisionObject(m_groundObjects.back().get());
     }
-
-    m_groundShape = std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.get(), false);
-    m_groundObject.setCollisionShape(m_groundShape.get());
-
-    m_collisionWorld->addCollisionObject(&m_groundObject);
 }

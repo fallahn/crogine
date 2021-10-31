@@ -8,6 +8,8 @@ See http://fallahn.itch.io/vga-golf for more details.
 
 ball_format.md - description of the *.ball files used to load custom balls. Written in markdown format.
 ball_template.blend - ball template file for Blender
+collision_colours.ase - A Photoshop palette which contains colours for terrain collision. Not an Aseprite file.
+collision_colours.kpl - A Krita palette (importable to Blender) which contains the colours used for terrain type detection.
 course_format.md - describes the .course and .hole files used to create custom courses, as well as the files associated with hole model files. Written in markdown format.
 hole_template.blend - example hole model in Blender format
 prop-export.py - Export script for Blender written in python. Used to export the positions of prop models and crowds in the *.hole format.
@@ -30,7 +32,7 @@ Models should have a scale of 1 Blender unit to 1 metre. For further examples op
 Balls
 -----
 
-Balls are 0.021 Blender units is radius, and have the origin at the bottom of the geometry, rather than the centre. Balls are also vertex coloured, any textures will be ignored, however this may change in the future. See the included ball_template Blender file for an example. Balls can be modeled however you like, although bear in mind that they appear very small in game and fine detail will not be very visible. Once a ball model has been converted to crogine format (see above) it requires a ball definition file created in a text editor, and placed in the 'balls' directory. See ball_format.md for an explanation of this file.
+Balls are 0.021 Blender units in radius, and have the origin at the bottom of the geometry, rather than the centre. Balls are also vertex coloured, any textures will be ignored, however this may change in the future. See the included ball_template Blender file for an example. Balls can be modeled however you like, although bear in mind that they appear very small in game and fine detail will not be very visible. Once a ball model has been converted to crogine format (see above) it requires a ball definition file created in a text editor, and placed in the 'balls' directory. See ball_format.md for an explanation of this file.
 
 
 
@@ -40,4 +42,17 @@ Holes actually consist of multiple files. Full details of these files are explai
 
 As a rule of thumb try not to make the green larger than approximately 10m radius from the hole. Greens larger than this require long tedious putts, which can infuriate the player!
 
-Further models can be created in blender and used as props, for example vehicles or buildings. These should be exported and converted in the same way as other models first, then in blender add a custom property named 'model_path' with the releative path of  the model in the assets directory as its value - eg 'assets/golf/models/cart.cmt'. This is used with the prop-export.py script (enabled in blender with Edit->Prefernces->Add Ons->Install...) to export the positions of prop models about the hole to a text file. This appears as File->Export->Object Positions in Blender. The output of this file can then be easily copy/pasted into a *.hole definition file.
+Further models can be created in blender and used as props, for example vehicles or buildings. These should be exported and converted in the same way as other models first, then in Blender add a custom property named 'model_path' with the releative path of  the model in the assets directory as its value - eg 'assets/golf/models/cart.cmt'. This is used with the prop-export.py script (enabled in Blender with Edit->Prefernces->Add Ons->Install...) to export the positions of prop models about the hole to a text file. This appears as File->Export->Object Positions in Blender. The output of this file can then be easily copy/pasted into a *.hole definition file.
+
+
+Collision Colours
+-----------------
+Different types of terrain a represented by different colour values. These colours are stored in the Krita palette file, collision_colours.kpl. This file can be opened in the free software Krita, or imported to Blender with the palette import add-on enabled. This allows easily setting, for example, vertex colours of course geometry so that VGA golf can determine which part of a hole is which terrain. The colour values are (in RGB format):
+
+        Rough   = 05,05,05
+        Fairway - 15,15,15
+        Green   - 25,25,25
+        Bunker  - 35,35,35
+        Water   - 45,45,45
+        Scrub   - 55,55,55
+        Hole    - 65,65,65

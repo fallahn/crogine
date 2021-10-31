@@ -96,6 +96,9 @@
     <ClCompile Include="src\LayoutStateUI.cpp">
       <Filter>Source Files\layout editor</Filter>
     </ClCompile>
+    <ClCompile Include="src\SrgbTransform.cpp">
+      <Filter>Source Files\model viewer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -160,6 +163,9 @@
     </ClInclude>
     <ClInclude Include="src\LayoutConsts.hpp">
       <Filter>Header Files\layout editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SrgbTransform.hpp">
+      <Filter>Header Files\model viewer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
