@@ -59,6 +59,10 @@ CollisionState::CollisionState(cro::StateStack& ss, cro::State::Context ctx)
         {
             if (ImGui::Begin("Stats"))
             {
+                ImGui::Text("P: Show debug");
+                ImGui::Text("L: Hit Ball");
+                ImGui::Separator();
+
                 const auto& ball = m_ballEntity.getComponent<Ball>();
                 ImGui::Text("Velocity %3.3f, %3.3f, %3.3f", ball.velocity.x, ball.velocity.y, ball.velocity.z);
                 ImGui::Text("Length2: %3.3f", glm::length2(ball.velocity));
@@ -73,7 +77,7 @@ CollisionState::CollisionState(cro::StateStack& ss, cro::State::Context ctx)
                     ImGui::Text("State: Sleeping");
                     break;
                 }
-
+                ImGui::Text("Current Terrain: TODO");
             }
             ImGui::End();        
         });
@@ -140,8 +144,13 @@ void CollisionState::buildScene()
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
 
+    /*if (m_environmentMap.loadFromFile("assets/images/hills.hdr"))
+    {
+        m_scene.setCubemap(m_environmentMap);
+    }*/
+    m_environmentMap.loadFromFile("assets/images/hills.hdr");
 
-    cro::ModelDefinition md(m_resources);
+    cro::ModelDefinition md(m_resources, &m_environmentMap);
     md.loadFromFile("assets/models/sphere.cmt");
 
     auto entity = m_scene.createEntity();
@@ -165,7 +174,7 @@ void CollisionState::buildScene()
     };
     auto& camera = m_scene.getActiveCamera().getComponent<cro::Camera>();
     camera.resizeCallback = callback;
-    camera.shadowMapBuffer.create(1024, 1024);
+    camera.shadowMapBuffer.create(2048, 2048);
     callback(camera);
 
     m_scene.getActiveCamera().getComponent<cro::Transform>().move({ 0.f, 5.f, 5.f });

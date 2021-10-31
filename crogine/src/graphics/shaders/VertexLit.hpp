@@ -362,7 +362,7 @@ namespace cro::Shaders::VertexLit
             diffuseColour *= TEXTURE(u_diffuseMap, v_texCoord0);
 
         #if defined(ALPHA_CLIP)
-        if(diffuseColour.a < u_alphaClip) discard;
+            if(diffuseColour.a < u_alphaClip) discard;
         #endif
         #endif
 

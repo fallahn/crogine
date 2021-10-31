@@ -795,9 +795,10 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
                         //calc bitan and correct for sign
                         //NOTE we flip the sign because we also flip the UV
                         auto index = i * size;
+                        auto normalIndex = i * (size - 1); //tangents have extra component containing sign
                         const auto& normalData = tempData[cro::Mesh::Normal].first;
 
-                        glm::vec3 normal(normalData[index], normalData[index + 1], normalData[index + 2]);
+                        glm::vec3 normal(normalData[normalIndex], normalData[normalIndex + 1], normalData[normalIndex + 2]);
                         glm::vec3 tan(data[index], data[index + 1], data[index + 2]);
                         //tan = normalMat * tan;
                         float sign = data[index + 3];

@@ -39,6 +39,9 @@ struct Ball final
 {
     glm::vec3 velocity = glm::vec3(0.f);
 
+    glm::vec3 prevVelocity = glm::vec3(0.f);
+    glm::vec3 prevPosition = glm::vec3(0.f);
+
     enum class State
     {
         Awake, Sleep

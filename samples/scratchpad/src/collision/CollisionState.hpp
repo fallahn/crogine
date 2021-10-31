@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
 
 #include <btBulletCollisionCommon.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
@@ -58,6 +59,7 @@ private:
 
     cro::Scene m_scene;
     cro::ResourceCollection m_resources;
+    cro::EnvironmentMap m_environmentMap;
 
     BulletDebug m_debugDrawer;
     std::unique_ptr<btCollisionConfiguration> m_collisionConfiguration;

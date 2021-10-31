@@ -41,6 +41,7 @@ namespace
 {
     constexpr glm::vec3 Gravity = glm::vec3(0.f, -0.7f, 0.f);
     const btVector3 RayLength = btVector3(0.f, 1.f, 0.f);
+    constexpr float Friction = 0.99f;
 
     btVector3 fromGLM(glm::vec3 v)
     {
@@ -69,30 +70,39 @@ void BallSystem::process(float dt)
     for (auto entity : entities)
     {
         auto& ball = entity.getComponent<Ball>();
+        auto& tx = entity.getComponent<cro::Transform>();
+
+        ball.prevPosition = tx.getPosition();
+        ball.prevVelocity = ball.velocity;
+
         if (ball.state == Ball::State::Awake)
         {
-            auto& tx = entity.getComponent<cro::Transform>();
-
             ball.velocity += Gravity;
+            ball.velocity *= Friction;
 
             tx.move(ball.velocity * dt);
-            ball.velocity *= 0.99f;
 
-            auto worldPos = fromGLM(tx.getWorldPosition());
+            auto worldPos = fromGLM(tx.getPosition());
             btCollisionWorld::ClosestRayResultCallback res(worldPos, worldPos + RayLength);
             m_collisionWorld->rayTest(worldPos, worldPos + RayLength, res);
 
             if (res.hasHit())
             {
-                //TODO we should take the difference between last pos and this
-                //and normalise it with the correct position to find out what the velocity
-                //should have been at that point (which would have been slightly less because less gravity
-                //would have been added) and then correct the velocity
+                //as we're effectively moving back up the arc to the collision
+                //point we need to recalc the velocity as it would have been, 
+                //through interpolation.
+                auto targetPos = toGLM(res.m_hitPointWorld);
+                auto travel = glm::length(tx.getPosition() - ball.prevPosition);
+                auto targetTravel = glm::length(targetPos - ball.prevPosition);
+                float interp = std::min(1.f, travel / targetTravel); 
 
-                tx.setPosition(toGLM(res.m_hitPointWorld));
+                ball.velocity = ball.prevVelocity + (Gravity * interp);
+                ball.velocity *= Friction;
+
+                tx.setPosition(targetPos);
 
                 ball.velocity = glm::reflect(ball.velocity, -toGLM(res.m_hitNormalWorld));
-                ball.velocity *= 0.35f;
+                ball.velocity *= 0.35f; //TODO this should be variable based on the terrain
             }
 
             if (glm::length2(ball.velocity) < 0.1f)
