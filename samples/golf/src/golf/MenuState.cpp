@@ -947,6 +947,18 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             }
         }
             break;
+        case PacketID::ServerError:
+            switch (evt.packet.as<std::uint8_t>())
+            {
+            default:
+                m_sharedData.errorMessage = "Server Error (Unknown)";
+                break;
+            case MessageType::MapNotFound:
+                m_sharedData.errorMessage = "Server Failed To Load Map";
+                break;
+            }
+            requestStackPush(StateID::Error);
+            break;
         break;
         }
     }
