@@ -531,7 +531,7 @@ bool GameState::validateMap()
             return false;
         }
 
-        static constexpr std::int32_t MaxProps = 4;
+        static constexpr std::int32_t MaxProps = 5;
         std::int32_t propCount = 0;
         auto& holeData = m_holeData.emplace_back();
 
@@ -577,6 +577,26 @@ bool GameState::validateMap()
                     return false;
                 }
                 propCount++;
+            }
+            else if (name == "model")
+            {
+                cro::ConfigFile modelConfig;
+                if (modelConfig.loadFromFile(holeProp.getValue<std::string>()))
+                {
+                    const auto& modelProps = modelConfig.getProperties();
+                    for (const auto& modelProp : modelProps)
+                    {
+                        if (modelProp.getName() == "mesh")
+                        {
+                            auto modelPath = modelProp.getValue<std::string>();
+                            if (cro::FileSystem::fileExists(modelPath))
+                            {
+                                holeData.modelPath = modelPath;
+                                propCount++;
+                            }
+                        }
+                    }
+                }
             }
         }
 

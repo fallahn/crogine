@@ -39,6 +39,7 @@ struct HoleData final
     glm::vec3 pin = glm::vec3(0.f);
     std::int32_t par = 0;
     std::string mapPath;
+    std::string modelPath;
     std::vector<glm::vec3> normalMap;
     cro::Entity modelEntity;
     std::vector<cro::Entity> propEntities;

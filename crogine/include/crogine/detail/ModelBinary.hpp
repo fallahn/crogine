@@ -44,7 +44,7 @@ namespace cro::Detail::ModelBinary
 {
     //appears at the beginning of the file
     static constexpr std::uint32_t MAGIC = 0x736e7542;
-    struct Header final
+    struct CRO_EXPORT_API Header final
     {
         //magic
         std::uint32_t magic = MAGIC;
@@ -64,7 +64,7 @@ namespace cro::Detail::ModelBinary
         std::uint32_t reserved3 = 0;
     };
     /*
-    Model binaries may contain eithe mesh data, skeleton data
+    Model binaries may contain either mesh data, skeleton data
     or both. They should not be empty. The version number
     is used to discover which of the subsequent properties are valid.
     */
@@ -73,7 +73,7 @@ namespace cro::Detail::ModelBinary
 
 
     //appears at Header::meshOffset bytes from beginning of the file
-    struct MeshHeader final
+    struct CRO_EXPORT_API MeshHeader final
     {
         //bytes from the beginning of the file to
         //the start of the index arrays
@@ -111,7 +111,7 @@ namespace cro::Detail::ModelBinary
 
     //appears at Header::skeletonOffset bytes from the beginning of the file
     //and always after the mesh data, if the mesh data exists
-    struct SkeletonHeader final
+    struct CRO_EXPORT_API SkeletonHeader final
     {
         std::size_t frameSize = 0; //number of joints in a frame
         std::size_t frameCount = 0;
@@ -154,7 +154,7 @@ namespace cro::Detail::ModelBinary
 
     */
 
-    struct SerialAnimation final
+    struct CRO_EXPORT_API SerialAnimation final
     {
         static constexpr std::size_t MaxChar = 64;
         char name[MaxChar] = {}; //empty space packed with zero
@@ -191,7 +191,7 @@ namespace cro::Detail::ModelBinary
         }
     };
 
-    struct SerialNotification final
+    struct CRO_EXPORT_API SerialNotification final
     {
         std::uint32_t frameID = 0;
         std::int32_t jointID = -1;
@@ -203,7 +203,7 @@ namespace cro::Detail::ModelBinary
         {}
     };
 
-    struct SerialAttachment final
+    struct CRO_EXPORT_API SerialAttachment final
     {
         glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
         glm::vec3 translation = glm::vec3(0.f);

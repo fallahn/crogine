@@ -96,16 +96,22 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         //for each pass in the list (different passes may use different cameras, eg reflections)
         for (auto p = 0u; p < m_visibleEnts.size(); ++p)
         {
-            /*const auto& frustum = camComponent.getPass(p).getFrustum();
-
-            model.m_visible = true;
-            std::size_t j = 0;
-            while (model.m_visible && j < frustum.size())
+            //TODO we need to fix cam component's frustum data for OBB testing
+            if (camComponent.isOrthographic())
             {
-                model.m_visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
-            }*/
+                const auto& frustum = camComponent.getPass(p).getFrustum();
 
-            model.m_visible = cro::Util::Frustum::visible(camComponent.getFrustumData(), camComponent.getPass(p).viewMatrix * tx.getWorldTransform(), model.getAABB());
+                model.m_visible = true;
+                std::size_t j = 0;
+                while (model.m_visible && j < frustum.size())
+                {
+                    model.m_visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
+                }
+            }
+            else
+            {
+                model.m_visible = cro::Util::Frustum::visible(camComponent.getFrustumData(), camComponent.getPass(p).viewMatrix * tx.getWorldTransform(), model.getAABB());
+            }
 
             if (model.m_visible)
             {
