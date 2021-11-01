@@ -426,6 +426,7 @@ void GameState::setNextHole()
         }
 
         //tell the local ball system which hole we're on
+        //TODO send a server error if this fails
         m_scene.getSystem<BallSystem>()->setHoleData(m_holeData[m_currentHole]);
 
         //tell clients to set up next hole

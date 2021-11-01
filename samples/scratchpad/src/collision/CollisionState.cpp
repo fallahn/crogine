@@ -233,6 +233,7 @@ void CollisionState::setupCollisionWorld(const cro::Mesh::Data& meshData, glm::m
     if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
     {
         LogE << "Mesh has no colour property in vertices. Ground will not be created." << std::endl;
+        return;
     }
 
     std::int32_t colourOffset = 0;

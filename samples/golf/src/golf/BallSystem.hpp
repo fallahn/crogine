@@ -32,8 +32,12 @@ source distribution.
 #include "Terrain.hpp"
 
 #include <crogine/ecs/System.hpp>
-
 #include <crogine/core/Clock.hpp>
+
+#include <btBulletCollisionCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+
+#include <memory>
 
 namespace cro
 {
@@ -61,12 +65,19 @@ class BallSystem final : public cro::System
 {
 public:
     BallSystem(cro::MessageBus&, const cro::Image&);
+    ~BallSystem();
+
+    BallSystem(const BallSystem&) = delete;
+    BallSystem& operator = (const BallSystem&) = delete;
+
+    BallSystem(BallSystem&&) = default;
+    BallSystem& operator = (BallSystem&&) = default;
 
     void process(float) override;
 
     glm::vec3 getWindDirection() const;
 
-    void setHoleData(const struct HoleData&);
+    bool setHoleData(const struct HoleData&);
 
 private:
 
@@ -94,4 +105,21 @@ private:
     void doCollision(cro::Entity);
     void updateWind();
     std::pair<std::uint8_t, glm::vec3> getTerrain(glm::vec3) const;
+
+
+    std::unique_ptr<btDefaultCollisionConfiguration> m_collisionCfg;
+    std::unique_ptr<btCollisionDispatcher> m_collisionDispatcher;
+    std::unique_ptr<btBroadphaseInterface> m_broadphaseInterface;
+    std::unique_ptr<btCollisionWorld> m_collisionWorld;
+
+    std::vector<std::unique_ptr<btPairCachingGhostObject>> m_groundObjects;
+    std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_groundShapes;
+    std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_groundVertices;
+
+    std::vector<float> m_vertexData;
+    std::vector<std::vector<std::uint32_t>> m_indexData;
+
+    void initCollisionWorld();
+    void clearCollisionObjects();
+    bool updateCollisionMesh(const std::string&);
 };

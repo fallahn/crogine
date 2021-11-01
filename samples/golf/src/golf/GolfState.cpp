@@ -1043,7 +1043,7 @@ void GolfState::loadAssets()
                     setTexture(modelDef, material);
 
                     holeData.modelEntity = m_gameScene.createEntity();
-                    holeData.modelEntity.addComponent<cro::Transform>();
+                    holeData.modelEntity.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f });;
                     holeData.modelEntity.addComponent<cro::Callback>();
                     modelDef.createModel(holeData.modelEntity);
                     holeData.modelEntity.getComponent<cro::Model>().setHidden(true);
@@ -2028,9 +2028,6 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
     //map collision data
     m_currentMap.loadFromFile(m_holeData[m_currentHole].mapPath);
-    glm::vec2 size(m_currentMap.getSize());
-    m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setPosition({ size.x / 2.f, 0.f, -size.y / 2.f });
-
 
     //make sure we have the correct target position
     m_cameras[CameraID::Player].getComponent<TargetInfo>().targetHeight = CameraStrokeHeight;

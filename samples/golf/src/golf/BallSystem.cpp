@@ -31,15 +31,19 @@ source distribution.
 #include "Terrain.hpp"
 #include "HoleData.hpp"
 #include "GameConsts.hpp"
+#include "../ErrorCheck.hpp"
 #include "server/ServerMessages.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/MeshBuilder.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Easings.hpp>
 
+#include <crogine/detail/ModelBinary.hpp>
+#include <crogine/detail/Types.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
 namespace
@@ -76,6 +80,13 @@ BallSystem::BallSystem(cro::MessageBus& mb, const cro::Image& mapData)
     m_windStrengthTarget = static_cast<float>(cro::Util::Random::value(1, 10)) / 10.f;
 
     updateWind();
+
+    initCollisionWorld();
+}
+
+BallSystem::~BallSystem()
+{
+    clearCollisionObjects();
 }
 
 //public
@@ -318,9 +329,11 @@ glm::vec3 BallSystem::getWindDirection() const
     return { m_windDirection.x, m_windStrength, m_windDirection.z };
 }
 
-void BallSystem::setHoleData(const HoleData& holeData)
+bool BallSystem::setHoleData(const HoleData& holeData)
 {
     m_holeData = &holeData;
+
+    return updateCollisionMesh(holeData.modelPath);
 }
 
 //private
@@ -463,4 +476,234 @@ std::pair<std::uint8_t, glm::vec3> BallSystem::getTerrain(glm::vec3 pos) const
     terrain = std::min(static_cast<std::uint8_t>(TerrainID::Scrub), terrain);
 
     return std::make_pair(terrain, m_holeData->normalMap[index]);
+}
+
+void BallSystem::initCollisionWorld()
+{
+    m_collisionCfg = std::make_unique<btDefaultCollisionConfiguration>();
+    m_collisionDispatcher = std::make_unique<btCollisionDispatcher>(m_collisionCfg.get());
+
+    m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
+    m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionCfg.get());
+}
+
+void BallSystem::clearCollisionObjects()
+{
+    for (auto& obj : m_groundObjects)
+    {
+        m_collisionWorld->removeCollisionObject(obj.get());
+    }
+
+    m_groundObjects.clear();
+    m_groundShapes.clear();
+    m_groundVertices.clear();
+
+    m_vertexData.clear();
+    m_indexData.clear();
+}
+
+bool BallSystem::updateCollisionMesh(const std::string& modelPath)
+{
+    clearCollisionObjects();
+
+    cro::Mesh::Data meshData;
+
+    cro::RaiiRWops file;
+    file.file = SDL_RWFromFile(modelPath.c_str(), "rb");
+    if (file.file)
+    {
+        cro::Detail::ModelBinary::Header header;
+        auto len = SDL_RWseek(file.file, 0, RW_SEEK_END);
+        if (len < sizeof(header))
+        {
+            LogE << "Unable to open " << modelPath << ": invalid file size" << std::endl;
+            return false;
+        }
+
+        SDL_RWseek(file.file, 0, RW_SEEK_SET);
+        SDL_RWread(file.file, &header, sizeof(header), 1);
+
+        if (header.magic != cro::Detail::ModelBinary::MAGIC)
+        {
+            LogE << "Invalid header found" << std::endl;
+            return {};
+        }
+
+        if (header.meshOffset)
+        {
+            cro::Detail::ModelBinary::MeshHeader meshHeader;
+            SDL_RWread(file.file, &meshHeader, sizeof(meshHeader), 1);
+
+            if ((meshHeader.flags & cro::VertexProperty::Position) == 0)
+            {
+                LogE << "No position data in mesh" << std::endl;
+                return false;
+            }
+
+            std::vector<float> tempVerts;
+            std::vector<std::uint32_t> sizes(meshHeader.indexArrayCount);
+            m_indexData.resize(meshHeader.indexArrayCount);
+
+            SDL_RWread(file.file, sizes.data(), meshHeader.indexArrayCount * sizeof(std::uint32_t), 1);
+
+            std::uint32_t vertStride = 0;
+            for (auto i = 0u; i < cro::Mesh::Attribute::Total; ++i)
+            {
+                if (meshHeader.flags & (1 << i))
+                {
+                    switch (i)
+                    {
+                    default:
+                    case cro::Mesh::Attribute::Bitangent:
+                        break;
+                    case cro::Mesh::Attribute::Position:
+                        vertStride += 3;
+                        meshData.attributes[i] = 3;
+                        break;
+                    case cro::Mesh::Attribute::Colour:
+                        vertStride += 4;
+                        meshData.attributes[i] = 1; //we'll only store the red channel for reading terrain
+                        break;
+                    case cro::Mesh::Attribute::Normal:
+                        vertStride += 3;
+                        break;
+                    case cro::Mesh::Attribute::UV0:
+                    case cro::Mesh::Attribute::UV1:
+                        vertStride += 2;
+                        break;
+                    case cro::Mesh::Attribute::Tangent:
+                    case cro::Mesh::Attribute::BlendIndices:
+                    case cro::Mesh::Attribute::BlendWeights:
+                        vertStride += 4;
+                        break;
+                    }
+                }
+            }
+
+            auto pos = SDL_RWtell(file.file);
+            auto vertSize = meshHeader.indexArrayOffset - pos;
+            tempVerts.resize(vertSize / sizeof(float));
+            SDL_RWread(file.file, tempVerts.data(), vertSize, 1);
+            CRO_ASSERT(tempVerts.size() % vertStride == 0, "");
+
+            for (auto i = 0u; i < meshHeader.indexArrayCount; ++i)
+            {
+                m_indexData[i].resize(sizes[i]);
+                SDL_RWread(file.file, m_indexData[i].data(), sizes[i] * sizeof(std::uint32_t), 1);
+            }
+
+            //process vertex data
+            for (auto i = 0u; i < tempVerts.size(); i += vertStride)
+            {
+                std::uint32_t offset = 0;
+                for (auto j = 0u; j < cro::Mesh::Attribute::Total; ++j)
+                {
+                    if (meshHeader.flags & (1 << j))
+                    {
+                        switch (j)
+                        {
+                        default: break;
+                        case cro::Mesh::Attribute::Position:
+                            m_vertexData.push_back(tempVerts[i + offset]);
+                            m_vertexData.push_back(tempVerts[i + offset + 1]);
+                            m_vertexData.push_back(tempVerts[i + offset + 2]);
+
+                            offset += 3;
+                            meshData.attributeFlags |= cro::VertexProperty::Position;
+                            break;
+                        case cro::Mesh::Attribute::Colour:
+                            m_vertexData.push_back(tempVerts[i + offset]);
+                            /*m_vertexData.push_back(tempVerts[i + offset + 1]);
+                            m_vertexData.push_back(tempVerts[i + offset + 2]);
+                            m_vertexData.push_back(tempVerts[i + offset + 3]);*/
+                            offset += 1;
+                            meshData.attributeFlags |= cro::VertexProperty::Colour;
+                            break;
+                        case cro::Mesh::Attribute::Normal:
+                        case cro::Mesh::Attribute::Tangent:
+                        case cro::Mesh::Attribute::Bitangent:
+                        case cro::Mesh::Attribute::UV0:
+                        case cro::Mesh::Attribute::UV1:
+                        case cro::Mesh::Attribute::BlendIndices:
+                        case cro::Mesh::Attribute::BlendWeights:
+                            break;
+                        }
+                    }
+                }
+            }
+
+            meshData.primitiveType = GL_TRIANGLES;
+
+            for (const auto& a : meshData.attributes)
+            {
+                meshData.vertexSize += a;
+            }
+            meshData.vertexSize *= sizeof(float);
+            meshData.vertexCount = m_vertexData.size() / (meshData.vertexSize / sizeof(float));
+
+            meshData.submeshCount = meshHeader.indexArrayCount;
+            for (auto i = 0u; i < meshData.submeshCount; ++i)
+            {
+                meshData.indexData[i].format = GL_UNSIGNED_INT;
+                meshData.indexData[i].primitiveType = meshData.primitiveType;
+                meshData.indexData[i].indexCount = static_cast<std::uint32_t>(m_indexData[i].size());
+            }
+        }
+    }
+    else
+    {
+        LogE << modelPath << ": " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+
+    if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
+    {
+        LogE << "No colour property found in collision mesh" << std::endl;
+        return false;
+    }
+
+
+
+    std::int32_t colourOffset = 0;
+    for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
+    {
+        colourOffset += meshData.attributes[i];
+    }
+
+    //TODO make this const
+    glm::mat4 groundTransform = glm::translate(glm::mat4(1.f), glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f));
+    btTransform transform;
+    transform.setFromOpenGLMatrix(&groundTransform[0][0]);
+
+    //we have to create a specific object for each sub mesh
+    //to be able to tag it with a different terrain...
+    for (auto i = 0u; i < m_indexData.size(); ++i)
+    {
+        btIndexedMesh groundMesh;
+        groundMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
+        groundMesh.m_numVertices = meshData.vertexCount;
+        groundMesh.m_vertexStride = meshData.vertexSize;
+
+        groundMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
+        groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
+        groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
+
+
+        float terrain = std::min(1.f, std::max(0.f, m_vertexData[(m_indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset])) * 255.f;
+        terrain = std::floor(terrain / 10.f);
+        if (terrain > TerrainID::Hole)
+        {
+            terrain = TerrainID::Fairway;
+        }
+
+        m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh);
+        m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
+        m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
+        m_groundObjects.back()->setWorldTransform(transform);
+        m_groundObjects.back()->setUserIndex(static_cast<std::int32_t>(terrain)); // set the terrain type
+        m_collisionWorld->addCollisionObject(m_groundObjects.back().get());
+    }
+
+    return true;
 }

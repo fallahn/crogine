@@ -9,7 +9,7 @@ hole 03
 
     crowd
     {
-        position - 107.6,0,88
+        position = 107.6,0,88
         rotation = -29
     }
 
