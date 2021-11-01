@@ -29,6 +29,7 @@ source distribution.
 
 #include "CollisionState.hpp"
 #include "BallSystem.hpp"
+#include "../StateIDs.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -63,6 +64,7 @@ CollisionState::CollisionState(cro::StateStack& ss, cro::State::Context ctx)
             {
                 ImGui::Text("P: Show debug");
                 ImGui::Text("L: Hit Ball");
+                ImGui::Text("Backspace: Quit");
                 ImGui::Separator();
 
                 const auto& ball = m_ballEntity.getComponent<Ball>();
@@ -127,6 +129,11 @@ bool CollisionState::handleEvent(const cro::Event& evt)
         case SDLK_p:
             showDebug = !showDebug;
             m_debugDrawer.setDebugMode(showDebug ? std::numeric_limits<std::int32_t>::max() : 0);
+            break;
+        case SDLK_BACKSPACE:
+            requestStackPop();
+            requestStackPush(States::ScratchPad::MainMenu);
+            break;
         }
     }
 

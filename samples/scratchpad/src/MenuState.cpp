@@ -51,6 +51,7 @@ using namespace sp;
 namespace
 {
     constexpr glm::vec2 ViewSize(1920.f, 1080.f);
+    constexpr float MenuSpacing = 40.f;
 
     bool activated(const cro::ButtonEvent& evt)
     {
@@ -190,7 +191,28 @@ void MenuState::createScene()
                     requestStackPush(States::ScratchPad::BatCat);
                 }
             });
-    textPos.y -= 40.f;
+    textPos.y -= MenuSpacing;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(textPos);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(m_font).setString("Mesh Collision");
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
+    entity.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
+    entity.getComponent<cro::Text>().setOutlineThickness(1.f);
+    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(States::ScratchPad::MeshCollision);
+                }
+            });
+    textPos.y -= MenuSpacing;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(textPos);
@@ -212,7 +234,7 @@ void MenuState::createScene()
                 }
             });
 
-    textPos.y -= 80.f;
+    textPos.y -= MenuSpacing * 2.f;
 
 
 

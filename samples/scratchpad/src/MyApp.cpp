@@ -93,7 +93,8 @@ bool MyApp::initialise()
     m_stateStack.registerState<CollisionState>(States::ScratchPad::MeshCollision);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::MeshCollision);
+    //m_stateStack.pushState(States::ScratchPad::MeshCollision);
+    m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
 #endif
