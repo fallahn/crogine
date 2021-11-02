@@ -228,3 +228,39 @@ static const std::string CelFragmentShader = R"(
 
         FRAG_OUT = vec4(colour.rgb, 1.0);
     })";
+
+
+const std::string NormalMapVertexShader = R"(
+    ATTRIBUTE vec4 a_position;
+    ATTRIBUTE vec3 a_normal;
+
+    uniform mat4 u_projectionMatrix;
+
+    VARYING_OUT vec3 v_normal;
+
+    void main()
+    {
+        gl_Position = u_projectionMatrix * a_position;
+        v_normal = a_normal;
+
+        //yeah should be a normal matrix, but YOLO
+        float z = v_normal.y;
+        v_normal.y = -v_normal.z;
+        v_normal.z = z;
+    }
+)";
+
+const std::string NormalMapFragmentShader = R"(
+    OUTPUT
+
+    VARYING_IN vec3 v_normal;
+
+    void main()
+    {
+        vec3 normal = normalize(v_normal);
+        normal += 1.0;
+        normal /= 2.0;
+
+        FRAG_OUT = vec4(normal, 1.0);
+    }
+)";

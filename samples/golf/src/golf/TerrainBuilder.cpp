@@ -362,7 +362,18 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_slopeProperties.meshData->boundingSphere.radius = glm::length(m_slopeProperties.meshData->boundingSphere.centre);
     slopeEntity = entity;
 
-    //create an update the initial normal map
+    //create and update the initial normal map
+    m_normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
+    glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
+    glm::vec2 mapSize(MapSize);
+    glm::mat4 projMat = glm::ortho(-mapSize.x / 2.f, mapSize.x / 2.f, -mapSize.y / 2.f, mapSize.y / 2.f, -10.f, 10.f);
+    auto normalViewProj = projMat * viewMat;
+
+    //we can set this once so we don't need to store the matrix
+    glCheck(glUseProgram(m_normalShader.getGLHandle()));
+    glCheck(glUniformMatrix4fv(m_normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
+    glCheck(glUseProgram(0));
+
     m_normalMap.create(MapSize.x, MapSize.y, false);
     if (m_currentHole < m_holeData.size())
     {
@@ -557,7 +568,7 @@ void TerrainBuilder::threadFunc()
                 //update the vertex data for the slope indicator
                 //TODO is this the same size as the loop above? could save on double iteration
                 //m_normalMapImage = loadNormalMap(m_normalMapBuffer, m_holeData[m_currentHole].mapPath);
-                loadNormalMap(m_normalMapBuffer, m_normalMapImage); //image is populated from render texture
+                loadNormalMap(m_normalMapBuffer, m_normalMapImage); //image is populated when rendering texture
 
                 m_slopeBuffer.clear();
                 m_slopeIndices.clear();
@@ -612,10 +623,48 @@ void TerrainBuilder::threadFunc()
 
 void TerrainBuilder::renderNormalMap()
 {
+    //hmmm is there some of this we can pre-process to save doing it here?
+    const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
+    std::size_t normalOffset = 0;
+    for (auto i = 0u; i < cro::Mesh::Normal; ++i)
+    {
+        normalOffset += meshData.attributes[i];
+    }
+
+    const auto& attribs = m_normalShader.getAttribMap();
+    auto vaoCount = static_cast<std::int32_t>(meshData.submeshCount);
+
+    std::vector<std::uint32_t> vaos(vaoCount);
+    glCheck(glGenVertexArrays(vaoCount, vaos.data()));
+
+    for (auto i = 0u; i < vaos.size(); ++i)
+    {
+        glCheck(glBindVertexArray(vaos[i]));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Position]));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Position], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), 0));
+        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Normal]));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Normal], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), (void*)(normalOffset * sizeof(float))));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
+    }
+    
+    glCheck(glUseProgram(m_normalShader.getGLHandle()));
+    glCheck(glDisable(GL_CULL_FACE));
+
     static const cro::Colour ClearColour(0x7f7fffff);
     m_normalMap.clear(ClearColour);
+    for (auto i = 0u; i < vaos.size(); ++i)
+    {
+        glCheck(glBindVertexArray(vaos[i]));
+        glDrawElements(GL_TRIANGLES, meshData.indexData[i].indexCount, GL_UNSIGNED_INT, 0);
+    }
     m_normalMap.display();
 
+    glCheck(glBindVertexArray(0));
+    glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
+
+
     //TODO this might be faster with glReadPixels directly from the above framebuffer?
+    //probably doesn't matter if it's fast enough.
     m_normalMap.getTexture().saveToImage(m_normalMapImage);
 }

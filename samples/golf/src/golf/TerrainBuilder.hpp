@@ -140,5 +140,6 @@ private:
     void threadFunc();
 
     cro::RenderTexture m_normalMap;
+    cro::Shader m_normalShader;
     void renderNormalMap(); //don't call this from thread!!
 };
