@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/ecs/components/BillboardCollection.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 
 #include <vector>
 #include <thread>
@@ -137,4 +138,7 @@ private:
     std::unique_ptr<std::thread> m_thread;
 
     void threadFunc();
+
+    cro::RenderTexture m_normalMap;
+    void renderNormalMap(); //don't call this from thread!!
 };

@@ -1039,6 +1039,8 @@ void GolfState::loadAssets()
             {
                 if (modelDef.loadFromFile(holeProp.getValue<std::string>()))
                 {
+                    //TODO this only works if all materials have the same texture
+                    //however we can replace this with the default material anyway
                     auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
                     setTexture(modelDef, material);
 
@@ -1047,7 +1049,10 @@ void GolfState::loadAssets()
                     holeData.modelEntity.addComponent<cro::Callback>();
                     modelDef.createModel(holeData.modelEntity);
                     holeData.modelEntity.getComponent<cro::Model>().setHidden(true);
-                    holeData.modelEntity.getComponent<cro::Model>().setMaterial(0, material);
+                    for (auto m = 0u; m < holeData.modelEntity.getComponent<cro::Model>().getMeshData().submeshCount; ++m)
+                    {
+                        holeData.modelEntity.getComponent<cro::Model>().setMaterial(m, material);
+                    }
                     propCount++;
                 }
                 else

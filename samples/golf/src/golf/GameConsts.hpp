@@ -178,60 +178,64 @@ static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, floa
     }
 }
 
+static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const cro::Image& img)
+{
+    dst.resize(MapSize.x * MapSize.y, glm::vec3(0.f, 1.f, 0.f));
+
+    std::uint32_t stride = 0;
+    if (img.getFormat() == cro::ImageFormat::RGB)
+    {
+        stride = 3;
+    }
+    else if (img.getFormat() == cro::ImageFormat::RGBA)
+    {
+        stride = 4;
+    }
+
+    if (stride != 0)
+    {
+        auto pixels = img.getPixelData();
+        for (auto i = 0u, j = 0u; i < dst.size(); ++i, j += stride)
+        {
+            dst[i] = { pixels[j], pixels[j + 2], pixels[j + 1] };
+            dst[i] /= 255.f;
+
+            dst[i].x = std::max(0.45f, std::min(0.55f, dst[i].x)); //clamps to +- 0.05f. I think. :3
+            dst[i].z = std::max(0.45f, std::min(0.55f, dst[i].z));
+
+            dst[i] *= 2.f;
+            dst[i] -= 1.f;
+            dst[i] = glm::normalize(dst[i]);
+            dst[i].z *= -1.f;
+        }
+    }
+
+    return img;
+}
+
 static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::string& path)
 {
     static const cro::Colour DefaultColour(0x7f7fffff);
-    
-    dst.resize(MapSize.x * MapSize.y, glm::vec3(0.f, 1.f, 0.f));
 
     auto extension = cro::FileSystem::getFileExtension(path);
     auto filePath = path.substr(0, path.length() - extension.length());
-
     filePath += "n" + extension;
 
     cro::Image img;
-    if (img.loadFromFile(filePath))
-    {
-        auto size = img.getSize();
-        if (size != MapSize)
-        {
-            LogW << path << ": not loaded, image not 320x200" << std::endl;
-            img.create(320, 300, DefaultColour);
-            return img;
-        }
-
-        std::uint32_t stride = 0;
-        if (img.getFormat() == cro::ImageFormat::RGB)
-        {
-            stride = 3;
-        }
-        else if (img.getFormat() == cro::ImageFormat::RGBA)
-        {
-            stride = 4;
-        }
-
-        if (stride != 0)
-        {
-            auto pixels = img.getPixelData();
-            for (auto i = 0u, j = 0u; i < dst.size(); ++i, j += stride)
-            {
-                dst[i] = { pixels[j], pixels[j + 2], pixels[j + 1] };
-                dst[i] /= 255.f;
-
-                dst[i].x = std::max(0.45f, std::min(0.55f, dst[i].x)); //clamps to +- 0.05f. I think. :3
-                dst[i].z = std::max(0.45f, std::min(0.55f, dst[i].z));
-
-                dst[i] *= 2.f;
-                dst[i] -= 1.f;
-                dst[i] = glm::normalize(dst[i]);
-                dst[i].z *= -1.f;
-            }
-        }
-    }
-    else
+    if (!img.loadFromFile(filePath))
     {
         img.create(320, 300, DefaultColour);
     }
+
+    auto size = img.getSize();
+    if (size != MapSize)
+    {
+        LogW << path << ": not loaded, image not 320x200" << std::endl;
+        img.create(320, 300, DefaultColour);
+    }
+
+    loadNormalMap(dst, img);
+
     return img;
 }
 

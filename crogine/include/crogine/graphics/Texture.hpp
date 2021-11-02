@@ -168,6 +168,14 @@ namespace cro
         */
         bool saveToFile(const std::string& path) const;
 
+        /*
+        \brief Saves the texture to the given image file.
+        Resizes the image to the texture size if necessary
+        \param image The destination image
+        \returns true if successful, else false
+        */
+        bool saveToImage(cro::Image& image) const;
+
     private:
         glm::uvec2 m_size;
         ImageFormat::Type m_format;

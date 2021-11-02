@@ -128,33 +128,34 @@ TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
     m_wantsUpdate   (false)
 {
 #ifdef CRO_DEBUG_
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("Terrain"))
-    //        {
-    //            auto slopePos = slopeEntity.getComponent<cro::Transform>().getPosition();
-    //            if (ImGui::SliderFloat("Slope", &slopePos.y, -10.f, 10.f))
-    //            {
-    //                slopeEntity.getComponent<cro::Transform>().setPosition(slopePos);
-    //            }
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Terrain"))
+            {
+                /*auto slopePos = slopeEntity.getComponent<cro::Transform>().getPosition();
+                if (ImGui::SliderFloat("Slope", &slopePos.y, -10.f, 10.f))
+                {
+                    slopeEntity.getComponent<cro::Transform>().setPosition(slopePos);
+                }
 
-    //            auto pos = m_terrainEntity.getComponent<cro::Transform>().getPosition();
-    //            if (ImGui::SliderFloat("Height", &pos.y, -10.f, 10.f))
-    //            {
-    //                m_terrainEntity.getComponent<cro::Transform>().setPosition(pos);
-    //            }
+                auto pos = m_terrainEntity.getComponent<cro::Transform>().getPosition();
+                if (ImGui::SliderFloat("Height", &pos.y, -10.f, 10.f))
+                {
+                    m_terrainEntity.getComponent<cro::Transform>().setPosition(pos);
+                }
 
-    //            auto visible = m_terrainEntity.getComponent<cro::Model>().isVisible();
-    //            ImGui::Text("Visible: %s", visible ? "yes" : "no");
+                auto visible = m_terrainEntity.getComponent<cro::Model>().isVisible();
+                ImGui::Text("Visible: %s", visible ? "yes" : "no");
 
-    //            if (ImGui::SliderFloat("Morph", &m_terrainProperties.morphTime, 0.f, 1.f))
-    //            {
-    //                glCheck(glUseProgram(m_terrainProperties.shaderID));
-    //                glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
-    //            }
-    //        }
-    //        ImGui::End();        
-    //    });
+                if (ImGui::SliderFloat("Morph", &m_terrainProperties.morphTime, 0.f, 1.f))
+                {
+                    glCheck(glUseProgram(m_terrainProperties.shaderID));
+                    glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
+                }*/
+                ImGui::Image(m_normalMap.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();        
+        });
 #endif
 }
 
@@ -361,6 +362,13 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_slopeProperties.meshData->boundingSphere.radius = glm::length(m_slopeProperties.meshData->boundingSphere.centre);
     slopeEntity = entity;
 
+    //create an update the initial normal map
+    m_normalMap.create(MapSize.x, MapSize.y, false);
+    if (m_currentHole < m_holeData.size())
+    {
+        renderNormalMap();
+    }
+
     //launch the thread - wants update is initially true
     //so we should create the first layout right away
     m_wantsUpdate = m_holeData.size() > m_currentHole;
@@ -428,7 +436,11 @@ void TerrainBuilder::update(std::size_t holeIndex)
         //signal to the thread we want to update the buffers
         //ready for next time
         m_currentHole++;
-        m_wantsUpdate = m_currentHole < m_holeData.size();
+        if (m_currentHole < m_holeData.size())
+        {
+            renderNormalMap();
+            m_wantsUpdate = true;
+        }
     }
 }
 
@@ -544,7 +556,9 @@ void TerrainBuilder::threadFunc()
 
                 //update the vertex data for the slope indicator
                 //TODO is this the same size as the loop above? could save on double iteration
-                m_normalMapImage = loadNormalMap(m_normalMapBuffer, m_holeData[m_currentHole].mapPath);
+                //m_normalMapImage = loadNormalMap(m_normalMapBuffer, m_holeData[m_currentHole].mapPath);
+                loadNormalMap(m_normalMapBuffer, m_normalMapImage); //image is populated from render texture
+
                 m_slopeBuffer.clear();
                 m_slopeIndices.clear();
 
@@ -594,4 +608,14 @@ void TerrainBuilder::threadFunc()
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
     }
+}
+
+void TerrainBuilder::renderNormalMap()
+{
+    static const cro::Colour ClearColour(0x7f7fffff);
+    m_normalMap.clear(ClearColour);
+    m_normalMap.display();
+
+    //TODO this might be faster with glReadPixels directly from the above framebuffer?
+    m_normalMap.getTexture().saveToImage(m_normalMapImage);
 }
