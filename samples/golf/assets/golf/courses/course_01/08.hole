@@ -2,9 +2,9 @@ hole 08
 {
     map = "assets/golf/courses/course_01/08.png"
     model = "assets/golf/models/course_01/08.cmt"
-    pin = 295, 160
-    target = 295, 160
-    tee = 32, 50
+    pin = 295, 0, -160
+    target = 295, 0, -160
+    tee = 32, 0, -50
     par = 3
 
     crowd

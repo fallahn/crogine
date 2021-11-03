@@ -1007,20 +1007,17 @@ void GolfState::loadAssets()
             else if (name == "pin")
             {
                 //TODO not sure how we ensure these are sane values?
-                auto pin = holeProp.getValue<glm::vec2>();
-                holeData.pin = { pin.x, 0.f, -pin.y };
+                holeData.pin = holeProp.getValue<glm::vec3>();
                 propCount++;
             }
             else if (name == "tee")
             {
-                auto tee = holeProp.getValue<glm::vec2>();
-                holeData.tee = { tee.x, 0.f, -tee.y };
+                holeData.tee = holeProp.getValue<glm::vec3>();
                 propCount++;
             }
             else if (name == "target")
             {
-                auto target = holeProp.getValue<glm::vec2>();
-                holeData.target = { target.x, 0.f, -target.y };
+                holeData.target = holeProp.getValue<glm::vec3>();
                 if (glm::length2(holeData.target) > 0)
                 {
                     propCount++;

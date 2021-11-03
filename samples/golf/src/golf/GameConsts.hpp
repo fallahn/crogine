@@ -61,6 +61,7 @@ static constexpr float PlayerShadowOffset = 0.04f;
 
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::uvec2 LabelTextureSize(128u, 64u);
+static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, -static_cast<float>(MapSize.y / 2));
 
 static const cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
 

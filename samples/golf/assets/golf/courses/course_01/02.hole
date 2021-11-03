@@ -2,9 +2,9 @@ hole 02
 {
     map = "assets/golf/courses/course_01/02.png"
     model = "assets/golf/models/course_01/02.cmt"
-    pin = 22, 180
-    target = 22, 180
-    tee = 280, 25
+    pin = 22, 0, -180
+    target = 22, 0, -180
+    tee = 280, 0, -25
     par = 3
 
 

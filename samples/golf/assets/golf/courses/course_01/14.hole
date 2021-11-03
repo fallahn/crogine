@@ -2,9 +2,9 @@ hole 14
 {
     map = "assets/golf/courses/course_01/14.png"
     model = "assets/golf/models/course_01/14.cmt"
-    pin = 35, 27
-    target = 177, 83
-    tee = 288, 180
+    pin = 35, 0, -27
+    target = 177, 0, -83
+    tee = 288, 0, -180
     par = 3
 
     prop
