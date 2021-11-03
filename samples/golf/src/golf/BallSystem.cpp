@@ -671,7 +671,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
         colourOffset += meshData.attributes[i];
     }
 
-    //TODO make this const
+    //TODO make this const (or outright remove it)
     glm::mat4 groundTransform = glm::translate(glm::mat4(1.f), glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f));
     btTransform transform;
     transform.setFromOpenGLMatrix(&groundTransform[0][0]);

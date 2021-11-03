@@ -102,6 +102,8 @@ namespace
 #include "MinimapShader.inl"
 #include "WireframeShader.inl"
 
+    std::int32_t debugFlags = 0;
+
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
     const cro::Time MouseHideTime = cro::seconds(3.f);
 
@@ -268,6 +270,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
         break;
+        case SDLK_HOME:
+            debugFlags = (debugFlags == 0) ? std::numeric_limits<std::int32_t>::max() : 0;
+            m_collisionMesh.setDebugFlags(debugFlags);
+            break;
 #endif
         }
     }
@@ -686,6 +692,9 @@ void GolfState::render()
     glCheck(glEnable(GL_PROGRAM_POINT_SIZE));
     m_gameSceneTexture.clear();
     m_gameScene.render(m_gameSceneTexture);
+#ifdef CRO_DEBUG_
+    m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
+#endif
     m_gameSceneTexture.display();
 
     //update mini green if ball is there
@@ -1973,6 +1982,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
     m_terrainBuilder.update(hole);
     m_gameScene.getSystem<ClientCollisionSystem>()->setMap(hole);
+    m_collisionMesh.updateCollisionMesh(m_holeData[hole].modelEntity.getComponent<cro::Model>().getMeshData());
 
     //create hole model transition
     auto* propModels = &m_holeData[m_currentHole].propEntities;
@@ -2189,11 +2199,11 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
     //set green cam position
     auto holePos = m_holeData[m_currentHole].pin;
-    m_greenCam.getComponent<cro::Transform>().setPosition({ holePos.x, 0.9f, holePos.z });
+    m_greenCam.getComponent<cro::Transform>().setPosition({ holePos.x, 6.f, holePos.z });
 
 
     //and the uh, other green cam. The spectator one
-    m_cameras[CameraID::Green].getComponent<cro::Transform>().setPosition({ holePos.x, 2.f, holePos.z });
+    m_cameras[CameraID::Green].getComponent<cro::Transform>().setPosition({ holePos.x, 3.f, holePos.z });
     //TODO what's a reasonable way to find an offset for this?
     //perhaps move at least 15m away in opposite direction from map centre?
 
@@ -2246,9 +2256,11 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     target *= 1.f - ((1.f - 0.08f) * distNorm);
     target += position;
 
-    camEnt.getComponent<cro::Transform>().setPosition({ position.x, height, position.z });
+    auto [terrainHeight, terrainType] = m_collisionMesh.getTerrain(position);
 
-    auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), glm::vec3(target.x, height * heightMultiplier, target.z), cro::Transform::Y_AXIS);
+    camEnt.getComponent<cro::Transform>().setPosition({ position.x, terrainHeight + height, position.z });
+
+    auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), glm::vec3(target.x, terrainHeight + (height * heightMultiplier), target.z), cro::Transform::Y_AXIS);
     camEnt.getComponent<cro::Transform>().setRotation(glm::inverse(lookat));
 
     auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();

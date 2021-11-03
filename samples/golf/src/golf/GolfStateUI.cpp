@@ -611,7 +611,7 @@ void GolfState::buildUI()
         data.currentSize += diff * (dt * 4.f);
 
         auto& cam = e.getComponent<cro::Camera>();
-        cam.setOrthographic(-data.currentSize, data.currentSize, -data.currentSize, data.currentSize, -0.15f, 1.f);
+        cam.setOrthographic(-data.currentSize, data.currentSize, -data.currentSize, data.currentSize, -0.15f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 

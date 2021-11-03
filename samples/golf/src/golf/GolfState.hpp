@@ -34,6 +34,7 @@ source distribution.
 #include "InputParser.hpp"
 #include "TerrainBuilder.hpp"
 #include "CameraFollowSystem.hpp"
+#include "CollisionMesh.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -98,6 +99,7 @@ private:
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;
     ActivePlayer m_currentPlayer;
+    CollisionMesh m_collisionMesh;
 
     TerrainBuilder m_terrainBuilder;
 

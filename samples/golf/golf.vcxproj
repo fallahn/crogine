@@ -301,6 +301,8 @@
     <ClCompile Include="src\golf\BallSystem.cpp" />
     <ClCompile Include="src\golf\CameraFollowSystem.cpp" />
     <ClCompile Include="src\golf\ClientCollisionSystem.cpp" />
+    <ClCompile Include="src\golf\CollisionMesh.cpp" />
+    <ClCompile Include="src\golf\DebugDraw.cpp" />
     <ClCompile Include="src\golf\ErrorState.cpp" />
     <ClCompile Include="src\golf\GolfCartSystem.cpp" />
     <ClCompile Include="src\golf\GolfParticleDirector.cpp" />
@@ -341,8 +343,10 @@
     <ClInclude Include="src\golf\ClientCollisionSystem.hpp" />
     <ClInclude Include="src\golf\ClientPacketData.hpp" />
     <ClInclude Include="src\golf\Clubs.hpp" />
+    <ClInclude Include="src\golf\CollisionMesh.hpp" />
     <ClInclude Include="src\golf\CommandIDs.hpp" />
     <ClInclude Include="src\golf\CommonConsts.hpp" />
+    <ClInclude Include="src\golf\DebugDraw.hpp" />
     <ClInclude Include="src\golf\ErrorState.hpp" />
     <ClInclude Include="src\golf\GameConsts.hpp" />
     <ClInclude Include="src\golf\GolfCartSystem.hpp" />

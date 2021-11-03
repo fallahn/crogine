@@ -3,6 +3,8 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/BallSystem.cpp
   ${PROJECT_DIR}/golf/CameraFollowSystem.cpp
   ${PROJECT_DIR}/golf/ClientCollisionSystem.cpp
+  ${PROJECT_DIR}/golf/CollisionMesh.cpp
+  ${PROJECT_DIR}/golf/DebugDraw.cpp
   ${PROJECT_DIR}/golf/ErrorState.cpp
   ${PROJECT_DIR}/golf/GolfCartSystem.cpp
   ${PROJECT_DIR}/golf/GolfParticleDirector.cpp

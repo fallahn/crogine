@@ -467,6 +467,16 @@ void TerrainBuilder::setSlopePosition(glm::vec3 position)
 //private
 void TerrainBuilder::threadFunc()
 {
+    const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y)
+    {
+        auto size = m_normalMapImage.getSize();
+        x = std::min(size.x - 1, std::max(0u, x));
+        y = std::min(size.y - 1, std::max(0u, y));
+
+        float height = static_cast<float>(m_normalMapImage.getPixel(x, y)[3]) / 255.f;
+        return m_holeHeight.bottom + (m_holeHeight.height * height);
+    };
+
     while (m_threadRunning)
     {
         if (m_wantsUpdate)
@@ -490,8 +500,7 @@ void TerrainBuilder::threadFunc()
                     if (terrain == TerrainID::Rough)
                     {
                         float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
-                        float height = static_cast<float>(m_normalMapImage.getPixel(static_cast<std::size_t>(x), static_cast<std::size_t>(y))[3]) / 255.f;
-                        height = m_holeHeight.bottom + (m_holeHeight.height * height);
+                        float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
 
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                         bb.position = { x, height, -y };
@@ -584,9 +593,10 @@ void TerrainBuilder::threadFunc()
                             float posZ = -(static_cast<float>(y) + 0.5f);
 
                             auto normal = m_normalMapBuffer[y * MapSize.x + x];
+                            auto height = readHeightMap(x, y);
 
                             auto& vert = m_slopeBuffer.emplace_back();
-                            vert.position = { posX, 0.f, posZ };
+                            vert.position = { posX, height, posZ };
                             vert.colour = { 1.f, 1.f, 0.f, 0.5f };
 
                             m_slopeIndices.push_back(currIndex++);
@@ -599,7 +609,7 @@ void TerrainBuilder::threadFunc()
                             dir *= strength;
                             
                             auto& vert2 = m_slopeBuffer.emplace_back();
-                            vert2.position = { posX + dir.x, 0.f, posZ + dir.y };
+                            vert2.position = { posX + dir.x, height, posZ + dir.y }; //TODO height should be minus (1-normalHeight)
                             vert2.colour = { 0.f, 1.f - (strength + 0.25f), 1.f, 1.f };
                             vert2.texCoord = glm::vec2(40.f  * (strength / MaxStrength));
 
