@@ -235,8 +235,11 @@ const std::string NormalMapVertexShader = R"(
     ATTRIBUTE vec3 a_normal;
 
     uniform mat4 u_projectionMatrix;
+    uniform float u_maxHeight;
+    uniform float u_lowestPoint;
 
     VARYING_OUT vec3 v_normal;
+    VARYING_OUT float v_height;
 
     void main()
     {
@@ -247,6 +250,8 @@ const std::string NormalMapVertexShader = R"(
         float z = v_normal.y;
         v_normal.y = -v_normal.z;
         v_normal.z = z;
+
+        v_height = clamp((a_position.y - u_lowestPoint) / u_maxHeight, 0.0, 1.0);
     }
 )";
 
@@ -254,6 +259,7 @@ const std::string NormalMapFragmentShader = R"(
     OUTPUT
 
     VARYING_IN vec3 v_normal;
+    VARYING_IN float v_height;
 
     void main()
     {
@@ -261,6 +267,6 @@ const std::string NormalMapFragmentShader = R"(
         normal += 1.0;
         normal /= 2.0;
 
-        FRAG_OUT = vec4(normal, 1.0);
+        FRAG_OUT = vec4(normal, v_height);
     }
 )";

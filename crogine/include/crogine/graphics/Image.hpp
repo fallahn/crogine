@@ -121,6 +121,14 @@ namespace cro
         */
         void setPixel(std::size_t x, std::size_t y, cro::Colour colour);
 
+        /*!
+        \brief Gets a pointer to the pixel data at the given
+        coordinates, or nullptr if out of range.
+        \param x X coordinate of the pixel to read
+        \param y Y coordinate of the pixel to read
+        */
+        const std::uint8_t* getPixel(std::size_t x, std::size_t y) const;
+
     private:
         glm::uvec2 m_size = glm::uvec2(0);
         ImageFormat::Type m_format;

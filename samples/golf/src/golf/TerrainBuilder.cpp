@@ -440,11 +440,6 @@ void TerrainBuilder::update(std::size_t holeIndex)
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), m_slopeIndices.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-        m_normalMaps[first].loadFromImage(m_normalMapImage);
-        m_normalMaps[first].setSmooth(false);
-        auto modelEnt = m_holeData[holeIndex].modelEntity;
-        modelEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_normalMap", cro::TextureID(m_normalMaps[first].getGLHandle()));
-
         //signal to the thread we want to update the buffers
         //ready for next time
         m_currentHole++;
@@ -491,10 +486,12 @@ void TerrainBuilder::threadFunc()
                 m_billboardBuffer.clear();
                 for (auto [x, y] : grass)
                 {
-                    auto [terrain, height] = readMap(mapImage, x, y);
+                    auto [terrain, _] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Rough)
                     {
                         float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
+                        float height = static_cast<float>(m_normalMapImage.getPixel(static_cast<std::size_t>(x), static_cast<std::size_t>(y))[3]) / 255.f;
+                        height = m_holeHeight.bottom + (m_holeHeight.height * height);
 
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                         bb.position = { x, height, -y };
@@ -651,6 +648,12 @@ void TerrainBuilder::renderNormalMap()
     
     glCheck(glUseProgram(m_normalShader.getGLHandle()));
     glCheck(glDisable(GL_CULL_FACE));
+
+    m_holeHeight.bottom = std::min(meshData.boundingBox[0].y, meshData.boundingBox[1].y);
+    m_holeHeight.height = std::max(meshData.boundingBox[0].y, meshData.boundingBox[1].y) - m_holeHeight.bottom;
+    glCheck(glUniform1f(m_normalShader.getUniformID("u_lowestPoint"), m_holeHeight.bottom));
+    glCheck(glUniform1f(m_normalShader.getUniformID("u_maxHeight"), m_holeHeight.height));
+
 
     static const cro::Colour ClearColour(0x7f7fffff);
     m_normalMap.clear(ClearColour);

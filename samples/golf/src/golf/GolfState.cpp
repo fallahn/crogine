@@ -715,10 +715,11 @@ void GolfState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
+    m_materialIDs[MaterialID::Course] = m_materialIDs[MaterialID::CelTextured];
 
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define NORMAL_MAP\n");
+    /*m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define NORMAL_MAP\n");
     shader = &m_resources.shaders.get(ShaderID::Course);
-    m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
+    m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);*/
 
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);

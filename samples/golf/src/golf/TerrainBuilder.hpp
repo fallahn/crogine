@@ -130,8 +130,6 @@ private:
     }m_slopeProperties;
     std::vector<glm::vec3> m_normalMapBuffer;
 
-    std::array<cro::Texture, 2u> m_normalMaps;
-    cro::Image m_normalMapImage;
 
     std::atomic_bool m_threadRunning;
     std::atomic_bool m_wantsUpdate;
@@ -141,5 +139,11 @@ private:
 
     cro::RenderTexture m_normalMap;
     cro::Shader m_normalShader;
+    cro::Image m_normalMapImage;
+    struct HoleHeight final
+    {
+        float bottom = 0.f;
+        float height = 0.f;
+    }m_holeHeight;
     void renderNormalMap(); //don't call this from thread!!
 };
