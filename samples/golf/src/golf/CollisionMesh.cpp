@@ -67,10 +67,6 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
         colourOffset += meshData.attributes[i];
     }
 
-    //TODO make this const (or outright remove it)
-    glm::mat4 groundTransform = glm::translate(glm::mat4(1.f), glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f));
-    btTransform transform;
-    transform.setFromOpenGLMatrix(&groundTransform[0][0]);
 
     //we have to create a specific object for each sub mesh
     //to be able to tag it with a different terrain...
@@ -96,7 +92,6 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
         m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh);
         m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
         m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
-        m_groundObjects.back()->setWorldTransform(transform);
         m_groundObjects.back()->setUserIndex(static_cast<std::int32_t>(terrain)); // set the terrain type
         m_collisionWorld->addCollisionObject(m_groundObjects.back().get());
     }
@@ -108,7 +103,7 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
 
 std::pair<float, std::int32_t> CollisionMesh::getTerrain(glm::vec3 position)
 {
-    static const btVector3 RayLength(0.f, -10.f, 0.f);
+    static const btVector3 RayLength(0.f, -50.f, 0.f);
     auto worldPos = fromGLM(position);
 
     std::pair<float, std::int32_t> retVal = { 0.f, TerrainID::Scrub };

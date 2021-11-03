@@ -271,7 +271,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
         break;
         case SDLK_HOME:
-            debugFlags = (debugFlags == 0) ? std::numeric_limits<std::int32_t>::max() : 0;
+            debugFlags = (debugFlags == 0) ? /*std::numeric_limits<std::int32_t>::max()*/1 : 0;
             m_collisionMesh.setDebugFlags(debugFlags);
             break;
 #endif
@@ -1052,7 +1052,8 @@ void GolfState::loadAssets()
                     setTexture(modelDef, material);
 
                     holeData.modelEntity = m_gameScene.createEntity();
-                    holeData.modelEntity.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f });;
+                    holeData.modelEntity.addComponent<cro::Transform>().setPosition(OriginOffset);
+                    holeData.modelEntity.getComponent<cro::Transform>().setOrigin(OriginOffset);
                     holeData.modelEntity.addComponent<cro::Callback>();
                     modelDef.createModel(holeData.modelEntity);
                     holeData.modelEntity.getComponent<cro::Model>().setHidden(true);

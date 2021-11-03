@@ -601,15 +601,15 @@ void TerrainBuilder::threadFunc()
 
                             m_slopeIndices.push_back(currIndex++);
 
-                            static constexpr float MaxStrength = 0.75f;
+                            static constexpr float MaxStrength = 0.95f;
                             auto dir = glm::vec2(normal.x, normal.z);
                             auto strength = glm::length(dir);
                             dir /= strength;
-                            strength = std::min(MaxStrength, strength * 12.f);
+                            strength = std::min(MaxStrength, strength * 48.f);
                             dir *= strength;
                             
                             auto& vert2 = m_slopeBuffer.emplace_back();
-                            vert2.position = { posX + dir.x, height, posZ + dir.y }; //TODO height should be minus (1-normalHeight)
+                            vert2.position = { posX + dir.x, height - (1.f - normal.y), posZ + dir.y };
                             vert2.colour = { 0.f, 1.f - (strength + 0.25f), 1.f, 1.f };
                             vert2.texCoord = glm::vec2(40.f  * (strength / MaxStrength));
 
