@@ -31,6 +31,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
 #include "BallSystem.hpp"
+#include "CollisionMesh.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 
@@ -41,10 +42,11 @@ namespace
     constexpr float MinBallDist = (HoleRadius * 1.2f) * (HoleRadius * 1.2f);
 }
 
-ClientCollisionSystem::ClientCollisionSystem(cro::MessageBus& mb, const std::vector<HoleData>& hd)
+ClientCollisionSystem::ClientCollisionSystem(cro::MessageBus& mb, const std::vector<HoleData>& hd, const CollisionMesh& cm)
     : cro::System   (mb, typeid(ClientCollisionSystem)),
     m_holeData      (hd),
     m_holeIndex     (0),
+    m_collisionMesh (cm),
     m_club          (-1)
 {
     requireComponent<cro::Transform>();
@@ -60,7 +62,16 @@ void ClientCollisionSystem::process(float)
         auto& collider = entity.getComponent<ClientCollider>();
         const auto& tx = entity.getComponent<cro::Transform>();
         auto position = tx.getPosition();
-        collider.terrain = readMap(m_currentMap, position.x, -position.z).first;
+
+        //skip if not near the ground
+        if (position.y > 10.f)
+        {
+            continue;
+        }
+
+        auto [height, terrain] = m_collisionMesh.getTerrain(position);
+        collider.terrain = terrain;
+
         if (collider.terrain == TerrainID::Green)
         {
             //check if we're in the hole
@@ -82,37 +93,37 @@ void ClientCollisionSystem::process(float)
             msg->position = position;
             msg->terrain = collider.terrain;
             msg->clubID = m_club;
-
-            
         };
 
         static constexpr float CollisionLevel = 0.25f;
+        float currentLevel = position.y - height;
+        float prevLevel = collider.previousPosition.y - height;
 
         std::int32_t direction = 0;
-        if (position.y < collider.previousPosition.y)
+        if (currentLevel < prevLevel)
         {
             direction = -1;
         }
-        else if (position.y > collider.previousPosition.y)
+        else if (currentLevel > prevLevel)
         {
             direction = 1;
         }
 
         //yes it's an odd way of doing it, but we're floundering
         //around in the spongey world of interpolated actors.
-        if (position.y < CollisionLevel)
+        if (currentLevel < CollisionLevel)
         {
             if (direction > collider.previousDirection)
             {
                 //started moving up
                 notify(CollisionEvent::End, position);
             }
-            else if (collider.previousPosition.y > CollisionLevel)
+            else if (prevLevel > CollisionLevel)
             {
                 notify(CollisionEvent::Begin, position);
             }
-            else if (position.y < -Ball::Radius
-                && collider.previousPosition.y > -Ball::Radius)
+            else if (currentLevel < -Ball::Radius
+                && prevLevel > -Ball::Radius)
             {
                 //we're in the hole. Probably.
                 notify(CollisionEvent::Begin, position);
@@ -122,13 +133,4 @@ void ClientCollisionSystem::process(float)
         collider.previousDirection = direction;
         collider.previousPosition = position;
     }
-}
-
-void ClientCollisionSystem::setMap(std::uint32_t holeIndex)
-{
-    CRO_ASSERT(holeIndex < m_holeData.size(), "");
-    CRO_ASSERT(!m_holeData[holeIndex].mapPath.empty(), "");
-
-    m_holeIndex = holeIndex;
-    m_currentMap.loadFromFile(m_holeData[holeIndex].mapPath);
 }

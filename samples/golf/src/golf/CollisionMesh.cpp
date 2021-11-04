@@ -101,7 +101,7 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
 #endif
 }
 
-std::pair<float, std::int32_t> CollisionMesh::getTerrain(glm::vec3 position)
+std::pair<float, std::int32_t> CollisionMesh::getTerrain(glm::vec3 position) const
 {
     static const btVector3 RayLength(0.f, -50.f, 0.f);
     auto worldPos = fromGLM(position);

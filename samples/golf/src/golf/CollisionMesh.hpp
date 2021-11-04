@@ -50,7 +50,7 @@ public:
     CollisionMesh& operator = (CollisionMesh&&) = delete;
 
     void updateCollisionMesh(const cro::Mesh::Data&);
-    std::pair<float, std::int32_t> getTerrain(glm::vec3 position);
+    std::pair<float, std::int32_t> getTerrain(glm::vec3 position) const;
 
     void renderDebug(const glm::mat4& viewProj, glm::uvec2 targetSize);
     void setDebugFlags(std::int32_t);

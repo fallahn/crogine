@@ -271,7 +271,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
         break;
         case SDLK_HOME:
-            debugFlags = (debugFlags == 0) ? /*std::numeric_limits<std::int32_t>::max()*/1 : 0;
+            debugFlags = (debugFlags == 0) ? /*std::numeric_limits<std::int32_t>::max()*/9 : 0;
             m_collisionMesh.setDebugFlags(debugFlags);
             break;
 #endif
@@ -1195,7 +1195,7 @@ void GolfState::addSystems()
     auto& mb = m_gameScene.getMessageBus();
 
     m_gameScene.addSystem<InterpolationSystem>(mb);
-    m_gameScene.addSystem<ClientCollisionSystem>(mb, m_holeData);
+    m_gameScene.addSystem<ClientCollisionSystem>(mb, m_holeData, m_collisionMesh);
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
@@ -1988,7 +1988,6 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     }
 
     m_terrainBuilder.update(hole);
-    m_gameScene.getSystem<ClientCollisionSystem>()->setMap(hole);
     m_collisionMesh.updateCollisionMesh(m_holeData[hole].modelEntity.getComponent<cro::Model>().getMeshData());
 
     //create hole model transition
