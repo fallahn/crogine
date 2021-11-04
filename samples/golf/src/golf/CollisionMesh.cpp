@@ -105,6 +105,7 @@ std::pair<float, std::int32_t> CollisionMesh::getTerrain(glm::vec3 position)
 {
     static const btVector3 RayLength(0.f, -50.f, 0.f);
     auto worldPos = fromGLM(position);
+    worldPos -= (RayLength / 2.f);
 
     std::pair<float, std::int32_t> retVal = { 0.f, TerrainID::Scrub };
 
@@ -115,18 +116,6 @@ std::pair<float, std::int32_t> CollisionMesh::getTerrain(glm::vec3 position)
     {
         retVal.first = res.m_hitPointWorld.y();
         retVal.second = res.m_collisionObject->getUserIndex(); //contains the terrain
-    }
-    else
-    {
-        //check if we're below ground
-        res = { worldPos, worldPos - RayLength };
-        m_collisionWorld->rayTest(worldPos, worldPos - RayLength, res);
-
-        if (res.hasHit())
-        {
-            retVal.first = res.m_hitPointWorld.y();
-            retVal.second = res.m_collisionObject->getUserIndex();
-        }
     }
 
     return retVal;

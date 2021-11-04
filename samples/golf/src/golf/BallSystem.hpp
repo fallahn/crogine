@@ -104,7 +104,13 @@ private:
 
     void doCollision(cro::Entity);
     void updateWind();
-    std::pair<std::uint8_t, glm::vec3> getTerrain(glm::vec3) const;
+    struct TerrainResult final
+    {
+        std::uint8_t terrain = TerrainID::Scrub;
+        glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
+        float penetration = 0.f;
+    };
+    TerrainResult getTerrain(glm::vec3) const;
 
 
     std::unique_ptr<btDefaultCollisionConfiguration> m_collisionCfg;

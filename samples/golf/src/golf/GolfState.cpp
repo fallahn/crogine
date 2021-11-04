@@ -1017,11 +1017,15 @@ void GolfState::loadAssets()
             {
                 //TODO not sure how we ensure these are sane values?
                 holeData.pin = holeProp.getValue<glm::vec3>();
+                holeData.pin.x = glm::clamp(holeData.pin.x, 0.f, 320.f);
+                holeData.pin.z = glm::clamp(holeData.pin.z, -200.f, 0.f);
                 propCount++;
             }
             else if (name == "tee")
             {
                 holeData.tee = holeProp.getValue<glm::vec3>();
+                holeData.tee.x = glm::clamp(holeData.tee.x, 0.f, 320.f);
+                holeData.tee.z = glm::clamp(holeData.tee.z, -200.f, 0.f);
                 propCount++;
             }
             else if (name == "target")
@@ -1113,7 +1117,7 @@ void GolfState::loadAssets()
                         if (modelDef.loadFromFile(path))
                         {
                             auto ent = m_gameScene.createEntity();
-                            ent.addComponent<cro::Transform>().setPosition(position);
+                            ent.addComponent<cro::Transform>().setPosition(position + OriginOffset);
                             ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation* cro::Util::Const::degToRad);
                             modelDef.createModel(ent);
                             if (modelDef.hasSkeleton())
@@ -1541,8 +1545,9 @@ void GolfState::buildScene()
 
     //careful with these values - they are fine tuned for shadowing of terrain
     auto sunEnt = m_gameScene.getSunlight();
-    //sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, /*-0.967f*/-45.f * cro::Util::Const::degToRad);
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-1.5f*/-38.746f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, /*-0.967f*/-45.f * cro::Util::Const::degToRad);
+    //sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-1.5f*/-38.746f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-1.5f*/-48.746f * cro::Util::Const::degToRad);
 
 #ifdef CRO_DEBUG_
     //createWeather();
@@ -1669,8 +1674,9 @@ void GolfState::spawnBall(const ActorInfo& info)
         }
         else
         {
+            //TODO only do this when active player.
             auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
-            ballPos.y = std::min(0.003f, ballPos.y); //just to prevent z-fighting
+            ballPos.y = std::min(0.003f + m_collisionMesh.getTerrain(ballPos).first, ballPos.y); //just to prevent z-fighting
             e.getComponent<cro::Transform>().setPosition(ballPos);
         }
     };
@@ -2373,7 +2379,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.action = [localPlayer, player](cro::Entity e, float)
     {
         auto position = player.position;
-        position.y = 0.01f;
+        position.y += 0.01f; //z-fighting
         e.getComponent<cro::Transform>().setPosition(position);
         e.getComponent<cro::Model>().setHidden(!localPlayer);
     };

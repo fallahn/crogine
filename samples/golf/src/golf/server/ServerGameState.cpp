@@ -555,7 +555,7 @@ bool GameState::validateMap()
                     return false;
                 }
 
-                loadNormalMap(holeData.normalMap, holeProp.getValue<std::string>());
+                //loadNormalMap(holeData.normalMap, holeProp.getValue<std::string>());
                 holeData.mapPath = holeProp.getValue<std::string>();
 
                 propCount++;
@@ -565,11 +565,15 @@ bool GameState::validateMap()
                 //TODO not sure how we ensure these are sane values?
                 //could at leat clamp them to map bounds.
                 holeData.pin = holeProp.getValue<glm::vec3>();
+                holeData.pin.x = glm::clamp(holeData.pin.x, 0.f, 320.f);
+                holeData.pin.z = glm::clamp(holeData.pin.z, -200.f, 0.f);
                 propCount++;
             }
             else if (name == "tee")
             {
                 holeData.tee = holeProp.getValue<glm::vec3>();
+                holeData.tee.x = glm::clamp(holeData.tee.x, 0.f, 320.f);
+                holeData.tee.z = glm::clamp(holeData.tee.z, -200.f, 0.f);
                 propCount++;
             }
             else if (name == "par")

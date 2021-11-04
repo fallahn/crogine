@@ -321,7 +321,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_slopeProperties.shader = slopeShader.getGLHandle();
     materialID = resources.materials.add(slopeShader);
     resources.materials.get(materialID).blendMode = cro::Material::BlendMode::Alpha;
-    resources.materials.get(materialID).enableDepthTest = false;
+    //resources.materials.get(materialID).enableDepthTest = false;
 
     entity = scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.01f, 0.f });
@@ -367,7 +367,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
     glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
     glm::vec2 mapSize(MapSize);
-    glm::mat4 projMat = glm::ortho(-mapSize.x / 2.f, mapSize.x / 2.f, -mapSize.y / 2.f, mapSize.y / 2.f, -10.f, 10.f);
+    glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -10.f, 20.f);
     auto normalViewProj = projMat * viewMat;
 
     //we can set this once so we don't need to store the matrix
@@ -574,7 +574,6 @@ void TerrainBuilder::threadFunc()
 
                 //update the vertex data for the slope indicator
                 //TODO is this the same size as the loop above? could save on double iteration
-                //m_normalMapImage = loadNormalMap(m_normalMapBuffer, m_holeData[m_currentHole].mapPath);
                 loadNormalMap(m_normalMapBuffer, m_normalMapImage); //image is populated when rendering texture
 
                 m_slopeBuffer.clear();
@@ -593,19 +592,19 @@ void TerrainBuilder::threadFunc()
                             float posZ = -(static_cast<float>(y) + 0.5f);
 
                             auto normal = m_normalMapBuffer[y * MapSize.x + x];
-                            auto height = readHeightMap(x, y);
+                            auto height = readHeightMap(x, y) + 0.001f;
 
                             auto& vert = m_slopeBuffer.emplace_back();
                             vert.position = { posX, height, posZ };
-                            vert.colour = { 1.f, 1.f, 0.f, 0.5f };
+                            vert.colour = { 1.f, 1.f, 0.f, 0.75f };
 
                             m_slopeIndices.push_back(currIndex++);
 
-                            static constexpr float MaxStrength = 0.95f;
+                            static constexpr float MaxStrength = 0.75f; //0.75
                             auto dir = glm::vec2(normal.x, normal.z);
                             auto strength = glm::length(dir);
                             dir /= strength;
-                            strength = std::min(MaxStrength, strength * 48.f);
+                            strength = std::min(MaxStrength, strength * 12.f); //12
                             dir *= strength;
                             
                             auto& vert2 = m_slopeBuffer.emplace_back();
