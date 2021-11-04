@@ -64,7 +64,8 @@ void ClientCollisionSystem::process(float)
         auto position = tx.getPosition();
 
         //skip if not near the ground
-        if (position.y > 10.f)
+        if (!collider.active
+            || position.y > 10.f)
         {
             continue;
         }

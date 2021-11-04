@@ -1674,10 +1674,13 @@ void GolfState::spawnBall(const ActorInfo& info)
         }
         else
         {
-            //TODO only do this when active player.
-            auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
-            ballPos.y = std::min(0.003f + m_collisionMesh.getTerrain(ballPos).first, ballPos.y); //just to prevent z-fighting
-            e.getComponent<cro::Transform>().setPosition(ballPos);
+            //only do this when active player.
+            if (ballEnt.getComponent<ClientCollider>().active)
+            {
+                auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
+                ballPos.y = std::min(0.003f + m_collisionMesh.getTerrain(ballPos).first, ballPos.y); //just to prevent z-fighting
+                e.getComponent<cro::Transform>().setPosition(ballPos);
+            }
         }
     };
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.shadowMeshID), material);
@@ -2553,9 +2556,11 @@ void GolfState::hitBall()
 
 void GolfState::updateActor(const ActorInfo& update)
 {
+    bool currentPlayer = (update == m_currentPlayer);
+
     cro::Command cmd;
     cmd.targetFlags = CommandID::Ball;
-    cmd.action = [update](cro::Entity e, float)
+    cmd.action = [update, currentPlayer](cro::Entity e, float)
     {
         if (e.isValid())
         {
@@ -2564,12 +2569,13 @@ void GolfState::updateActor(const ActorInfo& update)
             {
                 interp.setTarget({ update.position, {1.f,0.f,0.f,0.f}, update.timestamp });
             }
+            e.getComponent<ClientCollider>().active = currentPlayer;
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
-    if (update == m_currentPlayer)
+    if (currentPlayer)
     {
         //set the green cam zoom as appropriate
         float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
