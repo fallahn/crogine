@@ -600,11 +600,11 @@ void TerrainBuilder::threadFunc()
 
                             m_slopeIndices.push_back(currIndex++);
 
-                            static constexpr float MaxStrength = 0.75f; //0.75
+                            static constexpr float MaxStrength = 0.95f; //0.75
                             auto dir = glm::vec2(normal.x, normal.z);
                             auto strength = glm::length(dir);
                             dir /= strength;
-                            strength = std::min(MaxStrength, strength * 12.f); //12
+                            strength = std::min(MaxStrength, strength * 40.f); //12
                             dir *= strength;
                             
                             auto& vert2 = m_slopeBuffer.emplace_back();

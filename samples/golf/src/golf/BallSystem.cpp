@@ -201,9 +201,8 @@ void BallSystem::process(float dt)
 
                     //move by slope from normal map
                     auto velLength = glm::length(ball.velocity);
-                    glm::vec3 slope = glm::vec3(normal.x, 0.f, normal.z) * 0.16f * smoothstep(0.5f, 4.5f, velLength);
+                    glm::vec3 slope = glm::vec3(normal.x, 0.f, normal.z) * 3.f * smoothstep(0.5f, 4.5f, velLength);
                     ball.velocity += slope;
-                    LogI << "Normal: " << normal << ", penetration: " << penetration << ", terrain: " << (int)terrain << std::endl;
 
                     //add wind - adding less wind the more the ball travels in the
                     //wind direction means we don't get blown forever
