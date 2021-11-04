@@ -44,6 +44,15 @@ namespace cro
     class Image;
 }
 
+struct RayResultCallback final : public btCollisionWorld::ClosestRayResultCallback
+{
+    RayResultCallback(const btVector3& rayFromWorld, const btVector3& rayToWorld);
+    btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override;
+
+private:
+    btVector3 getFaceNormal(const btCollisionWorld::LocalRayResult& rayResult) const;
+};
+
 struct Ball final
 {
     static constexpr float Radius = 0.0215f;

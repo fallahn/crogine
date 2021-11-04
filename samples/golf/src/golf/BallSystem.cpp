@@ -472,22 +472,6 @@ void BallSystem::updateWind()
 
 BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
 {
-    //auto mapSize = m_mapData.getSize();
-    //auto size = glm::vec2(mapSize);
-    //std::uint32_t x = static_cast<std::uint32_t>(std::max(0.f, std::min(size.x - 1.f, std::floor(pos.x))));
-    //std::uint32_t y = static_cast<std::uint32_t>(std::max(0.f, std::min(size.y - 1.f, std::floor(-pos.z))));
-
-    //CRO_ASSERT(m_mapData.getFormat() == cro::ImageFormat::RGBA, "expected RGBA format");
-
-    //auto index = ((y * mapSize.x) + x);
-    //CRO_ASSERT(index < mapSize.x * mapSize.y, "");
-
-    ////R is terrain * 10
-    //std::uint8_t terrain = m_mapData.getPixelData()[index * 4] / 10;
-    //terrain = std::min(static_cast<std::uint8_t>(TerrainID::Scrub), terrain);
-
-    //return std::make_pair(terrain, m_holeData->normalMap[index]);
-
     TerrainResult retVal;
 
     //casts a vertical ray 5m above/below the ball
@@ -496,7 +480,7 @@ BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
     rayStart -= (RayLength / 2.f);
     auto rayEnd = rayStart + RayLength;
 
-    btCollisionWorld::ClosestRayResultCallback res(rayStart, rayEnd);
+    RayResultCallback res(rayStart, rayEnd);
     m_collisionWorld->rayTest(rayStart, rayEnd, res);
     if (res.hasHit())
     {
@@ -730,4 +714,62 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
     }
 
     return true;
+}
+
+//custom callback to return proper face normal (I wish  we could cahce these...)
+RayResultCallback::RayResultCallback(const btVector3& rayFromWorld, const btVector3& rayToWorld)
+    : ClosestRayResultCallback(rayFromWorld, rayToWorld)
+{
+}
+
+btScalar RayResultCallback::addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
+{
+    //caller already does the filter on the m_closestHitFraction
+    btAssert(rayResult.m_hitFraction <= m_closestHitFraction);
+
+    m_closestHitFraction = rayResult.m_hitFraction;
+    m_collisionObject = rayResult.m_collisionObject;
+    m_hitNormalWorld = getFaceNormal(rayResult);
+    m_hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
+    return rayResult.m_hitFraction;
+}
+
+btVector3 RayResultCallback::getFaceNormal(const btCollisionWorld::LocalRayResult& rayResult) const
+{
+    /*
+    Respect to https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=12826
+    */
+
+    const unsigned char* vertices = nullptr;
+    int numVertices = 0;
+    int vertexStride = 0;
+    PHY_ScalarType verticesType;
+
+    const unsigned char* indices = nullptr;
+    int indicesStride = 0;
+    int numFaces = 0;
+    PHY_ScalarType indicesType;
+
+    auto vertex = [&](int vertexIndex)
+    {
+        const auto* data = reinterpret_cast<const btScalar*>(vertices + vertexIndex * vertexStride);
+        return btVector3(*data, *(data + 1), *(data + 2));
+    };
+
+    const auto* triangleShape = static_cast<const btBvhTriangleMeshShape*>(rayResult.m_collisionObject->getCollisionShape());
+    const auto* triangleMesh = static_cast<const btTriangleIndexVertexArray*>(triangleShape->getMeshInterface());
+
+    triangleMesh->getLockedReadOnlyVertexIndexBase(
+        &vertices, numVertices, verticesType, vertexStride, &indices, indicesStride, numFaces, indicesType, rayResult.m_localShapeInfo->m_shapePart
+    );
+
+    const auto* index = reinterpret_cast<const int*>(indices + rayResult.m_localShapeInfo->m_triangleIndex * indicesStride);
+    btVector3 va = vertex(*index);
+    btVector3 vb = vertex(*(index + 1));
+    btVector3 vc = vertex(*(index + 2));
+    btVector3 normal = (vb - va).cross(vc - va).normalized();
+
+    triangleMesh->unLockReadOnlyVertexBase(rayResult.m_localShapeInfo->m_shapePart);
+
+    return normal;
 }
