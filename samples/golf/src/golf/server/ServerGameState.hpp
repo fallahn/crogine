@@ -56,7 +56,6 @@ namespace sv
         SharedData& m_sharedData;
         bool m_mapDataValid;
 
-        cro::Image m_currentMap;
         std::vector<HoleData> m_holeData;
         cro::Clock m_serverTime; //used in timestamping
         cro::Scene m_scene;

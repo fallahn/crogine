@@ -411,9 +411,6 @@ void GameState::setNextHole()
     m_currentHole++;
     if (m_currentHole < m_holeData.size())
     {
-        //make sure to load current data
-        m_currentMap.loadFromFile(m_holeData[m_currentHole].mapPath);
-
         //reset player positions/strokes
         for (auto& player : m_playerInfo)
         {
@@ -536,7 +533,7 @@ bool GameState::validateMap()
             return false;
         }
 
-        static constexpr std::int32_t MaxProps = 5;
+        static constexpr std::int32_t MaxProps = 4;
         std::int32_t propCount = 0;
         auto& holeData = m_holeData.emplace_back();
 
@@ -544,24 +541,7 @@ bool GameState::validateMap()
         for (const auto& holeProp : holeProps)
         {
             const auto& name = holeProp.getName();
-            if (name == "map")
-            {
-                if (!m_currentMap.loadFromFile(holeProp.getValue<std::string>()))
-                {
-                    return false;
-                }
-                if (m_currentMap.getFormat() != cro::ImageFormat::RGBA)
-                {
-                    LogE << "Server: hole map requires RGBA format" << std::endl;
-                    return false;
-                }
-
-                //loadNormalMap(holeData.normalMap, holeProp.getValue<std::string>());
-                holeData.mapPath = holeProp.getValue<std::string>();
-
-                propCount++;
-            }
-            else if (name == "pin")
+            if (name == "pin")
             {
                 //TODO not sure how we ensure these are sane values?
                 //could at leat clamp them to map bounds.
@@ -610,13 +590,10 @@ bool GameState::validateMap()
 
         if (propCount != MaxProps)
         {
-            LogE << "Missing hole property" << std::endl;
+            LogE << "Server: Missing hole property" << std::endl;
             return false;
         }
     }
-
-    //make sure we have the first map loaded else this won't match the hole...
-    m_currentMap.loadFromFile(m_holeData[0].mapPath);
 
     return true;
 }
@@ -652,7 +629,7 @@ void GameState::initScene()
 
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
-    m_mapDataValid = m_scene.addSystem<BallSystem>(mb, m_currentMap)->setHoleData(m_holeData[0]);
+    m_mapDataValid = m_scene.addSystem<BallSystem>(mb)->setHoleData(m_holeData[0]);
 }
 
 void GameState::buildWorld()

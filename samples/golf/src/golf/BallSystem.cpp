@@ -54,9 +54,8 @@ namespace
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
 }
 
-BallSystem::BallSystem(cro::MessageBus& mb, const cro::Image& mapData)
+BallSystem::BallSystem(cro::MessageBus& mb)
     : cro::System           (mb, typeid(BallSystem)),
-    m_mapData               (mapData),
     m_windDirTime           (cro::seconds(0.f)),
     m_windStrengthTime      (cro::seconds(1.f)),
     m_windDirection         (-1.f, 0.f, 0.f),
@@ -201,7 +200,7 @@ void BallSystem::process(float dt)
 
                     //move by slope from normal map
                     auto velLength = glm::length(ball.velocity);
-                    glm::vec3 slope = glm::vec3(normal.x, 0.f, normal.z) * 3.f * smoothstep(0.5f, 4.5f, velLength);
+                    glm::vec3 slope = glm::vec3(normal.x, 0.f, normal.z) * 2.f * smoothstep(0.5f, 4.5f, velLength);
                     ball.velocity += slope;
 
                     //add wind - adding less wind the more the ball travels in the
@@ -734,7 +733,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
     return true;
 }
 
-//custom callback to return proper face normal (I wish  we could cache these...)
+//custom callback to return proper face normal (I wish we could cache these...)
 RayResultCallback::RayResultCallback(const btVector3& rayFromWorld, const btVector3& rayToWorld)
     : ClosestRayResultCallback(rayFromWorld, rayToWorld)
 {

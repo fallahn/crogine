@@ -73,7 +73,7 @@ struct Ball final
 class BallSystem final : public cro::System
 {
 public:
-    BallSystem(cro::MessageBus&, const cro::Image&);
+    explicit BallSystem(cro::MessageBus&);
     ~BallSystem();
 
     BallSystem(const BallSystem&) = delete;
@@ -89,8 +89,6 @@ public:
     bool setHoleData(const struct HoleData&);
 
 private:
-
-    const cro::Image& m_mapData;
 
     cro::Clock m_windDirClock;
     cro::Clock m_windStrengthClock;
