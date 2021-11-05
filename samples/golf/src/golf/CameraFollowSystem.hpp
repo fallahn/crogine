@@ -52,7 +52,7 @@ struct CameraFollower final
         Reset
     }state = Track;
 
-    glm::vec3 target = glm::vec3(0.f);
+    cro::Entity target;
     glm::vec3 currentTarget = glm::vec3(0.f); //used to interpolate
     glm::vec3 holePosition = glm::vec3(0.f);
     glm::vec3 playerPosition = glm::vec3(0.f);

@@ -30,6 +30,8 @@ source distribution.
 #include "CameraFollowSystem.hpp"
 #include "MessageIDs.hpp"
 #include "Terrain.hpp"
+#include "ClientCollisionSystem.hpp"
+#include "BallSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -107,13 +109,18 @@ void CameraFollowSystem::process(float dt)
     for (auto entity : entities)
     {
         auto& follower = entity.getComponent<CameraFollower>();
+        if (!follower.target.isValid())
+        {
+            continue;
+        }
 
         switch (follower.state)
         {
         default: break;
         case CameraFollower::Track:
         {
-            auto diff = follower.target - follower.currentTarget;
+            auto target = follower.target.getComponent<cro::Transform>().getPosition();
+            auto diff = target - follower.currentTarget;
             follower.currentTarget += diff * (dt * (4.f + (4.f * follower.zoom.progress)));
 
             auto& tx = entity.getComponent<cro::Transform>();
@@ -122,26 +129,28 @@ void CameraFollowSystem::process(float dt)
 
             //check the distance to the ball, and store it if closer than previous dist
             //and if we fall within the camera's radius
-            //and if the play isn't standing too close
-            auto dist = glm::length2(tx.getPosition() - follower.target);
-            auto dist2 = glm::length2(tx.getPosition() - follower.playerPosition);
-            if (dist < currDist
-                && dist < follower.radius
-                && dist2 > follower.radius)
+            //and if the player isn't standing too close
+            if (follower.target.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
             {
-                currDist = dist;
-                m_closestCamera = follower.id;
+                auto dist = glm::length2(tx.getPosition() - target);
+                auto dist2 = glm::length2(tx.getPosition() - follower.playerPosition);
+                if (dist < currDist
+                    && dist < follower.radius
+                    && dist2 > follower.radius)
+                {
+                    currDist = dist;
+                    m_closestCamera = follower.id;
+                }
             }
 
             //zoom if ball goes near the hole
             static constexpr float ZoomRadius = 3.f;
             static constexpr float ZoomRadiusSqr = ZoomRadius * ZoomRadius;
-            dist = glm::length2(follower.target - follower.holePosition);
+            auto dist = glm::length2(target - follower.holePosition);
             if (dist < ZoomRadiusSqr)
             {
                 follower.state = CameraFollower::Zoom;
             }
-
 
             if (m_closestCamera != follower.id)
             {
@@ -166,7 +175,7 @@ void CameraFollowSystem::process(float dt)
                     follower.state = CameraFollower::Track;
                 }
 
-                auto diff = follower.target - follower.currentTarget;
+                auto diff = follower.target.getComponent<cro::Transform>().getPosition() - follower.currentTarget;
                 follower.currentTarget += diff * (dt * (2.f + (2.f * follower.zoom.progress)));
 
                 auto& tx = entity.getComponent<cro::Transform>();

@@ -2560,7 +2560,7 @@ void GolfState::updateActor(const ActorInfo& update)
 
     cro::Command cmd;
     cmd.targetFlags = CommandID::Ball;
-    cmd.action = [update, currentPlayer](cro::Entity e, float)
+    cmd.action = [&, update, currentPlayer](cro::Entity e, float)
     {
         if (e.isValid())
         {
@@ -2571,6 +2571,20 @@ void GolfState::updateActor(const ActorInfo& update)
             }
             e.getComponent<ClientCollider>().active = currentPlayer;
             e.getComponent<ClientCollider>().state = update.state;
+
+            if (currentPlayer)
+            {
+                //update spectator camera
+                cro::Command cmd2;
+                cmd2.targetFlags = CommandID::SpectatorCam;
+                cmd2.action = [&, e](cro::Entity en, float)
+                {
+                    en.getComponent<CameraFollower>().target = e;
+                    en.getComponent<CameraFollower>().playerPosition = m_currentPlayer.position;
+                    en.getComponent<CameraFollower>().holePosition = m_holeData[m_currentHole].pin;
+                };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd2);
+            }
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -2631,16 +2645,6 @@ void GolfState::updateActor(const ActorInfo& update)
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-        //update spectator camera
-        cmd.targetFlags = CommandID::SpectatorCam;
-        cmd.action = [&,update](cro::Entity e, float)
-        {
-            e.getComponent<CameraFollower>().target = update.position;
-            e.getComponent<CameraFollower>().playerPosition = m_currentPlayer.position;
-            e.getComponent<CameraFollower>().holePosition = m_holeData[m_currentHole].pin;
-        };
-        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
 }
 
