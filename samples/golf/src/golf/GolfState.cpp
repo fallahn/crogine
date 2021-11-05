@@ -2208,7 +2208,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
     //set green cam position
     auto holePos = m_holeData[m_currentHole].pin;
-    m_greenCam.getComponent<cro::Transform>().setPosition({ holePos.x, 6.f, holePos.z });
+    m_greenCam.getComponent<cro::Transform>().setPosition({ holePos.x, holePos.y + 0.5f, holePos.z });
 
 
     //and the uh, other green cam. The spectator one

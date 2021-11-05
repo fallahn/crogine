@@ -198,9 +198,9 @@ void BallSystem::process(float dt)
                     }
                     ball.hadAir = false;
 
-                    //move by slope from normal map
+                    //move by slope from surface normal
                     auto velLength = glm::length(ball.velocity);
-                    glm::vec3 slope = glm::vec3(normal.x, 0.f, normal.z) * 2.f * smoothstep(0.5f, 4.5f, velLength);
+                    glm::vec3 slope = glm::vec3(normal.x, 0.f, normal.z) * 1.5f * smoothstep(0.5f, 4.5f, velLength);
                     ball.velocity += slope;
 
                     //add wind - adding less wind the more the ball travels in the
