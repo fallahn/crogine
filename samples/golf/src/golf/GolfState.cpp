@@ -2570,6 +2570,7 @@ void GolfState::updateActor(const ActorInfo& update)
                 interp.setTarget({ update.position, {1.f,0.f,0.f,0.f}, update.timestamp });
             }
             e.getComponent<ClientCollider>().active = currentPlayer;
+            e.getComponent<ClientCollider>().state = update.state;
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

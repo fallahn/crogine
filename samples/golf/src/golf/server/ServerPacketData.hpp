@@ -68,6 +68,7 @@ struct ActorInfo final
     std::int32_t timestamp = 0;
     std::uint8_t clientID = 0;
     std::uint8_t playerID = 0;
+    std::uint8_t state = 0;
 };
 
 static inline bool operator == (const ActorInfo& actor, const ActivePlayer& player)

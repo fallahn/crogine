@@ -254,16 +254,23 @@ void BallSystem::process(float dt)
 
                 std::uint8_t terrain = TerrainID::Water;
                 auto ballPos = tx.getPosition();
-                auto dir = glm::normalize(m_holeData->pin - ballPos);
-                for (auto i = 0; i < 100; ++i) //max 100m
+                ballPos.y = 0.f;
+
+                auto dir = m_holeData->pin - ballPos;
+                auto length = glm::length(dir);
+                dir /= length;
+                std::int32_t maxDist = static_cast<std::int32_t>(length - 10.f);
+
+                for (auto i = 0; i < maxDist; ++i) //max 100m
                 {
                     ballPos += dir;
-                    terrain = getTerrain(ballPos).terrain;
+                    auto res = getTerrain(ballPos);
+                    terrain = res.terrain;
 
                     if (terrain != TerrainID::Water
                         && terrain != TerrainID::Scrub)
                     {
-                        ballPos.y = 0.f;
+                        ballPos.y = -res.penetration;
                         tx.setPosition(ballPos);
                         break;
                     }
@@ -342,11 +349,24 @@ void BallSystem::doCollision(cro::Entity entity)
     auto& tx = entity.getComponent<cro::Transform>();
     auto pos = tx.getPosition();
 
-    if (pos.y > 10.f)
+    //if (pos.y > 10.f)
+    //{
+    //    //skip test we're in the air (breaks if someone makes a tall mesh though...)
+    //    return;
+    //}
+
+    const auto resetBall = [&](Ball& ball, Ball::State state, std::uint8_t terrain)
     {
-        //skip test we're in the air (breaks if someone makes a tall mesh though...)
-        return;
-    }
+        ball.velocity = glm::vec3(0.f);
+        ball.state = state;
+        ball.delay = BallTurnDelay;
+        ball.terrain = terrain;
+
+        auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
+        msg->type = BallEvent::Landed;
+        msg->terrain = ball.terrain;
+        msg->position = tx.getPosition();
+    };
 
     auto [terrain, normal, penetration] = getTerrain(pos);
 
@@ -412,21 +432,19 @@ void BallSystem::doCollision(cro::Entity entity)
             if (terrain == TerrainID::Water
                 || terrain == TerrainID::Scrub)
             {
-                ball.state = Ball::State::Reset;
+                resetBall(ball, Ball::State::Reset, terrain);
             }
             else
             {
-                ball.state = Ball::State::Paused;
+                resetBall(ball, Ball::State::Paused, terrain);
             }
-            ball.delay = BallTurnDelay;
-            ball.terrain = terrain;
-            ball.velocity = glm::vec3(0.f);
-
-            auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
-            msg->type = BallEvent::Landed;
-            msg->terrain = ball.terrain;
-            msg->position = tx.getPosition();
         }
+    }
+    else if (pos.y < WaterLevel)
+    {
+        //must have missed all geometry and so are in scrub or water
+        auto& ball = entity.getComponent<Ball>();
+        resetBall(ball, Ball::State::Reset, TerrainID::Scrub);
     }
 }
 
@@ -474,12 +492,13 @@ BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
     TerrainResult retVal;
 
     //casts a vertical ray 5m above/below the ball
-    static const btVector3 RayLength = { 0.f,  -10.f, 10.f };
+    static const btVector3 RayLength = { 0.f,  -20.f, 0.f };
     btVector3 rayStart = { pos.x, pos.y, pos.z };
     rayStart -= (RayLength / 2.f);
     auto rayEnd = rayStart + RayLength;
 
-    RayResultCallback res(rayStart, rayEnd);
+    //RayResultCallback res(rayStart, rayEnd);
+    btCollisionWorld::ClosestRayResultCallback res(rayStart, rayEnd);
     m_collisionWorld->rayTest(rayStart, rayEnd, res);
     if (res.hasHit())
     {
@@ -715,7 +734,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
     return true;
 }
 
-//custom callback to return proper face normal (I wish  we could cahce these...)
+//custom callback to return proper face normal (I wish  we could cache these...)
 RayResultCallback::RayResultCallback(const btVector3& rayFromWorld, const btVector3& rayToWorld)
     : ClosestRayResultCallback(rayFromWorld, rayToWorld)
 {

@@ -217,6 +217,7 @@ void GameState::netBroadcast()
             info.timestamp = timestamp;
             info.clientID = player.client;
             info.playerID = player.player;
+            info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
             m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Unreliable);
         }
     }

@@ -107,7 +107,7 @@ std::pair<float, std::int32_t> CollisionMesh::getTerrain(glm::vec3 position) con
     auto worldPos = fromGLM(position);
     worldPos -= (RayLength / 2.f);
 
-    std::pair<float, std::int32_t> retVal = { 0.f, TerrainID::Scrub };
+    std::pair<float, std::int32_t> retVal = { WaterLevel, TerrainID::Scrub };
 
     btCollisionWorld::ClosestRayResultCallback res(worldPos, worldPos + RayLength);
     m_collisionWorld->rayTest(worldPos, worldPos + RayLength, res);

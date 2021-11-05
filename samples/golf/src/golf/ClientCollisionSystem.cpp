@@ -32,6 +32,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "BallSystem.hpp"
 #include "CollisionMesh.hpp"
+#include "BallSystem.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 
@@ -89,11 +90,16 @@ void ClientCollisionSystem::process(float)
 
         const auto notify = [&](CollisionEvent::Type type, glm::vec3 position)
         {
-            auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
-            msg->type = type;
-            msg->position = position;
-            msg->terrain = collider.terrain;
-            msg->clubID = m_club;
+            //TODO does this break collision with hole?
+            if (collider.terrain == TerrainID::Hole ||
+                collider.state == static_cast<std::uint8_t>(Ball::State::Flight))
+            {
+                auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+                msg->type = type;
+                msg->position = position;
+                msg->terrain = collider.terrain;
+                msg->clubID = m_club;
+            }
         };
 
         static constexpr float CollisionLevel = 0.25f;
