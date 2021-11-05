@@ -87,10 +87,16 @@ void ClientCollisionSystem::process(float)
             }
         }
 
+        if (height < 0)
+        {
+            //we've missed the geom so check the map to see if we're
+            //in water or scrub
+            terrain = readMap(m_mapImage, position.x, position.y).first;
+        }
+
 
         const auto notify = [&](CollisionEvent::Type type, glm::vec3 position)
         {
-            //TODO does this break collision with hole?
             if (collider.terrain == TerrainID::Hole ||
                 collider.state == static_cast<std::uint8_t>(Ball::State::Flight))
             {
@@ -140,4 +146,9 @@ void ClientCollisionSystem::process(float)
         collider.previousDirection = direction;
         collider.previousPosition = position;
     }
+}
+
+void ClientCollisionSystem::setMap(std::uint32_t index)
+{
+    m_mapImage.loadFromFile(m_holeData[index].mapPath);
 }

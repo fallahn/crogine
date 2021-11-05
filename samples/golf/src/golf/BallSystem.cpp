@@ -371,7 +371,6 @@ void BallSystem::doCollision(cro::Entity entity)
 
     if (penetration > 0)
     {
-        //pos.y = 0.f;
         pos.y += /*normal **/ penetration;
         //TODO reduce the velocity based on interpolation (see scratchpad)
         //TODO this should move back along ball velocity, not the normal.
@@ -385,7 +384,7 @@ void BallSystem::doCollision(cro::Entity entity)
         default: break;
         case TerrainID::Water:
         case TerrainID::Scrub:
-            pos.y = -Ball::Radius * 2.f;
+            pos.y = WaterLevel - (Ball::Radius * 2.f);
             tx.setPosition(pos);
             [[fallthrough]];
         case TerrainID::Bunker:

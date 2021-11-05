@@ -57,9 +57,13 @@ public:
 
     void setActiveClub(std::int32_t club) { m_club = club; } //hacky.
 
+    void setMap(std::uint32_t);
+
 private:
     const std::vector<HoleData>& m_holeData;
     std::uint32_t m_holeIndex;
     const CollisionMesh& m_collisionMesh;
     std::int32_t m_club;
+
+    cro::Image m_mapImage;
 };

@@ -1991,6 +1991,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     }
 
     m_terrainBuilder.update(hole);
+    m_gameScene.getSystem<ClientCollisionSystem>()->setMap(hole);
     m_collisionMesh.updateCollisionMesh(m_holeData[hole].modelEntity.getComponent<cro::Model>().getMeshData());
 
     //create hole model transition
