@@ -42,7 +42,8 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 
         file.write("hole %s\n{\n" % Path(self.properties.filepath).stem)
         file.write("    map=\"path/to/map.png\"\n")
-        file.write("    model=\"path/to/model.cmt\"\n\n")
+        file.write("    model=\"path/to/model.cmt\"\n")
+        file.write("    para = 4\n\n")
 
         teeWritten = False
         pinWritten = False

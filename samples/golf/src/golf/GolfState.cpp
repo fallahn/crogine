@@ -1117,8 +1117,8 @@ void GolfState::loadAssets()
                         if (modelDef.loadFromFile(path))
                         {
                             auto ent = m_gameScene.createEntity();
-                            ent.addComponent<cro::Transform>().setPosition(position + OriginOffset);
-                            ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation* cro::Util::Const::degToRad);
+                            ent.addComponent<cro::Transform>().setPosition(position);
+                            ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
                             modelDef.createModel(ent);
                             if (modelDef.hasSkeleton())
                             {

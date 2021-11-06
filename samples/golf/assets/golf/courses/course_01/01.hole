@@ -9,39 +9,47 @@ hole 01
 
     prop
     {
-        model = "assets/golf/models/cart.cmt"
-        position = 70, 0, 73
-        rotation = 45
+        model = "assets/golf/models/fence01.cmt"
+        position = 17.528160,1.530691,-150.091141
+        rotation = -641.477415
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 24.523228,1.504751,-134.872955
+        rotation = -603.966809
     }
 
     prop
     {
         model = "assets/golf/models/scoreboard.cmt"
-        position = 98, 0, 55.9
-        rotation = -31.2
+        position = 18.652422,1.538480,-144.263016
+        rotation = 116.479609
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 22.040394,1.534103,-138.970459
+        rotation = -595.327394
     }
 
     crowd
     {
-        position = -111.2, 0 , -86
-        rotation = 134
+        position = 28.044521,0.578745,-195.088486
+        rotation = -539.867161
     }
 
     crowd
     {
-        position = 80, 0 , 77
-        rotation = 170
+        position = 36.099537,0.578746,-193.833893
+        rotation = -195.114551
     }
 
     crowd
     {
-        position = -124, 0 , -92
-        rotation = -195
-    }
-
-    crowd
-    {
-        position = -132.1, 0 , -93.8
-        rotation = -540
+        position = 48.943195,0.578750,-187.570129
+        rotation = 134.480894
     }    
 }

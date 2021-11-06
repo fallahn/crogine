@@ -301,13 +301,16 @@ void BallSystem::process(float dt)
             ball.delay -= dt;
             if (ball.delay < 0)
             {
+                auto position = entity.getComponent<cro::Transform>().getPosition();
+                auto len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
+
                 //send message to report status
                 auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
                 msg->terrain = ball.terrain;
-                msg->position = entity.getComponent<cro::Transform>().getPosition();
-
-                if (ball.hadAir //was previously over the hole
-                        && getTerrain(msg->position).penetration > Ball::Radius)
+                msg->position = position;
+                //LogI << position << ", " << m_holeData->pin << ", " << len2 << ", " << MinBallDistance << std::endl;
+                if ((len2 <= MinBallDistance)
+                        /*&& getTerrain(position).penetration > Ball::Radius*/)
                 {
                     //we're in the hole
                     msg->type = BallEvent::Holed;
