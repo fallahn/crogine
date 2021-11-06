@@ -2,54 +2,55 @@ hole 07
 {
     map = "assets/golf/courses/course_01/07.png"
     model = "assets/golf/models/course_01/07.cmt"
-    pin = 294, 0, -32
-    target = 294, 0, -32
-    tee = 25, 0, -175
-    par = 3
+    pin = "294,0,-32"
+    target = "294,0,-32"
+    tee = "25,0,-175"
+    par = "3"
 
-    crowd
+    crowd 
     {
-        position = 131,0,90.8
-        rotation = 4.4
-    }
+        position = 291.000000,0.000000,-9.199997
+        rotation = "4.4"
 
-    crowd
+    }
+    crowd 
     {
-        position = 154.4,0,64
-        rotation = -91
-    }
+        position = 314.399994,0.000000,-36.000000
+        rotation = "-91"
 
-    crowd
+    }
+    crowd 
     {
-        position = 7.7,0,-39.8
-        rotation = -29
-    }
+        position = 167.699997,0.000000,-139.800003
+        rotation = "-29"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/crane.cmt"
-        position = 99.9, 0,87.8
-        rotation = -175
-    }
+        position = 259.899994,0.000000,-12.199997
+        rotation = "-175"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/crane_arm.cmt"
-        position = 99.9, 0,87.8
-        rotation = -109.3
-    }
+        position = 259.899994,0.000000,-12.199997
+        rotation = "-109.3"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/scoreboard.cmt"
-        position = 142.8, 0,38.8
-        rotation = -39.1
-    }
+        position = 302.799988,0.000000,-61.200001
+        rotation = "-39.1"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/view_platform.cmt"
-        position = 27.7, 1,-37.1
-        rotation = -28.6
+        position = 187.699997,1.000000,-137.100006
+        rotation = "-28.6"
+
     }
 }

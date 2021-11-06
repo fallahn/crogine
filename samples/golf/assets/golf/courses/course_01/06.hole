@@ -2,62 +2,63 @@ hole 06
 {
     map = "assets/golf/courses/course_01/06.png"
     model = "assets/golf/models/course_01/06.cmt"
-    pin = 64, 0, -47
-    target = 64,0, -47
-    tee = 241, 0, -142
-    par = 3
+    pin = "64,0,-47"
+    target = "64,0,-47"
+    tee = "241,0,-142"
+    par = "3"
 
-    crowd
+    crowd 
     {
-        position = -113,0,35
-        rotation = 34
-    }
+        position = 47.000000,0.000000,-65.000000
+        rotation = "34"
 
-    crowd
+    }
+    crowd 
     {
-        position = -124.9,0,53
-        rotation = -76
-    }
+        position = 35.099998,0.000000,-47.000000
+        rotation = "-76"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/windmill02.cmt"
-        position = -69, 0, 10.6
-        rotation = 15.8
-    }
+        position = 91.000000,0.000000,-89.400002
+        rotation = "15.8"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/view_platform.cmt"
-        position = 69.7, 1, -48.3
-        rotation = 72
-    }
+        position = 229.699997,1.000000,-148.300003
+        rotation = "72"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/fence01.cmt"
-        position = 75.3, 0, -17.6
-        rotation = -137
-    }
+        position = 235.300003,0.000000,-117.599998
+        rotation = "-137"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/fence02.cmt"
-        position = 77.7, 0, -21.1
-        rotation = -119
-    }
+        position = 237.699997,0.000000,-121.099998
+        rotation = "-119"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/fence01.cmt"
-        position = 80.2, 0, -24.6
-        rotation = -137
-    }
+        position = 240.199997,0.000000,-124.599998
+        rotation = "-137"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/cart.cmt"
-        position = 78.8, 0, -19.1
-        rotation = 45.3
+        position = 238.800003,0.000000,-119.099998
+        rotation = "45.3"
+
     }
 }

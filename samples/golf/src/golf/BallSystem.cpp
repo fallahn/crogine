@@ -173,8 +173,9 @@ void BallSystem::process(float dt)
                         else
                         {
                             //lets the ball continue travelling, ie overshoot
-                            ball.velocity *= 0.7f;
-                            ball.velocity.y = glm::length2(ball.velocity) * 0.4f;
+                            auto bounceVel = glm::length2(ball.velocity) * 0.2f;
+                            ball.velocity *= 0.1f;
+                            ball.velocity.y = bounceVel;
 
                             position.y += penetration;
                             tx.setPosition(position);
@@ -499,8 +500,8 @@ BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
     rayStart -= (RayLength / 2.f);
     auto rayEnd = rayStart + RayLength;
 
-    //RayResultCallback res(rayStart, rayEnd);
-    btCollisionWorld::ClosestRayResultCallback res(rayStart, rayEnd);
+    RayResultCallback res(rayStart, rayEnd);
+    //btCollisionWorld::ClosestRayResultCallback res(rayStart, rayEnd);
     m_collisionWorld->rayTest(rayStart, rayEnd, res);
     if (res.hasHit())
     {

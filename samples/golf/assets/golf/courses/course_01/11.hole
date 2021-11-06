@@ -2,47 +2,48 @@ hole 11
 {
     map = "assets/golf/courses/course_01/11.png"
     model = "assets/golf/models/course_01/11.cmt"
-    pin = 36, 0, -114
-    target = 109, 0, -138
-    tee = 280, 0, -38
-    par = 3
+    pin = "36,0,-114"
+    target = "109,0,-138"
+    tee = "280,0,-38"
+    par = "3"
 
-    prop
+    prop 
     {
         model = "assets/golf/models/fence01.cmt"
-        position = -132.524429,0.000000,-36.381351
-        rotation = 31.359022
-    }
+        position = 27.475571,0.000000,-136.381348
+        rotation = "31.359022"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/fence02.cmt"
-        position = -129.417465,0.000000,-39.252190
-        rotation = 49.450063
-    }
+        position = 30.582535,0.000000,-139.252197
+        rotation = "49.450063"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/view_platform.cmt"
-        position = -133.763062,-0.000004,-41.170837
-        rotation = -339.744289
-    }
+        position = 26.236938,-0.000004,-141.170837
+        rotation = "-339.744289"
 
-    crowd
-    {
-        position = -132.170563,0.000000,-33.379089
-        rotation = 25.458860
     }
-
-    crowd
+    crowd 
     {
-        position = -144.194672,0.000000,-0.640953
-        rotation = -50.813687
+        position = 27.829437,0.000000,-133.379089
+        rotation = "25.458860"
+
     }
-
-    crowd
+    crowd 
     {
-        position = -132.058334,0.000001,9.534601
-        rotation = 1.038276
+        position = 15.805328,0.000000,-100.640953
+        rotation = "-50.813687"
+
+    }
+    crowd 
+    {
+        position = 27.941666,0.000001,-90.465401
+        rotation = "1.038276"
+
     }
 }

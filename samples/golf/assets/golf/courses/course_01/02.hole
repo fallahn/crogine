@@ -2,41 +2,55 @@ hole 02
 {
     map = "assets/golf/courses/course_01/02.png"
     model = "assets/golf/models/course_01/02.cmt"
-    pin = 22, 0, -180
-    target = 22, 0, -180
-    tee = 280, 0, -25
+    tee = 279.860382,1.303625,-24.524582
+    target = 22.451130,0.571559,-178.079697
+    pin = 22.451130,0.571559,-178.079697
     par = 3
 
 
-    crowd
+    prop
     {
-        position = -139, 0 , -91
-        rotation = -7
-    }
-
-    crowd
-    {
-        position = -148, 0, -48
-        rotation = -29
-    }
-
-    crowd
-    {
-        position = 110, 0, 50
-        rotation = -30
+        model = "assets/golf/models/fence02.cmt"
+        position = 45.182831,0.367402,-135.547882
+        rotation = -541.993554
     }
 
     prop
     {
         model = "assets/golf/models/lighthouse.cmt"
-        position = -115, 0, -126
-        rotation = 45
+        position = 54.420780,0.000000,-199.608932
+        rotation = 0.000000
     }
 
     prop
     {
         model = "assets/golf/models/view_platform.cmt"
-        position = 19, 0, 53.4
-        rotation = 134
+        position = 42.411850,-0.000004,-130.007416
+        rotation = -873.310013
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 40.399151,0.216839,-135.282532
+        rotation = -533.354139
+    }
+
+    crowd
+    {
+        position = 41.518967,0.314913,-189.780426
+        rotation = -542.875252
+    }
+
+    crowd
+    {
+        position = 49.497063,0.314914,-188.104935
+        rotation = -198.122656
+    }
+
+    crowd
+    {
+        position = 61.994389,0.314918,-181.175934
+        rotation = 131.472803
     }
 }

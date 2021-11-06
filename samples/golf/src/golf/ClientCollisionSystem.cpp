@@ -76,7 +76,7 @@ void ClientCollisionSystem::process(float)
         {
             //we've missed the geom so check the map to see if we're
             //in water or scrub
-            result.terrain = readMap(m_mapImage, position.x, -position.y).first;
+            result.terrain = readMap(m_mapImage, position.x, -position.z).first;
             static int buns = 0;
         }
 
@@ -90,7 +90,7 @@ void ClientCollisionSystem::process(float)
             glm::vec2 pos(position.x, position.z);
             
             auto len2 = glm::length2(pin - pos);
-            if (len2 < MinBallDist)
+            if (len2 <= MinBallDist)
             {
                 collider.terrain = TerrainID::Hole;
             }
@@ -99,10 +99,11 @@ void ClientCollisionSystem::process(float)
 
         const auto notify = [&](CollisionEvent::Type type, glm::vec3 position)
         {
-            //ugh messy, but there are several edge caes (this is responsible for sound effects
+            //ugh messy, but there are several edge cases (this is responsible for sound effects
             //and particle effects being raised)
-            if (collider.state != static_cast<std::uint8_t>(Ball::State::Idle) &&
-                collider.state != static_cast<std::uint8_t>(Ball::State::Putt)
+            if (/*collider.state != static_cast<std::uint8_t>(Ball::State::Idle) &&
+                collider.state != static_cast<std::uint8_t>(Ball::State::Putt)*/
+                collider.state == static_cast<std::uint8_t>(Ball::State::Flight)
                 || collider.terrain == TerrainID::Hole)
             {
                 auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
@@ -141,7 +142,7 @@ void ClientCollisionSystem::process(float)
                 notify(CollisionEvent::Begin, position);
             }
             else if (currentLevel < -Ball::Radius
-                && prevLevel > -Ball::Radius)
+                && prevLevel >= -Ball::Radius)
             {
                 //we're in the hole. Probably.
                 notify(CollisionEvent::Begin, position);
