@@ -306,7 +306,8 @@ void BallSystem::process(float dt)
                 msg->terrain = ball.terrain;
                 msg->position = entity.getComponent<cro::Transform>().getPosition();
 
-                if (getTerrain(msg->position).penetration > Ball::Radius)
+                if (ball.hadAir //was previously over the hole
+                        && getTerrain(msg->position).penetration > Ball::Radius)
                 {
                     //we're in the hole
                     msg->type = BallEvent::Holed;

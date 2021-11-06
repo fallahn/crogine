@@ -28,7 +28,6 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "CollisionMesh.hpp"
-#include "GameConsts.hpp"
 
 #include <crogine/detail/glm/mat4x4.hpp>
 
@@ -101,21 +100,22 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
 #endif
 }
 
-std::pair<float, std::int32_t> CollisionMesh::getTerrain(glm::vec3 position) const
+TerrainResult CollisionMesh::getTerrain(glm::vec3 position) const
 {
     static const btVector3 RayLength(0.f, -50.f, 0.f);
     auto worldPos = fromGLM(position);
     worldPos -= (RayLength / 2.f);
 
-    std::pair<float, std::int32_t> retVal = { WaterLevel, TerrainID::Scrub };
+    TerrainResult retVal;
 
     btCollisionWorld::ClosestRayResultCallback res(worldPos, worldPos + RayLength);
     m_collisionWorld->rayTest(worldPos, worldPos + RayLength, res);
 
     if (res.hasHit())
     {
-        retVal.first = res.m_hitPointWorld.y();
-        retVal.second = res.m_collisionObject->getUserIndex(); //contains the terrain
+        retVal.height = res.m_hitPointWorld.y();
+        retVal.terrain = res.m_collisionObject->getUserIndex(); //contains the terrain
+        retVal.wasRayHit = true;
     }
 
     return retVal;

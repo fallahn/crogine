@@ -71,8 +71,17 @@ void ClientCollisionSystem::process(float)
             continue;
         }
 
-        auto [height, terrain] = m_collisionMesh.getTerrain(position);
-        collider.terrain = terrain;
+        auto result = m_collisionMesh.getTerrain(position);
+        if (!result.wasRayHit)
+        {
+            //we've missed the geom so check the map to see if we're
+            //in water or scrub
+            result.terrain = readMap(m_mapImage, position.x, -position.y).first;
+            static int buns = 0;
+        }
+
+
+        collider.terrain = result.terrain;
 
         if (collider.terrain == TerrainID::Green)
         {
@@ -87,18 +96,14 @@ void ClientCollisionSystem::process(float)
             }
         }
 
-        if (height < 0)
-        {
-            //we've missed the geom so check the map to see if we're
-            //in water or scrub
-            terrain = readMap(m_mapImage, position.x, position.y).first;
-        }
-
 
         const auto notify = [&](CollisionEvent::Type type, glm::vec3 position)
         {
-            if (collider.terrain == TerrainID::Hole ||
-                collider.state == static_cast<std::uint8_t>(Ball::State::Flight))
+            //ugh messy, but there are several edge caes (this is responsible for sound effects
+            //and particle effects being raised)
+            if (collider.state != static_cast<std::uint8_t>(Ball::State::Idle) &&
+                collider.state != static_cast<std::uint8_t>(Ball::State::Putt)
+                || collider.terrain == TerrainID::Hole)
             {
                 auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
                 msg->type = type;
@@ -109,8 +114,8 @@ void ClientCollisionSystem::process(float)
         };
 
         static constexpr float CollisionLevel = 0.25f;
-        float currentLevel = position.y - height;
-        float prevLevel = collider.previousPosition.y - height;
+        float currentLevel = position.y - result.height;
+        float prevLevel = collider.previousPosition.y - result.height;
 
         std::int32_t direction = 0;
         if (currentLevel < prevLevel)

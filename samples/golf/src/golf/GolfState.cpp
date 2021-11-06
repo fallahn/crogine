@@ -1678,7 +1678,7 @@ void GolfState::spawnBall(const ActorInfo& info)
             if (ballEnt.getComponent<ClientCollider>().active)
             {
                 auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
-                ballPos.y = std::min(0.003f + m_collisionMesh.getTerrain(ballPos).first, ballPos.y); //just to prevent z-fighting
+                ballPos.y = std::min(0.003f + m_collisionMesh.getTerrain(ballPos).height, ballPos.y); //just to prevent z-fighting
                 e.getComponent<cro::Transform>().setPosition(ballPos);
             }
         }
@@ -2266,7 +2266,7 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     target *= 1.f - ((1.f - 0.08f) * distNorm);
     target += position;
 
-    auto [terrainHeight, terrainType] = m_collisionMesh.getTerrain(position);
+    auto [terrainHeight, terrainType, _] = m_collisionMesh.getTerrain(position);
 
     camEnt.getComponent<cro::Transform>().setPosition({ position.x, terrainHeight + height, position.z });
 

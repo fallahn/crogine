@@ -30,6 +30,8 @@ source distribution.
 #pragma once
 
 #include "DebugDraw.hpp"
+#include "GameConsts.hpp"
+#include "Terrain.hpp"
 
 #include <crogine/graphics/MeshData.hpp>
 
@@ -37,6 +39,13 @@ source distribution.
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <memory>
+
+struct TerrainResult final
+{
+    float height = WaterLevel;
+    std::int32_t terrain = TerrainID::Scrub;
+    bool wasRayHit = false;
+};
 
 class CollisionMesh final
 {
@@ -50,7 +59,7 @@ public:
     CollisionMesh& operator = (CollisionMesh&&) = delete;
 
     void updateCollisionMesh(const cro::Mesh::Data&);
-    std::pair<float, std::int32_t> getTerrain(glm::vec3 position) const;
+    TerrainResult getTerrain(glm::vec3 position) const;
 
     void renderDebug(const glm::mat4& viewProj, glm::uvec2 targetSize);
     void setDebugFlags(std::int32_t);
