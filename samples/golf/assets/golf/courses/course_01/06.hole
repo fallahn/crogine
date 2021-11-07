@@ -2,7 +2,7 @@ hole 06
 {
     map = "assets/golf/courses/course_01/06.png"
     model = "assets/golf/models/course_01/06.cmt"
-    pin = "64,0,-47"
+    pin = "64,0.43039,-47"
     target = "64,0,-47"
     tee = "241,0,-142"
     par = "3"

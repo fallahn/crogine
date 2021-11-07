@@ -61,6 +61,8 @@ public:
 
     void render(glm::mat4 viewProjection, glm::uvec2);
 
+    static const std::int32_t DebugFlags = btIDebugDraw::DBG_DrawNormals | btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_FastWireframe;
+
 private:
     
     struct MeshData final

@@ -101,10 +101,9 @@ void ClientCollisionSystem::process(float)
         {
             //ugh messy, but there are several edge cases (this is responsible for sound effects
             //and particle effects being raised)
-            if (/*collider.state != static_cast<std::uint8_t>(Ball::State::Idle) &&
-                collider.state != static_cast<std::uint8_t>(Ball::State::Putt)*/
-                collider.state == static_cast<std::uint8_t>(Ball::State::Flight)
-                || collider.terrain == TerrainID::Hole)
+            if (collider.state == static_cast<std::uint8_t>(Ball::State::Flight)
+                || collider.terrain == TerrainID::Hole
+                || collider.terrain == TerrainID::Bunker)
             {
                 auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
                 msg->type = type;

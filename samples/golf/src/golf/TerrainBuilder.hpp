@@ -147,4 +147,8 @@ private:
         float height = 0.f;
     }m_holeHeight;
     void renderNormalMap(); //don't call this from thread!!
+
+#ifdef CRO_DEBUG_
+    cro::Texture m_normalDebugTexture;
+#endif 
 };

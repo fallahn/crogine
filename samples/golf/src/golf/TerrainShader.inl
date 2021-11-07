@@ -266,7 +266,6 @@ const std::string NormalMapFragmentShader = R"(
         vec3 normal = normalize(v_normal);
         normal += 1.0;
         normal /= 2.0;
-        normal.y = 1.0 - normal.y;
 
         FRAG_OUT = vec4(normal, v_height);
     }

@@ -152,6 +152,7 @@ TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
                     glCheck(glUseProgram(m_terrainProperties.shaderID));
                     glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
                 }*/
+                ImGui::Image(m_normalDebugTexture, { 640.f, 400.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 ImGui::Image(m_normalMap.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();        
@@ -600,15 +601,16 @@ void TerrainBuilder::threadFunc()
 
                             m_slopeIndices.push_back(currIndex++);
 
-                            static constexpr float MaxStrength = 0.85f; //0.75
-                            auto dir = glm::vec2(normal.x, normal.z);
+                            static constexpr float MaxStrength = 0.75f; //0.75
+                            auto dir = glm::vec2(normal.x, -normal.z);
                             auto strength = glm::length(dir);
                             dir /= strength;
-                            strength = std::min(MaxStrength, strength * 26.f); //12
+                            strength = std::min(MaxStrength, strength * 12.f); //12
                             dir *= strength;
                             
                             auto& vert2 = m_slopeBuffer.emplace_back();
                             vert2.position = { posX + dir.x, height - (1.f - normal.y), posZ + dir.y };
+                            //vert2.position = vert.position + normal;
                             vert2.colour = { 0.f, 1.f - (strength + 0.25f), 1.f, 1.f };
                             vert2.texCoord = glm::vec2(40.f  * (strength / MaxStrength));
 
@@ -630,6 +632,13 @@ void TerrainBuilder::threadFunc()
 
 void TerrainBuilder::renderNormalMap()
 {
+#ifdef CRO_DEBUG_
+    if (m_normalMapImage.getSize().x)
+    {
+        m_normalDebugTexture.loadFromImage(m_normalMapImage);
+    }
+#endif
+
     //hmmm is there some of this we can pre-process to save doing it here?
     const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
     std::size_t normalOffset = 0;

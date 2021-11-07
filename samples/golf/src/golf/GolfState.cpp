@@ -271,7 +271,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
         break;
         case SDLK_HOME:
-            debugFlags = (debugFlags == 0) ? /*std::numeric_limits<std::int32_t>::max()*/9 : 0;
+            debugFlags = (debugFlags == 0) ? BulletDebug::DebugFlags : 0;
             m_collisionMesh.setDebugFlags(debugFlags);
             break;
 #endif
