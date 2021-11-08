@@ -310,7 +310,7 @@ void BallSystem::process(float dt)
                 msg->terrain = ball.terrain;
                 msg->position = position;
                 //LogI << position << ", " << m_holeData->pin << ", " << len2 << ", " << MinBallDistance << std::endl;
-                if ((len2 <= MinBallDistance)
+                if ((len2 <= MinBallDistance) || ball.terrain == TerrainID::Hole
                         /*&& getTerrain(position).penetration > Ball::Radius*/)
                 {
                     //we're in the hole

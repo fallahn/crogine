@@ -536,6 +536,8 @@ void TerrainBuilder::threadFunc()
                     }
                 }
 
+                //this isn't the same as the readHeightMap above - it scales the
+                //result to MaxTerrainHeight, whereas the above returns world coords
                 const auto heightAt = [&](std::uint32_t x, std::uint32_t y)
                 {
                     auto size = mapImage.getSize();
@@ -574,50 +576,104 @@ void TerrainBuilder::threadFunc()
                 } 
 
                 //update the vertex data for the slope indicator
-                //TODO is this the same size as the loop above? could save on double iteration
                 loadNormalMap(m_normalMapBuffer, m_normalMapImage); //image is populated when rendering texture
 
                 m_slopeBuffer.clear();
                 m_slopeIndices.clear();
 
                 std::uint32_t currIndex = 0u;
-                for (auto y = 0u; y < MapSize.y; ++y)
+                float lowestHeight = std::numeric_limits<float>::max();
+                float highestHeight = std::numeric_limits<float>::lowest();
+                //we can optimise this by only looping the grid around the pin pos
+                auto pinPos = m_holeData[m_currentHole].pin;
+                pinPos.x = std::floor(pinPos.x);
+                pinPos.y = std::floor(-pinPos.z);
+                const std::int32_t startX = static_cast<std::int32_t>(pinPos.x) - 10;
+                const std::int32_t startY = static_cast<std::int32_t>(pinPos.y) - 10;
+
+                for (auto y = startY; y < startY + 20; ++y)
                 {
-                    for (auto x = 0u; x < MapSize.x; ++x)
+                    for (auto x = startX; x < startX + 20; ++x)
                     {
                         auto terrain = readMap(mapImage, x, y).first;
                         if (terrain == TerrainID::Green)
                         {
-                            //TODO skip bunker too?
-                            float posX = static_cast<float>(x) + 0.5f; //offset to centre of quad
-                            float posZ = -(static_cast<float>(y) + 0.5f);
+                            static constexpr float epsilon = 0.001f;
+                            float posX = static_cast<float>(x);
+                            float posZ = -static_cast<float>(y);
 
-                            auto normal = m_normalMapBuffer[y * MapSize.x + x];
-                            auto height = readHeightMap(x, y) + 0.001f;
-
+                            auto height = readHeightMap(x, y) + epsilon;
                             auto& vert = m_slopeBuffer.emplace_back();
                             vert.position = { posX, height, posZ };
-                            vert.colour = { 1.f, 1.f, 0.f, 0.75f };
-
                             m_slopeIndices.push_back(currIndex++);
 
-                            static constexpr float MaxStrength = 0.75f; //0.75
-                            auto dir = glm::vec2(normal.x, -normal.z);
-                            auto strength = glm::length(dir);
-                            dir /= strength;
-                            strength = std::min(MaxStrength, strength * 12.f); //12
-                            dir *= strength;
-                            
+                            if (height < lowestHeight)
+                            {
+                                lowestHeight = height;
+                            }
+                            else if (height > highestHeight)
+                            {
+                                highestHeight = height;
+                            }
+
+
+
+                            glm::vec3 offset(1.f, 0.f, 0.f);
+                            height = readHeightMap(x + 1, y) + epsilon;
+
                             auto& vert2 = m_slopeBuffer.emplace_back();
-                            vert2.position = { posX + dir.x, height - (1.f - normal.y), posZ + dir.y };
-                            //vert2.position = vert.position + normal;
-                            vert2.colour = { 0.f, 1.f - (strength + 0.25f), 1.f, 1.f };
-                            vert2.texCoord = glm::vec2(40.f  * (strength / MaxStrength));
-
+                            vert2.position = vert.position + offset;
+                            vert2.position.y = height;
+                            vert2.texCoord = { 40.f, 40.f };
                             m_slopeIndices.push_back(currIndex++);
+
+                            if (height < lowestHeight)
+                            {
+                                lowestHeight = height;
+                            }
+                            else if (height > highestHeight)
+                            {
+                                highestHeight = height;
+                            }
+                            
+                            
+                            m_slopeBuffer.emplace_back(vert);
+                            m_slopeIndices.push_back(currIndex++);
+
+
+
+                            offset = glm::vec3(0.f, 0.f, -1.f);
+                            height = readHeightMap(x, y + 1) + epsilon;
+
+                            auto& vert3 = m_slopeBuffer.emplace_back();
+                            vert3.position = vert.position + offset;
+                            vert3.position.y = height;
+                            vert3.texCoord = { 40.f, 40.f };
+                            m_slopeIndices.push_back(currIndex++);
+
+                            if (height < lowestHeight)
+                            {
+                                lowestHeight = height;
+                            }
+                            else if (height > highestHeight)
+                            {
+                                highestHeight = height;
+                            }
                         }
                     }
                 }
+
+                float maxHeight = highestHeight - lowestHeight;
+                if (maxHeight != 0)
+                {
+                    for (auto& v : m_slopeBuffer)
+                    {
+                        auto vertHeight = v.position.y - lowestHeight;
+                        vertHeight /= maxHeight;
+                        v.colour = { vertHeight, smoothstep(0.48f, 0.52f, vertHeight), 1.f - vertHeight, 1.f };
+                    }
+                }
+
                 m_slopeProperties.meshData->vertexCount = static_cast<std::uint32_t>(m_slopeBuffer.size());
             }
 
