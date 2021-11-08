@@ -4,7 +4,7 @@ hole 18
     model = "assets/golf/models/course_01/18.cmt"
     pin = "293,0.138427,-173"
     target = "144,0,-122"
-    tee = "27,0,-30"
+    tee = "27,0.062748,-30"
     par = "4"
 
     prop 

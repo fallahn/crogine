@@ -65,11 +65,15 @@ void SkeletalAnimator::process(float dt)
 
             skel.m_currentFrameTime += dt * anim.playbackRate;
                               
-            if (entity.getComponent<Model>().isVisible())
+            //TODO this break if there is more than one camera
+            //or even more thn one pass (ie reflections) and that pass
+            //leaves the model invisible despite being visible somewhere else
+            //if (entity.getComponent<Model>().isVisible())
             {
                 float interpTime = std::min(1.f, skel.m_currentFrameTime / skel.m_frameTime);
                 interpolate(anim.currentFrame, nextFrame, interpTime, skel);
             }
+
 
             if (skel.m_currentFrameTime > skel.m_frameTime)
             {
@@ -80,7 +84,7 @@ void SkeletalAnimator::process(float dt)
                 }
 
                 anim.currentFrame = nextFrame;
-                skel.m_currentFrameTime = 0.f;
+                skel.m_currentFrameTime -= skel.m_frameTime;
 
                 //raise notification events
                 for (auto [joint, uid] : skel.m_notifications[anim.currentFrame])

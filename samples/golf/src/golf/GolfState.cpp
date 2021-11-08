@@ -1300,6 +1300,7 @@ void GolfState::buildScene()
         }
     };
 
+
     auto flagEntity = entity;
 
     //displays the stroke direction
@@ -1585,9 +1586,10 @@ void GolfState::buildScene()
 
     //careful with these values - they are fine tuned for shadowing of terrain
     auto sunEnt = m_gameScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, /*-0.967f*/-45.f * cro::Util::Const::degToRad);
-    //sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-1.5f*/-38.746f * cro::Util::Const::degToRad);
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-1.5f*/-48.746f * cro::Util::Const::degToRad);
+    //sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -38.746f * cro::Util::Const::degToRad);
+
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -135.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -76.746f * cro::Util::Const::degToRad);
 
 #ifdef CRO_DEBUG_
     //createWeather();

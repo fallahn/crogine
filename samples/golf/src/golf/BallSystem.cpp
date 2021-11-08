@@ -51,7 +51,7 @@ namespace
     constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
 
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
-    static constexpr float Margin = 1.07f;
+    static constexpr float Margin = 1.16f;
     static constexpr float BallHoleDistance = (HoleRadius * Margin) * (HoleRadius * Margin);
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
 }
@@ -143,7 +143,8 @@ void BallSystem::process(float dt)
                 auto [terrain, normal, penetration] = getTerrain(position);
 
                 //test distance to pin
-                auto len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
+                auto pinDir = m_holeData->pin - position;
+                auto len2 = glm::length2(glm::vec2(pinDir.x, pinDir.z));
                 if (len2 < MinBallDistance)
                 {
                     //over hole or in the air
@@ -154,6 +155,11 @@ void BallSystem::process(float dt)
                     //if the ball falls low enough when
                     //over the hole we'll put it in.
                     ball.velocity += (gravityAmount * Gravity) * dt;
+
+                    //this draws the ball to the pin a little bit to make sure the ball
+                    //falls entirely within the radius
+                    pinDir.y = 0.f;
+                    ball.velocity += pinDir;// *dt;
 
                     ball.hadAir = true;
                 }
@@ -203,7 +209,7 @@ void BallSystem::process(float dt)
 
                     //move by slope from surface normal
                     auto velLength = glm::length(ball.velocity);
-                    glm::vec3 slope = glm::vec3(normal.x, 0.f, normal.z) * 1.5f * smoothstep(0.25f, 4.5f, velLength);
+                    glm::vec3 slope = glm::vec3(normal.x, 0.f, normal.z) * 1.15f * smoothstep(0.25f, 4.5f, velLength);
                     ball.velocity += slope;
 
                     //add wind - adding less wind the more the ball travels in the
