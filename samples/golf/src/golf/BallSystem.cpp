@@ -51,6 +51,8 @@ namespace
     constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
 
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
+    static constexpr float Margin = 1.07f;
+    static constexpr float BallHoleDistance = (HoleRadius * Margin) * (HoleRadius * Margin);
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
 }
 
@@ -309,18 +311,20 @@ void BallSystem::process(float dt)
                 auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
                 msg->terrain = ball.terrain;
                 msg->position = position;
-                //LogI << position << ", " << m_holeData->pin << ", " << len2 << ", " << MinBallDistance << std::endl;
-                if ((len2 <= MinBallDistance) || ball.terrain == TerrainID::Hole
+
+                if ((len2 <= BallHoleDistance) || ball.terrain == TerrainID::Hole
                         /*&& getTerrain(position).penetration > Ball::Radius*/)
                 {
                     //we're in the hole
                     msg->type = BallEvent::Holed;
+                    LogI << "Ball Holed" << std::endl;
                 }
                 else
                 {
                     msg->type = BallEvent::TurnEnded;
+                    LogI << "Turn Ended" << std::endl;
                 }
-
+                LogI << "Distance: " << len2 << ", terrain: " << TerrainStrings[ball.terrain] << std::endl;
 
                 ball.state = Ball::State::Idle;
                 updateWind(); //is a bit less random but at least stops the wind

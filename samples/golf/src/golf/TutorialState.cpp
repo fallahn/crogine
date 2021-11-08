@@ -184,12 +184,12 @@ void TutorialState::handleMessage(const cro::Message& msg)
 
 bool TutorialState::simulate(float dt)
 {
-    static float accum = 0.f;
+    /*static float accum = 0.f;
     accum += dt;
 
     glCheck(glUseProgram(shaderID));
     glCheck(glUniform1f(timeUniform, accum * 10.f));
-    glCheck(glUseProgram(0));
+    glCheck(glUseProgram(0));*/
 
     m_scene.simulate(dt);
     return true;
@@ -1542,7 +1542,7 @@ void TutorialState::tutorialFour(cro::Entity root)
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("The moving lines indicate the strength and direction of the green's slope.");
+    entity.addComponent<cro::Text>(font).setString("The coloured lines indicate the strength and direction of the green's slope.");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
@@ -1579,7 +1579,7 @@ void TutorialState::tutorialFour(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(-60.f, 5.f), cro::Colour(1.f, 1.f, 0.f, 0.f)),
-        cro::Vertex2D(glm::vec2(60.f, -5.f), cro::Colour(0.f, 0.25f, 1.f,01.f))
+        cro::Vertex2D(glm::vec2(60.f, -5.f), cro::Colour(0.2f, 0.25f, 1.f, 01.f))
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);
