@@ -44,6 +44,7 @@ source distribution.
 #include "GolfSoundDirector.hpp"
 #include "TutorialDirector.hpp"
 #include "BallSystem.hpp"
+#include "FpsCameraSystem.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -103,6 +104,7 @@ namespace
 #include "WireframeShader.inl"
 
     std::int32_t debugFlags = 0;
+    bool useFreeCam = false;
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
     const cro::Time MouseHideTime = cro::seconds(3.f);
@@ -274,6 +276,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             debugFlags = (debugFlags == 0) ? BulletDebug::DebugFlags : 0;
             m_collisionMesh.setDebugFlags(debugFlags);
             break;
+        case SDLK_INSERT:
+            toggleFreeCam();
+            break;
 #endif
         }
     }
@@ -372,12 +377,23 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_MOUSEMOTION)
     {
-        cro::App::getWindow().setMouseCaptured(false);
-        m_mouseVisible = true;
-        m_mouseClock.restart();
+#ifdef CRO_DEBUG_
+        if (!useFreeCam) {
+#endif
+            cro::App::getWindow().setMouseCaptured(false);
+            m_mouseVisible = true;
+            m_mouseClock.restart();
+#ifdef CRO_DEBUG_
+        }
+#endif // CRO_DEBUG_
+
     }
 
     m_inputParser.handleEvent(evt);
+
+#ifdef CRO_DEBUG_
+    m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
+#endif
 
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
@@ -1202,11 +1218,17 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+#ifdef CRO_DEBUG_
+    m_gameScene.addSystem<FpsCameraSystem>(mb);
+#endif
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
 
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
+#ifdef CRO_DEBUG_
+    m_gameScene.setSystemActive<FpsCameraSystem>(false);
+#endif
 
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures);
     m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio);
@@ -1537,6 +1559,24 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::AudioListener>();
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Green] = camEnt;
+
+#ifdef CRO_DEBUG_
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>();
+    camEnt.addComponent<cro::Camera>().resizeCallback =
+        [camEnt](cro::Camera& cam)
+    {
+        auto vpSize = calcVPSize();
+        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
+    camEnt.addComponent<cro::AudioListener>();
+    camEnt.addComponent<FpsCamera>();
+    setPerspective(camEnt.getComponent<cro::Camera>());
+    m_freeCam = camEnt;
+#endif
+
 
     m_currentPlayer.position = m_holeData[m_currentHole].tee; //prevents the initial camera movement
 
@@ -2787,6 +2827,13 @@ std::int32_t GolfState::getClub() const
 
 void GolfState::setActiveCamera(std::int32_t camID)
 {
+#ifdef CRO_DEBUG_
+    if (useFreeCam)
+    {
+        return;
+    }
+#endif
+
     CRO_ASSERT(camID >= 0 && camID < CameraID::Count, "");
 
     if (m_cameras[camID].isValid()
@@ -2828,4 +2875,23 @@ void GolfState::setActiveCamera(std::int32_t camID)
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
+}
+
+void GolfState::toggleFreeCam()
+{
+    useFreeCam = !useFreeCam;
+    if (useFreeCam)
+    {
+        m_defaultCam = m_gameScene.setActiveCamera(m_freeCam);
+        m_gameScene.setActiveListener(m_freeCam);
+    }
+    else
+    {
+        m_gameScene.setActiveCamera(m_defaultCam);
+        m_gameScene.setActiveListener(m_defaultCam);
+    }
+
+    m_gameScene.setSystemActive<FpsCameraSystem>(useFreeCam);
+    m_inputParser.setActive(!useFreeCam);
+    cro::App::getWindow().setMouseCaptured(useFreeCam);
 }

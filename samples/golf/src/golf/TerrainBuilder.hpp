@@ -128,6 +128,7 @@ private:
         std::int32_t timeUniform = -1;
         std::int32_t alphaUniform = -1;
         std::uint32_t shader = 0;
+        cro::Entity entity;
     }m_slopeProperties;
     std::vector<glm::vec3> m_normalMapBuffer;
 

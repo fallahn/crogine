@@ -35,6 +35,8 @@ source distribution.
 #include <SDL_gamecontroller.h>
 #include <SDL_haptic.h>
 
+#include <string>
+
 namespace cro
 {
     /*!

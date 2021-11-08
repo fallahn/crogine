@@ -59,8 +59,6 @@ namespace
 {
 #include "TerrainShader.inl"
 
-    cro::Entity slopeEntity;
-
     //params for poisson disk samples
     constexpr float GrassDensity = 1.7f; //radius for PD sampler
     constexpr float TreeDensity = 4.f;
@@ -72,6 +70,9 @@ namespace
     constexpr std::uint32_t QuadsPerMetre = 1;
 
     constexpr float MaxShrubOffset = MaxTerrainHeight + 13.f;
+    constexpr std::int32_t SlopeGridSize = 20;
+    constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
+
 
     //callback data
     struct SwapData final
@@ -325,7 +326,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //resources.materials.get(materialID).enableDepthTest = false;
 
     entity = scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.01f, 0.f });
+    entity.addComponent<cro::Transform>();// .setPosition({ 0.5f, 0.01f, 0.5f });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::SlopeIndicator;
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
@@ -358,11 +359,11 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     };
 
     m_slopeProperties.meshData = &entity.getComponent<cro::Model>().getMeshData();
-    m_slopeProperties.meshData->boundingBox[0] = glm::vec3(0.f, -10.f, 0.f);
-    m_slopeProperties.meshData->boundingBox[1] = glm::vec3(MaxBounds[0], 10.f, -MaxBounds[1]);
-    m_slopeProperties.meshData->boundingSphere.centre = { MaxBounds[0] / 2.f, 0.f, -MaxBounds[1] / 2.f };
+    m_slopeProperties.meshData->boundingBox[0] = glm::vec3(-HalfGridSize, -1.f, HalfGridSize);
+    m_slopeProperties.meshData->boundingBox[1] = glm::vec3(HalfGridSize, 1.f, -HalfGridSize);
+    m_slopeProperties.meshData->boundingSphere.centre = { HalfGridSize, 0.f, -HalfGridSize };
     m_slopeProperties.meshData->boundingSphere.radius = glm::length(m_slopeProperties.meshData->boundingSphere.centre);
-    slopeEntity = entity;
+    m_slopeProperties.entity = entity;
 
     //create and update the initial normal map
     m_normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
@@ -441,6 +442,8 @@ void TerrainBuilder::update(std::size_t holeIndex)
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), m_slopeIndices.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
+        m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
+
         //signal to the thread we want to update the buffers
         //ready for next time
         m_currentHole++;
@@ -454,8 +457,8 @@ void TerrainBuilder::update(std::size_t holeIndex)
 
 void TerrainBuilder::updateTime(float elapsed)
 {
-    glCheck(glUseProgram(m_slopeProperties.shader));
-    glCheck(glUniform1f(m_slopeProperties.timeUniform, elapsed));
+    //glCheck(glUseProgram(m_slopeProperties.shader));
+    //glCheck(glUniform1f(m_slopeProperties.timeUniform, elapsed));
 }
 
 void TerrainBuilder::setSlopePosition(glm::vec3 position)
@@ -586,23 +589,21 @@ void TerrainBuilder::threadFunc()
                 float highestHeight = std::numeric_limits<float>::lowest();
                 //we can optimise this by only looping the grid around the pin pos
                 auto pinPos = m_holeData[m_currentHole].pin;
-                pinPos.x = std::floor(pinPos.x);
-                pinPos.y = std::floor(-pinPos.z);
-                const std::int32_t startX = static_cast<std::int32_t>(pinPos.x) - 10;
-                const std::int32_t startY = static_cast<std::int32_t>(pinPos.y) - 10;
+                const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
+                const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
 
-                for (auto y = startY; y < startY + 20; ++y)
+                for (auto y = startY; y < startY + SlopeGridSize; ++y)
                 {
-                    for (auto x = startX; x < startX + 20; ++x)
+                    for (auto x = startX; x < startX + SlopeGridSize; ++x)
                     {
                         auto terrain = readMap(mapImage, x, y).first;
                         if (terrain == TerrainID::Green)
                         {
-                            static constexpr float epsilon = 0.001f;
-                            float posX = static_cast<float>(x);
-                            float posZ = -static_cast<float>(y);
+                            static constexpr float epsilon = 0.011f;
+                            float posX = static_cast<float>(x) - pinPos.x;
+                            float posZ = -static_cast<float>(y) - pinPos.z;
 
-                            auto height = readHeightMap(x, y) + epsilon;
+                            auto height = (readHeightMap(x, y) - pinPos.y) + epsilon;
                             auto& vert = m_slopeBuffer.emplace_back();
                             vert.position = { posX, height, posZ };
                             m_slopeIndices.push_back(currIndex++);
@@ -615,16 +616,16 @@ void TerrainBuilder::threadFunc()
                             {
                                 highestHeight = height;
                             }
-
+                            auto basePos = vert.position;
 
 
                             glm::vec3 offset(1.f, 0.f, 0.f);
-                            height = readHeightMap(x + 1, y) + epsilon;
+                            height = (readHeightMap(x + 1, y) - pinPos.y) + epsilon;
 
                             auto& vert2 = m_slopeBuffer.emplace_back();
-                            vert2.position = vert.position + offset;
+                            vert2.position = basePos + offset;
                             vert2.position.y = height;
-                            vert2.texCoord = { 40.f, 40.f };
+                            vert2.texCoord = { 40.f, 40.f }; //this is the number of times the 'dashes' repeat if enabled in the shader
                             m_slopeIndices.push_back(currIndex++);
 
                             if (height < lowestHeight)
@@ -636,17 +637,16 @@ void TerrainBuilder::threadFunc()
                                 highestHeight = height;
                             }
                             
-                            
-                            m_slopeBuffer.emplace_back(vert);
-                            m_slopeIndices.push_back(currIndex++);
+
+                            m_slopeIndices.push_back(currIndex-2); //repeat first vert
 
 
 
                             offset = glm::vec3(0.f, 0.f, -1.f);
-                            height = readHeightMap(x, y + 1) + epsilon;
+                            height = (readHeightMap(x, y + 1) - pinPos.y) + epsilon;
 
                             auto& vert3 = m_slopeBuffer.emplace_back();
-                            vert3.position = vert.position + offset;
+                            vert3.position = basePos + offset;
                             vert3.position.y = height;
                             vert3.texCoord = { 40.f, 40.f };
                             m_slopeIndices.push_back(currIndex++);
@@ -670,7 +670,7 @@ void TerrainBuilder::threadFunc()
                     {
                         auto vertHeight = v.position.y - lowestHeight;
                         vertHeight /= maxHeight;
-                        v.colour = { vertHeight, smoothstep(0.48f, 0.52f, vertHeight), 1.f - vertHeight, 1.f };
+                        v.colour = { vertHeight, smoothstep(0.48f, 0.52f, vertHeight), 1.f - vertHeight, 0.9f };
                     }
                 }
 

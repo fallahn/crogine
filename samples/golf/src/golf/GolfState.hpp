@@ -169,6 +169,9 @@ private:
     std::int32_t m_currentCamera;
     void setActiveCamera(std::int32_t);
 
+    cro::Entity m_defaultCam;
+    cro::Entity m_freeCam;
+    void toggleFreeCam();
 
     //UI stuffs - found in GolfStateUI.cpp
     struct SpriteID final
