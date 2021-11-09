@@ -205,10 +205,10 @@ void GameState::netBroadcast()
     for (const auto& player : m_playerInfo)
     {
         //only send active player's ball? this breaks initial positions for other players
+        auto ball = player.ballEntity;
+        
         //if (ball == m_playerInfo[0].ballEntity)
         {
-            auto ball = player.ballEntity;
-
             auto timestamp = m_serverTime.elapsed().asMilliseconds();
 
             ActorInfo info;

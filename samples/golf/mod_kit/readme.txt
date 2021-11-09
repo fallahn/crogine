@@ -10,6 +10,7 @@ ball_format.md - description of the *.ball files used to load custom balls. Writ
 ball_template.blend - ball template file for Blender
 collision_colours.ase - A Photoshop palette which contains colours for terrain collision. Not an Aseprite file.
 collision_colours.kpl - A Krita palette (importable to Blender) which contains the colours used for terrain type detection.
+colordome-32.ase - The main colour palette used by VGA Golf, created by Polyphorge https://lospec.com/poly-phorge
 course_format.md - describes the .course and .hole files used to create custom courses, as well as the files associated with hole model files. Written in markdown format.
 hole_template.blend - example hole model in Blender format
 prop-export.py - Export script for Blender written in python. Used to export the positions of prop models and crowds in the *.hole format.
