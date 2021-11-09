@@ -2598,11 +2598,11 @@ void GolfState::hitBall()
 
 void GolfState::updateActor(const ActorInfo& update)
 {
-    bool currentPlayer = (update == m_currentPlayer);
+    bool active = m_currentPlayer.player == update.playerID;
 
     cro::Command cmd;
     cmd.targetFlags = CommandID::Ball;
-    cmd.action = [&, update, currentPlayer](cro::Entity e, float)
+    cmd.action = [&, update, active](cro::Entity e, float)
     {
         if (e.isValid())
         {
@@ -2611,15 +2611,17 @@ void GolfState::updateActor(const ActorInfo& update)
             {
                 interp.setTarget({ update.position, {1.f,0.f,0.f,0.f}, update.timestamp });
             }
-            e.getComponent<ClientCollider>().active = currentPlayer;
+            e.getComponent<ClientCollider>().active = active;
             e.getComponent<ClientCollider>().state = update.state;
 
-            if (currentPlayer)
+            if (active)
             {
+                auto position = update.position;
+
                 //update spectator camera
                 cro::Command cmd2;
                 cmd2.targetFlags = CommandID::SpectatorCam;
-                cmd2.action = [&, e](cro::Entity en, float)
+                cmd2.action = [&, e, position](cro::Entity en, float)
                 {
                     en.getComponent<CameraFollower>().target = e;
                     en.getComponent<CameraFollower>().playerPosition = m_currentPlayer.position;
@@ -2632,7 +2634,7 @@ void GolfState::updateActor(const ActorInfo& update)
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
-    if (currentPlayer)
+    if (update == m_currentPlayer) //actually current client...
     {
         //set the green cam zoom as appropriate
         float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);

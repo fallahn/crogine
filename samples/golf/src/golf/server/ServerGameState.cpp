@@ -204,10 +204,10 @@ void GameState::netBroadcast()
     //fetch ball ents and send updates to client
     for (const auto& player : m_playerInfo)
     {
-        //only send active player's ball? this breaks initial positions for other players
+        //only send active player's ball
         auto ball = player.ballEntity;
         
-        //if (ball == m_playerInfo[0].ballEntity)
+        if (ball == m_playerInfo[0].ballEntity)
         {
             auto timestamp = m_serverTime.elapsed().asMilliseconds();
 
@@ -418,9 +418,22 @@ void GameState::setNextHole()
             player.distanceToHole = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin);
             player.terrain = TerrainID::Fairway;
 
-            player.ballEntity.getComponent<Ball>().terrain = TerrainID::Fairway;
-            player.ballEntity.getComponent<Ball>().velocity = glm::vec3(0.f);
-            player.ballEntity.getComponent<cro::Transform>().setPosition(player.position);
+            auto ball = player.ballEntity;
+            ball.getComponent<Ball>().terrain = TerrainID::Fairway;
+            ball.getComponent<Ball>().velocity = glm::vec3(0.f);
+            ball.getComponent<cro::Transform>().setPosition(player.position);
+
+            auto timestamp = m_serverTime.elapsed().asMilliseconds();
+
+            ActorInfo info;
+            info.serverID = static_cast<std::uint32_t>(ball.getIndex());
+            info.position = ball.getComponent<cro::Transform>().getPosition();
+            info.timestamp = timestamp;
+            info.clientID = player.client;
+            info.playerID = player.player;
+            info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
+            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
         }
 
         //tell the local ball system which hole we're on
