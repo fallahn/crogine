@@ -209,7 +209,7 @@ void BallSystem::process(float dt)
 
                     //move by slope from surface normal
                     auto velLength = glm::length(ball.velocity);
-                    glm::vec3 slope = glm::vec3(normal.x, 0.f, normal.z) * 1.15f * smoothstep(0.25f, 4.5f, velLength);
+                    glm::vec3 slope = glm::vec3(normal.x, 0.f, normal.z) * 0.85f * smoothstep(0.35f, 4.5f, velLength);
                     ball.velocity += slope;
 
                     //add wind - adding less wind the more the ball travels in the
@@ -318,19 +318,20 @@ void BallSystem::process(float dt)
                 msg->terrain = ball.terrain;
                 msg->position = position;
 
-                if ((len2 <= BallHoleDistance) || ball.terrain == TerrainID::Hole
-                        /*&& getTerrain(position).penetration > Ball::Radius*/)
+                if (/*position. y < (m_holeData->pin.y - Ball::Radius)
+                    ||*/ ball.terrain == TerrainID::Hole
+                        || (len2 <= BallHoleDistance))
                 {
                     //we're in the hole
                     msg->type = BallEvent::Holed;
-                    LogI << "Ball Holed" << std::endl;
+                    //LogI << "Ball Holed" << std::endl;
                 }
                 else
                 {
                     msg->type = BallEvent::TurnEnded;
-                    LogI << "Turn Ended" << std::endl;
+                    //LogI << "Turn Ended" << std::endl;
                 }
-                LogI << "Distance: " << len2 << ", terrain: " << TerrainStrings[ball.terrain] << std::endl;
+                //LogI << "Distance: " << len2 << ", terrain: " << TerrainStrings[ball.terrain] << std::endl;
 
                 ball.state = Ball::State::Idle;
                 updateWind(); //is a bit less random but at least stops the wind
