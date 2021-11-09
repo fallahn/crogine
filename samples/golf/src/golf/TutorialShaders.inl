@@ -62,7 +62,6 @@ R"(
     {
         float alpha = (sin((v_position.x * 0.5) - u_time) + 1.0) * 0.5;
         alpha = step(0.5, alpha);
-alpha = 1.0;
 
         FRAG_OUT = v_colour;
         FRAG_OUT.a *= alpha;

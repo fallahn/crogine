@@ -49,6 +49,7 @@ source distribution.
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Maths.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
 #include "../ErrorCheck.hpp"
@@ -128,6 +129,7 @@ TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
     m_threadRunning (false),
     m_wantsUpdate   (false)
 {
+    m_slopeBuffer.reserve(SlopeGridSize * SlopeGridSize * 4);
 #ifdef CRO_DEBUG_
     registerWindow([&]() 
         {
@@ -329,7 +331,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     entity.addComponent<cro::Transform>();// .setPosition({ 0.5f, 0.01f, 0.5f });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::SlopeIndicator;
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
-    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
     entity.getComponent<cro::Model>().setHidden(true);
     entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
     entity.getComponent<cro::Callback>().function =
@@ -457,8 +459,8 @@ void TerrainBuilder::update(std::size_t holeIndex)
 
 void TerrainBuilder::updateTime(float elapsed)
 {
-    //glCheck(glUseProgram(m_slopeProperties.shader));
-    //glCheck(glUniform1f(m_slopeProperties.timeUniform, elapsed));
+    glCheck(glUseProgram(m_slopeProperties.shader));
+    glCheck(glUniform1f(m_slopeProperties.timeUniform, elapsed));
 }
 
 void TerrainBuilder::setSlopePosition(glm::vec3 position)
@@ -591,6 +593,8 @@ void TerrainBuilder::threadFunc()
                 auto pinPos = m_holeData[m_currentHole].pin;
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
+                constexpr float DashCount = 40.f; //actual div by TAU cos its sin but eh.
+                constexpr float SlopeSpeed = 40.f;
 
                 for (auto y = startY; y < startY + SlopeGridSize; ++y)
                 {
@@ -604,9 +608,12 @@ void TerrainBuilder::threadFunc()
                             float posZ = -static_cast<float>(y) - pinPos.z;
 
                             auto height = (readHeightMap(x, y) - pinPos.y) + epsilon;
-                            auto& vert = m_slopeBuffer.emplace_back();
+                            SlopeVertex vert;
                             vert.position = { posX, height, posZ };
-                            m_slopeIndices.push_back(currIndex++);
+
+                            //this is the number of times the 'dashes' repeat if enabled in the shader
+                            //and the speed/direction based on height difference
+                            vert.texCoord = { 0.f, 0.f };
 
                             if (height < lowestHeight)
                             {
@@ -616,17 +623,17 @@ void TerrainBuilder::threadFunc()
                             {
                                 highestHeight = height;
                             }
-                            auto basePos = vert.position;
+
 
 
                             glm::vec3 offset(1.f, 0.f, 0.f);
                             height = (readHeightMap(x + 1, y) - pinPos.y) + epsilon;
 
-                            auto& vert2 = m_slopeBuffer.emplace_back();
-                            vert2.position = basePos + offset;
+                            SlopeVertex vert2;
+                            vert2.position = vert.position + offset;
                             vert2.position.y = height;
-                            vert2.texCoord = { 40.f, 40.f }; //this is the number of times the 'dashes' repeat if enabled in the shader
-                            m_slopeIndices.push_back(currIndex++);
+                            vert2.texCoord = { DashCount, (vert.position.y - height) * SlopeSpeed};
+                            vert.texCoord.y = vert2.texCoord.y; //must be constant across segment
 
                             if (height < lowestHeight)
                             {
@@ -638,18 +645,18 @@ void TerrainBuilder::threadFunc()
                             }
                             
 
-                            m_slopeIndices.push_back(currIndex-2); //repeat first vert
-
-
+                            //we have to copy first vert as the tex coords will be different
+                            //shame we can just recycle the index...
+                            auto vert3 = vert;
 
                             offset = glm::vec3(0.f, 0.f, -1.f);
                             height = (readHeightMap(x, y + 1) - pinPos.y) + epsilon;
 
-                            auto& vert3 = m_slopeBuffer.emplace_back();
-                            vert3.position = basePos + offset;
-                            vert3.position.y = height;
-                            vert3.texCoord = { 40.f, 40.f };
-                            m_slopeIndices.push_back(currIndex++);
+                            SlopeVertex vert4;
+                            vert4.position = vert.position + offset;
+                            vert4.position.y = height;
+                            vert4.texCoord = { DashCount, (vert3.position.y - height) * SlopeSpeed };
+                            vert3.texCoord.y = vert4.texCoord.y;
 
                             if (height < lowestHeight)
                             {
@@ -659,6 +666,17 @@ void TerrainBuilder::threadFunc()
                             {
                                 highestHeight = height;
                             }
+
+
+                            //do this last once we know everything was modified
+                            m_slopeBuffer.push_back(vert);
+                            m_slopeIndices.push_back(currIndex++);
+                            m_slopeBuffer.push_back(vert2);
+                            m_slopeIndices.push_back(currIndex++);
+                            m_slopeBuffer.push_back(vert3);
+                            m_slopeIndices.push_back(currIndex++);
+                            m_slopeBuffer.push_back(vert4);
+                            m_slopeIndices.push_back(currIndex++);
                         }
                     }
                 }

@@ -1773,7 +1773,6 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
     //name label for the ball's owner
     glm::vec2 texSize(LabelTextureSize);
 

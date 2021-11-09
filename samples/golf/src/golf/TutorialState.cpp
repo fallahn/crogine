@@ -184,12 +184,12 @@ void TutorialState::handleMessage(const cro::Message& msg)
 
 bool TutorialState::simulate(float dt)
 {
-    /*static float accum = 0.f;
+    static float accum = 0.f;
     accum += dt;
 
     glCheck(glUseProgram(shaderID));
     glCheck(glUniform1f(timeUniform, accum * 10.f));
-    glCheck(glUseProgram(0));*/
+    glCheck(glUseProgram(0));
 
     m_scene.simulate(dt);
     return true;
