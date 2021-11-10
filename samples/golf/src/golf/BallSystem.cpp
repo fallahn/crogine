@@ -51,7 +51,8 @@ namespace
     constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
 
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
-    static constexpr float Margin = 1.16f;
+    static constexpr float MinFallDistance = (HoleRadius - Ball::Radius) * (HoleRadius - Ball::Radius);
+    static constexpr float Margin = 1.19f;
     static constexpr float BallHoleDistance = (HoleRadius * Margin) * (HoleRadius * Margin);
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
 }
@@ -149,21 +150,25 @@ void BallSystem::process(float dt)
                 auto len2 = glm::length2(glm::vec2(pinDir.x, pinDir.z));
                 if (len2 < MinBallDistance)
                 {
-                    //over hole or in the air
-                    static constexpr float MinFallVelocity = 2.1f;
-                    float gravityAmount = 1.f - std::min(1.f, glm::length2(ball.velocity) / MinFallVelocity);
-
-                    //this is some fudgy non-physics.
-                    //if the ball falls low enough when
-                    //over the hole we'll put it in.
-                    ball.velocity += (gravityAmount * Gravity) * dt;
-
                     //this draws the ball to the pin a little bit to make sure the ball
                     //falls entirely within the radius
                     pinDir.y = 0.f;
-                    ball.velocity += pinDir;// *dt;
+                    ball.velocity += pinDir * dt;
 
                     ball.hadAir = true;
+
+                    //but don't fall until we're Ball::Radius in
+                    if (len2 <= MinFallDistance)
+                    {
+                        //over hole or in the air
+                        static constexpr float MinFallVelocity = 2.1f;
+                        float gravityAmount = 1.f - std::min(1.f, glm::length2(ball.velocity) / MinFallVelocity);
+
+                        //this is some fudgy non-physics.
+                        //if the ball falls low enough when
+                        //over the hole we'll put it in.
+                        ball.velocity += (gravityAmount * Gravity) * dt;
+                    }
                 }
                 else //we're on the green so roll
                 {
