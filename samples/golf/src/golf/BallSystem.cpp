@@ -226,9 +226,14 @@ void BallSystem::process(float dt)
                 tx.move(ball.velocity * dt);
                 ball.terrain = terrain; //TODO this will be wrong if the above movement changed the terrain
 
+                //spin based on velocity
+                auto vel2 = glm::length2(ball.velocity);
+                static constexpr float MaxVel = 5.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
+                tx.rotate(cro::Transform::Y_AXIS, cro::Util::Const::TAU * (vel2 / MaxVel) * ball.spin * dt);
+
                 //if we've slowed down or fallen more than the
                 //ball's diameter (radius??) stop the ball
-                if (glm::length2(ball.velocity) < 0.01f
+                if (vel2 < 0.01f
                     || (penetration > (Ball::Radius * 2.5f)))
                 {
                     ball.velocity = glm::vec3(0.f);

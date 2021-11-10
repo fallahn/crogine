@@ -214,6 +214,7 @@ void GameState::netBroadcast()
             ActorInfo info;
             info.serverID = static_cast<std::uint32_t>(ball.getIndex());
             info.position = ball.getComponent<cro::Transform>().getPosition();
+            info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
             info.timestamp = timestamp;
             info.clientID = player.client;
             info.playerID = player.player;
@@ -342,8 +343,17 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
             //Ideally we want to read the frame data from the sprite sheet
             //as well as account for a frame of interp delay on the client
             ball.delay = 0.32f;
-
             ball.startPoint = m_playerInfo[0].ballEntity.getComponent<cro::Transform>().getPosition();
+
+            //calc the amount of spin based on if we're going towards the hole
+            glm::vec2 pin = { m_holeData[m_currentHole].pin.x, m_holeData[m_currentHole].pin.z };
+            glm::vec2 start = { ball.startPoint.x, ball.startPoint.z };
+            auto dir = glm::normalize(pin - start);
+            auto x = -dir.y;
+            dir.y = dir.x;
+            dir.x = x;
+            ball.spin = glm::dot(dir, glm::normalize(glm::vec2(ball.velocity.x, ball.velocity.z))) + 0.1f;
+
 
             m_playerInfo[0].holeScore[m_currentHole]++;
 

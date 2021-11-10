@@ -356,7 +356,7 @@ bool GolfGame::initialise()
         });
 
     getWindow().setLoadingScreen<LoadingScreen>();
-    getWindow().setTitle("Golf Game");
+    getWindow().setTitle("VGA Golf - 1.1.0");
     getWindow().setIcon(icon);
     m_renderTarget = &getWindow();
 
