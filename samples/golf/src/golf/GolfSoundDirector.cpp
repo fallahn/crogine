@@ -272,12 +272,16 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 break;
             }
         }
-        else if (data.type == CollisionEvent::End)
+        else// if (data.type == CollisionEvent::End)
         {
             if (data.terrain == TerrainID::Green
                 && data.clubID == ClubID::Putter)
             {
                 playSound(AudioID::Ground, data.position);
+            }
+            else if (data.terrain == TerrainID::Hole)
+            {
+                playSound(AudioID::Hole, data.position);
             }
         }
     }

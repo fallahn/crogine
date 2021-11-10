@@ -51,7 +51,8 @@ namespace
     constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
 
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
-    static constexpr float MinFallDistance = (HoleRadius - Ball::Radius) * (HoleRadius - Ball::Radius);
+    static constexpr float FallRadius = Ball::Radius * 0.25f;
+    static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
     static constexpr float Margin = 1.19f;
     static constexpr float BallHoleDistance = (HoleRadius * Margin) * (HoleRadius * Margin);
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
@@ -160,6 +161,8 @@ void BallSystem::process(float dt)
                     //but don't fall until we're Ball::Radius in
                     if (len2 <= MinFallDistance)
                     {
+                        //float radMultiplier = 1.f - std::max(0.f, (len2 - MinFallDistance) / (MinBallDistance - MinFallDistance));
+
                         //over hole or in the air
                         static constexpr float MinFallVelocity = 2.1f;
                         float gravityAmount = 1.f - std::min(1.f, glm::length2(ball.velocity) / MinFallVelocity);

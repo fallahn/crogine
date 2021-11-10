@@ -1568,7 +1568,7 @@ void GolfState::buildScene()
         [camEnt](cro::Camera& cam)
     {
         auto vpSize = calcVPSize();
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
