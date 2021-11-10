@@ -688,7 +688,7 @@ void TerrainBuilder::threadFunc()
                     {
                         auto vertHeight = v.position.y - lowestHeight;
                         vertHeight /= maxHeight;
-                        v.colour = { vertHeight, smoothstep(0.48f, 0.52f, vertHeight), 1.f - vertHeight, 0.8f };
+                        v.colour = { 0.f, 0.4f * vertHeight, 1.f - vertHeight, 0.9f };
                     }
                 }
 
