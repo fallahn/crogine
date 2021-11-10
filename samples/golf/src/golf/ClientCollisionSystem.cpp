@@ -150,6 +150,7 @@ void ClientCollisionSystem::process(float)
 
         collider.previousDirection = direction;
         collider.previousPosition = position;
+        collider.active = false; //forcibly reset this so it can only be explicitly set true by a server update
     }
 }
 
