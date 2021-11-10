@@ -1694,7 +1694,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.003f, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<InterpolationComponent>().setID(info.serverID);
-    entity.addComponent<ClientCollider>().previousPosition = info.position;
+    entity.addComponent<ClientCollider>();// .previousPosition = info.position;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.ballMeshID), material);
 
     //ball shadow

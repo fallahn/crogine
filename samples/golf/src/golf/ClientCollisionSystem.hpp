@@ -41,8 +41,9 @@ class CollisionMesh;
 
 struct ClientCollider final
 {
-    glm::vec3 previousPosition = glm::vec3(0.f);
+    //glm::vec3 previousPosition = glm::vec3(0.f);
     std::int32_t previousDirection = 0;
+    float previousHeight = 0.f;
     std::uint8_t terrain = 0;
     std::uint8_t state = 0;
     bool active = false;

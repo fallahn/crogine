@@ -115,14 +115,14 @@ void ClientCollisionSystem::process(float)
 
         static constexpr float CollisionLevel = 0.25f;
         float currentLevel = position.y - result.height;
-        float prevLevel = collider.previousPosition.y - result.height;
+        //float prevLevel = collider.previousPosition.y - result.height;
 
         std::int32_t direction = 0;
-        if (currentLevel < prevLevel)
+        if (currentLevel < collider.previousHeight)
         {
             direction = -1;
         }
-        else if (currentLevel > prevLevel)
+        else if (currentLevel > collider.previousHeight)
         {
             direction = 1;
         }
@@ -136,12 +136,15 @@ void ClientCollisionSystem::process(float)
                 //started moving up
                 notify(CollisionEvent::End, position);
             }
-            else if (prevLevel > CollisionLevel)
+            else if (collider.previousHeight > CollisionLevel)
             {
                 notify(CollisionEvent::Begin, position);
             }
-            else if (currentLevel < -Ball::Radius
-                && prevLevel >= -Ball::Radius)
+            /*else if (currentLevel < -Ball::Radius
+                && prevLevel >= -Ball::Radius)*/
+            else if(collider.terrain == TerrainID::Hole
+                &&(collider.previousHeight > result.height - Ball::Radius
+                    && currentLevel < result.height - Ball::Radius))
             {
                 //we're in the hole. Probably.
                 notify(CollisionEvent::Begin, position);
@@ -149,7 +152,8 @@ void ClientCollisionSystem::process(float)
         }
 
         collider.previousDirection = direction;
-        collider.previousPosition = position;
+        //collider.previousPosition = position;
+        collider.previousHeight = currentLevel;
         collider.active = false; //forcibly reset this so it can only be explicitly set true by a server update
     }
 }
