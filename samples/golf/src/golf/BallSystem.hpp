@@ -61,6 +61,8 @@ struct Ball final
         Idle, Flight, Putt, Paused, Reset
     }state = State::Idle;
 
+    static const std::array<std::string, 5> StateStrings;
+
     std::uint8_t terrain = TerrainID::Fairway;
 
     glm::vec3 velocity = glm::vec3(0.f);

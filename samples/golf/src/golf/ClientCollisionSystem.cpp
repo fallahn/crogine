@@ -102,6 +102,7 @@ void ClientCollisionSystem::process(float)
             //ugh messy, but there are several edge cases (this is responsible for sound effects
             //and particle effects being raised)
             if (collider.state == static_cast<std::uint8_t>(Ball::State::Flight)
+                || collider.state == static_cast<std::uint8_t>(Ball::State::Reset) //for scrub/water
                 || collider.terrain == TerrainID::Hole
                 || collider.terrain == TerrainID::Bunker)
             {
@@ -110,12 +111,13 @@ void ClientCollisionSystem::process(float)
                 msg->position = position;
                 msg->terrain = collider.terrain;
                 msg->clubID = m_club;
+
+                //LogI << "Collide " << TerrainStrings[collider.terrain] << ", State " << Ball::StateStrings[collider.state] << std::endl;
             }
         };
 
-        static constexpr float CollisionLevel = 0.25f;
+        static constexpr float CollisionLevel = 0.35f;
         float currentLevel = position.y - result.height;
-        //float prevLevel = collider.previousPosition.y - result.height;
 
         std::int32_t direction = 0;
         if (currentLevel < collider.previousHeight)
@@ -140,11 +142,9 @@ void ClientCollisionSystem::process(float)
             {
                 notify(CollisionEvent::Begin, position);
             }
-            /*else if (currentLevel < -Ball::Radius
-                && prevLevel >= -Ball::Radius)*/
             else if(collider.terrain == TerrainID::Hole
-                &&(collider.previousHeight > result.height - Ball::Radius
-                    && currentLevel < result.height - Ball::Radius))
+                &&(collider.previousHeight > result.height - (Ball::Radius * 2.f)
+                    && currentLevel < result.height - (Ball::Radius * 2.f)))
             {
                 //we're in the hole. Probably.
                 notify(CollisionEvent::Begin, position);
@@ -152,7 +152,6 @@ void ClientCollisionSystem::process(float)
         }
 
         collider.previousDirection = direction;
-        //collider.previousPosition = position;
         collider.previousHeight = currentLevel;
         collider.active = false; //forcibly reset this so it can only be explicitly set true by a server update
     }
@@ -161,4 +160,5 @@ void ClientCollisionSystem::process(float)
 void ClientCollisionSystem::setMap(std::uint32_t index)
 {
     m_mapImage.loadFromFile(m_holeData[index].mapPath);
+    m_holeIndex = index;
 }

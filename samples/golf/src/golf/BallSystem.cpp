@@ -56,6 +56,8 @@ namespace
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
 }
 
+const std::array<std::string, 5u> Ball::StateStrings = { "Idle", "Flight", "Putt", "Paused", "Reset" };
+
 BallSystem::BallSystem(cro::MessageBus& mb)
     : cro::System           (mb, typeid(BallSystem)),
     m_windDirTime           (cro::seconds(0.f)),
