@@ -29,7 +29,7 @@ source distribution.
 
 #include "FpsCameraSystem.hpp"
 
-#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/core/GameController.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
@@ -47,7 +47,7 @@ FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb)
 }
 
 //public
-void FpsCameraSystem::handleEvent(const SDL_Event& evt)
+void FpsCameraSystem::handleEvent(const cro::Event& evt)
 {
     //TODO add button mapping. Probably only map one
     //set of keys as it's unlikely people will play with
@@ -128,31 +128,160 @@ void FpsCameraSystem::handleEvent(const SDL_Event& evt)
         }
         break;
     case SDL_MOUSEMOTION:
-        //if (evt.motion.xrel != 0)
-    {
         m_inputs[0].xMove += evt.motion.xrel;
-    }
-    //if (evt.motion.yrel != 0)
-    {
         m_inputs[0].yMove += evt.motion.yrel;
-    }
     break;
+
+
+    //parse controller presses into corresponding inputs
+    case SDL_CONTROLLERBUTTONDOWN:
+    {
+        auto controllerID = cro::GameController::controllerID(evt.cbutton.which);
+        if (controllerID != -1)
+        {
+            CRO_ASSERT(controllerID < m_inputs.size(), "OUT OF RANGE");
+            switch (evt.cbutton.button)
+            {
+            default: break;
+            case cro::GameController::ButtonA:
+                m_inputs[controllerID].buttonFlags |= Input::Flags::Jump;
+                break;
+            case cro::GameController::ButtonB:
+                m_inputs[controllerID].buttonFlags |= Input::Flags::Crouch;
+                break;
+            case cro::GameController::ButtonX:
+
+                break;
+            case cro::GameController::ButtonY:
+                
+                break;
+            case cro::GameController::DPadUp:
+                m_inputs[controllerID].buttonFlags |= Input::Flags::Forward;
+                break;
+            case cro::GameController::DPadDown:
+                m_inputs[controllerID].buttonFlags |= Input::Flags::Backward;
+                break;
+            case cro::GameController::DPadLeft:
+                m_inputs[controllerID].buttonFlags |= Input::Flags::Left;
+                break;
+            case cro::GameController::DPadRight:
+                m_inputs[controllerID].buttonFlags |= Input::Flags::Right;
+                break;
+            }
+        }
+    }
+        break;
+    case SDL_CONTROLLERBUTTONUP:
+    {
+        auto controllerID = cro::GameController::controllerID(evt.cbutton.which);
+        if (controllerID != -1)
+        {
+            CRO_ASSERT(controllerID < m_inputs.size(), "OUT OF RANGE");
+            switch (evt.cbutton.button)
+            {
+            default: break;
+            case cro::GameController::ButtonA:
+                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Jump;
+                break;
+            case cro::GameController::ButtonB:
+                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Crouch;
+                break;
+            case cro::GameController::ButtonX:
+
+                break;
+            case cro::GameController::ButtonY:
+
+                break;
+            case cro::GameController::DPadUp:
+                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Forward;
+                break;
+            case cro::GameController::DPadDown:
+                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Backward;
+                break;
+            case cro::GameController::DPadLeft:
+                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Left;
+                break;
+            case cro::GameController::DPadRight:
+                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Right;
+                break;
+            }
+        }
+    }
+        break;
     }
 
-    //TODO parse controller presses into corresponding inputs
+    
 }
 
 void FpsCameraSystem::process(float dt)
 {
+    //read the game controller axis if connected
+    static constexpr float MaxLookAxis = 50.f;
+    for (auto i = 0; i < 4; ++i)
+    {
+        if (cro::GameController::isConnected(i))
+        {
+            //look around
+            float xPos = static_cast<float>(cro::GameController::getAxisPosition(i, cro::GameController::AxisRightX));
+            xPos /= cro::GameController::AxisMax;
+            m_inputs[i].xMove = static_cast<std::int8_t>(xPos * MaxLookAxis);
+
+            float yPos = static_cast<float>(cro::GameController::getAxisPosition(i, cro::GameController::AxisRightY));
+            yPos /= cro::GameController::AxisMax;
+            m_inputs[i].yMove = static_cast<std::int8_t>(yPos * MaxLookAxis);
+
+
+            //move
+            auto xMove = cro::GameController::getAxisPosition(i, cro::GameController::AxisLeftX);
+            if (xMove == 0)
+            {
+                //hmmm how do we stop this unsetting state set by the DPad event (above)?
+                //m_inputs[i].buttonFlags &= ~Input::Flags::Right;
+                //m_inputs[i].buttonFlags &= ~Input::Flags::Left;
+            }
+            else if (xMove > 0)
+            {
+                m_inputs[i].buttonFlags |= Input::Flags::Right;
+            }
+            else
+            {
+                m_inputs[i].buttonFlags |= Input::Flags::Left;
+            }
+
+            auto yMove = cro::GameController::getAxisPosition(i, cro::GameController::AxisLeftY);
+            if (yMove == 0)
+            {
+                //hmmm how do we stop this unsetting state set by the DPad event (above)?
+                //m_inputs[i].buttonFlags &= ~Input::Flags::Forward;
+                //m_inputs[i].buttonFlags &= ~Input::Flags::Backward;
+            }
+            else if (yMove > 0)
+            {
+                m_inputs[i].buttonFlags |= Input::Flags::Forward;
+            }
+            else
+            {
+                m_inputs[i].buttonFlags |= Input::Flags::Backward;
+            }
+
+            //TODO create a normalised vector from left stick
+            //and use the length to calculate moement speed...
+        }
+    }
+
+
     auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& controller = entity.getComponent<FpsCamera>();
         auto& input = m_inputs[controller.controllerIndex];
 
-        const float moveScale = 0.004f;
-        float pitchMove = static_cast<float>(-input.yMove) * moveScale;
-        float yawMove = static_cast<float>(-input.xMove) * moveScale;
+        static constexpr float MoveScale = 0.004f;
+        float pitchMove = static_cast<float>(-input.yMove) * MoveScale * controller.lookSensitivity;
+        pitchMove *= controller.yInvert;
+
+        float yawMove = static_cast<float>(-input.xMove) * MoveScale * controller.lookSensitivity;
+        
         input.xMove = input.yMove = 0;
 
         //clamp pitch
@@ -247,11 +376,5 @@ void FpsCameraSystem::process(float dt)
 //private
 void FpsCameraSystem::onEntityAdded(cro::Entity entity)
 {
-    CRO_ASSERT(entity.hasComponent<cro::Transform>(), "Transform component is missing");
-
-    auto rotation = glm::eulerAngles(entity.getComponent<cro::Transform>().getRotation());
-
-    auto& cam = entity.getComponent<FpsCamera>();
-    //cam.cameraPitch = rotation.x;
-    cam.cameraYaw = rotation.y;
+    entity.getComponent<FpsCamera>().resetOrientation(entity);
 }

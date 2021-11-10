@@ -74,6 +74,7 @@ R"(
     uniform mat4 u_worldMatrix;
     uniform mat4 u_viewProjectionMatrix;
     uniform vec3 u_centrePosition;
+    uniform vec3 u_cameraWorldPosition;
 
     VARYING_OUT vec4 v_colour;
     VARYING_OUT vec2 v_texCoord;
@@ -84,6 +85,7 @@ R"(
     {
         vec4 worldPos = u_worldMatrix * a_position;
         float alpha = 1.0 - smoothstep(Radius, Radius + 5.0, length(worldPos.xyz - u_centrePosition));
+        alpha *= (1.0 - smoothstep(Radius, Radius + 1.0, length(worldPos.xyz - u_cameraWorldPosition)));
 
         gl_Position = u_viewProjectionMatrix * worldPos;
 

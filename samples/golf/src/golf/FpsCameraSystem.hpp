@@ -31,9 +31,13 @@ source distribution.
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/ecs/System.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 
 /*
-First person camera controller. Probably works as 3rd person too with some adjustments
+First/third person camera controller.
+Attach this directly to an entity which has a Camera component for first
+person view, or attach a Camera to a child entity of the camera controller
+and place it appropriately to create a third person view.
 */
 
 struct FpsCamera final
@@ -41,11 +45,22 @@ struct FpsCamera final
     float cameraPitch = 0.f; //used to clamp camera
     float cameraYaw = 0.f; //used to calc forward vector
 
-    float moveSpeed = 5.f; //units per second
+    float moveSpeed = 3.f; //units per second
+    float lookSensitivity = 0.5f; //0 - 1
+    float yInvert = 1.f; //-1 to invert axis
 
     std::int32_t controllerIndex = 0; //which controller to accept input from. Keyboard input is always sent to controller 0
 
     bool flyMode = true;
+
+    //if setting a transform manually on an entity which uses this component
+    //call this once with the entity to reset the orientation to the new transform.
+    void resetOrientation(cro::Entity entity)
+    {
+        auto rotation = glm::eulerAngles(entity.getComponent<cro::Transform>().getRotation());
+        //cam.cameraPitch = rotation.x;
+        cameraYaw = rotation.y;
+    }
 };
 
 
@@ -54,6 +69,10 @@ class FpsCameraSystem final : public cro::System
 public:
     explicit FpsCameraSystem(cro::MessageBus&);
 
+    /*
+    Call this from your event handler to forward incoming events
+    from the keyboard or any attached game controllers.
+    */
     void handleEvent(const cro::Event&);
 
     void process(float) override;

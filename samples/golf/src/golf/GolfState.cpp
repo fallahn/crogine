@@ -2882,6 +2882,10 @@ void GolfState::toggleFreeCam()
     {
         m_defaultCam = m_gameScene.setActiveCamera(m_freeCam);
         m_gameScene.setActiveListener(m_freeCam);
+
+        auto tx = glm::lookAt(m_currentPlayer.position + glm::vec3(0.f, 3.f, 0.f), m_holeData[m_currentHole].pin, glm::vec3(0.f, 1.f, 0.f));
+        m_freeCam.getComponent<cro::Transform>().setLocalTransform(glm::inverse(tx));
+        m_freeCam.getComponent<FpsCamera>().resetOrientation(m_freeCam);
     }
     else
     {
