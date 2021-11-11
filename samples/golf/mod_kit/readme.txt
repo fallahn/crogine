@@ -13,6 +13,7 @@ collision_colours.kpl - A Krita palette (importable to Blender) which contains t
 colordome-32.ase - The main colour palette used by VGA Golf, created by Polyphorge https://lospec.com/poly-phorge
 course_format.md - describes the .course and .hole files used to create custom courses, as well as the files associated with hole model files. Written in markdown format.
 hole_template.blend - example hole model in Blender format
+post_process.frag - template fragment shader for creating post process effects.
 prop-export.py - Export script for Blender written in python. Used to export the positions of prop models and crowds in the *.hole format.
 
 
@@ -62,3 +63,18 @@ Different types of terrain a represented by different colour values. These colou
         Scrub   = 55,55,55
 
 Each section of mesh with a specific terrain type should also have its own material assigned - even if that is a duplicate of an existing material. This is so that the game will correctly divide the geometry by terrain type when it is loaded.
+
+
+Post Process Effects
+--------------------
+VGA Golf has a set of post process effects to alter the visual appearance of the game. These are accessible by opening the console (press F1 or Advanced from the options menu), and then clicking on the Advanced tab. Custom fragment shaders can be used by clicking on the 'Open' button and selecting a text file containing the shader code. Shaders are written using GLSL targetting version 410 (OpenGL version 4.1). The version preprocessor directive `#version 410` is automatically included by VGA Golf, so it should be omitted from shader source code. A full fragment shader tutorial is beyond the scope of this document (plus there are many available online), but here is a brief run-down of the available uniform inputs:
+
+        sampler2D u_texture; - This is the input texture containing the current scene. Effects should be applied to this
+        float u_time; - A perpetually increasing value, contains the time elapsed, in seconds, since the game started running
+        vec2 u_resolution; - The current window resolution
+        vec2 u_scale; - The current pixel scale. That is the number of on-screen pixels covered by a single in-game pixel.
+
+The fragment shader also has two inputs from the vertex shader:
+
+        vec2 v_texCoord; - The texture coordinates for the input texture.
+        vec4 v_colour; - The current vertex colour. Currently always white (vec4(1.0)).

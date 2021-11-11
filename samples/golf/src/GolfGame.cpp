@@ -234,6 +234,31 @@ bool GolfGame::initialise()
         return false;
     }
 
+    static const auto setShader = [&](const char* frag)
+    {
+        std::unique_ptr<cro::Shader> shader = std::make_unique<cro::Shader>();
+        if (shader->loadFromString(PostVertex, frag))
+        {
+            //if the shader loaded successfully
+            //swap with current shader.
+            m_postShader.swap(shader);
+            m_postQuad->setShader(*m_postShader);
+
+            m_sharedData.usePostProcess = false; //message handler flips this???
+            auto* msg = getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+            msg->type = SystemEvent::PostProcessToggled;
+
+            m_activeIndex = m_postProcessIndex;
+            return true;
+        }
+        else
+        {
+            cro::FileSystem::showMessageBox("Error", "Failed to compile shader\nSee console for more details");
+        }
+        return false;
+    };
+
+
     registerConsoleTab("Advanced",
         [&]()
         {
@@ -280,66 +305,76 @@ bool GolfGame::initialise()
                 ImGui::EndTooltip();
             }
 
-            if (ImGui::Button("Apply"))
+            if (!m_sharedData.customShaderPath.empty())
             {
-                if (m_activeIndex != m_postProcessIndex)
-                {
-                    std::unique_ptr<cro::Shader> shader = std::make_unique<cro::Shader>();
-                    if (shader->loadFromString(PostVertex, PostShaders[m_postProcessIndex].fragmentString))
-                    {
-                        //if the shader loaded successfully
-                        //swap with current shader.
-                        m_postShader.swap(shader);
-                        m_postQuad->setShader(*m_postShader);
-
-                        m_sharedData.usePostProcess = false; //message handler flips this???
-                        auto* msg = getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
-                        msg->type = SystemEvent::PostProcessToggled;
-
-                        m_activeIndex = m_postProcessIndex;
-                    }
-                }
-            }
-
-            /*ImGui::NewLine();
-            ImGui::Separator();
-            ImGui::NewLine();
-            ImGui::Text("Networking:");
-
-            if (m_sharedData.serverInstance.running())
-            {
-                ImGui::Text("Options not available while server is running");
+                ImGui::Text("Custom shader: %s", m_sharedData.customShaderPath.c_str());
             }
             else
             {
-                ImGui::Text("Some computers have multiple adapters available. Select the desired IP\naddress below on which to host the game.");
+                ImGui::Text("No Custom Shader Loaded.");
+            }
 
-                auto currentAddress = m_sharedData.serverInstance.getPreferredIP();
-                if (currentAddress.empty())
+            if (ImGui::Button("Apply"))
+            {
+                if (m_activeIndex != m_postProcessIndex
+                    || !m_sharedData.customShaderPath.empty())
                 {
-                    currentAddress = "127.0.0.1";
-                }
-                ImGui::PushItemWidth(260.f);
-                if (ImGui::BeginCombo("Host Address", currentAddress.c_str()))
-                {
-                    for (auto i = 0u; i < m_hostAddresses.size(); ++i)
+                    if (setShader(PostShaders[m_postProcessIndex].fragmentString))
                     {
-                        bool selected = (m_hostAddresses[i] == currentAddress);
-                        if (ImGui::Selectable(m_hostAddresses[i].c_str(), selected))
-                        {
-                            m_sharedData.serverInstance.setPreferredIP(m_hostAddresses[i]);
-                        }
+                        m_sharedData.customShaderPath.clear();
+                    }
+                }
+            }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::BeginTooltip();
+                ImGui::Text("Apply the selected built-in shader.");
+                ImGui::EndTooltip();
+            }
 
-                        if (selected)
+            ImGui::SameLine();
+            if (ImGui::Button("Open"))
+            {
+                auto path = cro::FileSystem::openFileDialogue("", "txt,frag,glsl");
+                std::replace(path.begin(), path.end(), '\\', '/');
+                if (!path.empty())
+                {
+                    cro::RaiiRWops file;
+                    file.file = SDL_RWFromFile(path.c_str(), "r");
+                    if (file.file)
+                    {
+                        auto size = SDL_RWsize(file.file);
+                        std::vector<char> buffer(size);
+                        if (SDL_RWread(file.file, buffer.data(), size, 1))
                         {
-                            ImGui::SetItemDefaultFocus();
+                            //teminate the string!
+                            buffer.push_back(0);
+                            if (setShader(buffer.data()))
+                            {
+                                m_sharedData.customShaderPath = path;
+                            }
+                            else
+                            {
+                                m_sharedData.customShaderPath.clear();
+                            }
+                        }
+                        else
+                        {
+                            cro::FileSystem::showMessageBox("Error", "Could not read file");
                         }
                     }
-
-                    ImGui::EndCombo();
+                    else
+                    {
+                        cro::FileSystem::showMessageBox("Error", "Failed to open file");
+                    }
                 }
-                ImGui::PopItemWidth();
-            }*/
+            }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::BeginTooltip();
+                ImGui::Text("Open a fragment shader from a text file.");
+                ImGui::EndTooltip();
+            }
         });
 
     registerConsoleTab("Credits",
@@ -403,7 +438,39 @@ bool GolfGame::initialise()
     m_postBuffer = std::make_unique<cro::RenderTexture>();
     m_postBuffer->create(windowSize.x, windowSize.y, false);
     m_postShader = std::make_unique<cro::Shader>();
-    m_postShader->loadFromString(PostVertex, PostShaders[m_postProcessIndex].fragmentString);
+    if (!m_sharedData.customShaderPath.empty())
+    {
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(m_sharedData.customShaderPath.c_str(), "r");
+        if (file.file)
+        {
+            auto size = SDL_RWsize(file.file);
+            std::vector<char> buffer(size);
+            if (SDL_RWread(file.file, buffer.data(), size, 1))
+            {
+                //teminate the string!
+                buffer.push_back(0);
+                if (!m_postShader->loadFromString(PostVertex, buffer.data()))
+                {
+                    m_postShader->loadFromString(PostVertex, PostShaders[m_postProcessIndex].fragmentString);
+                }
+            }
+            else
+            {
+                LogE << "Failed reading " << m_sharedData.customShaderPath << std::endl;
+                m_sharedData.customShaderPath.clear();
+            }
+        }
+        else
+        {
+            LogE << "Could not open " << m_sharedData.customShaderPath << std::endl;
+            m_sharedData.customShaderPath.clear();
+        }
+    }
+    else
+    {
+        m_postShader->loadFromString(PostVertex, PostShaders[m_postProcessIndex].fragmentString);
+    }
     auto shaderRes = glm::vec2(windowSize);
     glCheck(glUseProgram(m_postShader->getGLHandle()));
     glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
@@ -474,6 +541,10 @@ void GolfGame::loadPreferences()
                 {
                     m_postProcessIndex = std::max(0, std::min(static_cast<std::int32_t>(PostShaders.size()) - 1, prop.getValue<std::int32_t>()));
                 }
+                else if (name == "custom_shader")
+                {
+                    m_sharedData.customShaderPath = prop.getValue<std::string>();
+                }
                 else if (name == "last_ip")
                 {
                     auto str = prop.getValue<std::string>();
@@ -518,6 +589,10 @@ void GolfGame::savePreferences()
     //advanced options
     cfg.addProperty("use_post_process").setValue(m_sharedData.usePostProcess);
     cfg.addProperty("post_index").setValue(m_postProcessIndex);
+    if (!m_sharedData.customShaderPath.empty())
+    {
+        cfg.addProperty("custom_shader").setValue(m_sharedData.customShaderPath);
+    }
     cfg.addProperty("last_ip").setValue(m_sharedData.targetIP.toAnsiString());
     cfg.save(path);
 

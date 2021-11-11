@@ -151,27 +151,28 @@ void BallSystem::process(float dt)
                 auto len2 = glm::length2(glm::vec2(pinDir.x, pinDir.z));
                 if (len2 < MinBallDistance)
                 {
+                    //over hole or in the air
+
+                    //apply more gravity/push the closer we are to the pin
+                    float forceAffect = 1.f - smoothstep(MinFallDistance, MinBallDistance, len2);
+
+
+                    //gravity
+                    static constexpr float MinFallVelocity = 2.1f;
+                    float gravityAmount = 1.f - std::min(1.f, glm::length2(ball.velocity) / MinFallVelocity);
+
+                    //this is some fudgy non-physics.
+                    //if the ball falls low enough when
+                    //over the hole we'll put it in.
+                    ball.velocity += (gravityAmount * Gravity * forceAffect) * dt;
+
+
                     //this draws the ball to the pin a little bit to make sure the ball
                     //falls entirely within the radius
                     pinDir.y = 0.f;
-                    ball.velocity += pinDir * dt;
+                    ball.velocity += pinDir * forceAffect;// dt;
 
                     ball.hadAir = true;
-
-                    //but don't fall until we're Ball::Radius in
-                    if (len2 <= MinFallDistance)
-                    {
-                        //float radMultiplier = 1.f - std::max(0.f, (len2 - MinFallDistance) / (MinBallDistance - MinFallDistance));
-
-                        //over hole or in the air
-                        static constexpr float MinFallVelocity = 2.1f;
-                        float gravityAmount = 1.f - std::min(1.f, glm::length2(ball.velocity) / MinFallVelocity);
-
-                        //this is some fudgy non-physics.
-                        //if the ball falls low enough when
-                        //over the hole we'll put it in.
-                        ball.velocity += (gravityAmount * Gravity) * dt;
-                    }
                 }
                 else //we're on the green so roll
                 {

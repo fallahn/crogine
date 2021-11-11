@@ -116,6 +116,7 @@ struct SharedStateData final
 
     //client settings
     bool usePostProcess = false;
+    std::string customShaderPath;
     InputBinding inputBinding;
 
 
