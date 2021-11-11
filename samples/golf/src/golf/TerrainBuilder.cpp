@@ -237,8 +237,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             e.getComponent<cro::Callback>().active = false;
 
             //raise a message to say the transition is complete
-            auto* msg = cro::App::getInstance().getMessageBus().post<SceneEvent>(MessageID::SceneMessage);
-            msg->type = SceneEvent::TransitionComplete;
+            /*auto* msg = cro::App::getInstance().getMessageBus().post<SceneEvent>(MessageID::SceneMessage);
+            msg->type = SceneEvent::TransitionComplete;*/
         }
     };
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));

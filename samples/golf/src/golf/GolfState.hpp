@@ -162,6 +162,7 @@ private:
     void updateActor(const ActorInfo&);
 
     void createTransition(const ActivePlayer&);
+    void startFlyBy();
     std::int32_t getClub() const;
 
     //allows switching camera, TV style

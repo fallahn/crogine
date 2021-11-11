@@ -479,6 +479,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         case SceneEvent::TransitionComplete:
         {
             updateMiniMap();
+            setActiveCamera(CameraID::Player);
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
             break;
@@ -1562,6 +1563,21 @@ void GolfState::buildScene()
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Green] = camEnt;
 
+    //fly-by cam for transition
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>();
+    camEnt.addComponent<cro::Camera>().resizeCallback =
+        [camEnt](cro::Camera& cam)
+    {
+        auto vpSize = calcVPSize();
+        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
+    camEnt.addComponent<cro::AudioListener>();
+    setPerspective(camEnt.getComponent<cro::Camera>());
+    m_cameras[CameraID::Transition] = camEnt;
+
 #ifdef CRO_DEBUG_
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
@@ -2022,7 +2038,7 @@ void GolfState::removeClient(std::uint8_t clientID)
 void GolfState::setCurrentHole(std::uint32_t hole)
 {
     updateScoreboard();
-    showScoreboard(!m_sharedData.tutorial);
+    //showScoreboard(!m_sharedData.tutorial);
 
     //CRO_ASSERT(hole < m_holeData.size(), "");
     if (hole >= m_holeData.size())
@@ -2090,6 +2106,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     };
 
     m_currentHole = hole;
+    startFlyBy(); //requires current hole
 
     //map collision data
     m_currentMap.loadFromFile(m_holeData[m_currentHole].mapPath);
@@ -2814,6 +2831,78 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     };
 }
 
+void GolfState::startFlyBy()
+{
+    static constexpr glm::vec3 BaseOffset(30.f, 10.f, 0.f);
+
+    //calc offset based on direction of initial target to tee
+    glm::vec3 dir = m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin;
+    float rotation = std::atan2(-dir.z, dir.x);
+    glm::quat q = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rotation, cro::Transform::Y_AXIS);
+    glm::vec3 offset = q * BaseOffset;
+
+    //set initial transform to look at pin from offset position
+    auto transform = glm::lookAt(offset + m_holeData[m_currentHole].pin, m_holeData[m_currentHole].pin, cro::Transform::Y_AXIS);
+    m_cameras[CameraID::Transition].getComponent<cro::Transform>().setLocalTransform(glm::inverse(transform));
+
+
+    //interp the lookat from pin->target->tee, maintaining offset
+    struct FlyByTarget final
+    {
+        const std::int32_t MaxTarget = 2;
+        std::int32_t targetIndex = 0;
+        glm::vec3 currentTarget = glm::vec3(0.f);
+        glm::vec3 currentPos = glm::vec3(0.f);
+        FlyByTarget(glm::vec3 t, glm::vec3 p) : currentTarget(t), currentPos(p) {}
+    };
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<FlyByTarget>(m_holeData[m_currentHole].target, m_holeData[m_currentHole].pin);
+    entity.getComponent<cro::Callback>().function =
+        [&, offset](cro::Entity e, float dt)
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<FlyByTarget>();
+        
+        auto dir = data.currentTarget - data.currentPos;
+        auto len2 = glm::length2(dir);
+
+        if (len2 < 1)
+        {
+            data.targetIndex++;
+            if (data.targetIndex == data.MaxTarget)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+
+                auto* msg = cro::App::getInstance().getMessageBus().post<SceneEvent>(MessageID::SceneMessage);
+                msg->type = SceneEvent::TransitionComplete;
+            }
+            else
+            {
+                data.currentTarget = m_holeData[m_currentHole].tee;
+                dir = data.currentTarget - data.currentPos;
+                len2 = glm::length2(dir);
+            }
+        }
+        
+        //if (len2 > 0)
+        {
+            len2 = std::sqrt(len2);
+            dir /= len2;
+        }
+
+        static constexpr float Speed = 25.f;
+        dir *= Speed;
+        data.currentPos += dir * dt;
+
+        m_cameras[CameraID::Transition].getComponent<cro::Transform>().setPosition(data.currentPos + offset);
+    };
+
+
+    setActiveCamera(CameraID::Transition);
+}
+
 std::int32_t GolfState::getClub() const
 {
     switch (m_currentPlayer.terrain)
@@ -2849,6 +2938,7 @@ void GolfState::setActiveCamera(std::int32_t camID)
         cmd.action = [&,camID](cro::Entity e, float)
         {
             //show/hide player based on camera
+            //flipping the sprite render dir will stop it drawing
             if (m_avatars[m_currentPlayer.client][m_currentPlayer.player].flipped)
             {
                 if (camID == CameraID::Player)
