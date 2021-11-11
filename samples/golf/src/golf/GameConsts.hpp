@@ -69,7 +69,7 @@ struct MixerChannel final
 {
     enum
     {
-        Music, Effects, Menu
+        Music, Effects, Menu, Voice
     };
 };
 

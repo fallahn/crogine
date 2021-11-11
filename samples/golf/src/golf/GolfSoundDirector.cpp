@@ -157,15 +157,15 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         {
             if (data.terrain == TerrainID::Green)
             {
-                playSound(cro::Util::Random::value(AudioID::Putt01, AudioID::Putt03), data.position);
+                playSound(cro::Util::Random::value(AudioID::Putt01, AudioID::Putt03), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             }
             else if (data.terrain == TerrainID::Bunker)
             {
-                playSound(AudioID::Wedge, data.position);
+                playSound(AudioID::Wedge, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             }
             else
             {
-                playSound(cro::Util::Random::value(AudioID::Swing01, AudioID::Swing03), data.position);
+                playSound(cro::Util::Random::value(AudioID::Swing01, AudioID::Swing03), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             }
         }
             break;
@@ -201,7 +201,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
 
             if (data.score <= ScoreID::Par)
             {
-                playSound(AudioID::Applause, glm::vec3(0.f));
+                playSound(AudioID::Applause, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             }
             break;
         case GolfEvent::BallLanded:
@@ -259,16 +259,16 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             switch (data.terrain)
             {
             default:
-                playSound(AudioID::Ground, data.position);
+                playSound(AudioID::Ground, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                 break;
             case TerrainID::Water:
-                playSound(AudioID::Water, data.position);
+                playSound(AudioID::Water, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                 break;
             case TerrainID::Hole:
-                playSound(AudioID::Hole, data.position);
+                playSound(AudioID::Hole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                 break;
             case TerrainID::Scrub:
-                playSound(AudioID::Scrub, data.position);
+                playSound(AudioID::Scrub, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                 break;
             }
         }
@@ -277,11 +277,11 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             if (data.terrain == TerrainID::Green
                 && data.clubID == ClubID::Putter)
             {
-                playSound(AudioID::Ground, data.position);
+                playSound(AudioID::Ground, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             }
             else if (data.terrain == TerrainID::Hole)
             {
-                playSound(AudioID::Hole, data.position);
+                playSound(AudioID::Hole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             }
         }
     }
@@ -290,14 +290,15 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
 }
 
 //private
-void GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, float volume)
+cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, float volume)
 {
     auto ent = getNextEntity();
     ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
     ent.getComponent<cro::AudioEmitter>().play();
     ent.getComponent<cro::AudioEmitter>().setVolume(volume);
-    ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+    ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
     ent.getComponent<cro::Transform>().setPosition(position);
+    return ent;
 }
 
 void GolfSoundDirector::playSoundDelayed(std::int32_t id, glm::vec3 position, float delay, float volume)
@@ -313,7 +314,7 @@ void GolfSoundDirector::playSoundDelayed(std::int32_t id, glm::vec3 position, fl
 
         if (currTime < 0)
         {
-            playSound(id, position, volume);
+            playSound(id, position, volume).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
 
             e.getComponent<cro::Callback>().active = false;
             getScene().destroyEntity(e);
