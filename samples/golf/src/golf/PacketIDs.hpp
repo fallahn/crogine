@@ -67,10 +67,11 @@ namespace PacketID
 
         //from client
         RequestGameStart,
-        ClientReady, //< uint8 playerID - requests game data from server. Sent repeatedly until ack'd
+        ClientReady, //< uint8 clientID - requests game data from server. Sent repeatedly until ack'd
         InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput)
         PlayerInfo, //< ConnectionData array
         ServerCommand, //< uint8_t command type
+        TransitionComplete, //< uint8 clientID, signal hole transition completed
 
         //both directions
         MapInfo, //< serialised cro::String containing course directory

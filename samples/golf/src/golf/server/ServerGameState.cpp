@@ -61,6 +61,7 @@ GameState::GameState(SharedData& sd)
     m_mapDataValid  (false),
     m_scene         (sd.messageBus, 512),
     m_gameStarted   (false),
+    m_allMapsLoaded (false),
     m_currentHole   (0)
 {
     if (m_mapDataValid = validateMap(); m_mapDataValid)
@@ -190,6 +191,12 @@ void GameState::netEvent(const cro::NetEvent& evt)
                 doServerCommand(evt);
             }
             break;
+        case PacketID::TransitionComplete:
+        {
+            auto clientID = evt.packet.as<std::uint8_t>();
+            m_sharedData.clients[clientID].mapLoaded = true;
+        }
+            break;
         }
     }
 }
@@ -243,6 +250,22 @@ std::int32_t GameState::process(float dt)
                 setNextPlayer(); //resets the timer
             }
         }
+
+        //we have to keep checking this as a client might
+        //disconnect mid-transition and the final 'complete'
+        //packet will never arrive.
+        if (!m_allMapsLoaded)
+        {
+            bool allReady = true;
+            for (const auto& client : m_sharedData.clients)
+            {
+                if (client.connected && !client.mapLoaded)
+                {
+                    allReady = false;
+                }
+            }
+            m_allMapsLoaded = allReady;
+        }
     }
 
     m_scene.simulate(dt);
@@ -282,7 +305,7 @@ void GameState::sendInitialGameState(std::uint8_t clientID)
     bool allReady = true;
     for (const auto& client : m_sharedData.clients)
     {
-        if (!client.connected && client.ready)
+        if (client.connected && !client.ready)
         {
             allReady = false;
         }
@@ -295,20 +318,16 @@ void GameState::sendInitialGameState(std::uint8_t clientID)
 
         //send command to set clients to first player
         //this also tells the client to stop requesting state
-        //setNextPlayer();
 
-        //create an ent which waits some time before setting next player active
-        //this is just so players have a chance to view the score board
+        //create an ent which waits for the clients to
+        //finish playing the transition animation
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<float>(3.f);
         entity.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
         {
-            auto& t = e.getComponent<cro::Callback>().getUserData<float>();
-            t -= dt;
-            if (t < 0)
+            if (m_allMapsLoaded)
             {
                 setNextPlayer();
                 e.getComponent<cro::Callback>().active = false;
@@ -417,6 +436,12 @@ void GameState::setNextHole()
         m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 
+    //set clients as not yet loaded
+    for (auto& client : m_sharedData.clients)
+    {
+        client.mapLoaded = false;
+    }
+    m_allMapsLoaded = false;
 
     m_currentHole++;
     if (m_currentHole < m_holeData.size())
@@ -443,7 +468,6 @@ void GameState::setNextHole()
             info.playerID = player.player;
             info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
             m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
         }
 
         //tell the local ball system which hole we're on
@@ -456,17 +480,15 @@ void GameState::setNextHole()
         //tell clients to set up next hole
         m_sharedData.host.broadcastPacket(PacketID::SetHole, m_currentHole, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-        //create an ent which waits some time before setting next player active
+        //create an ent which waits for all clients to load the next hole
+        //which include playing the transition animation.
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<float>(3.f);
         entity.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
         {
-            auto& t = e.getComponent<cro::Callback>().getUserData<float>();
-            t -= dt;
-            if (t < 0)
+            if (m_allMapsLoaded)
             {
                 setNextPlayer();
                 e.getComponent<cro::Callback>().active = false;

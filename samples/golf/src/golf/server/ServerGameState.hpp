@@ -62,6 +62,7 @@ namespace sv
 
         //game rule stuff. TODO encapsulate somewhere
         bool m_gameStarted;
+        bool m_allMapsLoaded;
         std::uint8_t m_currentHole;
         std::vector<PlayerStatus> m_playerInfo; //active players. Sorted by distance so the front position is active player
 

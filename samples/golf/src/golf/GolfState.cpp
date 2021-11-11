@@ -479,6 +479,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         case SceneEvent::TransitionComplete:
         {
             updateMiniMap();
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
             break;
         case SceneEvent::RequestSwitchCamera:
@@ -2234,6 +2235,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
         e.getComponent<cro::Callback>().active = true;
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    m_terrainBuilder.setSlopePosition(m_holeData[m_currentHole].pin);
 
     //update the UI
     cmd.targetFlags = CommandID::UI::HoleNumber;
@@ -2246,7 +2248,6 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    m_terrainBuilder.setSlopePosition(m_holeData[m_currentHole].pin);
 
     //set green cam position
     auto holePos = m_holeData[m_currentHole].pin;
