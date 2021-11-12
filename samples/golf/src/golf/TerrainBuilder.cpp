@@ -228,17 +228,13 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     entity.addComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
-        m_terrainProperties.morphTime = std::min(1.f, m_terrainProperties.morphTime + dt);
+        m_terrainProperties.morphTime = std::min(1.f, m_terrainProperties.morphTime + (dt / 2.f));
         glCheck(glUseProgram(m_terrainProperties.shaderID));
         glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
 
         if (m_terrainProperties.morphTime == 1)
         {
             e.getComponent<cro::Callback>().active = false;
-
-            //raise a message to say the transition is complete
-            /*auto* msg = cro::App::getInstance().getMessageBus().post<SceneEvent>(MessageID::SceneMessage);
-            msg->type = SceneEvent::TransitionComplete;*/
         }
     };
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));

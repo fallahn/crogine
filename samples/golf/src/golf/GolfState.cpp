@@ -1505,6 +1505,7 @@ void GolfState::buildScene()
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
+    camEnt.getComponent<cro::Transform>().setPosition(m_holeData[0].pin);
     m_cameras[CameraID::Player] = camEnt;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
@@ -1664,7 +1665,7 @@ void GolfState::initAudio()
 
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<std::pair<float, float>>(0.f, static_cast<float>(cro::Util::Random::value(12, 64)));
+    entity.getComponent<cro::Callback>().setUserData<std::pair<float, float>>(0.f, static_cast<float>(cro::Util::Random::value(32, 64)));
     entity.getComponent<cro::Callback>().function =
         [plane01, plane02](cro::Entity e, float dt) mutable
     {
@@ -2038,7 +2039,6 @@ void GolfState::removeClient(std::uint8_t clientID)
 void GolfState::setCurrentHole(std::uint32_t hole)
 {
     updateScoreboard();
-    //showScoreboard(!m_sharedData.tutorial);
 
     //CRO_ASSERT(hole < m_holeData.size(), "");
     if (hole >= m_holeData.size())
@@ -2060,7 +2060,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
         [&, propModels](cro::Entity e, float dt)
     {
         auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
-        progress = std::min(1.f, progress + dt);
+        progress = std::min(1.f, progress + (dt / 2.f));
 
         float scale = 1.f - progress;
         e.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
@@ -2086,7 +2086,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                 [](cro::Entity ent, float dt)
             {
                 auto& progress = ent.getComponent<cro::Callback>().getUserData<float>();
-                progress = std::min(1.f, progress + dt);
+                progress = std::min(1.f, progress + (dt / 2.f));
 
                 float scale = progress;
                 ent.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
@@ -2652,13 +2652,15 @@ void GolfState::updateActor(const ActorInfo& update)
         //set the green cam zoom as appropriate
         float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
 
+#ifdef CRO_DEBUG_
         if (ballDist < 0)
         {
             LogE << "Ball dist is wrong! value: " << ballDist << " with position " << update.position << std::endl;
         }
+#endif // CRO_DEBUG_
 
         m_greenCam.getComponent<cro::Callback>().getUserData<MiniCamData>().targetSize =
-            interpolate(MiniCamData::MinSize, MiniCamData::MaxSize, smoothstep(MiniCamData::MinSize, MiniCamData::MaxSize, ballDist));
+            interpolate(MiniCamData::MinSize, MiniCamData::MaxSize, smoothstep(MiniCamData::MinSize, MiniCamData::MaxSize, ballDist + 0.08f)); //pad the dist so ball is always in view
 
         //this is the active ball so update the UI
         cmd.targetFlags = CommandID::UI::PinDistance;
@@ -2833,70 +2835,127 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
 void GolfState::startFlyBy()
 {
+    static constexpr float MoveSpeed = 50.f; //metres per sec
+    struct FlyByTarget final
+    {
+        std::function<float(float)> ease = [](float t) {return t; };
+        std::int32_t currentTarget = 0;
+        float progress = 0.f;
+        std::array<glm::mat4, 4u> targets = {};
+        std::array<float, 4u> speeds = {};
+    }targetData;
+
+    targetData.targets[0] = m_cameras[CameraID::Player].getComponent<cro::Transform>().getLocalTransform();
+
+
     static constexpr glm::vec3 BaseOffset(30.f, 10.f, 0.f);
+    const auto& holeData = m_holeData[m_currentHole];
 
     //calc offset based on direction of initial target to tee
-    glm::vec3 dir = m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin;
+    glm::vec3 dir = holeData.tee - holeData.pin;
     float rotation = std::atan2(-dir.z, dir.x);
     glm::quat q = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rotation, cro::Transform::Y_AXIS);
     glm::vec3 offset = q * BaseOffset;
 
     //set initial transform to look at pin from offset position
-    auto transform = glm::lookAt(offset + m_holeData[m_currentHole].pin, m_holeData[m_currentHole].pin, cro::Transform::Y_AXIS);
-    m_cameras[CameraID::Transition].getComponent<cro::Transform>().setLocalTransform(glm::inverse(transform));
+    auto transform = glm::inverse(glm::lookAt(offset + holeData.pin, holeData.pin, cro::Transform::Y_AXIS));
+    targetData.targets[1] = transform;
+    targetData.speeds[0] = glm::length(glm::vec3(targetData.targets[0][3]) - glm::vec3(targetData.targets[1][3])) / MoveSpeed;
 
-
-    //interp the lookat from pin->target->tee, maintaining offset
-    struct FlyByTarget final
+    //translate the transform to look at target point or half way point if not set
+    auto diff = holeData.target - holeData.pin;
+    if (glm::length2(diff) == 0)
     {
-        const std::int32_t MaxTarget = 2;
-        std::int32_t targetIndex = 0;
-        glm::vec3 currentTarget = glm::vec3(0.f);
-        glm::vec3 currentPos = glm::vec3(0.f);
-        FlyByTarget(glm::vec3 t, glm::vec3 p) : currentTarget(t), currentPos(p) {}
-    };
+        diff = (holeData.tee - holeData.pin) / 2.f;
+    }
+    transform[3] += glm::vec4(diff, 0.f);
+    targetData.targets[2] = transform;
+    targetData.speeds[1] = glm::length(glm::vec3(targetData.targets[1][3]) - glm::vec3(targetData.targets[2][3])) / MoveSpeed;
 
+    //the final transform is set to what should be the same as the initial player view
+    //this is actually more complicated than it seems, so the callback interrogates the
+    //player camera when it needs to.
+
+
+    //set to initial position
+    m_cameras[CameraID::Transition].getComponent<cro::Transform>().setLocalTransform(targetData.targets[0]);
+
+
+    //interp the transform targets
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<FlyByTarget>(m_holeData[m_currentHole].target, m_holeData[m_currentHole].pin);
+    entity.getComponent<cro::Callback>().setUserData<FlyByTarget>(targetData);
     entity.getComponent<cro::Callback>().function =
-        [&, offset](cro::Entity e, float dt)
+        [&](cro::Entity e, float dt)
     {
-        auto& data = e.getComponent<cro::Callback>().getUserData<FlyByTarget>();
-        
-        auto dir = data.currentTarget - data.currentPos;
-        auto len2 = glm::length2(dir);
-
-        if (len2 < 1)
+        static const auto interp = [](glm::vec3 a, glm::vec3 b, float t)
         {
-            data.targetIndex++;
-            if (data.targetIndex == data.MaxTarget)
+            auto diff = b - a;
+            return a + (diff * t);
+        };
+
+        auto& data = e.getComponent<cro::Callback>().getUserData<FlyByTarget>();
+        data.progress = std::min(data.progress + (dt / data.speeds[data.currentTarget]), 1.f);
+
+        auto rot = glm::slerp(glm::quat_cast(data.targets[data.currentTarget]), glm::quat_cast(data.targets[data.currentTarget + 1]), data.progress);
+        m_cameras[CameraID::Transition].getComponent<cro::Transform>().setRotation(rot);
+
+        auto pos = interp(glm::vec3(data.targets[data.currentTarget][3]), glm::vec3(data.targets[data.currentTarget + 1][3]), data.ease(data.progress));
+        m_cameras[CameraID::Transition].getComponent<cro::Transform>().setPosition(pos);
+
+        if (data.progress == 1)
+        {
+            data.progress = 0;
+            data.currentTarget++;
+
+            switch (data.currentTarget)
             {
+            default: break;
+            case 2:
+                //hope the player cam finished...
+                //tbh if this transition is replacing the existing one then
+                //we can remove the player cam transition completely.
+                data.targets[3] = m_cameras[CameraID::Player].getComponent<cro::Transform>().getLocalTransform();
+                data.ease = std::bind(&cro::Util::Easing::easeInQuint, std::placeholders::_1);
+                data.speeds[2] = glm::length(glm::vec3(data.targets[2][3]) - glm::vec3(data.targets[3][3])) / MoveSpeed;
+                break;
+            case 3:
+                //we're done here
+            {
+                if (m_sharedData.tutorial)
+                {
+                    auto* msg = cro::App::getInstance().getMessageBus().post<SceneEvent>(MessageID::SceneMessage);
+                    msg->type = SceneEvent::TransitionComplete;
+                }
+                else
+                {
+                    showScoreboard(true);
+
+                    //delayed ent just to show the score board for a while
+                    auto de = m_gameScene.createEntity();
+                    de.addComponent<cro::Callback>().active = true;
+                    de.getComponent<cro::Callback>().setUserData<float>(3.f);
+                    de.getComponent<cro::Callback>().function =
+                        [&](cro::Entity ent, float dt)
+                    {
+                        auto& currTime = ent.getComponent<cro::Callback>().getUserData<float>();
+                        currTime -= dt;
+                        if (currTime < 0)
+                        {
+                            auto* msg = cro::App::getInstance().getMessageBus().post<SceneEvent>(MessageID::SceneMessage);
+                            msg->type = SceneEvent::TransitionComplete;
+
+                            ent.getComponent<cro::Callback>().active = false;
+                            m_gameScene.destroyEntity(ent);
+                        }
+                    };
+                }
                 e.getComponent<cro::Callback>().active = false;
                 m_gameScene.destroyEntity(e);
-
-                auto* msg = cro::App::getInstance().getMessageBus().post<SceneEvent>(MessageID::SceneMessage);
-                msg->type = SceneEvent::TransitionComplete;
             }
-            else
-            {
-                data.currentTarget = m_holeData[m_currentHole].tee;
-                dir = data.currentTarget - data.currentPos;
-                len2 = glm::length2(dir);
+                break;
             }
         }
-        
-        //if (len2 > 0)
-        {
-            len2 = std::sqrt(len2);
-            dir /= len2;
-        }
-
-        static constexpr float Speed = 25.f;
-        dir *= Speed;
-        data.currentPos += dir * dt;
-
-        m_cameras[CameraID::Transition].getComponent<cro::Transform>().setPosition(data.currentPos + offset);
     };
 
 
