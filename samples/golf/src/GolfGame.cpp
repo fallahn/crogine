@@ -203,7 +203,7 @@ void GolfGame::simulate(float dt)
         accum += dt;
 
         glUseProgram(m_postShader->getGLHandle());
-        glUniform1f(m_uniformIDs[UniformID::Time], accum * 0.1f);
+        glUniform1f(m_uniformIDs[UniformID::Time], accum);
     }
 
     m_stateStack.simulate(dt);

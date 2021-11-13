@@ -396,6 +396,7 @@
     <None Include="src\golf\MinimapShader.inl" />
     <None Include="src\golf\PostProcess.inl" />
     <None Include="src\golf\TerrainShader.inl" />
+    <None Include="src\golf\TransitionShader.inl" />
     <None Include="src\golf\TutorialShaders.inl" />
     <None Include="src\golf\WaterShader.inl" />
     <None Include="src\golf\WireframeShader.inl" />

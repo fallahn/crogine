@@ -87,7 +87,8 @@ struct ShaderID final
         TutorialSlope,
         Wireframe,
         WireframeCulled,
-        Weather
+        Weather,
+        Transition
     };
 };
 

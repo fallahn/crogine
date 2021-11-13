@@ -102,6 +102,8 @@ namespace
 #include "TerrainShader.inl"
 #include "MinimapShader.inl"
 #include "WireframeShader.inl"
+#include "TransitionShader.inl"
+#include "PostProcess.inl"
 
     std::int32_t debugFlags = 0;
     bool useFreeCam = false;
@@ -155,6 +157,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         initAudio();
         buildScene();
         });
+
+    createTransition();
 
     sd.baseState = StateID::Game;
 
@@ -744,11 +748,10 @@ void GolfState::loadAssets()
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
     m_materialIDs[MaterialID::Course] = m_materialIDs[MaterialID::CelTextured];
 
-    /*m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define NORMAL_MAP\n");
-    shader = &m_resources.shaders.get(ShaderID::Course);
-    m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);*/
+    //scanline transition
+    m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
 
-
+    //wireframe
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
     m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]).blendMode = cro::Material::BlendMode::Alpha;
@@ -757,15 +760,17 @@ void GolfState::loadAssets()
     m_materialIDs[MaterialID::WireFrameCulled] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulled));
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulled]).blendMode = cro::Material::BlendMode::Alpha;
 
+    //minimap
     m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment);
 
+
+    //water
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Water));
 
     m_waterShader.shaderID = m_resources.shaders.get(ShaderID::Water).getGLHandle();
     m_waterShader.timeUniform = m_resources.shaders.get(ShaderID::Water).getUniformMap().at("u_time");
     
-
 
     //model definitions
     for (auto& md : m_modelDefs)
@@ -1567,16 +1572,10 @@ void GolfState::buildScene()
     //fly-by cam for transition
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
-    camEnt.addComponent<cro::Camera>().resizeCallback =
-        [camEnt](cro::Camera& cam)
-    {
-        auto vpSize = calcVPSize();
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
-        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-    };
+    camEnt.addComponent<cro::Camera>().resizeCallback = updateView;
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
     camEnt.addComponent<cro::AudioListener>();
-    setPerspective(camEnt.getComponent<cro::Camera>());
+    updateView(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Transition] = camEnt;
 
 #ifdef CRO_DEBUG_
@@ -2838,7 +2837,7 @@ void GolfState::startFlyBy()
     static constexpr float MoveSpeed = 50.f; //metres per sec
     struct FlyByTarget final
     {
-        std::function<float(float)> ease = [](float t) {return t; };
+        std::function<float(float)> ease = std::bind(&cro::Util::Easing::easeInOutCubic, std::placeholders::_1);
         std::int32_t currentTarget = 0;
         float progress = 0.f;
         std::array<glm::mat4, 4u> targets = {};
@@ -2848,7 +2847,7 @@ void GolfState::startFlyBy()
     targetData.targets[0] = m_cameras[CameraID::Player].getComponent<cro::Transform>().getLocalTransform();
 
 
-    static constexpr glm::vec3 BaseOffset(30.f, 10.f, 0.f);
+    static constexpr glm::vec3 BaseOffset(30.f, 20.f, 0.f);
     const auto& holeData = m_holeData[m_currentHole];
 
     //calc offset based on direction of initial target to tee
@@ -2876,7 +2875,6 @@ void GolfState::startFlyBy()
     //this is actually more complicated than it seems, so the callback interrogates the
     //player camera when it needs to.
 
-
     //set to initial position
     m_cameras[CameraID::Transition].getComponent<cro::Transform>().setLocalTransform(targetData.targets[0]);
 
@@ -2888,7 +2886,7 @@ void GolfState::startFlyBy()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
-        static const auto interp = [](glm::vec3 a, glm::vec3 b, float t)
+        const auto interp = [](glm::vec3 a, glm::vec3 b, float t)
         {
             auto diff = b - a;
             return a + (diff * t);
@@ -2905,7 +2903,7 @@ void GolfState::startFlyBy()
 
         if (data.progress == 1)
         {
-            data.progress = 0;
+            data.progress = 0.f;
             data.currentTarget++;
 
             switch (data.currentTarget)
@@ -2914,8 +2912,9 @@ void GolfState::startFlyBy()
             case 2:
                 //hope the player cam finished...
                 //tbh if this transition is replacing the existing one then
-                //we can remove the player cam transition completely.
-                data.targets[3] = m_cameras[CameraID::Player].getComponent<cro::Transform>().getLocalTransform();
+                //we can remove the player cam transition completely. Probvlem is that it's
+                //created by setPlayer(), not setHole()
+                data.targets[3] = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldTransform();
                 data.ease = std::bind(&cro::Util::Easing::easeInQuint, std::placeholders::_1);
                 data.speeds[2] = glm::length(glm::vec3(data.targets[2][3]) - glm::vec3(data.targets[3][3])) / MoveSpeed;
                 break;

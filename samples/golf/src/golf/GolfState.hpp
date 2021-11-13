@@ -222,6 +222,7 @@ private:
     };
     void showMessageBoard(MessageBoardID);
     void floatingMessage(const std::string&);
+    void createTransition();
 
     //-----------
 

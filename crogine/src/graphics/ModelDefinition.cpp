@@ -56,6 +56,7 @@ namespace
     {
         "VertexLit", "Unlit", "Billboard", "PBR"
     };
+    bool billboardsWarned = false;
 }
 
 ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap, const std::string& workingDir)
@@ -182,7 +183,14 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         auto flags = VertexProperty::Position | VertexProperty::Normal | VertexProperty::Colour | VertexProperty::UV0 | VertexProperty::UV1;
         meshBuilder = std::make_unique<DynamicMeshBuilder>(flags, 1, GL_TRIANGLES);
         m_billboard = true;
-        LOG("Multiple billboards created from the same definition will share the same mesh data!", cro::Logger::Type::Warning);
+
+#ifdef CRO_DEBUG_
+        if (!billboardsWarned)
+        {
+            LOG("Multiple billboards created from the same definition will share the same mesh data!", cro::Logger::Type::Warning);
+            billboardsWarned = true;
+        }
+#endif
 
         if (auto* prop = cfg.findProperty("lock_rotation"); prop != nullptr)
         {

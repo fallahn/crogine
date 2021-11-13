@@ -76,5 +76,7 @@ VGA Golf has a set of post process effects to alter the visual appearance of the
 
 The fragment shader also has two inputs from the vertex shader:
 
-        vec2 v_texCoord; - The texture coordinates for the input texture.
-        vec4 v_colour; - The current vertex colour. Currently always white (vec4(1.0)).
+        in vec2 v_texCoord; - The texture coordinates for the input texture.
+        in vec4 v_colour; - The current vertex colour. Currently always white (vec4(1.0)).
+
+It should be noted that, as the game expects the vertex properties to contain colour information, v_colour *must* be used, to prevent an explosion of OpenGL errors. Sorry 'bout that.
