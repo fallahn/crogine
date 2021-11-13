@@ -77,7 +77,6 @@ void ClientCollisionSystem::process(float)
             //we've missed the geom so check the map to see if we're
             //in water or scrub
             result.terrain = readMap(m_mapImage, position.x, -position.z).first;
-            static int buns = 0;
         }
 
 
@@ -90,7 +89,8 @@ void ClientCollisionSystem::process(float)
             glm::vec2 pos(position.x, position.z);
             
             auto len2 = glm::length2(pin - pos);
-            if (len2 <= MinBallDist)
+            if (len2 <= MinBallDist
+                && (result.height - position.y) > (Ball::Radius * 2.f))
             {
                 collider.terrain = TerrainID::Hole;
             }
@@ -111,8 +111,6 @@ void ClientCollisionSystem::process(float)
                 msg->position = position;
                 msg->terrain = collider.terrain;
                 msg->clubID = m_club;
-
-                //LogI << "Collide " << TerrainStrings[collider.terrain] << ", State " << Ball::StateStrings[collider.state] << std::endl;
             }
         };
 

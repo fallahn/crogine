@@ -135,7 +135,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         case GolfEvent::ClubChanged:
             if (data.score != 0)
             {
-                playSound(AudioID::Putt01, data.position);
+                playSound(AudioID::Putt01, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
             }
             break;
         case GolfEvent::HookedBall:
