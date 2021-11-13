@@ -228,7 +228,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     entity.addComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
-        m_terrainProperties.morphTime = std::min(1.f, m_terrainProperties.morphTime + (dt / 2.f));
+        m_terrainProperties.morphTime = std::min(1.f, m_terrainProperties.morphTime + dt);
         glCheck(glUseProgram(m_terrainProperties.shaderID));
         glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
 

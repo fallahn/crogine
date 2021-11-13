@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Matrix.hpp>
 
 #include <cstdint>
 
@@ -108,7 +109,7 @@ static constexpr float ViewportHeightWide = 300.f;
 static inline glm::vec3 interpolate(glm::vec3 a, glm::vec3 b, float t)
 {
     auto diff = b - a;
-    return a + (diff * cro::Util::Easing::easeOutElastic(t));
+    return a + (diff *t);
 }
 
 static inline constexpr float interpolate(float a, float b, float t)
@@ -147,7 +148,30 @@ static inline void setTexture(const cro::ModelDefinition& modelDef, cro::Materia
             dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
         }
     }
-};
+}
+
+//finds an intersecting point on the water plane.
+static inline bool planeIntersect(const glm::mat4& camTx, glm::vec3& result)
+{
+    //we know we have a fixed water plane here, so no need to generalise
+    static constexpr glm::vec3 PlaneNormal(0.f, 1.f, 0.f);
+    static constexpr glm::vec3 PlanePoint(0.f, WaterLevel, 0.f);
+    static const float rd = glm::dot(PlaneNormal, PlanePoint);
+
+    //this is normalised all the time the camera doesn't have a scale (it shouldn't)
+    auto ray = -cro::Util::Matrix::getForwardVector(camTx);
+    auto origin = glm::vec3(camTx[3]);
+
+    if (glm::dot(PlaneNormal, ray) <= 0)
+    {
+        //parallel or plane is behind camera
+        return false;
+    }
+
+    float pointDist = (rd - glm::dot(PlaneNormal, origin)) / glm::dot(PlaneNormal, ray);
+    result = origin + (ray * pointDist);
+    return true;
+}
 
 static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, float px, float py)
 {

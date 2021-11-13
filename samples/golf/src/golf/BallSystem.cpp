@@ -100,7 +100,7 @@ void BallSystem::process(float dt)
     //interpolate current strength/direction
     m_currentWindInterpTime = std::min(m_windInterpTime, m_currentWindInterpTime + dt);
     float interp = m_currentWindInterpTime / m_windInterpTime;
-    m_windDirection = interpolate(m_windDirSrc, m_windDirTarget, interp);
+    m_windDirection = interpolate(m_windDirSrc, m_windDirTarget, cro::Util::Easing::easeOutElastic(interp));
     m_windStrength = interpolate(m_windStrengthSrc, m_windStrengthTarget, interp);
 
     auto& entities = getEntities();
@@ -264,6 +264,13 @@ void BallSystem::process(float dt)
                     auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
                     msg->type = BallEvent::Landed;
                     msg->terrain = penetration > Ball::Radius ? TerrainID::Hole : ball.terrain;
+
+                    if (msg->terrain == TerrainID::Hole)
+                    {
+                        position.x = m_holeData->pin.x;
+                        position.z = m_holeData->pin.z;
+                    }
+
                     msg->position = position;
                 }
             }

@@ -111,21 +111,6 @@ namespace
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
     const cro::Time MouseHideTime = cro::seconds(3.f);
 
-    //used to set the camera target
-    struct TargetInfo final
-    {
-        float targetHeight = CameraStrokeHeight;
-        float targetOffset = CameraStrokeOffset;
-        float startHeight = 0.f;
-        float startOffset = 0.f;
-
-        glm::vec3 targetLookAt = glm::vec3(0.f);
-        glm::vec3 currentLookAt = glm::vec3(0.f);
-        glm::vec3 prevLookAt = glm::vec3(0.f);
-
-        cro::Entity waterPlane;
-    };
-
     //use to move the flag as the player approaches
     struct FlagCallbackData final
     {
@@ -767,6 +752,7 @@ void GolfState::loadAssets()
     //water
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Water));
+    m_resources.materials.get(m_materialIDs[MaterialID::Water]).blendMode = cro::Material::BlendMode::Alpha; //forces rendering last to reduce overdraw
 
     m_waterShader.shaderID = m_resources.shaders.get(ShaderID::Water).getGLHandle();
     m_waterShader.timeUniform = m_resources.shaders.get(ShaderID::Water).getUniformMap().at("u_time");
@@ -1547,6 +1533,7 @@ void GolfState::buildScene()
     camEnt.getComponent<CameraFollower>().zoom.target = 0.1f;
     camEnt.getComponent<CameraFollower>().zoom.speed = 3.f;
     camEnt.addComponent<cro::AudioListener>();
+    camEnt.addComponent<TargetInfo>(); //this just holds the water plane ent when active
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Sky] = camEnt;
 
@@ -1566,6 +1553,7 @@ void GolfState::buildScene()
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
     camEnt.getComponent<CameraFollower>().zoom.speed = 2.f;
     camEnt.addComponent<cro::AudioListener>();
+    camEnt.addComponent<TargetInfo>();
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Green] = camEnt;
 
@@ -1575,6 +1563,7 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = updateView;
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
     camEnt.addComponent<cro::AudioListener>();
+    camEnt.addComponent<TargetInfo>();
     updateView(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Transition] = camEnt;
 
@@ -2334,7 +2323,10 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
     camEnt.getComponent<cro::Transform>().move(offset * viewOffset);
 
-    targetInfo.waterPlane.getComponent<cro::Transform>().setPosition({ target.x, WaterLevel, target.z });
+    if (targetInfo.waterPlane.isValid())
+    {
+        targetInfo.waterPlane.getComponent<cro::Transform>().setPosition({ target.x, WaterLevel, target.z });
+    }
 }
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
@@ -2659,7 +2651,7 @@ void GolfState::updateActor(const ActorInfo& update)
 #endif // CRO_DEBUG_
 
         m_greenCam.getComponent<cro::Callback>().getUserData<MiniCamData>().targetSize =
-            interpolate(MiniCamData::MinSize, MiniCamData::MaxSize, smoothstep(MiniCamData::MinSize, MiniCamData::MaxSize, ballDist + 0.08f)); //pad the dist so ball is always in view
+            interpolate(MiniCamData::MinSize, MiniCamData::MaxSize, smoothstep(MiniCamData::MinSize, MiniCamData::MaxSize, ballDist + 0.4f)); //pad the dist so ball is always in view
 
         //this is the active ball so update the UI
         cmd.targetFlags = CommandID::UI::PinDistance;
@@ -2837,7 +2829,7 @@ void GolfState::startFlyBy()
     static constexpr float MoveSpeed = 50.f; //metres per sec
     struct FlyByTarget final
     {
-        std::function<float(float)> ease = std::bind(&cro::Util::Easing::easeInOutCubic, std::placeholders::_1);
+        std::function<float(float)> ease = std::bind(&cro::Util::Easing::easeInOutQuad, std::placeholders::_1);
         std::int32_t currentTarget = 0;
         float progress = 0.f;
         std::array<glm::mat4, 4u> targets = {};
@@ -2886,20 +2878,24 @@ void GolfState::startFlyBy()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
-        const auto interp = [](glm::vec3 a, glm::vec3 b, float t)
-        {
-            auto diff = b - a;
-            return a + (diff * t);
-        };
-
         auto& data = e.getComponent<cro::Callback>().getUserData<FlyByTarget>();
         data.progress = std::min(data.progress + (dt / data.speeds[data.currentTarget]), 1.f);
 
-        auto rot = glm::slerp(glm::quat_cast(data.targets[data.currentTarget]), glm::quat_cast(data.targets[data.currentTarget + 1]), data.progress);
-        m_cameras[CameraID::Transition].getComponent<cro::Transform>().setRotation(rot);
+        auto& camTx = m_cameras[CameraID::Transition].getComponent<cro::Transform>();
 
-        auto pos = interp(glm::vec3(data.targets[data.currentTarget][3]), glm::vec3(data.targets[data.currentTarget + 1][3]), data.ease(data.progress));
-        m_cameras[CameraID::Transition].getComponent<cro::Transform>().setPosition(pos);
+        auto rot = glm::slerp(glm::quat_cast(data.targets[data.currentTarget]), glm::quat_cast(data.targets[data.currentTarget + 1]), data.progress);
+        camTx.setRotation(rot);
+
+        auto pos = interpolate(glm::vec3(data.targets[data.currentTarget][3]), glm::vec3(data.targets[data.currentTarget + 1][3]), data.ease(data.progress));
+        camTx.setPosition(pos);
+
+        //find out 'lookat' point as it would appear on the water plane and set the water there
+        glm::vec3 intersection(0.f);
+        if (planeIntersect(camTx.getLocalTransform(), intersection))
+        {
+            intersection.y = WaterLevel;
+            m_cameras[CameraID::Transition].getComponent<TargetInfo>().waterPlane.getComponent<cro::Transform>().setPosition(intersection);
+        }
 
         if (data.progress == 1)
         {
@@ -2985,10 +2981,20 @@ void GolfState::setActiveCamera(std::int32_t camID)
     if (m_cameras[camID].isValid()
         && camID != m_currentCamera)
     {
+        //set the water plane ent on the active camera
+        cro::Entity waterEnt;
+        if (m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane.isValid())
+        {
+            waterEnt = m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane;
+            m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = {};
+        }
+
         //set scene camera
         m_gameScene.setActiveCamera(m_cameras[camID]);
         m_gameScene.setActiveListener(m_cameras[camID]);
         m_currentCamera = camID;
+
+        m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = waterEnt;
 
         //hide player based on cam id
         cro::Command cmd;

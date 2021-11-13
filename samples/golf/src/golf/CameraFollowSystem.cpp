@@ -156,6 +156,17 @@ void CameraFollowSystem::process(float dt)
             {
                 follower.state = CameraFollower::Reset;
             }
+
+            auto& targetInfo = entity.getComponent<TargetInfo>();
+            if (targetInfo.waterPlane.isValid())
+            {
+                glm::vec3 intersection(0.f);
+                if (planeIntersect(tx.getLocalTransform(), intersection))
+                {
+                    intersection.y = WaterLevel;
+                    targetInfo.waterPlane.getComponent<cro::Transform>().setPosition(intersection);
+                }
+            }
         }
             break;
         case CameraFollower::Zoom:
