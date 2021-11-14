@@ -7,5 +7,6 @@ model shrubbery
         diffuse = "assets/golf/images/shrubbery.png"
         alpha_clip = 0.2
         blendmode = "none"
+        lock_rotation = true
     }
 }

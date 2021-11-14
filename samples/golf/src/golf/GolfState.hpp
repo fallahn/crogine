@@ -207,6 +207,7 @@ private:
     std::size_t m_scoreColumnCount;
 
     cro::Entity m_courseEnt;
+    cro::Entity m_waterEnt;
 
     void buildUI();
     void showCountdown(std::uint8_t);

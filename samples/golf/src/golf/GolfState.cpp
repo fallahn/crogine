@@ -752,7 +752,8 @@ void GolfState::loadAssets()
     //water
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Water));
-    m_resources.materials.get(m_materialIDs[MaterialID::Water]).blendMode = cro::Material::BlendMode::Alpha; //forces rendering last to reduce overdraw
+    //forces rendering last to reduce overdraw - but unfortunately also disables backface culling :/
+    //m_resources.materials.get(m_materialIDs[MaterialID::Water]).blendMode = cro::Material::BlendMode::Alpha; 
 
     m_waterShader.shaderID = m_resources.shaders.get(ShaderID::Water).getGLHandle();
     m_waterShader.timeUniform = m_resources.shaders.get(ShaderID::Water).getUniformMap().at("u_time");
@@ -1386,6 +1387,8 @@ void GolfState::buildScene()
     waterEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
     waterEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::Water]));
     waterEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+
+    m_waterEnt = waterEnt;
     m_gameScene.setWaterLevel(WaterLevel);
 
 
@@ -2052,6 +2055,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
         float scale = 1.f - progress;
         e.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
+        m_waterEnt.getComponent<cro::Transform>().setScale({ scale, scale, scale });
 
         if (progress == 1)
         {
@@ -2071,13 +2075,14 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             entity.getComponent<cro::Callback>().setUserData<float>(0.f);
             entity.getComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
-                [](cro::Entity ent, float dt)
+                [&](cro::Entity ent, float dt)
             {
                 auto& progress = ent.getComponent<cro::Callback>().getUserData<float>();
                 progress = std::min(1.f, progress + (dt / 2.f));
 
                 float scale = progress;
                 ent.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
+                m_waterEnt.getComponent<cro::Transform>().setScale({ scale, scale, scale });
 
                 if (progress == 1)
                 {
@@ -2911,7 +2916,7 @@ void GolfState::startFlyBy()
                 //we can remove the player cam transition completely. Probvlem is that it's
                 //created by setPlayer(), not setHole()
                 data.targets[3] = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldTransform();
-                data.ease = std::bind(&cro::Util::Easing::easeInQuint, std::placeholders::_1);
+                //data.ease = std::bind(&cro::Util::Easing::easeInQuint, std::placeholders::_1);
                 data.speeds[2] = glm::length(glm::vec3(data.targets[2][3]) - glm::vec3(data.targets[3][3])) / MoveSpeed;
                 break;
             case 3:

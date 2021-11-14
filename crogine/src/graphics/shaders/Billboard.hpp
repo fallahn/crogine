@@ -118,7 +118,7 @@ namespace cro::Shaders::Billboard
 
                 const float minDistance = 2.0;
                 const float nearFadeDistance = 12.0; //TODO make this a uniform
-                const float farFadeDistance = 150.f;
+                const float farFadeDistance = 250.f;
                 float distance = length(position - u_cameraWorldPosition);
 
                 v_ditherAmount = pow(clamp((distance - minDistance) / nearFadeDistance, 0.0, 1.0), 5.0);

@@ -6,6 +6,7 @@ model crowd
     {
         diffuse = "assets/golf/images/crowd.png"
         alpha_clip = 0.2
-        blendmode = "none"        
+        blendmode = "none"
+        lock_rotation = true
     }
 }
