@@ -1128,7 +1128,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     pingEnt.addComponent<cro::Callback>().active = true;
     pingEnt.getComponent<cro::Callback>().setUserData<float>(1.f);
     pingEnt.getComponent<cro::Callback>().function =
-        [&,hookBar](cro::Entity e, float dt)
+        [&](cro::Entity e, float dt)
     {
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime = std::min(1.f, currTime + (dt * 1.5f));

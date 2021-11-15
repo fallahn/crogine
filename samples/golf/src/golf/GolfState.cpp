@@ -2437,7 +2437,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.action = [localPlayer, player](cro::Entity e, float)
     {
         auto position = player.position;
-        position.y += 0.01f; //z-fighting
+        position.y += 0.014f; //z-fighting
         e.getComponent<cro::Transform>().setPosition(position);
         e.getComponent<cro::Model>().setHidden(!localPlayer);
     };
@@ -2660,7 +2660,7 @@ void GolfState::updateActor(const ActorInfo& update)
 
         //this is the active ball so update the UI
         cmd.targetFlags = CommandID::UI::PinDistance;
-        cmd.action = [&, update, ballDist](cro::Entity e, float)
+        cmd.action = [&, ballDist](cro::Entity e, float)
         {
             //if we're on the green convert to cm
             std::int32_t distance = 0;

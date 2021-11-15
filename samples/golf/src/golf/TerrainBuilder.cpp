@@ -461,6 +461,7 @@ void TerrainBuilder::updateTime(float elapsed)
 
 void TerrainBuilder::setSlopePosition(glm::vec3 position)
 {
+    //why do this here when we could set it in update() when we set the entity position??
     glCheck(glUseProgram(m_slopeProperties.shader));
     glCheck(glUniform3f(m_slopeProperties.positionUniform, position.x, position.y, position.z));
     glCheck(glUseProgram(0));
