@@ -29,6 +29,12 @@ source distribution.
 
 #pragma once
 
+#include <cstdint>
+
+//just to detect client/server version mismatch
+//(terrain data changed between 100 -> 110)
+static constexpr std::uint16_t CURRENT_VER = 110;
+
 namespace MessageType
 {
     enum
@@ -36,7 +42,8 @@ namespace MessageType
         ServerFull,
         NotInLobby,
         MapNotFound,
-        BadData
+        BadData,
+        VersionMismatch
     };
 }
 
@@ -66,6 +73,7 @@ namespace PacketID
         EntityRemoved, //< uint32 entity ID
 
         //from client
+        ClientVersion, //uint32 CURRENT_VER of client. Clients are kicked if this does not match the server
         RequestGameStart,
         ClientReady, //< uint8 clientID - requests game data from server. Sent repeatedly until ack'd
         InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput)
