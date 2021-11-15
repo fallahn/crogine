@@ -206,7 +206,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
 
             if (data.score <= ScoreID::Par)
             {
-                playSound(AudioID::Applause, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f, MixerChannel::Effects);
             }
             break;
         case GolfEvent::BallLanded:

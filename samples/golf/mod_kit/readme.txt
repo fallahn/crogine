@@ -33,7 +33,6 @@ Models should have a scale of 1 Blender unit to 1 metre. For further examples it
 
 Balls
 -----
-
 Balls are 0.021 Blender units in radius, and have the origin at the bottom of the geometry, rather than the centre. Balls are also vertex coloured, any textures will be ignored, however this may change in the future. See the included ball_template Blender file for an example. Balls can be modeled however you like, although bear in mind that they appear very small in game and fine detail will not be very visible. Once a ball model has been converted to crogine format (see above) it requires a ball definition file created in a text editor, and placed in the 'balls' directory. See ball_format.md for an explanation of this file.
 
 
