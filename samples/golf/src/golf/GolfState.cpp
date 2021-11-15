@@ -467,7 +467,6 @@ void GolfState::handleMessage(const cro::Message& msg)
         default: break;
         case SceneEvent::TransitionComplete:
         {
-            updateMiniMap();
             setActiveCamera(CameraID::Player);
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
@@ -1705,6 +1704,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<InterpolationComponent>().setID(info.serverID);
     entity.addComponent<ClientCollider>();
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.ballMeshID), material);
+    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
 
     //ball shadow
     auto ballEnt = entity;
@@ -1735,12 +1735,14 @@ void GolfState::spawnBall(const ActorInfo& info)
         }
     };
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.shadowMeshID), material);
+    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
 
     //large shadow seen close up
     auto shadowEnt = entity;
     entity = m_gameScene.createEntity();
     shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
     m_modelDefs[ModelID::BallShadow]->createModel(entity);
+    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -1780,6 +1782,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     }
     
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //name label for the ball's owner
@@ -2254,6 +2257,16 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
         data.string = "Hole: " + std::to_string(m_currentHole + 1);
+        e.getComponent<cro::Callback>().active = true;
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+    //hide the overhead view
+    cmd.targetFlags = CommandID::UI::MiniGreen;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
         e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -2844,7 +2857,7 @@ void GolfState::startFlyBy()
     targetData.targets[0] = m_cameras[CameraID::Player].getComponent<cro::Transform>().getLocalTransform();
 
 
-    static constexpr glm::vec3 BaseOffset(30.f, 20.f, 0.f);
+    static constexpr glm::vec3 BaseOffset(10.f, 5.f, 0.f);
     const auto& holeData = m_holeData[m_currentHole];
 
     //calc offset based on direction of initial target to tee
@@ -2864,6 +2877,7 @@ void GolfState::startFlyBy()
     {
         diff = (holeData.tee - holeData.pin) / 2.f;
     }
+    diff.y += 25.f;
     transform[3] += glm::vec4(diff, 0.f);
     targetData.targets[2] = transform;
     targetData.speeds[1] = glm::length(glm::vec3(targetData.targets[1][3]) - glm::vec3(targetData.targets[2][3])) / MoveSpeed;
@@ -2926,10 +2940,13 @@ void GolfState::startFlyBy()
                 {
                     auto* msg = cro::App::getInstance().getMessageBus().post<SceneEvent>(MessageID::SceneMessage);
                     msg->type = SceneEvent::TransitionComplete;
+
+                    updateMiniMap();
                 }
                 else
                 {
                     showScoreboard(true);
+                    updateMiniMap();
 
                     //delayed ent just to show the score board for a while
                     auto de = m_gameScene.createEntity();
