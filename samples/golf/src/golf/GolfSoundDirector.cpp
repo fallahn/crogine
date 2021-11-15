@@ -43,6 +43,11 @@ source distribution.
 
 #include <crogine/util/Random.hpp>
 
+namespace
+{
+    constexpr float VoiceDelay = 0.5f;
+}
+
 GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
 {
     //this must match with AudioID enum
@@ -174,28 +179,28 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             {
             default: 
                 //TODO this is probably way over par so play some sad sound
-                playSound(AudioID::ScoreHole, glm::vec3(0.f));
+                playSoundDelayed(AudioID::ScoreHole, glm::vec3(0.f), VoiceDelay, 1.f, MixerChannel::Voice);
                 break; 
             case ScoreID::Albatross:
-                playSound(AudioID::ScoreAlbatross, glm::vec3(0.f));
+                playSoundDelayed(AudioID::ScoreAlbatross, glm::vec3(0.f), VoiceDelay, 1.f, MixerChannel::Voice);
                 break;
             case ScoreID::Birdie:
-                playSound(AudioID::ScoreBirdie, glm::vec3(0.f));
+                playSoundDelayed(AudioID::ScoreBirdie, glm::vec3(0.f), VoiceDelay, 1.f, MixerChannel::Voice);
                 break;
             case ScoreID::Bogie:
-                playSound(AudioID::ScoreBogie, glm::vec3(0.f));
+                playSoundDelayed(AudioID::ScoreBogie, glm::vec3(0.f), VoiceDelay, 1.f, MixerChannel::Voice);
                 break;
             case ScoreID::DoubleBogie:
-                playSound(AudioID::ScoreDoubleBogie, glm::vec3(0.f));
+                playSoundDelayed(AudioID::ScoreDoubleBogie, glm::vec3(0.f), VoiceDelay, 1.f, MixerChannel::Voice);
                 break;
             case ScoreID::Eagle:
-                playSound(AudioID::ScoreEagle, glm::vec3(0.f));
+                playSoundDelayed(AudioID::ScoreEagle, glm::vec3(0.f), VoiceDelay, 1.f, MixerChannel::Voice);
                 break;
             case ScoreID::Par:
-                playSound(AudioID::ScorePar, glm::vec3(0.f));
+                playSoundDelayed(AudioID::ScorePar, glm::vec3(0.f), VoiceDelay, 1.f, MixerChannel::Voice);
                 break;
             case ScoreID::TripleBogie:
-                playSound(AudioID::ScoreTripleBogie, glm::vec3(0.f));
+                playSoundDelayed(AudioID::ScoreTripleBogie, glm::vec3(0.f), VoiceDelay, 1.f, MixerChannel::Voice);
                 break;
             }
 
@@ -301,20 +306,20 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
     return ent;
 }
 
-void GolfSoundDirector::playSoundDelayed(std::int32_t id, glm::vec3 position, float delay, float volume)
+void GolfSoundDirector::playSoundDelayed(std::int32_t id, glm::vec3 position, float delay, float volume, std::uint8_t channel)
 {
     auto entity = getScene().createEntity();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(delay);
     entity.getComponent<cro::Callback>().function =
-        [&, id, position, volume](cro::Entity e, float dt)
+        [&, id, position, volume, channel](cro::Entity e, float dt)
     {
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime -= dt;
 
         if (currTime < 0)
         {
-            playSound(id, position, volume).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            playSound(id, position, volume).getComponent<cro::AudioEmitter>().setMixerChannel(channel);
 
             e.getComponent<cro::Callback>().active = false;
             getScene().destroyEntity(e);

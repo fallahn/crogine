@@ -2873,11 +2873,11 @@ void GolfState::startFlyBy()
 
     //translate the transform to look at target point or half way point if not set
     auto diff = holeData.target - holeData.pin;
-    if (glm::length2(diff) == 0)
+    if (glm::length2(diff) < 100.f)
     {
         diff = (holeData.tee - holeData.pin) / 2.f;
     }
-    diff.y += 25.f;
+    diff.y = 10.f;
     transform[3] += glm::vec4(diff, 0.f);
     targetData.targets[2] = transform;
     targetData.speeds[1] = glm::length(glm::vec3(targetData.targets[1][3]) - glm::vec3(targetData.targets[2][3])) / MoveSpeed;
@@ -2920,6 +2920,7 @@ void GolfState::startFlyBy()
         {
             data.progress = 0.f;
             data.currentTarget++;
+            camTx.setLocalTransform(data.targets[data.currentTarget]);
 
             switch (data.currentTarget)
             {
@@ -2929,8 +2930,8 @@ void GolfState::startFlyBy()
                 //tbh if this transition is replacing the existing one then
                 //we can remove the player cam transition completely. Probvlem is that it's
                 //created by setPlayer(), not setHole()
-                data.targets[3] = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldTransform();
-                //data.ease = std::bind(&cro::Util::Easing::easeInQuint, std::placeholders::_1);
+                data.targets[3] = m_cameras[CameraID::Player].getComponent<cro::Transform>().getLocalTransform();
+                //data.ease = std::bind(&cro::Util::Easing::easeInSine, std::placeholders::_1);
                 data.speeds[2] = glm::length(glm::vec3(data.targets[2][3]) - glm::vec3(data.targets[3][3])) / MoveSpeed;
                 break;
             case 3:

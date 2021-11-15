@@ -57,7 +57,7 @@ static constexpr float WaterLevel = -0.02f;
 static constexpr float TerrainLevel = WaterLevel - 0.03f;
 static constexpr float MaxTerrainHeight = 4.5f;
 
-static constexpr float FlagRaiseDistance = 3.5f * 3.5f;
+static constexpr float FlagRaiseDistance = 2.5f * 2.5f;
 static constexpr float PlayerShadowOffset = 0.04f;
 
 static constexpr glm::uvec2 MapSize(320u, 200u);
@@ -170,6 +170,10 @@ static inline bool planeIntersect(const glm::mat4& camTx, glm::vec3& result)
 
     float pointDist = (rd - glm::dot(PlaneNormal, origin)) / glm::dot(PlaneNormal, ray);
     result = origin + (ray * pointDist);
+    //clamp the result so overhead cams don't produce the effect of the water
+    //plane 'zooming' off into the sunset :)
+    //result.x = std::max(0.f, std::min(static_cast<float>(MapSize.x), result.x));
+    //result.z = std::max(-static_cast<float>(MapSize.y), std::min(0.f, result.z));
     return true;
 }
 
