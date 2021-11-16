@@ -96,7 +96,10 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
     }
 
 #ifdef CRO_DEBUG_
-    m_collisionWorld->debugDrawWorld();
+    if (m_collisionWorld->getDebugDrawer()->getDebugMode())
+    {
+        m_collisionWorld->debugDrawWorld();
+    }
 #endif
 }
 

@@ -2033,6 +2033,7 @@ void GolfState::removeClient(std::uint8_t clientID)
 void GolfState::setCurrentHole(std::uint32_t hole)
 {
     updateScoreboard();
+    m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
 
     //CRO_ASSERT(hole < m_holeData.size(), "");
     if (hole >= m_holeData.size())
@@ -2935,7 +2936,7 @@ void GolfState::startFlyBy()
                 //we're done here
             {
                 updateMiniMap();
-                m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play(); //plays the music
+                //m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play(); //plays the music
 
                 if (m_sharedData.tutorial)
                 {
