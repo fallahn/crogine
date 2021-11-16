@@ -45,8 +45,8 @@ struct FpsCamera final
     float cameraPitch = 0.f; //used to clamp camera
     float cameraYaw = 0.f; //used to calc forward vector
 
-    float moveSpeed = 3.f; //units per second
-    float lookSensitivity = 0.5f; //0 - 1
+    float moveSpeed = 1.f; //units per second
+    float lookSensitivity = 0.45f; //0 - 1
     float yInvert = 1.f; //-1 to invert axis
 
     std::int32_t controllerIndex = 0; //which controller to accept input from. Keyboard input is always sent to controller 0

@@ -30,6 +30,7 @@ source distribution.
 #include "FpsCameraSystem.hpp"
 
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/Mouse.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
@@ -128,8 +129,11 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         }
         break;
     case SDL_MOUSEMOTION:
-        m_inputs[0].xMove += evt.motion.xrel;
-        m_inputs[0].yMove += evt.motion.yrel;
+        if (cro::Mouse::isButtonPressed(cro::Mouse::Button::Left))
+        {
+            m_inputs[0].xMove += evt.motion.xrel;
+            m_inputs[0].yMove += evt.motion.yrel;
+        }
     break;
 
 
@@ -215,61 +219,6 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
 
 void FpsCameraSystem::process(float dt)
 {
-    //read the game controller axis if connected
-    static constexpr float MaxLookAxis = 50.f;
-    //for (auto i = 0; i < 4; ++i)
-    //{
-    //    if (cro::GameController::isConnected(i))
-    //    {
-    //        //look around
-    //        float xPos = static_cast<float>(cro::GameController::getAxisPosition(i, cro::GameController::AxisRightX));
-    //        xPos /= cro::GameController::AxisMax;
-    //        m_inputs[i].xMove = static_cast<std::int8_t>(xPos * MaxLookAxis);
-
-    //        float yPos = static_cast<float>(cro::GameController::getAxisPosition(i, cro::GameController::AxisRightY));
-    //        yPos /= cro::GameController::AxisMax;
-    //        m_inputs[i].yMove = static_cast<std::int8_t>(yPos * MaxLookAxis);
-
-
-    //        //move
-    //        auto xMove = cro::GameController::getAxisPosition(i, cro::GameController::AxisLeftX);
-    //        if (xMove == 0)
-    //        {
-    //            //hmmm how do we stop this unsetting state set by the DPad event (above)?
-    //            //m_inputs[i].buttonFlags &= ~Input::Flags::Right;
-    //            //m_inputs[i].buttonFlags &= ~Input::Flags::Left;
-    //        }
-    //        else if (xMove > 0)
-    //        {
-    //            m_inputs[i].buttonFlags |= Input::Flags::Right;
-    //        }
-    //        else
-    //        {
-    //            m_inputs[i].buttonFlags |= Input::Flags::Left;
-    //        }
-
-    //        auto yMove = cro::GameController::getAxisPosition(i, cro::GameController::AxisLeftY);
-    //        if (yMove == 0)
-    //        {
-    //            //hmmm how do we stop this unsetting state set by the DPad event (above)?
-    //            //m_inputs[i].buttonFlags &= ~Input::Flags::Forward;
-    //            //m_inputs[i].buttonFlags &= ~Input::Flags::Backward;
-    //        }
-    //        else if (yMove > 0)
-    //        {
-    //            m_inputs[i].buttonFlags |= Input::Flags::Forward;
-    //        }
-    //        else
-    //        {
-    //            m_inputs[i].buttonFlags |= Input::Flags::Backward;
-    //        }
-
-    //        //TODO create a normalised vector from left stick
-    //        //and use the length to calculate moement speed...
-    //    }
-    //}
-
-
     auto& entities = getEntities();
     for (auto entity : entities)
     {

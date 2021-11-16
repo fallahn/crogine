@@ -43,6 +43,8 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/gui/detail/imgui.h>
 
+#include "ModelViewerConsts.inl"
+
 #include <map>
 #include <memory>
 #include <optional>
@@ -88,7 +90,6 @@ private:
     MaskEditor m_maskEditor;
     bool m_showMaskEditor;
 
-    float m_fov;
     float m_viewportRatio;
 
     struct Preferences final
@@ -103,6 +104,9 @@ private:
     bool m_showMaterialWindow;
     bool m_showBakingWindow;
 
+    std::array<CameraSettings, CameraID::Count> m_cameras = {};
+    bool m_useFreecam;
+
     cro::ConfigFile m_currentModelConfig;
     std::string m_currentFilePath;
 
@@ -111,7 +115,7 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
-
+    void toggleFreecam();
 
     //------------ModelStateModels.cpp----------//
     struct ModelProperties final

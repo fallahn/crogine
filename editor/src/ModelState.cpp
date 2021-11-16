@@ -34,7 +34,7 @@ source distribution.
 #include "UIConsts.hpp"
 #include "SharedStateData.hpp"
 #include "Messages.hpp"
-#include "ModelViewerConsts.inl"
+#include "FpsCameraSystem.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
@@ -85,13 +85,13 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_scene                 (context.appInstance.getMessageBus()),
     m_previewScene          (context.appInstance.getMessageBus()),
     m_showMaskEditor        (false),
-    m_fov                   (DefaultFOV),
     m_viewportRatio         (1.f),
     m_showPreferences       (false),
     m_showGroundPlane       (false),
     m_showSkybox            (false),
     m_showMaterialWindow    (false),
     m_showBakingWindow      (false),
+    m_useFreecam            (false),
     m_exportAnimation       (true),
     m_skeletonMeshID        (0),
     m_browseGLTF            (false),
@@ -129,14 +129,23 @@ bool ModelState::handleEvent(const cro::Event& evt)
         }
         break;
     case SDL_MOUSEMOTION:
-        updateMouseInput(evt);
+        if (!m_useFreecam)
+        {
+            updateMouseInput(evt);
+        }
         break;
     case SDL_MOUSEWHEEL:
+        if(!m_useFreecam)
     {
-        m_fov = std::min(MaxFOV, std::max(MinFOV, m_fov - (evt.wheel.y * 0.1f)));
-        m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
+        m_cameras[CameraID::Default].FOV = std::min(MaxFOV, std::max(MinFOV, m_cameras[CameraID::Default].FOV - (evt.wheel.y * 0.1f)));
+        m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_cameras[CameraID::Default].FOV);
     }
         break;
+    }
+
+    if (m_useFreecam)
+    {
+        m_scene.getSystem<FpsCameraSystem>()->handleEvent(evt);
     }
 
     m_previewScene.forwardEvent(evt);
@@ -152,7 +161,8 @@ void ModelState::handleMessage(const cro::Message& msg)
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
             updateLayout(data.data0, data.data1);
-            m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
+            m_viewportRatio = updateView(m_cameras[CameraID::Default].camera, m_cameras[CameraID::Default].FarPlane, m_cameras[CameraID::Default].FOV);
+            updateView(m_cameras[CameraID::FreeLook].camera, m_cameras[CameraID::FreeLook].FarPlane, m_cameras[CameraID::FreeLook].FOV);
         }
     }
     else if (msg.id == cro::Message::ConsoleMessage)
@@ -220,6 +230,7 @@ void ModelState::addSystems()
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::BillboardSystem>(mb);
+    m_scene.addSystem<FpsCameraSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     if (m_useDeferred)
@@ -344,6 +355,7 @@ void ModelState::createScene()
     entity.addComponent<cro::Camera>().shadowMapBuffer.create(4096, 4096);
     m_viewportRatio = updateView(entity, DefaultFarPlane, DefaultFOV);
     m_scene.setActiveCamera(entity);
+    m_cameras[CameraID::Default].camera = entity;
 
     m_entities[EntityID::RootNode] = m_scene.createEntity();
     m_entities[EntityID::RootNode].addComponent<cro::Transform>();
@@ -361,7 +373,7 @@ void ModelState::createScene()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        float scale = m_fov / DefaultFOV;
+        float scale = m_cameras[CameraID::Default].FOV / DefaultFOV;
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
     };
     m_entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -449,6 +461,23 @@ void ModelState::createScene()
 
     m_scene.setCubemap(m_environmentMap);
     m_previewScene.setCubemap(m_environmentMap);
+
+
+    //set up free cam
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(DefaultCameraPosition);
+    entity.addComponent<FpsCamera>();
+    entity.addComponent<cro::Camera>().shadowMapBuffer.create(4096, 4096);
+    updateView(entity, DefaultFarPlane * 3.f, DefaultFOV);
+
+    m_cameras[CameraID::FreeLook].FarPlane = DefaultFarPlane * 3.f;
+    m_cameras[CameraID::FreeLook].camera = entity;
+}
+
+void ModelState::toggleFreecam()
+{
+    m_useFreecam = !m_useFreecam;
+    m_scene.setActiveCamera(m_useFreecam ? m_cameras[CameraID::FreeLook].camera : m_cameras[CameraID::Default].camera);
 }
 
 void ModelState::loadPrefs()
