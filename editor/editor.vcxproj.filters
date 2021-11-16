@@ -99,6 +99,9 @@
     <ClCompile Include="src\SrgbTransform.cpp">
       <Filter>Source Files\model viewer</Filter>
     </ClCompile>
+    <ClCompile Include="src\FpsCameraSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -166,6 +169,9 @@
     </ClInclude>
     <ClInclude Include="src\SrgbTransform.hpp">
       <Filter>Header Files\model viewer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FpsCameraSystem.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

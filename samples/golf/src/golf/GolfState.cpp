@@ -2213,9 +2213,6 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             //remove the transition ent
             e.getComponent<cro::Callback>().active = false;
             m_gameScene.destroyEntity(e);
-
-            //play the music
-            m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
         }
         else
         {
@@ -2937,17 +2934,17 @@ void GolfState::startFlyBy()
             case 3:
                 //we're done here
             {
+                updateMiniMap();
+                m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play(); //plays the music
+
                 if (m_sharedData.tutorial)
                 {
                     auto* msg = cro::App::getInstance().getMessageBus().post<SceneEvent>(MessageID::SceneMessage);
                     msg->type = SceneEvent::TransitionComplete;
-
-                    updateMiniMap();
                 }
                 else
                 {
                     showScoreboard(true);
-                    updateMiniMap();
 
                     //delayed ent just to show the score board for a while
                     auto de = m_gameScene.createEntity();

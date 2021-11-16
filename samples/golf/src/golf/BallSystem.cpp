@@ -107,6 +107,10 @@ void BallSystem::process(float dt)
     for (auto entity : entities)
     {
         auto& ball = entity.getComponent<Ball>();
+
+        //*sigh* isnan bug
+        CRO_ASSERT(!std::isnan(ball.velocity.x), "");
+
         switch (ball.state)
         {
         default: break;
@@ -133,6 +137,9 @@ void BallSystem::process(float dt)
 
                 //test collision
                 doCollision(entity);
+
+                CRO_ASSERT(!std::isnan(tx.getPosition().x), "");
+                CRO_ASSERT(!std::isnan(ball.velocity.x), "");
             }
         }
         break;
@@ -143,6 +150,9 @@ void BallSystem::process(float dt)
             {
                 auto& tx = entity.getComponent<cro::Transform>();
                 auto position = tx.getPosition();
+
+                //attempts to trap na obscure NaN bug
+                CRO_ASSERT(!std::isnan(position.x), "");
 
                 auto [terrain, normal, penetration] = getTerrain(position);
 
@@ -173,6 +183,7 @@ void BallSystem::process(float dt)
                     ball.velocity += pinDir * forceAffect;// dt;
 
                     ball.hadAir = true;
+                    CRO_ASSERT(!std::isnan(ball.velocity.x), "");
                 }
                 else //we're on the green so roll
                 {
@@ -199,6 +210,9 @@ void BallSystem::process(float dt)
                             position.y += penetration;
                             tx.setPosition(position);
                         }
+
+                        CRO_ASSERT(!std::isnan(position.x), "");
+                        CRO_ASSERT(!std::isnan(ball.velocity.x), "");
                     }
                     else
                     {
@@ -215,6 +229,8 @@ void BallSystem::process(float dt)
                             position.y += penetration;
                             tx.setPosition(position);
                         }
+                        CRO_ASSERT(!std::isnan(position.x), "");
+                        CRO_ASSERT(!std::isnan(ball.velocity.x), "");
                     }
                     ball.hadAir = false;
 
@@ -231,7 +247,7 @@ void BallSystem::process(float dt)
                     //add friction
                     ball.velocity *= 0.985f;
                 }
-
+                
 
                 //move by velocity
                 tx.move(ball.velocity * dt);
@@ -278,6 +294,9 @@ void BallSystem::process(float dt)
                     }
 
                     msg->position = position;
+
+                    CRO_ASSERT(!std::isnan(position.x), "");
+                    CRO_ASSERT(!std::isnan(ball.velocity.x), "");
                 }
             }
             break;
@@ -392,6 +411,7 @@ void BallSystem::doCollision(cro::Entity entity)
     //check height
     auto& tx = entity.getComponent<cro::Transform>();
     auto pos = tx.getPosition();
+    CRO_ASSERT(!std::isnan(pos.x), "");
 
     //if (pos.y > 10.f)
     //{
@@ -422,6 +442,8 @@ void BallSystem::doCollision(cro::Entity entity)
         tx.setPosition(pos);
 
         auto& ball = entity.getComponent<Ball>();
+        CRO_ASSERT(!std::isnan(pos.x), "");
+        CRO_ASSERT(!std::isnan(ball.velocity.x), "");
 
         //apply dampening based on terrain (or splash)
         switch (terrain)
@@ -448,24 +470,27 @@ void BallSystem::doCollision(cro::Entity entity)
                 float momentum = 1.f - glm::dot(-cro::Transform::Y_AXIS, glm::normalize(ball.velocity));
                 static constexpr float MaxMomentum = 20.f;
                 momentum *= MaxMomentum;
-
+                CRO_ASSERT(!std::isnan(ball.velocity.x), "");
 
                 auto len = glm::length(ball.velocity);
                 ball.velocity.y = 0.f;
                 ball.velocity = glm::normalize(ball.velocity) * len * momentum; //fake physics to simulate momentum
                 ball.state = Ball::State::Putt;
                 ball.delay = 0.f;
+                CRO_ASSERT(!std::isnan(ball.velocity.x), "");
 
                 return;
             }
             else //bounce
             {
                 ball.velocity = glm::reflect(ball.velocity, normal);
+                CRO_ASSERT(!std::isnan(ball.velocity.x), "");
             }
             break;
         case TerrainID::Rough:
             ball.velocity *= 0.23f;
             ball.velocity = glm::reflect(ball.velocity, normal);
+            CRO_ASSERT(!std::isnan(ball.velocity.x), "");
             break;
         }
 
