@@ -160,14 +160,7 @@ void CameraFollowSystem::process(float dt)
             auto& targetInfo = entity.getComponent<TargetInfo>();
             if (targetInfo.waterPlane.isValid())
             {
-                glm::vec3 intersection = target;
-                //planeIntersect(tx.getLocalTransform(), intersection); //if this fails we'll just follow the ball instead
-                /*if (planeIntersect(tx.getLocalTransform(), intersection))
-                {
-
-                }*/
-                intersection.y = WaterLevel;
-                targetInfo.waterPlane.getComponent<cro::Transform>().setPosition(intersection);
+                targetInfo.waterPlane.getComponent<cro::Callback>().setUserData<glm::vec3>(target.x, WaterLevel, target.z);
             }
         }
             break;

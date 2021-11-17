@@ -1255,7 +1255,7 @@ void GolfState::buildScene()
     cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/cup.cmt");
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setScale({ 1.1f, 1.f, 1.1f });
     md.createModel(entity);
 
     auto holeEntity = entity;
@@ -1380,8 +1380,7 @@ void GolfState::buildScene()
 
 
 
-    //attach a water plane to the camera
-    //this is updated when positioning the camera
+    //water plane. Updated by various camera callbacks
     meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(150.f, 30));
     auto waterEnt = m_gameScene.createEntity();
     waterEnt.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
@@ -1389,7 +1388,18 @@ void GolfState::buildScene()
     waterEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
     waterEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::Water]));
     waterEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    waterEnt.addComponent<cro::Callback>().active = true;
+    waterEnt.getComponent<cro::Callback>().setUserData<glm::vec3>(m_holeData[0].pin);
+    waterEnt.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto target = e.getComponent<cro::Callback>().getUserData<glm::vec3>();
+        target.y = WaterLevel;
 
+        auto& tx = e.getComponent<cro::Transform>();
+        auto diff = target - tx.getPosition();
+        tx.move(diff * 5.f * dt);
+    };
     m_waterEnt = waterEnt;
     m_gameScene.setWaterLevel(WaterLevel);
 
@@ -2344,7 +2354,7 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
     if (targetInfo.waterPlane.isValid())
     {
-        targetInfo.waterPlane.getComponent<cro::Transform>().setPosition({ target.x, WaterLevel, target.z });
+        targetInfo.waterPlane.getComponent<cro::Callback>().setUserData<glm::vec3>(target.x, WaterLevel, target.z);
     }
 }
 
@@ -3011,6 +3021,12 @@ void GolfState::setActiveCamera(std::int32_t camID)
         {
             waterEnt = m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane;
             m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = {};
+        }
+
+        if (camID == CameraID::Player)
+        {
+            auto target = m_currentPlayer.position;
+            waterEnt.getComponent<cro::Callback>().setUserData<glm::vec3>(target.x, WaterLevel, target.z);
         }
 
         //set scene camera
