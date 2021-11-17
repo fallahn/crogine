@@ -1063,6 +1063,10 @@ void GolfState::updateScoreboard()
         }
 
         ents.back().getComponent<cro::Text>().setString(totalString);
+        //for some reason we have to hack this to display and I'm too lazy to debug it
+        auto pos = ents.back().getComponent<cro::Transform>().getPosition();
+        pos.z = 1.f;
+        ents.back().getComponent<cro::Transform>().setPosition(pos);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
@@ -1085,7 +1089,6 @@ void GolfState::showScoreboard(bool visible)
     {
         visible = true;
     }
-
 
     auto target = visible ? 0 : 1; //when 1 board is moved 1x screen size from centre
 

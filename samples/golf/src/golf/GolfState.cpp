@@ -277,7 +277,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_TAB:
-            showScoreboard(true);
+            if (!evt.key.repeat)
+            {
+                showScoreboard(true);
+            }
             break;
         case SDLK_UP:
         case SDLK_LEFT:
@@ -307,7 +310,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             showScoreboard(true);
             break;
         case cro::GameController::ButtonB:
-                showScoreboard(false);
+            showScoreboard(false);
             break;
         case cro::GameController::DPadUp:
         case cro::GameController::DPadLeft:
