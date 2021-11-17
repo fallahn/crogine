@@ -79,7 +79,7 @@ BallSystem::BallSystem(cro::MessageBus& mb)
 
     m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
     m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
-    m_windDirTarget += 0.1f;
+    m_windDirTarget.x += 0.1f;
 
     m_windDirTarget = glm::normalize(m_windDirTarget);
 
@@ -542,7 +542,7 @@ void BallSystem::updateWind()
         //on rare occasions both of the above might have a value of 0 - in which
         //case attempting to normalise below causes a NaN which cascades through
         //ball velocity and eventually ball position culminating in a cluster fk.
-        m_windDirTarget += 0.1f;
+        m_windDirTarget.x += 0.1f;
 
         m_windDirTarget = glm::normalize(m_windDirTarget);
 
