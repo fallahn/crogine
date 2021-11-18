@@ -124,7 +124,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     : cro::State        (stack, context),
     m_sharedData        (sd),
     m_gameScene         (context.appInstance.getMessageBus(), 512),
-    m_uiScene           (context.appInstance.getMessageBus(), 512),
+    m_uiScene           (context.appInstance.getMessageBus(), 1024),
     m_mouseVisible      (true),
     m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
     m_wantsGameState    (true),
@@ -379,6 +379,20 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
 #endif // CRO_DEBUG_
 
+    }
+
+    else if (evt.type == SDL_JOYAXISMOTION)
+    {
+        if (evt.caxis.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+        {
+            switch (evt.caxis.axis)
+            {
+            default: break;
+            case cro::GameController::AxisLeftY:
+                scrollScores(cro::Util::Maths::sgn(evt.caxis.value) * 19);
+                break;
+            }
+        }
     }
 
     m_inputParser.handleEvent(evt);

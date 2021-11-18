@@ -463,7 +463,7 @@ void BallSystem::doCollision(cro::Entity entity)
             ball.velocity = glm::reflect(ball.velocity, normal);
             break;
         case TerrainID::Green:
-            ball.velocity *= 0.28f;
+            ball.velocity *= 0.26f;
 
             //if low bounce start rolling
             if (ball.velocity.y > -0.05f)
