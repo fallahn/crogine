@@ -283,3 +283,26 @@ void Image::setPixel(std::size_t x, std::size_t y, cro::Colour colour)
         m_data[index] = colour.getAlphaByte();
     }
 }
+
+const std::uint8_t* Image::getPixel(std::size_t x, std::size_t y) const
+{
+    std::size_t size = 1;
+    switch (m_format)
+    {
+    default: break;
+    case ImageFormat::Type::RGB:
+        size = 3;
+        break;
+    case ImageFormat::Type::RGBA:
+        size = 4;
+        break;
+    }
+
+    auto index = ((y * m_size.x) + x) * size;
+
+    if (index < m_data.size())
+    {
+        return &m_data[index];
+    }
+    return nullptr;
+}

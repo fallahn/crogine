@@ -61,6 +61,7 @@ GameState::GameState(SharedData& sd)
     m_mapDataValid  (false),
     m_scene         (sd.messageBus, 512),
     m_gameStarted   (false),
+    m_allMapsLoaded (false),
     m_currentHole   (0)
 {
     if (m_mapDataValid = validateMap(); m_mapDataValid)
@@ -190,6 +191,12 @@ void GameState::netEvent(const cro::NetEvent& evt)
                 doServerCommand(evt);
             }
             break;
+        case PacketID::TransitionComplete:
+        {
+            auto clientID = evt.packet.as<std::uint8_t>();
+            m_sharedData.clients[clientID].mapLoaded = true;
+        }
+            break;
         }
     }
 }
@@ -204,19 +211,21 @@ void GameState::netBroadcast()
     //fetch ball ents and send updates to client
     for (const auto& player : m_playerInfo)
     {
-        //only send active player's ball? this breaks initial positions for other players
-        //if (ball == m_playerInfo[0].ballEntity)
+        //only send active player's ball
+        auto ball = player.ballEntity;
+        
+        if (ball == m_playerInfo[0].ballEntity)
         {
-            auto ball = player.ballEntity;
-
             auto timestamp = m_serverTime.elapsed().asMilliseconds();
 
             ActorInfo info;
             info.serverID = static_cast<std::uint32_t>(ball.getIndex());
             info.position = ball.getComponent<cro::Transform>().getPosition();
+            info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
             info.timestamp = timestamp;
             info.clientID = player.client;
             info.playerID = player.player;
+            info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
             m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Unreliable);
         }
     }
@@ -240,6 +249,22 @@ std::int32_t GameState::process(float dt)
                 m_playerInfo[0].terrain = TerrainID::Green;
                 setNextPlayer(); //resets the timer
             }
+        }
+
+        //we have to keep checking this as a client might
+        //disconnect mid-transition and the final 'complete'
+        //packet will never arrive.
+        if (!m_allMapsLoaded)
+        {
+            bool allReady = true;
+            for (const auto& client : m_sharedData.clients)
+            {
+                if (client.connected && !client.mapLoaded)
+                {
+                    allReady = false;
+                }
+            }
+            m_allMapsLoaded = allReady;
         }
     }
 
@@ -280,7 +305,7 @@ void GameState::sendInitialGameState(std::uint8_t clientID)
     bool allReady = true;
     for (const auto& client : m_sharedData.clients)
     {
-        if (!client.connected && client.ready)
+        if (client.connected && !client.ready)
         {
             allReady = false;
         }
@@ -293,20 +318,16 @@ void GameState::sendInitialGameState(std::uint8_t clientID)
 
         //send command to set clients to first player
         //this also tells the client to stop requesting state
-        //setNextPlayer();
 
-        //create an ent which waits some time before setting next player active
-        //this is just so players have a chance to view the score board
+        //create an ent which waits for the clients to
+        //finish playing the transition animation
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<float>(3.f);
         entity.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
         {
-            auto& t = e.getComponent<cro::Callback>().getUserData<float>();
-            t -= dt;
-            if (t < 0)
+            if (m_allMapsLoaded)
             {
                 setNextPlayer();
                 e.getComponent<cro::Callback>().active = false;
@@ -341,8 +362,17 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
             //Ideally we want to read the frame data from the sprite sheet
             //as well as account for a frame of interp delay on the client
             ball.delay = 0.32f;
-
             ball.startPoint = m_playerInfo[0].ballEntity.getComponent<cro::Transform>().getPosition();
+
+            //calc the amount of spin based on if we're going towards the hole
+            glm::vec2 pin = { m_holeData[m_currentHole].pin.x, m_holeData[m_currentHole].pin.z };
+            glm::vec2 start = { ball.startPoint.x, ball.startPoint.z };
+            auto dir = glm::normalize(pin - start);
+            auto x = -dir.y;
+            dir.y = dir.x;
+            dir.x = x;
+            ball.spin = glm::dot(dir, glm::normalize(glm::vec2(ball.velocity.x, ball.velocity.z))) + 0.1f;
+
 
             m_playerInfo[0].holeScore[m_currentHole]++;
 
@@ -406,13 +436,16 @@ void GameState::setNextHole()
         m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 
+    //set clients as not yet loaded
+    for (auto& client : m_sharedData.clients)
+    {
+        client.mapLoaded = false;
+    }
+    m_allMapsLoaded = false;
 
     m_currentHole++;
     if (m_currentHole < m_holeData.size())
     {
-        //make sure to load current data
-        m_currentMap.loadFromFile(m_holeData[m_currentHole].mapPath);
-
         //reset player positions/strokes
         for (auto& player : m_playerInfo)
         {
@@ -420,28 +453,42 @@ void GameState::setNextHole()
             player.distanceToHole = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin);
             player.terrain = TerrainID::Fairway;
 
-            player.ballEntity.getComponent<Ball>().terrain = TerrainID::Fairway;
-            player.ballEntity.getComponent<Ball>().velocity = glm::vec3(0.f);
-            player.ballEntity.getComponent<cro::Transform>().setPosition(player.position);
+            auto ball = player.ballEntity;
+            ball.getComponent<Ball>().terrain = TerrainID::Fairway;
+            ball.getComponent<Ball>().velocity = glm::vec3(0.f);
+            ball.getComponent<cro::Transform>().setPosition(player.position);
+
+            auto timestamp = m_serverTime.elapsed().asMilliseconds();
+
+            ActorInfo info;
+            info.serverID = static_cast<std::uint32_t>(ball.getIndex());
+            info.position = ball.getComponent<cro::Transform>().getPosition();
+            info.timestamp = timestamp;
+            info.clientID = player.client;
+            info.playerID = player.player;
+            info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
+            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
 
         //tell the local ball system which hole we're on
-        m_scene.getSystem<BallSystem>()->setHoleData(m_holeData[m_currentHole]);
+        if (!m_scene.getSystem<BallSystem>()->setHoleData(m_holeData[m_currentHole]))
+        {
+            m_sharedData.host.broadcastPacket(PacketID::ServerError, static_cast<std::uint8_t>(MessageType::MapNotFound), cro::NetFlag::Reliable);
+            return;
+        }
 
         //tell clients to set up next hole
         m_sharedData.host.broadcastPacket(PacketID::SetHole, m_currentHole, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-        //create an ent which waits some time before setting next player active
+        //create an ent which waits for all clients to load the next hole
+        //which include playing the transition animation.
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<float>(3.f);
         entity.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
         {
-            auto& t = e.getComponent<cro::Callback>().getUserData<float>();
-            t -= dt;
-            if (t < 0)
+            if (m_allMapsLoaded)
             {
                 setNextPlayer();
                 e.getComponent<cro::Callback>().active = false;
@@ -531,7 +578,7 @@ bool GameState::validateMap()
             return false;
         }
 
-        static constexpr std::int32_t MaxProps = 5;
+        static constexpr std::int32_t MaxProps = 4;
         std::int32_t propCount = 0;
         auto& holeData = m_holeData.emplace_back();
 
@@ -539,34 +586,20 @@ bool GameState::validateMap()
         for (const auto& holeProp : holeProps)
         {
             const auto& name = holeProp.getName();
-            if (name == "map")
-            {
-                if (!m_currentMap.loadFromFile(holeProp.getValue<std::string>()))
-                {
-                    return false;
-                }
-                if (m_currentMap.getFormat() != cro::ImageFormat::RGBA)
-                {
-                    LogE << "Server: hole map requires RGBA format" << std::endl;
-                    return false;
-                }
-
-                loadNormalMap(holeData.normalMap, holeProp.getValue<std::string>());
-                holeData.mapPath = holeProp.getValue<std::string>();
-
-                propCount++;
-            }
-            else if (name == "pin")
+            if (name == "pin")
             {
                 //TODO not sure how we ensure these are sane values?
-                auto pin = holeProp.getValue<glm::vec2>();
-                holeData.pin = { pin.x, 0.f, -pin.y };
+                //could at leat clamp them to map bounds.
+                holeData.pin = holeProp.getValue<glm::vec3>();
+                holeData.pin.x = glm::clamp(holeData.pin.x, 0.f, 320.f);
+                holeData.pin.z = glm::clamp(holeData.pin.z, -200.f, 0.f);
                 propCount++;
             }
             else if (name == "tee")
             {
-                auto tee = holeProp.getValue<glm::vec2>();
-                holeData.tee = { tee.x, 0.f, -tee.y };
+                holeData.tee = holeProp.getValue<glm::vec3>();
+                holeData.tee.x = glm::clamp(holeData.tee.x, 0.f, 320.f);
+                holeData.tee.z = glm::clamp(holeData.tee.z, -200.f, 0.f);
                 propCount++;
             }
             else if (name == "par")
@@ -602,13 +635,10 @@ bool GameState::validateMap()
 
         if (propCount != MaxProps)
         {
-            LogE << "Missing hole property" << std::endl;
+            LogE << "Server: Missing hole property" << std::endl;
             return false;
         }
     }
-
-    //make sure we have the first map loaded else this won't match the hole...
-    m_currentMap.loadFromFile(m_holeData[0].mapPath);
 
     return true;
 }
@@ -644,7 +674,7 @@ void GameState::initScene()
 
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
-    m_scene.addSystem<BallSystem>(mb, m_currentMap)->setHoleData(m_holeData[0]);
+    m_mapDataValid = m_scene.addSystem<BallSystem>(mb)->setHoleData(m_holeData[0]);
 }
 
 void GameState::buildWorld()

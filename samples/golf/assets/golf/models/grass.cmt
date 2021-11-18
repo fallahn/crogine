@@ -6,5 +6,6 @@ model grass
     {
         diffuse = "assets/golf/images/grass01.png"
         alpha_clip = 0.2
+        lock_rotation = true
     }
 }

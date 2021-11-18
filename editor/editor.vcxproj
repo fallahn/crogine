@@ -294,6 +294,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\FpsCameraSystem.cpp" />
     <ClCompile Include="src\gltf\gltf.cpp" />
     <ClCompile Include="src\LayoutState.cpp" />
     <ClCompile Include="src\LayoutStateUI.cpp" />
@@ -315,6 +316,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp" />
+    <ClInclude Include="src\FpsCameraSystem.hpp" />
     <ClInclude Include="src\gltf\json.hpp" />
     <ClInclude Include="src\gltf\stb_image.h" />
     <ClInclude Include="src\gltf\stb_image_write.h" />

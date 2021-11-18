@@ -34,6 +34,7 @@ source distribution.
 #include "InputParser.hpp"
 #include "TerrainBuilder.hpp"
 #include "CameraFollowSystem.hpp"
+#include "CollisionMesh.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -98,6 +99,7 @@ private:
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;
     ActivePlayer m_currentPlayer;
+    CollisionMesh m_collisionMesh;
 
     TerrainBuilder m_terrainBuilder;
 
@@ -160,6 +162,7 @@ private:
     void updateActor(const ActorInfo&);
 
     void createTransition(const ActivePlayer&);
+    void startFlyBy();
     std::int32_t getClub() const;
 
     //allows switching camera, TV style
@@ -167,6 +170,9 @@ private:
     std::int32_t m_currentCamera;
     void setActiveCamera(std::int32_t);
 
+    cro::Entity m_defaultCam;
+    cro::Entity m_freeCam;
+    void toggleFreeCam();
 
     //UI stuffs - found in GolfStateUI.cpp
     struct SpriteID final
@@ -201,6 +207,7 @@ private:
     std::size_t m_scoreColumnCount;
 
     cro::Entity m_courseEnt;
+    cro::Entity m_waterEnt;
 
     void buildUI();
     void showCountdown(std::uint8_t);
@@ -216,6 +223,7 @@ private:
     };
     void showMessageBoard(MessageBoardID);
     void floatingMessage(const std::string&);
+    void createTransition();
 
     //-----------
 

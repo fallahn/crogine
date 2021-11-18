@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Matrix.hpp>
 
 #include <cstdint>
 
@@ -54,13 +55,14 @@ static constexpr float HoleRadius = 0.058f;
 
 static constexpr float WaterLevel = -0.02f;
 static constexpr float TerrainLevel = WaterLevel - 0.03f;
-static constexpr float MaxTerrainHeight = 3.5f;
+static constexpr float MaxTerrainHeight = 4.5f;
 
-static constexpr float FlagRaiseDistance = 3.5f * 3.5f;
+static constexpr float FlagRaiseDistance = 2.5f * 2.5f;
 static constexpr float PlayerShadowOffset = 0.04f;
 
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::uvec2 LabelTextureSize(128u, 64u);
+static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, -static_cast<float>(MapSize.y / 2));
 
 static const cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
 
@@ -68,7 +70,7 @@ struct MixerChannel final
 {
     enum
     {
-        Music, Effects, Menu
+        Music, Effects, Menu, Voice
     };
 };
 
@@ -86,7 +88,8 @@ struct ShaderID final
         TutorialSlope,
         Wireframe,
         WireframeCulled,
-        Weather
+        Weather,
+        Transition
     };
 };
 
@@ -106,7 +109,7 @@ static constexpr float ViewportHeightWide = 300.f;
 static inline glm::vec3 interpolate(glm::vec3 a, glm::vec3 b, float t)
 {
     auto diff = b - a;
-    return a + (diff * cro::Util::Easing::easeOutElastic(t));
+    return a + (diff *t);
 }
 
 static inline constexpr float interpolate(float a, float b, float t)
@@ -145,7 +148,34 @@ static inline void setTexture(const cro::ModelDefinition& modelDef, cro::Materia
             dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
         }
     }
-};
+}
+
+//finds an intersecting point on the water plane.
+static inline bool planeIntersect(const glm::mat4& camTx, glm::vec3& result)
+{
+    //we know we have a fixed water plane here, so no need to generalise
+    static constexpr glm::vec3 PlaneNormal(0.f, 1.f, 0.f);
+    static constexpr glm::vec3 PlanePoint(0.f, WaterLevel, 0.f);
+    static const float rd = glm::dot(PlaneNormal, PlanePoint);
+
+    //this is normalised all the time the camera doesn't have a scale (it shouldn't)
+    auto ray = -cro::Util::Matrix::getForwardVector(camTx);
+    auto origin = glm::vec3(camTx[3]);
+
+    if (glm::dot(PlaneNormal, ray) <= 0)
+    {
+        //parallel or plane is behind camera
+        return false;
+    }
+
+    float pointDist = (rd - glm::dot(PlaneNormal, origin)) / glm::dot(PlaneNormal, ray);
+    result = origin + (ray * pointDist);
+    //clamp the result so overhead cams don't produce the effect of the water
+    //plane 'zooming' off into the sunset :)
+    //result.x = std::max(0.f, std::min(static_cast<float>(MapSize.x), result.x));
+    //result.z = std::max(-static_cast<float>(MapSize.y), std::min(0.f, result.z));
+    return true;
+}
 
 static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, float px, float py)
 {
@@ -178,60 +208,64 @@ static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, floa
     }
 }
 
+static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const cro::Image& img)
+{
+    dst.resize(MapSize.x * MapSize.y, glm::vec3(0.f, 1.f, 0.f));
+
+    std::uint32_t stride = 0;
+    if (img.getFormat() == cro::ImageFormat::RGB)
+    {
+        stride = 3;
+    }
+    else if (img.getFormat() == cro::ImageFormat::RGBA)
+    {
+        stride = 4;
+    }
+
+    if (stride != 0)
+    {
+        auto pixels = img.getPixelData();
+        for (auto i = 0u, j = 0u; i < dst.size(); ++i, j += stride)
+        {
+            dst[i] = { pixels[j], pixels[j + 2], pixels[j + 1] };
+            dst[i] /= 255.f;
+
+            dst[i].x = std::max(0.45f, std::min(0.55f, dst[i].x)); //clamps to +- 0.05f. I think. :3
+            dst[i].z = std::max(0.45f, std::min(0.55f, dst[i].z));
+
+            dst[i] *= 2.f;
+            dst[i] -= 1.f;
+            dst[i] = glm::normalize(dst[i]);
+            dst[i].z *= -1.f;
+        }
+    }
+
+    return img;
+}
+
 static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::string& path)
 {
     static const cro::Colour DefaultColour(0x7f7fffff);
-    
-    dst.resize(MapSize.x * MapSize.y, glm::vec3(0.f, 1.f, 0.f));
 
     auto extension = cro::FileSystem::getFileExtension(path);
     auto filePath = path.substr(0, path.length() - extension.length());
-
     filePath += "n" + extension;
 
     cro::Image img;
-    if (img.loadFromFile(filePath))
-    {
-        auto size = img.getSize();
-        if (size != MapSize)
-        {
-            LogW << path << ": not loaded, image not 320x200" << std::endl;
-            img.create(320, 300, DefaultColour);
-            return img;
-        }
-
-        std::uint32_t stride = 0;
-        if (img.getFormat() == cro::ImageFormat::RGB)
-        {
-            stride = 3;
-        }
-        else if (img.getFormat() == cro::ImageFormat::RGBA)
-        {
-            stride = 4;
-        }
-
-        if (stride != 0)
-        {
-            auto pixels = img.getPixelData();
-            for (auto i = 0u, j = 0u; i < dst.size(); ++i, j += stride)
-            {
-                dst[i] = { pixels[j], pixels[j + 2], pixels[j + 1] };
-                dst[i] /= 255.f;
-
-                dst[i].x = std::max(0.45f, std::min(0.55f, dst[i].x)); //clamps to +- 0.05f. I think. :3
-                dst[i].z = std::max(0.45f, std::min(0.55f, dst[i].z));
-
-                dst[i] *= 2.f;
-                dst[i] -= 1.f;
-                dst[i] = glm::normalize(dst[i]);
-                dst[i].z *= -1.f;
-            }
-        }
-    }
-    else
+    if (!img.loadFromFile(filePath))
     {
         img.create(320, 300, DefaultColour);
     }
+
+    auto size = img.getSize();
+    if (size != MapSize)
+    {
+        LogW << path << ": not loaded, image not 320x200" << std::endl;
+        img.create(320, 300, DefaultColour);
+    }
+
+    loadNormalMap(dst, img);
+
     return img;
 }
 

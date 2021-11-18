@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "GameConsts.hpp"
+
 #include <crogine/ecs/System.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
@@ -38,9 +40,24 @@ struct CameraID final
 {
     enum
     {
-        Player, Sky, Green,
+        Player, Sky, Green, Transition,
         Count
     };
+};
+
+//used to set the camera target
+struct TargetInfo final
+{
+    float targetHeight = CameraStrokeHeight;
+    float targetOffset = CameraStrokeOffset;
+    float startHeight = 0.f;
+    float startOffset = 0.f;
+
+    glm::vec3 targetLookAt = glm::vec3(0.f);
+    glm::vec3 currentLookAt = glm::vec3(0.f);
+    glm::vec3 prevLookAt = glm::vec3(0.f);
+
+    cro::Entity waterPlane;
 };
 
 struct CameraFollower final
@@ -52,7 +69,7 @@ struct CameraFollower final
         Reset
     }state = Track;
 
-    glm::vec3 target = glm::vec3(0.f);
+    cro::Entity target;
     glm::vec3 currentTarget = glm::vec3(0.f); //used to interpolate
     glm::vec3 holePosition = glm::vec3(0.f);
     glm::vec3 playerPosition = glm::vec3(0.f);

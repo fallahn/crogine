@@ -37,27 +37,33 @@ source distribution.
 
 #include <crogine/detail/glm/vec3.hpp>
 
+class CollisionMesh;
+
 struct ClientCollider final
 {
-    glm::vec3 previousPosition = glm::vec3(0.f);
     std::int32_t previousDirection = 0;
+    float previousHeight = 0.f;
     std::uint8_t terrain = 0;
+    std::uint8_t state = 0;
+    bool active = false;
 };
 
 class ClientCollisionSystem final : public cro::System 
 {
 public:
-    ClientCollisionSystem(cro::MessageBus&, const std::vector<HoleData>&);
+    ClientCollisionSystem(cro::MessageBus&, const std::vector<HoleData>&, const CollisionMesh&);
 
     void process(float) override;
 
-    void setMap(std::uint32_t);
-
     void setActiveClub(std::int32_t club) { m_club = club; } //hacky.
+
+    void setMap(std::uint32_t);
 
 private:
     const std::vector<HoleData>& m_holeData;
     std::uint32_t m_holeIndex;
-    cro::Image m_currentMap;
+    const CollisionMesh& m_collisionMesh;
     std::int32_t m_club;
+
+    cro::Image m_mapImage;
 };

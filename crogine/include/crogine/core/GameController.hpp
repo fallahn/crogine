@@ -35,6 +35,8 @@ source distribution.
 #include <SDL_gamecontroller.h>
 #include <SDL_haptic.h>
 
+#include <string>
+
 namespace cro
 {
     /*!
@@ -125,6 +127,18 @@ namespace cro
         \returns deviceID The ID of the device which corresponds to the given controller
         */
         static std::int32_t deviceID(std::int32_t controllerID);
+
+        /*!
+        \brief Returns the ControllerID (0-3) from the given joystick index, if it is connected.
+        If the joystick ID is not valid this function returns -1. Use it to find the ControllerID
+        of a joystick event such as SDL_CONTROLLERBUTTONDOWN
+        \begincode
+
+        \endcode
+        \param joystickID The ID from which to retrieve the controller ID
+        \returns 0-3 on success or -1 if the joystick is not a GameController
+        */
+        static std::int32_t controllerID(std::int32_t joystickID);
 
         /*!
         \brief Returns the current value of the requested axis on the requested

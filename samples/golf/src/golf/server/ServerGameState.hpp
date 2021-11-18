@@ -56,13 +56,13 @@ namespace sv
         SharedData& m_sharedData;
         bool m_mapDataValid;
 
-        cro::Image m_currentMap;
         std::vector<HoleData> m_holeData;
         cro::Clock m_serverTime; //used in timestamping
         cro::Scene m_scene;
 
         //game rule stuff. TODO encapsulate somewhere
         bool m_gameStarted;
+        bool m_allMapsLoaded;
         std::uint8_t m_currentHole;
         std::vector<PlayerStatus> m_playerInfo; //active players. Sorted by distance so the front position is active player
 

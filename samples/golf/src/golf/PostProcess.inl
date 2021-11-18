@@ -63,7 +63,7 @@ R"(
 
     float rand(vec2 pos)
     {
-        return fract(sin(dot(pos, vec2(12.9898, 4.1414) + u_time)) * 43758.5453);
+        return fract(sin(dot(pos, vec2(12.9898, 4.1414) + (u_time * 0.1))) * 43758.5453);
     }
 
     void main()
@@ -89,7 +89,7 @@ R"(
 
     float rand(vec2 pos)
     {
-        return fract(sin(dot(pos, vec2(12.9898, 4.1414) + u_time)) * 43758.5453);
+        return fract(sin(dot(pos, vec2(12.9898, 4.1414) + (u_time * 0.1))) * 43758.5453);
     }
 
     const vec2 curvature = vec2(10.0);
@@ -110,9 +110,9 @@ R"(
         float glitchOffset = 0.05 * smoothstep(0.36, 0.998, sin(v_texCoord.y * 180.0));
         glitchOffset *= round(sin(v_texCoord.y * 90.0));
 
-        float band = smoothstep(0.9951, 0.9992, sin((v_texCoord.y * 4.0) + (u_time * 2.0))) * 0.06;
+        float band = smoothstep(0.9951, 0.9992, sin((v_texCoord.y * 4.0) + (u_time * 0.2))) * 0.06;
 
-        float glitchAmount = step(0.997, rand(vec2(u_time))) * 0.08;
+        float glitchAmount = step(0.997, rand(vec2(u_time * 0.1))) * 0.08;
 #if defined DISTORTION
         vec2 texCoord = curve(v_texCoord);
 #else

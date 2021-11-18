@@ -53,6 +53,7 @@ namespace sv
     struct ClientConnection final
     {
         bool ready = false; //< player is ready to recieve game data, not lobby readiness (see GameState)
+        bool mapLoaded = false;
         bool connected = false;
         cro::NetPeer peer;
         

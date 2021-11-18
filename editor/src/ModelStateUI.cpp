@@ -495,12 +495,19 @@ void ModelState::buildUI()
                     {
 
                     }
-                    if (ImGui::MenuItem("Reset Camera"))
+                    if (ImGui::MenuItem("Use Free Look", nullptr, nullptr))
                     {
-                        m_entities[EntityID::ArcBall].getComponent<cro::Transform>().setLocalTransform(glm::mat4(1.f));
-                        m_entities[EntityID::ArcBall].getComponent<cro::Transform>().setPosition(DefaultArcballPosition);
-                        m_fov = DefaultFOV;
-                        updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
+                        toggleFreecam();
+                    }                    
+                    if (!m_useFreecam)
+                    {
+                        if (ImGui::MenuItem("Reset Camera"))
+                        {
+                            m_entities[EntityID::ArcBall].getComponent<cro::Transform>().setLocalTransform(glm::mat4(1.f));
+                            m_entities[EntityID::ArcBall].getComponent<cro::Transform>().setPosition(DefaultArcballPosition);
+                            m_cameras[CameraID::Default].FOV = DefaultFOV;
+                            updateView(m_cameras[CameraID::Default].camera, DefaultFarPlane, DefaultFOV);
+                        }
                     }
                     ImGui::EndMenu();
                 }

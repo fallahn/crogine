@@ -2,34 +2,35 @@ hole 04
 {
     map = "assets/golf/courses/course_01/04.png"
     model = "assets/golf/models/course_01/04.cmt"
-    pin = 204, 39
-    target = 204, 39
-    tee = 85, 175
-    par = 3
+    pin = "204,0.180357,-39"
+    target = "204,0,-39"
+    tee = "85,0.887401,-175"
+    par = "3"
 
-    crowd
+    crowd 
     {
-        position = 81,0,55
-        rotation = 78
-    }
+        position = 241.000000,0.000000,-45.000000
+        rotation = "78"
 
-    crowd
+    }
+    crowd 
     {
-        position = 69.6,0,75
-        rotation = 49.4
-    }
+        position = 229.600006,0.000000,-25.000000
+        rotation = "49.4"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/crane.cmt"
-        position = 86, 0, 19.4
-        rotation = -20.9
-    }
+        position = 246.000000,0.000000,-80.599998
+        rotation = "-20.9"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/crane_arm.cmt"
-        position = 86, 0, 19.4
-        rotation = 5.9
-    }    
+        position = 246.000000,0.000000,-80.599998
+        rotation = "5.9"
+
+    }
 }

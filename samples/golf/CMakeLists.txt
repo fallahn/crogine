@@ -29,11 +29,14 @@ SET (OpenGL_GL_PREFERENCE "GLVND")
 find_package(CROGINE REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
+#TODO specifiy version 2.83
+find_package(Bullet REQUIRED)
 
 include_directories(
   ${CROGINE_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
+  ${BULLET_INCLUDE_DIRS}
   src)
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -47,4 +50,5 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}
   ${SDL2_LIBRARY}
+  ${BULLET_LIBRARIES}  
   ${OPENGL_LIBRARIES})

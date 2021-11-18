@@ -49,6 +49,7 @@ source distribution.
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Maths.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
 #include "../ErrorCheck.hpp"
@@ -58,8 +59,6 @@ source distribution.
 namespace
 {
 #include "TerrainShader.inl"
-
-    cro::Entity slopeEntity;
 
     //params for poisson disk samples
     constexpr float GrassDensity = 1.7f; //radius for PD sampler
@@ -72,6 +71,9 @@ namespace
     constexpr std::uint32_t QuadsPerMetre = 1;
 
     constexpr float MaxShrubOffset = MaxTerrainHeight + 13.f;
+    constexpr std::int32_t SlopeGridSize = 20;
+    constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
+
 
     //callback data
     struct SwapData final
@@ -127,34 +129,37 @@ TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
     m_threadRunning (false),
     m_wantsUpdate   (false)
 {
+    m_slopeBuffer.reserve(SlopeGridSize * SlopeGridSize * 4);
 #ifdef CRO_DEBUG_
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("Terrain"))
-    //        {
-    //            auto slopePos = slopeEntity.getComponent<cro::Transform>().getPosition();
-    //            if (ImGui::SliderFloat("Slope", &slopePos.y, -10.f, 10.f))
-    //            {
-    //                slopeEntity.getComponent<cro::Transform>().setPosition(slopePos);
-    //            }
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Terrain"))
+            {
+                /*auto slopePos = slopeEntity.getComponent<cro::Transform>().getPosition();
+                if (ImGui::SliderFloat("Slope", &slopePos.y, -10.f, 10.f))
+                {
+                    slopeEntity.getComponent<cro::Transform>().setPosition(slopePos);
+                }
 
-    //            auto pos = m_terrainEntity.getComponent<cro::Transform>().getPosition();
-    //            if (ImGui::SliderFloat("Height", &pos.y, -10.f, 10.f))
-    //            {
-    //                m_terrainEntity.getComponent<cro::Transform>().setPosition(pos);
-    //            }
+                auto pos = m_terrainEntity.getComponent<cro::Transform>().getPosition();
+                if (ImGui::SliderFloat("Height", &pos.y, -10.f, 10.f))
+                {
+                    m_terrainEntity.getComponent<cro::Transform>().setPosition(pos);
+                }
 
-    //            auto visible = m_terrainEntity.getComponent<cro::Model>().isVisible();
-    //            ImGui::Text("Visible: %s", visible ? "yes" : "no");
+                auto visible = m_terrainEntity.getComponent<cro::Model>().isVisible();
+                ImGui::Text("Visible: %s", visible ? "yes" : "no");
 
-    //            if (ImGui::SliderFloat("Morph", &m_terrainProperties.morphTime, 0.f, 1.f))
-    //            {
-    //                glCheck(glUseProgram(m_terrainProperties.shaderID));
-    //                glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
-    //            }
-    //        }
-    //        ImGui::End();        
-    //    });
+                if (ImGui::SliderFloat("Morph", &m_terrainProperties.morphTime, 0.f, 1.f))
+                {
+                    glCheck(glUseProgram(m_terrainProperties.shaderID));
+                    glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
+                }*/
+                ImGui::Image(m_normalDebugTexture, { 640.f, 400.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::Image(m_normalMap.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();        
+        });
 #endif
 }
 
@@ -230,10 +235,6 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         if (m_terrainProperties.morphTime == 1)
         {
             e.getComponent<cro::Callback>().active = false;
-
-            //raise a message to say the transition is complete
-            auto* msg = cro::App::getInstance().getMessageBus().post<SceneEvent>(MessageID::SceneMessage);
-            msg->type = SceneEvent::TransitionComplete;
         }
     };
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
@@ -320,12 +321,13 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_slopeProperties.shader = slopeShader.getGLHandle();
     materialID = resources.materials.add(slopeShader);
     resources.materials.get(materialID).blendMode = cro::Material::BlendMode::Alpha;
+    //resources.materials.get(materialID).enableDepthTest = false;
 
     entity = scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.01f, 0.f });
+    entity.addComponent<cro::Transform>();// .setPosition({ 0.5f, 0.01f, 0.5f });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::SlopeIndicator;
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
-    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
     entity.getComponent<cro::Model>().setHidden(true);
     entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
     entity.getComponent<cro::Callback>().function =
@@ -355,11 +357,29 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     };
 
     m_slopeProperties.meshData = &entity.getComponent<cro::Model>().getMeshData();
-    m_slopeProperties.meshData->boundingBox[0] = glm::vec3(0.f, -10.f, 0.f);
-    m_slopeProperties.meshData->boundingBox[1] = glm::vec3(MaxBounds[0], 10.f, -MaxBounds[1]);
-    m_slopeProperties.meshData->boundingSphere.centre = { MaxBounds[0] / 2.f, 0.f, -MaxBounds[1] / 2.f };
+    m_slopeProperties.meshData->boundingBox[0] = glm::vec3(-HalfGridSize, -1.f, HalfGridSize);
+    m_slopeProperties.meshData->boundingBox[1] = glm::vec3(HalfGridSize, 1.f, -HalfGridSize);
+    m_slopeProperties.meshData->boundingSphere.centre = { HalfGridSize, 0.f, -HalfGridSize };
     m_slopeProperties.meshData->boundingSphere.radius = glm::length(m_slopeProperties.meshData->boundingSphere.centre);
-    slopeEntity = entity;
+    m_slopeProperties.entity = entity;
+
+    //create and update the initial normal map
+    m_normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
+    glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
+    glm::vec2 mapSize(MapSize);
+    glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -10.f, 20.f);
+    auto normalViewProj = projMat * viewMat;
+
+    //we can set this once so we don't need to store the matrix
+    glCheck(glUseProgram(m_normalShader.getGLHandle()));
+    glCheck(glUniformMatrix4fv(m_normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
+    glCheck(glUseProgram(0));
+
+    m_normalMap.create(MapSize.x, MapSize.y, false);
+    if (m_currentHole < m_holeData.size())
+    {
+        renderNormalMap();
+    }
 
     //launch the thread - wants update is initially true
     //so we should create the first layout right away
@@ -420,15 +440,16 @@ void TerrainBuilder::update(std::size_t holeIndex)
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), m_slopeIndices.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-        m_normalMaps[first].loadFromImage(m_normalMapImage);
-        m_normalMaps[first].setSmooth(false);
-        auto modelEnt = m_holeData[holeIndex].modelEntity;
-        modelEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_normalMap", cro::TextureID(m_normalMaps[first].getGLHandle()));
+        m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
 
         //signal to the thread we want to update the buffers
         //ready for next time
         m_currentHole++;
-        m_wantsUpdate = m_currentHole < m_holeData.size();
+        if (m_currentHole < m_holeData.size())
+        {
+            renderNormalMap();
+            m_wantsUpdate = true;
+        }
     }
 }
 
@@ -440,6 +461,7 @@ void TerrainBuilder::updateTime(float elapsed)
 
 void TerrainBuilder::setSlopePosition(glm::vec3 position)
 {
+    //why do this here when we could set it in update() when we set the entity position??
     glCheck(glUseProgram(m_slopeProperties.shader));
     glCheck(glUniform3f(m_slopeProperties.positionUniform, position.x, position.y, position.z));
     glCheck(glUseProgram(0));
@@ -448,6 +470,16 @@ void TerrainBuilder::setSlopePosition(glm::vec3 position)
 //private
 void TerrainBuilder::threadFunc()
 {
+    const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y)
+    {
+        auto size = m_normalMapImage.getSize();
+        x = std::min(size.x - 1, std::max(0u, x));
+        y = std::min(size.y - 1, std::max(0u, y));
+
+        float height = static_cast<float>(m_normalMapImage.getPixel(x, y)[3]) / 255.f;
+        return m_holeHeight.bottom + (m_holeHeight.height * height);
+    };
+
     while (m_threadRunning)
     {
         if (m_wantsUpdate)
@@ -467,10 +499,11 @@ void TerrainBuilder::threadFunc()
                 m_billboardBuffer.clear();
                 for (auto [x, y] : grass)
                 {
-                    auto [terrain, height] = readMap(mapImage, x, y);
+                    auto [terrain, _] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Rough)
                     {
                         float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
+                        float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
 
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                         bb.position = { x, height, -y };
@@ -505,6 +538,8 @@ void TerrainBuilder::threadFunc()
                     }
                 }
 
+                //this isn't the same as the readHeightMap above - it scales the
+                //result to MaxTerrainHeight, whereas the above returns world coords
                 const auto heightAt = [&](std::uint32_t x, std::uint32_t y)
                 {
                     auto size = mapImage.getSize();
@@ -543,47 +578,117 @@ void TerrainBuilder::threadFunc()
                 } 
 
                 //update the vertex data for the slope indicator
-                //TODO is this the same size as the loop above? could save on double iteration
-                m_normalMapImage = loadNormalMap(m_normalMapBuffer, m_holeData[m_currentHole].mapPath);
+                loadNormalMap(m_normalMapBuffer, m_normalMapImage); //image is populated when rendering texture
+
                 m_slopeBuffer.clear();
                 m_slopeIndices.clear();
 
                 std::uint32_t currIndex = 0u;
-                for (auto y = 0u; y < MapSize.y; ++y)
+                float lowestHeight = std::numeric_limits<float>::max();
+                float highestHeight = std::numeric_limits<float>::lowest();
+                //we can optimise this by only looping the grid around the pin pos
+                auto pinPos = m_holeData[m_currentHole].pin;
+                const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
+                const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
+                constexpr float DashCount = 40.f; //actual div by TAU cos its sin but eh.
+                constexpr float SlopeSpeed = 40.f;
+
+                for (auto y = startY; y < startY + SlopeGridSize; ++y)
                 {
-                    for (auto x = 0u; x < MapSize.x; ++x)
+                    for (auto x = startX; x < startX + SlopeGridSize; ++x)
                     {
                         auto terrain = readMap(mapImage, x, y).first;
                         if (terrain == TerrainID::Green)
                         {
-                            //TODO skip bunker too?
-                            float posX = static_cast<float>(x) + 0.5f; //offset to centre of quad
-                            float posZ = -(static_cast<float>(y) + 0.5f);
+                            static constexpr float epsilon = 0.011f;
+                            float posX = static_cast<float>(x) - pinPos.x;
+                            float posZ = -static_cast<float>(y) - pinPos.z;
 
-                            auto normal = m_normalMapBuffer[y * MapSize.x + x];
+                            auto height = (readHeightMap(x, y) - pinPos.y) + epsilon;
+                            SlopeVertex vert;
+                            vert.position = { posX, height, posZ };
 
-                            auto& vert = m_slopeBuffer.emplace_back();
-                            vert.position = { posX, 0.f, posZ };
-                            vert.colour = { 1.f, 1.f, 0.f, 0.5f };
+                            //this is the number of times the 'dashes' repeat if enabled in the shader
+                            //and the speed/direction based on height difference
+                            vert.texCoord = { 0.f, 0.f };
 
-                            m_slopeIndices.push_back(currIndex++);
+                            if (height < lowestHeight)
+                            {
+                                lowestHeight = height;
+                            }
+                            else if (height > highestHeight)
+                            {
+                                highestHeight = height;
+                            }
 
-                            static constexpr float MaxStrength = 0.75f;
-                            auto dir = glm::vec2(normal.x, normal.z);
-                            auto strength = glm::length(dir);
-                            dir /= strength;
-                            strength = std::min(MaxStrength, strength * 12.f);
-                            dir *= strength;
+
+
+                            glm::vec3 offset(1.f, 0.f, 0.f);
+                            height = (readHeightMap(x + 1, y) - pinPos.y) + epsilon;
+
+                            SlopeVertex vert2;
+                            vert2.position = vert.position + offset;
+                            vert2.position.y = height;
+                            vert2.texCoord = { DashCount, std::min(2.f, std::max(-2.f, (vert.position.y - height) * SlopeSpeed)) };
+                            vert.texCoord.y = vert2.texCoord.y; //must be constant across segment
+
+                            if (height < lowestHeight)
+                            {
+                                lowestHeight = height;
+                            }
+                            else if (height > highestHeight)
+                            {
+                                highestHeight = height;
+                            }
                             
-                            auto& vert2 = m_slopeBuffer.emplace_back();
-                            vert2.position = { posX + dir.x, 0.f, posZ + dir.y };
-                            vert2.colour = { 0.f, 1.f - (strength + 0.25f), 1.f, 1.f };
-                            vert2.texCoord = glm::vec2(40.f  * (strength / MaxStrength));
 
+                            //we have to copy first vert as the tex coords will be different
+                            //shame we can just recycle the index...
+                            auto vert3 = vert;
+
+                            offset = glm::vec3(0.f, 0.f, -1.f);
+                            height = (readHeightMap(x, y + 1) - pinPos.y) + epsilon;
+
+                            SlopeVertex vert4;
+                            vert4.position = vert.position + offset;
+                            vert4.position.y = height;
+                            vert4.texCoord = { DashCount, std::min(2.f, std::max(-2.f, (vert3.position.y - height) * SlopeSpeed)) };
+                            vert3.texCoord.y = vert4.texCoord.y;
+
+                            if (height < lowestHeight)
+                            {
+                                lowestHeight = height;
+                            }
+                            else if (height > highestHeight)
+                            {
+                                highestHeight = height;
+                            }
+
+
+                            //do this last once we know everything was modified
+                            m_slopeBuffer.push_back(vert);
+                            m_slopeIndices.push_back(currIndex++);
+                            m_slopeBuffer.push_back(vert2);
+                            m_slopeIndices.push_back(currIndex++);
+                            m_slopeBuffer.push_back(vert3);
+                            m_slopeIndices.push_back(currIndex++);
+                            m_slopeBuffer.push_back(vert4);
                             m_slopeIndices.push_back(currIndex++);
                         }
                     }
                 }
+
+                float maxHeight = highestHeight - lowestHeight;
+                if (maxHeight != 0)
+                {
+                    for (auto& v : m_slopeBuffer)
+                    {
+                        auto vertHeight = v.position.y - lowestHeight;
+                        vertHeight /= maxHeight;
+                        v.colour = { 0.f, 0.4f * vertHeight, 1.f - vertHeight, 0.8f };
+                    }
+                }
+
                 m_slopeProperties.meshData->vertexCount = static_cast<std::uint32_t>(m_slopeBuffer.size());
             }
 
@@ -594,4 +699,65 @@ void TerrainBuilder::threadFunc()
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
     }
+}
+
+void TerrainBuilder::renderNormalMap()
+{
+#ifdef CRO_DEBUG_
+    if (m_normalMapImage.getSize().x)
+    {
+        m_normalDebugTexture.loadFromImage(m_normalMapImage);
+    }
+#endif
+
+    //hmmm is there some of this we can pre-process to save doing it here?
+    const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
+    std::size_t normalOffset = 0;
+    for (auto i = 0u; i < cro::Mesh::Normal; ++i)
+    {
+        normalOffset += meshData.attributes[i];
+    }
+
+    const auto& attribs = m_normalShader.getAttribMap();
+    auto vaoCount = static_cast<std::int32_t>(meshData.submeshCount);
+
+    std::vector<std::uint32_t> vaos(vaoCount);
+    glCheck(glGenVertexArrays(vaoCount, vaos.data()));
+
+    for (auto i = 0u; i < vaos.size(); ++i)
+    {
+        glCheck(glBindVertexArray(vaos[i]));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Position]));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Position], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), 0));
+        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Normal]));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Normal], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), (void*)(normalOffset * sizeof(float))));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
+    }
+    
+    glCheck(glUseProgram(m_normalShader.getGLHandle()));
+    glCheck(glDisable(GL_CULL_FACE));
+
+    m_holeHeight.bottom = std::min(meshData.boundingBox[0].y, meshData.boundingBox[1].y);
+    m_holeHeight.height = std::max(meshData.boundingBox[0].y, meshData.boundingBox[1].y) - m_holeHeight.bottom;
+    glCheck(glUniform1f(m_normalShader.getUniformID("u_lowestPoint"), m_holeHeight.bottom));
+    glCheck(glUniform1f(m_normalShader.getUniformID("u_maxHeight"), m_holeHeight.height));
+
+
+    static const cro::Colour ClearColour(0x7f7fffff);
+    m_normalMap.clear(ClearColour);
+    for (auto i = 0u; i < vaos.size(); ++i)
+    {
+        glCheck(glBindVertexArray(vaos[i]));
+        glDrawElements(GL_TRIANGLES, meshData.indexData[i].indexCount, GL_UNSIGNED_INT, 0);
+    }
+    m_normalMap.display();
+
+    glCheck(glBindVertexArray(0));
+    glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
+
+
+    //TODO this might be faster with glReadPixels directly from the above framebuffer?
+    //probably doesn't matter if it's fast enough.
+    m_normalMap.getTexture().saveToImage(m_normalMapImage);
 }

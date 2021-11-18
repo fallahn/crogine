@@ -1102,7 +1102,10 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                                 cmd.targetFlags = CommandID::Menu::ServerInfo;
                                 cmd.action = [&](cro::Entity e, float)
                                 {
-                                    e.getComponent<cro::Text>().setString("Hosting on: " + m_sharedData.clientConnection.netClient.getPeer().getAddress() + ":" + std::to_string(ConstVal::GamePort));
+                                    e.getComponent<cro::Text>().setString(
+                                        "Hosting on: " + m_sharedData.clientConnection.netClient.getPeer().getAddress() + ":" 
+                                        + std::to_string(ConstVal::GamePort) 
+                                        + " Version " + std::to_string(CURRENT_VER));
                                 };
                                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                                 

@@ -81,7 +81,8 @@ namespace
 {
 #include "TerrainShader.inl"
 
-    constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
+    //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
+    const cro::Time PingTime = cro::seconds(1.f);
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -386,6 +387,12 @@ bool MenuState::simulate(float dt)
 {
     if (m_sharedData.clientConnection.connected)
     {
+        if (m_pingClock.elapsed() > PingTime)
+        {
+            m_pingClock.restart();
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientVersion, CURRENT_VER, cro::NetFlag::Unreliable);
+        }
+
         cro::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
@@ -842,6 +849,9 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             case MessageType::BadData:
                 err += "Bad Data Received";
                 break;
+            case MessageType::VersionMismatch:
+                err += "Client/Server Mismatch";
+                break;
             }
             LogE << err << std::endl;
             m_sharedData.errorMessage = err;
@@ -946,6 +956,18 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 }
             }
         }
+            break;
+        case PacketID::ServerError:
+            switch (evt.packet.as<std::uint8_t>())
+            {
+            default:
+                m_sharedData.errorMessage = "Server Error (Unknown)";
+                break;
+            case MessageType::MapNotFound:
+                m_sharedData.errorMessage = "Server Failed To Load Map";
+                break;
+            }
+            requestStackPush(StateID::Error);
             break;
         break;
         }

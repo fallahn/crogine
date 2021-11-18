@@ -436,3 +436,22 @@ bool Texture::saveToFile(const std::string& path) const
     }
     return true;
 }
+
+bool Texture::saveToImage(Image& dst) const
+{
+    if (m_handle == 0)
+    {
+        LogE << "Failed to save texture to image, texture not created." << std::endl;
+        return false;
+    }
+
+    std::vector<GLubyte> buffer(m_size.x * m_size.y * 4);
+
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
+    glCheck(glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data()));
+    glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+
+    dst.loadFromMemory(buffer.data(), m_size.x, m_size.y, cro::ImageFormat::RGBA);
+
+    return true;
+}

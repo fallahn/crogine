@@ -103,6 +103,12 @@ void SystemManager::setSystemActive(bool active)
             }
         }
     }
+#ifdef CRO_DEBUG_
+    else
+    {
+        LogE << type.name() << ": System does not exist." << std::endl;
+    }
+#endif
 }
 
 template <typename T>

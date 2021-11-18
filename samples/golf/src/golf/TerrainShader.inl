@@ -74,6 +74,7 @@ R"(
     uniform mat4 u_worldMatrix;
     uniform mat4 u_viewProjectionMatrix;
     uniform vec3 u_centrePosition;
+    uniform vec3 u_cameraWorldPosition;
 
     VARYING_OUT vec4 v_colour;
     VARYING_OUT vec2 v_texCoord;
@@ -84,6 +85,7 @@ R"(
     {
         vec4 worldPos = u_worldMatrix * a_position;
         float alpha = 1.0 - smoothstep(Radius, Radius + 5.0, length(worldPos.xyz - u_centrePosition));
+        alpha *= (1.0 - smoothstep(Radius, Radius + 1.0, length(worldPos.xyz - u_cameraWorldPosition)));
 
         gl_Position = u_viewProjectionMatrix * worldPos;
 
@@ -109,7 +111,7 @@ R"(
 
     void main()
     {
-        float alpha = (sin((v_texCoord.x) - u_time) + 1.0) * 0.5;
+        float alpha = (sin(v_texCoord.x - (u_time * v_texCoord.y)) + 1.0) * 0.5;
         alpha = step(0.5, alpha);
 
         FRAG_OUT = v_colour;
@@ -228,3 +230,45 @@ static const std::string CelFragmentShader = R"(
 
         FRAG_OUT = vec4(colour.rgb, 1.0);
     })";
+
+
+const std::string NormalMapVertexShader = R"(
+    ATTRIBUTE vec4 a_position;
+    ATTRIBUTE vec3 a_normal;
+
+    uniform mat4 u_projectionMatrix;
+    uniform float u_maxHeight;
+    uniform float u_lowestPoint;
+
+    VARYING_OUT vec3 v_normal;
+    VARYING_OUT float v_height;
+
+    void main()
+    {
+        gl_Position = u_projectionMatrix * a_position;
+        v_normal = a_normal;
+
+        //yeah should be a normal matrix, but YOLO
+        float z = v_normal.y;
+        v_normal.y = -v_normal.z;
+        v_normal.z = z;
+
+        v_height = clamp((a_position.y - u_lowestPoint) / u_maxHeight, 0.0, 1.0);
+    }
+)";
+
+const std::string NormalMapFragmentShader = R"(
+    OUTPUT
+
+    VARYING_IN vec3 v_normal;
+    VARYING_IN float v_height;
+
+    void main()
+    {
+        vec3 normal = normalize(v_normal);
+        normal += 1.0;
+        normal /= 2.0;
+
+        FRAG_OUT = vec4(normal, v_height);
+    }
+)";

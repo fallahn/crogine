@@ -1128,7 +1128,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     pingEnt.addComponent<cro::Callback>().active = true;
     pingEnt.getComponent<cro::Callback>().setUserData<float>(1.f);
     pingEnt.getComponent<cro::Callback>().function =
-        [&,hookBar](cro::Entity e, float dt)
+        [&](cro::Entity e, float dt)
     {
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime = std::min(1.f, currTime + (dt * 1.5f));
@@ -1542,7 +1542,7 @@ void TutorialState::tutorialFour(cro::Entity root)
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("The moving lines indicate the strength and direction of the green's slope.");
+    entity.addComponent<cro::Text>(font).setString("The coloured lines indicate the strength and direction of the green's slope.");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
@@ -1578,8 +1578,8 @@ void TutorialState::tutorialFour(cro::Entity root)
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
-        cro::Vertex2D(glm::vec2(-60.f, 5.f), cro::Colour(1.f, 1.f, 0.f, 0.f)),
-        cro::Vertex2D(glm::vec2(60.f, -5.f), cro::Colour(0.f, 0.25f, 1.f,01.f))
+        cro::Vertex2D(glm::vec2(-60.f, 5.f), cro::Colour(0.f, 0.4f, 0.f, 0.f)),
+        cro::Vertex2D(glm::vec2(60.f, -5.f), cro::Colour(0.f, 0.f, 1.f, 01.f))
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);

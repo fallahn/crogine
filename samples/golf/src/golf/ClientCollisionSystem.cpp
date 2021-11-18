@@ -31,6 +31,8 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
 #include "BallSystem.hpp"
+#include "CollisionMesh.hpp"
+#include "BallSystem.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 
@@ -41,10 +43,11 @@ namespace
     constexpr float MinBallDist = (HoleRadius * 1.2f) * (HoleRadius * 1.2f);
 }
 
-ClientCollisionSystem::ClientCollisionSystem(cro::MessageBus& mb, const std::vector<HoleData>& hd)
+ClientCollisionSystem::ClientCollisionSystem(cro::MessageBus& mb, const std::vector<HoleData>& hd, const CollisionMesh& cm)
     : cro::System   (mb, typeid(ClientCollisionSystem)),
     m_holeData      (hd),
     m_holeIndex     (0),
+    m_collisionMesh (cm),
     m_club          (-1)
 {
     requireComponent<cro::Transform>();
@@ -60,7 +63,25 @@ void ClientCollisionSystem::process(float)
         auto& collider = entity.getComponent<ClientCollider>();
         const auto& tx = entity.getComponent<cro::Transform>();
         auto position = tx.getPosition();
-        collider.terrain = readMap(m_currentMap, position.x, -position.z).first;
+
+        //skip if not near the ground
+        if (!collider.active
+            || position.y > 10.f)
+        {
+            continue;
+        }
+
+        auto result = m_collisionMesh.getTerrain(position);
+        if (!result.wasRayHit)
+        {
+            //we've missed the geom so check the map to see if we're
+            //in water or scrub
+            result.terrain = readMap(m_mapImage, position.x, -position.z).first;
+        }
+
+
+        collider.terrain = result.terrain;
+
         if (collider.terrain == TerrainID::Green)
         {
             //check if we're in the hole
@@ -68,7 +89,8 @@ void ClientCollisionSystem::process(float)
             glm::vec2 pos(position.x, position.z);
             
             auto len2 = glm::length2(pin - pos);
-            if (len2 < MinBallDist)
+            if (len2 <= MinBallDist
+                && (result.height - position.y) > (Ball::Radius * 2.f))
             {
                 collider.terrain = TerrainID::Hole;
             }
@@ -77,42 +99,50 @@ void ClientCollisionSystem::process(float)
 
         const auto notify = [&](CollisionEvent::Type type, glm::vec3 position)
         {
-            auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
-            msg->type = type;
-            msg->position = position;
-            msg->terrain = collider.terrain;
-            msg->clubID = m_club;
-
-            
+            //ugh messy, but there are several edge cases (this is responsible for sound effects
+            //and particle effects being raised)
+            if (collider.state == static_cast<std::uint8_t>(Ball::State::Flight)
+                || collider.state == static_cast<std::uint8_t>(Ball::State::Reset) //for scrub/water
+                || collider.terrain == TerrainID::Hole
+                || collider.terrain == TerrainID::Bunker)
+            {
+                auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+                msg->type = type;
+                msg->position = position;
+                msg->terrain = collider.terrain;
+                msg->clubID = m_club;
+            }
         };
 
-        static constexpr float CollisionLevel = 0.25f;
+        static constexpr float CollisionLevel = 0.35f;
+        float currentLevel = position.y - result.height;
 
         std::int32_t direction = 0;
-        if (position.y < collider.previousPosition.y)
+        if (currentLevel < collider.previousHeight)
         {
             direction = -1;
         }
-        else if (position.y > collider.previousPosition.y)
+        else if (currentLevel > collider.previousHeight)
         {
             direction = 1;
         }
 
         //yes it's an odd way of doing it, but we're floundering
         //around in the spongey world of interpolated actors.
-        if (position.y < CollisionLevel)
+        if (currentLevel < CollisionLevel)
         {
             if (direction > collider.previousDirection)
             {
                 //started moving up
                 notify(CollisionEvent::End, position);
             }
-            else if (collider.previousPosition.y > CollisionLevel)
+            else if (collider.previousHeight > CollisionLevel)
             {
                 notify(CollisionEvent::Begin, position);
             }
-            else if (position.y < -Ball::Radius
-                && collider.previousPosition.y > -Ball::Radius)
+            else if(collider.terrain == TerrainID::Hole
+                &&(collider.previousHeight > result.height - (Ball::Radius * 2.f)
+                    && currentLevel < result.height - (Ball::Radius * 2.f)))
             {
                 //we're in the hole. Probably.
                 notify(CollisionEvent::Begin, position);
@@ -120,15 +150,13 @@ void ClientCollisionSystem::process(float)
         }
 
         collider.previousDirection = direction;
-        collider.previousPosition = position;
+        collider.previousHeight = currentLevel;
+        collider.active = false; //forcibly reset this so it can only be explicitly set true by a server update
     }
 }
 
-void ClientCollisionSystem::setMap(std::uint32_t holeIndex)
+void ClientCollisionSystem::setMap(std::uint32_t index)
 {
-    CRO_ASSERT(holeIndex < m_holeData.size(), "");
-    CRO_ASSERT(!m_holeData[holeIndex].mapPath.empty(), "");
-
-    m_holeIndex = holeIndex;
-    m_currentMap.loadFromFile(m_holeData[holeIndex].mapPath);
+    m_mapImage.loadFromFile(m_holeData[index].mapPath);
+    m_holeIndex = index;
 }

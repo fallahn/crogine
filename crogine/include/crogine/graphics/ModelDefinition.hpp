@@ -175,6 +175,11 @@ namespace cro
         */
         const cro::Material::Data* getMaterial(std::size_t index) const;
 
+        /*!
+        \brief Return the number of materials currently loaded in this definition
+        */
+        std::size_t getMaterialCount() const { return m_materialCount; }
+
     private:
         ResourceCollection& m_resources;
         EnvironmentMap* m_envMap;

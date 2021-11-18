@@ -37,6 +37,7 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "ScoreStrings.hpp"
 #include "MessageIDs.hpp"
+#include "../ErrorCheck.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -1062,6 +1063,10 @@ void GolfState::updateScoreboard()
         }
 
         ents.back().getComponent<cro::Text>().setString(totalString);
+        //for some reason we have to hack this to display and I'm too lazy to debug it
+        auto pos = ents.back().getComponent<cro::Transform>().getPosition();
+        pos.z = 1.f;
+        ents.back().getComponent<cro::Transform>().setPosition(pos);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
@@ -1084,7 +1089,6 @@ void GolfState::showScoreboard(bool visible)
     {
         visible = true;
     }
-
 
     auto target = visible ? 0 : 1; //when 1 board is moved 1x screen size from centre
 
@@ -1390,6 +1394,48 @@ void GolfState::floatingMessage(const std::string& msg)
         c.setAlpha(1.f - alpha);
         e.getComponent<cro::Text>().setFillColour(c);
     };
+}
+
+void GolfState::createTransition()
+{
+    glm::vec2 screenSize(cro::App::getWindow().getSize());
+    auto& shader = m_resources.shaders.get(ShaderID::Transition);
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
+    entity.addComponent<cro::Drawable2D>().setShader(&shader);
+    entity.getComponent<cro::Drawable2D>().setVertexData(
+    {
+        cro::Vertex2D(glm::vec2(0.f, screenSize.y), glm::vec2(0.f, 1.f), cro::Colour::Black),
+        cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.f), cro::Colour::Black),
+        cro::Vertex2D(screenSize, glm::vec2(1.f), cro::Colour::Black),
+        cro::Vertex2D(glm::vec2(screenSize.x, 0.f), glm::vec2(1.f, 0.f), cro::Colour::Black)
+    });
+
+    auto timeID = shader.getUniformID("u_time");
+    auto shaderID = shader.getGLHandle();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, shaderID, timeID](cro::Entity e, float dt)
+    {
+        static constexpr float MaxTime = 2.f - (1.f/60.f);
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(MaxTime, currTime + dt);
+
+        glCheck(glUseProgram(shaderID));
+        glCheck(glUniform1f(timeID, currTime));
+
+        if (currTime == MaxTime)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        }
+    };
+
+    glCheck(glUseProgram(shader.getGLHandle()));
+    glCheck(glUniform2f(shader.getUniformID("u_scale"), m_viewScale.x, m_viewScale.y));
+    glCheck(glUniform2f(shader.getUniformID("u_resolution"), screenSize.x, screenSize.y));
 }
 
 void GolfState::updateMiniMap()

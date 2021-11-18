@@ -2,62 +2,63 @@ hole 17
 {
     map = "assets/golf/courses/course_01/17.png"
     model = "assets/golf/models/course_01/17.cmt"
-    pin = 100, 148
-    target = 160, 138
-    tee = 215, 61
-    par = 3
+    pin = "100,0.291138,-148"
+    target = "160,0,-138"
+    tee = "215,0,-61"
+    par = "3"
 
-    prop
+    prop 
     {
         model = "assets/golf/models/cart.cmt"
-        position = 34.182880,0.000000,33.807144
-        rotation = -74.825724
-    }
+        position = 194.182877,0.000000,-66.192856
+        rotation = "-74.825724"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/fence01.cmt"
-        position = 35.943520,-0.000000,33.862309
-        rotation = -592.937196
-    }
+        position = 195.943512,0.000000,-66.137695
+        rotation = "-592.937196"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/fence02.cmt"
-        position = 33.485676,-0.000000,30.153683
-        rotation = -601.576556
-    }
+        position = 193.485672,0.000000,-69.846313
+        rotation = "-601.576556"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/scoreboard.cmt"
-        position = -73.131516,-0.000000,-62.651665
-        rotation = 45.891375
-    }
+        position = 86.868484,0.000000,-162.651672
+        rotation = "45.891375"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/cart.cmt"
-        position = 32.125027,0.000000,31.205399
-        rotation = -55.827545
-    }
+        position = 192.125031,0.000000,-68.794601
+        rotation = "-55.827545"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/fence01.cmt"
-        position = 30.834156,-0.000000,26.163254
-        rotation = -592.937196
-    }
+        position = 190.834152,0.000000,-73.836746
+        rotation = "-592.937196"
 
-    crowd
-    {
-        position = -64.204498,-0.000000,-68.265762
-        rotation = -508.106855
     }
-
-    crowd
+    crowd 
     {
-        position = -75.118652,0.000005,-34.809265
-        rotation = 123.751034
+        position = 95.795502,0.000000,-168.265762
+        rotation = "-508.106855"
+
+    }
+    crowd 
+    {
+        position = 84.881348,0.000005,-134.809265
+        rotation = "123.751034"
+
     }
 }

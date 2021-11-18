@@ -82,6 +82,7 @@ namespace cro
         model's material.
         */
         Mesh::Data& getMeshData() { return m_meshData; };
+        const Mesh::Data& getMeshData() const { return m_meshData; };
 
         /*!
         \brief Sets a model's optional skeleton

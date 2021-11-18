@@ -43,6 +43,24 @@ static constexpr float MaxFOV = 120.f * cro::Util::Const::degToRad;
 static constexpr float MinFOV = 5.f * cro::Util::Const::degToRad;
 static constexpr float DefaultFarPlane = 30.f;
 
+struct CameraSettings final
+{
+    float FOV = DefaultFOV;
+    float FarPlane = DefaultFarPlane;
+    cro::Entity camera;
+};
+
+struct CameraID final
+{
+    enum
+    {
+        Default,
+        FreeLook,
+
+        Count
+    };
+};
+
 static constexpr std::uint32_t LightmapSize = 1024;
 
 static constexpr std::uint8_t MaxSubMeshes = 8; //for imported models. Can be made bigger but this is generally a waste of memory

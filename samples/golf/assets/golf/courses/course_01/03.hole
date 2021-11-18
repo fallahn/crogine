@@ -2,40 +2,41 @@ hole 03
 {
     map = "assets/golf/courses/course_01/03.png"
     model = "assets/golf/models/course_01/03.cmt"
-    pin = 277, 38
-    target = 185, 124
-    tee = 17, 160
-    par = 4
+    pin = "277,0.235758,-38"
+    target = "185,0,-124"
+    tee = "17,0,-160"
+    par = "4"
 
-    crowd
+    crowd 
     {
-        position - 107.6,0,88
-        rotation = -29
-    }
+        position = 267.600006,0.000000,-12.000000
+        rotation = "-29"
 
-    crowd
+    }
+    crowd 
     {
-        position = 132.8,0,90
-        rotation = 25
-    }
+        position = 292.799988,0.000000,-10.000000
+        rotation = "25"
 
-    crowd
+    }
+    crowd 
     {
-        position = 149,0,59.5
-        rotation = 117
-    }
+        position = 309.000000,0.000000,-40.500000
+        rotation = "117"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/lighthouse.cmt"
-        position = 165, 0, 29.6
-        rotation = 45
-    }
+        position = 325.000000,0.000000,-70.400002
+        rotation = "45"
 
-    prop
+    }
+    prop 
     {
         model = "assets/golf/models/view_platform.cmt"
-        position = 87.5, 0, 81.3
-        rotation = 134
-    }    
+        position = 247.500000,0.000000,-18.699997
+        rotation = "134"
+
+    }
 }

@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/ecs/components/BillboardCollection.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 
 #include <vector>
 #include <thread>
@@ -55,7 +56,8 @@ struct ThemeSettings final
 {
     std::string billboardModel;
     std::string billboardSprites;
-    cro::Colour grassColour = cro::Colour(0.1568f, 0.305f, 0.2627f, 1.f);
+    //cro::Colour grassColour = cro::Colour(0.1568f, 0.305f, 0.2627f, 1.f);
+    cro::Colour grassColour = cro::Colour(0.137f, 0.274f, 0.231f, 1.f);
 };
 
 class TerrainBuilder final : public cro::GuiClient
@@ -126,15 +128,28 @@ private:
         std::int32_t timeUniform = -1;
         std::int32_t alphaUniform = -1;
         std::uint32_t shader = 0;
+        cro::Entity entity;
     }m_slopeProperties;
     std::vector<glm::vec3> m_normalMapBuffer;
 
-    std::array<cro::Texture, 2u> m_normalMaps;
-    cro::Image m_normalMapImage;
 
     std::atomic_bool m_threadRunning;
     std::atomic_bool m_wantsUpdate;
     std::unique_ptr<std::thread> m_thread;
 
     void threadFunc();
+
+    cro::RenderTexture m_normalMap;
+    cro::Shader m_normalShader;
+    cro::Image m_normalMapImage;
+    struct HoleHeight final
+    {
+        float bottom = 0.f;
+        float height = 0.f;
+    }m_holeHeight;
+    void renderNormalMap(); //don't call this from thread!!
+
+#ifdef CRO_DEBUG_
+    cro::Texture m_normalDebugTexture;
+#endif 
 };

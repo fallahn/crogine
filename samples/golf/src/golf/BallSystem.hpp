@@ -32,13 +32,26 @@ source distribution.
 #include "Terrain.hpp"
 
 #include <crogine/ecs/System.hpp>
-
 #include <crogine/core/Clock.hpp>
+
+#include <btBulletCollisionCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+
+#include <memory>
 
 namespace cro
 {
     class Image;
 }
+
+struct RayResultCallback final : public btCollisionWorld::ClosestRayResultCallback
+{
+    RayResultCallback(const btVector3& rayFromWorld, const btVector3& rayToWorld);
+    btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override;
+
+private:
+    btVector3 getFaceNormal(const btCollisionWorld::LocalRayResult& rayResult) const;
+};
 
 struct Ball final
 {
@@ -48,10 +61,13 @@ struct Ball final
         Idle, Flight, Putt, Paused, Reset
     }state = State::Idle;
 
+    static const std::array<std::string, 5> StateStrings;
+
     std::uint8_t terrain = TerrainID::Fairway;
 
     glm::vec3 velocity = glm::vec3(0.f);
     float delay = 0.f;
+    float spin = 0.f;
 
     glm::vec3 startPoint = glm::vec3(0.f);
     bool hadAir = false; //toggled when passing over hole
@@ -60,17 +76,22 @@ struct Ball final
 class BallSystem final : public cro::System
 {
 public:
-    BallSystem(cro::MessageBus&, const cro::Image&);
+    explicit BallSystem(cro::MessageBus&);
+    ~BallSystem();
+
+    BallSystem(const BallSystem&) = delete;
+    BallSystem& operator = (const BallSystem&) = delete;
+
+    BallSystem(BallSystem&&) = default;
+    BallSystem& operator = (BallSystem&&) = default;
 
     void process(float) override;
 
     glm::vec3 getWindDirection() const;
 
-    void setHoleData(const struct HoleData&);
+    bool setHoleData(const struct HoleData&);
 
 private:
-
-    const cro::Image& m_mapData;
 
     cro::Clock m_windDirClock;
     cro::Clock m_windStrengthClock;
@@ -93,5 +114,28 @@ private:
 
     void doCollision(cro::Entity);
     void updateWind();
-    std::pair<std::uint8_t, glm::vec3> getTerrain(glm::vec3) const;
+    struct TerrainResult final
+    {
+        std::uint8_t terrain = TerrainID::Scrub;
+        glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
+        float penetration = 0.f;
+    };
+    TerrainResult getTerrain(glm::vec3) const;
+
+
+    std::unique_ptr<btDefaultCollisionConfiguration> m_collisionCfg;
+    std::unique_ptr<btCollisionDispatcher> m_collisionDispatcher;
+    std::unique_ptr<btBroadphaseInterface> m_broadphaseInterface;
+    std::unique_ptr<btCollisionWorld> m_collisionWorld;
+
+    std::vector<std::unique_ptr<btPairCachingGhostObject>> m_groundObjects;
+    std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_groundShapes;
+    std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_groundVertices;
+
+    std::vector<float> m_vertexData;
+    std::vector<std::vector<std::uint32_t>> m_indexData;
+
+    void initCollisionWorld();
+    void clearCollisionObjects();
+    bool updateCollisionMesh(const std::string&);
 };
