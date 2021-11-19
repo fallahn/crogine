@@ -685,7 +685,8 @@ bool GolfState::simulate(float dt)
     if (m_mouseVisible
         && getStateCount() == 1)
     {
-        if (m_mouseClock.elapsed() > MouseHideTime)
+        if (m_mouseClock.elapsed() > MouseHideTime
+            && !ImGui::GetIO().WantCaptureMouse)
         {
             m_mouseVisible = false;
             cro::App::getWindow().setMouseCaptured(true);
