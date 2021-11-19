@@ -85,8 +85,6 @@ private:
     cro::Scene m_uiScene;
     cro::Scene m_backgroundScene;
 
-    cro::Clock m_pingClock;
-
     cro::AudioScape m_menuSounds;
     struct AudioID final
     {

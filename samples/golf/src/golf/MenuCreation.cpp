@@ -308,6 +308,14 @@ void MenuState::createUI()
     createJoinMenu(rootNode, mouseEnterCallback, mouseExitCallback);
     createLobbyMenu(rootNode, mouseEnterCallback, mouseExitCallback);
 
+    //diplays version number
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 2.f, 10.f, 1.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString("Version: " + StringVer);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
     auto updateView = [&, rootNode, courseEnt](cro::Camera& cam) mutable
@@ -822,7 +830,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
 
     //banner
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 5.f, -0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, BannerPosition, -0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ButtonBanner];
     auto spriteRect = entity.getComponent<cro::Sprite>().getTextureRect();
@@ -1104,8 +1112,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                                 {
                                     e.getComponent<cro::Text>().setString(
                                         "Hosting on: " + m_sharedData.clientConnection.netClient.getPeer().getAddress() + ":" 
-                                        + std::to_string(ConstVal::GamePort) 
-                                        + " Version " + std::to_string(CURRENT_VER));
+                                        + std::to_string(ConstVal::GamePort));
                                 };
                                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                                 
@@ -1350,7 +1357,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
     //banner
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 5.f, -0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, BannerPosition, -0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ButtonBanner];
     auto spriteRect = entity.getComponent<cro::Sprite>().getTextureRect();
@@ -1617,7 +1624,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //banner
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 5.f, -0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, BannerPosition, -0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ButtonBanner];
     auto spriteRect = entity.getComponent<cro::Sprite>().getTextureRect();

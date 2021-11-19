@@ -126,20 +126,11 @@ void Server::run()
             if (evt.type == cro::NetEvent::ClientConnect)
             {
                 //refuse if not in lobby state
-                //else add to client list
+                //else add to pending list and await version confirmation
                 if (m_currentState->stateID() == sv::StateID::Lobby)
                 {
-                    if (auto i = addClient(evt); i >= ConstVal::MaxClients)
-                    {
-                        //tell client server is full
-                        m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerFull), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                        m_sharedData.host.disconnectLater(evt.peer);
-                    }
-                    else
-                    {
-                        //tell the client which player they are
-                        m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionAccepted, i, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    }
+                    m_pendingConnections.emplace_back().peer = evt.peer;
+                    m_sharedData.host.sendPacket(evt.peer, PacketID::ClientVersion, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
                 else
                 {
@@ -153,7 +144,23 @@ void Server::run()
                 //remove from client list
                 removeClient(evt);
             }
+            else if(evt.type == cro::NetEvent::PacketReceived)
+            {
+                if (evt.packet.getID() == PacketID::ClientVersion)
+                {
+                    if (evt.packet.as<std::uint16_t>() != CURRENT_VER)
+                    {
+                        m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::VersionMismatch), cro::NetFlag::Reliable);
+                    }
+                    else
+                    {
+                        validatePeer(evt.peer);
+                    }
+                }
+            }
         }
+
+        checkPending();
 
         //network broadcasts
         netAccumulatedTime += netFrameClock.restart();
@@ -206,17 +213,67 @@ void Server::run()
     LOG("Server quit", cro::Logger::Type::Info);
 }
 
-std::uint8_t Server::addClient(const cro::NetEvent& evt)
+void Server::checkPending()
+{
+    for (auto& [peer, t] : m_pendingConnections)
+    {
+        if (t.elapsed().asSeconds() > PendingConnection::Timeout)
+        {
+            m_sharedData.host.sendPacket(peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::VersionMismatch), cro::NetFlag::Reliable);
+            m_sharedData.host.disconnectLater(peer);
+        }
+
+        //TODO regularly send another version request in case a packet was lost?
+    }
+
+    m_pendingConnections.erase(std::remove_if(m_pendingConnections.begin(), m_pendingConnections.end(), 
+        [](const PendingConnection& pc)
+        {
+            return pc.connectionTime.elapsed().asSeconds() > PendingConnection::Timeout;        
+        }), m_pendingConnections.end());
+}
+
+void Server::validatePeer(cro::NetPeer& peer)
+{
+    auto result = std::find_if(m_pendingConnections.begin(), m_pendingConnections.end(),
+        [&peer](const PendingConnection& pc)
+        {
+            return pc.peer == peer;
+        });
+
+    if (result != m_pendingConnections.end())
+    {
+        if (auto i = addClient(peer); i >= ConstVal::MaxClients)
+        {
+            //tell client server is full
+            m_sharedData.host.sendPacket(peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerFull), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.disconnectLater(peer);
+        }
+        else
+        {
+            //tell the client which player they are
+            m_sharedData.host.sendPacket(peer, PacketID::ConnectionAccepted, i, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+
+        m_pendingConnections.erase(result);
+    }
+    else
+    {
+        //stray connection so boot it?
+    }
+}
+
+std::uint8_t Server::addClient(const cro::NetPeer& peer)
 {
     std::uint8_t i = 0;
     for (; i < m_sharedData.clients.size(); ++i)
     {
         if (!m_sharedData.clients[i].connected)
         {
-            LOG("Added client to server with id " + std::to_string(evt.peer.getID()), cro::Logger::Type::Info);
+            LOG("Added client to server with id " + std::to_string(peer.getID()), cro::Logger::Type::Info);
 
             m_sharedData.clients[i].connected = true;
-            m_sharedData.clients[i].peer = evt.peer;
+            m_sharedData.clients[i].peer = peer;
 
             //broadcast to all connected clients
             //so they can update lobby view.

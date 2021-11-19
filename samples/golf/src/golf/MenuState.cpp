@@ -82,7 +82,6 @@ namespace
 #include "TerrainShader.inl"
 
     //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
-    const cro::Time PingTime = cro::seconds(1.f);
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -387,12 +386,6 @@ bool MenuState::simulate(float dt)
 {
     if (m_sharedData.clientConnection.connected)
     {
-        if (m_pingClock.elapsed() > PingTime)
-        {
-            m_pingClock.restart();
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientVersion, CURRENT_VER, cro::NetFlag::Unreliable);
-        }
-
         cro::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
@@ -968,6 +961,10 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 break;
             }
             requestStackPush(StateID::Error);
+            break;
+        case PacketID::ClientVersion:
+            //server is requesting our client version
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientVersion, CURRENT_VER, cro::NetFlag::Reliable);
             break;
         break;
         }

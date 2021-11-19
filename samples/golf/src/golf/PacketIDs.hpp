@@ -30,10 +30,12 @@ source distribution.
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 //just to detect client/server version mismatch
 //(terrain data changed between 100 -> 110)
 static constexpr std::uint16_t CURRENT_VER = 110;
+static const std::string StringVer("1.1.0");
 
 namespace MessageType
 {

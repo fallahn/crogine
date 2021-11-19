@@ -38,6 +38,7 @@ source distribution.
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
+#include "golf/PacketIDs.hpp"
 #include "LoadingScreen.hpp"
 #include "SplashScreenState.hpp"
 #include "ErrorCheck.hpp"
@@ -391,7 +392,7 @@ bool GolfGame::initialise()
         });
 
     getWindow().setLoadingScreen<LoadingScreen>();
-    getWindow().setTitle("VGA Golf - 1.1.0");
+    getWindow().setTitle("VGA Golf - " + StringVer);
     getWindow().setIcon(icon);
     m_renderTarget = &getWindow();
 

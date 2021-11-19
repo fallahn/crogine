@@ -106,12 +106,6 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
                 m_returnValue = StateID::Game;
             }
             break;
-        case PacketID::ClientVersion:
-            if (evt.packet.as<std::uint16_t>() != CURRENT_VER)
-            {
-                m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::VersionMismatch), cro::NetFlag::Reliable);
-            }
-            break;
         }
     }
 }

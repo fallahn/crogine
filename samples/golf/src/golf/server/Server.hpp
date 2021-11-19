@@ -65,9 +65,20 @@ private:
 
     sv::SharedData m_sharedData;
 
+    struct PendingConnection final
+    {
+        cro::NetPeer peer;
+        cro::Clock connectionTime;
+        static constexpr float Timeout = 5.f;
+    };
+    std::vector<PendingConnection> m_pendingConnections;
+
     void run();
 
+    void checkPending();
+    void validatePeer(cro::NetPeer&);
+
     //returns slot index, or >= MaxClients if full
-    std::uint8_t addClient(const cro::NetEvent&);
+    std::uint8_t addClient(const cro::NetPeer&);
     void removeClient(const cro::NetEvent&);
 };
