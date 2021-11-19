@@ -100,9 +100,12 @@ void BallSystem::process(float dt)
 {
     //interpolate current strength/direction
     m_currentWindInterpTime = std::min(m_windInterpTime, m_currentWindInterpTime + dt);
-    float interp = m_currentWindInterpTime / m_windInterpTime;
-    m_windDirection = interpolate(m_windDirSrc, m_windDirTarget, cro::Util::Easing::easeOutElastic(interp));
+    float interp = std::min(1.f, std::max(0.f, m_currentWindInterpTime / m_windInterpTime));
+    m_windDirection = interpolate(m_windDirSrc, m_windDirTarget, interp);
     m_windStrength = interpolate(m_windStrengthSrc, m_windStrengthTarget, interp);
+
+    CRO_ASSERT(!std::isnan(m_windDirection.x), "");
+    CRO_ASSERT(!std::isnan(m_windDirTarget.x), "");
 
     auto& entities = getEntities();
     for (auto entity : entities)
@@ -543,8 +546,11 @@ void BallSystem::updateWind()
         //case attempting to normalise below causes a NaN which cascades through
         //ball velocity and eventually ball position culminating in a cluster fk.
         m_windDirTarget.x += 0.1f;
+        m_windDirTarget.z -= 0.1f;
 
         m_windDirTarget = glm::normalize(m_windDirTarget);
+        CRO_ASSERT(!std::isnan(m_windDirTarget.x), "");
+        CRO_ASSERT(!std::isnan(m_windDirTarget.z), "");
 
         resetInterp();
     }
