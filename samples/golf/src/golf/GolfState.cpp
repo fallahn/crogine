@@ -1693,9 +1693,9 @@ void GolfState::initAudio()
         if (currTime > timeOut)
         {
             currTime = 0.f;
-            timeOut = static_cast<float>(cro::Util::Random::value(90, 170));
+            timeOut = static_cast<float>(cro::Util::Random::value(120, 240));
 
-            auto ent = cro::Util::Random::value(0, 20) % 2 == 0 ? plane01 : plane02;
+            auto ent = cro::Util::Random::value(0, 1) % 2 == 0 ? plane01 : plane02;
             if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
             {
                 ent.getComponent<cro::AudioEmitter>().play();
@@ -2119,6 +2119,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                 if (progress == 1)
                 {
                     ent.getComponent<cro::Callback>().active = false;
+                    updateMiniMap();
                 }
             };
 
@@ -2963,9 +2964,6 @@ void GolfState::startFlyBy()
             case 3:
                 //we're done here
             {
-                updateMiniMap();
-                //m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play(); //plays the music
-
                 if (m_sharedData.tutorial)
                 {
                     auto* msg = cro::App::getInstance().getMessageBus().post<SceneEvent>(MessageID::SceneMessage);

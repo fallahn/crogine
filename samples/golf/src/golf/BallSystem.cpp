@@ -77,9 +77,10 @@ BallSystem::BallSystem(cro::MessageBus& mb)
     requireComponent<cro::Transform>();
     requireComponent<Ball>();
 
-    m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
-    m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
-    m_windDirTarget.x += 0.1f;
+    m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10));// / 10.f;
+    m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10));// / 10.f;
+    m_windDirTarget.x += 1.f;
+    m_windDirTarget.z -= 1.f;
 
     m_windDirTarget = glm::normalize(m_windDirTarget);
 
@@ -539,14 +540,14 @@ void BallSystem::updateWind()
         m_windDirTime = cro::seconds(static_cast<float>(cro::Util::Random::value(100, 220)) / 10.f);
 
         //create new direction
-        m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
-        m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
+        m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10));// / 10.f;
+        m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10));// / 10.f;
 
         //on rare occasions both of the above might have a value of 0 - in which
         //case attempting to normalise below causes a NaN which cascades through
         //ball velocity and eventually ball position culminating in a cluster fk.
-        m_windDirTarget.x += 0.1f;
-        m_windDirTarget.z -= 0.1f;
+        m_windDirTarget.x += 1.f;
+        m_windDirTarget.z -= 1.f;
 
         m_windDirTarget = glm::normalize(m_windDirTarget);
         CRO_ASSERT(!std::isnan(m_windDirTarget.x), "");
