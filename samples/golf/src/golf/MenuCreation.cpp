@@ -257,9 +257,134 @@ void MenuState::parseCourseDirectory()
     }
 }
 
+void MenuState::parseAvatarDirectory()
+{
+    static const std::string AvatarPath = "assets/golf/avatars/";
+
+    auto files = cro::FileSystem::listFiles(AvatarPath);
+    for (const auto& file : files)
+    {
+        if (cro::FileSystem::getFileExtension(file) == ".avt")
+        {
+            cro::ConfigFile cfg;
+            if (cfg.loadFromFile(AvatarPath + file))
+            {
+                SharedStateData::AvatarInfo info;
+
+                const auto& props = cfg.getProperties();
+                for (const auto& prop : props)
+                {
+                    const auto& name = prop.getName();
+                    if (name == "sprite")
+                    {
+                        enum
+                        {
+                            WoodIdle = 0x1,
+                            IronIdle = 0x2,
+                            WoodSwing = 0x4,
+                            IronSwing = 0x8,
+
+                            AllFlags = 0xf
+                        };
+                        std::int32_t flags = 0;
+
+                        auto spritePath = prop.getValue<std::string>();
+                        cro::SpriteSheet spritesheet;
+                        if (spritesheet.loadFromFile(spritePath, m_resources.textures))
+                        {
+                            const auto& sprites = spritesheet.getSprites();
+                            for (const auto& [name, _] : sprites)
+                            {
+                                if (name == "wood")
+                                {
+                                    if (spritesheet.hasAnimation("idle", name))
+                                    {
+                                        flags |= WoodIdle;
+                                    }
+
+                                    if (spritesheet.hasAnimation("swing", name))
+                                    {
+                                        flags |= WoodSwing;
+                                    }
+                                }
+                                else if (name == "iron")
+                                {
+                                    if (spritesheet.hasAnimation("idle", name))
+                                    {
+                                        flags |= IronIdle;
+                                    }
+
+                                    if (spritesheet.hasAnimation("swing", name))
+                                    {
+                                        flags |= IronSwing;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (flags == AllFlags)
+                        {
+                            info.spritePath = spritePath;
+                        }
+                    }
+                    else if (name == "uid")
+                    {
+                        info.uid = prop.getValue<std::int32_t>();
+                    }
+                    else if (name == "audio")
+                    {
+                        info.audioscape = prop.getValue<std::string>();
+                    }
+                }
+
+                if (info.uid >= 0
+                    && !info.spritePath.empty())
+                {
+                    //check uid doesn't exist
+                    auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
+                        [&info](const SharedStateData::AvatarInfo& i) 
+                        {
+                            return info.uid == i.uid;
+                        });
+
+                    if (result == m_sharedData.avatarInfo.end())
+                    {
+                        m_sharedData.avatarInfo.push_back(info);
+                    }
+                    else
+                    {
+                        LogW << "Avatar with UID " << info.uid << " already exists. " << info.spritePath << " will be skipped." << std::endl;
+                    }
+                }
+                else
+                {
+                    LogW << "Skipping " << file << ": missing or corrupt data, or not an avatar." << std::endl;
+                }
+            }
+        }
+    }
+}
+
+std::int32_t MenuState::indexFromAvatarID(std::uint8_t id)
+{
+    auto avatar = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
+        [id](const SharedStateData::AvatarInfo& info)
+        {
+            return info.uid == id;
+        });
+
+    if (avatar != m_sharedData.avatarInfo.end())
+    {
+        return static_cast<std::int32_t>(std::distance(m_sharedData.avatarInfo.begin(), avatar));
+    }
+
+    return -1;
+}
+
 void MenuState::createUI()
 {
     parseCourseDirectory();
+    parseAvatarDirectory();
 
     auto mouseEnterCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e) mutable
@@ -570,7 +695,8 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     glm::vec3 textPos = { TextOffset, 54.f, 0.1f };
 
     if (!m_courseData.empty()
-        && !m_sharedData.ballModels.empty())
+        && !m_sharedData.ballModels.empty()
+        && ! m_sharedData.avatarInfo.empty())
     {
         //host
         entity = m_uiScene.createEntity();
@@ -694,11 +820,25 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     }
     else
     {
+        std::string str = "Error:\n";
+        if (m_courseData.empty())
+        {
+            str += "No course data found\n";
+        }
+        if (m_sharedData.ballModels.empty())
+        {
+            str += "Missing Ball Data\n";
+        }
+        if (m_sharedData.avatarInfo.empty())
+        {
+            str += "Missing Avatar Data";
+        }
+
         //display error
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(textPos);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString("Error: No Course Data Found\nOr Missing Ball Data.");
+        entity.addComponent<cro::Text>(font).setString(str);
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
         entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
 

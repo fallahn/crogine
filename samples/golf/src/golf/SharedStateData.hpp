@@ -34,6 +34,7 @@ source distribution.
 
 #include <crogine/network/NetClient.hpp>
 #include <crogine/core/String.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -95,6 +96,15 @@ struct SharedStateData final
             : tint(c), uid(i), modelPath(str) {}
     };
     std::vector<BallInfo> ballModels;
+
+    //available avatar sprites mapped to ID
+    struct AvatarInfo final
+    {
+        std::int32_t uid = -1;
+        std::string spritePath;
+        std::string audioscape;
+    };
+    std::vector<AvatarInfo> avatarInfo;
 
     //our local player data
     ConnectionData localConnectionData;

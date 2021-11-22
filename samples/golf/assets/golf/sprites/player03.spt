@@ -1,0 +1,74 @@
+spritesheet player03
+{
+    src="assets/golf/images/player.png"
+
+    sprite wood
+    {
+        bounds = 0,0,64,96
+
+        animation idle
+        {
+            frame = 0,0,64,96
+
+            loop = true
+            framerate = 30
+        }
+
+        animation swing
+        {
+            frame = 0,0,64,96
+            frame = 64,0,64,96
+            frame = 128,0,64,96
+            frame = 192,0,64,96
+            frame = 256,0,64,96
+            frame = 320,0,64,96
+            frame = 384,0,64,96
+            frame = 448,0,64,96
+            frame = 512,0,64,96
+            frame = 576,0,64,96
+            frame = 640,0,64,96
+            frame = 704,0,64,96
+            frame = 768,0,64,96
+
+            event = 0,5
+
+            loop = false
+            framerate = 12
+        }
+    } 
+
+    sprite iron
+    {
+        bounds = 0,192,64,96
+
+        animation idle
+        {
+            frame = 0,192,64,96
+
+            loop = true
+            framerate = 30
+        }
+
+        animation swing
+        {
+            frame = 0,192,64,96
+            frame = 64,192,64,96
+            frame = 128,192,64,96
+            frame = 192,192,64,96
+            frame = 256,192,64,96
+            frame = 320,192,64,96
+            frame = 384,192,64,96
+            frame = 448,192,64,96
+            frame = 512,192,64,96
+            frame = 576,192,64,96
+            frame = 640,192,64,96
+            frame = 704,192,64,96
+            frame = 768,192,64,96
+
+            event = 0,5
+
+            loop = false
+            framerate = 12
+        }
+    }   
+}

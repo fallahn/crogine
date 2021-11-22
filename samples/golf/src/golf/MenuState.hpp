@@ -206,6 +206,9 @@ private:
     void createBallScene();
     std::int32_t indexFromBallID(std::uint8_t);
 
+    void parseAvatarDirectory();
+    std::int32_t indexFromAvatarID(std::uint8_t);
+
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);

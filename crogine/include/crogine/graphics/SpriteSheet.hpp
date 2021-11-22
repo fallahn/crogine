@@ -70,8 +70,12 @@ namespace cro
         std::size_t getAnimationIndex(const std::string& name, const std::string& sprite) const;
 
         /*!
-        
-        \brief Returns the Sprite components definied in the spritesheet, mapped to their name
+        \brief Returns true if the given animation exists on the sprite with the give name
+        */
+        bool hasAnimation(const std::string& name, const std::string& sprite) const;
+
+        /*!
+        \brief Returns the Sprite components defined in the spritesheet, mapped to their name
         */
         const std::unordered_map<std::string, Sprite>& getSprites() const { return m_sprites; }
 

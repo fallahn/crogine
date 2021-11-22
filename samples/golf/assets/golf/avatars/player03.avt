@@ -1,0 +1,5 @@
+avatar
+{
+    sprite = "assets/golf/sprites/player03.spt"
+    uid = 3
+}

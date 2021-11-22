@@ -205,3 +205,14 @@ std::size_t SpriteSheet::getAnimationIndex(const std::string& name, const std::s
     }
     return 0;
 }
+
+bool SpriteSheet::hasAnimation(const std::string& name, const std::string& spriteName) const
+{
+    if (m_animations.count(spriteName) != 0)
+    {
+        const auto& anims = m_animations[spriteName];
+        const auto& result = std::find(anims.cbegin(), anims.cend(), name);
+        return result != anims.cend();
+    }
+    return false;
+}
