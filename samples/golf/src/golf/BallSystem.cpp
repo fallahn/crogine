@@ -310,19 +310,30 @@ void BallSystem::process(float dt)
             ball.delay -= dt;
             if (ball.delay < 0)
             {
-                //move towards hole util we find non-water
+                //move towards hole or target util we find non-water
                 auto& tx = entity.getComponent<cro::Transform>();
 
                 std::uint8_t terrain = TerrainID::Water;
                 auto ballPos = tx.getPosition();
                 ballPos.y = 0.f;
 
-                auto dir = m_holeData->pin - ballPos;
+                auto pinDir = m_holeData->pin - ballPos;
+                auto targetDir = m_holeData->target - ballPos;
+                glm::vec3 dir(0.f);
+                if (glm::length2(pinDir) < glm::length2(targetDir))
+                {
+                    dir = pinDir;
+                }
+                else
+                {
+                    dir = targetDir;
+                }
+
                 auto length = glm::length(dir);
                 dir /= length;
                 std::int32_t maxDist = static_cast<std::int32_t>(length - 10.f);
 
-                for (auto i = 0; i < maxDist; ++i) //max 100m
+                for (auto i = 0; i < maxDist; ++i)
                 {
                     ballPos += dir;
                     auto res = getTerrain(ballPos);
