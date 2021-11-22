@@ -48,6 +48,7 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
     }
 
     m_sprites.clear();
+    m_texturePath.clear();
 
     std::size_t count = 0;
 
@@ -57,7 +58,8 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
     //validate sprites, increase count
     if (auto* p = sheetFile.findProperty("src"))
     {
-        texture = &textures.get(workingDirectory + p->getValue<std::string>());
+        m_texturePath = p->getValue<std::string>();
+        texture = &textures.get(workingDirectory + m_texturePath);
     }
     else
     {

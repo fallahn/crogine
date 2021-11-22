@@ -206,6 +206,7 @@ private:
     void createBallScene();
     std::int32_t indexFromBallID(std::uint8_t);
 
+    std::vector<PlayerAvatar> m_playerAvatars;
     void parseAvatarDirectory();
     std::int32_t indexFromAvatarID(std::uint8_t);
 

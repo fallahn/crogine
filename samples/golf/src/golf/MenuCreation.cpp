@@ -262,6 +262,8 @@ void MenuState::parseAvatarDirectory()
     static const std::string AvatarPath = "assets/golf/avatars/";
 
     auto files = cro::FileSystem::listFiles(AvatarPath);
+    m_playerAvatars.reserve(files.size());
+
     for (const auto& file : files)
     {
         if (cro::FileSystem::getFileExtension(file) == ".avt")
@@ -270,6 +272,8 @@ void MenuState::parseAvatarDirectory()
             if (cfg.loadFromFile(AvatarPath + file))
             {
                 SharedStateData::AvatarInfo info;
+                std::string texturePath;
+                cro::FloatRect previewRect;
 
                 const auto& props = cfg.getProperties();
                 for (const auto& prop : props)
@@ -293,7 +297,7 @@ void MenuState::parseAvatarDirectory()
                         if (spritesheet.loadFromFile(spritePath, m_resources.textures))
                         {
                             const auto& sprites = spritesheet.getSprites();
-                            for (const auto& [name, _] : sprites)
+                            for (const auto& [name, sprite] : sprites)
                             {
                                 if (name == "wood")
                                 {
@@ -306,6 +310,7 @@ void MenuState::parseAvatarDirectory()
                                     {
                                         flags |= WoodSwing;
                                     }
+                                    previewRect = sprite.getTextureRect();
                                 }
                                 else if (name == "iron")
                                 {
@@ -325,6 +330,7 @@ void MenuState::parseAvatarDirectory()
                         if (flags == AllFlags)
                         {
                             info.spritePath = spritePath;
+                            texturePath = spritesheet.getTexturePath();
                         }
                     }
                     else if (name == "uid")
@@ -350,6 +356,7 @@ void MenuState::parseAvatarDirectory()
                     if (result == m_sharedData.avatarInfo.end())
                     {
                         m_sharedData.avatarInfo.push_back(info);
+                        m_playerAvatars.emplace_back(texturePath).previewRects[0] = previewRect;
                     }
                     else
                     {
@@ -367,6 +374,9 @@ void MenuState::parseAvatarDirectory()
 
 std::int32_t MenuState::indexFromAvatarID(std::uint8_t id)
 {
+    //odd IDs are same sprite, but flipped horizontally
+    id /= 2;
+
     auto avatar = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
         [id](const SharedStateData::AvatarInfo& info)
         {
@@ -378,7 +388,7 @@ std::int32_t MenuState::indexFromAvatarID(std::uint8_t id)
         return static_cast<std::int32_t>(std::distance(m_sharedData.avatarInfo.begin(), avatar));
     }
 
-    return -1;
+    return 0;
 }
 
 void MenuState::createUI()
@@ -2487,28 +2497,33 @@ void MenuState::createPlayerConfigMenu()
 
 
     //player preview
-    spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_resources.textures);
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 113.f, 68.f, ButtonDepth });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::PlayerAvatar;
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("female_wood");
-    entity.getComponent<cro::Sprite>().setTexture(m_playerAvatar.getTexture(), false);
-    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    if (!m_playerAvatars.empty())
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 113.f, 68.f, ButtonDepth });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::PlayerAvatar;
+        //entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("female_wood");
+        //entity.getComponent<cro::Sprite>().setTexture(m_playerAvatar.getTexture(), false);
+        entity.addComponent<cro::Sprite>(m_playerAvatars[0].getTexture());
+        entity.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[0].previewRects[0]);
+        bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //odd indices are left handed
-    m_playerAvatar.previewRects[0] = spriteSheet.getSprite("female_wood").getTextureRect();
-    m_playerAvatar.previewRects[1] = spriteSheet.getSprite("female_wood").getTextureRect();
-    m_playerAvatar.previewRects[2] = spriteSheet.getSprite("male_wood").getTextureRect();
-    m_playerAvatar.previewRects[3] = spriteSheet.getSprite("male_wood").getTextureRect();
-    m_playerAvatar.previewRects[4] = spriteSheet.getSprite("female_wood_02").getTextureRect();
-    m_playerAvatar.previewRects[5] = spriteSheet.getSprite("female_wood_02").getTextureRect();
-    m_playerAvatar.previewRects[6] = spriteSheet.getSprite("male_wood_02").getTextureRect();
-    m_playerAvatar.previewRects[7] = spriteSheet.getSprite("male_wood_02").getTextureRect();
+        //odd indices are left handed
+        spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_resources.textures);
+        m_playerAvatar.previewRects[0] = spriteSheet.getSprite("female_wood").getTextureRect();
+        m_playerAvatar.previewRects[1] = spriteSheet.getSprite("female_wood").getTextureRect();
+        m_playerAvatar.previewRects[2] = spriteSheet.getSprite("male_wood").getTextureRect();
+        m_playerAvatar.previewRects[3] = spriteSheet.getSprite("male_wood").getTextureRect();
+        m_playerAvatar.previewRects[4] = spriteSheet.getSprite("female_wood_02").getTextureRect();
+        m_playerAvatar.previewRects[5] = spriteSheet.getSprite("female_wood_02").getTextureRect();
+        m_playerAvatar.previewRects[6] = spriteSheet.getSprite("male_wood_02").getTextureRect();
+        m_playerAvatar.previewRects[7] = spriteSheet.getSprite("male_wood_02").getTextureRect();
 
-    auto centre = m_playerAvatar.previewRects[0].width / 2.f;
-    entity.getComponent<cro::Transform>().setOrigin({ centre, 0.f });
-    entity.getComponent<cro::Transform>().move({ centre, 0.f });
+        auto centre = m_playerAvatar.previewRects[0].width / 2.f;
+        entity.getComponent<cro::Transform>().setOrigin({ centre, 0.f });
+        entity.getComponent<cro::Transform>().move({ centre, 0.f });
+    }
 }
 
 void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouseExit)
@@ -2532,7 +2547,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
     {
         auto localPos = glm::vec3(
             173.f * static_cast<float>(i % 2),
-            -(LineHeight + m_playerAvatar.previewRects[0].height) * static_cast<float>(i / 2),
+            -(LineHeight + m_playerAvatars[0].previewRects[0].height) * static_cast<float>(i / 2),
             0.1f);
         localPos += RootPos;
 
@@ -2548,27 +2563,30 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
 
+        auto skinID = m_sharedData.localConnectionData.playerData[i].skinID;
+        auto id = indexFromAvatarID(skinID);
+
         //add avatar preview
         if (m_sharedData.avatarTextures[0][i].getSize().x == 0)
         {
             //this is the first time the texture was displayed so
             //updated it from the current (loaded from disk) settings
             const auto& flags = m_sharedData.localConnectionData.playerData[i].avatarFlags;
-            m_playerAvatar.setColour(pc::ColourKey::Bottom, flags[0]);
-            m_playerAvatar.setColour(pc::ColourKey::Top, flags[1]);
-            m_playerAvatar.setColour(pc::ColourKey::Skin, flags[2]);
-            m_playerAvatar.setColour(pc::ColourKey::Hair, flags[3]);
+            m_playerAvatars[id].setColour(pc::ColourKey::Bottom, flags[0]);
+            m_playerAvatars[id].setColour(pc::ColourKey::Top, flags[1]);
+            m_playerAvatars[id].setColour(pc::ColourKey::Skin, flags[2]);
+            m_playerAvatars[id].setColour(pc::ColourKey::Hair, flags[3]);
 
-            m_playerAvatar.setTarget(m_sharedData.avatarTextures[0][i]);
-            m_playerAvatar.apply();
+            m_playerAvatars[id].setTarget(m_sharedData.avatarTextures[0][i]);
+            m_playerAvatars[id].apply();
         }
 
-        auto id = m_sharedData.localConnectionData.playerData[i].skinID;
+        
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(localPos + AvatarOffset);
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>(m_sharedData.avatarTextures[0][i]);
-        entity.getComponent<cro::Sprite>().setTextureRect(m_playerAvatar.previewRects[id]);
+        entity.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[id].previewRects[0]);
         auto centre = std::ceil(entity.getComponent<cro::Sprite>().getTextureBounds().width / 2.f);
         entity.getComponent<cro::Transform>().setOrigin({ centre, 0.f });
         entity.getComponent<cro::Transform>().move({ centre, 0.f });
@@ -2576,7 +2594,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         m_avatarListEntities.push_back(entity);
 
         //flip if left handed
-        if (id % 2)
+        if (skinID % 2)
         {
             entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             entity.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
@@ -2751,14 +2769,14 @@ void MenuState::updateLobbyAvatars()
         }
         children.clear();
 
-        const auto applyTexture = [&](cro::Texture& targetTexture, const std::array<uint8_t, 4u>& flags)
+        const auto applyTexture = [&](std::uint8_t idx, cro::Texture& targetTexture, const std::array<uint8_t, 4u>& flags)
         {
-            m_playerAvatar.setTarget(targetTexture);
+            m_playerAvatars[idx].setTarget(targetTexture);
             for (auto j = 0u; j < flags.size(); ++j)
             {
-                m_playerAvatar.setColour(pc::ColourKey::Index(j), flags[j]);
+                m_playerAvatars[idx].setColour(pc::ColourKey::Index(j), flags[j]);
             }
-            m_playerAvatar.apply();
+            m_playerAvatars[idx].apply();
         };
         const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
         cro::SimpleText simpleText(font);
@@ -2802,7 +2820,7 @@ void MenuState::updateLobbyAvatars()
             for (auto i = 0u; i < c.playerCount; ++i)
             {
                 str += c.playerData[i].name + "\n";
-                applyTexture(m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
+                applyTexture(indexFromAvatarID(c.playerData[i].skinID), m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
             }
 
             if (str.empty())
