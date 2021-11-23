@@ -101,26 +101,33 @@ void PlayerAvatar::setColour(pc::ColourKey::Index idx, std::int8_t pairIdx)
 {
     CRO_ASSERT(pairIdx < pc::ColourID::Count, "");
 
-    //TODO we could cache the current colour and not run this
-    //if already set... but does it matter?
-
     const auto imgWidth = m_image.getSize().x;
-
-    for (auto i : m_keyIndicesLight[idx])
+    //cache the colour and only update if it changed.
+    if (auto colour = cro::Colour(pc::Palette[pairIdx].light); m_lightColours[idx] != colour)
     {
-        //set the colour in the image at this index
-        auto x = i % imgWidth;
-        auto y = i / imgWidth;
 
-        m_image.setPixel(x, y, cro::Colour(pc::Palette[pairIdx].light));
+        for (auto i : m_keyIndicesLight[idx])
+        {
+            //set the colour in the image at this index
+            auto x = i % imgWidth;
+            auto y = i / imgWidth;
+
+            m_image.setPixel(x, y, colour);
+        }
+        m_lightColours[idx] = colour;
     }
 
-    for (auto i : m_keyIndicesDark[idx])
-    {
-        auto x = i % imgWidth;
-        auto y = i / imgWidth;
 
-        m_image.setPixel(x, y, cro::Colour(pc::Palette[pairIdx].dark));
+    if (auto colour = cro::Colour(pc::Palette[pairIdx].dark); m_darkColours[idx] != colour)
+    {
+        for (auto i : m_keyIndicesDark[idx])
+        {
+            auto x = i % imgWidth;
+            auto y = i / imgWidth;
+
+            m_image.setPixel(x, y, colour);
+        }
+        m_darkColours[idx] = colour;
     }
 }
 

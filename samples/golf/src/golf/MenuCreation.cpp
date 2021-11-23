@@ -396,6 +396,20 @@ std::int32_t MenuState::indexFromAvatarID(std::uint8_t id)
     return 0;
 }
 
+void MenuState::applyAvatar(std::size_t playerIndex)
+{
+    auto avatarIndex = m_avatarIndices[playerIndex];
+
+    const auto& flags = m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags;
+    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Bottom, flags[0]);
+    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Top, flags[1]);
+    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Skin, flags[2]);
+    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Hair, flags[3]);
+
+    m_playerAvatars[avatarIndex].setTarget(m_sharedData.avatarTextures[0][playerIndex]);
+    m_playerAvatars[avatarIndex].apply();
+}
+
 void MenuState::createUI()
 {
     parseCourseDirectory();
@@ -2163,12 +2177,9 @@ void MenuState::createPlayerConfigMenu()
 
             auto paletteIdx = m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].avatarFlags[idx];
             paletteIdx = (paletteIdx + (pc::ColourID::Count - 1)) % pc::ColourID::Count;
-            auto index = m_avatarIndices[m_activePlayerAvatar];
-            m_playerAvatars[index].setColour(idx, paletteIdx);
-            m_playerAvatars[index].setTarget(m_sharedData.avatarTextures[0][m_activePlayerAvatar]);
-            m_playerAvatars[index].apply();
-
             m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].avatarFlags[idx] = paletteIdx;
+
+            applyAvatar(m_activePlayerAvatar);
         }
     };
 
@@ -2181,12 +2192,9 @@ void MenuState::createPlayerConfigMenu()
 
             auto paletteIdx = m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].avatarFlags[idx];
             paletteIdx = (paletteIdx + 1) % pc::ColourID::Count;
-            auto index = m_avatarIndices[m_activePlayerAvatar];
-            m_playerAvatars[index].setColour(idx, paletteIdx);
-            m_playerAvatars[index].setTarget(m_sharedData.avatarTextures[0][m_activePlayerAvatar]);
-            m_playerAvatars[index].apply();
-
             m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].avatarFlags[idx] = paletteIdx;
+
+            applyAvatar(m_activePlayerAvatar);
         }
     };
 
@@ -2316,28 +2324,22 @@ void MenuState::createPlayerConfigMenu()
                     auto skinID = m_sharedData.avatarInfo[m_avatarIndices[m_activePlayerAvatar]].uid;
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].skinID = skinID;
 
+                    applyAvatar(m_activePlayerAvatar);
+
                     cro::Command cmd;
                     cmd.targetFlags = CommandID::Menu::PlayerAvatar;
                     cmd.action = [&, skinID](cro::Entity en, float)
                     {
                         auto index = m_avatarIndices[m_activePlayerAvatar];
-                        const auto& flags = m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].avatarFlags;
-                        for (auto i = 0u; i < pc::ColourKey::Index::Count; ++i)
-                        {
-                            m_playerAvatars[index].setColour(static_cast<pc::ColourKey::Index>(i), flags[i]);
-                        }
-                        m_playerAvatars[index].setTarget(m_sharedData.avatarTextures[0][m_activePlayerAvatar]);
-                        m_playerAvatars[index].apply();
-
-                        en.getComponent<cro::Sprite>().setTexture(m_sharedData.avatarTextures[0][m_activePlayerAvatar]);
+                        //en.getComponent<cro::Sprite>().setTexture(m_sharedData.avatarTextures[0][m_activePlayerAvatar]); //this should have been set when opening edit window
                         en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[index].previewRect);
 
-                        if (skinID % 2)
+                        /*if (skinID % 2)
                         {
                             en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                             en.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
                         }
-                        else
+                        else*/
                         {
                             en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
                             en.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
@@ -2363,28 +2365,23 @@ void MenuState::createPlayerConfigMenu()
                     auto skinID = m_sharedData.avatarInfo[m_avatarIndices[m_activePlayerAvatar]].uid;
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].skinID = skinID;
 
+                    applyAvatar(m_activePlayerAvatar);
+
                     cro::Command cmd;
                     cmd.targetFlags = CommandID::Menu::PlayerAvatar;
                     cmd.action = [&, skinID](cro::Entity en, float)
                     {
                         auto index = m_avatarIndices[m_activePlayerAvatar];
-                        const auto& flags = m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].avatarFlags;
-                        for (auto i = 0u; i < pc::ColourKey::Index::Count; ++i)
-                        {
-                            m_playerAvatars[index].setColour(static_cast<pc::ColourKey::Index>(i), flags[i]);
-                        }
-                        m_playerAvatars[index].setTarget(m_sharedData.avatarTextures[0][m_activePlayerAvatar]);
-                        m_playerAvatars[index].apply();
 
-                        en.getComponent<cro::Sprite>().setTexture(m_sharedData.avatarTextures[0][m_activePlayerAvatar]);
+                        //en.getComponent<cro::Sprite>().setTexture(m_sharedData.avatarTextures[0][m_activePlayerAvatar]);
                         en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[index].previewRect);
 
-                        if (skinID % 2)
+                        /*if (skinID % 2)
                         {
                             en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                             en.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
                         }
-                        else
+                        else*/
                         {
                             en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
                             en.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
@@ -2589,25 +2586,11 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
 
-        auto skinID = m_sharedData.localConnectionData.playerData[i].skinID;
-        auto id = m_avatarIndices[i];
 
         //add avatar preview
-        if (m_sharedData.avatarTextures[0][i].getSize().x == 0)
-        {
-            //this is the first time the texture was displayed so
-            //updated it from the current (loaded from disk) settings
-            const auto& flags = m_sharedData.localConnectionData.playerData[i].avatarFlags;
-            m_playerAvatars[id].setColour(pc::ColourKey::Bottom, flags[0]);
-            m_playerAvatars[id].setColour(pc::ColourKey::Top, flags[1]);
-            m_playerAvatars[id].setColour(pc::ColourKey::Skin, flags[2]);
-            m_playerAvatars[id].setColour(pc::ColourKey::Hair, flags[3]);
-
-            m_playerAvatars[id].setTarget(m_sharedData.avatarTextures[0][i]);
-            m_playerAvatars[id].apply();
-        }
-
-        
+        applyAvatar(i);
+        auto id = m_avatarIndices[i];
+                
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(localPos + AvatarOffset);
         entity.addComponent<cro::Drawable2D>();
@@ -3096,7 +3079,7 @@ void MenuState::loadAvatars()
                     else if (name == "skin_id")
                     {
                         auto id = prop.getValue<std::int32_t>();
-                        id = std::min(PlayerAvatar::MaxSkins - 1, std::max(0, id));
+                        id = std::min(255, std::max(0, id)); //can only store uint8
                         m_sharedData.localConnectionData.playerData[i].skinID = id;
                     }
                     else if (name == "ball_id")

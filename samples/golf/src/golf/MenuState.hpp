@@ -211,6 +211,7 @@ private:
     std::uint8_t m_activePlayerAvatar; //which player is current editing their avatar
     void parseAvatarDirectory();
     std::int32_t indexFromAvatarID(std::uint8_t);
+    void applyAvatar(std::size_t);
 
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);

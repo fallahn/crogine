@@ -33,6 +33,7 @@ source distribution.
 
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/Colour.hpp>
 
 #include <string>
 
@@ -54,4 +55,7 @@ private:
 
     std::array<std::vector<std::uint32_t>, pc::ColourKey::Count> m_keyIndicesLight;
     std::array<std::vector<std::uint32_t>, pc::ColourKey::Count> m_keyIndicesDark;
+
+    std::array<cro::Colour, pc::ColourKey::Count> m_lightColours;
+    std::array<cro::Colour, pc::ColourKey::Count> m_darkColours;
 };
