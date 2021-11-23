@@ -43,10 +43,7 @@ PlayerAvatar::PlayerAvatar(const std::string& path)
     if (m_image.loadFromFile(path) //MUST be RGBA for colour replace to work.
         && m_image.getFormat() == cro::ImageFormat::RGBA)
     {
-        //if successful load into texture
-        m_texture.loadFromImage(m_image);
-
-        //and cache color indices
+        //cache color indices
         auto stride = 4u;
         auto length = m_image.getSize().x * m_image.getSize().y * stride;
         const auto* pixels = m_image.getPixelData();
@@ -104,6 +101,9 @@ void PlayerAvatar::setColour(pc::ColourKey::Index idx, std::int8_t pairIdx)
 {
     CRO_ASSERT(pairIdx < pc::ColourID::Count, "");
 
+    //TODO we could cache the current colour and not run this
+    //if already set... but does it matter?
+
     const auto imgWidth = m_image.getSize().x;
 
     for (auto i : m_keyIndicesLight[idx])
@@ -122,8 +122,6 @@ void PlayerAvatar::setColour(pc::ColourKey::Index idx, std::int8_t pairIdx)
 
         m_image.setPixel(x, y, cro::Colour(pc::Palette[pairIdx].dark));
     }
-
-    m_texture.loadFromImage(m_image);
 }
 
 void PlayerAvatar::apply()

@@ -45,14 +45,11 @@ public:
     void setColour(pc::ColourKey::Index, std::int8_t);
     void apply();
 
-    const cro::Texture& getTexture() const { return m_texture; }
-
     static constexpr std::uint8_t MaxSkins = 8;
     cro::FloatRect previewRect;
 
 private:
     cro::Texture* m_target;
-    cro::Texture m_texture;
     cro::Image m_image;
 
     std::array<std::vector<std::uint32_t>, pc::ColourKey::Count> m_keyIndicesLight;
