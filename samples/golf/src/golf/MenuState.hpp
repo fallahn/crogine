@@ -117,7 +117,6 @@ private:
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
     cro::Entity m_avatarMenu; //root of the avatar menu to which each player avatar is attached
     std::vector<cro::Entity> m_avatarListEntities;
-    PlayerAvatar m_playerAvatar;
     std::pair<std::uint32_t, std::uint32_t> m_avatarCallbacks;
     std::tuple<std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t> m_courseSelectCallbacks;
     std::array<std::uint32_t, 4u> m_avatarEditCallbacks = {};
@@ -207,6 +206,9 @@ private:
     std::int32_t indexFromBallID(std::uint8_t);
 
     std::vector<PlayerAvatar> m_playerAvatars;
+    //this is the index for each player into m_playerAvatars - skinID is read from PlayerAvatar struct
+    std::array<std::size_t, 4u> m_avatarIndices = {};
+    std::uint8_t m_activePlayerAvatar; //which player is current editing their avatar
     void parseAvatarDirectory();
     std::int32_t indexFromAvatarID(std::uint8_t);
 

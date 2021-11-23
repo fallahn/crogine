@@ -89,11 +89,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_sharedData        (sd),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_backgroundScene   (context.appInstance.getMessageBus()),
-    m_playerAvatar      ("assets/golf/images/player.png"),
     m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu       (MenuID::Main),
     m_prevMenu          (MenuID::Main),
-    m_viewScale         (2.f)
+    m_viewScale         (2.f),
+    m_activePlayerAvatar(0)
 {
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -116,6 +116,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     std::fill(m_readyState.begin(), m_readyState.end(), false);
 
     std::fill(m_ballIndices.begin(), m_ballIndices.end(), 0);
+
+    std::fill(m_avatarIndices.begin(), m_avatarIndices.end(), 0);
     
     //remap the selected ball model indices - this is always applied
     //as the avatar IDs are loaded from the config, above
@@ -352,7 +354,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 break;
             case MenuID::PlayerConfig:
                 applyTextEdit();
-                showPlayerConfig(false, m_playerAvatar.activePlayer);
+                showPlayerConfig(false, m_activePlayerAvatar);
                 updateLocalAvatars(m_avatarCallbacks.first, m_avatarCallbacks.second);
                 break;
             }
