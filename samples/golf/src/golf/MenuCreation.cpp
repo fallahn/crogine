@@ -2778,7 +2778,7 @@ void MenuState::updateLobbyAvatars()
         }
         children.clear();
 
-        const auto applyTexture = [&](std::uint8_t idx, cro::Texture& targetTexture, const std::array<uint8_t, 4u>& flags)
+        const auto applyTexture = [&](std::size_t idx, cro::Texture& targetTexture, const std::array<uint8_t, 4u>& flags)
         {
             m_playerAvatars[idx].setTarget(targetTexture);
             for (auto j = 0u; j < flags.size(); ++j)

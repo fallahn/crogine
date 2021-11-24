@@ -95,6 +95,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale         (2.f),
     m_activePlayerAvatar(0)
 {
+    std::fill(m_readyState.begin(), m_readyState.end(), false);
+    std::fill(m_ballIndices.begin(), m_ballIndices.end(), 0);
+    std::fill(m_avatarIndices.begin(), m_avatarIndices.end(), 0);    
+    
+    
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
         loadAvatars();
@@ -113,12 +118,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     sd.baseState = StateID::Menu;
 
     sd.clientConnection.ready = false;
-    std::fill(m_readyState.begin(), m_readyState.end(), false);
 
-    std::fill(m_ballIndices.begin(), m_ballIndices.end(), 0);
-
-    std::fill(m_avatarIndices.begin(), m_avatarIndices.end(), 0);
-    
     //remap the selected ball model indices - this is always applied
     //as the avatar IDs are loaded from the config, above
     for (auto i = 0u; i < 4u; ++i)
