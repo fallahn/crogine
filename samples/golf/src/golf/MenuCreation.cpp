@@ -2319,7 +2319,14 @@ void MenuState::createPlayerConfigMenu()
                     applyTextEdit();
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 
-                    m_avatarIndices[m_activePlayerAvatar] = (m_avatarIndices[m_activePlayerAvatar] + (m_playerAvatars.size() - 1)) % m_playerAvatars.size();
+                    auto flipped = m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].flipped;
+                    flipped = !flipped;
+                    m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].flipped = flipped;
+                    
+                    if (!flipped)
+                    {
+                        m_avatarIndices[m_activePlayerAvatar] = (m_avatarIndices[m_activePlayerAvatar] + (m_playerAvatars.size() - 1)) % m_playerAvatars.size();
+                    }
 
                     auto skinID = m_sharedData.avatarInfo[m_avatarIndices[m_activePlayerAvatar]].uid;
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].skinID = skinID;
@@ -2328,18 +2335,17 @@ void MenuState::createPlayerConfigMenu()
 
                     cro::Command cmd;
                     cmd.targetFlags = CommandID::Menu::PlayerAvatar;
-                    cmd.action = [&, skinID](cro::Entity en, float)
+                    cmd.action = [&, flipped](cro::Entity en, float)
                     {
                         auto index = m_avatarIndices[m_activePlayerAvatar];
-                        //en.getComponent<cro::Sprite>().setTexture(m_sharedData.avatarTextures[0][m_activePlayerAvatar]); //this should have been set when opening edit window
                         en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[index].previewRect);
 
-                        /*if (skinID % 2)
+                        if (flipped)
                         {
                             en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                             en.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
                         }
-                        else*/
+                        else
                         {
                             en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
                             en.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
@@ -2360,7 +2366,14 @@ void MenuState::createPlayerConfigMenu()
                     applyTextEdit();
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                    m_avatarIndices[m_activePlayerAvatar] = (m_avatarIndices[m_activePlayerAvatar] + 1) % m_playerAvatars.size();
+                    auto flipped = m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].flipped;
+                    flipped = !flipped;
+                    m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].flipped = flipped;
+
+                    if (!flipped)
+                    {
+                        m_avatarIndices[m_activePlayerAvatar] = (m_avatarIndices[m_activePlayerAvatar] + 1) % m_playerAvatars.size();
+                    }
 
                     auto skinID = m_sharedData.avatarInfo[m_avatarIndices[m_activePlayerAvatar]].uid;
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].skinID = skinID;
@@ -2369,19 +2382,17 @@ void MenuState::createPlayerConfigMenu()
 
                     cro::Command cmd;
                     cmd.targetFlags = CommandID::Menu::PlayerAvatar;
-                    cmd.action = [&, skinID](cro::Entity en, float)
+                    cmd.action = [&, flipped](cro::Entity en, float)
                     {
                         auto index = m_avatarIndices[m_activePlayerAvatar];
-
-                        //en.getComponent<cro::Sprite>().setTexture(m_sharedData.avatarTextures[0][m_activePlayerAvatar]);
                         en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[index].previewRect);
 
-                        /*if (skinID % 2)
+                        if (flipped)
                         {
                             en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                             en.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
                         }
-                        else*/
+                        else
                         {
                             en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
                             en.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
@@ -2415,7 +2426,8 @@ void MenuState::createPlayerConfigMenu()
 
                     auto skinID = m_sharedData.avatarInfo[m_avatarIndices[m_activePlayerAvatar]].uid;
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].skinID = skinID;
-
+                    bool flipped = cro::Util::Random::value(0, 1) == 0;
+                    m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].flipped = flipped;
 
                     //random colours
                     std::int32_t prevIndex = 0;
@@ -2439,16 +2451,16 @@ void MenuState::createPlayerConfigMenu()
                     //update texture
                     cro::Command cmd;
                     cmd.targetFlags = CommandID::Menu::PlayerAvatar;
-                    cmd.action = [&](cro::Entity en, float)
+                    cmd.action = [&, flipped](cro::Entity en, float)
                     {
                         en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].previewRect);
 
-                        /*if (skinID % 2)
+                        if (flipped)
                         {
                             en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                             en.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
                         }
-                        else*/
+                        else
                         {
                             en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
                             en.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
@@ -2602,12 +2614,12 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         m_avatarListEntities.push_back(entity);
 
         //flip if left handed
-        /*if (skinID % 2)
+        if (m_sharedData.localConnectionData.playerData[i].flipped)
         {
             entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             entity.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
         }
-        else*/
+        else
         {
             entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
             entity.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
@@ -2906,15 +2918,13 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
     cmd.targetFlags = CommandID::Menu::PlayerAvatar;
     cmd.action = [&](cro::Entity e, float)
     {
-        auto id = m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].skinID;
-
         auto index = m_avatarIndices[m_activePlayerAvatar];
         m_playerAvatars[index].setTarget(m_sharedData.avatarTextures[0][m_activePlayerAvatar]);
         m_playerAvatars[index].apply();
         e.getComponent<cro::Sprite>().setTexture(m_sharedData.avatarTextures[0][m_activePlayerAvatar]);
         e.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[index].previewRect);
 
-        if (id % 2)
+        if (m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].flipped)
         {
             //flipped left handed
             e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
@@ -3041,6 +3051,7 @@ void MenuState::saveAvatars()
         auto* avatar = cfg.addObject("avatar");
         avatar->addProperty("name", player.name.empty() ? "Player" : player.name.toAnsiString()); //hmmm shame we can't save the encoding here
         avatar->addProperty("skin_id").setValue(player.skinID);
+        avatar->addProperty("flipped").setValue(player.flipped);
         avatar->addProperty("ball_id").setValue(player.ballID);
         avatar->addProperty("flags0").setValue(player.avatarFlags[0]);
         avatar->addProperty("flags1").setValue(player.avatarFlags[1]);
@@ -3080,6 +3091,10 @@ void MenuState::loadAvatars()
                         auto id = prop.getValue<std::int32_t>();
                         id = std::min(255, std::max(0, id)); //can only store uint8
                         m_sharedData.localConnectionData.playerData[i].skinID = id;
+                    }
+                    else if (name == "flipped")
+                    {
+                        m_sharedData.localConnectionData.playerData[i].flipped = prop.getValue<bool>();
                     }
                     else if (name == "ball_id")
                     {

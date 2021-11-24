@@ -48,7 +48,8 @@ struct PlayerData final
 {
     cro::String name;
     std::array<std::uint8_t, 4u> avatarFlags = {1,0,3,6}; //indices into colour pairs
-    std::uint8_t skinID = 0; //currently male, female, odd IDs are left handed - can be extended, see PlayerColours::MaxSkins
+    std::uint8_t skinID = 0; //as loaded from the avatar data file
+    bool flipped = false; //whether or not avatar flipped
     std::uint8_t ballID = 0;
 
     std::vector<std::uint8_t> holeScores;
