@@ -2411,9 +2411,9 @@ void MenuState::createPlayerConfigMenu()
 
 
                     //random skin
-                    auto randIdx = cro::Util::Random::value(0u, m_playerAvatars.size() - 1);
+                    m_avatarIndices[m_activePlayerAvatar] = cro::Util::Random::value(0u, m_playerAvatars.size() - 1);
 
-                    auto skinID = m_sharedData.avatarInfo[randIdx].uid;
+                    auto skinID = m_sharedData.avatarInfo[m_avatarIndices[m_activePlayerAvatar]].uid;
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].skinID = skinID;
 
 
@@ -2429,20 +2429,19 @@ void MenuState::createPlayerConfigMenu()
                             paletteIdx = (paletteIdx + 1) % pc::ColourID::Count;
                         }
 
-                        m_playerAvatars[randIdx].setColour(pc::ColourKey::Index(i), paletteIdx);
+                        m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].setColour(pc::ColourKey::Index(i), paletteIdx);
                         m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].avatarFlags[i] = paletteIdx;
 
                         prevIndex = paletteIdx;
                     }
+                    applyAvatar(m_activePlayerAvatar);
 
                     //update texture
                     cro::Command cmd;
                     cmd.targetFlags = CommandID::Menu::PlayerAvatar;
-                    cmd.action = [&, randIdx](cro::Entity en, float)
+                    cmd.action = [&](cro::Entity en, float)
                     {
-                        m_playerAvatars[randIdx].setTarget(m_sharedData.avatarTextures[0][m_activePlayerAvatar]);
-                        m_playerAvatars[randIdx].apply();
-                        en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[randIdx].previewRect);
+                        en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].previewRect);
 
                         /*if (skinID % 2)
                         {
