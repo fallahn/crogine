@@ -259,6 +259,8 @@ void MenuState::parseCourseDirectory()
 
 void MenuState::parseAvatarDirectory()
 {
+    m_sharedData.avatarInfo.clear();
+
     static const std::string AvatarPath = "assets/golf/avatars/";
 
     auto files = cro::FileSystem::listFiles(AvatarPath);

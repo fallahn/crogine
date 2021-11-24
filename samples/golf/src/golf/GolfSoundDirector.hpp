@@ -30,6 +30,13 @@ source distribution.
 #pragma once
 
 #include "SoundEffectsDirector.hpp"
+#include "CommonConsts.hpp"
+#include "SharedStateData.hpp"
+
+#include <crogine/audio/AudioScape.hpp>
+
+#include <vector>
+#include <array>
 
 namespace cro
 {
@@ -43,6 +50,10 @@ public:
     explicit GolfSoundDirector(cro::AudioResource&);
 
     void handleMessage(const cro::Message&) override;
+
+    void addAudioScape(const std::string& path, cro::AudioResource& resource);
+    void setPlayerIndex(std::size_t client, std::size_t player, std::int32_t index);
+    void setActivePlayer(std::size_t client, std::size_t player);
 
 private:
     struct AudioID final
@@ -78,7 +89,7 @@ private:
             TerrainBunker01,
             TerrainBunker02,
             TerrainBunker03,
-            TerrainBunkre04,
+            TerrainBunker04,
             TerrainBunker05,
             TerrainFairway01,
             TerrainFairway02,
@@ -105,6 +116,11 @@ private:
         };
     };
     std::array<const cro::AudioSource*, AudioID::Count> m_audioSources = {};
+
+    std::array<std::array<std::int32_t, ConnectionData::MaxPlayers>, ConstVal::MaxClients> m_playerIndices = {};
+    std::vector<cro::AudioScape> m_playerVoices;
+    std::size_t m_currentClient;
+    std::size_t m_currentPlayer;
 
     cro::Entity playSound(std::int32_t, glm::vec3, float = 1.f);
     void playSoundDelayed(std::int32_t, glm::vec3, float, float = 1.f, std::uint8_t = 1/*MixerChannel::Effects*/);

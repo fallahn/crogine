@@ -49,6 +49,8 @@ namespace
 }
 
 GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
+    : m_currentClient(0),
+    m_currentPlayer(0)
 {
     //this must match with AudioID enum
     static const std::array<std::string, AudioID::Count> FilePaths =
@@ -119,6 +121,11 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
             //get a default sound so we at least don't have nullptr
             m_audioSources[i] = &ar.get(1010101);
         }
+    }
+
+    for (auto& a : m_playerIndices)
+    {
+        std::fill(a.begin(), a.end(), -1);
     }
 }
 
@@ -294,16 +301,100 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
     }
 }
 
+void GolfSoundDirector::addAudioScape(const std::string& path, cro::AudioResource& resource)
+{
+    //we emplace back even if it fails/has empty path so indices match the player indices.
+    m_playerVoices.emplace_back().loadFromFile(path, resource);
+}
+
+void GolfSoundDirector::setPlayerIndex(std::size_t client, std::size_t player, std::int32_t index)
+{
+    CRO_ASSERT(index < m_playerVoices.size(), "load audioscapes first!");
+    m_playerIndices[client][player] = index;
+}
+
+void GolfSoundDirector::setActivePlayer(std::size_t client, std::size_t player)
+{
+    m_currentClient = client;
+    m_currentPlayer = player;
+}
+
 //private
 cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, float volume)
 {
-    auto ent = getNextEntity();
-    ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
-    ent.getComponent<cro::AudioEmitter>().play();
-    ent.getComponent<cro::AudioEmitter>().setVolume(volume);
-    ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
-    ent.getComponent<cro::Transform>().setPosition(position);
-    return ent;
+    static const auto playDefault = [&]()
+    {
+        auto ent = getNextEntity();
+        ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
+        ent.getComponent<cro::AudioEmitter>().setVolume(volume);
+        ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+        ent.getComponent<cro::AudioEmitter>().play();
+        ent.getComponent<cro::Transform>().setPosition(position);
+        return ent;
+    };
+
+    static const auto playSpecial = [&]()
+    {
+        if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
+        {
+            std::string emitterName;
+            switch (id)
+            {
+            default: break;
+            case AudioID::TerrainBunker01:
+                emitterName = "bunker";
+                break;
+            case AudioID::TerrainFairway01:
+                emitterName = "fairway";
+                break;
+            case AudioID::TerrainGreen01:
+                emitterName = "green";
+                break;
+            case AudioID::TerrainRough01:
+                emitterName = "rough";
+                break;
+            case AudioID::TerrainScrub01:
+                emitterName = "scrub";
+                break;
+            case AudioID::TerrainWater01:
+                emitterName = "water";
+                break;
+            case AudioID::Hook:
+                emitterName = "hook";
+                break;
+            case AudioID::Slice:
+                emitterName = "slice";
+                break;
+            }
+
+            if (m_playerVoices[idx].hasEmitter(emitterName))
+            {
+                auto ent = getNextEntity();
+                ent.getComponent<cro::AudioEmitter>() = m_playerVoices[idx].getEmitter(emitterName);
+                ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+                ent.getComponent<cro::AudioEmitter>().play();
+                ent.getComponent<cro::Transform>().setPosition(position);
+                return ent;
+            }
+        }
+
+        return playDefault();
+    };
+
+    switch (id)
+    {
+    default: 
+        return playDefault();
+    case AudioID::TerrainBunker01:
+    case AudioID::TerrainFairway01:
+    case AudioID::TerrainGreen01:
+    case AudioID::TerrainRough01:
+    case AudioID::TerrainScrub01:
+    case AudioID::TerrainWater01:
+    case AudioID::Hook:
+    case AudioID::Slice:
+        return playSpecial();
+    }
 }
 
 void GolfSoundDirector::playSoundDelayed(std::int32_t id, glm::vec3 position, float delay, float volume, std::uint8_t channel)

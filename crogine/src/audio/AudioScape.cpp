@@ -170,3 +170,8 @@ AudioEmitter AudioScape::getEmitter(const std::string& name) const
     }
     return emitter;
 }
+
+bool AudioScape::hasEmitter(const std::string& name) const
+{
+    return m_configs.count(name) != 0;
+}

@@ -137,8 +137,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_scoreColumnCount  (2)
 {
     context.mainWindow.loadResources([this]() {
-        loadAssets();
         addSystems();
+        loadAssets();
         initAudio();
         buildScene();
         });
@@ -816,6 +816,7 @@ void GolfState::loadAssets()
     for (const auto& avatar : m_sharedData.avatarInfo)
     {
         spriteSheets.emplace_back().loadFromFile(avatar.spritePath, m_resources.textures);
+        m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape(avatar.audioscape, m_resources.audio);
     }
 
     //copy into active player slots
@@ -852,6 +853,8 @@ void GolfState::loadAssets()
 
             m_avatars[i][j].sprites[Avatar::Sprite::Iron].sprite.setTexture(m_sharedData.avatarTextures[i][j], false);
             m_avatars[i][j].sprites[Avatar::Sprite::Wood].sprite.setTexture(m_sharedData.avatarTextures[i][j], false);
+
+            m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, static_cast<std::int32_t>(spriteIndex));
         }
     }
 
@@ -2384,6 +2387,8 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    m_gameScene.getDirector<GolfSoundDirector>()->setActivePlayer(player.client, player.player);
+
     updateScoreboard();
     showScoreboard(false);
 

@@ -97,6 +97,12 @@ namespace cro
         */
         AudioEmitter getEmitter(const std::string& name) const;
 
+        /*!
+        \brief Returns true if the AudioScape contains an emitter definition with the given name
+        \param name Name of the emitter to query
+        */
+        bool hasEmitter(const std::string& name) const;
+
     private:
         AudioResource* m_audioResource;
 
