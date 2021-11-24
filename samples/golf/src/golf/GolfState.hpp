@@ -194,11 +194,21 @@ private:
 
     struct Avatar final
     {
-        cro::Sprite wood;
-        cro::Sprite iron;
+        struct Sprite final
+        {
+            cro::Sprite sprite;
+            std::array<std::size_t, AnimationID::Count> animIDs = {};
+
+            enum
+            {
+                Wood, Iron, Count
+            };
+        };
+        std::int32_t clubType = Sprite::Wood;
+        std::array<Sprite, Sprite::Count> sprites = {};
         bool flipped = false;
     };
-    std::array<std::array<Avatar, 4u>, 4u> m_avatars;
+    std::array<std::array<Avatar, ConnectionData::MaxPlayers>, ConstVal::MaxClients> m_avatars;
 
 
     float m_camRotation; //used to offset the rotation of the wind indicator

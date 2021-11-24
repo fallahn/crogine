@@ -93,6 +93,15 @@ struct ShaderID final
     };
 };
 
+struct AnimationID final
+{
+    enum
+    {
+        Idle, Swing,
+        Count
+    };
+};
+
 static const std::array BallTints =
 {
     cro::Colour(1.f,0.937f,0.752f), //default

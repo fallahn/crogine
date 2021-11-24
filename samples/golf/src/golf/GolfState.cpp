@@ -519,11 +519,15 @@ void GolfState::handleMessage(const cro::Message& msg)
                 auto colour = e.getComponent<cro::Sprite>().getColour();
                 if (getClub() < ClubID::FiveIron)
                 {
-                    e.getComponent<cro::Sprite>() = m_avatars[m_currentPlayer.client][m_currentPlayer.player].wood;
+                    auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
+                    avatar.clubType = Avatar::Sprite::Wood;
+                    e.getComponent<cro::Sprite>() = avatar.sprites[Avatar::Sprite::Wood].sprite;
                 }
                 else
                 {
-                    e.getComponent<cro::Sprite>() = m_avatars[m_currentPlayer.client][m_currentPlayer.player].iron;
+                    auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
+                    avatar.clubType = Avatar::Sprite::Iron;
+                    e.getComponent<cro::Sprite>() = avatar.sprites[Avatar::Sprite::Iron].sprite;
                 }
                 e.getComponent<cro::Sprite>().setColour(colour);
             };
@@ -807,44 +811,47 @@ void GolfState::loadAssets()
     m_flagQuad.setTexture(*flagSprite.getTexture());
     m_flagQuad.setTextureRect(flagSprite.getTextureRect());
 
-    //these are doubled because odd skinIDs are flipped
-    //versions of even numbered
-    spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_resources.textures);
-    std::vector<cro::Sprite> ironSprites =
+    //load sprites from avatar info
+    std::vector<cro::SpriteSheet> spriteSheets;
+    for (const auto& avatar : m_sharedData.avatarInfo)
     {
-        spriteSheet.getSprite("female_iron"),
-        spriteSheet.getSprite("female_iron"),
-        spriteSheet.getSprite("male_iron"),
-        spriteSheet.getSprite("male_iron"),
-        spriteSheet.getSprite("female_iron_02"),
-        spriteSheet.getSprite("female_iron_02"),
-        spriteSheet.getSprite("male_iron_02"),
-        spriteSheet.getSprite("male_iron_02")
-    };
+        spriteSheets.emplace_back().loadFromFile(avatar.spritePath, m_resources.textures);
+    }
 
-    std::vector<cro::Sprite> woodSprites =
+    //copy into active player slots
+    auto indexFromSkinID = [&](std::uint8_t skinID)->std::size_t
     {
-        spriteSheet.getSprite("female_wood"),
-        spriteSheet.getSprite("female_wood"),
-        spriteSheet.getSprite("male_wood"),
-        spriteSheet.getSprite("male_wood"),
-        spriteSheet.getSprite("female_wood_02"),
-        spriteSheet.getSprite("female_wood_02"),
-        spriteSheet.getSprite("male_wood_02"),
-        spriteSheet.getSprite("male_wood_02")
+        auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
+            [skinID](const SharedStateData::AvatarInfo& ai) 
+            {
+                return skinID == ai.uid;
+            });
+
+        if (result != m_sharedData.avatarInfo.end())
+        {
+            return std::distance(m_sharedData.avatarInfo.begin(), result);
+        }
+        return 0;
     };
 
     for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
     {
         for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
         {
-            auto skinID = std::min(m_sharedData.connectionData[i].playerData[j].skinID, std::uint8_t(PlayerAvatar::MaxSkins - 1));
-            m_avatars[i][j].iron = ironSprites[skinID];
-            m_avatars[i][j].wood = woodSprites[skinID];
-            m_avatars[i][j].flipped = (skinID % 2);
+            auto skinID = m_sharedData.connectionData[i].playerData[j].skinID;
+            auto spriteIndex = indexFromSkinID(skinID);
 
-            m_avatars[i][j].iron.setTexture(m_sharedData.avatarTextures[i][j], false);
-            m_avatars[i][j].wood.setTexture(m_sharedData.avatarTextures[i][j], false);
+            m_avatars[i][j].sprites[Avatar::Sprite::Iron].sprite = spriteSheets[spriteIndex].getSprite("iron");
+            m_avatars[i][j].sprites[Avatar::Sprite::Iron].animIDs[AnimationID::Idle] = spriteSheets[spriteIndex].getAnimationIndex("idle", "iron");
+            m_avatars[i][j].sprites[Avatar::Sprite::Iron].animIDs[AnimationID::Swing] = spriteSheets[spriteIndex].getAnimationIndex("swing", "iron");
+
+            m_avatars[i][j].sprites[Avatar::Sprite::Wood].sprite = spriteSheets[spriteIndex].getSprite("wood");
+            m_avatars[i][j].sprites[Avatar::Sprite::Wood].animIDs[AnimationID::Idle] = spriteSheets[spriteIndex].getAnimationIndex("idle", "wood");
+            m_avatars[i][j].sprites[Avatar::Sprite::Wood].animIDs[AnimationID::Swing] = spriteSheets[spriteIndex].getAnimationIndex("swing", "wood");
+            m_avatars[i][j].flipped = m_sharedData.connectionData[i].playerData[j].flipped;
+
+            m_avatars[i][j].sprites[Avatar::Sprite::Iron].sprite.setTexture(m_sharedData.avatarTextures[i][j], false);
+            m_avatars[i][j].sprites[Avatar::Sprite::Wood].sprite.setTexture(m_sharedData.avatarTextures[i][j], false);
         }
     }
 
@@ -1966,9 +1973,10 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             auto animID = evt.packet.as<std::uint8_t>();
             cro::Command cmd;
             cmd.targetFlags = CommandID::UI::PlayerSprite;
-            cmd.action = [animID](cro::Entity e, float)
+            cmd.action = [&,animID](cro::Entity e, float)
             {
-                e.getComponent<cro::SpriteAnimation>().play(animID);
+                const auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
+                e.getComponent<cro::SpriteAnimation>().play(avatar.sprites[avatar.clubType].animIDs[animID]);
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
@@ -2510,11 +2518,15 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         {
             if (getClub() < ClubID::FiveIron)
             {
-                e.getComponent<cro::Sprite>() = m_avatars[m_currentPlayer.client][m_currentPlayer.player].wood;
+                auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
+                avatar.clubType = Avatar::Sprite::Wood;
+                e.getComponent<cro::Sprite>() = avatar.sprites[Avatar::Sprite::Wood].sprite;
             }
             else
             {
-                e.getComponent<cro::Sprite>() = m_avatars[m_currentPlayer.client][m_currentPlayer.player].iron;
+                auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
+                avatar.clubType = Avatar::Sprite::Iron;
+                e.getComponent<cro::Sprite>() = avatar.sprites[Avatar::Sprite::Iron].sprite;
             }
             e.getComponent<cro::Callback>().active = true;
 

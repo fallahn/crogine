@@ -142,6 +142,7 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
                     m_sharedData.clients[connectionID].playerData[i].name = cd.playerData[i].name;
                     m_sharedData.clients[connectionID].playerData[i].avatarFlags = cd.playerData[i].avatarFlags;
                     m_sharedData.clients[connectionID].playerData[i].skinID = cd.playerData[i].skinID;
+                    m_sharedData.clients[connectionID].playerData[i].flipped = cd.playerData[i].flipped;
                     m_sharedData.clients[connectionID].playerData[i].ballID = cd.playerData[i].ballID;
                 }
             }
@@ -172,6 +173,7 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
                 cd.playerData[j].name = c.playerData[j].name;
                 cd.playerData[j].avatarFlags = c.playerData[j].avatarFlags;
                 cd.playerData[j].skinID = c.playerData[j].skinID;
+                cd.playerData[j].flipped = c.playerData[j].flipped;
                 cd.playerData[j].ballID = c.playerData[j].ballID;
             }
             auto buffer = cd.serialise();

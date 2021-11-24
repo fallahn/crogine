@@ -376,7 +376,7 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
 
             m_playerInfo[0].holeScore[m_currentHole]++;
 
-            m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, m_animIDs[AnimID::Swing], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(AnimationID::Swing), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
             m_turnTimer.restart(); //don't time out mid-shot...
         }
@@ -413,7 +413,7 @@ void GameState::setNextPlayer()
     {
         //go to next player
         m_sharedData.host.broadcastPacket(PacketID::SetPlayer, player, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, m_animIDs[AnimID::Idle], cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(AnimationID::Idle), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 
     m_turnTimer.restart();
@@ -659,18 +659,6 @@ void GameState::initScene()
             }
         }
     }
-
-    //load the anims so we know which ID to
-    //TODO parse the sprite sheet manually as OpenGL 
-    //isn't available in the server thread and the default
-    //loader wants a texture resource
-    /*cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/player.spt", m_textures);
-    m_animIDs[AnimID::Idle] = static_cast<std::uint8_t>(spriteSheet.getAnimationIndex("idle", "female"));
-    m_animIDs[AnimID::Swing] = static_cast<std::uint8_t>(spriteSheet.getAnimationIndex("swing", "female"));*/
-    m_animIDs[AnimID::Idle] = 0;
-    m_animIDs[AnimID::Swing] = 1;
-
 
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);

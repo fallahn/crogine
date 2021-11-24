@@ -46,7 +46,6 @@ public:
     void setColour(pc::ColourKey::Index, std::int8_t);
     void apply();
 
-    static constexpr std::uint8_t MaxSkins = 8;
     cro::FloatRect previewRect;
 
 private:

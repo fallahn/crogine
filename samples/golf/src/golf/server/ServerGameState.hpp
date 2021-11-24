@@ -68,16 +68,6 @@ namespace sv
 
         cro::Clock m_turnTimer;
 
-        struct AnimID final
-        {
-            enum
-            {
-                Idle, Swing,
-                Count
-            };
-        };
-        std::array<std::uint8_t, AnimID::Count> m_animIDs = {};
-
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const cro::NetEvent::Packet&);
 

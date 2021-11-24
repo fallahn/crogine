@@ -13,6 +13,7 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
 
         sizes[i] += sizeof(playerData[i].avatarFlags);
         sizes[i] += sizeof(playerData[i].skinID);
+        sizes[i] += sizeof(std::uint8_t); //bool flipped
         sizes[i] += sizeof(playerData[i].ballID);
 
         totalSize += sizes[i];
@@ -34,6 +35,9 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
 
         std::memcpy(&buffer[offset], &playerData[i].skinID, sizeof(playerData[i].skinID));
         offset += sizeof(playerData[i].skinID);
+
+        buffer[offset] = playerData[i].flipped ? 1 : 0;
+        offset++;
 
         std::memcpy(&buffer[offset], &playerData[i].ballID, sizeof(playerData[i].ballID));
         offset += sizeof(playerData[i].ballID);
@@ -109,6 +113,10 @@ bool ConnectionData::deserialise(const cro::NetEvent::Packet& packet)
         offset += sizeof(playerData[i].skinID);
         stringSize -= sizeof(playerData[i].skinID);
         
+        playerData[i].flipped = ptr[offset] != 0;
+        offset++;
+        stringSize--;
+
         std::memcpy(&playerData[i].ballID, ptr + offset, sizeof(playerData[i].ballID));
         offset += sizeof(playerData[i].ballID);
         stringSize -= sizeof(playerData[i].ballID);
