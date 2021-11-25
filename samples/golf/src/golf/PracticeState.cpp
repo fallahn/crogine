@@ -103,7 +103,7 @@ bool PracticeState::handleEvent(const cro::Event& evt)
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP
-        && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+        && evt.cbutton.which == cro::GameController::deviceID(/*m_sharedData.inputBinding.controllerID*/0))
     {
         if (evt.cbutton.button == cro::GameController::ButtonB)
         {
@@ -328,8 +328,8 @@ void PracticeState::buildScene()
             {
                 if (activated(evt))
                 {
-                    //requestStackClear();
-                    //requestStackPush(StateID::DrivingRange);
+                    requestStackClear();
+                    requestStackPush(StateID::DrivingRange);
                 }
             });
 

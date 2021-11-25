@@ -36,6 +36,7 @@ source distribution.
 #include "golf/TutorialState.hpp"
 #include "golf/KeyboardState.hpp"
 #include "golf/PracticeState.hpp"
+#include "golf/DrivingState.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
@@ -89,7 +90,7 @@ GolfGame::GolfGame()
     m_postProcessIndex  (0),
     m_activeIndex       (0)
 {
-    //must be sest before anything else cfg is still loaded from default path
+    //must be set before anything, else cfg is still loaded from default path
     setApplicationStrings("trederia", "golf");
 
     m_stateStack.registerState<SplashState>(StateID::SplashScreen);
@@ -101,6 +102,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<PauseState>(StateID::Pause, m_sharedData);
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
+    m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
 }
 
 //public

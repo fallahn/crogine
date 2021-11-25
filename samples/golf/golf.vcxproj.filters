@@ -174,6 +174,9 @@
     <ClCompile Include="src\golf\PracticeState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\DrivingState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -342,6 +345,9 @@
       <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\PracticeState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\DrivingState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
   </ItemGroup>

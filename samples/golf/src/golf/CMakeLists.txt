@@ -5,6 +5,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ClientCollisionSystem.cpp
   ${PROJECT_DIR}/golf/CollisionMesh.cpp
   ${PROJECT_DIR}/golf/DebugDraw.cpp
+  ${PROJECT_DIR}/golf/DrivingState.cpp
   ${PROJECT_DIR}/golf/ErrorState.cpp
   ${PROJECT_DIR}/golf/FpsCameraSystem.cpp
   ${PROJECT_DIR}/golf/GolfCartSystem.cpp

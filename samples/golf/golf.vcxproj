@@ -303,6 +303,7 @@
     <ClCompile Include="src\golf\ClientCollisionSystem.cpp" />
     <ClCompile Include="src\golf\CollisionMesh.cpp" />
     <ClCompile Include="src\golf\DebugDraw.cpp" />
+    <ClCompile Include="src\golf\DrivingState.cpp" />
     <ClCompile Include="src\golf\ErrorState.cpp" />
     <ClCompile Include="src\golf\FpsCameraSystem.cpp" />
     <ClCompile Include="src\golf\GolfCartSystem.cpp" />
@@ -349,6 +350,7 @@
     <ClInclude Include="src\golf\CommandIDs.hpp" />
     <ClInclude Include="src\golf\CommonConsts.hpp" />
     <ClInclude Include="src\golf\DebugDraw.hpp" />
+    <ClInclude Include="src\golf\DrivingState.hpp" />
     <ClInclude Include="src\golf\ErrorState.hpp" />
     <ClInclude Include="src\golf\FpsCameraSystem.hpp" />
     <ClInclude Include="src\golf\GameConsts.hpp" />

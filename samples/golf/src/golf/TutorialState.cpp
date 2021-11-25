@@ -124,7 +124,7 @@ bool TutorialState::handleEvent(const cro::Event& evt)
         case SDLK_PAUSE:
             requestStackPush(StateID::Pause);
             break;
-            //make sure sysem buttons don't do anything
+            //make sure system buttons don't do anything
         case SDLK_F1:
         case SDLK_F5:
 
