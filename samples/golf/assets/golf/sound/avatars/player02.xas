@@ -4,7 +4,7 @@ audioscape player02
     {
         path = "assets/golf/sound/avatars/bunker02.wav"
         streaming = false
-        volume = 1
+        volume = 0.6
         mixer_channel = 3
         attenuation = 0.06
         looped = false
@@ -14,7 +14,7 @@ audioscape player02
     {
         path = "assets/golf/sound/avatars/fairway02.wav"
         streaming = false
-        volume = 1
+        volume = 0.6
         mixer_channel = 3
         attenuation = 0.06
         looped = false
@@ -24,7 +24,7 @@ audioscape player02
     {
         path = "assets/golf/sound/avatars/green02.wav"
         streaming = false
-        volume = 1
+        volume = 0.6
         mixer_channel = 3
         attenuation = 0.06
         looped = false
@@ -34,7 +34,7 @@ audioscape player02
     {
         path = "assets/golf/sound/avatars/hook02.wav"
         streaming = false
-        volume = 1
+        volume = 0.6
         mixer_channel = 3
         attenuation = 0.06
         looped = false
@@ -44,7 +44,7 @@ audioscape player02
     {
         path = "assets/golf/sound/avatars/rough02.wav"
         streaming = false
-        volume = 1
+        volume = 0.6
         mixer_channel = 3
         attenuation = 0.06
         looped = false
@@ -54,7 +54,7 @@ audioscape player02
     {
         path = "assets/golf/sound/avatars/scrub02.wav"
         streaming = false
-        volume = 1
+        volume = 0.6
         mixer_channel = 3
         attenuation = 0.06
         looped = false
@@ -64,7 +64,7 @@ audioscape player02
     {
         path = "assets/golf/sound/avatars/slice02.wav"
         streaming = false
-        volume = 1
+        volume = 0.6
         mixer_channel = 3
         attenuation = 0.06
         looped = false
@@ -74,7 +74,7 @@ audioscape player02
     {
         path = "assets/golf/sound/avatars/water02.wav"
         streaming = false
-        volume = 1
+        volume = 0.6
         mixer_channel = 3
         attenuation = 0.06
         looped = false
