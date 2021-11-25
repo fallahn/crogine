@@ -787,12 +787,12 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         textPos.y -= LineSpacing;
 
-        //tutorial
+        //practice menu
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(textPos);
         entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString("Tutorial");
+        entity.addComponent<cro::Text>(font).setString("Practice");
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
@@ -802,48 +802,10 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
                 {
-                    //TODO check stuff like current connection status (must be disconnected)
-                    //and whether or not the tutorial course data exists.
                     if (activated(evt))
                     {
+                        requestStackPush(StateID::Practice);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                        m_sharedData.hosting = true;
-                        m_sharedData.tutorial = true;
-                        m_sharedData.localConnectionData.playerCount = 1;
-
-                        //start a local server and connect
-                        if (!m_sharedData.clientConnection.connected)
-                        {
-                            m_sharedData.serverInstance.launch();
-
-                            //small delay for server to get ready
-                            cro::Clock clock;
-                            while (clock.elapsed().asMilliseconds() < 500) {}
-
-                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
-
-                            if (!m_sharedData.clientConnection.connected)
-                            {
-                                m_sharedData.serverInstance.stop();
-                                m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
-                                    + std::to_string(ConstVal::GamePort)
-                                    + " is allowed through\nany firewalls or NAT";
-                                requestStackPush(StateID::Error); //error makes sure to reset any connection
-                            }
-                            else
-                            {
-                                m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
-                                m_sharedData.mapDirectory = "tutorial";
-
-                                //set the course to tutorial
-                                auto data = serialiseString(m_sharedData.mapDirectory);
-                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
-
-                                //now we wait for the server to send us the map name so we know the tutorial
-                                //course has been set. Then the network event handler launches the game.
-                            }
-                        }
                     }
                 });
         bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

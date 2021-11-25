@@ -1,5 +1,6 @@
 avatar
 {
     sprite = "assets/golf/sprites/player03.spt"
+    audio = "assets/golf/sound/avatars/player02.xas"
     uid = 13
 }

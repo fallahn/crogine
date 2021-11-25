@@ -805,16 +805,23 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 auto buffer = m_sharedData.localConnectionData.serialise();
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
-                //switch to lobby view
-                cro::Command cmd;
-                cmd.targetFlags = CommandID::Menu::RootNode;
-                cmd.action = [&](cro::Entity e, float)
+                if (m_sharedData.tutorial)
                 {
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-                    m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
-                    m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
-                };
-                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+                else
+                {
+                    //switch to lobby view
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::Menu::RootNode;
+                    cmd.action = [&](cro::Entity e, float)
+                    {
+                        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+                        m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
+                        m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+                    };
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                }
 
                 if (m_sharedData.serverInstance.running())
                 {
@@ -882,7 +889,8 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             //if that's what's set
             if (course == "tutorial")
             {
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                //moved to connection accepted - must happen after sending player info
+                //m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             else
             {

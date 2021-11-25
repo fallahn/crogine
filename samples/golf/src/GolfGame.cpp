@@ -35,6 +35,7 @@ source distribution.
 #include "golf/PauseState.hpp"
 #include "golf/TutorialState.hpp"
 #include "golf/KeyboardState.hpp"
+#include "golf/PracticeState.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
@@ -99,6 +100,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
     m_stateStack.registerState<PauseState>(StateID::Pause, m_sharedData);
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
+    m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
 }
 
 //public

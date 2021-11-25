@@ -1,8 +1,8 @@
-audioscape player01
+audioscape player02
 {
     emitter bunker
     {
-        path = "assets/golf/sound/avatars/bunker01.wav"
+        path = "assets/golf/sound/avatars/bunker02.wav"
         streaming = false
         volume = 1
         mixer_channel = 3
@@ -12,7 +12,7 @@ audioscape player01
 
     emitter fairway
     {
-        path = "assets/golf/sound/avatars/fairway01.wav"
+        path = "assets/golf/sound/avatars/fairway02.wav"
         streaming = false
         volume = 1
         mixer_channel = 3
@@ -22,7 +22,7 @@ audioscape player01
 
     emitter green
     {
-        path = "assets/golf/sound/avatars/green01.wav"
+        path = "assets/golf/sound/avatars/green02.wav"
         streaming = false
         volume = 1
         mixer_channel = 3
@@ -32,7 +32,7 @@ audioscape player01
 
     emitter hook
     {
-        path = "assets/golf/sound/avatars/hook01.wav"
+        path = "assets/golf/sound/avatars/hook02.wav"
         streaming = false
         volume = 1
         mixer_channel = 3
@@ -42,7 +42,7 @@ audioscape player01
 
     emitter rough
     {
-        path = "assets/golf/sound/avatars/rough01.wav"
+        path = "assets/golf/sound/avatars/rough02.wav"
         streaming = false
         volume = 1
         mixer_channel = 3
@@ -52,7 +52,7 @@ audioscape player01
 
     emitter scrub
     {
-        path = "assets/golf/sound/avatars/scrub01.wav"
+        path = "assets/golf/sound/avatars/scrub02.wav"
         streaming = false
         volume = 1
         mixer_channel = 3
@@ -62,7 +62,7 @@ audioscape player01
 
     emitter slice
     {
-        path = "assets/golf/sound/avatars/slice01.wav"
+        path = "assets/golf/sound/avatars/slice02.wav"
         streaming = false
         volume = 1
         mixer_channel = 3
@@ -72,7 +72,7 @@ audioscape player01
 
     emitter water
     {
-        path = "assets/golf/sound/avatars/water01.wav"
+        path = "assets/golf/sound/avatars/water02.wav"
         streaming = false
         volume = 1
         mixer_channel = 3
