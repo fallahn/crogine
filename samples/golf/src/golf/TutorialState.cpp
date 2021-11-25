@@ -336,7 +336,7 @@ void TutorialState::buildScene()
 
 
     //create the layout depending on the requested tutorial
-    switch (m_sharedData.tutorialIndex)
+    switch (/*m_sharedData.tutorialIndex*/3)
     {
     default:
         quitState();
@@ -1605,6 +1605,23 @@ void TutorialState::tutorialFour(cro::Entity root)
         }
     };
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto lineEnt = entity;
+
+    //line background
+    /*auto colour = TextNormalColour;
+    colour.setAlpha(0.5f);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, -0.1f});
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(-62.f, 7.f), colour),
+        cro::Vertex2D(glm::vec2(-62.f, -7.f), colour),
+        cro::Vertex2D(glm::vec2(60.f, 7.f), colour),
+        cro::Vertex2D(glm::vec2(60.f, -7.f), colour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    lineEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
 
 
     //second tip text

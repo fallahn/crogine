@@ -819,6 +819,10 @@ void GolfState::loadAssets()
         m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape(avatar.audioscape, m_resources.audio);
     }
 
+    //TODO we don't actually need to load *every* sprite sheet, just look up the index first
+    //and load it as necessary...
+    //however: while it may load unnecessary audioscapes, it does ensure they are loaded in the correct order :S
+
     //copy into active player slots
     auto indexFromSkinID = [&](std::uint8_t skinID)->std::size_t
     {
@@ -1620,7 +1624,7 @@ void GolfState::buildScene()
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<FpsCamera>();
-    setPerspective(camEnt.getComponent<cro::Camera>());
+    //setPerspective(camEnt.getComponent<cro::Camera>());
     m_freeCam = camEnt;
 #endif
 

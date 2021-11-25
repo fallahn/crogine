@@ -491,7 +491,7 @@ bool GolfGame::initialise()
     m_activeIndex = m_postProcessIndex;
 
 #ifdef CRO_DEBUG_
-    //m_stateStack.pushState(StateID::Keyboard);
+    //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
     m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::SplashScreen);
 #else

@@ -1,0 +1,16 @@
+model driving_range
+{
+    mesh = "assets/golf/models/driving_range.cmb"
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        blendmode = "none"
+        diffuse = "assets/golf/images/stripes.png"
+
+    }
+}

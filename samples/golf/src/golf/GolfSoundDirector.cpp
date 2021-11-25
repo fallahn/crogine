@@ -322,7 +322,7 @@ void GolfSoundDirector::setActivePlayer(std::size_t client, std::size_t player)
 //private
 cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, float volume)
 {
-    static const auto playDefault = [&]()
+    const auto playDefault = [&, id, volume, position]()
     {
         auto ent = getNextEntity();
         ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
@@ -333,7 +333,7 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
         return ent;
     };
 
-    static const auto playSpecial = [&]()
+    const auto playSpecial = [&, id, volume, position]()
     {
         if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
         {

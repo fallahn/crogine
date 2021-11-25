@@ -30,13 +30,18 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "CameraFollowSystem.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+
+#include <crogine/detail/glm/vec2.hpp>
 
 struct SharedStateData;
-class DrivingState final : public cro::State
+class DrivingState final : public cro::State, public cro::GuiClient
 {
 public:
     DrivingState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -53,11 +58,32 @@ private:
 
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
+    glm::vec2 m_viewScale;
 
     cro::ResourceCollection m_resources;
+    cro::RenderTexture m_backgroundTexture;
+
+    struct MaterialID final
+    {
+        enum
+        {
+            Cel,
+            CelTextured,
+
+            Count
+        };
+    };
+    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
+
+    std::array<cro::Entity, CameraID::Count> m_cameras = {};
+
+    cro::Entity m_defaultCam;
+    cro::Entity m_freeCam;
+    void toggleFreeCam();
 
     void addSystems();
     void loadAssets();
     void createScene();
     void createUI();
+    void createPlayer(cro::Entity);
 };
