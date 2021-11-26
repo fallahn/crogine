@@ -271,7 +271,7 @@ void PracticeState::buildScene()
     };
 
     //tutorial button
-    entity = createItem(glm::vec2(0.f, 10.f), "Tutorial", menuEntity);
+    entity = createItem(glm::vec2(0.f, 16.f), "Tutorial", menuEntity);
     entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) 
@@ -322,7 +322,7 @@ void PracticeState::buildScene()
             });
 
     //driving range
-    entity = createItem(glm::vec2(0.f), "Driving Range", menuEntity);
+    entity = createItem(glm::vec2(0.f, 6.f), "Driving Range", menuEntity);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -334,7 +334,7 @@ void PracticeState::buildScene()
             });
 
     //back button
-    entity = createItem(glm::vec2(0.f, -10.f), "Back", menuEntity);
+    entity = createItem(glm::vec2(0.f, -16.f), "Back", menuEntity);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
             {

@@ -205,20 +205,6 @@ void GolfState::buildUI()
     entity.addComponent<UIElement>().relativePosition = ClubTextPosition;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-    //entity.addComponent<cro::Callback>().active = true;
-    //entity.getComponent<cro::Callback>().function =
-    //    [&](cro::Entity e, float)
-    //{
-    //    //TODO would this work better on the club changed callback?
-    //    /*if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
-    //    {
-    //        e.getComponent<cro::Text>().setString(Clubs[getClub()].name);
-    //    }
-    //    else
-    //    {
-    //        e.getComponent<cro::Text>().setString(" ");
-    //    }*/
-    //};
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //current stroke
@@ -637,7 +623,7 @@ void GolfState::buildUI()
         playerEnt.getComponent<cro::Transform>().setPosition(pos);
 
         //update minimap
-        auto uiSize = size / m_viewScale;
+        const auto uiSize = size / m_viewScale;
         auto mapSize = glm::vec2(MapSize / 2u);
         mapSize /= 2.f;
         mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y, uiSize.y - (mapSize.x) - (UIBarHeight * 1.5f) }); //map sprite is rotated 90
@@ -664,14 +650,6 @@ void GolfState::buildUI()
             cro::Vertex2D(glm::vec2(0.f, uiSize.y - UIBarHeight), colour),
             cro::Vertex2D(uiSize, colour),
             cro::Vertex2D(glm::vec2(uiSize.x, uiSize.y - UIBarHeight), colour),
-            ////degen
-            //cro::Vertex2D(glm::vec2(uiSize.x, uiSize.y - UIBarHeight), cro::Colour::Transparent),
-            //cro::Vertex2D(glm::vec2(uiSize.x - mapSize.y, uiSize.y - UIBarHeight), cro::Colour::Transparent),
-            ////side bar
-            //cro::Vertex2D(glm::vec2(uiSize.x - (mapSize.y * 2.f), uiSize.y - UIBarHeight), colour),
-            //cro::Vertex2D(glm::vec2(uiSize.x - (mapSize.y * 2.f), UIBarHeight), colour),
-            //cro::Vertex2D(glm::vec2(uiSize.x, uiSize.y - UIBarHeight), colour),
-            //cro::Vertex2D(glm::vec2(uiSize.x, UIBarHeight), colour)
         };
         infoEnt.getComponent<cro::Drawable2D>().updateLocalBounds();
         infoEnt.getComponent<cro::Transform>().setScale(m_viewScale);

@@ -86,4 +86,26 @@ private:
     void createScene();
     void createUI();
     void createPlayer(cro::Entity);
+
+    struct TransitionData final
+    {
+        cro::Entity courseEnt;
+    }m_transitionData;
+    void startTransition();
+    void updateWindDisplay(glm::vec3);
+
+    struct SpriteID final
+    {
+        enum
+        {
+            PowerBar,
+            PowerBarInner,
+            HookBar,
+            WindIndicator,
+            MessageBoard,
+
+            Count
+        };
+    };
+    std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 };
