@@ -336,7 +336,7 @@ void TutorialState::buildScene()
 
 
     //create the layout depending on the requested tutorial
-    switch (/*m_sharedData.tutorialIndex*/3)
+    switch (m_sharedData.tutorialIndex)
     {
     default:
         quitState();
@@ -1608,20 +1608,33 @@ void TutorialState::tutorialFour(cro::Entity root)
     auto lineEnt = entity;
 
     //line background
-    /*auto colour = TextNormalColour;
-    colour.setAlpha(0.5f);
+    auto colour = cro::Colour(0.576f,0.671f,0.322f, 0.8f);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, -0.1f});
+    entity.getComponent<cro::Transform>().setScale({ 1.f, 0.f });
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
-        cro::Vertex2D(glm::vec2(-62.f, 7.f), colour),
-        cro::Vertex2D(glm::vec2(-62.f, -7.f), colour),
-        cro::Vertex2D(glm::vec2(60.f, 7.f), colour),
-        cro::Vertex2D(glm::vec2(60.f, -7.f), colour)
+        cro::Vertex2D(glm::vec2(-64.f, 16.f), colour),
+        cro::Vertex2D(glm::vec2(-64.f, -16.f), colour),
+        cro::Vertex2D(glm::vec2(64.f, 16.f), colour),
+        cro::Vertex2D(glm::vec2(64.f, -16.f), colour)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
-    lineEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto scale = e.getComponent<cro::Transform>().getScale();
+        scale.y = std::min(1.f, scale.y + dt);
+        e.getComponent<cro::Transform>().setScale(scale);
+
+        if (scale.y == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
+    lineEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //second tip text
