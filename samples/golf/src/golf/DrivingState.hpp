@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "CameraFollowSystem.hpp"
+#include "InputParser.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -55,6 +56,7 @@ public:
 
 private:
     SharedStateData& m_sharedData;
+    InputParser m_inputParser;
 
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;

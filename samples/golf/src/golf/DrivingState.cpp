@@ -87,6 +87,7 @@ namespace
 DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State    (stack, context),
     m_sharedData    (sd),
+    m_inputParser   (sd.inputBinding, context.appInstance.getMessageBus()),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
     m_viewScale     (1.f)
@@ -169,6 +170,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
 #endif
 
+    m_inputParser.handleEvent(evt);
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
     return true;
@@ -184,6 +186,7 @@ bool DrivingState::simulate(float dt)
 {
     updateWindDisplay(glm::vec3(1.f, 1.f, 0.f));
 
+    m_inputParser.update(dt);
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -215,7 +218,7 @@ void DrivingState::toggleFreeCam()
     }
 
     m_gameScene.setSystemActive<FpsCameraSystem>(useFreeCam);
-    //m_inputParser.setActive(!useFreeCam);
+    m_inputParser.setActive(!useFreeCam);
     cro::App::getWindow().setMouseCaptured(useFreeCam);
 #endif
 }
@@ -575,7 +578,7 @@ void DrivingState::createUI()
         [&, bounds](cro::Entity e, float)
     {
         auto crop = bounds;
-        //crop.width *= m_inputParser.getPower();
+        crop.width *= m_inputParser.getPower();
         e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -591,7 +594,7 @@ void DrivingState::createUI()
     entity.getComponent<cro::Callback>().function =
         [&, barCentre](cro::Entity e, float)
     {
-        glm::vec3 pos(barCentre + (barCentre /** m_inputParser.getHook()*/), 8.f, 0.1f);
+        glm::vec3 pos(barCentre + (barCentre * m_inputParser.getHook()), 8.f, 0.1f);
         e.getComponent<cro::Transform>().setPosition(pos);
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -723,8 +726,6 @@ void DrivingState::startTransition()
 {
     //m_transitionData.courseEnt.getComponent<cro::Callback>().active = true;
     m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
-
-
 
     //scanlines drawn over the UI
     glm::vec2 screenSize(cro::App::getWindow().getSize());
