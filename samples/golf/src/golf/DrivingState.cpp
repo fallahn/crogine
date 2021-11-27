@@ -449,7 +449,10 @@ void DrivingState::createScene()
 #endif
 
 
-    //TODO emulate facing north with sun more or less behind player
+    //emulate facing north with sun more or less behind player
+    auto sunEnt = m_gameScene.getSunlight();
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -35.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -35.f * cro::Util::Const::degToRad);
 }
 
 void DrivingState::createUI()

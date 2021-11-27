@@ -42,7 +42,7 @@ Holes
 -----
 Holes actually consist of multiple files. Full details of these files are explained in course_format.md, and can mostly be created in Blender. Hole geometry is expected to have textured materials, and vertex colours are used for creating collision data. Collision colours (listed below) can be loaded into Blender by enabling the import-export palette add-on from Preferences->Add-ons. It is then possible to import either collision_colours.ase or collision_colours.kpl for use in vertex painting. Each terrain type in the geometry should have its own material assigned (each of which can of course share a single texture) so that when the model is loaded into the game the collision geometry can be correctly broken down by terrain type. See the hole_template.blend file for an example of this.
 
-As a rule of thumb try not to make the green larger than approximately 10m radius from the hole. Greens larger than this require long tedious putts, which can infuriate the player!
+As a rule of thumb try not to make the green larger than approximately 100m^2, or approximately 5.64m radius from the hole. Greens larger than this require long tedious putts, which can infuriate the player! For an interesting insight into golf course design Sport Scotland offer this document: https://sportscotland.org.uk/media-imported/791088/802-golf-development-centre.pdf
 
 The surrounding terrain can be created by sculpting a sub-divided plane and baking the height values to a texture. This texture is then stored in the green channel of the associated map image file. See course_format.md and hole_template.blend for more details.
 
