@@ -1,0 +1,19 @@
+course course_02
+{
+    skybox = "assets/golf/images/skybox/spring/sky.ccm"
+    billboard_model = "assets/golf/models/shrubbery.cmt"
+    billboard_sprites = "assets/golf/sprites/shrubbery.spt"
+
+    title = "St. Billybob's links, Isle of Wibble"
+    description = "This is the front 9 holes"
+
+    hole = "assets/golf/courses/course_01/01.hole"
+    hole = "assets/golf/courses/course_01/02.hole"
+    hole = "assets/golf/courses/course_01/03.hole"
+    hole = "assets/golf/courses/course_01/04.hole"
+    hole = "assets/golf/courses/course_01/05.hole"
+    hole = "assets/golf/courses/course_01/06.hole"
+    hole = "assets/golf/courses/course_01/07.hole"
+    hole = "assets/golf/courses/course_01/08.hole"
+    hole = "assets/golf/courses/course_01/09.hole"
+}
