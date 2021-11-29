@@ -1571,6 +1571,7 @@ void GolfState::buildScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
+    camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 80.f * 80.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
@@ -1592,6 +1593,7 @@ void GolfState::buildScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
+    camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 30.f * 30.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
@@ -1606,6 +1608,7 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = updateView;
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
+    camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     updateView(camEnt.getComponent<cro::Camera>());
@@ -1622,6 +1625,7 @@ void GolfState::buildScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
+    camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<FpsCamera>();
     //setPerspective(camEnt.getComponent<cro::Camera>());
@@ -3056,6 +3060,7 @@ void GolfState::setActiveCamera(std::int32_t camID)
             waterEnt = m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane;
             m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = {};
         }
+        m_cameras[m_currentCamera].getComponent<cro::Camera>().active = false;
 
         if (camID == CameraID::Player)
         {
@@ -3069,6 +3074,7 @@ void GolfState::setActiveCamera(std::int32_t camID)
         m_currentCamera = camID;
 
         m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = waterEnt;
+        m_cameras[m_currentCamera].getComponent<cro::Camera>().active = true;
 
         //hide player based on cam id
         cro::Command cmd;
@@ -3110,16 +3116,21 @@ void GolfState::toggleFreeCam()
     if (useFreeCam)
     {
         m_defaultCam = m_gameScene.setActiveCamera(m_freeCam);
+        m_defaultCam.getComponent<cro::Camera>().active = false;
         m_gameScene.setActiveListener(m_freeCam);
 
         auto tx = glm::lookAt(m_currentPlayer.position + glm::vec3(0.f, 3.f, 0.f), m_holeData[m_currentHole].pin, glm::vec3(0.f, 1.f, 0.f));
         m_freeCam.getComponent<cro::Transform>().setLocalTransform(glm::inverse(tx));
         m_freeCam.getComponent<FpsCamera>().resetOrientation(m_freeCam);
+        m_freeCam.getComponent<cro::Camera>().active = true;
     }
     else
     {
         m_gameScene.setActiveCamera(m_defaultCam);
         m_gameScene.setActiveListener(m_defaultCam);
+
+        m_defaultCam.getComponent<cro::Camera>().active = true;
+        m_freeCam.getComponent<cro::Camera>().active = false;
     }
 
     m_gameScene.setSystemActive<FpsCameraSystem>(useFreeCam);

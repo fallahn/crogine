@@ -308,7 +308,10 @@ namespace cro
 
         /*!
         \brief If this is set to false the CameraSystem will ignore
-        this Camera component.
+        this Camera component. Setting this to false on Camera components
+        in a Scene which are currently not used (eg when switching between
+        views) can improve performance as the Camera's draw list / frustum
+        culling will not be updated unnecesarily.
         */
         bool active = true;
 
