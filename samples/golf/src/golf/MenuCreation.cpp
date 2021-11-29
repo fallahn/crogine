@@ -3093,6 +3093,7 @@ void MenuState::loadAvatars()
                         m_sharedData.localConnectionData.playerData[i].avatarFlags[3] = static_cast<std::uint8_t>(flag);
                     }
                 }
+
                 i++;
             }
         }

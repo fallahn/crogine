@@ -121,7 +121,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
     //remap the selected ball model indices - this is always applied
     //as the avatar IDs are loaded from the config, above
-    for (auto i = 0u; i < 4u; ++i)
+    for (auto i = 0u; i < ConnectionData::MaxPlayers; ++i)
     {
         auto idx = indexFromBallID(m_sharedData.localConnectionData.playerData[i].ballID);
 
@@ -133,6 +133,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             m_sharedData.localConnectionData.playerData[i].ballID = 0;
         }
+        applyAvatar(i);
     }
 
     //reset the state if we came from the tutorial (this is
@@ -238,6 +239,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         }
         m_sharedData.hosting = false;
     }
+
+
 
 #ifdef CRO_DEBUG_
     //registerWindow([&]() 

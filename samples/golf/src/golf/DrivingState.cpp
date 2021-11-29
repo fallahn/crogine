@@ -93,7 +93,7 @@ namespace
         FoliageCallback(float d = 0.f) : delay(d + 6.f) {} //magic number is some delay before effect starts
         float delay = 0.f;
         float progress = 0.f;
-        static constexpr float Distance = 12.f;
+        static constexpr float Distance = 14.f;
 
         void operator() (cro::Entity e, float dt)
         {
@@ -139,8 +139,10 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
         {
             if (ImGui::Begin("Window"))
             {
-                /*auto camPos = m_freeCam.getComponent<cro::Transform>().getPosition();
-                ImGui::Text("Cam pos %3.3f, %3.3f, %3.3f", camPos.x, camPos.y, camPos.z);*/
+                ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][0].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
+                ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][1].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
+                ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][2].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
+                ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][3].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});                
             }
             ImGui::End();
         });

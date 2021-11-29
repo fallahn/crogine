@@ -46,6 +46,7 @@ source distribution.
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
@@ -55,6 +56,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
@@ -146,6 +148,7 @@ void PauseState::buildScene()
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
+    m_scene.addSystem<cro::SpriteAnimator>(mb);
     m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
@@ -254,11 +257,32 @@ void PauseState::buildScene()
     confirmEntity.addComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
     rootNode.getComponent<cro::Transform>().addChild(confirmEntity.getComponent<cro::Transform>());
 
+    /*spriteSheet.loadFromFile("assets/golf/sprites/main_menu.spt", m_sharedData.sharedResources->textures);
+    auto cursorEnt = m_scene.createEntity();
+    cursorEnt.addComponent<cro::Transform>();
+    cursorEnt.addComponent<cro::Drawable2D>();
+    cursorEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("cursor");
+    cursorEnt.addComponent<cro::SpriteAnimation>().play(0);
+    menuEntity.getComponent<cro::Transform>().addChild(cursorEnt.getComponent<cro::Transform>());*/
+
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
 
-    auto selectedID = uiSystem.addCallback([](cro::Entity e) { e.getComponent<cro::Text>().setFillColour(TextHighlightColour); e.getComponent<cro::AudioEmitter>().play(); });
-    auto unselectedID = uiSystem.addCallback([](cro::Entity e) { e.getComponent<cro::Text>().setFillColour(TextNormalColour); });
+    auto selectedID = uiSystem.addCallback(
+        [/*cursorEnt*/](cro::Entity e) mutable
+        {
+            e.getComponent<cro::Text>().setFillColour(TextHighlightColour); 
+            e.getComponent<cro::AudioEmitter>().play(); 
+
+            /*auto pos = e.getComponent<cro::Transform>().getPosition();
+            pos.x = -40.f;
+            cursorEnt.getComponent<cro::Transform>().setPosition(pos);*/
+        });
+    auto unselectedID = uiSystem.addCallback(
+        [](cro::Entity e) 
+        { 
+            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        });
     
     auto createItem = [&](glm::vec2 position, const std::string label, cro::Entity parent) 
     {
