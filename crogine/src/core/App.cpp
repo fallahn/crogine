@@ -399,33 +399,41 @@ void App::handleEvents()
         {
         default: break;
         case SDL_KEYUP:
-            if (evt.key.keysym.sym == SDLK_F1)
+            switch (evt.key.keysym.sym)
             {
+            default: break;
+            case SDLK_F1:
                 Console::show();
                 if (!Console::isVisible())
                 {
                     saveSettings();
                 }
-            }
-            else if (evt.key.keysym.sym == SDLK_F5)
-            {
-                saveScreenshot();
-            }
-            else if (evt.key.keysym.sym == SDLK_RETURN
-                && evt.key.keysym.mod & KMOD_ALT)
-            {
-                auto fs = m_window.isFullscreen();
-                fs = !fs;
-                m_window.setFullScreen(fs);
-                
-                //hack to hide console if it's open as the full screen
-                //checkbox won't be updated
-                if (Console::isVisible())
+                break;
+            case SDLK_F4:
+                if (evt.key.keysym.mod & KMOD_ALT)
                 {
-                    Console::show();
+                    quit();
                 }
-            }
+                break;
+            case SDLK_F5:
+                saveScreenshot();
+                break;
+            case SDLK_RETURN:
+                if (evt.key.keysym.mod & KMOD_ALT)
+                {
+                    auto fs = m_window.isFullscreen();
+                    fs = !fs;
+                    m_window.setFullScreen(fs);
 
+                    //hack to hide console if it's open as the full screen
+                    //checkbox won't be updated
+                    if (Console::isVisible())
+                    {
+                        Console::show();
+                    }
+                }
+                break;
+            }
             break;
         case SDL_QUIT:
             quit();
