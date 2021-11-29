@@ -33,6 +33,7 @@ source distribution.
 #include "CameraFollowSystem.hpp"
 #include "InputParser.hpp"
 #include "HoleData.hpp"
+#include "Billboard.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -78,11 +79,12 @@ private:
     };
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
-    std::array<cro::Entity, CameraID::Count> m_cameras = {};
-
 
     std::vector<HoleData> m_holeData;
+    std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
 
+
+    std::array<cro::Entity, CameraID::Count> m_cameras = {};
 
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;
@@ -94,12 +96,9 @@ private:
     void createUI();
     void createPlayer(cro::Entity);
 
-    struct TransitionData final
-    {
-        cro::Entity courseEnt;
-    }m_transitionData;
     void startTransition();
     void updateWindDisplay(glm::vec3);
+    void showGameOptions();
 
     struct SpriteID final
     {

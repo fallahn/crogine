@@ -267,7 +267,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         if (billboardDef.loadFromFile(theme.billboardModel))
         {
             //TODO if this fails to load we won't crash but the terrain
-            //transition won't complete either so the gam eeffectively gets stuck
+            //transition won't complete either so the game effectively gets stuck
 
             entity = scene.createEntity();
             entity.addComponent<cro::Transform>().setPosition({ 0.f, -MaxShrubOffset, 0.f });

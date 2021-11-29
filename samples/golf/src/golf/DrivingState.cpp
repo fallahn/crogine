@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "DrivingState.hpp"
+#include "PoissonDisk.hpp"
 #include "SharedStateData.hpp"
 #include "GameConsts.hpp"
 #include "CommandIDs.hpp"
@@ -83,6 +84,36 @@ namespace
     constexpr glm::vec3 PlayerPosition(0.f, 0.f, 123.f);
     constexpr glm::vec3 CameraPosition = PlayerPosition + glm::vec3(0.f, CameraStrokeHeight, CameraStrokeOffset);
     constexpr glm::vec2 RangeSize(200.f, 250.f);
+
+    constexpr glm::vec2 BillboardChunk(40.f, 50.f);
+    constexpr std::size_t ChunkCount = 5;
+
+    struct FoliageCallback final
+    {
+        FoliageCallback(float d = 0.f) : delay(d + 6.f) {} //magic number is some delay before effect starts
+        float delay = 0.f;
+        float progress = 0.f;
+        static constexpr float Distance = 12.f;
+
+        void operator() (cro::Entity e, float dt)
+        {
+            delay -= (dt * 4.f); 
+
+            if (delay < 0)
+            {
+                progress = std::min(1.f, progress + dt);
+
+                auto pos = e.getComponent<cro::Transform>().getPosition();
+                pos.y = (cro::Util::Easing::easeInOutQuint(progress) - 1.f) * Distance;
+                e.getComponent<cro::Transform>().setPosition(pos);
+
+                if (progress == 1)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            }
+        }
+    };
 }
 
 DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -264,9 +295,23 @@ void DrivingState::loadAssets()
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Cel));
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(m_resources.shaders.get(ShaderID::CelTextured));
 
+    //load the billboard rects from a sprite sheet and convert to templates
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", m_resources.textures);
+    m_billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
+    m_billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
+    m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("flowers01"));
+    m_billboardTemplates[BillboardID::Flowers02] = spriteToBillboard(spriteSheet.getSprite("flowers02"));
+    m_billboardTemplates[BillboardID::Flowers03] = spriteToBillboard(spriteSheet.getSprite("flowers03"));
+    m_billboardTemplates[BillboardID::Bush01] = spriteToBillboard(spriteSheet.getSprite("hedge01"));
+    m_billboardTemplates[BillboardID::Bush02] = spriteToBillboard(spriteSheet.getSprite("hedge02"));
+
+    m_billboardTemplates[BillboardID::Tree01] = spriteToBillboard(spriteSheet.getSprite("tree01"));
+    m_billboardTemplates[BillboardID::Tree02] = spriteToBillboard(spriteSheet.getSprite("tree02"));
+    m_billboardTemplates[BillboardID::Tree03] = spriteToBillboard(spriteSheet.getSprite("tree03"));
+    m_billboardTemplates[BillboardID::Tree04] = spriteToBillboard(spriteSheet.getSprite("tree04"));
 
     //UI stuff
-    cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
     m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar");
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner");
@@ -370,25 +415,9 @@ void DrivingState::createScene()
     setTexture(md, texturedMat);
 
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();// .setScale(glm::vec3(0.f));
+    entity.addComponent<cro::Transform>();
     md.createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
-    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
-    entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
-    {
-        auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
-        progress = std::min(1.f, progress + (dt / 2.f));
-
-        float scale = cro::Util::Easing::easeOutCirc(progress);
-        e.getComponent<cro::Transform>().setScale(glm::vec3(scale, 1.f, scale));
-
-        if (progress == 1)
-        {
-            e.getComponent<cro::Callback>().active = false;
-        }
-    };
-    m_transitionData.courseEnt = entity;
 
 
     //tee marker
@@ -398,6 +427,70 @@ void DrivingState::createScene()
     entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
     md.createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+
+
+    //create the billboards
+    auto createBillboards = [&](cro::Entity dst, std::array<float,2u> minBounds, std::array<float, 2u> maxBounds)
+    {
+        auto trees = pd::PoissonDiskSampling(4.f, minBounds, maxBounds);
+        auto flowers = pd::PoissonDiskSampling(2.f, minBounds, maxBounds);
+        std::vector<cro::Billboard> billboards;
+
+        for (auto [x, y] : trees)
+        {
+            float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+            auto& bb = billboards.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)]);
+            bb.position = { x, -0.05f, -y }; //small vertical offset to stop floating billboards
+            bb.size *= scale;
+        }
+
+        for (auto [x, y] : flowers)
+        {
+            float scale = static_cast<float>(cro::Util::Random::value(13, 17)) / 10.f;
+
+            auto& bb = billboards.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Bush02)]);
+            bb.position = { x, 0.05f, -y };
+            bb.size *= scale;
+        }
+        dst.getComponent<cro::BillboardCollection>().setBillboards(billboards);
+    };
+
+    //sides
+    for (auto i = 0u; i < ChunkCount; ++i)
+    {
+        glm::vec3 pos = { (-RangeSize.x / 2.f) - BillboardChunk.x, -FoliageCallback::Distance, (i * -BillboardChunk.y) + (RangeSize.y / 2.f) };
+        for (auto j = 0u; j < 2u; ++j)
+        {
+            md.loadFromFile("assets/golf/models/shrubbery.cmt");
+
+            entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(pos);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function = FoliageCallback(i);
+            md.createModel(entity);
+
+            if (entity.hasComponent<cro::BillboardCollection>())
+            {
+                static constexpr std::array MinBounds = { 0.f, 0.f };
+                static constexpr std::array MaxBounds = { BillboardChunk.x, BillboardChunk.y };
+                createBillboards(entity, MinBounds, MaxBounds);
+            }
+
+            pos.x += RangeSize.x + BillboardChunk.x;
+        }
+    }
+
+    //end range of trees
+    md.loadFromFile("assets/golf/models/shrubbery.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (-RangeSize.x / 2.f) - BillboardChunk.x, -FoliageCallback::Distance, (-RangeSize.y / 2.f) });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = FoliageCallback(ChunkCount);
+    md.createModel(entity);
+    if (entity.hasComponent<cro::BillboardCollection>())
+    {
+        createBillboards(entity, { 0.f, 0.f }, { RangeSize.x + (BillboardChunk.x * 2.f), BillboardChunk.x});
+    }
 
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
@@ -453,10 +546,10 @@ void DrivingState::createScene()
     auto eyeSize = halfSize / 2.f;
     std::array<std::pair<glm::vec3, glm::vec3>, 4u> positions =
     {
-        std::make_pair(glm::vec3(eyeSize.x, 20.f, eyeSize.y), glm::vec3(halfSize.x, 2.f, halfSize.y)),
-        std::make_pair(glm::vec3(-eyeSize.x, 20.f, eyeSize.y), glm::vec3(-halfSize.x, 2.f, halfSize.y)),
-        std::make_pair(glm::vec3(-eyeSize.x, 30.f, -eyeSize.y), glm::vec3(-halfSize.x, 2.f, -halfSize.y)),
-        std::make_pair(glm::vec3(0.f, 50.f, 0.f), glm::vec3(0.f, 2.f, -halfSize.y))
+        std::make_pair(glm::vec3(eyeSize.x, 10.f, eyeSize.y), glm::vec3(halfSize.x, 2.f, halfSize.y)),
+        std::make_pair(glm::vec3(-eyeSize.x, 10.f, eyeSize.y), glm::vec3(-halfSize.x, 2.f, halfSize.y)),
+        std::make_pair(glm::vec3(-eyeSize.x, 14.f, -eyeSize.y), glm::vec3(-halfSize.x, 2.f, -halfSize.y)),
+        std::make_pair(glm::vec3(0.f, 20.f, 0.f), glm::vec3(0.f, 2.f, -halfSize.y))
     };
 
     for (auto i = 0u; i < positions.size(); ++i)
@@ -486,12 +579,14 @@ void DrivingState::createScene()
 
         auto& camTx = e.getComponent<cro::Transform>();
 
-        auto rot = glm::slerp(glm::quat_cast(data.targets[data.currentTarget]), glm::quat_cast(data.targets[data.currentTarget + 1]), data.progress);
+        auto progress = cro::Util::Easing::easeInOutSine(data.progress);
+
+        auto rot = glm::slerp(glm::quat_cast(data.targets[data.currentTarget]), glm::quat_cast(data.targets[data.currentTarget + 1]), progress);
         camTx.setRotation(rot);
 
         auto pos = interpolate(glm::vec3(data.targets[data.currentTarget][3]),
             glm::vec3(data.targets[data.currentTarget + 1][3]),
-            cro::Util::Easing::easeInOutSine(data.progress));
+            progress);
         camTx.setPosition(pos);
 
         if (data.progress == 1)
@@ -503,7 +598,7 @@ void DrivingState::createScene()
             if (data.currentTarget == data.targets.size() - 1)
             {
                 e.getComponent<cro::Callback>().active = false;
-                //TODO raise message to say transition completed
+                showGameOptions();
 
                 //position player sprite
                 cro::Command cmd;
@@ -811,7 +906,6 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
 void DrivingState::startTransition()
 {
-    //m_transitionData.courseEnt.getComponent<cro::Callback>().active = true;
     m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
 
     //scanlines drawn over the UI
@@ -911,4 +1005,111 @@ void DrivingState::updateWindDisplay(glm::vec3 direction)
     //    e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
     //};
     //m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+}
+
+void DrivingState::showGameOptions()
+{
+    auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();
+    auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
+    auto position = glm::vec3(size.x / 2.f, size.y / 2.f, 0.05f);
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MessageBoard];
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard;
+
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto textEnt = m_uiScene.createEntity();
+    textEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 58.f, 0.02f });
+    textEnt.addComponent<cro::Drawable2D>();
+    textEnt.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    textEnt.getComponent<cro::Text>().setString("Shots:");
+
+    auto textEnt2 = m_uiScene.createEntity();
+    textEnt2.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 32.f, 0.02f });
+    textEnt2.addComponent<cro::Drawable2D>();
+    textEnt2.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    textEnt2.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    textEnt2.getComponent<cro::Text>().setString("How To Play");
+
+    auto textEnt3 = m_uiScene.createEntity();
+    textEnt3.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 22.f, 0.02f });
+    textEnt3.addComponent<cro::Drawable2D>();
+    textEnt3.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    textEnt3.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    textEnt3.getComponent<cro::Text>().setString("Start");
+
+
+    centreText(textEnt);
+    centreText(textEnt2);
+    centreText(textEnt3);
+
+    entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(textEnt2.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(textEnt3.getComponent<cro::Transform>());
+
+    //callback for anim/self destruction
+    struct MessageAnim final
+    {
+        enum
+        {
+            Delay, Open, Hold, Close
+        }state = Delay;
+        float currentTime = 0.5f;
+    };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<MessageAnim>();
+    entity.getComponent<cro::Callback>().function =
+        [&, textEnt, textEnt2](cro::Entity e, float dt)
+    {
+        static constexpr float HoldTime = 2.f;
+        auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
+        switch (state)
+        {
+        default: break;
+        case MessageAnim::Delay:
+            currTime = std::max(0.f, currTime - dt);
+            if (currTime == 0)
+            {
+                state = MessageAnim::Open;
+            }
+            break;
+        case MessageAnim::Open:
+            //grow
+            currTime = std::min(1.f, currTime + (dt * 2.f));
+            e.getComponent<cro::Transform>().setScale(glm::vec2(m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime)));
+            if (currTime == 1)
+            {
+                currTime = 0;
+                state = MessageAnim::Hold;
+
+                //TODO set UI active
+            }
+            break;
+        case MessageAnim::Hold:
+            //hold
+            //do nothing, input sets the Close state
+            break;
+        case MessageAnim::Close:
+            //shrink
+            currTime = std::max(0.f, currTime - (dt * 3.f));
+            e.getComponent<cro::Transform>().setScale(glm::vec2(m_viewScale.x * cro::Util::Easing::easeInCubic(currTime), m_viewScale.y));
+            if (currTime == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(textEnt);
+                m_uiScene.destroyEntity(textEnt2);
+                m_uiScene.destroyEntity(textEnt3);
+                m_uiScene.destroyEntity(e);
+
+                m_inputParser.setActive(true);
+            }
+            break;
+        }
+    };
 }
