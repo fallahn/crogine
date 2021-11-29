@@ -1047,8 +1047,11 @@ void GolfState::loadAssets()
             const auto& name = holeProp.getName();
             if (name == "map")
             {
-                if (!m_currentMap.loadFromFile(holeProp.getValue<std::string>()))
+                auto path = holeProp.getValue<std::string>();
+                if (!m_currentMap.loadFromFile(path)
+                    || m_currentMap.getFormat() != cro::ImageFormat::RGBA)
                 {
+                    LogE << path << ": image file not RGBA" << std::endl;
                     error = true;
                 }
                 holeData.mapPath = holeProp.getValue<std::string>();
@@ -1091,11 +1094,6 @@ void GolfState::loadAssets()
             {
                 if (modelDef.loadFromFile(holeProp.getValue<std::string>()))
                 {
-                    //TODO this only works if all materials have the same texture
-                    //however we can replace this with the default material anyway
-                    auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
-                    setTexture(modelDef, material);
-
                     holeData.modelEntity = m_gameScene.createEntity();
                     holeData.modelEntity.addComponent<cro::Transform>().setPosition(OriginOffset);
                     holeData.modelEntity.getComponent<cro::Transform>().setOrigin(OriginOffset);
@@ -1104,6 +1102,8 @@ void GolfState::loadAssets()
                     holeData.modelEntity.getComponent<cro::Model>().setHidden(true);
                     for (auto m = 0u; m < holeData.modelEntity.getComponent<cro::Model>().getMeshData().submeshCount; ++m)
                     {
+                        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
+                        setTexture(modelDef, material, m);
                         holeData.modelEntity.getComponent<cro::Model>().setMaterial(m, material);
                     }
                     propCount++;
@@ -1209,7 +1209,7 @@ void GolfState::loadAssets()
 
     if (error)
     {
-        m_sharedData.errorMessage = "Failed to load course data";
+        m_sharedData.errorMessage = "Failed to load course data\nSee console for more";
         requestStackPush(StateID::Error);
     }
     //else

@@ -517,6 +517,8 @@ void TerrainBuilder::threadFunc()
                     if (terrain == TerrainID::Scrub)
                     {
                         float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+                        float height2 = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y)); //check if model mesh is higher than terrain
+                        height = std::max(height, height2);
 
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)]);
                         bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards
@@ -530,6 +532,9 @@ void TerrainBuilder::threadFunc()
                     if (terrain == TerrainID::Scrub
                         /*&& height > 0.6f*/)
                     {
+                        float height2 = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+                        height = std::max(height, height2);
+
                         float scale = static_cast<float>(cro::Util::Random::value(13, 17)) / 10.f;
 
                         auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Bush02)]);

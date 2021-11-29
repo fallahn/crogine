@@ -148,9 +148,9 @@ static inline glm::vec2 calcVPSize()
     return glm::vec2(ViewportWidth, ratio < Widescreen ? ViewportHeightWide : ViewportHeight);
 }
 
-static inline void setTexture(const cro::ModelDefinition& modelDef, cro::Material::Data& dest)
+static inline void setTexture(const cro::ModelDefinition& modelDef, cro::Material::Data& dest, std::size_t matID = 0)
 {
-    if (auto* m = modelDef.getMaterial(0); m != nullptr)
+    if (auto* m = modelDef.getMaterial(matID); m != nullptr)
     {
         if (m->properties.count("u_diffuseMap"))
         {
