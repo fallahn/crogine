@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "CameraFollowSystem.hpp"
 #include "InputParser.hpp"
+#include "HoleData.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -78,6 +79,10 @@ private:
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
     std::array<cro::Entity, CameraID::Count> m_cameras = {};
+
+
+    std::vector<HoleData> m_holeData;
+
 
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;

@@ -748,8 +748,9 @@ void TerrainBuilder::renderNormalMap()
     glCheck(glUniform1f(m_normalShader.getUniformID("u_lowestPoint"), m_holeHeight.bottom));
     glCheck(glUniform1f(m_normalShader.getUniformID("u_maxHeight"), m_holeHeight.height));
 
-
-    static const cro::Colour ClearColour(0x7f7fffff);
+    //clear the alpha to 0 so unrendered areas have zero height
+    //then the heightmap image can be compared and highest value used
+    static const cro::Colour ClearColour(0x7f7fff00);
     m_normalMap.clear(ClearColour);
     for (auto i = 0u; i < vaos.size(); ++i)
     {

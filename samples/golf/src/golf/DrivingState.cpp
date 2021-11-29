@@ -37,6 +37,7 @@ source distribution.
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
 
+#include <crogine/core/ConfigFile.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -276,11 +277,96 @@ void DrivingState::loadAssets()
 
 void DrivingState::createScene()
 {
+    const auto& quitFail = [&](const std::string msg)
+    {
+        m_sharedData.errorMessage = msg;
+        requestStackPush(StateID::Error);
+    };
+
+    //check data file - quit if missing or corrupt
+    cro::ConfigFile cfg;
+    if (!cfg.loadFromFile("assets/golf/courses/driving.range"))
+    {
+        quitFail("Could Not Open Course Data");
+        return;
+    }
+
+    const auto& properties = cfg.getProperties();
+    for (const auto& p : properties)
+    {
+        const auto& name = p.getName();
+        if (name == "hole")
+        {
+            auto& data = m_holeData.emplace_back();
+            data.pin = p.getValue<glm::vec3>();
+            data.target = data.pin;
+            data.tee = PlayerPosition;
+            //TODO check ball system for which properties are needed
+        }
+    }
+
+    if (m_holeData.empty())
+    {
+        quitFail("No Hole Data Found");
+        return;
+    }
+
+    const auto& objects = cfg.getObjects();
+    for (const auto& obj : objects)
+    {
+        const auto& name = obj.getName();
+        if (name == "prop")
+        {
+            std::string path;
+            glm::vec3 position(0.f);
+            float rotation = 0.f;
+
+            const auto& properties = obj.getProperties();
+            for (const auto& p : properties)
+            {
+                const auto& propName = p.getName();
+                if (propName == "model")
+                {
+                    path = p.getValue<std::string>();
+                }
+                else if (propName == "position")
+                {
+                    position = p.getValue<glm::vec3>();
+                }
+                else if (propName == "rotation")
+                {
+                    rotation = p.getValue<float>();
+                }
+            }
+
+            cro::ModelDefinition md(m_resources);
+            if (!path.empty()
+                && md.loadFromFile(path))
+            {
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition(position);
+                entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
+                md.createModel(entity);
+
+                for (auto m = 0u; m < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++m)
+                {
+                    auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+                    setTexture(md, material, m);
+                    entity.getComponent<cro::Model>().setMaterial(m, material);
+                }
+            }
+        }
+    }
+
     //load the course model
     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
 
     cro::ModelDefinition md(m_resources);
-    md.loadFromFile("assets/golf/models/driving_range.cmt");
+    if (!md.loadFromFile("assets/golf/models/driving_range.cmt"))
+    {
+        quitFail("Could Not Load Course Model");
+        return;
+    }
     setTexture(md, texturedMat);
 
     auto entity = m_gameScene.createEntity();
@@ -312,8 +398,6 @@ void DrivingState::createScene()
     entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
     md.createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
-
-
 
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
