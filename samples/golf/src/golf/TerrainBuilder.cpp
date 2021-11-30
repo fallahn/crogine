@@ -324,7 +324,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //resources.materials.get(materialID).enableDepthTest = false;
 
     entity = scene.createEntity();
-    entity.addComponent<cro::Transform>();// .setPosition({ 0.5f, 0.01f, 0.5f });
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::SlopeIndicator;
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
@@ -605,7 +605,7 @@ void TerrainBuilder::threadFunc()
                         auto terrain = readMap(mapImage, x, y).first;
                         if (terrain == TerrainID::Green)
                         {
-                            static constexpr float epsilon = 0.011f;
+                            static constexpr float epsilon = 0.021f;
                             float posX = static_cast<float>(x) - pinPos.x;
                             float posZ = -static_cast<float>(y) - pinPos.z;
 

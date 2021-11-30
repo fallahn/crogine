@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/SpriteAnimation.hpp>
@@ -88,6 +89,17 @@ namespace
     constexpr glm::vec2 BillboardChunk(40.f, 50.f);
     constexpr std::size_t ChunkCount = 5;
 
+    //callback data for anim/self destruction
+    //of messages / options window
+    struct MessageAnim final
+    {
+        enum
+        {
+            Delay, Open, Hold, Close
+        }state = Delay;
+        float currentTime = 0.5f;
+    };
+
     struct FoliageCallback final
     {
         FoliageCallback(float d = 0.f) : delay(d + 25.f) {} //magic number is some delay before effect starts
@@ -113,6 +125,17 @@ namespace
                 }
             }
         }
+    };
+
+    struct MenuID final
+    {
+        enum
+        {
+            Dummy, 
+            Options,
+
+            Count
+        };
     };
 }
 
@@ -204,6 +227,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
 #endif
 
+    m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
     m_inputParser.handleEvent(evt);
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
@@ -319,7 +343,10 @@ void DrivingState::loadAssets()
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
-    m_sprites[SpriteID::MessageBoard] = spriteSheet.getSprite("message_board");
+    //m_sprites[SpriteID::MessageBoard] = spriteSheet.getSprite("message_board");
+
+    spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
+    m_sprites[SpriteID::MessageBoard] = spriteSheet.getSprite("border");
 }
 
 void DrivingState::createScene()
@@ -494,6 +521,22 @@ void DrivingState::createScene()
         createBillboards(entity, { 0.f, 0.f }, { RangeSize.x + (BillboardChunk.x * 2.f), BillboardChunk.x});
     }
 
+    glm::vec3 position((-RangeSize.x / 2.f) - BillboardChunk.x, 0.f, (-RangeSize.y / 2.f) - (BillboardChunk.x * 1.5f));
+    for (auto i = 0; i < 2; ++i)
+    {
+        md.loadFromFile("assets/golf/models/shrubbery.cmt");
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position);
+        md.createModel(entity);
+
+        if (entity.hasComponent<cro::BillboardCollection>())
+        {
+            createBillboards(entity, { 0.f, 0.f }, { (BillboardChunk.x * 2.8f), BillboardChunk.x / 2.f });
+        }
+
+        position.x += 170.f;
+    }
+
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
     {
@@ -581,8 +624,6 @@ void DrivingState::createScene()
         {
             e.getComponent<cro::Callback>().active = false;
 
-            showGameOptions();
-
             //position player sprite
             cro::Command cmd;
             cmd.targetFlags = CommandID::UI::PlayerSprite;
@@ -591,6 +632,14 @@ void DrivingState::createScene()
                 const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
                 auto pos = camera.coordsToPixel(PlayerPosition, m_backgroundTexture.getSize());
                 e.getComponent<cro::Transform>().setPosition(pos);
+                e.getComponent<cro::Callback>().active = true;
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            //show menu
+            cmd.targetFlags = CommandID::UI::MessageBoard;
+            cmd.action = [&](cro::Entity e, float)
+            {
                 e.getComponent<cro::Callback>().active = true;
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -832,6 +881,8 @@ void DrivingState::createUI()
     entity.addComponent<cro::Camera>().resizeCallback = updateView;
     m_uiScene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
+
+    createGameOptions();
 }
 
 void DrivingState::createPlayer(cro::Entity courseEnt)
@@ -1005,67 +1056,98 @@ void DrivingState::updateWindDisplay(glm::vec3 direction)
     //m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
-void DrivingState::showGameOptions()
+void DrivingState::createGameOptions()
 {
     auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-    auto position = glm::vec3(size.x / 2.f, size.y / 2.f, 0.05f);
+    auto position = glm::vec3(size.x / 2.f, size.y / 2.f, 1.5f);
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MessageBoard];
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard;
 
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
-    auto textEnt = m_uiScene.createEntity();
-    textEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 58.f, 0.02f });
-    textEnt.addComponent<cro::Drawable2D>();
-    textEnt.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
-    textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    textEnt.getComponent<cro::Text>().setString("Shots:");
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
-    auto textEnt2 = m_uiScene.createEntity();
-    textEnt2.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 32.f, 0.02f });
-    textEnt2.addComponent<cro::Drawable2D>();
-    textEnt2.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
-    textEnt2.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    textEnt2.getComponent<cro::Text>().setString("How To Play");
+    auto titleText = m_uiScene.createEntity();
+    titleText.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 293.f, 0.02f });
+    titleText.addComponent<cro::Drawable2D>();
+    titleText.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    titleText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    titleText.getComponent<cro::Text>().setString("The Range");
+    centreText(titleText);
 
-    auto textEnt3 = m_uiScene.createEntity();
-    textEnt3.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 22.f, 0.02f });
-    textEnt3.addComponent<cro::Drawable2D>();
-    textEnt3.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
-    textEnt3.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    textEnt3.getComponent<cro::Text>().setString("Start");
+    auto headerText = m_uiScene.createEntity();
+    headerText.addComponent<cro::Transform>().setPosition({ 8.f, 277.f, 0.02f });
+    headerText.addComponent<cro::Drawable2D>();
+    headerText.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    headerText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    headerText.getComponent<cro::Text>().setString("How To Play");
+
+    auto infoText = m_uiScene.createEntity();
+    infoText.addComponent<cro::Transform>().setPosition({ 8.f, 268.f, 0.02f });
+    infoText.addComponent<cro::Drawable2D>();
+    infoText.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+    infoText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    const std::string helpString = 
+    R"(
+Pick the number of shots you wish to take. For each shot you will be given
+a new target. Hit the ball as close as possible to the target by selecting
+the appropriate club. When all your shots are taken you will be given a
+score based on your overall accuracy. Good Luck!
+    )";
+
+    infoText.getComponent<cro::Text>().setString(helpString);
+
+    auto* uiSystem = m_uiScene.getSystem<cro::UISystem>();
+    auto textEnter = uiSystem->addCallback([](cro::Entity e) {e.getComponent<cro::Text>().setFillColour(TextGoldColour); });
+    auto textExit = uiSystem->addCallback([](cro::Entity e) {e.getComponent<cro::Text>().setFillColour(TextNormalColour); });
+
+    //consumes events when menu not active
+    auto dummyEnt = m_uiScene.createEntity();
+    dummyEnt.addComponent<cro::Transform>();
+    dummyEnt.addComponent<cro::UIInput>();
+
+    auto startText = m_uiScene.createEntity();
+    startText.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 26.f, 0.02f });
+    startText.addComponent<cro::Drawable2D>();
+    startText.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    startText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    startText.getComponent<cro::Text>().setString("Start");
+    startText.addComponent<cro::UIInput>().setGroup(MenuID::Options);
+    startText.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(startText);
+    startText.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = textEnter;
+    startText.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = textExit;
+    startText.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [uiSystem, entity](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                auto& [state, timeout] = entity.getComponent<cro::Callback>().getUserData<MessageAnim>();
+                if (state == MessageAnim::Hold
+                    && activated(evt))
+                {
+                    state = MessageAnim::Close;
+                    timeout = 1.f;
+                    uiSystem->setActiveGroup(MenuID::Dummy);
+                }
+            });
+    centreText(startText);
+
+    entity.getComponent<cro::Transform>().addChild(titleText.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(headerText.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(infoText.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(startText.getComponent<cro::Transform>());
 
 
-    centreText(textEnt);
-    centreText(textEnt2);
-    centreText(textEnt3);
-
-    entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
-    entity.getComponent<cro::Transform>().addChild(textEnt2.getComponent<cro::Transform>());
-    entity.getComponent<cro::Transform>().addChild(textEnt3.getComponent<cro::Transform>());
-
-    //callback for anim/self destruction
-    struct MessageAnim final
-    {
-        enum
-        {
-            Delay, Open, Hold, Close
-        }state = Delay;
-        float currentTime = 0.5f;
-    };
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<MessageAnim>();
+    entity.addComponent<cro::Callback>().setUserData<MessageAnim>();
     entity.getComponent<cro::Callback>().function =
-        [&, textEnt, textEnt2](cro::Entity e, float dt)
+        [&, uiSystem](cro::Entity e, float dt)
     {
-        static constexpr float HoldTime = 2.f;
         auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
         switch (state)
         {
@@ -1080,18 +1162,24 @@ void DrivingState::showGameOptions()
         case MessageAnim::Open:
             //grow
             currTime = std::min(1.f, currTime + (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale(glm::vec2(m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime)));
+            e.getComponent<cro::Transform>().setScale(glm::vec2(m_viewScale.x, m_viewScale.y *cro::Util::Easing::easeOutQuint(currTime)));
             if (currTime == 1)
             {
                 currTime = 0;
                 state = MessageAnim::Hold;
 
-                //TODO set UI active
+                //set UI active
+                uiSystem->setActiveGroup(MenuID::Options);
             }
             break;
         case MessageAnim::Hold:
-            //hold
-            //do nothing, input sets the Close state
+        {
+            //hold - make sure we stay centred
+            auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
+            auto position = glm::vec3(size.x / 2.f, size.y / 2.f, 1.5f);
+            e.getComponent<cro::Transform>().setPosition(position);
+            e.getComponent<cro::Transform>().setScale(m_viewScale);
+        }
             break;
         case MessageAnim::Close:
             //shrink
@@ -1100,12 +1188,9 @@ void DrivingState::showGameOptions()
             if (currTime == 0)
             {
                 e.getComponent<cro::Callback>().active = false;
-                m_uiScene.destroyEntity(textEnt);
-                m_uiScene.destroyEntity(textEnt2);
-                m_uiScene.destroyEntity(textEnt3);
-                m_uiScene.destroyEntity(e);
+                e.getComponent<cro::Transform>().setPosition({ -10000.f, -10000.f });
 
-                m_inputParser.setActive(true);
+                //TODO start the game director
             }
             break;
         }

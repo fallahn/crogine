@@ -249,7 +249,7 @@ void PracticeState::buildScene()
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
 
-    auto selectedID = uiSystem.addCallback([](cro::Entity e) { e.getComponent<cro::Text>().setFillColour(TextHighlightColour); e.getComponent<cro::AudioEmitter>().play(); });
+    auto selectedID = uiSystem.addCallback([](cro::Entity e) { e.getComponent<cro::Text>().setFillColour(TextGoldColour); e.getComponent<cro::AudioEmitter>().play(); });
     auto unselectedID = uiSystem.addCallback([](cro::Entity e) { e.getComponent<cro::Text>().setFillColour(TextNormalColour); });
     
     auto createItem = [&](glm::vec2 position, const std::string label, cro::Entity parent) 
@@ -272,7 +272,7 @@ void PracticeState::buildScene()
 
     //tutorial button
     entity = createItem(glm::vec2(0.f, 16.f), "Tutorial", menuEntity);
-    entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) 
             {

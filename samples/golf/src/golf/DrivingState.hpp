@@ -98,7 +98,7 @@ private:
 
     void startTransition();
     void updateWindDisplay(glm::vec3);
-    void showGameOptions();
+    void createGameOptions();
 
     struct SpriteID final
     {

@@ -257,26 +257,14 @@ void PauseState::buildScene()
     confirmEntity.addComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
     rootNode.getComponent<cro::Transform>().addChild(confirmEntity.getComponent<cro::Transform>());
 
-    /*spriteSheet.loadFromFile("assets/golf/sprites/main_menu.spt", m_sharedData.sharedResources->textures);
-    auto cursorEnt = m_scene.createEntity();
-    cursorEnt.addComponent<cro::Transform>();
-    cursorEnt.addComponent<cro::Drawable2D>();
-    cursorEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("cursor");
-    cursorEnt.addComponent<cro::SpriteAnimation>().play(0);
-    menuEntity.getComponent<cro::Transform>().addChild(cursorEnt.getComponent<cro::Transform>());*/
-
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
 
     auto selectedID = uiSystem.addCallback(
-        [/*cursorEnt*/](cro::Entity e) mutable
+        [](cro::Entity e) mutable
         {
-            e.getComponent<cro::Text>().setFillColour(TextHighlightColour); 
-            e.getComponent<cro::AudioEmitter>().play(); 
-
-            /*auto pos = e.getComponent<cro::Transform>().getPosition();
-            pos.x = -40.f;
-            cursorEnt.getComponent<cro::Transform>().setPosition(pos);*/
+            e.getComponent<cro::Text>().setFillColour(TextGoldColour); 
+            e.getComponent<cro::AudioEmitter>().play();
         });
     auto unselectedID = uiSystem.addCallback(
         [](cro::Entity e) 
@@ -304,7 +292,7 @@ void PauseState::buildScene()
 
     //options button
     entity = createItem(glm::vec2(0.f, 10.f), "Options", menuEntity);
-    entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) 
