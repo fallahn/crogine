@@ -4,7 +4,7 @@ course course_02
     billboard_model = "assets/golf/models/shrubbery.cmt"
     billboard_sprites = "assets/golf/sprites/shrubbery.spt"
 
-    title = "Sunny Cove, West New Somethingshire"
+    title = "Sunny Cove, Weald & Hedgeways"
     description = "The Finest Gravel You'll Tread"
 
     hole = "assets/golf/courses/course_02/01.hole"

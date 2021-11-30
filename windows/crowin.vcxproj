@@ -180,6 +180,7 @@
     <ClInclude Include="..\crogine\include\crogine\util\Network.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Random.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Rectangle.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\util\Spline.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\String.hpp" />
     <ClInclude Include="..\crogine\include\crogine\util\Wavetable.hpp" />
     <ClInclude Include="..\crogine\src\audio\ALCheck.hpp" />
@@ -358,6 +359,7 @@
     <ClCompile Include="..\crogine\src\util\Matrix.cpp" />
     <ClCompile Include="..\crogine\src\util\Network.cpp" />
     <ClCompile Include="..\crogine\src\util\Random.cpp" />
+    <ClCompile Include="..\crogine\src\util\Spline.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\crogine\include\crogine\core\ConfigFile.inl" />

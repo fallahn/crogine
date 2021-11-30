@@ -148,7 +148,8 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/util/Frustum.cpp
   ${PROJECT_DIR}/util/Matrix.cpp
   ${PROJECT_DIR}/util/Network.cpp
-  ${PROJECT_DIR}/util/Random.cpp)
+  ${PROJECT_DIR}/util/Random.cpp
+  ${PROJECT_DIR}/util/Spline.cpp)
 
 SET(project_src_openal
   ${PROJECT_DIR}/audio/OpenALImpl.cpp

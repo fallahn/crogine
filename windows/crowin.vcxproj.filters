@@ -639,6 +639,9 @@
     <ClInclude Include="..\crogine\include\crogine\util\Frustum.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\util\Spline.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1060,6 +1063,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\MeshData.cpp">
       <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\util\Spline.cpp">
+      <Filter>Source Files\util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

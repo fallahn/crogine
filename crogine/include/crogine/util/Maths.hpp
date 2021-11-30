@@ -34,6 +34,7 @@ source distribution.
 #endif //_MSC_VER
 
 #include "Constants.hpp"
+#include "Spline.hpp"
 
 #include <type_traits>
 #include <algorithm>

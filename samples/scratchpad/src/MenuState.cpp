@@ -45,7 +45,7 @@ source distribution.
 
 #include <fstream>
 #include <iomanip>
-#include <crogine/graphics/Image.hpp>
+
 using namespace sp;
 
 namespace
