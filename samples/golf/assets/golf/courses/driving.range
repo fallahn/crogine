@@ -24,21 +24,21 @@ driving_range
     prop
     {
         model = "assets/golf/models/menu_pavilion.cmt"
-        position = 0,0.000000,-190
+        position = 0,1.000000,-190
         rotation = 0
     }
 
     prop
     {
-        model = "assets/golf/models/menu_ground.cmt"
-        position = -0,-0.100000,-190
+        model = "assets/golf/models/driving_range_bground.cmt"
+        position = -0,0.900000,-190
         rotation = 0
     } 
 
     prop
     {
         model = "assets/golf/models/driving_shed.cmt"
-        position = -5.500000,0.000000,128.500000
+        position = -5.500000,0.000000,126.500000
         rotation = 0.000000
     }
 
@@ -46,7 +46,7 @@ driving_range
     prop
     {
         model = "assets/golf/models/driving_shed.cmt"
-        position = 5.500000,0.000000,128.500000
+        position = 5.500000,0.000000,126.500000
         rotation = 0.000000
     }
 
@@ -56,5 +56,12 @@ driving_range
         model = "assets/golf/models/cart.cmt"
         position = -5.000000,0.000000,124.000000
         rotation = 14.500849
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cart.cmt"
+        position = -5.000000,1.000000,-189.000000
+        rotation = 34.500849
     }
 }

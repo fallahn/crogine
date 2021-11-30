@@ -1,0 +1,16 @@
+model driving_range_bground
+{
+    mesh = "assets/golf/models/driving_range_bground.cmb"
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        blendmode = "none"
+        diffuse = "assets/golf/images/menu_ground.png"
+
+    }
+}

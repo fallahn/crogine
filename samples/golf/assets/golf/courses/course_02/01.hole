@@ -2,8 +2,31 @@ hole 01
 {
     map = "assets/golf/courses/course_02/01.png"
     model = "assets/golf/models/course_02/01.cmt"
-    pin = 50.794151,2.068006,-33.344284
+
+    pin = 50.794151,2.180053,-33.344284
     target = 185.059784,1.928631,-62.967476
     tee = 278.745605,2.314100,-179.356476
-    par = 4   
+
+    par = 4
+
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = 33.442749,2.886726,-51.629166
+        rotation = 14.811081
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 33.442749,2.886726,-51.629166
+        rotation = 138.169127
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = 200.126434,2.747362,-34.233288
+        rotation = -873.310013
+    }
 }
