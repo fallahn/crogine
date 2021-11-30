@@ -249,8 +249,19 @@ void PracticeState::buildScene()
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
 
-    auto selectedID = uiSystem.addCallback([](cro::Entity e) { e.getComponent<cro::Text>().setFillColour(TextGoldColour); e.getComponent<cro::AudioEmitter>().play(); });
-    auto unselectedID = uiSystem.addCallback([](cro::Entity e) { e.getComponent<cro::Text>().setFillColour(TextNormalColour); });
+    auto selectedID = uiSystem.addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+            e.getComponent<cro::AudioEmitter>().play();
+            e.getComponent<cro::Callback>().setUserData<float>(0.f);
+            e.getComponent<cro::Callback>().active = true;
+        });
+    auto unselectedID = uiSystem.addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        });
     
     auto createItem = [&](glm::vec2 position, const std::string label, cro::Entity parent) 
     {
@@ -265,6 +276,22 @@ void PracticeState::buildScene()
         e.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(e);
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+
+        e.addComponent<cro::Callback>().setUserData<float>(0.f);
+        e.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+        {
+            auto& data = e.getComponent<cro::Callback>().getUserData<float>();
+            data = std::min(1.f, data + (dt * 2.f));
+            
+            float scale =  0.8f + (0.2f * cro::Util::Easing::easeOutBounce(data));
+            e.getComponent<cro::Transform>().setScale({ scale, scale });
+            
+            if (data == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
 
         parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         return e;
