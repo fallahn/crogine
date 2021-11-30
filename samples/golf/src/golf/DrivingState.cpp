@@ -81,7 +81,7 @@ namespace
     std::size_t camIdx = 0;
 #endif
 
-    constexpr glm::vec3 PlayerPosition(0.f, 0.f, 123.f);
+    constexpr glm::vec3 PlayerPosition(0.f, 0.f, 121.f);
     constexpr glm::vec3 CameraPosition = PlayerPosition + glm::vec3(0.f, CameraStrokeHeight, CameraStrokeOffset);
     constexpr glm::vec2 RangeSize(200.f, 250.f);
 
@@ -90,7 +90,7 @@ namespace
 
     struct FoliageCallback final
     {
-        FoliageCallback(float d = 0.f) : delay(d + 6.f) {} //magic number is some delay before effect starts
+        FoliageCallback(float d = 0.f) : delay(d + 25.f) {} //magic number is some delay before effect starts
         float delay = 0.f;
         float progress = 0.f;
         static constexpr float Distance = 14.f;
@@ -468,7 +468,7 @@ void DrivingState::createScene()
             entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(pos);
             entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().function = FoliageCallback(i);
+            entity.getComponent<cro::Callback>().function = FoliageCallback(static_cast<float>(i));
             md.createModel(entity);
 
             if (entity.hasComponent<cro::BillboardCollection>())
@@ -536,84 +536,64 @@ void DrivingState::createScene()
     
     m_cameras[CameraID::Player] = camEnt;
 
+    constexpr auto halfSize = RangeSize / 2.f;
+
     struct TransitionPath final
     {
-        std::array<glm::mat4, 5u> targets = {};
-        std::array<float, 4u> speeds = {};
-        std::size_t currentTarget = 0;
-        float progress = 0.f;
+        cro::Util::Maths::Spline targetPath;
+        cro::Util::Maths::Spline cameraPath;
+
+        const float TotalTime = 10.f;
+        float currentTime = 0.f;
     }path;
 
-    auto halfSize = RangeSize / 2.f;
-    auto eyeSize = halfSize / 2.f;
-    std::array<std::pair<glm::vec3, glm::vec3>, 4u> positions =
-    {
-        std::make_pair(glm::vec3(eyeSize.x, 10.f, eyeSize.y), glm::vec3(halfSize.x, 2.f, halfSize.y)),
-        std::make_pair(glm::vec3(-eyeSize.x, 10.f, eyeSize.y), glm::vec3(-halfSize.x, 2.f, halfSize.y)),
-        std::make_pair(glm::vec3(-eyeSize.x, 14.f, -eyeSize.y), glm::vec3(-halfSize.x, 2.f, -halfSize.y)),
-        std::make_pair(glm::vec3(0.f, 20.f, 0.f), glm::vec3(0.f, 2.f, -halfSize.y))
-    };
+    auto targetStart = glm::vec3(0.f, 2.f, -160.f);
+    path.targetPath.addPoint(targetStart);
+    path.targetPath.addPoint(glm::vec3(0, 2.f, -100.f));
+    path.targetPath.addPoint(glm::vec3(0, 10.f, -halfSize.y));
+    path.targetPath.addPoint(glm::vec3(0.f, 2.f, -halfSize.y));
 
-    for (auto i = 0u; i < positions.size(); ++i)
-    {
-        const auto& [eye, target] = positions[i];
-        path.targets[i] = glm::inverse(glm::lookAt(eye, target, cro::Transform::Y_AXIS));
-    }
-    
-    path.targets.back() = glm::translate(glm::mat4(1.f), CameraPosition);
-    path.targets.back() = glm::rotate(path.targets.back(), -3.f * cro::Util::Const::degToRad, cro::Transform::X_AXIS);
-    camEnt.getComponent<cro::Transform>().setLocalTransform(path.targets[0]);
+    auto eyeStart = glm::vec3(0.f, CameraPosition.y, -halfSize.y - 20.f);
+    path.cameraPath.addPoint(eyeStart);
+    path.cameraPath.addPoint(glm::vec3(0.f, 30.f, -halfSize.y / 3.f));
+    path.cameraPath.addPoint(glm::vec3(0.f, 10.f, halfSize.y / 2.f));
+    path.cameraPath.addPoint(CameraPosition);
 
-    static constexpr float MoveSpeed = 140.f;
-    for (auto i = 0u; i < path.speeds.size() -1; ++i)
-    {
-        path.speeds[i] = glm::length(positions[i].second - positions[i + 1].second) / MoveSpeed;
-    }
-    path.speeds.back() = glm::length(positions.back().second - CameraPosition) / MoveSpeed;
-
+    auto tx = glm::inverse(glm::lookAt(eyeStart, targetStart, cro::Transform::Y_AXIS));
+    camEnt.getComponent<cro::Transform>().setLocalTransform(tx);
 
     camEnt.addComponent<cro::Callback>().setUserData<TransitionPath>(path);
     camEnt.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<TransitionPath>();
-        data.progress = std::min(data.progress + (dt / data.speeds[data.currentTarget]), 1.f);
+        data.currentTime = std::min(data.TotalTime, data.currentTime + dt);
 
-        auto& camTx = e.getComponent<cro::Transform>();
+        float progress = cro::Util::Easing::easeInOutQuad(data.currentTime / data.TotalTime);
 
-        auto progress = cro::Util::Easing::easeInOutSine(data.progress);
+        auto target = data.targetPath.getInterpolatedPoint(progress);
+        auto eye = data.cameraPath.getInterpolatedPoint(progress);
+        auto tx = glm::inverse(glm::lookAt(eye, target, cro::Transform::Y_AXIS));
 
-        auto rot = glm::slerp(glm::quat_cast(data.targets[data.currentTarget]), glm::quat_cast(data.targets[data.currentTarget + 1]), progress);
-        camTx.setRotation(rot);
+        e.getComponent<cro::Transform>().setLocalTransform(tx);
 
-        auto pos = interpolate(glm::vec3(data.targets[data.currentTarget][3]),
-            glm::vec3(data.targets[data.currentTarget + 1][3]),
-            progress);
-        camTx.setPosition(pos);
-
-        if (data.progress == 1)
+        if (data.currentTime == data.TotalTime)
         {
-            data.progress = 0.f;
-            data.currentTarget++;
-            camTx.setLocalTransform(data.targets[data.currentTarget]);
+            e.getComponent<cro::Callback>().active = false;
 
-            if (data.currentTarget == data.targets.size() - 1)
+            showGameOptions();
+
+            //position player sprite
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::PlayerSprite;
+            cmd.action = [&](cro::Entity e, float)
             {
-                e.getComponent<cro::Callback>().active = false;
-                showGameOptions();
-
-                //position player sprite
-                cro::Command cmd;
-                cmd.targetFlags = CommandID::UI::PlayerSprite;
-                cmd.action = [&](cro::Entity e, float)
-                {
-                    const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
-                    auto pos = camera.coordsToPixel(PlayerPosition, m_backgroundTexture.getSize());
-                    e.getComponent<cro::Transform>().setPosition(pos);
-                    e.getComponent<cro::Callback>().active = true;
-                };
-                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-            }
+                const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
+                auto pos = camera.coordsToPixel(PlayerPosition, m_backgroundTexture.getSize());
+                e.getComponent<cro::Transform>().setPosition(pos);
+                e.getComponent<cro::Callback>().active = true;
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
     };
 
@@ -908,13 +888,29 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
 void DrivingState::startTransition()
 {
-    m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.5f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime -= dt;
+        if (currTime < 0)
+        {
+            m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
+
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+    };    
+    
 
     //scanlines drawn over the UI
     glm::vec2 screenSize(cro::App::getWindow().getSize());
     auto& shader = m_resources.shaders.get(ShaderID::Transition);
 
-    auto entity = m_uiScene.createEntity();
+    entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
     entity.addComponent<cro::Drawable2D>().setShader(&shader);
     entity.getComponent<cro::Drawable2D>().setVertexData(

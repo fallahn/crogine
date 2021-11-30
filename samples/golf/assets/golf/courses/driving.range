@@ -17,16 +17,23 @@ driving_range
     prop
     {
         model = "assets/golf/models/view_platform.cmt"
-        position = -94.623322,0.000000,125.000000
-        rotation = -34.886523
+        position = -94.623322,0.000000,-125.000000
+        rotation = -214.886523
     }
 
     prop
     {
         model = "assets/golf/models/menu_pavilion.cmt"
-        position = -56.415943,0.000000,161.460236
-        rotation = -195.668242
+        position = 0,0.000000,-190
+        rotation = 0
     }
+
+    prop
+    {
+        model = "assets/golf/models/menu_ground.cmt"
+        position = -0,-0.100000,-190
+        rotation = 0
+    } 
 
     prop
     {
@@ -35,19 +42,6 @@ driving_range
         rotation = 0.000000
     }
 
-    prop
-    {
-        model = "assets/golf/models/driving_shed.cmt"
-        position = -11.000000,0.000000,128.500000
-        rotation = 0.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/driving_shed.cmt"
-        position = -16.500000,0.000000,128.500000
-        rotation = 0.000000
-    }
 
     prop
     {
@@ -56,31 +50,13 @@ driving_range
         rotation = 0.000000
     }
 
-    prop
-    {
-        model = "assets/golf/models/driving_shed.cmt"
-        position = 11.000000,0.000000,128.500000
-        rotation = 0.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/driving_shed.cmt"
-        position = 16.500000,0.000000,128.500000
-        rotation = 0.000000
-    }
 
     prop
     {
         model = "assets/golf/models/cart.cmt"
-        position = -25.000000,0.000000,126.000000
-        rotation = 4.500849
+        position = -5.000000,0.000000,124.000000
+        rotation = 14.500849
     }
 
-    prop
-    {
-        model = "assets/golf/models/menu_ground.cmt"
-        position = -56.415943,-0.100000,161.460236
-        rotation = -196.036978
-    }    
+   
 }
