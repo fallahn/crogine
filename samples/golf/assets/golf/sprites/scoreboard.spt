@@ -11,4 +11,34 @@ spritesheet scoreboard
     {
         bounds = 0,0,388,532
     }
+
+    sprite player_select
+    {
+        bounds = 400,308,94,98
+    }
+
+    sprite stroke_select
+    {
+        bounds = 400,420,48,22
+    }
+
+    sprite arrow_left
+    {
+        bounds = 448,420,16,15
+    }
+
+    sprite arrow_right
+    {
+        bounds = 464,420,16,15
+    }
+
+    sprite start_button
+    {
+        bounds = 400,452,48,16
+    }
+
+    sprite start_highlight
+    {
+        bounds = 400, 472,48,18
+    }
 }

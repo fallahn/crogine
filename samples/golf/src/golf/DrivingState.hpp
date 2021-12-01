@@ -83,6 +83,8 @@ private:
     std::vector<HoleData> m_holeData;
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
 
+    std::array<std::int32_t, 3u> m_strokeCounts = { 5,9,18 };
+    std::size_t m_strokeCountIndex;
 
     std::array<cro::Entity, CameraID::Count> m_cameras = {};
 

@@ -140,12 +140,13 @@ namespace
 }
 
 DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
-    : cro::State    (stack, context),
-    m_sharedData    (sd),
-    m_inputParser   (sd.inputBinding, context.appInstance.getMessageBus()),
-    m_gameScene     (context.appInstance.getMessageBus()),
-    m_uiScene       (context.appInstance.getMessageBus()),
-    m_viewScale     (1.f)
+    : cro::State        (stack, context),
+    m_sharedData        (sd),
+    m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
+    m_gameScene         (context.appInstance.getMessageBus()),
+    m_uiScene           (context.appInstance.getMessageBus()),
+    m_viewScale         (1.f),
+    m_strokeCountIndex  (0)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -344,10 +345,7 @@ void DrivingState::loadAssets()
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
-    //m_sprites[SpriteID::MessageBoard] = spriteSheet.getSprite("message_board");
-
-    spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
-    m_sprites[SpriteID::MessageBoard] = spriteSheet.getSprite("border");
+    m_sprites[SpriteID::MessageBoard] = spriteSheet.getSprite("message_board");
 }
 
 void DrivingState::createScene()
@@ -479,7 +477,6 @@ void DrivingState::createScene()
 
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
-
         //the resize actually extends the target vertically so we need to maintain a
         //horizontal FOV, not the vertical one expected by default.
         cam.setPerspective(FOV * (texSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
@@ -563,7 +560,7 @@ void DrivingState::createScene()
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             //show menu
-            cmd.targetFlags = CommandID::UI::MessageBoard;
+            cmd.targetFlags = CommandID::UI::DrivingBoard;
             cmd.action = [&](cro::Entity e, float)
             {
                 e.getComponent<cro::Callback>().active = true;
@@ -1153,94 +1150,40 @@ void DrivingState::updateWindDisplay(glm::vec3 direction)
 
 void DrivingState::createGameOptions()
 {
-    auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();
-    auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-    auto position = glm::vec3(size.x / 2.f, size.y / 2.f, 1.5f);
-
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(position);
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MessageBoard];
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard;
-
-
-    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
-
-    auto titleText = m_uiScene.createEntity();
-    titleText.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 293.f, 0.02f });
-    titleText.addComponent<cro::Drawable2D>();
-    titleText.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
-    titleText.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    titleText.getComponent<cro::Text>().setString("The Range");
-    centreText(titleText);
-
-    auto headerText = m_uiScene.createEntity();
-    headerText.addComponent<cro::Transform>().setPosition({ 8.f, 277.f, 0.02f });
-    headerText.addComponent<cro::Drawable2D>();
-    headerText.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
-    headerText.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    headerText.getComponent<cro::Text>().setString("How To Play");
-
-    auto infoText = m_uiScene.createEntity();
-    infoText.addComponent<cro::Transform>().setPosition({ 8.f, 268.f, 0.02f });
-    infoText.addComponent<cro::Drawable2D>();
-    infoText.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
-    infoText.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    const std::string helpString = 
-    R"(
-Pick the number of shots you wish to take. For each shot you will be given
-a new target. Hit the ball as close as possible to the target by selecting
-the appropriate club. When all your shots are taken you will be given a
-score based on your overall accuracy. Good Luck!
-    )";
-
-    infoText.getComponent<cro::Text>().setString(helpString);
+    const auto centreSprite = [](cro::Entity e)
+    {
+        auto bounds = e.getComponent<cro::Sprite>().getTextureBounds();
+        e.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    };
 
     auto* uiSystem = m_uiScene.getSystem<cro::UISystem>();
-    auto textEnter = uiSystem->addCallback([](cro::Entity e) {e.getComponent<cro::Text>().setFillColour(TextGoldColour); });
-    auto textExit = uiSystem->addCallback([](cro::Entity e) {e.getComponent<cro::Text>().setFillColour(TextNormalColour); });
+    auto buttonSelect = uiSystem->addCallback([](cro::Entity e) {e.getComponent<cro::Transform>().setScale({ 1.f, 1.f }); });
+    auto buttonUnselect = uiSystem->addCallback([](cro::Entity e) {e.getComponent<cro::Transform>().setScale({ 0.f, 0.f }); });
+
 
     //consumes events when menu not active
     auto dummyEnt = m_uiScene.createEntity();
     dummyEnt.addComponent<cro::Transform>();
     dummyEnt.addComponent<cro::UIInput>();
 
-    auto startText = m_uiScene.createEntity();
-    startText.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 26.f, 0.02f });
-    startText.addComponent<cro::Drawable2D>();
-    startText.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
-    startText.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    startText.getComponent<cro::Text>().setString("Start");
-    startText.addComponent<cro::UIInput>().setGroup(MenuID::Options);
-    startText.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(startText);
-    startText.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = textEnter;
-    startText.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = textExit;
-    startText.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem->addCallback(
-            [uiSystem, entity](cro::Entity e, const cro::ButtonEvent& evt) mutable
-            {
-                auto& [state, timeout] = entity.getComponent<cro::Callback>().getUserData<MessageAnim>();
-                if (state == MessageAnim::Hold
-                    && activated(evt))
-                {
-                    state = MessageAnim::Close;
-                    timeout = 1.f;
-                    uiSystem->setActiveGroup(MenuID::Dummy);
-                }
-            });
-    centreText(startText);
+    //background
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
+    auto bgSprite = spriteSheet.getSprite("border");
 
-    entity.getComponent<cro::Transform>().addChild(titleText.getComponent<cro::Transform>());
-    entity.getComponent<cro::Transform>().addChild(headerText.getComponent<cro::Transform>());
-    entity.getComponent<cro::Transform>().addChild(infoText.getComponent<cro::Transform>());
-    entity.getComponent<cro::Transform>().addChild(startText.getComponent<cro::Transform>());
+    auto bounds = bgSprite.getTextureBounds();
+    auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
+    auto position = glm::vec3(size.x / 2.f, size.y / 2.f, 1.5f);
 
-
-    entity.addComponent<cro::Callback>().setUserData<MessageAnim>();
-    entity.getComponent<cro::Callback>().function =
+    auto bgEntity = m_uiScene.createEntity();
+    bgEntity.addComponent<cro::Transform>().setPosition(position);
+    bgEntity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    bgEntity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    bgEntity.addComponent<cro::Drawable2D>();
+    bgEntity.addComponent<cro::Sprite>() = bgSprite;
+    bgEntity.addComponent<cro::CommandTarget>().ID = CommandID::UI::DrivingBoard;
+    bgEntity.addComponent<cro::Callback>().setUserData<MessageAnim>();
+    bgEntity.getComponent<cro::Callback>().function =
         [&, uiSystem](cro::Entity e, float dt)
     {
         auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
@@ -1257,7 +1200,7 @@ score based on your overall accuracy. Good Luck!
         case MessageAnim::Open:
             //grow
             currTime = std::min(1.f, currTime + (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale(glm::vec2(m_viewScale.x, m_viewScale.y *cro::Util::Easing::easeOutQuint(currTime)));
+            e.getComponent<cro::Transform>().setScale(glm::vec2(m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime)));
             if (currTime == 1)
             {
                 currTime = 0;
@@ -1275,7 +1218,7 @@ score based on your overall accuracy. Good Luck!
             e.getComponent<cro::Transform>().setPosition(position);
             e.getComponent<cro::Transform>().setScale(m_viewScale);
         }
-            break;
+        break;
         case MessageAnim::Close:
             //shrink
             currTime = std::max(0.f, currTime - (dt * 3.f));
@@ -1290,4 +1233,204 @@ score based on your overall accuracy. Good Luck!
             break;
         }
     };
+
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    //title
+    auto titleText = m_uiScene.createEntity();
+    titleText.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 293.f, 0.02f });
+    titleText.addComponent<cro::Drawable2D>();
+    titleText.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    titleText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    titleText.getComponent<cro::Text>().setString("The Range");
+    centreText(titleText);
+    bgEntity.getComponent<cro::Transform>().addChild(titleText.getComponent<cro::Transform>());
+
+    //header
+    auto headerText = m_uiScene.createEntity();
+    headerText.addComponent<cro::Transform>().setPosition({ 14.f, 233.f, 0.02f });
+    headerText.addComponent<cro::Drawable2D>();
+    headerText.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    headerText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    headerText.getComponent<cro::Text>().setString("How To Play");
+    bgEntity.getComponent<cro::Transform>().addChild(headerText.getComponent<cro::Transform>());
+
+    //help text
+    auto infoText = m_uiScene.createEntity();
+    infoText.addComponent<cro::Transform>().setPosition({ 14.f, 220.f, 0.02f });
+    infoText.addComponent<cro::Drawable2D>();
+    infoText.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+    infoText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    const std::string helpString = 
+    R"(
+Pick the number of shots you wish to take. For each shot you will be given
+a new target. Hit the ball as close as possible to the target by selecting
+the appropriate club. When all your shots are taken you will be given a
+score based on your overall accuracy. Good Luck!
+    )";
+
+    infoText.getComponent<cro::Text>().setString(helpString);
+    bgEntity.getComponent<cro::Transform>().addChild(infoText.getComponent<cro::Transform>());
+
+
+    const auto createButton = [&](const std::string& sprite, glm::vec2 position)
+    {
+        auto buttonEnt = m_uiScene.createEntity();
+        buttonEnt.addComponent<cro::Transform>().setPosition(glm::vec3(position, 0.4f));
+        buttonEnt.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
+        buttonEnt.addComponent<cro::Drawable2D>();
+        buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite(sprite);
+        buttonEnt.addComponent<cro::UIInput>().area = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
+        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = buttonSelect;
+        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = buttonUnselect;
+        buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Options);
+
+        return buttonEnt;
+    };
+
+
+    //hole count
+    auto countEnt = m_uiScene.createEntity();
+    countEnt.addComponent<cro::Transform>().setPosition({bounds.width / 2.f, 90.f, 0.1f});
+    countEnt.addComponent<cro::Drawable2D>();
+    countEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("stroke_select");
+    auto strokeBounds = spriteSheet.getSprite("stroke_select").getTextureBounds();
+    countEnt.getComponent<cro::Transform>().setOrigin({ strokeBounds.width / 2.f, 0.f});
+    bgEntity.getComponent<cro::Transform>().addChild(countEnt.getComponent<cro::Transform>());
+
+    auto strokeTextEnt = m_uiScene.createEntity();
+    strokeTextEnt.addComponent<cro::Transform>().setPosition({ strokeBounds.width / 2.f, strokeBounds.height + 11.f });
+    strokeTextEnt.addComponent<cro::Drawable2D>();
+    strokeTextEnt.addComponent<cro::Text>(largeFont).setString("Strokes To Play");
+    strokeTextEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    strokeTextEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    centreText(strokeTextEnt);
+    countEnt.getComponent<cro::Transform>().addChild(strokeTextEnt.getComponent<cro::Transform>());
+
+    auto numberEnt = m_uiScene.createEntity();
+    numberEnt.addComponent<cro::Transform>().setPosition({ strokeBounds.width / 2.f, std::floor(strokeBounds.height / 2.f) + 4.f });
+    numberEnt.addComponent<cro::Drawable2D>();
+    numberEnt.addComponent<cro::Text>(largeFont);
+    numberEnt.getComponent<cro::Text>().setString("5");
+    numberEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    numberEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    centreText(numberEnt);
+    countEnt.getComponent<cro::Transform>().addChild(numberEnt.getComponent<cro::Transform>());
+
+    auto buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f));
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [&, numberEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_strokeCountIndex = (m_strokeCountIndex + (m_strokeCounts.size() - 1)) % m_strokeCounts.size();
+                    numberEnt.getComponent<cro::Text>().setString(std::to_string(m_strokeCounts[m_strokeCountIndex]));
+                    centreText(numberEnt);
+                }
+            });
+    countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+    buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f));
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [&, numberEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_strokeCountIndex = (m_strokeCountIndex + 1) % m_strokeCounts.size();
+                    numberEnt.getComponent<cro::Text>().setString(std::to_string(m_strokeCounts[m_strokeCountIndex]));
+                    centreText(numberEnt);
+                }
+            });
+    countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+
+    //player select - do we realyl want this, or shall we just put a nice picture here instead?
+    /*auto playerEnt = m_uiScene.createEntity();
+    playerEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 48.f, 0.1f });
+    playerEnt.addComponent<cro::Drawable2D>();
+    playerEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("player_select");
+    playerEnt.getComponent<cro::Transform>().setOrigin({ spriteSheet.getSprite("player_select").getTextureBounds().width / 2.f, 0.f });
+    bgEntity.getComponent<cro::Transform>().addChild(playerEnt.getComponent<cro::Transform>());
+
+    auto avatarEnt = m_uiScene.createEntity();
+    avatarEnt.addComponent<cro::Transform>();
+    avatarEnt.addComponent<cro::Drawable2D>();
+    avatarEnt.addComponent<cro::Sprite>(m_sharedData.avatarTextures[0][0]);
+    avatarEnt.getComponent<cro::Sprite>().setTextureRect(m_sharedData.avatarInfo[0].buns);
+
+
+    buttonEnt = createButton("arrow_left", glm::vec2(-2.f, 42.f));
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+
+                }
+            });
+    playerEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+    buttonEnt = createButton("arrow_right", glm::vec2(80.f, 42.f));
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+
+                }
+            });
+    playerEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());*/
+
+
+
+    //start button
+    auto selectedBounds = spriteSheet.getSprite("start_highlight").getTextureRect();
+    auto unselectedBounds = spriteSheet.getSprite("start_button").getTextureRect();
+    auto startButton = m_uiScene.createEntity();
+    startButton.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 48.f, 0.2f });
+    startButton.addComponent<cro::Drawable2D>();
+    startButton.addComponent<cro::Sprite>() = spriteSheet.getSprite("start_button");
+    startButton.addComponent<cro::UIInput>().setGroup(MenuID::Options);
+    startButton.getComponent<cro::UIInput>().area = startButton.getComponent<cro::Sprite>().getTextureBounds();
+    startButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+        uiSystem->addCallback(
+            [selectedBounds](cro::Entity e) 
+            {
+                e.getComponent<cro::Sprite>().setTextureRect(selectedBounds);
+                e.getComponent<cro::Transform>().setOrigin({ selectedBounds.width / 2.f, selectedBounds.height / 2.f });
+            });
+    startButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
+        uiSystem->addCallback(
+            [unselectedBounds](cro::Entity e)
+            {
+                e.getComponent<cro::Sprite>().setTextureRect(unselectedBounds);
+                e.getComponent<cro::Transform>().setOrigin({ unselectedBounds.width / 2.f, unselectedBounds.height / 2.f });
+            });
+    startButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [uiSystem, bgEntity](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                auto& [state, timeout] = bgEntity.getComponent<cro::Callback>().getUserData<MessageAnim>();
+                if (state == MessageAnim::Hold
+                    && activated(evt))
+                {
+                    state = MessageAnim::Close;
+                    timeout = 1.f;
+                    uiSystem->setActiveGroup(MenuID::Dummy);
+                }
+            });
+    centreSprite(startButton);
+    bgEntity.getComponent<cro::Transform>().addChild(startButton.getComponent<cro::Transform>());
+
+
+    //wang this in here so we can debug easier
+    /*cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::DrivingBoard;
+    cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Callback>().active = true; };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
 }

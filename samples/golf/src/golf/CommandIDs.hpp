@@ -63,7 +63,8 @@ struct CommandID final
             MiniMap              = 0x1000,
             MiniBall             = 0x2000,
             MessageBoard         = 0x4000,
-            MiniGreen            = 0x8000
+            MiniGreen            = 0x8000,
+            DrivingBoard         = 0x10000
         };
     };
 
