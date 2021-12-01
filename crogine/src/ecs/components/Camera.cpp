@@ -164,7 +164,7 @@ void Camera::updateMatrices(const Transform& tx, float level)
     finalPass.viewProjectionMatrix = m_projectionMatrix * finalPass.viewMatrix;
     finalPass.m_aabb = Spatial::updateFrustum(finalPass.m_frustum, finalPass.viewProjectionMatrix);
 
-
+    //TODO - disable this pass if the reflection buffer isn't created?
     reflectionPass.viewMatrix = glm::scale(finalPass.viewMatrix, glm::vec3(1.f, -1.f, 1.f));
     reflectionPass.viewMatrix = glm::translate(reflectionPass.viewMatrix, glm::vec3(0.f, level, 0.f));
     reflectionPass.viewProjectionMatrix = m_projectionMatrix * reflectionPass.viewMatrix;

@@ -315,18 +315,26 @@ void BallSystem::process(float dt)
 
                 std::uint8_t terrain = TerrainID::Water;
                 auto ballPos = tx.getPosition();
-                ballPos.y = 0.f;
-
+                //make sure ball height is level with target
+                //else moving it may cause the collision test
+                //to miss if the terrain is much higher than
+                //the water level.
+                ballPos.y = m_holeData->pin.y;
                 auto pinDir = m_holeData->pin - ballPos;
+
+                ballPos.y = m_holeData->target.y;
                 auto targetDir = m_holeData->target - ballPos;
+
                 glm::vec3 dir(0.f);
                 if (glm::length2(pinDir) < glm::length2(targetDir))
                 {
                     dir = pinDir;
+                    ballPos.y = m_holeData->pin.y;
                 }
                 else
                 {
                     dir = targetDir;
+                    ballPos.y = m_holeData->target.y;
                 }
 
                 auto length = glm::length(dir);

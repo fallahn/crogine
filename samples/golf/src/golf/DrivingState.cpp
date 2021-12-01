@@ -1000,7 +1000,8 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
         return 0;
     };
 
-    auto idx = indexFromSkinID(m_sharedData.localConnectionData.playerData[0].skinID);
+    auto playerIndex = cro::Util::Random::value(0, 3);
+    auto idx = indexFromSkinID(m_sharedData.localConnectionData.playerData[playerIndex].skinID);
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile(m_sharedData.avatarInfo[idx].spritePath, m_resources.textures);
@@ -1026,7 +1027,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     };
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("wood");
-    entity.getComponent<cro::Sprite>().setTexture(m_sharedData.avatarTextures[0][0], false);
+    entity.getComponent<cro::Sprite>().setTexture(m_sharedData.avatarTextures[0][playerIndex], false);
     entity.addComponent<cro::SpriteAnimation>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
