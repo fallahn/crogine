@@ -287,6 +287,7 @@ void DrivingState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
+    m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
@@ -559,12 +560,16 @@ void DrivingState::createScene()
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-            //show menu
-            cmd.targetFlags = CommandID::UI::DrivingBoard;
+            //show shadow
+            cmd.targetFlags = CommandID::PlayerShadow;
             cmd.action = [&](cro::Entity e, float)
             {
                 e.getComponent<cro::Callback>().active = true;
             };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            //show menu
+            cmd.targetFlags = CommandID::UI::DrivingBoard;
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
     };
@@ -1027,6 +1032,34 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width * 0.78f, 0.f, -0.5f });
     courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //shadow
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/golf/models/ball_shadow.cmt"))
+    {
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
+        entity.getComponent<cro::Transform>().move({ -0.65f, 0.1f, 0.4f });
+        entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
+        md.createModel(entity);
+
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::PlayerShadow;
+        entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+        {
+            static constexpr float ShadowScale = 20.f;
+
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::min(1.f, currTime + (dt * 2.f));
+            e.getComponent<cro::Transform>().setScale({ ShadowScale * cro::Util::Easing::easeOutBounce(currTime), 1.f, ShadowScale });
+
+            if (currTime == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
+    }
 }
 
 void DrivingState::startTransition()
