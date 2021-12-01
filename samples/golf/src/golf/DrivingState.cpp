@@ -102,14 +102,14 @@ namespace
 
     struct FoliageCallback final
     {
-        FoliageCallback(float d = 0.f) : delay(d + 25.f) {} //magic number is some delay before effect starts
+        FoliageCallback(float d = 0.f) : delay(d + 8.f) {} //magic number is some delay before effect starts
         float delay = 0.f;
         float progress = 0.f;
         static constexpr float Distance = 14.f;
 
         void operator() (cro::Entity e, float dt)
         {
-            delay -= (dt * 4.f); 
+            delay -= (dt * 1.6f); 
 
             if (delay < 0)
             {
@@ -162,10 +162,11 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
         {
             if (ImGui::Begin("Window"))
             {
-                ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][0].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
+                /*ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][0].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
                 ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][1].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
                 ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][2].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
-                ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][3].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});                
+                ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][3].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});*/ 
+                ImGui::Image(cro::TextureID(m_debugHeightmap.getGLHandle()), { 280.f, 290.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
         });
@@ -422,32 +423,36 @@ void DrivingState::createScene()
                 entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
                 md.createModel(entity);
 
-                for (auto m = 0u; m < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++m)
-                {
-                    auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-                    setTexture(md, material, m);
-                    entity.getComponent<cro::Model>().setMaterial(m, material);
-                }
+                //not sure we need to set all submeshes - for one thing it breaks the cart shadow
+                auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+                setTexture(md, material);
+                entity.getComponent<cro::Model>().setMaterial(0, material);
             }
         }
     }
 
     //load the course model
-    auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-
     cro::ModelDefinition md(m_resources);
     if (!md.loadFromFile("assets/golf/models/driving_range.cmt"))
     {
         quitFail("Could Not Load Course Model");
         return;
     }
-    setTexture(md, texturedMat);
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
-    entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
+    auto count = entity.getComponent<cro::Model>().getMeshData().submeshCount;
+    for (auto i = 0u; i < count; ++i)
+    {
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        setTexture(md, material, i);
+        entity.getComponent<cro::Model>().setMaterial(i, material);
+    }
+
+    //create the billboards
+    createFoliage(entity);
 
     //tee marker
     md.loadFromFile("assets/golf/models/tee_balls.cmt");
@@ -457,85 +462,6 @@ void DrivingState::createScene()
     md.createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
 
-
-    //create the billboards
-    auto createBillboards = [&](cro::Entity dst, std::array<float,2u> minBounds, std::array<float, 2u> maxBounds)
-    {
-        auto trees = pd::PoissonDiskSampling(4.f, minBounds, maxBounds);
-        auto flowers = pd::PoissonDiskSampling(2.f, minBounds, maxBounds);
-        std::vector<cro::Billboard> billboards;
-
-        for (auto [x, y] : trees)
-        {
-            float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
-            auto& bb = billboards.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)]);
-            bb.position = { x, -0.05f, -y }; //small vertical offset to stop floating billboards
-            bb.size *= scale;
-        }
-
-        for (auto [x, y] : flowers)
-        {
-            float scale = static_cast<float>(cro::Util::Random::value(13, 17)) / 10.f;
-
-            auto& bb = billboards.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Bush02)]);
-            bb.position = { x, 0.05f, -y };
-            bb.size *= scale;
-        }
-        dst.getComponent<cro::BillboardCollection>().setBillboards(billboards);
-    };
-
-    //sides
-    for (auto i = 0u; i < ChunkCount; ++i)
-    {
-        glm::vec3 pos = { (-RangeSize.x / 2.f) - BillboardChunk.x, -FoliageCallback::Distance, (i * -BillboardChunk.y) + (RangeSize.y / 2.f) };
-        for (auto j = 0u; j < 2u; ++j)
-        {
-            md.loadFromFile("assets/golf/models/shrubbery.cmt");
-
-            entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(pos);
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().function = FoliageCallback(static_cast<float>(i));
-            md.createModel(entity);
-
-            if (entity.hasComponent<cro::BillboardCollection>())
-            {
-                static constexpr std::array MinBounds = { 0.f, 0.f };
-                static constexpr std::array MaxBounds = { BillboardChunk.x, BillboardChunk.y };
-                createBillboards(entity, MinBounds, MaxBounds);
-            }
-
-            pos.x += RangeSize.x + BillboardChunk.x;
-        }
-    }
-
-    //end range of trees
-    md.loadFromFile("assets/golf/models/shrubbery.cmt");
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ (-RangeSize.x / 2.f) - BillboardChunk.x, -FoliageCallback::Distance, (-RangeSize.y / 2.f) });
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function = FoliageCallback(ChunkCount);
-    md.createModel(entity);
-    if (entity.hasComponent<cro::BillboardCollection>())
-    {
-        createBillboards(entity, { 0.f, 0.f }, { RangeSize.x + (BillboardChunk.x * 2.f), BillboardChunk.x});
-    }
-
-    glm::vec3 position((-RangeSize.x / 2.f) - BillboardChunk.x, 0.f, (-RangeSize.y / 2.f) - (BillboardChunk.x * 1.5f));
-    for (auto i = 0; i < 2; ++i)
-    {
-        md.loadFromFile("assets/golf/models/shrubbery.cmt");
-        entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(position);
-        md.createModel(entity);
-
-        if (entity.hasComponent<cro::BillboardCollection>())
-        {
-            createBillboards(entity, { 0.f, 0.f }, { (BillboardChunk.x * 2.8f), BillboardChunk.x / 2.f });
-        }
-
-        position.x += 170.f;
-    }
 
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
@@ -661,8 +587,177 @@ void DrivingState::createScene()
 
     //emulate facing north with sun more or less behind player
     auto sunEnt = m_gameScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -35.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -65.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -35.f * cro::Util::Const::degToRad);
+}
+
+void DrivingState::createFoliage(cro::Entity terrainEnt)
+{
+    //render a heightmap from the hole mesh
+    //TODO this is lifted from TerrainBuilder and can probably be shared between both with a refactor
+    const auto& meshData = terrainEnt.getComponent<cro::Model>().getMeshData();
+    std::size_t normalOffset = 0;
+    for (auto i = 0u; i < cro::Mesh::Normal; ++i)
+    {
+        normalOffset += meshData.attributes[i];
+    }
+
+    cro::Shader normalShader;
+    normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
+
+    glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
+    glm::vec2 mapSize(280.f, 290.f);
+    glm::mat4 projMat = glm::ortho(-mapSize.x / 2.f, mapSize.x / 2.f, -125.f, mapSize.y - 125.f, -10.f, 20.f);
+    auto normalViewProj = projMat * viewMat;
+
+    const auto& attribs = normalShader.getAttribMap();
+    auto vaoCount = static_cast<std::int32_t>(meshData.submeshCount);
+
+    std::vector<std::uint32_t> vaos(vaoCount);
+    glCheck(glGenVertexArrays(vaoCount, vaos.data()));
+
+    for (auto i = 0u; i < vaos.size(); ++i)
+    {
+        glCheck(glBindVertexArray(vaos[i]));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Position]));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Position], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), 0));
+        glCheck(glEnableVertexAttribArray(attribs[cro::Mesh::Normal]));
+        glCheck(glVertexAttribPointer(attribs[cro::Mesh::Normal], 3, GL_FLOAT, GL_FALSE, static_cast<std::int32_t>(meshData.vertexSize), (void*)(normalOffset * sizeof(float))));
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[i].ibo));
+    }
+
+    glCheck(glUseProgram(normalShader.getGLHandle()));
+    glCheck(glDisable(GL_CULL_FACE));
+
+    float holeBottom = std::min(meshData.boundingBox[0].y, meshData.boundingBox[1].y);
+    float holeHeight = std::max(meshData.boundingBox[0].y, meshData.boundingBox[1].y) - holeBottom;
+    glCheck(glUniform1f(normalShader.getUniformID("u_lowestPoint"), holeBottom));
+    glCheck(glUniform1f(normalShader.getUniformID("u_maxHeight"), holeHeight));
+    glCheck(glUniformMatrix4fv(normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
+
+    cro::RenderTexture normalMap;
+    normalMap.create(280, 290, false); //course size + borders
+
+    //clear the alpha to 0 so unrendered areas have zero height
+    static const cro::Colour ClearColour = cro::Colour(0x7f7fff00);
+    normalMap.clear(ClearColour);
+    for (auto i = 0u; i < vaos.size(); ++i)
+    {
+        glCheck(glBindVertexArray(vaos[i]));
+        glCheck(glDrawElements(GL_TRIANGLES, meshData.indexData[i].indexCount, GL_UNSIGNED_INT, 0));
+    }
+    normalMap.display();
+
+    glCheck(glBindVertexArray(0));
+    glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
+
+    cro::Image normalMapImage;
+    normalMap.getTexture().saveToImage(normalMapImage);
+
+#ifdef CRO_DEBUG_
+    m_debugHeightmap.loadFromImage(normalMapImage);
+#endif
+
+    const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y)
+    {
+        auto size = normalMapImage.getSize();
+        x = std::min(size.x - 1, std::max(0u, x));
+        y = std::min(size.y - 1, std::max(0u, y));
+
+        float height = static_cast<float>(normalMapImage.getPixel(x, y)[3]) / 255.f;
+        return holeBottom + (holeHeight * height);
+    };
+
+    auto createBillboards = [&](cro::Entity dst, std::array<float, 2u> minBounds, std::array<float, 2u> maxBounds)
+    {
+        auto trees = pd::PoissonDiskSampling(4.f, minBounds, maxBounds);
+        auto flowers = pd::PoissonDiskSampling(2.f, minBounds, maxBounds);
+        std::vector<cro::Billboard> billboards;
+
+        glm::vec3 offsetPos = dst.getComponent<cro::Transform>().getPosition();
+        constexpr glm::vec2 centreOffset(140.f, 125.f);
+
+        for (auto [x, y] : trees)
+        {
+            glm::vec2 mapPos(offsetPos.x + x, -offsetPos.z + y);
+            mapPos += centreOffset;
+
+            float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+            auto& bb = billboards.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)]);
+            bb.position = { x, readHeightMap(static_cast<std::int32_t>(mapPos.x), static_cast<std::int32_t>(mapPos.y)) - 0.05f, -y}; //small vertical offset to stop floating billboards
+            bb.size *= scale;
+        }
+
+        for (auto [x, y] : flowers)
+        {
+            glm::vec2 mapPos(offsetPos.x + x, -offsetPos.z + y);
+            mapPos += centreOffset;
+
+            float scale = static_cast<float>(cro::Util::Random::value(13, 17)) / 10.f;
+
+            auto& bb = billboards.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Bush02)]);
+            bb.position = { x, readHeightMap(static_cast<std::int32_t>(mapPos.x), static_cast<std::int32_t>(mapPos.y)) + 0.05f, -y };
+            bb.size *= scale;
+        }
+        dst.getComponent<cro::BillboardCollection>().setBillboards(billboards);
+    };
+
+    cro::ModelDefinition md(m_resources);
+
+    //sides
+    for (auto i = 0u; i < ChunkCount; ++i)
+    {
+        glm::vec3 pos = { (-RangeSize.x / 2.f) - BillboardChunk.x, -FoliageCallback::Distance, (i * -BillboardChunk.y) + (RangeSize.y / 2.f) };
+        for (auto j = 0u; j < 2u; ++j)
+        {
+            md.loadFromFile("assets/golf/models/shrubbery.cmt");
+
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(pos);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function = FoliageCallback(static_cast<float>(ChunkCount - i));
+            md.createModel(entity);
+
+            if (entity.hasComponent<cro::BillboardCollection>())
+            {
+                static constexpr std::array MinBounds = { 0.f, 0.f };
+                static constexpr std::array MaxBounds = { BillboardChunk.x, BillboardChunk.y };
+                createBillboards(entity, MinBounds, MaxBounds);
+            }
+
+            pos.x += RangeSize.x + BillboardChunk.x;
+        }
+    }
+
+    //end range of trees
+    md.loadFromFile("assets/golf/models/shrubbery.cmt");
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (-RangeSize.x / 2.f) - BillboardChunk.x, -FoliageCallback::Distance, (-RangeSize.y / 2.f) });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = FoliageCallback();
+    md.createModel(entity);
+    if (entity.hasComponent<cro::BillboardCollection>())
+    {
+        createBillboards(entity, { 0.f, 0.f }, { RangeSize.x + (BillboardChunk.x * 2.f), BillboardChunk.x });
+    }
+
+    //magic height number here - should match the loaded pavilion height
+    glm::vec3 position((-RangeSize.x / 2.f) - BillboardChunk.x, 2.f, (-RangeSize.y / 2.f) - (BillboardChunk.x * 1.6f));
+    for (auto i = 0; i < 2; ++i)
+    {
+        md.loadFromFile("assets/golf/models/shrubbery.cmt");
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position);
+        md.createModel(entity);
+
+        if (entity.hasComponent<cro::BillboardCollection>())
+        {
+            createBillboards(entity, { 0.f, 0.f }, { (BillboardChunk.x * 2.8f), BillboardChunk.x / 2.f });
+        }
+
+        position.x += 170.f;
+    }
 }
 
 void DrivingState::createUI()

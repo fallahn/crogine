@@ -93,6 +93,7 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
+    void createFoliage(cro::Entity);
     void createUI();
     void createPlayer(cro::Entity);
 
@@ -114,4 +115,8 @@ private:
         };
     };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
+
+#ifdef CRO_DEBUG_
+    cro::Texture m_debugHeightmap;
+#endif
 };

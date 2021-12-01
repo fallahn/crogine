@@ -755,7 +755,7 @@ void TerrainBuilder::renderNormalMap()
     for (auto i = 0u; i < vaos.size(); ++i)
     {
         glCheck(glBindVertexArray(vaos[i]));
-        glDrawElements(GL_TRIANGLES, meshData.indexData[i].indexCount, GL_UNSIGNED_INT, 0);
+        glCheck(glDrawElements(GL_TRIANGLES, meshData.indexData[i].indexCount, GL_UNSIGNED_INT, 0));
     }
     m_normalMap.display();
 
