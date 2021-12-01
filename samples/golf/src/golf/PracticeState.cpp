@@ -35,6 +35,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "PacketIDs.hpp"
 #include "Utility.hpp"
+#include "TextAnimCallback.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/core/Window.hpp>
@@ -278,20 +279,7 @@ void PracticeState::buildScene()
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
 
         e.addComponent<cro::Callback>().setUserData<float>(0.f);
-        e.getComponent<cro::Callback>().function =
-            [](cro::Entity e, float dt)
-        {
-            auto& data = e.getComponent<cro::Callback>().getUserData<float>();
-            data = std::min(1.f, data + (dt * 2.f));
-            
-            float scale =  0.8f + (0.2f * cro::Util::Easing::easeOutBounce(data));
-            e.getComponent<cro::Transform>().setScale({ scale, scale });
-            
-            if (data == 1)
-            {
-                e.getComponent<cro::Callback>().active = false;
-            }
-        };
+        e.getComponent<cro::Callback>().function = MenuTextCallback();
 
         parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         return e;

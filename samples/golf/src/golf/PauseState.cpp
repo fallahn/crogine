@@ -33,6 +33,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
+#include "TextAnimCallback.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/core/Window.hpp>
@@ -265,6 +266,8 @@ void PauseState::buildScene()
         {
             e.getComponent<cro::Text>().setFillColour(TextGoldColour); 
             e.getComponent<cro::AudioEmitter>().play();
+            e.getComponent<cro::Callback>().setUserData<float>(0.f);
+            e.getComponent<cro::Callback>().active = true;
         });
     auto unselectedID = uiSystem.addCallback(
         [](cro::Entity e) 
@@ -285,6 +288,9 @@ void PauseState::buildScene()
         e.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(e);
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+
+        e.addComponent<cro::Callback>().setUserData<float>(0.f);
+        e.getComponent<cro::Callback>().function = MenuTextCallback();
 
         parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         return e;

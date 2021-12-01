@@ -33,6 +33,7 @@ source distribution.
 
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Text.hpp>
+#include <crogine/util/Easings.hpp>
 
 //used to animate strings with a text callback, ie player name
 struct TextCallbackData final
@@ -43,6 +44,7 @@ struct TextCallbackData final
     static constexpr float CharTime = 0.05f;
 };
 
+//prints text one character at a time (see name labels in game state)
 struct TextAnimCallback final
 {
     void operator () (cro::Entity e, float dt)
@@ -68,6 +70,24 @@ struct TextAnimCallback final
                 data.currentChar = 0;
                 e.getComponent<cro::Callback>().active = false;
             }
+        }
+    }
+};
+
+//used to animate text on menus (see paused/practice selection)
+struct MenuTextCallback final
+{
+    void operator() (cro::Entity e, float dt)
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<float>();
+        data = std::min(1.f, data + (dt * 2.5f));
+
+        float scale = 1.f + (0.2f * (1.f - cro::Util::Easing::easeOutElastic(data)));
+        e.getComponent<cro::Transform>().setScale({ scale, scale });
+
+        if (data == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
         }
     }
 };
