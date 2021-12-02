@@ -422,11 +422,11 @@ glm::vec3 BallSystem::getWindDirection() const
     return { m_windDirection.x, m_windStrength, m_windDirection.z };
 }
 
-bool BallSystem::setHoleData(const HoleData& holeData)
+bool BallSystem::setHoleData(const HoleData& holeData, bool rebuildMesh)
 {
     m_holeData = &holeData;
 
-    return updateCollisionMesh(holeData.modelPath);
+    return rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
 }
 
 //private

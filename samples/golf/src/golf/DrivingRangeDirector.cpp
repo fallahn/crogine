@@ -28,9 +28,14 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "DrivingRangeDirector.hpp"
+#include "MessageIDs.hpp"
+#include "server/ServerMessages.hpp"
 
-DrivingRangeDirector::DrivingRangeDirector()
-	: m_holeCount(18)
+#include <crogine/util/Random.hpp>
+
+DrivingRangeDirector::DrivingRangeDirector(std::vector<HoleData>& hd)
+	: m_holeData	(hd),
+	m_holeCount		(18)
 {
 
 }
@@ -38,10 +43,31 @@ DrivingRangeDirector::DrivingRangeDirector()
 //public
 void DrivingRangeDirector::handleMessage(const cro::Message& msg)
 {
-
+	switch (msg.id)
+	{
+	default: break;
+	case MessageID::GolfMessage:
+	{
+		const auto& data = msg.getData<GolfEvent>();
+		if (data.type == GolfEvent::HitBall)
+		{
+			//actual ball whacking is done in the driving state
+			//as it needs to read the input parser
+		}
+	}
+		break;
+	}
 }
 
 void DrivingRangeDirector::process(float)
 {
 
+}
+
+void DrivingRangeDirector::setHoleCount(std::int32_t count)
+{
+	m_holeCount = count;
+	std::shuffle(m_holeData.begin(), m_holeData.end(), cro::Util::Random::rndEngine);
+
+	//TODO raise a message to start the round
 }

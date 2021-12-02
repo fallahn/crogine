@@ -36,10 +36,15 @@ namespace MessageID
 {
     enum
     {
+        //this is a fudge to stop it clashing with sv::MessageID
+        //as systems like the BallSystem raise them locally when
+        //used in modes like the driving range.
         GolfMessage = 400,//cro::Message::Count
         SceneMessage,
         CollisionMessage,
-        SystemMessage
+        SystemMessage,
+
+        Count
     };
 }
 

@@ -36,6 +36,9 @@ source distribution.
 #include "FpsCameraSystem.hpp"
 #include "TextAnimCallback.hpp"
 #include "DrivingRangeDirector.hpp"
+#include "BallSystem.hpp"
+#include "MessageIDs.hpp"
+#include "Clubs.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
 
@@ -155,10 +158,6 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
         addSystems();
         loadAssets();
         createScene();
-        createUI();
-
-        //make sure everything was loaded
-        startTransition();
     });
 
 #ifdef CRO_DEBUG_
@@ -241,13 +240,30 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 
 void DrivingState::handleMessage(const cro::Message& msg)
 {
+    switch (msg.id)
+    {
+    default: break;
+    case MessageID::GolfMessage:
+    {
+        const auto& data = msg.getData<GolfEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case GolfEvent::HitBall:
+            hitBall();
+            break;
+        }
+    }
+        break;
+    }
+
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
 
 bool DrivingState::simulate(float dt)
 {
-    updateWindDisplay(glm::vec3(1.f, 1.f, 0.f));
+    updateWindDisplay(m_gameScene.getSystem<BallSystem>()->getWindDirection());
 
     m_inputParser.update(dt);
     m_gameScene.simulate(dt);
@@ -292,6 +308,7 @@ void DrivingState::addSystems()
 
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
+    m_gameScene.addSystem<BallSystem>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
@@ -301,7 +318,7 @@ void DrivingState::addSystems()
 
     m_gameScene.setSystemActive<FpsCameraSystem>(false);
 #endif
-    m_gameScene.addDirector<DrivingRangeDirector>();
+    m_gameScene.addDirector<DrivingRangeDirector>(m_holeData);
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
@@ -372,6 +389,10 @@ void DrivingState::createScene()
 {
     const auto& quitFail = [&](const std::string msg)
     {
+        //create a basic render texture in case a load
+        //error occurs (this will be resized by camera callback on success)
+        m_backgroundTexture.create(800, 600);
+
         m_sharedData.errorMessage = msg;
         requestStackPush(StateID::Error);
     };
@@ -394,6 +415,7 @@ void DrivingState::createScene()
             data.pin = p.getValue<glm::vec3>();
             data.target = data.pin;
             data.tee = PlayerPosition;
+            data.modelPath = "assets/golf/models/driving_range.cmt"; //needed for ball system to load collision mesh
             //TODO check ball system for which properties are needed
         }
     }
@@ -456,6 +478,10 @@ void DrivingState::createScene()
         quitFail("Could Not Load Course Model");
         return;
     }
+
+    //set the hole data for the first hole, just so the
+    //ball system loads the collision mesh now
+    m_gameScene.getSystem<BallSystem>()->setHoleData(m_holeData[0]);
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -610,6 +636,11 @@ void DrivingState::createScene()
     auto sunEnt = m_gameScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -65.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -35.f * cro::Util::Const::degToRad);
+
+
+    //we only want these to happen if the scene creation was successful
+    createUI();
+    startTransition();
 }
 
 void DrivingState::createFoliage(cro::Entity terrainEnt)
@@ -1148,9 +1179,10 @@ void DrivingState::createBall()
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.003f, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(ballMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    entity.addComponent<Ball>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
 
     //ball shadow
     auto ballEnt = entity;
@@ -1160,16 +1192,6 @@ void DrivingState::createBall()
     //point shadow seen from distance
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
-    //entity.addComponent<cro::Callback>().active = true;
-    //entity.getComponent<cro::Callback>().function =
-    //    [&, ballEnt](cro::Entity e, float)
-    //{
-    //    if (ballEnt.destroyed())
-    //    {
-    //        e.getComponent<cro::Callback>().active = false;
-    //        m_gameScene.destroyEntity(e);
-    //    }
-    //};
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(shadowMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
 
@@ -1184,30 +1206,10 @@ void DrivingState::createBall()
 
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, ballEnt](cro::Entity e, float)
-    {
-        if (ballEnt.destroyed())
-        {
-            e.getComponent<cro::Callback>().active = false;
-            m_gameScene.destroyEntity(e);
-        }
-    };
 
     //adding a ball model means we see something a bit more reasonable when close up
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, ballEnt](cro::Entity e, float)
-    {
-        if (ballEnt.destroyed())
-        {
-            e.getComponent<cro::Callback>().active = false;
-            m_gameScene.destroyEntity(e);
-        }
-    };
 
     if (m_ballModels.count(ballID) != 0)
     {
@@ -1224,8 +1226,6 @@ void DrivingState::createBall()
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    m_gameScene.getDirector<DrivingRangeDirector>()->setBallEntity(ballEnt);
 }
 
 void DrivingState::startTransition()
@@ -1356,8 +1356,8 @@ void DrivingState::createGameOptions()
     };
 
     auto* uiSystem = m_uiScene.getSystem<cro::UISystem>();
-    auto buttonSelect = uiSystem->addCallback([](cro::Entity e) {e.getComponent<cro::Transform>().setScale({ 1.f, 1.f }); });
-    auto buttonUnselect = uiSystem->addCallback([](cro::Entity e) {e.getComponent<cro::Transform>().setScale({ 0.f, 0.f }); });
+    auto buttonSelect = uiSystem->addCallback([](cro::Entity e) { e.getComponent<cro::Sprite>().setColour(cro::Colour::White); });
+    auto buttonUnselect = uiSystem->addCallback([](cro::Entity e) { e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
 
 
     //consumes events when menu not active
@@ -1477,9 +1477,9 @@ score based on your overall accuracy. Good Luck!
     {
         auto buttonEnt = m_uiScene.createEntity();
         buttonEnt.addComponent<cro::Transform>().setPosition(glm::vec3(position, 0.4f));
-        buttonEnt.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite(sprite);
+        buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         buttonEnt.addComponent<cro::UIInput>().area = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = buttonSelect;
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = buttonUnselect;
@@ -1546,7 +1546,7 @@ score based on your overall accuracy. Good Luck!
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
-    //player select - do we realyl want this, or shall we just put a nice picture here instead?
+    //player select - do we really want this, or shall we just put a nice picture here instead?
     /*auto playerEnt = m_uiScene.createEntity();
     playerEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 48.f, 0.1f });
     playerEnt.addComponent<cro::Drawable2D>();
@@ -1612,7 +1612,7 @@ score based on your overall accuracy. Good Luck!
             });
     startButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [uiSystem, bgEntity](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, uiSystem, bgEntity](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 auto& [state, timeout] = bgEntity.getComponent<cro::Callback>().getUserData<MessageAnim>();
                 if (state == MessageAnim::Hold
@@ -1621,6 +1621,10 @@ score based on your overall accuracy. Good Luck!
                     state = MessageAnim::Close;
                     timeout = 1.f;
                     uiSystem->setActiveGroup(MenuID::Dummy);
+                    m_gameScene.getDirector<DrivingRangeDirector>()->setHoleCount(m_strokeCounts[m_strokeCountIndex]);
+
+                    //TODO let the director set this
+                    m_inputParser.setActive(true);
                 }
             });
     centreSprite(startButton);
@@ -1632,4 +1636,57 @@ score based on your overall accuracy. Good Luck!
     cmd.targetFlags = CommandID::UI::DrivingBoard;
     cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Callback>().active = true; };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
+}
+
+void DrivingState::hitBall()
+{
+    auto pitch = Clubs[m_inputParser.getClub()].angle;
+
+    auto yaw = m_inputParser.getYaw();
+
+    //add hook/slice to yaw
+    yaw += MaxHook * m_inputParser.getHook();
+    yaw += cro::Util::Const::PI / 2.f; //can't remember why we have to do this - probably to do with cam rotation in the main mode. This fudges it though.
+
+    glm::vec3 impulse(1.f, 0.f, 0.f);
+    auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
+    rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
+    impulse = glm::toMat3(rotation) * impulse;
+
+    impulse *= Clubs[m_inputParser.getClub()].power * m_inputParser.getPower();
+    impulse *= Dampening[TerrainID::Fairway];
+
+    //apply impulse to ball component
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Ball;
+    cmd.action = [impulse](cro::Entity e, float)
+    {
+        auto& ball = e.getComponent<Ball>();
+
+        if (ball.state == Ball::State::Idle)
+        {
+            ball.velocity = impulse;
+            ball.state = Ball::State::Flight;
+            //this is a kludge to wait for the anim before hitting the ball
+            //Ideally we want to read the frame data from the sprite sheet
+            ball.delay = 0.32f;
+            ball.startPoint = e.getComponent<cro::Transform>().getPosition();
+
+            //calc the amount of spin based on if we're going towards the hole
+            /*glm::vec2 pin = { m_holeData[m_currentHole].pin.x, m_holeData[m_currentHole].pin.z };
+            glm::vec2 start = { ball.startPoint.x, ball.startPoint.z };
+            auto dir = glm::normalize(pin - start);
+            auto x = -dir.y;
+            dir.y = dir.x;
+            dir.x = x;
+            ball.spin = glm::dot(dir, glm::normalize(glm::vec2(ball.velocity.x, ball.velocity.z))) + 0.1f;*/
+
+
+            //TODO play correct animation on player sprite
+            //m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(AnimationID::Swing), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+    };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    m_inputParser.setActive(false);
 }

@@ -81,10 +81,24 @@ private:
     };
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
-
     std::vector<HoleData> m_holeData;
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
     std::unordered_map<std::int32_t, std::unique_ptr<cro::ModelDefinition>> m_ballModels;
+
+    struct SpriteID final
+    {
+        enum
+        {
+            PowerBar,
+            PowerBarInner,
+            HookBar,
+            WindIndicator,
+            MessageBoard,
+
+            Count
+        };
+    };
+    std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
     std::array<std::int32_t, 3u> m_strokeCounts = { 5,9,18 };
     std::size_t m_strokeCountIndex;
@@ -107,20 +121,7 @@ private:
     void updateWindDisplay(glm::vec3);
     void createGameOptions();
 
-    struct SpriteID final
-    {
-        enum
-        {
-            PowerBar,
-            PowerBarInner,
-            HookBar,
-            WindIndicator,
-            MessageBoard,
-
-            Count
-        };
-    };
-    std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
+    void hitBall();
 
 #ifdef CRO_DEBUG_
     cro::Texture m_debugHeightmap;

@@ -29,23 +29,25 @@ source distribution.
 
 #pragma once
 
+#include "HoleData.hpp"
+
 #include <crogine/ecs/Director.hpp>
+
+#include <vector>
 
 class DrivingRangeDirector final : public cro::Director
 {
 public:
-	DrivingRangeDirector();
+	explicit DrivingRangeDirector(std::vector<HoleData>&);
 
 	void handleMessage(const cro::Message&) override;
 
 	void process(float) override;
 
-	void setHoleCount(std::size_t count) { m_holeCount = count; }
-
-	void setBallEntity(cro::Entity entity) { m_ballEntity = entity; }
+	void setHoleCount(std::int32_t count);
 
 private:
 
-	std::size_t m_holeCount;
-	cro::Entity m_ballEntity;
+	std::vector<HoleData>& m_holeData;
+	std::int32_t m_holeCount;
 };

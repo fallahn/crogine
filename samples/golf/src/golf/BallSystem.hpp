@@ -89,7 +89,7 @@ public:
 
     glm::vec3 getWindDirection() const;
 
-    bool setHoleData(const struct HoleData&);
+    bool setHoleData(const struct HoleData&, bool rebuildMesh = true);
 
 private:
 
