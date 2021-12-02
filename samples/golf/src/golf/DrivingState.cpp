@@ -35,6 +35,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "FpsCameraSystem.hpp"
 #include "TextAnimCallback.hpp"
+#include "DrivingRangeDirector.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
 
@@ -65,6 +66,7 @@ source distribution.
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -75,6 +77,7 @@ namespace
 #include "TerrainShader.inl"
 #include "TransitionShader.inl"
 #include "MinimapShader.inl"
+#include "WireframeShader.inl"
 
 #ifdef CRO_DEBUG_
     bool useFreeCam = false;
@@ -298,6 +301,7 @@ void DrivingState::addSystems()
 
     m_gameScene.setSystemActive<FpsCameraSystem>(false);
 #endif
+    m_gameScene.addDirector<DrivingRangeDirector>();
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
@@ -321,8 +325,13 @@ void DrivingState::loadAssets()
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
 
+    //materials
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Cel));
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(m_resources.shaders.get(ShaderID::CelTextured));
+
+    m_resources.shaders.loadFromString(ShaderID::WireframeCulled, WireframeVertex, WireframeFragment, "#define CULLED\n");
+    m_materialIDs[MaterialID::WireframeCulled] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulled));
+    m_resources.materials.get(m_materialIDs[MaterialID::WireframeCulled]).blendMode = cro::Material::BlendMode::Alpha;
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
@@ -347,6 +356,16 @@ void DrivingState::loadAssets()
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::MessageBoard] = spriteSheet.getSprite("message_board");
+
+    //ball models - the menu should never have let us get this far if it found no ball files
+    for (const auto& [colour, uid, path] : m_sharedData.ballModels)
+    {
+        std::unique_ptr<cro::ModelDefinition> def = std::make_unique<cro::ModelDefinition>(m_resources);
+        if (def->loadFromFile(path))
+        {
+            m_ballModels.insert(std::make_pair(uid, std::move(def)));
+        }
+    }
 }
 
 void DrivingState::createScene()
@@ -783,7 +802,7 @@ void DrivingState::createUI()
     };
     auto courseEnt = entity;
     createPlayer(courseEnt);
-
+    createBall();
 
     //info panel background - vertices are set in resize callback
     entity = m_uiScene.createEntity();
@@ -1061,6 +1080,152 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
             }
         };
     }
+}
+
+void DrivingState::createBall()
+{
+    //ball is rendered as a single point
+    //at a distance, and as a model when closer
+    glCheck(glPointSize(BallPointSize));
+
+    auto ballMaterialID = m_materialIDs[MaterialID::WireframeCulled];
+    auto ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+    auto shadowMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+
+    auto* meshData = &m_resources.meshes.getMesh(ballMeshID);
+    std::vector<float> verts =
+    {
+        0.f, 0.f, 0.f,   1.f, 1.f, 1.f, 1.f
+    };
+    std::vector<std::uint32_t> indices =
+    {
+        0
+    };
+
+    meshData->vertexCount = 1;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = 1;
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    meshData = &m_resources.meshes.getMesh(shadowMeshID);
+    verts =
+    {
+        0.f, 0.f, 0.f,    0.5f, 0.5f, 0.5f, 1.f,
+    };
+    meshData->vertexCount = 1;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    submesh = &meshData->indexData[0];
+    submesh->indexCount = 1;
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
+
+    auto ballID = m_sharedData.connectionData[0].playerData[cro::Util::Random::value(0,3)].ballID;
+
+    //render the ball as a point so no perspective is applied to the scale
+    auto material = m_resources.materials.get(ballMaterialID);
+    auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
+        [ballID](const SharedStateData::BallInfo& ballPair)
+        {
+            return ballPair.uid == ballID;
+        });
+    if (ball != m_sharedData.ballModels.end())
+    {
+        material.setProperty("u_colour", ball->tint);
+    }
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.003f, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(ballMeshID), material);
+    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+
+    //ball shadow
+    auto ballEnt = entity;
+    material.setProperty("u_colour", cro::Colour::White);
+    material.blendMode = cro::Material::BlendMode::Multiply;
+
+    //point shadow seen from distance
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().function =
+    //    [&, ballEnt](cro::Entity e, float)
+    //{
+    //    if (ballEnt.destroyed())
+    //    {
+    //        e.getComponent<cro::Callback>().active = false;
+    //        m_gameScene.destroyEntity(e);
+    //    }
+    //};
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(shadowMeshID), material);
+    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+
+    //large shadow seen close up
+    auto shadowEnt = entity;
+    entity = m_gameScene.createEntity();
+    shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
+    
+    cro::ModelDefinition md(m_resources);
+    md.loadFromFile("assets/golf/models/ball_shadow.cmt");
+    md.createModel(entity);
+
+    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, ballEnt](cro::Entity e, float)
+    {
+        if (ballEnt.destroyed())
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+    };
+
+    //adding a ball model means we see something a bit more reasonable when close up
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, ballEnt](cro::Entity e, float)
+    {
+        if (ballEnt.destroyed())
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+    };
+
+    if (m_ballModels.count(ballID) != 0)
+    {
+        m_ballModels[ballID]->createModel(entity);
+    }
+    else
+    {
+        //a bit dangerous assuming we're not empty, but we
+        //shouldn't have made it this far without loading at least something...
+        LogW << "Ball with ID " << (int)ballID << " not found" << std::endl;
+        m_ballModels.begin()->second->createModel(entity);
+    }
+
+    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    m_gameScene.getDirector<DrivingRangeDirector>()->setBallEntity(ballEnt);
 }
 
 void DrivingState::startTransition()

@@ -177,6 +177,9 @@
     <ClCompile Include="src\golf\DrivingState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\DrivingRangeDirector.cpp">
+      <Filter>Source Files\golf\client\directors</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -349,6 +352,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\DrivingState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\DrivingRangeDirector.hpp">
+      <Filter>Header Files\golf\client\directors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

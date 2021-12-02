@@ -42,6 +42,7 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
+#include <unordered_map>
 
 struct SharedStateData;
 class DrivingState final : public cro::State, public cro::GuiClient
@@ -73,6 +74,7 @@ private:
         {
             Cel,
             CelTextured,
+            WireframeCulled,
 
             Count
         };
@@ -82,6 +84,7 @@ private:
 
     std::vector<HoleData> m_holeData;
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
+    std::unordered_map<std::int32_t, std::unique_ptr<cro::ModelDefinition>> m_ballModels;
 
     std::array<std::int32_t, 3u> m_strokeCounts = { 5,9,18 };
     std::size_t m_strokeCountIndex;
@@ -98,6 +101,7 @@ private:
     void createFoliage(cro::Entity);
     void createUI();
     void createPlayer(cro::Entity);
+    void createBall();
 
     void startTransition();
     void updateWindDisplay(glm::vec3);
