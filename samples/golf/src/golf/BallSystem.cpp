@@ -60,7 +60,7 @@ namespace
 
 const std::array<std::string, 5u> Ball::StateStrings = { "Idle", "Flight", "Putt", "Paused", "Reset" };
 
-BallSystem::BallSystem(cro::MessageBus& mb)
+BallSystem::BallSystem(cro::MessageBus& mb, bool drawDebug)
     : cro::System           (mb, typeid(BallSystem)),
     m_windDirTime           (cro::seconds(0.f)),
     m_windStrengthTime      (cro::seconds(1.f)),
@@ -88,7 +88,7 @@ BallSystem::BallSystem(cro::MessageBus& mb)
 
     updateWind();
 
-    initCollisionWorld();
+    initCollisionWorld(drawDebug);
 }
 
 BallSystem::~BallSystem()
@@ -429,6 +429,21 @@ bool BallSystem::setHoleData(const HoleData& holeData, bool rebuildMesh)
     return rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
 }
 
+#ifdef CRO_DEBUG_
+void BallSystem::renderDebug(const glm::mat4& mat, glm::uvec2 targetSize)
+{
+    CRO_ASSERT(m_debugDraw, "");
+    m_debugDraw->render(mat, targetSize);
+}
+
+void BallSystem::setDebugFlags(std::int32_t flags)
+{
+    CRO_ASSERT(m_debugDraw, "");
+    m_debugDraw->setDebugMode(flags);
+    m_collisionWorld->debugDrawWorld();
+}
+#endif
+
 //private
 void BallSystem::doCollision(cro::Entity entity)
 {
@@ -610,13 +625,21 @@ BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
     return retVal;
 }
 
-void BallSystem::initCollisionWorld()
+void BallSystem::initCollisionWorld(bool drawDebug)
 {
     m_collisionCfg = std::make_unique<btDefaultCollisionConfiguration>();
     m_collisionDispatcher = std::make_unique<btCollisionDispatcher>(m_collisionCfg.get());
 
     m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
     m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionCfg.get());
+
+#ifdef CRO_DEBUG_
+    if (drawDebug)
+    {
+        m_debugDraw = std::make_unique<BulletDebug>();
+        m_collisionWorld->setDebugDrawer(m_debugDraw.get());
+    }
+#endif
 }
 
 void BallSystem::clearCollisionObjects()

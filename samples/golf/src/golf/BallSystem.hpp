@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "Terrain.hpp"
+#include "DebugDraw.hpp"
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/core/Clock.hpp>
@@ -76,7 +77,9 @@ struct Ball final
 class BallSystem final : public cro::System
 {
 public:
-    explicit BallSystem(cro::MessageBus&);
+    //don't try and create debug drawer on server instances
+    //there's no OpenGL context on the server thread.
+    BallSystem(cro::MessageBus&, bool debug = false);
     ~BallSystem();
 
     BallSystem(const BallSystem&) = delete;
@@ -90,6 +93,11 @@ public:
     glm::vec3 getWindDirection() const;
 
     bool setHoleData(const struct HoleData&, bool rebuildMesh = true);
+
+#ifdef CRO_DEBUG_
+    void setDebugFlags(std::int32_t);
+    void renderDebug(const glm::mat4&, glm::uvec2);
+#endif
 
 private:
 
@@ -135,7 +143,11 @@ private:
     std::vector<float> m_vertexData;
     std::vector<std::vector<std::uint32_t>> m_indexData;
 
-    void initCollisionWorld();
+#ifdef CRO_DEBUG_
+    std::unique_ptr<BulletDebug> m_debugDraw;
+#endif
+
+    void initCollisionWorld(bool);
     void clearCollisionObjects();
     bool updateCollisionMesh(const std::string&);
 };

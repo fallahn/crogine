@@ -85,10 +85,14 @@ namespace
 #include "WireframeShader.inl"
 
 #ifdef CRO_DEBUG_
+    std::int32_t debugFlags = 0;
     bool useFreeCam = false;
     std::array<glm::mat4, 5u> camTx = {};
     std::size_t camIdx = 0;
     cro::Entity ballEntity;
+#define DEBUG_DRAW true
+#else
+#define DEBUG_DRAW
 #endif
 
     constexpr glm::vec3 PlayerPosition(0.f, 0.f, 121.f);
@@ -208,6 +212,10 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 
             break;
 #ifdef CRO_DEBUG_
+        case SDLK_HOME:
+            debugFlags = (debugFlags == 0) ? BulletDebug::DebugFlags : 0;
+            m_gameScene.getSystem<BallSystem>()->setDebugFlags(debugFlags);
+            break;
         case SDLK_INSERT:
             toggleFreeCam();
             break;
@@ -351,6 +359,10 @@ void DrivingState::render()
 {
     m_backgroundTexture.clear();
     m_gameScene.render(m_backgroundTexture);
+#ifdef CRO_DEBUG_
+    auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    m_gameScene.getSystem<BallSystem>()->renderDebug(cam.getActivePass().viewProjectionMatrix, m_backgroundTexture.getSize());
+#endif
     m_backgroundTexture.display();
 
     m_uiScene.render(*GolfGame::getActiveTarget());
@@ -384,7 +396,7 @@ void DrivingState::addSystems()
 
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
-    m_gameScene.addSystem<BallSystem>(mb);
+    m_gameScene.addSystem<BallSystem>(mb, DEBUG_DRAW);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
@@ -1193,7 +1205,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     {
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
-        entity.getComponent<cro::Transform>().move({ -0.65f * (flipped) ? -1.f : 1.f, 0.1f, 0.4f});
+        entity.getComponent<cro::Transform>().move({ -0.65f * (flipped) ? 1.f : -1.f, 0.1f, 0.4f});
         entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
         md.createModel(entity);
 

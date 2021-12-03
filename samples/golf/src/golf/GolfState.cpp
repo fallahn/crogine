@@ -719,7 +719,7 @@ void GolfState::render()
     cam.viewport = oldVP;
 
     //then render scene
-    glCheck(glEnable(GL_PROGRAM_POINT_SIZE));
+    glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for
     m_gameSceneTexture.clear();
     m_gameScene.render(m_gameSceneTexture);
 #ifdef CRO_DEBUG_
