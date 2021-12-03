@@ -74,6 +74,7 @@ private:
         {
             Cel,
             CelTextured,
+            Wireframe,
             WireframeCulled,
 
             Count
@@ -100,6 +101,22 @@ private:
     };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
+    struct Avatar final
+    {
+        struct Sprite final
+        {
+            cro::Sprite sprite;
+            std::array<std::size_t, AnimationID::Count> animIDs = {};
+
+            enum
+            {
+                Wood, Iron, Count
+            };
+        };
+        std::array<Sprite, Sprite::Count> sprites = {};
+        std::int32_t spriteIndex = Sprite::Wood;
+    }m_avatar;
+
     std::array<std::int32_t, 3u> m_strokeCounts = { 5,9,18 };
     std::size_t m_strokeCountIndex;
 
@@ -122,6 +139,7 @@ private:
     void createGameOptions();
 
     void hitBall();
+    void setHole(std::int32_t);
 
 #ifdef CRO_DEBUG_
     cro::Texture m_debugHeightmap;
