@@ -103,6 +103,14 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
+
+#ifdef WIN32
+#ifdef CRO_DEBUG_
+    //places the console window in the to right so it's a bit more visible when debugging
+    HWND consoleWindow = GetConsoleWindow();
+    SetWindowPos(consoleWindow, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+#endif
+#endif
 }
 
 //public
