@@ -92,7 +92,7 @@ namespace
     cro::Entity ballEntity;
 #define DEBUG_DRAW true
 #else
-#define DEBUG_DRAW
+#define DEBUG_DRAW false
 #endif
 
     constexpr glm::vec3 PlayerPosition(0.f, 0.f, 121.f);

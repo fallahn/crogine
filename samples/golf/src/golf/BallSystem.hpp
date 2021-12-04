@@ -126,6 +126,7 @@ private:
     {
         std::uint8_t terrain = TerrainID::Scrub;
         glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
+        glm::vec3 intersection = glm::vec3(0.f);
         float penetration = 0.f;
     };
     TerrainResult getTerrain(glm::vec3) const;

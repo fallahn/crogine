@@ -107,6 +107,7 @@ namespace
 
     std::int32_t debugFlags = 0;
     bool useFreeCam = false;
+    cro::Entity ballEntity;
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
     const cro::Time MouseHideTime = cro::seconds(3.f);
@@ -149,26 +150,19 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
+    ballEntity = {};
     //registerWindow([&]() 
     //    {
     //        if (ImGui::Begin("buns"))
     //        {
     //            auto active = m_freeCam.getComponent<cro::Camera>().active;
     //            ImGui::Text("Active %s", active ? "true" : "false");
-    //            /*auto pin = m_holeData[m_currentHole].pin;
-    //            auto target = m_holeData[m_currentHole].target;
-    //            auto currLookAt = m_gameScene.getActiveCamera().getComponent<TargetInfo>().currentLookAt;
-    //            ImGui::Text("Pin: %3.3f, %3.3f", pin.x, pin.z);
-    //            ImGui::Text("Target: %3.3f, %3.3f", target.x, target.z);
-    //            ImGui::Text("Look At: %3.3f, %3.3f", currLookAt.x, currLookAt.z);*/
-
-    //            /*ImGui::Text("Cam Rotation: %3.3f", m_camRotation);
-
-    //            auto pos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition();
-    //            ImGui::Text("Cam Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);*/
-
-    //            //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //            //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 300.f, 300.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //            
+    //            /*if (ballEntity.isValid())
+    //            {
+    //                auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
+    //                ImGui::Text("Ball Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+    //            }*/
     //        }
     //        ImGui::End();
     //    });
@@ -1913,6 +1907,8 @@ void GolfState::spawnBall(const ActorInfo& info)
         }
     };
     m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    ballEntity = ballEnt;
 }
 
 void GolfState::handleNetEvent(const cro::NetEvent& evt)

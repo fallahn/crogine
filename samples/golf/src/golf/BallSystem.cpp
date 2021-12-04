@@ -77,12 +77,14 @@ BallSystem::BallSystem(cro::MessageBus& mb, bool drawDebug)
     requireComponent<cro::Transform>();
     requireComponent<Ball>();
 
-    m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10));// / 10.f;
-    m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10));// / 10.f;
-    m_windDirTarget.x += 1.f;
-    m_windDirTarget.z -= 1.f;
+    m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10));
+    m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10));
+    m_windDirTarget.x += 0.5f; //deliberately not a whole number because we might end up with cases where we add 1 to -1 and end up back at zero...
+    m_windDirTarget.z -= 0.5f;
 
     m_windDirTarget = glm::normalize(m_windDirTarget);
+    CRO_ASSERT(!std::isnan(m_windDirTarget.x), "");
+    CRO_ASSERT(!std::isnan(m_windDirTarget.z), "");
 
     m_windStrengthTarget = static_cast<float>(cro::Util::Random::value(1, 10)) / 10.f;
 
@@ -159,7 +161,7 @@ void BallSystem::process(float dt)
                 //attempts to trap na obscure NaN bug
                 CRO_ASSERT(!std::isnan(position.x), "");
 
-                auto [terrain, normal, penetration] = getTerrain(position);
+                auto [terrain, normal, hitpoint, penetration] = getTerrain(position);
 
                 //test distance to pin
                 auto pinDir = m_holeData->pin - position;
@@ -350,7 +352,8 @@ void BallSystem::process(float dt)
                     if (terrain != TerrainID::Water
                         && terrain != TerrainID::Scrub)
                     {
-                        ballPos.y = -res.penetration;
+                        //ballPos.y -= res.penetration;
+                        ballPos = res.intersection;
                         tx.setPosition(ballPos);
                         break;
                     }
@@ -471,13 +474,14 @@ void BallSystem::doCollision(cro::Entity entity)
         msg->position = tx.getPosition();
     };
 
-    auto [terrain, normal, penetration] = getTerrain(pos);
+    auto terrainResult = getTerrain(pos);
 
-    if (penetration > 0)
+    if (terrainResult.penetration > 0)
     {
-        pos.y += /*normal **/ penetration;
+        //pos.y += /*normal **/ penetration;
         //TODO reduce the velocity based on interpolation (see scratchpad)
         //TODO this should move back along ball velocity, not the normal.
+        pos = terrainResult.intersection;
         tx.setPosition(pos);
 
         auto& ball = entity.getComponent<Ball>();
@@ -485,7 +489,7 @@ void BallSystem::doCollision(cro::Entity entity)
         CRO_ASSERT(!std::isnan(ball.velocity.x), "");
 
         //apply dampening based on terrain (or splash)
-        switch (terrain)
+        switch (terrainResult.terrain)
         {
         default: break;
         case TerrainID::Water:
@@ -498,7 +502,7 @@ void BallSystem::doCollision(cro::Entity entity)
             break;
         case TerrainID::Fairway:
             ball.velocity *= 0.33f;
-            ball.velocity = glm::reflect(ball.velocity, normal);
+            ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
             break;
         case TerrainID::Green:
             ball.velocity *= 0.26f;
@@ -522,13 +526,13 @@ void BallSystem::doCollision(cro::Entity entity)
             }
             else //bounce
             {
-                ball.velocity = glm::reflect(ball.velocity, normal);
+                ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
             }
             break;
         case TerrainID::Rough:
             ball.velocity *= 0.23f;
-            ball.velocity = glm::reflect(ball.velocity, normal);
+            ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
             CRO_ASSERT(!std::isnan(ball.velocity.x), "");
             break;
         }
@@ -536,14 +540,14 @@ void BallSystem::doCollision(cro::Entity entity)
         //stop the ball if velocity low enough
         if (glm::length2(ball.velocity) < 0.01f)
         {
-            if (terrain == TerrainID::Water
-                || terrain == TerrainID::Scrub)
+            if (terrainResult.terrain == TerrainID::Water
+                || terrainResult.terrain == TerrainID::Scrub)
             {
-                resetBall(ball, Ball::State::Reset, terrain);
+                resetBall(ball, Ball::State::Reset, terrainResult.terrain);
             }
             else
             {
-                resetBall(ball, Ball::State::Paused, terrain);
+                resetBall(ball, Ball::State::Paused, terrainResult.terrain);
             }
         }
     }
@@ -574,14 +578,14 @@ void BallSystem::updateWind()
         m_windDirTime = cro::seconds(static_cast<float>(cro::Util::Random::value(100, 220)) / 10.f);
 
         //create new direction
-        m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10));// / 10.f;
-        m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10));// / 10.f;
+        m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10));
+        m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10));
 
         //on rare occasions both of the above might have a value of 0 - in which
         //case attempting to normalise below causes a NaN which cascades through
         //ball velocity and eventually ball position culminating in a cluster fk.
-        m_windDirTarget.x += 1.f;
-        m_windDirTarget.z -= 1.f;
+        m_windDirTarget.x += 0.5f;
+        m_windDirTarget.z -= 0.5f;
 
         m_windDirTarget = glm::normalize(m_windDirTarget);
         CRO_ASSERT(!std::isnan(m_windDirTarget.x), "");
@@ -606,7 +610,7 @@ BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
 {
     TerrainResult retVal;
 
-    //casts a vertical ray 5m above/below the ball
+    //casts a vertical ray 10m above/below the ball
     static const btVector3 RayLength = { 0.f,  -20.f, 0.f };
     btVector3 rayStart = { pos.x, pos.y, pos.z };
     rayStart -= (RayLength / 2.f);
@@ -619,6 +623,7 @@ BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
     {
         retVal.terrain = static_cast<std::uint8_t>(res.m_collisionObject->getUserIndex());
         retVal.normal = { res.m_hitNormalWorld.x(), res.m_hitNormalWorld.y(), res.m_hitNormalWorld.z() };
+        retVal.intersection = { res.m_hitPointWorld.x(), res.m_hitPointWorld.y(), res.m_hitPointWorld.z() };
         retVal.penetration = res.m_hitPointWorld.y() - pos.y;
     }
 
@@ -842,6 +847,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
 
         float terrain = std::min(1.f, std::max(0.f, m_vertexData[(m_indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset])) * 255.f;
         terrain = std::floor(terrain / 10.f);
+
         if (terrain > TerrainID::Hole)
         {
             terrain = TerrainID::Fairway;
