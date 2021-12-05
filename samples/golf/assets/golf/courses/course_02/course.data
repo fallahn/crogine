@@ -7,9 +7,9 @@ course course_02
     title = "Sunny Cove, Weald & Hedgeways"
     description = "The Finest Gravel You'll Ever Tread"
 
-    hole = "assets/golf/courses/course_02/03.hole"
+    hole = "assets/golf/courses/course_02/04.hole"
     hole = "assets/golf/courses/course_02/01.hole"
     hole = "assets/golf/courses/course_02/02.hole"
     hole = "assets/golf/courses/course_02/03.hole"
-    hole = "assets/golf/courses/course_02/01.hole"
+    hole = "assets/golf/courses/course_02/04.hole"
 }
