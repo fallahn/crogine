@@ -95,7 +95,7 @@ namespace
 #define DEBUG_DRAW false
 #endif
 
-    constexpr glm::vec3 PlayerPosition(0.f, 0.f, 121.f);
+    constexpr glm::vec3 PlayerPosition(0.f, 2.5f, 121.f);
     constexpr glm::vec3 CameraPosition = PlayerPosition + glm::vec3(0.f, CameraStrokeHeight, CameraStrokeOffset);
     constexpr glm::vec2 RangeSize(200.f, 250.f);
 
@@ -181,6 +181,9 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
                 const auto& ball = ballEntity.getComponent<Ball>();
                 ImGui::Text("Ball Terrain: %s", TerrainStrings[ball.terrain].c_str());
                 ImGui::Text("Ball State: %s", Ball::StateStrings[static_cast<std::int32_t>(ball.state)].c_str());
+
+                auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
+                ImGui::Text("Ball Pos: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
             }
             ImGui::End();
         });
@@ -657,16 +660,16 @@ void DrivingState::createScene()
         float currentTime = 0.f;
     }path;
 
-    auto targetStart = glm::vec3(0.f, 2.f, -160.f);
+    auto targetStart = glm::vec3(0.f, 4.5f, -160.f);
     path.targetPath.addPoint(targetStart);
-    path.targetPath.addPoint(glm::vec3(0, 2.f, -100.f));
-    path.targetPath.addPoint(glm::vec3(0, 10.f, -halfSize.y));
-    path.targetPath.addPoint(glm::vec3(0.f, 2.f, -halfSize.y));
+    path.targetPath.addPoint(glm::vec3(0, 4.5f, -100.f));
+    path.targetPath.addPoint(glm::vec3(0, 12.5f, -halfSize.y));
+    path.targetPath.addPoint(glm::vec3(0.f, 4.5f, -halfSize.y));
 
     auto eyeStart = glm::vec3(0.f, CameraPosition.y, -halfSize.y - 20.f);
     path.cameraPath.addPoint(eyeStart);
-    path.cameraPath.addPoint(glm::vec3(0.f, 30.f, -halfSize.y / 3.f));
-    path.cameraPath.addPoint(glm::vec3(0.f, 10.f, halfSize.y / 2.f));
+    path.cameraPath.addPoint(glm::vec3(0.f, 32.5f, -halfSize.y / 3.f));
+    path.cameraPath.addPoint(glm::vec3(0.f, 12.5f, halfSize.y / 2.f));
     path.cameraPath.addPoint(CameraPosition);
 
     auto tx = glm::inverse(glm::lookAt(eyeStart, targetStart, cro::Transform::Y_AXIS));

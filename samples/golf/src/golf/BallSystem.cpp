@@ -478,7 +478,6 @@ void BallSystem::doCollision(cro::Entity entity)
 
     if (terrainResult.penetration > 0)
     {
-        //pos.y += /*normal **/ penetration;
         //TODO reduce the velocity based on interpolation (see scratchpad)
         //TODO this should move back along ball velocity, not the normal.
         pos = terrainResult.intersection;
