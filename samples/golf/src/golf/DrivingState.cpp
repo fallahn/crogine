@@ -1193,7 +1193,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width * 0.78f, 0.f, -0.5f });
 
-    auto flipped = m_sharedData.localConnectionData.playerData[playerIndex].flipped;
+    auto flipped = false;// m_sharedData.localConnectionData.playerData[playerIndex].flipped;
     if (flipped)
     {
         entity.getComponent<cro::Transform>().setScale({ -1.f, 0.f });
@@ -1206,9 +1206,15 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("assets/golf/models/ball_shadow.cmt"))
     {
+        float offset = -0.72f; //TODO this should actually be scaled to aspect ratio - compmare position in 4:3 to 16:9...
+        if (flipped)
+        {
+            offset *= -1.f;
+        }
+
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
-        entity.getComponent<cro::Transform>().move({ -0.65f * (flipped) ? 1.f : -1.f, 0.1f, 0.4f});
+        entity.getComponent<cro::Transform>().move({ offset, 0.1f, 0.4f});
         entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
         md.createModel(entity);
 

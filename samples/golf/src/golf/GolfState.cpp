@@ -2329,6 +2329,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     auto centre = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
     auto direction = holePos - centre;
     direction = glm::normalize(direction) * 15.f;
+    direction.y += holePos.y;
     m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
 
     //we also have to check the camera hasn't ended up too close to the centre one, else the

@@ -1,0 +1,43 @@
+hole 03
+{
+    map="assets/golf/courses/course_02/03.png"
+    model="assets/golf/models/course_02/03.cmt"
+    par = 3
+
+    pin = 83.240166,3.856189,-54.932350
+    target = 119.429245,3.018642,-75.861961
+    tee = 250.622696,3.018642,-159.444794
+
+    crowd
+    {
+        position = 62.138725,2.979522,-36.656139
+        rotation = -29.486701
+    }
+
+    crowd
+    {
+        position = 54.499935,2.922357,-52.247562
+        rotation = -82.659728
+    }
+
+    prop
+    {
+        model = "assets/golf/models/driving_shed.cmt"
+        position = 250.101013,3.077369,-145.780212
+        rotation = 220.693203
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 218.671997,3.027795,-155.460098
+        rotation = -684.701433
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 222.563263,3.027797,-157.722504
+        rotation = -695.683608
+    }
+}
