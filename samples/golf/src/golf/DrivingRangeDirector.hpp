@@ -46,6 +46,11 @@ public:
 
 	void setHoleCount(std::int32_t count);
 
+	//note that this does not necessarily
+	//end when it reaches zero as the hole count
+	//may be greater than the number of holes.
+	std::int32_t getCurrentHole() const;
+
 private:
 
 	std::vector<HoleData>& m_holeData;

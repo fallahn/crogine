@@ -133,6 +133,7 @@ private:
     void createUI();
     void createPlayer(cro::Entity);
     void createBall();
+    void createFlag();
 
     void startTransition();
     void updateWindDisplay(glm::vec3);
@@ -140,6 +141,7 @@ private:
 
     void hitBall();
     void setHole(std::int32_t);
+    void showMessage();
 
 #ifdef CRO_DEBUG_
     cro::Texture m_debugHeightmap;

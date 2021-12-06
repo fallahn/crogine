@@ -56,6 +56,17 @@ void DrivingRangeDirector::handleMessage(const cro::Message& msg)
 		}
 	}
 		break;
+	case sv::MessageID::BallMessage:
+	{
+		const auto& data = msg.getData<BallEvent>();
+		if (data.type == BallEvent::TurnEnded
+			|| data.type == BallEvent::Foul)
+		{
+			m_holeCount--;
+			//TODO end if < 0
+		}
+	}
+		break;
 	}
 }
 
@@ -68,6 +79,9 @@ void DrivingRangeDirector::setHoleCount(std::int32_t count)
 {
 	m_holeCount = count;
 	std::shuffle(m_holeData.begin(), m_holeData.end(), cro::Util::Random::rndEngine);
+}
 
-	//TODO raise a message to start the round
+std::int32_t DrivingRangeDirector::getCurrentHole() const
+{
+	return m_holeCount % m_holeData.size();
 }

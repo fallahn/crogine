@@ -2732,11 +2732,6 @@ void GolfState::updateActor(const ActorInfo& update)
             if (ballDist > 5)
             {
                 distance = static_cast<std::int32_t>(ballDist);
-                if (distance < 0)
-                {
-                    LogE << "Distance got mangled, now: " << distance << std::endl;
-                }
-
                 e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
             }
             else
