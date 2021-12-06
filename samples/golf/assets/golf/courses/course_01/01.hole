@@ -9,6 +9,13 @@ hole 01
 
     prop
     {
+        model = "assets/golf/models/boat01.cmt"
+        position = -10.528160,-0.530691,-190.091141
+        rotation = 49.4
+    }
+
+    prop
+    {
         model = "assets/golf/models/fence01.cmt"
         position = 17.528160,1.530691,-150.091141
         rotation = -641.477415

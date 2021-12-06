@@ -94,6 +94,15 @@ public:
 
     bool setHoleData(const struct HoleData&, bool rebuildMesh = true);
 
+    struct TerrainResult final
+    {
+        std::uint8_t terrain = TerrainID::Scrub;
+        glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
+        glm::vec3 intersection = glm::vec3(0.f);
+        float penetration = 0.f;
+    };
+    TerrainResult getTerrain(glm::vec3) const;
+
 #ifdef CRO_DEBUG_
     void setDebugFlags(std::int32_t);
     void renderDebug(const glm::mat4&, glm::uvec2);
@@ -122,15 +131,6 @@ private:
 
     void doCollision(cro::Entity);
     void updateWind();
-    struct TerrainResult final
-    {
-        std::uint8_t terrain = TerrainID::Scrub;
-        glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
-        glm::vec3 intersection = glm::vec3(0.f);
-        float penetration = 0.f;
-    };
-    TerrainResult getTerrain(glm::vec3) const;
-
 
     std::unique_ptr<btDefaultCollisionConfiguration> m_collisionCfg;
     std::unique_ptr<btCollisionDispatcher> m_collisionDispatcher;

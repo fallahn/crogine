@@ -1145,20 +1145,23 @@ void DrivingState::createBall()
     entity.addComponent<Ball>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f); //stores the ground height under the ball for the shadows to read
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity ent, float)
     {
         auto state = ent.getComponent<Ball>().state;
         if (state == Ball::State::Flight)
         {
+            auto pos = ent.getComponent<cro::Transform>().getPosition();
+
             cro::Command cmd;
             cmd.targetFlags = CommandID::UI::PinDistance;
-            cmd.action = [&, ent](cro::Entity e, float)
+            cmd.action = [&, pos](cro::Entity e, float)
             {
                 //if we're on the green convert to cm
                 std::int32_t distance = 0;
                 float ballDist = 
-                    glm::length(ent.getComponent<cro::Transform>().getPosition() - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin);
+                    glm::length(pos - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin);
 
                 if (ballDist > 5)
                 {
@@ -1176,6 +1179,14 @@ void DrivingState::createBall()
                 e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            pos.y = 0.f;
+            auto groundHeight = m_gameScene.getSystem<BallSystem>()->getTerrain(pos).intersection.y;
+            ent.getComponent<cro::Callback>().getUserData<float>() = groundHeight + 0.003f; //prevent z-fighting
+        }
+        else
+        {
+            ent.getComponent<cro::Callback>().setUserData<float>(0.f);
         }
     };
 
@@ -1189,6 +1200,15 @@ void DrivingState::createBall()
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(shadowMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [ballEnt](cro::Entity e, float)
+    {
+        float height = ballEnt.getComponent<cro::Callback>().getUserData<float>();
+        height -= ballEnt.getComponent<cro::Transform>().getPosition().y;
+        e.getComponent<cro::Transform>().setPosition({ 0.f, height, 0.f });
+    };
+    ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //large shadow seen close up
     auto shadowEnt = entity;

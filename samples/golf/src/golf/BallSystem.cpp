@@ -432,6 +432,30 @@ bool BallSystem::setHoleData(const HoleData& holeData, bool rebuildMesh)
     return rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
 }
 
+BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
+{
+    TerrainResult retVal;
+
+    //casts a vertical ray 10m above/below the ball
+    static const btVector3 RayLength = { 0.f,  -20.f, 0.f };
+    btVector3 rayStart = { pos.x, pos.y, pos.z };
+    rayStart -= (RayLength / 2.f);
+    auto rayEnd = rayStart + RayLength;
+
+    RayResultCallback res(rayStart, rayEnd);
+    //btCollisionWorld::ClosestRayResultCallback res(rayStart, rayEnd);
+    m_collisionWorld->rayTest(rayStart, rayEnd, res);
+    if (res.hasHit())
+    {
+        retVal.terrain = static_cast<std::uint8_t>(res.m_collisionObject->getUserIndex());
+        retVal.normal = { res.m_hitNormalWorld.x(), res.m_hitNormalWorld.y(), res.m_hitNormalWorld.z() };
+        retVal.intersection = { res.m_hitPointWorld.x(), res.m_hitPointWorld.y(), res.m_hitPointWorld.z() };
+        retVal.penetration = res.m_hitPointWorld.y() - pos.y;
+    }
+
+    return retVal;
+}
+
 #ifdef CRO_DEBUG_
 void BallSystem::renderDebug(const glm::mat4& mat, glm::uvec2 targetSize)
 {
@@ -603,30 +627,6 @@ void BallSystem::updateWind()
 
         resetInterp();
     }
-}
-
-BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
-{
-    TerrainResult retVal;
-
-    //casts a vertical ray 10m above/below the ball
-    static const btVector3 RayLength = { 0.f,  -20.f, 0.f };
-    btVector3 rayStart = { pos.x, pos.y, pos.z };
-    rayStart -= (RayLength / 2.f);
-    auto rayEnd = rayStart + RayLength;
-
-    RayResultCallback res(rayStart, rayEnd);
-    //btCollisionWorld::ClosestRayResultCallback res(rayStart, rayEnd);
-    m_collisionWorld->rayTest(rayStart, rayEnd, res);
-    if (res.hasHit())
-    {
-        retVal.terrain = static_cast<std::uint8_t>(res.m_collisionObject->getUserIndex());
-        retVal.normal = { res.m_hitNormalWorld.x(), res.m_hitNormalWorld.y(), res.m_hitNormalWorld.z() };
-        retVal.intersection = { res.m_hitPointWorld.x(), res.m_hitPointWorld.y(), res.m_hitPointWorld.z() };
-        retVal.penetration = res.m_hitPointWorld.y() - pos.y;
-    }
-
-    return retVal;
 }
 
 void BallSystem::initCollisionWorld(bool drawDebug)
