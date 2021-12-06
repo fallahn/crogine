@@ -63,7 +63,6 @@ void DrivingRangeDirector::handleMessage(const cro::Message& msg)
 			|| data.type == BallEvent::Foul)
 		{
 			m_holeCount--;
-			//TODO end if < 0
 		}
 	}
 		break;

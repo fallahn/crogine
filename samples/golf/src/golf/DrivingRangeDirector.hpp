@@ -51,6 +51,8 @@ public:
 	//may be greater than the number of holes.
 	std::int32_t getCurrentHole() const;
 
+	bool roundEnded() const { return m_holeCount == 0; }
+
 private:
 
 	std::vector<HoleData>& m_holeData;

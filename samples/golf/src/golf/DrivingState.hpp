@@ -130,18 +130,28 @@ private:
     void loadAssets();
     void createScene();
     void createFoliage(cro::Entity);
-    void createUI();
     void createPlayer(cro::Entity);
     void createBall();
     void createFlag();
-
     void startTransition();
-    void updateWindDisplay(glm::vec3);
-    void createGameOptions();
 
     void hitBall();
     void setHole(std::int32_t);
+    
+    //DrivingStateUI.cpp
+    void createUI();
+    void createGameOptions();
+    void createSummary();
+    void updateWindDisplay(glm::vec3);    
     void showMessage();
+
+    //create the summary screen with its own
+    //encapsulation just to update the text more easily
+    struct SummaryScreen final
+    {
+        cro::Entity root;
+        cro::Entity text;
+    }m_summaryScreen;
 
 #ifdef CRO_DEBUG_
     cro::Texture m_debugHeightmap;

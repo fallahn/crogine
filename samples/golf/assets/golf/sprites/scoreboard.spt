@@ -41,4 +41,24 @@ spritesheet scoreboard
     {
         bounds = 400, 472,48,18
     }
+
+    sprite yes_button
+    {
+        bounds = 464,452,32,16
+    }
+
+    sprite yes_highlight
+    {
+        bounds = 464, 472,32,18
+    }
+
+    sprite no_button
+    {
+        bounds = 512,452,32,16
+    }
+
+    sprite no_highlight
+    {
+        bounds = 512, 472,32,18
+    }
 }

@@ -305,6 +305,7 @@
     <ClCompile Include="src\golf\DebugDraw.cpp" />
     <ClCompile Include="src\golf\DrivingRangeDirector.cpp" />
     <ClCompile Include="src\golf\DrivingState.cpp" />
+    <ClCompile Include="src\golf\DrivingStateUI.cpp" />
     <ClCompile Include="src\golf\ErrorState.cpp" />
     <ClCompile Include="src\golf\FpsCameraSystem.cpp" />
     <ClCompile Include="src\golf\GolfCartSystem.cpp" />

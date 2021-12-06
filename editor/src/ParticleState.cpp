@@ -45,6 +45,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
 
 #include <crogine/util/Matrix.hpp>
 
@@ -262,6 +263,7 @@ void ParticleState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_scene.addSystem<cro::CameraSystem>(mb);
+    m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
     m_scene.addSystem<cro::ParticleSystem>(mb);
 }
