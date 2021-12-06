@@ -44,7 +44,7 @@ namespace cro
     of an entity to decide where to project a texture. To draw projected
     textures a Scene must contain a ModelRenderer system and a 
     ProjectionMap system. At least one material must exist in the scene
-    which uses a shader created with the ShaderReource::BuiltIn::ReceiveProjection flag.
+    which uses a shader created with the ShaderResource::BuiltIn::ReceiveProjection flag.
     Materials which utilise skinning for skeletal animation cannot currently
     receive projected textures, as a limit on the number of available
     shader vectors prevents this. In the future this limit may only apply

@@ -6,11 +6,11 @@ model boat01
     material Unlit
     {
         name = "Untitled"
-        colour = 1.000000,0.999990,1.000000,1.000000
-        smooth = true
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
         repeat = true
-        vertex_coloured = true
         blendmode = "none"
+        diffuse = "assets/golf/images/boat01.png"
 
     }
 }
