@@ -3,6 +3,7 @@ course course_02
     skybox = "assets/golf/images/skybox/spring/sky.ccm"
     billboard_model = "assets/golf/models/shrubbery.cmt"
     billboard_sprites = "assets/golf/sprites/shrubbery.spt"
+    audio = "assets/golf/sound/ambience.xas"
 
     title = "Sunny Cove, Weald & Hedgeways"
     description = "The Finest Gravel You'll Ever Tread"

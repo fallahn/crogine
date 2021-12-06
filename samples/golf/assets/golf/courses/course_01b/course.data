@@ -3,6 +3,7 @@ course course_03
     skybox = "assets/golf/images/skybox/spring/sky.ccm"
     billboard_model = "assets/golf/models/shrubbery.cmt"
     billboard_sprites = "assets/golf/sprites/shrubbery.spt"
+    audio = "assets/golf/sound/ambience.xas"
 
     title = "St. Billybob's links, Isle of Wibble"
     description = "This is the back 9 holes"

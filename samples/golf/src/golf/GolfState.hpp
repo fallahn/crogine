@@ -144,6 +144,8 @@ private:
         std::size_t shadowMeshID = 0;
     }m_ballResources;
 
+    std::string m_audioPath;
+
     void loadAssets();
     void addSystems();
     void buildScene();

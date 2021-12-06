@@ -60,7 +60,7 @@ audioscape ambience
         looped = true
     }    
 
-    emitter plane
+    emitter incidental01
     {
         path = "assets/golf/sound/ambience/plane.ogg"
         streaming = true
@@ -70,7 +70,7 @@ audioscape ambience
         looped = false
     }      
 
-    emitter plane02
+    emitter incidental02
     {
         path = "assets/golf/sound/ambience/plane02.ogg"
         streaming = true
