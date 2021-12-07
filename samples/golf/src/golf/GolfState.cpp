@@ -1764,7 +1764,7 @@ void GolfState::initAudio()
 
         cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Effects);
 
-        if (progress = 1)
+        if (progress == 1)
         {
             e.getComponent<cro::Callback>().active = false;
             m_gameScene.destroyEntity(e);

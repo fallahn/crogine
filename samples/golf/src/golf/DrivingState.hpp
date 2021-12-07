@@ -144,6 +144,7 @@ private:
     void createSummary();
     void updateWindDisplay(glm::vec3);    
     void showMessage(float);
+    void floatingMessage(const std::string&);
 
     //create the summary screen with its own
     //encapsulation just to update the text more easily

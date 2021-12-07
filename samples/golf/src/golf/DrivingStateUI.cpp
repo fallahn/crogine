@@ -46,7 +46,8 @@ source distribution.
 
 namespace
 {
-    constexpr float SummaryOffset = 34.f;
+    constexpr float SummaryOffset = 70.f;
+    constexpr float SummaryHeight = 246.f;
 
     struct MenuID final
     {
@@ -646,7 +647,7 @@ void DrivingState::createSummary()
 
     //info text
     auto infoEnt = m_uiScene.createEntity();
-    infoEnt.addComponent<cro::Transform>().setPosition({ SummaryOffset, 260.f, 0.02f });
+    infoEnt.addComponent<cro::Transform>().setPosition({ SummaryOffset, SummaryHeight, 0.02f });
     infoEnt.addComponent<cro::Drawable2D>();
     infoEnt.addComponent<cro::Text>(smallFont).setString("Sample Text\n1\n1\n1\n1\n1\n1\n1\n1");
     infoEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -655,7 +656,7 @@ void DrivingState::createSummary()
     m_summaryScreen.text01 = infoEnt;
 
     infoEnt = m_uiScene.createEntity();
-    infoEnt.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) + SummaryOffset, 260.f, 0.02f });
+    infoEnt.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) + SummaryOffset, SummaryHeight, 0.02f });
     infoEnt.addComponent<cro::Drawable2D>();
     infoEnt.addComponent<cro::Text>(smallFont).setString("Sample Text\n1\n1\n1\n1\n1\n1\n1\n1");
     infoEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -664,7 +665,7 @@ void DrivingState::createSummary()
     m_summaryScreen.text02 = infoEnt;
 
     auto summaryEnt = m_uiScene.createEntity();
-    summaryEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 98.f, 0.02f });
+    summaryEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 120.f, 0.02f });
     summaryEnt.addComponent<cro::Drawable2D>();
     summaryEnt.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     summaryEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -896,7 +897,7 @@ void DrivingState::showMessage(float range)
     entity.getComponent<cro::Transform>().addChild(textEnt2.getComponent<cro::Transform>());
 
     std::stringstream s2;
-    s2.precision(2);
+    s2.precision(3);
     s2 << "Accuracy: " << score << "%";
 
     auto textEnt3 = m_uiScene.createEntity();
@@ -981,8 +982,8 @@ void DrivingState::showMessage(float range)
                         float score = director->getScore(i);
 
                         std::stringstream s;
-                        s.precision(2);
-                        s << "Turn " << i + 1 << ": " << score << "%\n";
+                        s.precision(3);
+                        s << "Turn " << i + 1 << ":      " << score << "%\n";
                         summary += s.str();
 
                         totalScore += score;
@@ -998,8 +999,8 @@ void DrivingState::showMessage(float range)
                             float score = director->getScore(i);
 
                             std::stringstream s;
-                            s.precision(2);
-                            s << "Turn " << i + 1 << ": " << score << "%\n";
+                            s.precision(3);
+                            s << "Turn " << i + 1 << ":      " << score << "%\n";
                             summary += s.str();
 
                             totalScore += score;
@@ -1025,7 +1026,7 @@ void DrivingState::showMessage(float range)
 
                     totalScore /= scoreCount;
                     std::stringstream s;
-                    s.precision(2);
+                    s.precision(3);
                     s << "\nTotal: " << totalScore << "% - ";
 
                     if (totalScore < BadScore)
@@ -1057,5 +1058,52 @@ void DrivingState::showMessage(float range)
             }
             break;
         }
+    };
+}
+
+void DrivingState::floatingMessage(const std::string& msg)
+{
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    glm::vec2 size = glm::vec2(GolfGame::getActiveTarget()->getSize());
+    glm::vec3 position((size.x / 2.f), (UIBarHeight + 14.f) * m_viewScale.y, 0.2f);
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.getComponent<cro::Transform>().setScale(m_viewScale);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString(msg);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    centreText(entity);
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, position](cro::Entity e, float dt)
+    {
+        static constexpr float MaxMove = 40.f;
+        static constexpr float MaxTime = 3.f;
+
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(MaxTime, currTime + dt);
+
+        float progress = currTime / MaxTime;
+        float move = std::floor(cro::Util::Easing::easeOutQuint(progress) * MaxMove);
+
+        auto pos = position;
+        pos.y += move;
+        e.getComponent<cro::Transform>().setPosition(pos);
+
+        if (currTime == MaxTime)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        }
+
+        float alpha = cro::Util::Easing::easeInCubic(progress);
+        auto c = TextNormalColour;
+        c.setAlpha(1.f - alpha);
+        e.getComponent<cro::Text>().setFillColour(c);
     };
 }

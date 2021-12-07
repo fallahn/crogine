@@ -285,6 +285,53 @@ void DrivingState::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
+    case cro::Message::SpriteAnimationMessage:
+    {
+        const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
+        if (data.userType == 0)
+        {
+            //relay this message with the info needed for particle/sound effects
+            auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+            msg2->type = GolfEvent::ClubSwing;
+            msg2->position = PlayerPosition;
+            msg2->terrain = TerrainID::Fairway;
+            msg2->club = static_cast<std::uint8_t>(m_inputParser.getClub());
+
+            cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 50000, 35000, 200);
+
+            //check if we hooked/sliced
+            auto hook = m_inputParser.getHook();
+            if (hook < -0.15f)
+            {
+                auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                msg2->type = GolfEvent::HookedBall;
+                floatingMessage("Hook");
+            }
+            else if (hook > 0.15f)
+            {
+                auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                msg2->type = GolfEvent::SlicedBall;
+                floatingMessage("Slice");
+            }
+
+            auto power = m_inputParser.getPower();
+            hook *= 20.f;
+            hook = std::round(hook);
+            hook /= 20.f;
+
+            if (power > 0.9f
+                && std::fabs(hook) < 0.05f)
+            {
+                auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                msg2->type = GolfEvent::NiceShot;
+            }
+
+
+            //enable the camera following
+            m_gameScene.setSystemActive<CameraFollowSystem>(true);
+        }
+    }
+    break;
     case sv::MessageID::BallMessage:
     {
         const auto& data = msg.getData<BallEvent>();

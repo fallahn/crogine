@@ -61,4 +61,33 @@ spritesheet scoreboard
     {
         bounds = 512, 472,32,18
     }
+
+    sprite orbs
+    {
+        bounds = 512,348,32,8
+
+        animation zero
+        {
+            frame = 512,332,32,8
+            loop = false
+        }
+
+        animation one
+        {
+            frame = 512, 324,32,8
+            loop = false
+        }
+
+        animation two
+        {
+            frame - 512,316,32,8
+            loop = false
+        }
+
+        animation three
+        {
+            frame = 512, 308,32,8
+            loop = false
+        }
+    }
 }
