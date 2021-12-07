@@ -1030,11 +1030,11 @@ void DrivingState::showMessage(float range)
 
                     if (totalScore < BadScore)
                     {
-                        s << "Try Again!";
+                        s << "Maybe more practice..?";
                     }
                     else if (totalScore < GoodScore)
                     {
-                        s << "Could Do Better";
+                        s << "Could Do Better...";
                     }
                     else if (totalScore < ExcellentScore)
                     {

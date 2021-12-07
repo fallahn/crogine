@@ -94,6 +94,7 @@ namespace
     std::array<glm::mat4, 5u> camTx = {};
     std::size_t camIdx = 0;
     cro::Entity ballEntity;
+    float dotProd = 0.f;
 #define DEBUG_DRAW true
 #else
 #define DEBUG_DRAW false
@@ -171,6 +172,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
                 ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][2].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
                 ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][3].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});*/ 
                 //ImGui::Image(cro::TextureID(m_debugHeightmap.getGLHandle()), { 280.f, 290.f }, { 0.f, 1.f }, { 1.f, 0.f });
+
+                ImGui::Text("Dot Prod: %3.3f", dotProd);
 
                 const auto& ball = ballEntity.getComponent<Ball>();
                 ImGui::Text("Ball Terrain: %s", TerrainStrings[ball.terrain].c_str());
@@ -997,6 +1000,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     }
 
     courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto playerEnt = entity;
 
     //shadow
     cro::ModelDefinition md(m_resources);
@@ -1040,9 +1044,18 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
+        [&, playerEnt](cro::Entity e, float) mutable
     {
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw() + (cro::Util::Const::PI / 2.f));
+        
+        //fade the palyer sprite at high angles
+        //so we don't obstruct the view of the indicator
+        float alpha = std::abs(m_inputParser.getYaw());
+        alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / 0.35f));
+
+        cro::Colour c = cro::Colour::White;
+        c.setAlpha(alpha);
+        playerEnt.getComponent<cro::Sprite>().setColour(c);
     };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
 
