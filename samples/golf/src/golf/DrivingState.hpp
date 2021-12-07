@@ -143,7 +143,7 @@ private:
     void createGameOptions();
     void createSummary();
     void updateWindDisplay(glm::vec3);    
-    void showMessage();
+    void showMessage(float);
 
     //create the summary screen with its own
     //encapsulation just to update the text more easily

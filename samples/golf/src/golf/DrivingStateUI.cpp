@@ -196,6 +196,16 @@ void DrivingState::createUI()
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //current turn
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::HoleNumber;
+    entity.addComponent<UIElement>().relativePosition = { 0.76f, 1.f };
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     //wind strength - this is positioned by the camera's resize callback, below
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -801,8 +811,11 @@ void DrivingState::updateWindDisplay(glm::vec3 direction)
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
-void DrivingState::showMessage(/*MessageBoardID messageType*/)
+void DrivingState::showMessage(float range)
 {
+    auto* director = m_gameScene.getDirector<DrivingRangeDirector>();
+    float score = director->getScore(director->getCurrentStroke() - 1); //this was incremented internally when score was updated
+
     auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     auto position = glm::vec3(size.x / 2.f, size.y / 2.f, 0.05f);
@@ -815,25 +828,66 @@ void DrivingState::showMessage(/*MessageBoardID messageType*/)
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MessageBoard];
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard;
 
+    std::int32_t starCount = 0;
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto textEnt = m_uiScene.createEntity();
     textEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 56.f, 0.02f });
     textEnt.addComponent<cro::Drawable2D>();
-    textEnt.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    textEnt.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    if (score < 50)
+    {
+        textEnt.getComponent<cro::Text>().setString("Try Harder!");
+    }
+    else if (score < 75)
+    {
+        textEnt.getComponent<cro::Text>().setString("Bad Luck!");
+        starCount = 1;
+    }
+    else if (score < 90)
+    {
+        textEnt.getComponent<cro::Text>().setString("Not Bad!");
+        starCount = 2;
+    }
+    else
+    {
+        textEnt.getComponent<cro::Text>().setString("Excellent!");
+        starCount = 3;
+    }
     centreText(textEnt);
     entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
 
+
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    std::stringstream s1;
+    s1.precision(3);
+    s1 << range << "m";
+
     auto textEnt2 = m_uiScene.createEntity();
-    textEnt2.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 26.f, 0.02f });
+    textEnt2.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 36.f, 0.02f });
     textEnt2.addComponent<cro::Drawable2D>();
-    textEnt2.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    textEnt2.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     textEnt2.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    textEnt2.getComponent<cro::Text>().setString("Range: " + s1.str());
     centreText(textEnt2);
     entity.getComponent<cro::Transform>().addChild(textEnt2.getComponent<cro::Transform>());
 
-    //add mini graphic depending on message type
+    std::stringstream s2;
+    s2.precision(2);
+    s2 << "Accuracy: " << score << "%";
+
+    auto textEnt3 = m_uiScene.createEntity();
+    textEnt3.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 24.f, 0.02f });
+    textEnt3.addComponent<cro::Drawable2D>();
+    textEnt3.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+    textEnt3.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    textEnt3.getComponent<cro::Text>().setString(s2.str());
+    centreText(textEnt3);
+    entity.getComponent<cro::Transform>().addChild(textEnt3.getComponent<cro::Transform>());
+
+    //add mini graphic showing rank in stars
     /*auto imgEnt = m_uiScene.createEntity();
     imgEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, 0.01f });
     imgEnt.getComponent<cro::Transform>().move(glm::vec2(0.f, -6.f));
@@ -898,9 +952,9 @@ void DrivingState::showMessage(/*MessageBoardID messageType*/)
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<MessageAnim>();
     entity.getComponent<cro::Callback>().function =
-        [&, textEnt, textEnt2/*, imgEnt*/](cro::Entity e, float dt)
+        [&, textEnt, textEnt2, textEnt3/*, imgEnt*/](cro::Entity e, float dt)
     {
-        static constexpr float HoldTime = 2.f;
+        static constexpr float HoldTime = 4.f;
         auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
         switch (state)
         {
@@ -940,6 +994,7 @@ void DrivingState::showMessage(/*MessageBoardID messageType*/)
                 e.getComponent<cro::Callback>().active = false;
                 m_uiScene.destroyEntity(textEnt);
                 m_uiScene.destroyEntity(textEnt2);
+                m_uiScene.destroyEntity(textEnt3);
                 //m_uiScene.destroyEntity(imgEnt);
                 m_uiScene.destroyEntity(e);
 

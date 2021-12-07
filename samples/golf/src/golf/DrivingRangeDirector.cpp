@@ -30,12 +30,19 @@ source distribution.
 #include "DrivingRangeDirector.hpp"
 #include "MessageIDs.hpp"
 #include "server/ServerMessages.hpp"
+#include "CommandIDs.hpp"
+
+#include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Easings.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 DrivingRangeDirector::DrivingRangeDirector(std::vector<HoleData>& hd)
-	: m_holeData	(hd),
-	m_holeCount		(18)
+    : m_holeData	(hd),
+    m_holeCount		(18),
+    m_totalHoleCount(18)
 {
 
 }
@@ -43,30 +50,40 @@ DrivingRangeDirector::DrivingRangeDirector(std::vector<HoleData>& hd)
 //public
 void DrivingRangeDirector::handleMessage(const cro::Message& msg)
 {
-	switch (msg.id)
-	{
-	default: break;
-	case MessageID::GolfMessage:
-	{
-		const auto& data = msg.getData<GolfEvent>();
-		if (data.type == GolfEvent::HitBall)
-		{
-			//actual ball whacking is done in the driving state
-			//as it needs to read the input parser
-		}
-	}
-		break;
-	case sv::MessageID::BallMessage:
-	{
-		const auto& data = msg.getData<BallEvent>();
-		if (data.type == BallEvent::TurnEnded
-			|| data.type == BallEvent::Foul)
-		{
-			m_holeCount--;
-		}
-	}
-		break;
-	}
+    switch (msg.id)
+    {
+    default: break;
+    case MessageID::GolfMessage:
+    {
+        const auto& data = msg.getData<GolfEvent>();
+        if (data.type == GolfEvent::HitBall)
+        {
+            //actual ball whacking is done in the driving state
+            //as it needs to read the input parser
+        }
+    }
+        break;
+    case sv::MessageID::BallMessage:
+    {
+        const auto& data = msg.getData<BallEvent>();
+        if (data.type == BallEvent::TurnEnded
+            || data.type == BallEvent::Foul)
+        {
+            auto hole = getCurrentHole();
+            auto idx = m_totalHoleCount - m_holeCount;
+
+            static constexpr float MinDistance = 20.f;
+            //LogI << glm::length(data.position - m_holeData[hole].pin) << std::endl;
+            float score = 1.f - std::min(1.f, glm::length(data.position - m_holeData[hole].pin) / MinDistance);
+            //score *= score; //pow2 accuracy curve
+
+            m_scores[idx] = cro::Util::Easing::easeOutQuad(score) * 100.f; //grade on a curve
+
+            m_holeCount--;
+        }
+    }
+        break;
+    }
 }
 
 void DrivingRangeDirector::process(float)
@@ -76,11 +93,15 @@ void DrivingRangeDirector::process(float)
 
 void DrivingRangeDirector::setHoleCount(std::int32_t count)
 {
-	m_holeCount = count;
-	std::shuffle(m_holeData.begin(), m_holeData.end(), cro::Util::Random::rndEngine);
+    m_totalHoleCount = m_holeCount = std::min(count, MaxHoles);
+    std::shuffle(m_holeData.begin(), m_holeData.end(), cro::Util::Random::rndEngine);
+
+    std::fill(m_scores.begin(), m_scores.end(), 0.f);
+
+    
 }
 
 std::int32_t DrivingRangeDirector::getCurrentHole() const
 {
-	return m_holeCount % m_holeData.size();
+    return m_holeCount % m_holeData.size();
 }

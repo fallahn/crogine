@@ -268,9 +268,9 @@ bool ConfigObject::loadFromFile(const std::string& filePath)
 
                         objStack.push_back(objStack.back()->addObject(name.first, name.second));
                     }
-                    else //last line was probably garbage
+                    else //last line was probably garbage or nothing but spaces
                     {
-                        LogW << filePath << ": Missing line or incorrect syntax at " << currentLine << std::endl;
+                        //LogW << filePath << ": Missing line or incorrect syntax at " << currentLine << std::endl;
                         continue;
                     }
                 }
@@ -511,6 +511,7 @@ void ConfigObject::removeComment(std::string& line)
 
     //remove any tabs while we're at it
     Util::String::removeChar(line, '\t');
+    //Util::String::removeChar(line, ' ');
 
     //and preceding spaces
     auto start = line.find_first_not_of(' ');

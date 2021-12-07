@@ -273,6 +273,12 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 
 void DrivingState::handleMessage(const cro::Message& msg)
 {
+    //director must handle message first so score is
+    //up to date by the time the switchblock below is
+    //processed
+    m_gameScene.forwardMessage(msg);
+    m_uiScene.forwardMessage(msg);
+
     switch (msg.id)
     {
     default: break;
@@ -283,7 +289,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
             || data.type == BallEvent::Foul)
         {
             //display a message with score
-            showMessage();
+            showMessage(glm::length(PlayerPosition - data.position));
         }
     }
         break;
@@ -350,9 +356,6 @@ void DrivingState::handleMessage(const cro::Message& msg)
     }
         break;
     }
-
-    m_gameScene.forwardMessage(msg);
-    m_uiScene.forwardMessage(msg);
 }
 
 bool DrivingState::simulate(float dt)
@@ -1127,6 +1130,7 @@ void DrivingState::createBall()
 
     //render the ball as a point so no perspective is applied to the scale
     auto material = m_resources.materials.get(ballMaterialID);
+    material.setProperty("u_colour", TextNormalColour);
     auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
         [ballID](const SharedStateData::BallInfo& ballPair)
         {
@@ -1528,6 +1532,16 @@ void DrivingState::setHole(std::int32_t index)
         auto bounds = cro::Text::getLocalBounds(e);
         bounds.width = std::floor(bounds.width / 2.f);
         e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //and turn indicator
+    cmd.targetFlags = CommandID::UI::HoleNumber;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        std::string str("Turn ");
+        str += std::to_string(m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentStroke() + 1);
+        e.getComponent<cro::Text>().setString(str);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

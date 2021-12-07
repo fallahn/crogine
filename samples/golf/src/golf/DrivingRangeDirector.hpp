@@ -38,23 +38,33 @@ source distribution.
 class DrivingRangeDirector final : public cro::Director
 {
 public:
-	explicit DrivingRangeDirector(std::vector<HoleData>&);
+    explicit DrivingRangeDirector(std::vector<HoleData>&);
 
-	void handleMessage(const cro::Message&) override;
+    void handleMessage(const cro::Message&) override;
 
-	void process(float) override;
+    void process(float) override;
 
-	void setHoleCount(std::int32_t count);
+    void setHoleCount(std::int32_t count);
 
-	//note that this does not necessarily
-	//end when it reaches zero as the hole count
-	//may be greater than the number of holes.
-	std::int32_t getCurrentHole() const;
+    //note that this does not necessarily
+    //end when it reaches zero as the hole count
+    //may be greater than the number of holes.
+    std::int32_t getCurrentHole() const;
 
-	bool roundEnded() const { return m_holeCount == 0; }
+    std::int32_t getCurrentStroke() const { return m_totalHoleCount - m_holeCount; }
+
+    float getScore(std::int32_t idx) const { return m_scores[idx]; };
+
+    bool roundEnded() const { return m_holeCount == 0; }
+
+    static constexpr std::int32_t MaxHoles = 18;
+
 
 private:
 
-	std::vector<HoleData>& m_holeData;
-	std::int32_t m_holeCount;
+    std::vector<HoleData>& m_holeData;
+    std::int32_t m_holeCount;
+    std::int32_t m_totalHoleCount;
+
+    std::array<float, MaxHoles> m_scores = {};
 };
