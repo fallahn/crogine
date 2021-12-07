@@ -47,6 +47,7 @@ source distribution.
 #include "FpsCameraSystem.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
+#include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/SysTime.hpp>
@@ -1657,7 +1658,7 @@ void GolfState::buildScene()
 
 void GolfState::initAudio()
 {
-    //4 evenly spaced points with ambient audio
+    //6 evenly spaced points with ambient audio
     auto envOffset = glm::vec2(MapSize) / 3.f;
     cro::AudioScape as;
     if (as.loadFromFile(m_audioPath, m_resources.audio))
@@ -1750,6 +1751,25 @@ void GolfState::initAudio()
     {
         LogE << "Invalid AudioScape file was found" << std::endl;
     }
+
+    //fades in the audio
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
+        progress = std::min(1.f, progress + dt);
+
+        cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Effects);
+
+        if (progress = 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+    };
 }
 
 void GolfState::spawnBall(const ActorInfo& info)
