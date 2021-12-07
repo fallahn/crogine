@@ -73,10 +73,7 @@ void DrivingRangeDirector::handleMessage(const cro::Message& msg)
             auto idx = m_totalHoleCount - m_holeCount;
 
             static constexpr float MinDistance = 20.f;
-            //LogI << glm::length(data.position - m_holeData[hole].pin) << std::endl;
             float score = 1.f - std::min(1.f, glm::length(data.position - m_holeData[hole].pin) / MinDistance);
-            //score *= score; //pow2 accuracy curve
-
             m_scores[idx] = cro::Util::Easing::easeOutQuad(score) * 100.f; //grade on a curve
 
             m_holeCount--;

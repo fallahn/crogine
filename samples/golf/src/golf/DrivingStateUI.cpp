@@ -46,6 +46,8 @@ source distribution.
 
 namespace
 {
+    constexpr float SummaryOffset = 34.f;
+
     struct MenuID final
     {
         enum
@@ -644,14 +646,30 @@ void DrivingState::createSummary()
 
     //info text
     auto infoEnt = m_uiScene.createEntity();
-    infoEnt.addComponent<cro::Transform>().setPosition({ 14.f, 220.f, 0.02f });
+    infoEnt.addComponent<cro::Transform>().setPosition({ SummaryOffset, 260.f, 0.02f });
     infoEnt.addComponent<cro::Drawable2D>();
-    infoEnt.addComponent<cro::Text>(smallFont).setString("Sample Text");
+    infoEnt.addComponent<cro::Text>(smallFont).setString("Sample Text\n1\n1\n1\n1\n1\n1\n1\n1");
     infoEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     infoEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bgEntity.getComponent<cro::Transform>().addChild(infoEnt.getComponent<cro::Transform>());
-    m_summaryScreen.text = infoEnt;
+    m_summaryScreen.text01 = infoEnt;
 
+    infoEnt = m_uiScene.createEntity();
+    infoEnt.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) + SummaryOffset, 260.f, 0.02f });
+    infoEnt.addComponent<cro::Drawable2D>();
+    infoEnt.addComponent<cro::Text>(smallFont).setString("Sample Text\n1\n1\n1\n1\n1\n1\n1\n1");
+    infoEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    infoEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    bgEntity.getComponent<cro::Transform>().addChild(infoEnt.getComponent<cro::Transform>());
+    m_summaryScreen.text02 = infoEnt;
+
+    auto summaryEnt = m_uiScene.createEntity();
+    summaryEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 98.f, 0.02f });
+    summaryEnt.addComponent<cro::Drawable2D>();
+    summaryEnt.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    summaryEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    bgEntity.getComponent<cro::Transform>().addChild(summaryEnt.getComponent<cro::Transform>());
+    m_summaryScreen.summary = summaryEnt;
 
     //replay text
     auto questionEnt = m_uiScene.createEntity();
@@ -813,7 +831,7 @@ void DrivingState::updateWindDisplay(glm::vec3 direction)
 
 void DrivingState::showMessage(float range)
 {
-    auto* director = m_gameScene.getDirector<DrivingRangeDirector>();
+    const auto* director = m_gameScene.getDirector<DrivingRangeDirector>();
     float score = director->getScore(director->getCurrentStroke() - 1); //this was incremented internally when score was updated
 
     auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();
@@ -829,6 +847,9 @@ void DrivingState::showMessage(float range)
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard;
 
     std::int32_t starCount = 0;
+    static constexpr float BadScore = 50.f;
+    static constexpr float GoodScore = 75.f;
+    static constexpr float ExcellentScore = 95.f;
 
     auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto textEnt = m_uiScene.createEntity();
@@ -836,16 +857,16 @@ void DrivingState::showMessage(float range)
     textEnt.addComponent<cro::Drawable2D>();
     textEnt.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    if (score < 50)
-    {
-        textEnt.getComponent<cro::Text>().setString("Try Harder!");
-    }
-    else if (score < 75)
+    if (score < BadScore)
     {
         textEnt.getComponent<cro::Text>().setString("Bad Luck!");
+    }
+    else if (score < GoodScore)
+    {
+        textEnt.getComponent<cro::Text>().setString("Good Effort!");
         starCount = 1;
     }
-    else if (score < 90)
+    else if (score < ExcellentScore)
     {
         textEnt.getComponent<cro::Text>().setString("Not Bad!");
         starCount = 2;
@@ -894,57 +915,6 @@ void DrivingState::showMessage(float range)
     imgEnt.addComponent<cro::Drawable2D>();
     entity.getComponent<cro::Transform>().addChild(imgEnt.getComponent<cro::Transform>());*/
 
-    //switch (messageType)
-    //{
-    //default: break;
-    //case MessageBoardID::HoleScore:
-    //{
-    //    std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
-    //    score -= m_holeData[m_currentHole].par;
-    //    auto overPar = score;
-    //    score += ScoreID::ScoreOffset;
-
-    //    //if this is a remote player the score won't
-    //    //have arrived yet, so kludge this here so the
-    //    //display type is correct.
-    //    if (m_currentPlayer.client != m_sharedData.clientConnection.connectionID)
-    //    {
-    //        score++;
-    //    }
-
-    //    auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-    //    msg->type = GolfEvent::Scored;
-    //    msg->score = static_cast<std::uint8_t>(score);
-
-    //    if (score < ScoreID::Count)
-    //    {
-    //        textEnt.getComponent<cro::Text>().setString(ScoreStrings[score]);
-    //        textEnt.getComponent<cro::Transform>().move({ 0.f, -10.f, 0.f });
-    //    }
-    //    else
-    //    {
-    //        textEnt.getComponent<cro::Text>().setString("Bad Luck!");
-    //        textEnt2.getComponent<cro::Text>().setString(std::to_string(overPar) + " Over Par");
-    //    }
-    //}
-    //break;
-    //case MessageBoardID::Bunker:
-    //    textEnt.getComponent<cro::Text>().setString("Bunker!");
-    //    imgEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Bunker];
-    //    bounds = m_sprites[SpriteID::Bunker].getTextureBounds();
-    //    break;
-    //case MessageBoardID::PlayerName:
-    //    textEnt.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name);
-    //    textEnt2.getComponent<cro::Text>().setString("Stroke: " + std::to_string(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] + 1));
-    //    break;
-    //case MessageBoardID::Scrub:
-    //case MessageBoardID::Water:
-    //    textEnt.getComponent<cro::Text>().setString("Foul!");
-    //    textEnt2.getComponent<cro::Text>().setString("1 Stroke Penalty");
-    //    imgEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Foul];
-    //    bounds = m_sprites[SpriteID::Foul].getTextureBounds();
-    //    break;
-    //}
     //imgEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
 
 
@@ -1001,6 +971,83 @@ void DrivingState::showMessage(float range)
                 if (m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
                 {
                     //show summary screen
+                    const auto* director = m_gameScene.getDirector<DrivingRangeDirector>();
+                    auto scoreCount = director->getTotalStrokes();
+                    float totalScore = 0.f;
+
+                    std::string summary;
+                    for (auto i = 0; i < std::min(9, scoreCount); ++i)
+                    {
+                        float score = director->getScore(i);
+
+                        std::stringstream s;
+                        s.precision(2);
+                        s << "Turn " << i + 1 << ": " << score << "%\n";
+                        summary += s.str();
+
+                        totalScore += score;
+                    }
+                    m_summaryScreen.text01.getComponent<cro::Text>().setString(summary);
+                    summary.clear();
+
+                    //second column
+                    if (scoreCount > 9)
+                    {
+                        for (auto i = 9; i < scoreCount; ++i)
+                        {
+                            float score = director->getScore(i);
+
+                            std::stringstream s;
+                            s.precision(2);
+                            s << "Turn " << i + 1 << ": " << score << "%\n";
+                            summary += s.str();
+
+                            totalScore += score;
+                        }
+                        m_summaryScreen.text02.getComponent<cro::Text>().setString(summary);
+
+                        auto& tx = m_summaryScreen.text01.getComponent<cro::Transform>();
+                        auto pos = tx.getPosition();
+                        pos.x = SummaryOffset;
+                        tx.setPosition(pos);
+                        tx.setOrigin({ 0.f, 0.f });
+                    }
+                    else
+                    {
+                        auto& tx = m_summaryScreen.text01.getComponent<cro::Transform>();
+                        auto pos = tx.getPosition();
+                        pos.x = 200.f; //TODO this should be half background width
+                        tx.setPosition(pos);
+                        centreText(m_summaryScreen.text01);
+
+                        m_summaryScreen.text02.getComponent<cro::Text>().setString(" ");
+                    }
+
+                    totalScore /= scoreCount;
+                    std::stringstream s;
+                    s.precision(2);
+                    s << "\nTotal: " << totalScore << "% - ";
+
+                    if (totalScore < BadScore)
+                    {
+                        s << "Try Again!";
+                    }
+                    else if (totalScore < GoodScore)
+                    {
+                        s << "Could Do Better";
+                    }
+                    else if (totalScore < ExcellentScore)
+                    {
+                        s << "Great Job!";
+                    }
+                    else
+                    {
+                        s << "Excellent!";
+                    }
+
+                    m_summaryScreen.summary.getComponent<cro::Text>().setString(s.str());
+                    centreText(m_summaryScreen.summary);
+                    
                     m_summaryScreen.root.getComponent<cro::Callback>().active = true;
                 }
                 else
@@ -1011,25 +1058,4 @@ void DrivingState::showMessage(float range)
             break;
         }
     };
-
-
-    //send a message to immediately close any current open messages
-    //TODO shouldn't need to do this - if we do consider that the
-    //the callback will set the next hole when it's done!!
-
-    //cro::Command cmd;
-    //cmd.targetFlags = CommandID::UI::MessageBoard;
-    //cmd.action = [entity](cro::Entity e, float)
-    //{
-    //    if (e != entity)
-    //    {
-    //        auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
-    //        if (state != MessageAnim::Close)
-    //        {
-    //            currTime = 1.f;
-    //            state = MessageAnim::Close;
-    //        }
-    //    }
-    //};
-    //m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

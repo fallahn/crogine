@@ -53,6 +53,8 @@ public:
 
     std::int32_t getCurrentStroke() const { return m_totalHoleCount - m_holeCount; }
 
+    std::int32_t getTotalStrokes() const { return m_totalHoleCount; }
+
     float getScore(std::int32_t idx) const { return m_scores[idx]; };
 
     bool roundEnded() const { return m_holeCount == 0; }

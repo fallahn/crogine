@@ -150,7 +150,9 @@ private:
     struct SummaryScreen final
     {
         cro::Entity root;
-        cro::Entity text;
+        cro::Entity text01;
+        cro::Entity text02;
+        cro::Entity summary;
     }m_summaryScreen;
 
 #ifdef CRO_DEBUG_
