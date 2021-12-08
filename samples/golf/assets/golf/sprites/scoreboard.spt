@@ -64,7 +64,7 @@ spritesheet scoreboard
 
     sprite orbs
     {
-        bounds = 512,348,32,8
+        bounds = 512,308,32,8
 
         animation zero
         {
@@ -80,7 +80,7 @@ spritesheet scoreboard
 
         animation two
         {
-            frame - 512,316,32,8
+            frame = 512,316,32,8
             loop = false
         }
 

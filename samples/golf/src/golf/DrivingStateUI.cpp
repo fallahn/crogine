@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Maths.hpp>
@@ -388,6 +389,7 @@ void DrivingState::createGameOptions()
     //background
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
+    m_sprites[SpriteID::Stars] = spriteSheet.getSprite("orbs");
     auto bgSprite = spriteSheet.getSprite("border");
 
     auto bounds = bgSprite.getTextureBounds();
@@ -909,21 +911,23 @@ void DrivingState::showMessage(float range)
     centreText(textEnt3);
     entity.getComponent<cro::Transform>().addChild(textEnt3.getComponent<cro::Transform>());
 
-    //add mini graphic showing rank in stars
-    /*auto imgEnt = m_uiScene.createEntity();
-    imgEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, 0.01f });
-    imgEnt.getComponent<cro::Transform>().move(glm::vec2(0.f, -6.f));
+    //add mini graphic showing rank
+    auto imgEnt = m_uiScene.createEntity();
+    imgEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, 0.02f });
+    imgEnt.getComponent<cro::Transform>().move(glm::vec2(0.f, 2.f));
     imgEnt.addComponent<cro::Drawable2D>();
-    entity.getComponent<cro::Transform>().addChild(imgEnt.getComponent<cro::Transform>());*/
-
-    //imgEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
+    imgEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Stars];
+    imgEnt.addComponent<cro::SpriteAnimation>().play(starCount);
+    bounds = imgEnt.getComponent<cro::Sprite>().getTextureBounds();
+    imgEnt.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f), 0.f });
+    entity.getComponent<cro::Transform>().addChild(imgEnt.getComponent<cro::Transform>());
 
 
     //callback for anim/self destruction
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<MessageAnim>();
     entity.getComponent<cro::Callback>().function =
-        [&, textEnt, textEnt2, textEnt3/*, imgEnt*/](cro::Entity e, float dt)
+        [&, textEnt, textEnt2, textEnt3, imgEnt](cro::Entity e, float dt)
     {
         static constexpr float HoldTime = 4.f;
         auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
@@ -966,7 +970,7 @@ void DrivingState::showMessage(float range)
                 m_uiScene.destroyEntity(textEnt);
                 m_uiScene.destroyEntity(textEnt2);
                 m_uiScene.destroyEntity(textEnt3);
-                //m_uiScene.destroyEntity(imgEnt);
+                m_uiScene.destroyEntity(imgEnt);
                 m_uiScene.destroyEntity(e);
 
                 if (m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())

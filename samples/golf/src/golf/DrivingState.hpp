@@ -95,6 +95,7 @@ private:
             HookBar,
             WindIndicator,
             MessageBoard,
+            Stars,
 
             Count
         };

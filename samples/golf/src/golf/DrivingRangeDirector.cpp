@@ -66,8 +66,7 @@ void DrivingRangeDirector::handleMessage(const cro::Message& msg)
     case sv::MessageID::BallMessage:
     {
         const auto& data = msg.getData<BallEvent>();
-        if (data.type == BallEvent::TurnEnded
-            || data.type == BallEvent::Foul)
+        if (data.type == BallEvent::TurnEnded)
         {
             auto hole = getCurrentHole();
             auto idx = m_totalHoleCount - m_holeCount;
