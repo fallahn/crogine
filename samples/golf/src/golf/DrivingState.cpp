@@ -1094,7 +1094,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     entity.getComponent<cro::Callback>().function =
         [&, playerEnt](cro::Entity e, float) mutable
     {
-        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw() + (cro::Util::Const::PI / 2.f));
+        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
         
         //fade the palyer sprite at high angles
         //so we don't obstruct the view of the indicator
@@ -1115,7 +1115,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     std::vector<float> verts =
     {
         0.f, 0.05f, 0.f,    1.f, 0.97f, 0.88f, 1.f,
-        5.f, 0.1f, 0.f,    1.f, 0.97f, 0.88f, 0.2f
+        0.f, 0.1f, -5.f,    1.f, 0.97f, 0.88f, 0.2f
     };
     std::vector<std::uint32_t> indices =
     {

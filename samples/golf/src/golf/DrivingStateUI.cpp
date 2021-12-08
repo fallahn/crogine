@@ -319,6 +319,7 @@ void DrivingState::createUI()
     //minimap view
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f });
+    entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_mapTexture.getTexture());
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniMap;
@@ -403,6 +404,28 @@ void DrivingState::createUI()
             currTime = 1.f;
             e.getComponent<cro::Callback>().active = false;
         }
+    };
+    mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ PlayerPosition.x / 2.f, -PlayerPosition.z / 2.f, 0.01f });
+    entity.getComponent<cro::Transform>().move(RangeSize / 4.f);
+    auto endColour = TextGoldColour;
+    endColour.setAlpha(0.f);
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(-0.5f, 18.f), endColour),
+        cro::Vertex2D(glm::vec2(-0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.5f, 18.f), endColour),
+        cro::Vertex2D(glm::vec2(0.5f, -0.5f), TextGoldColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
