@@ -131,6 +131,7 @@ private:
 
     void addSystems();
     void loadAssets();
+    void initAudio();
     void createScene();
     void createFoliage(cro::Entity);
     void createPlayer(cro::Entity);

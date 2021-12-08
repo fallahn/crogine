@@ -62,6 +62,11 @@ spritesheet scoreboard
         bounds = 512, 472,32,18
     }
 
+    sprite star
+    {
+        bounds = 544,308,32,32
+    }
+
     sprite orbs
     {
         bounds = 512,332,32,8

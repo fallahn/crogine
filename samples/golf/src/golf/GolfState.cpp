@@ -1741,7 +1741,7 @@ void GolfState::initAudio()
 
         }
 
-        //put the new hole music on the cam for accessabilty
+        //put the new hole music on the cam for accessibilty
         //this is done *before* m_cameras is updated 
         if (as.hasEmitter("music"))
         {

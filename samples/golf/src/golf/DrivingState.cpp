@@ -47,6 +47,7 @@ source distribution.
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
 
+#include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -164,27 +165,27 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     });
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Window"))
-            {
-                /*ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][0].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
-                ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][1].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
-                ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][2].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
-                ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][3].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});*/ 
-                //ImGui::Image(cro::TextureID(m_debugHeightmap.getGLHandle()), { 280.f, 290.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Window"))
+    //        {
+    //            /*ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][0].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
+    //            ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][1].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
+    //            ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][2].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
+    //            ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][3].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});*/ 
+    //            //ImGui::Image(cro::TextureID(m_debugHeightmap.getGLHandle()), { 280.f, 290.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
-                ImGui::Text("Dot Prod: %3.3f", dotProd);
+    //            ImGui::Text("Dot Prod: %3.3f", dotProd);
 
-                const auto& ball = ballEntity.getComponent<Ball>();
-                ImGui::Text("Ball Terrain: %s", TerrainStrings[ball.terrain].c_str());
-                ImGui::Text("Ball State: %s", Ball::StateStrings[static_cast<std::int32_t>(ball.state)].c_str());
+    //            const auto& ball = ballEntity.getComponent<Ball>();
+    //            ImGui::Text("Ball Terrain: %s", TerrainStrings[ball.terrain].c_str());
+    //            ImGui::Text("Ball State: %s", Ball::StateStrings[static_cast<std::int32_t>(ball.state)].c_str());
 
-                auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
-                ImGui::Text("Ball Pos: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-            }
-            ImGui::End();
-        });
+    //            auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
+    //            ImGui::Text("Ball Pos: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
@@ -569,6 +570,124 @@ void DrivingState::loadAssets()
             m_ballModels.insert(std::make_pair(uid, std::move(def)));
         }
     }
+
+    initAudio();
+}
+
+void DrivingState::initAudio()
+{
+    //6 evenly spaced points with ambient audio
+    auto envOffset = RangeSize / 3.f;
+    cro::AudioScape as;
+    if (as.loadFromFile("assets/golf/sound/ambience.xas", m_resources.audio))
+    {
+        std::array emitterNames =
+        {
+            std::string("01"),
+            std::string("02"),
+            std::string("03"),
+            std::string("04"),
+            std::string("05"),
+            std::string("06"),
+            std::string("05"),
+            std::string("06"),
+        };
+
+        for (auto i = 0; i < 2; ++i)
+        {
+            for (auto j = 0; j < 2; ++j)
+            {
+                static constexpr float height = 4.f;
+                glm::vec3 position(envOffset.x * (i + 1), height, -envOffset.y * (j + 1));
+
+                auto idx = i * 2 + j;
+
+                if (as.hasEmitter(emitterNames[idx + 4]))
+                {
+                    auto entity = m_gameScene.createEntity();
+                    entity.addComponent<cro::Transform>().setPosition(position);
+                    entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[idx + 4]);
+                    entity.getComponent<cro::AudioEmitter>().play();
+                }
+
+                position = { i * MapSize.x, height, -static_cast<float>(MapSize.y) * j };
+
+                if (as.hasEmitter(emitterNames[idx]))
+                {
+                    auto entity = m_gameScene.createEntity();
+                    entity.addComponent<cro::Transform>().setPosition(position);
+                    entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[idx]);
+                    entity.getComponent<cro::AudioEmitter>().play();
+                }
+            }
+        }
+
+        //random incidental audio
+        if (as.hasEmitter("incidental01")
+            && as.hasEmitter("incidental02"))
+        {
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental01");
+            auto plane01 = entity;
+
+            entity = m_gameScene.createEntity();
+            entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental02");
+            auto plane02 = entity;
+
+            entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<std::pair<float, float>>(0.f, static_cast<float>(cro::Util::Random::value(32, 64)));
+            entity.getComponent<cro::Callback>().function =
+                [plane01, plane02](cro::Entity e, float dt) mutable
+            {
+                auto& [currTime, timeOut] = e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>();
+                currTime += dt;
+
+                if (currTime > timeOut)
+                {
+                    currTime = 0.f;
+                    timeOut = static_cast<float>(cro::Util::Random::value(120, 240));
+
+                    auto ent = cro::Util::Random::value(0, 1) % 2 == 0 ? plane01 : plane02;
+                    if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                    {
+                        ent.getComponent<cro::AudioEmitter>().play();
+                    }
+                }
+            };
+
+        }
+
+        //put the new hole music on the cam for accessibilty
+        //this is done *before* m_cameras is updated 
+        if (as.hasEmitter("music"))
+        {
+            m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>() = as.getEmitter("music");
+        }
+    }
+    else
+    {
+        LogE << "Invalid AudioScape file was found" << std::endl;
+    }
+
+    //fades in the audio
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
+        progress = std::min(1.f, progress + dt);
+
+        cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Effects);
+
+        if (progress == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+    };
 }
 
 void DrivingState::createScene()
@@ -772,7 +891,15 @@ void DrivingState::createScene()
         [&](cro::Entity e, float dt)
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<TransitionPath>();
+        float oldTime = data.currentTime;
         data.currentTime = std::min(data.TotalTime, data.currentTime + dt);
+
+        if (oldTime < data.TotalTime / 2.f
+            && data.currentTime > data.TotalTime / 2.f)
+        {
+            //play the music
+            e.getComponent<cro::AudioEmitter>().play();
+        }
 
         float progress = cro::Util::Easing::easeInOutQuad(data.currentTime / data.TotalTime);
 
@@ -825,7 +952,7 @@ void DrivingState::createScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
-    camEnt.addComponent<cro::Transform>().setPosition({ RangeSize.x / 3.f, SkyCamHeight, 0.f });
+    camEnt.addComponent<cro::Transform>().setPosition({ RangeSize.x / 3.f, SkyCamHeight, 30.f });
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
@@ -856,7 +983,7 @@ void DrivingState::createScene()
     };
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
-    camEnt.addComponent<CameraFollower>().radius = 35.f * 35.f;
+    camEnt.addComponent<CameraFollower>().radius = 20.f * 20.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
     camEnt.getComponent<CameraFollower>().zoom.speed = 2.f;
     camEnt.addComponent<cro::AudioListener>();
