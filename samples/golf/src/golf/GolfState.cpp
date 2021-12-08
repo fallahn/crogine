@@ -1569,7 +1569,7 @@ void GolfState::buildScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
-    camEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, 16.f, -static_cast<float>(MapSize.y) / 2.f });
+    camEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, SkyCamHeight, -static_cast<float>(MapSize.y) / 2.f });
     camEnt.addComponent<cro::Camera>().resizeCallback = 
         [camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
@@ -2372,14 +2372,14 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
 
     //and the uh, other green cam. The spectator one
-    m_cameras[CameraID::Green].getComponent<cro::Transform>().setPosition({ holePos.x, 3.f, holePos.z });
+    m_cameras[CameraID::Green].getComponent<cro::Transform>().setPosition({ holePos.x, GreenCamHeight, holePos.z });
     //TODO what's a reasonable way to find an offset for this?
     //perhaps move at least 15m away in opposite direction from map centre?
 
     auto centre = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
     auto direction = holePos - centre;
     direction = glm::normalize(direction) * 15.f;
-    direction.y += holePos.y;
+    direction.y += holePos.y; //TODO this only works if hole is higher than the camera
     m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
 
     //we also have to check the camera hasn't ended up too close to the centre one, else the

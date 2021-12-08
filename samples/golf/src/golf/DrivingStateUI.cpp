@@ -1111,6 +1111,13 @@ void DrivingState::showMessage(float range)
         case MessageAnim::Hold:
             //hold
             currTime = std::min(HoldTime, currTime + dt);
+
+            if (currTime > (HoldTime / 2.f))
+            {
+                //this should be safe to call repeatedly
+                setActiveCamera(CameraID::Player);
+            }
+
             if (currTime == HoldTime)
             {
                 currTime = 1.f;
@@ -1215,6 +1222,7 @@ void DrivingState::showMessage(float range)
                 else
                 {
                     setHole(m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole());
+                    //setActiveCamera(CameraID::Green);
                 }
             }
             break;

@@ -41,6 +41,8 @@ source distribution.
 #include "Clubs.hpp"
 #include "GolfParticleDirector.hpp"
 #include "GolfSoundDirector.hpp"
+#include "CameraFollowSystem.hpp"
+#include "ClientCollisionSystem.hpp"
 #include "server/ServerMessages.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
@@ -152,7 +154,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus()),
     m_viewScale         (1.f),
-    m_strokeCountIndex  (0)
+    m_strokeCountIndex  (0),
+    m_currentCamera     (CameraID::Player)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -402,6 +405,23 @@ void DrivingState::handleMessage(const cro::Message& msg)
         }
     }
         break;
+    case MessageID::SceneMessage:
+    {
+        const auto& data = msg.getData<SceneEvent>();
+        switch (data.type)
+        {
+        default: break;
+        case SceneEvent::TransitionComplete:
+        {
+            setActiveCamera(CameraID::Player);
+        }
+        break;
+        case SceneEvent::RequestSwitchCamera:
+            setActiveCamera(data.data);
+            break;
+        }
+    }
+    break;
     }
 }
 
@@ -459,6 +479,7 @@ void DrivingState::addSystems()
     m_gameScene.addSystem<BallSystem>(mb, DEBUG_DRAW);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
+    m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
@@ -468,6 +489,9 @@ void DrivingState::addSystems()
 
     m_gameScene.setSystemActive<FpsCameraSystem>(false);
 #endif
+
+    m_gameScene.setSystemActive<CameraFollowSystem>(false);
+
     m_gameScene.addDirector<DrivingRangeDirector>(m_holeData);
     m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio);
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures);
@@ -787,6 +811,59 @@ void DrivingState::createScene()
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
     };
+
+
+
+    //create an overhead camera
+    auto setPerspective = [](cro::Camera& cam)
+    {
+        auto vpSize = calcVPSize();
+
+        //the resize actually extends the target vertically so we need to maintain a
+        //horizontal FOV, not the vertical one expected by default.
+        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>().setPosition({ RangeSize.x / 3.f, SkyCamHeight, 0.f });
+    camEnt.addComponent<cro::Camera>().resizeCallback =
+        [camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
+    {
+        auto vpSize = calcVPSize();
+        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+    camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
+    camEnt.addComponent<CameraFollower>().radius = 85.f * 85.f;
+    camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
+    camEnt.getComponent<CameraFollower>().zoom.target = 0.1f;
+    camEnt.getComponent<CameraFollower>().zoom.speed = 3.f;
+    camEnt.addComponent<cro::AudioListener>();
+    camEnt.addComponent<TargetInfo>(); //fudge because follower system requires it (water plane would be attached to this if it existed).
+    setPerspective(camEnt.getComponent<cro::Camera>());
+    m_cameras[CameraID::Sky] = camEnt;
+
+    //and a green camera
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>();
+    camEnt.addComponent<cro::Camera>().resizeCallback =
+        [camEnt](cro::Camera& cam)
+    {
+        auto vpSize = calcVPSize();
+        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+    camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
+    camEnt.addComponent<CameraFollower>().radius = 35.f * 35.f;
+    camEnt.getComponent<CameraFollower>().id = CameraID::Green;
+    camEnt.getComponent<CameraFollower>().zoom.speed = 2.f;
+    camEnt.addComponent<cro::AudioListener>();
+    camEnt.addComponent<TargetInfo>();
+    setPerspective(camEnt.getComponent<cro::Camera>());
+    m_cameras[CameraID::Green] = camEnt;
+
 
 #ifdef CRO_DEBUG_
     camEnt = m_gameScene.createEntity();
@@ -1209,6 +1286,7 @@ void DrivingState::createBall()
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(ballMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     entity.addComponent<Ball>();
+    entity.addComponent<ClientCollider>().state = 1; //needed to fudge the operation of cam follower system
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f); //stores the ground height under the ball for the shadows to read
@@ -1263,6 +1341,16 @@ void DrivingState::createBall()
                 e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            //following cameras
+            cmd.targetFlags = CommandID::SpectatorCam;
+            cmd.action = [&, ent](cro::Entity e, float)
+            {
+                e.getComponent<CameraFollower>().target = ent;
+                e.getComponent<CameraFollower>().playerPosition = PlayerPosition;
+                e.getComponent<CameraFollower>().holePosition = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin;
+            };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             pos.y = 0.f;
             auto groundHeight = m_gameScene.getSystem<BallSystem>()->getTerrain(pos).intersection.y;
@@ -1646,4 +1734,105 @@ void DrivingState::setHole(std::int32_t index)
         e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    
+    auto holePos = m_holeData[index].pin;
+
+    //reposition sky cam based on target position
+    auto camPos = m_cameras[CameraID::Sky].getComponent<cro::Transform>().getPosition();
+    camPos.x = holePos.x > 0 ? RangeSize.x / 3.f : -RangeSize.x / 3.f;
+    auto tx = glm::inverse(glm::lookAt(camPos, PlayerPosition, cro::Transform::Y_AXIS));
+    m_cameras[CameraID::Sky].getComponent<cro::Transform>().setLocalTransform(tx);
+
+    //reposition the green-cam
+    //TODO interp the motion?
+    m_cameras[CameraID::Green].getComponent<cro::Transform>().setPosition({ holePos.x, GreenCamHeight, holePos.z });
+
+    //always away from tee
+    auto direction = holePos - PlayerPosition;
+    direction = glm::normalize(direction) * 15.f;
+    m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
+
+
+    //we also have to check the camera hasn't ended up too close to the centre one, else the
+    //camera director gets confused as to which should be active when the ball is in both radii
+    auto distVec = camPos - m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition();
+    auto len2 = glm::length2(distVec);
+    auto minLen = m_cameras[CameraID::Sky].getComponent<CameraFollower>().radius + m_cameras[CameraID::Green].getComponent<CameraFollower>().radius;
+    if (len2 < minLen)
+    {
+        auto len = std::sqrt(len2);
+        auto diff = std::sqrt(minLen) - len;
+        distVec /= len;
+        distVec *= (diff * 1.1f);
+        //m_cameras[CameraID::Green].getComponent<cro::Transform>().move(-distVec);
+        //m_cameras[CameraID::Sky].getComponent<cro::Transform>().move(distVec);
+    }
+
+
+    //double check terrain height
+    auto result = m_gameScene.getSystem<BallSystem>()->getTerrain(m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition());
+    result.intersection.y += GreenCamHeight;
+    
+    tx = glm::inverse(glm::lookAt(result.intersection, m_holeData[index].pin, cro::Transform::Y_AXIS));
+    m_cameras[CameraID::Green].getComponent<cro::Transform>().setLocalTransform(tx);
+
+    m_gameScene.setSystemActive<CameraFollowSystem>(false);
+}
+
+void DrivingState::setActiveCamera(std::int32_t camID)
+{
+#ifdef CRO_DEBUG_
+    if (useFreeCam)
+    {
+        return;
+    }
+#endif
+
+    CRO_ASSERT(camID >= 0 && camID < CameraID::Count, "");
+
+    if (m_cameras[camID].isValid()
+        && camID != m_currentCamera)
+    {
+        m_cameras[m_currentCamera].getComponent<cro::Camera>().active = false;
+
+        //set scene camera
+        m_gameScene.setActiveCamera(m_cameras[camID]);
+        m_gameScene.setActiveListener(m_cameras[camID]);
+        m_currentCamera = camID;
+
+        m_cameras[m_currentCamera].getComponent<cro::Camera>().active = true;
+
+        //hide player based on cam id
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::PlayerSprite;
+        cmd.action = [&, camID](cro::Entity e, float)
+        {
+            //show/hide player based on camera
+            //flipping the sprite render dir will stop it drawing
+            if (e.getComponent<cro::Transform>().getScale().x < 0)
+            {
+                if (camID == CameraID::Player)
+                {
+                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                }
+                else
+                {
+                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                }
+            }
+            else
+            {
+                if (camID == CameraID::Player)
+                {
+                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                }
+                else
+                {
+                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                }
+            }
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
 }

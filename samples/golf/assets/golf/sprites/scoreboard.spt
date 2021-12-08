@@ -77,7 +77,7 @@ spritesheet scoreboard
             frame = 512,332,32,8
             frame = 512, 324,32,8
             loop = false
-            framerate = 2
+            framerate = 1.1
 
             event = 1,0
             event = 1,1
@@ -89,7 +89,7 @@ spritesheet scoreboard
             frame = 512, 324,32,8
             frame = 512,316,32,8
             loop = false
-            framerate = 2
+            framerate = 1
 
             event = 1,0
             event = 1,1
@@ -102,7 +102,7 @@ spritesheet scoreboard
             frame = 512, 324,32,8
             frame = 512,316,32,8
             frame = 512, 308,32,8
-            framrate = 2
+            framerate = 1.1
             loop = false
 
             event = 1,0

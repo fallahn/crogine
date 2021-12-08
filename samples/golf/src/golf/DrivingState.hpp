@@ -123,6 +123,7 @@ private:
     std::size_t m_strokeCountIndex;
 
     std::array<cro::Entity, CameraID::Count> m_cameras = {};
+    std::int32_t m_currentCamera;
 
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;
@@ -139,6 +140,7 @@ private:
 
     void hitBall();
     void setHole(std::int32_t);
+    void setActiveCamera(std::int32_t);
     
     //DrivingStateUI.cpp
     cro::RenderTexture m_mapTexture;
