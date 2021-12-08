@@ -138,6 +138,15 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
+    case cro::Message::SpriteAnimationMessage:
+    {
+        const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
+        if (data.userType == SpriteAnimID::Medal) //scoreboard star animation
+        {
+            playSound(cro::Util::Random::value(AudioID::Swing01, AudioID::Swing03), glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+        }
+    }
+    break;
     case MessageID::GolfMessage:
     {
         const auto& data = msg.getData<GolfEvent>();

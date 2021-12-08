@@ -286,7 +286,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
     case cro::Message::SpriteAnimationMessage:
     {
         const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
-        if (data.userType == 0)
+        if (data.userType == SpriteAnimID::Swing)
         {
             //relay this message with the info needed for particle/sound effects
             auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
@@ -630,6 +630,7 @@ void DrivingState::createScene()
                 auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
                 setTexture(md, material);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
+                entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
             }
         }
     }

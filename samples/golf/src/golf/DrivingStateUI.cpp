@@ -1073,7 +1073,7 @@ void DrivingState::showMessage(float range)
     imgEnt.getComponent<cro::Transform>().move(glm::vec2(0.f, 2.f));
     imgEnt.addComponent<cro::Drawable2D>();
     imgEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Stars];
-    imgEnt.addComponent<cro::SpriteAnimation>().play(starCount);
+    imgEnt.addComponent<cro::SpriteAnimation>();
     bounds = imgEnt.getComponent<cro::Sprite>().getTextureBounds();
     imgEnt.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f), 0.f });
     entity.getComponent<cro::Transform>().addChild(imgEnt.getComponent<cro::Transform>());
@@ -1083,7 +1083,7 @@ void DrivingState::showMessage(float range)
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<MessageAnim>();
     entity.getComponent<cro::Callback>().function =
-        [&, textEnt, textEnt2, textEnt3, imgEnt](cro::Entity e, float dt)
+        [&, textEnt, textEnt2, textEnt3, imgEnt, starCount](cro::Entity e, float dt) mutable
     {
         static constexpr float HoldTime = 4.f;
         auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
@@ -1105,6 +1105,7 @@ void DrivingState::showMessage(float range)
             {
                 currTime = 0;
                 state = MessageAnim::Hold;
+                imgEnt.getComponent<cro::SpriteAnimation>().play(starCount);
             }
             break;
         case MessageAnim::Hold:

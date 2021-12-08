@@ -67,6 +67,15 @@ static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, 
 
 static const cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
 
+struct SpriteAnimID final
+{
+    enum
+    {
+        Swing = 0,
+        Medal
+    };
+};
+
 struct MixerChannel final
 {
     enum

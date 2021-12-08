@@ -422,7 +422,7 @@ void GolfState::handleMessage(const cro::Message& msg)
     case cro::Message::SpriteAnimationMessage:
     {
         const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
-        if (data.userType == 0)
+        if (data.userType == SpriteAnimID::Swing)
         {
             //relay this message with the info needed for particle/sound effects
             auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
@@ -1506,6 +1506,7 @@ void GolfState::buildScene()
             entity.addComponent<cro::CommandTarget>().ID = CommandID::Cart;
             md.createModel(entity);
             entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+            entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
             teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
     }
