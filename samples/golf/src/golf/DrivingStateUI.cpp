@@ -295,9 +295,121 @@ void DrivingState::createUI()
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //camera for mini map - probably doesn't need to be a
+    //callback as it's not actually resized.
+    auto updateMiniView = [&](cro::Camera& miniCam) mutable
+    {
+        glm::uvec2 previewSize(RangeSize / 2.f);
+        m_mapTexture.create(previewSize.x, previewSize.y);
+
+        miniCam.setOrthographic((-RangeSize.x / 2.f) + 1.f, (RangeSize.x / 2.f) - 1.f, -RangeSize.y / 2.f, RangeSize.y / 2.f, -0.1f, 20.f);
+        float xPixel = 1.f / (RangeSize.x / 2.f);
+        float yPixel = 1.f / (RangeSize.y / 2.f);
+        miniCam.viewport = { xPixel, yPixel, 1.f - (xPixel * 2.f), 1.f - (yPixel * 2.f) };
+    };
+
+    m_mapCam = m_gameScene.createEntity();
+    m_mapCam.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 0.f });
+    m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+    auto& miniCam = m_mapCam.addComponent<cro::Camera>();
+    miniCam.renderFlags = RenderFlags::MiniMap;
+    miniCam.resizeCallback = updateMiniView;
+    updateMiniView(miniCam);
+
+    //minimap view
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_mapTexture.getTexture());
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniMap;
+    entity.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(0, 1.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& [state, scale] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+        float speed = dt * 4.f;
+        float newScale = 0.f;
+
+        if (state == 0)
+        {
+            //shrinking
+            scale = std::max(0.f, scale - speed);
+            newScale = cro::Util::Easing::easeOutSine(scale);
+
+            if (scale == 0)
+            {
+                glm::vec2 offset = glm::vec2(0.f);
+
+                //update render
+                updateMinimap();
+                e.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
+                auto bounds = e.getComponent<cro::Sprite>().getTextureBounds();
+                e.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+
+                //and set to grow
+                state = 1;
+            }
+        }
+        else
+        {
+            //growing
+            scale = std::min(1.f, scale + speed);
+            newScale = cro::Util::Easing::easeInSine(scale);
+
+            if (scale == 1)
+            {
+                //stop callback
+                state = 0;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        e.getComponent<cro::Transform>().setScale(glm::vec2(newScale, 1.f));
+    };
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto mapEnt = entity;
+
+    //ball icon on mini map
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(PlayerPosition); //actually hides ball off map until ready to be drawn
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(-0.5f, 0.5f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(-0.5f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(0.5f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(0.5f, -0.5f), TextNormalColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniBall;
+    entity.addComponent<cro::Callback>().setUserData<float>(1.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::max(0.f, currTime - (dt * 3.f));
+
+        static constexpr float MaxScale = 6.f - 1.f;
+        float scale = 1.f + (MaxScale * currTime);
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+        float alpha = 1.f - currTime;
+        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+        for (auto& v : verts)
+        {
+            v.colour.setAlpha(alpha);
+        }
+
+        if (currTime == 0)
+        {
+            currTime = 1.f;
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
+    mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
-    auto updateView = [&, rootNode, courseEnt, infoEnt, windEnt](cro::Camera& cam) mutable
+    auto updateView = [&, rootNode, courseEnt, infoEnt, windEnt, mapEnt](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.5f, 2.f);
@@ -313,6 +425,10 @@ void DrivingState::createUI()
 
         //ui layout
         const auto uiSize = size / m_viewScale;
+
+        auto mapSize = RangeSize / 4.f;
+        mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.x - UIBarHeight, uiSize.y - (mapSize.y) - (UIBarHeight * 1.5f) });
+
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(uiSize.x + WindIndicatorPosition.x, WindIndicatorPosition.y));
 
         //update the overlay
@@ -772,6 +888,23 @@ void DrivingState::createSummary()
     bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     m_summaryScreen.root = bgEntity;
+}
+
+void DrivingState::updateMinimap()
+{
+    auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
+
+    m_mapTexture.clear(TextNormalColour);
+    m_gameScene.render(m_mapTexture);
+
+    auto holePos = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin / 2.f;
+    m_flagQuad.setPosition({ holePos.x, -holePos.z });
+    m_flagQuad.move(RangeSize / 4.f);
+    m_flagQuad.draw();
+
+    m_mapTexture.display();
+
+    m_gameScene.setActiveCamera(oldCam);
 }
 
 void DrivingState::updateWindDisplay(glm::vec3 direction)

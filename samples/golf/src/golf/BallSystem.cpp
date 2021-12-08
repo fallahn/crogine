@@ -31,6 +31,7 @@ source distribution.
 #include "Terrain.hpp"
 #include "HoleData.hpp"
 #include "GameConsts.hpp"
+#include "MessageIDs.hpp"
 #include "../ErrorCheck.hpp"
 #include "server/ServerMessages.hpp"
 
@@ -474,6 +475,13 @@ void BallSystem::setDebugFlags(std::int32_t flags)
 //private
 void BallSystem::doCollision(cro::Entity entity)
 {
+    /*
+    This function raises collision messages, although
+    they are only effective when it's used locally, such
+    as in the driving range. Server instances ignore
+    collision messages.
+    */
+
     //check height
     auto& tx = entity.getComponent<cro::Transform>();
     auto pos = tx.getPosition();
@@ -573,12 +581,22 @@ void BallSystem::doCollision(cro::Entity entity)
                 resetBall(ball, Ball::State::Paused, terrainResult.terrain);
             }
         }
+
+        auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+        msg->terrain = terrainResult.terrain;
+        msg->position = pos;
+        msg->type = CollisionEvent::Begin;
     }
     else if (pos.y < WaterLevel)
     {
         //must have missed all geometry and so are in scrub or water
         auto& ball = entity.getComponent<Ball>();
         resetBall(ball, Ball::State::Reset, TerrainID::Scrub);
+
+        auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+        msg->terrain = TerrainID::Water;
+        msg->position = pos;
+        msg->type = CollisionEvent::Begin;
     }
 }
 

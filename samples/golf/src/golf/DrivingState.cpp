@@ -101,7 +101,6 @@ namespace
 #endif
 
     constexpr glm::vec3 CameraPosition = PlayerPosition + glm::vec3(0.f, CameraStrokeHeight, CameraStrokeOffset);
-    constexpr glm::vec2 RangeSize(200.f, 250.f);
 
     constexpr glm::vec2 BillboardChunk(40.f, 50.f);
     constexpr std::size_t ChunkCount = 5;
@@ -532,6 +531,10 @@ void DrivingState::loadAssets()
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::MessageBoard] = spriteSheet.getSprite("message_board");
+
+    auto flagSprite = spriteSheet.getSprite("flag03");
+    m_flagQuad.setTexture(*flagSprite.getTexture());
+    m_flagQuad.setTextureRect(flagSprite.getTextureRect());
 
     //ball models - the menu should never have let us get this far if it found no ball files
     for (const auto& [colour, uid, path] : m_sharedData.ballModels)
@@ -1216,6 +1219,7 @@ void DrivingState::createBall()
         {
             auto pos = ent.getComponent<cro::Transform>().getPosition();
 
+            //update pin distance on ui
             cro::Command cmd;
             cmd.targetFlags = CommandID::UI::PinDistance;
             cmd.action = [&, pos](cro::Entity e, float)
@@ -1239,6 +1243,23 @@ void DrivingState::createBall()
                 auto bounds = cro::Text::getLocalBounds(e);
                 bounds.width = std::floor(bounds.width / 2.f);
                 e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            //and mini-ball in overhead map
+            cmd.targetFlags = CommandID::UI::MiniBall;
+            cmd.action =
+                [pos](cro::Entity e, float)
+            {
+                auto position = glm::vec3(pos.x, -pos.z, 0.1f) / 2.f;
+                //need to tie into the fact the mini map is 1/2 scale
+                //and has the origin in the centre
+                e.getComponent<cro::Transform>().setPosition(position + glm::vec3(RangeSize / 4.f, 0.f));
+
+                //set scale based on height
+                static constexpr float MaxHeight = 40.f;
+                float scale = 1.f + ((pos.y / MaxHeight) * 2.f);
+                e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -1600,6 +1621,28 @@ void DrivingState::setHole(std::int32_t index)
         std::string str("Turn ");
         str += std::to_string(m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentStroke() + 1);
         e.getComponent<cro::Text>().setString(str);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //update the minimap
+    cmd.targetFlags = CommandID::UI::MiniMap;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().active = true;
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //reset mini ball
+    cmd.targetFlags = CommandID::UI::MiniBall;
+    cmd.action =
+        [](cro::Entity e, float)
+    {
+        auto pos = glm::vec3(PlayerPosition.x, -PlayerPosition.z, 0.1f);
+        e.getComponent<cro::Transform>().setPosition(pos / 2.f);
+        e.getComponent<cro::Transform>().move(RangeSize / 4.f);
+
+        //play the callback animation
+        e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

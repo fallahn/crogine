@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
 #include <unordered_map>
@@ -140,9 +141,13 @@ private:
     void setHole(std::int32_t);
     
     //DrivingStateUI.cpp
+    cro::RenderTexture m_mapTexture;
+    cro::Entity m_mapCam;
+    cro::SimpleQuad m_flagQuad;
     void createUI();
     void createGameOptions();
     void createSummary();
+    void updateMinimap();
     void updateWindDisplay(glm::vec3);    
     void showMessage(float);
     void floatingMessage(const std::string&);
