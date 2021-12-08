@@ -73,7 +73,16 @@ void DrivingRangeDirector::handleMessage(const cro::Message& msg)
             auto idx = m_totalHoleCount - m_holeCount;
 
             static constexpr float MinDistance = 20.f;
-            float score = 1.f - std::min(1.f, glm::length(data.position - m_holeData[hole].pin) / MinDistance);
+
+            float distance = MinDistance;
+            //allow some leighway for longer shots
+            float difficulty = std::min(1.f, glm::length(PlayerPosition - data.position) / 250.f);
+            difficulty *= 2.f;
+            difficulty -= 1.f;
+
+            distance += 10.f * difficulty;
+
+            float score = 1.f - std::min(1.f, glm::length(data.position - m_holeData[hole].pin) / distance);
             m_scores[idx] = cro::Util::Easing::easeOutQuad(score) * 100.f; //grade on a curve
 
             m_holeCount--;

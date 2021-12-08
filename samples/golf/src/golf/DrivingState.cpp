@@ -100,7 +100,6 @@ namespace
 #define DEBUG_DRAW false
 #endif
 
-    constexpr glm::vec3 PlayerPosition(0.f, 2.5f, 121.f);
     constexpr glm::vec3 CameraPosition = PlayerPosition + glm::vec3(0.f, CameraStrokeHeight, CameraStrokeOffset);
     constexpr glm::vec2 RangeSize(200.f, 250.f);
 
