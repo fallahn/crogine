@@ -954,7 +954,7 @@ void DrivingState::createScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
-    camEnt.addComponent<cro::Transform>().setPosition({ RangeSize.x / 3.f, SkyCamHeight, 30.f });
+    camEnt.addComponent<cro::Transform>().setPosition({ RangeSize.x / 3.f, SkyCamHeight, 10.f });
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
@@ -1096,7 +1096,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
         return holeBottom + (holeHeight * height);
     };
 
-    auto createBillboards = [&](cro::Entity dst, std::array<float, 2u> minBounds, std::array<float, 2u> maxBounds)
+    auto createBillboards = [&](cro::Entity dst, std::array<float, 2u> minBounds, std::array<float, 2u> maxBounds, float radius = 0.f, glm::vec2 centre = glm::vec2(0.f))
     {
         auto trees = pd::PoissonDiskSampling(4.f, minBounds, maxBounds);
         auto flowers = pd::PoissonDiskSampling(2.f, minBounds, maxBounds);
@@ -1105,8 +1105,15 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
         glm::vec3 offsetPos = dst.getComponent<cro::Transform>().getPosition();
         constexpr glm::vec2 centreOffset(140.f, 125.f);
 
+        const float radSqr = radius * radius;
+
         for (auto [x, y] : trees)
         {
+            glm::vec2 radPos(x, y);
+            auto len2 = glm::length2(radPos - centre);
+
+            if (len2 < radSqr) continue;
+
             glm::vec2 mapPos(offsetPos.x + x, -offsetPos.z + y);
             mapPos += centreOffset;
 
@@ -1118,6 +1125,11 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
 
         for (auto [x, y] : flowers)
         {
+            glm::vec2 radPos(x, y);
+            auto len2 = glm::length2(radPos - centre);
+
+            if (len2 < radSqr) continue;
+
             glm::vec2 mapPos(offsetPos.x + x, -offsetPos.z + y);
             mapPos += centreOffset;
 
@@ -1131,6 +1143,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     };
 
     cro::ModelDefinition md(m_resources);
+    static const std::string shrubPath("assets/golf/models/shrubbery.cmt");
 
     //sides
     for (auto i = 0u; i < ChunkCount; ++i)
@@ -1138,7 +1151,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
         glm::vec3 pos = { (-RangeSize.x / 2.f) - BillboardChunk.x, -FoliageCallback::Distance, (i * -BillboardChunk.y) + (RangeSize.y / 2.f) };
         for (auto j = 0u; j < 2u; ++j)
         {
-            md.loadFromFile("assets/golf/models/shrubbery.cmt");
+            md.loadFromFile(shrubPath);
 
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(pos);
@@ -1158,7 +1171,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     }
 
     //end range of trees
-    md.loadFromFile("assets/golf/models/shrubbery.cmt");
+    md.loadFromFile(shrubPath);
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ (-RangeSize.x / 2.f) - BillboardChunk.x, -FoliageCallback::Distance, (-RangeSize.y / 2.f) });
     entity.addComponent<cro::Callback>().active = true;
@@ -1173,7 +1186,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     glm::vec3 position((-RangeSize.x / 2.f) - BillboardChunk.x, 2.f, (-RangeSize.y / 2.f) - (BillboardChunk.x * 1.6f));
     for (auto i = 0; i < 2; ++i)
     {
-        md.loadFromFile("assets/golf/models/shrubbery.cmt");
+        md.loadFromFile(shrubPath);
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
         md.createModel(entity);
@@ -1184,6 +1197,17 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
         }
 
         position.x += 170.f;
+    }
+
+
+    //curved copse behind the player
+    md.loadFromFile(shrubPath);
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (-RangeSize.x / 2.f), 0.f, (RangeSize.y / 2.f) + 20.f });
+    md.createModel(entity);
+    if (entity.hasComponent<cro::BillboardCollection>())
+    {
+        createBillboards(entity, { 0.f, 0.f }, { RangeSize.x , BillboardChunk.x }, BillboardChunk.x - 15.f, { RangeSize.x / 2.f, BillboardChunk.x });
     }
 }
 
