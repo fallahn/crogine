@@ -242,6 +242,10 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_PAGEUP:
         {
             m_summaryScreen.root.getComponent<cro::Callback>().active = true;
+            for (auto e : m_summaryScreen.stars)
+            {
+                e.getComponent<cro::Callback>().active = true;
+            }
             /*cro::Command cmd;
             cmd.targetFlags = CommandID::UI::DrivingBoard;
             cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Callback>().active = true; };
@@ -506,6 +510,7 @@ void DrivingState::addSystems()
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
+    m_uiScene.addSystem<cro::ParticleSystem>(mb);
     m_uiScene.addSystem<cro::AudioPlayerSystem>(mb);
 }
 

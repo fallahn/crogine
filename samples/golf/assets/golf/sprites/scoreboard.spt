@@ -65,6 +65,18 @@ spritesheet scoreboard
     sprite star
     {
         bounds = 544,308,32,32
+
+        animation black
+        {
+            frame = 544,340,32,32
+            loop = false
+        }
+
+        animation gold
+        {
+            frame = 544,308,32,32
+            loop = false
+        }
     }
 
     sprite orbs

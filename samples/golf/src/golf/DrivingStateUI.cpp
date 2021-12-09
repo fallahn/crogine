@@ -42,6 +42,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/SpriteAnimation.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Maths.hpp>
@@ -50,6 +51,10 @@ namespace
 {
     constexpr float SummaryOffset = 70.f;
     constexpr float SummaryHeight = 246.f;
+
+    constexpr float BadScore = 50.f;
+    constexpr float GoodScore = 75.f;
+    constexpr float ExcellentScore = 95.f;
 
     struct MenuID final
     {
@@ -133,6 +138,27 @@ namespace
                     currTime = 0.75f;
                 }
                 break;
+            }
+        }
+    };
+
+    struct StarAnimCallback final
+    {
+        float delay = 0.f;
+        float currentTime = 0.f;
+
+        explicit StarAnimCallback(float d) : delay(d), currentTime(d) {}
+
+        void operator() (cro::Entity e, float dt)
+        {
+            currentTime = std::max(0.f, currentTime - dt);
+
+            if (currentTime == 0)
+            {
+                currentTime = delay;
+                e.getComponent<cro::SpriteAnimation>().play(1);
+                e.getComponent<cro::Callback>().active = false;
+                e.getComponent<cro::ParticleEmitter>().start();
             }
         }
     };
@@ -621,7 +647,7 @@ score based on your overall accuracy. Good Luck!
     countEnt.getComponent<cro::Transform>().addChild(strokeTextEnt.getComponent<cro::Transform>());
 
     auto numberEnt = m_uiScene.createEntity();
-    numberEnt.addComponent<cro::Transform>().setPosition({ strokeBounds.width / 2.f, std::floor(strokeBounds.height / 2.f) + 4.f });
+    numberEnt.addComponent<cro::Transform>().setPosition({ strokeBounds.width / 2.f, std::floor(strokeBounds.height / 2.f) + 4.f, 0.02f });
     numberEnt.addComponent<cro::Drawable2D>();
     numberEnt.addComponent<cro::Text>(largeFont);
     numberEnt.getComponent<cro::Text>().setString("5");
@@ -811,8 +837,32 @@ void DrivingState::createSummary()
     summaryEnt.addComponent<cro::Drawable2D>();
     summaryEnt.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     summaryEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    summaryEnt.getComponent<cro::Text>().setString("Placeholder Text");
+    centreText(summaryEnt);
     bgEntity.getComponent<cro::Transform>().addChild(summaryEnt.getComponent<cro::Transform>());
     m_summaryScreen.summary = summaryEnt;
+
+
+    //star ratings
+    const float starWidth = spriteSheet.getSprite("star").getTextureBounds().width;
+    glm::vec3 pos(std::floor((bounds.width / 2.f) - (starWidth * 1.5f)), 76.f, 0.02f);
+    for (auto i = 0; i < 3; ++i)
+    {
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(pos);
+        entity.getComponent<cro::Transform>().setOrigin({ starWidth / 2.f, starWidth / 2.f });
+        entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("star");
+        entity.addComponent<cro::SpriteAnimation>().play(0);
+        entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/spark.xyp", m_resources.textures);
+        entity.addComponent<cro::Callback>().function = StarAnimCallback(1.5f + (i * 0.5f));
+        bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        m_summaryScreen.stars[i] = entity;
+        pos.x += starWidth;
+    }
+
 
     //replay text
     auto questionEnt = m_uiScene.createEntity();
@@ -863,6 +913,11 @@ void DrivingState::createSummary()
                 {
                     state = MessageAnim::Close;
                     timeout = 1.f;
+
+                    for (auto star : m_summaryScreen.stars)
+                    {
+                        star.getComponent<cro::SpriteAnimation>().play(0);
+                    }
 
                     cro::Command cmd;
                     cmd.targetFlags = CommandID::UI::DrivingBoard;
@@ -1007,9 +1062,6 @@ void DrivingState::showMessage(float range)
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard;
 
     std::uint8_t starCount = 0;
-    static constexpr float BadScore = 50.f;
-    static constexpr float GoodScore = 75.f;
-    static constexpr float ExcellentScore = 95.f;
 
     auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto textEnt = m_uiScene.createEntity();
@@ -1205,14 +1257,17 @@ void DrivingState::showMessage(float range)
                     else if (totalScore < GoodScore)
                     {
                         s << "Could Do Better...";
+                        m_summaryScreen.stars[0].getComponent<cro::Callback>().active = true;
                     }
                     else if (totalScore < ExcellentScore)
                     {
                         s << "Great Job!";
+                        m_summaryScreen.stars[1].getComponent<cro::Callback>().active = true;
                     }
                     else
                     {
                         s << "Excellent!";
+                        m_summaryScreen.stars[2].getComponent<cro::Callback>().active = true;
                     }
 
                     m_summaryScreen.summary.getComponent<cro::Text>().setString(s.str());
