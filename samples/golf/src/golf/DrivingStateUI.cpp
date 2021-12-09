@@ -49,7 +49,7 @@ source distribution.
 
 namespace
 {
-    constexpr float SummaryOffset = 70.f;
+    constexpr float SummaryOffset = 54.f;
     constexpr float SummaryHeight = 246.f;
 
     constexpr float BadScore = 50.f;
