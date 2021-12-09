@@ -576,8 +576,9 @@ void DrivingState::loadAssets()
 
 void DrivingState::initAudio()
 {
-    //6 evenly spaced points with ambient audio
-    auto envOffset = RangeSize / 3.f;
+    //8 evenly spaced points with ambient audio
+    auto envOffset = RangeSize / 2.f;
+    const auto rangeOffset = glm::vec3(RangeSize.x / 2.f, 0.f, -RangeSize.y / 2.f);
     cro::AudioScape as;
     if (as.loadFromFile("assets/golf/sound/ambience.xas", m_resources.audio))
     {
@@ -599,6 +600,7 @@ void DrivingState::initAudio()
             {
                 static constexpr float height = 4.f;
                 glm::vec3 position(envOffset.x * (i + 1), height, -envOffset.y * (j + 1));
+                position -= rangeOffset;
 
                 auto idx = i * 2 + j;
 
@@ -610,7 +612,8 @@ void DrivingState::initAudio()
                     entity.getComponent<cro::AudioEmitter>().play();
                 }
 
-                position = { i * MapSize.x, height, -static_cast<float>(MapSize.y) * j };
+                position = { i * RangeSize.x, height, -static_cast<float>(RangeSize.y) * j };
+                position -= rangeOffset;
 
                 if (as.hasEmitter(emitterNames[idx]))
                 {

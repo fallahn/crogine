@@ -65,6 +65,7 @@ ParticleState::ParticleState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_viewportRatio     (1.f),
     m_fov               (DefaultFOV),
     m_gizmoMode         (ImGuizmo::TRANSLATE),
+    m_cameraIndex       (CameraID::ThreeDee),
     m_particleSettings  (nullptr),
     m_selectedBlendMode (0),
     m_showPreferences   (false),
@@ -117,11 +118,27 @@ bool ParticleState::handleEvent(const cro::Event& evt)
                 break;
             }
         }
+        else
+        {
+            switch (evt.key.keysym.sym)
+            {
+            default: break;
+            case SDLK_1:
+                setCamera(CameraID::ThreeDee);
+                break;
+            case SDLK_2:
+                setCamera(CameraID::TwoDee);
+                break;
+            }
+        }
         break;
     case SDL_MOUSEWHEEL:
     {
-        m_fov = std::min(MaxFOV, std::max(MinFOV, m_fov - (evt.wheel.y * 0.1f)));
-        m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
+        if (m_cameraIndex == CameraID::ThreeDee)
+        {
+            m_fov = std::min(MaxFOV, std::max(MinFOV, m_fov - (evt.wheel.y * 0.1f)));
+            m_viewportRatio = updateView(m_cameras[CameraID::ThreeDee].camera, DefaultFarPlane, m_fov);
+        }
     }
     break;
     case SDL_MOUSEMOTION:
@@ -141,7 +158,7 @@ void ParticleState::handleMessage(const cro::Message& msg)
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
             updateLayout(data.data0, data.data1);
-            m_viewportRatio = updateView(m_scene.getActiveCamera(), DefaultFarPlane, m_fov);
+            m_viewportRatio = updateView(m_cameras[CameraID::ThreeDee].camera, DefaultFarPlane, m_fov);
         }
     }
     /*else if (msg.id == cro::Message::StateMessage)
@@ -270,29 +287,79 @@ void ParticleState::addSystems()
 
 void ParticleState::setupScene()
 {
-    //create the camera - using a custom camera prevents the scene updating the projection on window resize
+    //create the cameras - allows us to switch between 2D and 3D views (ortho/perspective)
     auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(DefaultCameraPosition + DefaultArcballPosition);
+    auto& cam = entity.addComponent<cro::Camera>();
+    cam.resizeCallback =
+        [&](cro::Camera& cam)
+    {
+        auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+        auto size = windowSize;
+        size.x -= m_windowLayouts[WindowID::Inspector].second.x;
+        size.y -= m_windowLayouts[WindowID::Browser].second.y;
+
+        cam.setOrthographic(-size.x / 2.f, size.x / 2.f, -size.y / 2.f, size.y / 2.f, 0.1f, 10.f);
+        cam.viewport = { uiConst::InspectorWidth, uiConst::BrowserHeight, 1.f, 1.f };
+    };
+    cam.resizeCallback(cam);
+
+    m_cameras[CameraID::TwoDee].camera = entity;
+    m_cameras[CameraID::TwoDee].scale = TwoDeeScale;
+    m_cameras[CameraID::TwoDee].emitter = m_scene.createEntity();
+    m_cameras[CameraID::TwoDee].emitter.addComponent<cro::Transform>();
+    auto& settings = m_cameras[CameraID::TwoDee].emitter.addComponent<cro::ParticleEmitter>().settings;
+    //make the default values in 2D larger
+    settings.acceleration *= TwoDeeScale;
+    settings.size *= TwoDeeScale;
+    settings.initialVelocity *= TwoDeeScale;
+    settings.gravity *= TwoDeeScale;
+
+    entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(DefaultCameraPosition);
     entity.addComponent<cro::Camera>().shadowMapBuffer.create(4096, 4096);
     m_viewportRatio = updateView(entity, DefaultFarPlane, DefaultFOV);
-    m_scene.setActiveCamera(entity);
+
+    m_cameras[CameraID::ThreeDee].camera = entity;
+    m_cameras[CameraID::ThreeDee].emitter = m_scene.createEntity();
+    m_cameras[CameraID::ThreeDee].emitter.addComponent<cro::Transform>();
+    m_cameras[CameraID::ThreeDee].emitter.addComponent<cro::ParticleEmitter>();
 
     m_entities[EntityID::ArcBall] = m_scene.createEntity();
     m_entities[EntityID::ArcBall].addComponent<cro::Transform>().setPosition(DefaultArcballPosition);
     m_entities[EntityID::ArcBall].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    m_entities[EntityID::Emitter] = m_scene.createEntity();
-    m_entities[EntityID::Emitter].addComponent<cro::Transform>();
-    m_entities[EntityID::Emitter].addComponent<cro::ParticleEmitter>().start();
-    m_particleSettings = &m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().settings;
-    m_selectedEntity = m_entities[EntityID::Emitter];
+    setCamera(m_cameraIndex); //assigns the emitter entity too
 
     //sunlight node
     /*cro::ModelDefinition def;
     def.loadFromFile("assets/models/arrow.cmt", m_resources);
     def.createModel(m_scene.getSunlight(), m_resources);
     m_scene.getSunlight().setLabel("Sunlight");*/
+}
+
+void ParticleState::setCamera(std::int32_t idx)
+{
+    m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().stop();
+    m_cameras[m_cameraIndex].camera.getComponent<cro::Camera>().active = false;
+
+    m_cameraIndex = idx;
+
+    m_scene.setActiveCamera(m_cameras[m_cameraIndex].camera);
+    m_cameras[m_cameraIndex].camera.getComponent<cro::Camera>().active = true;
+
+    if (idx == CameraID::TwoDee) //TODO this should work on any cam, but there's no callback on the 3D camera...
+    {
+        auto& cam = m_cameras[CameraID::TwoDee].camera.getComponent<cro::Camera>();
+        cam.resizeCallback(cam);
+        cam.active = true;
+    }
+
+    m_entities[EntityID::Emitter] = m_cameras[m_cameraIndex].emitter;
+    m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().start();
+    m_particleSettings = &m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().settings;
+    m_selectedEntity = m_entities[EntityID::Emitter];
 }
 
 void ParticleState::loadPrefs()
@@ -312,6 +379,11 @@ void ParticleState::loadPrefs()
             {
                 m_renderClearColour = prop.getValue<cro::Colour>();
             }
+            else if (name == "camera")
+            {
+                auto idx = prop.getValue<std::int32_t>();
+                m_cameraIndex = std::min(CameraID::Count - 1, std::max(0, idx));
+            }
         }
     }
 }
@@ -321,7 +393,7 @@ void ParticleState::savePrefs()
     cro::ConfigFile cfg;
     cfg.addProperty("sky_colour").setValue(getContext().appInstance.getClearColour());
     cfg.addProperty("render_colour").setValue(m_renderClearColour);
-
+    cfg.addProperty("camera").setValue(m_cameraIndex);
 
     cfg.save(prefPath);
 }

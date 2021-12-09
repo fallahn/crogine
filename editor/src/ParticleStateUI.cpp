@@ -48,27 +48,13 @@ source distribution.
 
 namespace
 {
-    enum WindowID
-    {
-        Inspector,
-        Browser,
-        ViewGizmo,
-        Info,
-
-        Count
-    };
-
-    std::array<std::pair<glm::vec2, glm::vec2>, WindowID::Count> WindowLayouts =
-    {
-        std::make_pair(glm::vec2(), glm::vec2())
-    };
-
     std::string lastSavePath;
 }
 
 void ParticleState::initUI()
 {
     loadPrefs();
+    setCamera(m_cameraIndex);
 
     registerWindow(
         [&]()
@@ -93,6 +79,34 @@ void ParticleState::drawMenuBar()
         //file menu
         if (ImGui::BeginMenu("File##Particle"))
         {
+            if (ImGui::MenuItem("New##Particle", nullptr, nullptr))
+            {
+                if (cro::FileSystem::showMessageBox("Confirm", "Save Current Settings?", cro::FileSystem::ButtonType::YesNo))
+                {
+                    if (!lastSavePath.empty())
+                    {
+                        m_particleSettings->saveToFile(lastSavePath);
+                    }
+                    else
+                    {
+                        auto path = cro::FileSystem::saveFileDialogue(lastSavePath, "cps");
+                        if (!path.empty())
+                        {
+                            m_particleSettings->saveToFile(path);
+                            lastSavePath = path;
+                        }
+                    }
+                }
+
+                m_cameras[CameraID::ThreeDee].emitter.getComponent<cro::ParticleEmitter>().settings = {};
+                auto& settings = m_cameras[CameraID::TwoDee].emitter.getComponent<cro::ParticleEmitter>().settings;
+                settings = {};
+                settings.acceleration *= TwoDeeScale;
+                settings.size *= TwoDeeScale;
+                settings.initialVelocity *= TwoDeeScale;
+                settings.gravity *= TwoDeeScale;
+            }
+
             if (ImGui::MenuItem("Open##Particle", nullptr, nullptr))
             {
                 auto path = cro::FileSystem::openFileDialogue(lastSavePath, "xyp,cps");
@@ -117,6 +131,15 @@ void ParticleState::drawMenuBar()
                                 m_particleSettings->textureSize = m_texture.getSize();
                                 m_texture.setSmooth(true);
                                 m_texture.setRepeated(true);
+                            }
+                        }
+
+                        for (auto i = 0u; i < m_cameras.size(); ++i)
+                        {
+                            //copy settings into the other emitters
+                            if (i != m_cameraIndex)
+                            {
+                                m_cameras[i].emitter.getComponent<cro::ParticleEmitter>().settings = *m_particleSettings;
                             }
                         }
                     }
@@ -207,7 +230,7 @@ void ParticleState::drawMenuBar()
 
 void ParticleState::drawInspector()
 {
-    auto [pos, size] = WindowLayouts[WindowID::Inspector];
+    auto [pos, size] = m_windowLayouts[WindowID::Inspector];
     ImGui::SetNextWindowPos({ pos.x, pos.y });
     ImGui::SetNextWindowSize({ size.x, size.y });
     if (ImGui::Begin("Inspector##Particle", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
@@ -225,10 +248,10 @@ void ParticleState::drawInspector()
             ImGui::SliderFloat("Scale Modifier", &m_particleSettings->scaleModifier, -5.f, 5.f);
 
             //acceleration
-            ImGui::SliderFloat("Acceleration", &m_particleSettings->acceleration, 0.f, 10.f);
+            ImGui::SliderFloat("Acceleration", &m_particleSettings->acceleration, 0.f, 10.f * m_cameras[m_cameraIndex].scale);
             
             //size
-            ImGui::SliderFloat("Size", &m_particleSettings->size, 0.01f, 1.f);
+            ImGui::SliderFloat("Size", &m_particleSettings->size, 0.01f, 1.f * m_cameras[m_cameraIndex].scale);
             
             //emit rate
             ImGui::SliderFloat("Emit Rate", &m_particleSettings->emitRate, 0.1f, 50.f);
@@ -237,7 +260,7 @@ void ParticleState::drawInspector()
             ImGui::SliderFloat("Rotation Speed", &m_particleSettings->rotationSpeed, -180.f, 180.f);
             
             //spawn radius
-            ImGui::SliderFloat("Spawn Radius", &m_particleSettings->spawnRadius, 0.f, 4.f);
+            ImGui::SliderFloat("Spawn Radius", &m_particleSettings->spawnRadius, 0.f, 4.f * m_cameras[m_cameraIndex].scale);
 
             //----Animation----
             ImGui::Separator();
@@ -314,13 +337,13 @@ void ParticleState::drawInspector()
         if (ImGui::BeginTabItem("Behaviour"))
         {
             //initial velocity
-            ImGui::SliderFloat3("Initial Velocity", &m_particleSettings->initialVelocity[0], -5.f, 5.f);
+            ImGui::SliderFloat3("Initial Velocity", &m_particleSettings->initialVelocity[0], -5.f * m_cameras[m_cameraIndex].scale, 5.f * m_cameras[m_cameraIndex].scale);
             
             //gravity
-            ImGui::SliderFloat3("Gravity", &m_particleSettings->gravity[0], -5.f, 5.f);
+            ImGui::SliderFloat3("Gravity", &m_particleSettings->gravity[0], -5.f * m_cameras[m_cameraIndex].scale, 5.f * m_cameras[m_cameraIndex].scale);
             
             //spawn offset
-            ImGui::SliderFloat3("Spawn Offset", &m_particleSettings->spawnOffset[0], -5.f, 5.f);
+            ImGui::SliderFloat3("Spawn Offset", &m_particleSettings->spawnOffset[0], -5.f * m_cameras[m_cameraIndex].scale, 5.f * m_cameras[m_cameraIndex].scale);
             
             //forces
             
@@ -376,7 +399,7 @@ void ParticleState::drawInspector()
 
 void ParticleState::drawBrowser()
 {
-    auto [pos, size] = WindowLayouts[WindowID::Browser];
+    auto [pos, size] = m_windowLayouts[WindowID::Browser];
 
     ImGui::SetNextWindowPos({ pos.x, pos.y });
     ImGui::SetNextWindowSize({ size.x, size.y });
@@ -390,7 +413,7 @@ void ParticleState::drawBrowser()
 
 void ParticleState::drawInfo()
 {
-    auto [pos, size] = WindowLayouts[WindowID::Info];
+    auto [pos, size] = m_windowLayouts[WindowID::Info];
     ImGui::SetNextWindowPos({ pos.x, pos.y });
     ImGui::SetNextWindowSize({ size.x, size.y });
     if (ImGui::Begin("InfoBar##Particle", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar))
@@ -418,7 +441,7 @@ void ParticleState::drawGizmo()
     ImGuizmo::SetRect(io.DisplaySize.x * uiConst::InspectorWidth, 0, io.DisplaySize.x - (uiConst::InspectorWidth * io.DisplaySize.x),
         io.DisplaySize.y - (uiConst::BrowserHeight * io.DisplaySize.y));
 
-    auto [pos, size] = WindowLayouts[WindowID::ViewGizmo];
+    auto [pos, size] = m_windowLayouts[WindowID::ViewGizmo];
 
     //view cube doohickey
     auto tx = glm::inverse(m_entities[EntityID::ArcBall].getComponent<cro::Transform>().getLocalTransform());
@@ -676,18 +699,18 @@ void ParticleState::updateLayout(std::int32_t w, std::int32_t h)
 {
     float width = static_cast<float>(w);
     float height = static_cast<float>(h);
-    WindowLayouts[WindowID::Inspector] = 
+    m_windowLayouts[WindowID::Inspector] =
         std::make_pair(glm::vec2(0.f, uiConst::TitleHeight),
             glm::vec2(width * uiConst::InspectorWidth, height - (uiConst::TitleHeight + uiConst::InfoBarHeight)));
 
-    WindowLayouts[WindowID::Browser] =
+    m_windowLayouts[WindowID::Browser] =
         std::make_pair(glm::vec2(width * uiConst::InspectorWidth, height - (height * uiConst::BrowserHeight) - uiConst::InfoBarHeight),
             glm::vec2(width - (width * uiConst::InspectorWidth), height * uiConst::BrowserHeight));
 
-    WindowLayouts[WindowID::Info] =
+    m_windowLayouts[WindowID::Info] =
         std::make_pair(glm::vec2(0.f, height - uiConst::InfoBarHeight), glm::vec2(width, uiConst::InfoBarHeight));
 
-    WindowLayouts[WindowID::ViewGizmo] =
+    m_windowLayouts[WindowID::ViewGizmo] =
         std::make_pair(glm::vec2(width - uiConst::ViewManipSize, uiConst::TitleHeight), glm::vec2(uiConst::ViewManipSize, uiConst::ViewManipSize));
 }
 
@@ -695,31 +718,34 @@ void ParticleState::updateMouseInput(const cro::Event& evt)
 {
     //TODO this isn't really consistent with the controls for model viewer...
 
-    const float moveScale = 0.004f;
-    if (evt.motion.state & SDL_BUTTON_RMASK)
+    if (m_cameraIndex == CameraID::ThreeDee)
     {
-        float pitchMove = static_cast<float>(evt.motion.yrel) * moveScale * m_viewportRatio;
-        float yawMove = static_cast<float>(evt.motion.xrel) * moveScale;
+        const float moveScale = 0.004f;
+        if (evt.motion.state & SDL_BUTTON_RMASK)
+        {
+            float pitchMove = static_cast<float>(evt.motion.yrel) * moveScale * m_viewportRatio;
+            float yawMove = static_cast<float>(evt.motion.xrel) * moveScale;
 
-        auto& tx = m_scene.getActiveCamera().getComponent<cro::Transform>();
-        tx.rotate(cro::Transform::X_AXIS, -pitchMove);
-        tx.rotate(cro::Transform::Y_AXIS, -yawMove);
-    }
-    //else if (evt.motion.state & SDL_BUTTON_RMASK)
-    //{
-    //    //do roll
-    //    float rollMove = static_cast<float>(-evt.motion.xrel) * moveScale;
+            auto& tx = m_scene.getActiveCamera().getComponent<cro::Transform>();
+            tx.rotate(cro::Transform::X_AXIS, -pitchMove);
+            tx.rotate(cro::Transform::Y_AXIS, -yawMove);
+        }
+        //else if (evt.motion.state & SDL_BUTTON_RMASK)
+        //{
+        //    //do roll
+        //    float rollMove = static_cast<float>(-evt.motion.xrel) * moveScale;
 
-    //    auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
-    //    tx.rotate(cro::Transform::Z_AXIS, -rollMove);
-    //}
-    else if (evt.motion.state & SDL_BUTTON_MMASK)
-    {
-        auto camTx = m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldTransform();
+        //    auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
+        //    tx.rotate(cro::Transform::Z_AXIS, -rollMove);
+        //}
+        else if (evt.motion.state & SDL_BUTTON_MMASK)
+        {
+            auto camTx = m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldTransform();
 
-        auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
-        tx.move(cro::Util::Matrix::getRightVector(camTx) * -static_cast<float>(evt.motion.xrel) / 160.f);
-        tx.move(cro::Util::Matrix::getUpVector(camTx) * static_cast<float>(evt.motion.yrel) / 160.f);
+            auto& tx = m_entities[EntityID::ArcBall].getComponent<cro::Transform>();
+            tx.move(cro::Util::Matrix::getRightVector(camTx) * -static_cast<float>(evt.motion.xrel) / 160.f);
+            tx.move(cro::Util::Matrix::getUpVector(camTx) * static_cast<float>(evt.motion.yrel) / 160.f);
+        }
     }
 }
 

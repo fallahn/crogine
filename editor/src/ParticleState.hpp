@@ -46,6 +46,7 @@ namespace cro
     struct EmitterSettings;
 }
 
+static constexpr float TwoDeeScale = 64.f;
 class ParticleState final : public cro::State, public cro::GuiClient
 {
 public:
@@ -73,6 +74,7 @@ private:
     void loadAssets();
     void addSystems();
     void setupScene();
+    void setCamera(std::int32_t);
 
     void loadPrefs();
     void savePrefs();
@@ -92,6 +94,45 @@ private:
     std::array<cro::Entity, EntityID::Count> m_entities = {};
     cro::Entity m_selectedEntity;
     std::int32_t m_gizmoMode;
+
+    struct CameraID final
+    {
+        enum
+        {
+            TwoDee,
+            ThreeDee,
+
+            Count
+        };
+    };
+
+    struct CameraData final
+    {
+        cro::Entity camera;
+        cro::Entity emitter;
+        float scale = 1.f;
+    };
+    std::array<CameraData, CameraID::Count> m_cameras = {};
+    std::int32_t m_cameraIndex;
+
+    struct WindowID final
+    {
+        enum
+        {
+            Inspector,
+            Browser,
+            ViewGizmo,
+            Info,
+
+            Count
+        };
+    };
+
+    //stores position / size of panel areas
+    std::array<std::pair<glm::vec2, glm::vec2>, WindowID::Count> m_windowLayouts =
+    {
+        std::make_pair(glm::vec2(0.f), glm::vec2(0.f))
+    };
 
     cro::EmitterSettings* m_particleSettings;
     std::int32_t m_selectedBlendMode;
