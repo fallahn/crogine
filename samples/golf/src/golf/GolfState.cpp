@@ -1711,10 +1711,12 @@ void GolfState::initAudio()
         {
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental01");
+            entity.getComponent<cro::AudioEmitter>().setLooped(false);
             auto plane01 = entity;
 
             entity = m_gameScene.createEntity();
             entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental02");
+            entity.getComponent<cro::AudioEmitter>().setLooped(false);
             auto plane02 = entity;
 
             entity = m_gameScene.createEntity();
@@ -1746,6 +1748,7 @@ void GolfState::initAudio()
         if (as.hasEmitter("music"))
         {
             m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>() = as.getEmitter("music");
+            m_gameScene.getActiveCamera().getComponent<cro::AudioEmitter>().setLooped(false);
         }
     }
     else
@@ -2382,9 +2385,22 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     direction.y += holePos.y; //TODO this only works if hole is higher than the camera
     m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
 
+
+    //double check terrain height
+    auto result = m_collisionMesh.getTerrain(m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition());
+    result.height = std::max(result.height, holePos.y);
+    result.height += GreenCamHeight;
+
+    auto pos = m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition();
+    pos.y = result.height;
+
+    auto tx = glm::inverse(glm::lookAt(pos, m_holeData[hole].pin, cro::Transform::Y_AXIS));
+    m_cameras[CameraID::Green].getComponent<cro::Transform>().setLocalTransform(tx);
+
+
     //we also have to check the camera hasn't ended up too close to the centre one, else the
     //camera director gets confused as to which should be active when the ball is in both radii
-    auto distVec = m_cameras[CameraID::Sky].getComponent<cro::Transform>().getPosition();
+    /*auto distVec = m_cameras[CameraID::Sky].getComponent<cro::Transform>().getPosition();
     distVec -= m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition();
     auto len2 = glm::length2(distVec);
     auto minLen = m_cameras[CameraID::Sky].getComponent<CameraFollower>().radius + m_cameras[CameraID::Green].getComponent<CameraFollower>().radius;
@@ -2395,7 +2411,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
         distVec /= len;
         distVec *= (diff * 1.1f);
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(-distVec);
-    }
+    }*/
 
 
     //reset the flag
@@ -3097,6 +3113,15 @@ void GolfState::setActiveCamera(std::int32_t camID)
     if (m_cameras[camID].isValid()
         && camID != m_currentCamera)
     {
+        if (camID != CameraID::Player
+            && (camID < m_currentCamera))
+        {
+            //don't switch back to the previous camera
+            //ie if we're on the green cam don't switch
+            //back to sky
+            return;
+        }
+
         //set the water plane ent on the active camera
         cro::Entity waterEnt;
         if (m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane.isValid())

@@ -593,35 +593,31 @@ void DrivingState::initAudio()
             std::string("05"),
             std::string("06"),
         };
+        std::shuffle(emitterNames.begin(), emitterNames.end(), cro::Util::Random::rndEngine);
 
-        for (auto i = 0; i < 2; ++i)
+        static constexpr float xOffset = RangeSize.x / 4.f;
+        static constexpr float height = 4.f;
+        static constexpr float zOffset = RangeSize.y / 4.f;
+        static constexpr std::array positions =
         {
-            for (auto j = 0; j < 2; ++j)
+            glm::vec3(-xOffset, height, -zOffset * 2.f),
+            glm::vec3(xOffset, height, -zOffset * 2.f),
+            glm::vec3(-xOffset, height, -zOffset),
+            glm::vec3(xOffset, height, -zOffset),
+            glm::vec3(-xOffset, height, zOffset),
+            glm::vec3(xOffset, height, zOffset),
+            glm::vec3(-xOffset, height, zOffset * 2.f),
+            glm::vec3(xOffset, height, zOffset * 2.f),
+        };
+
+        for (auto i = 0u; i < emitterNames.size(); ++i)
+        {
+            if (as.hasEmitter(emitterNames[i]))
             {
-                static constexpr float height = 4.f;
-                glm::vec3 position(envOffset.x * (i + 1), height, -envOffset.y * (j + 1));
-                position -= rangeOffset;
-
-                auto idx = i * 2 + j;
-
-                if (as.hasEmitter(emitterNames[idx + 4]))
-                {
-                    auto entity = m_gameScene.createEntity();
-                    entity.addComponent<cro::Transform>().setPosition(position);
-                    entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[idx + 4]);
-                    entity.getComponent<cro::AudioEmitter>().play();
-                }
-
-                position = { i * RangeSize.x, height, -static_cast<float>(RangeSize.y) * j };
-                position -= rangeOffset;
-
-                if (as.hasEmitter(emitterNames[idx]))
-                {
-                    auto entity = m_gameScene.createEntity();
-                    entity.addComponent<cro::Transform>().setPosition(position);
-                    entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[idx]);
-                    entity.getComponent<cro::AudioEmitter>().play();
-                }
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition(positions[i]);
+                entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[i]);
+                entity.getComponent<cro::AudioEmitter>().play();
             }
         }
 
@@ -631,10 +627,12 @@ void DrivingState::initAudio()
         {
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental01");
+            entity.getComponent<cro::AudioEmitter>().setLooped(false);
             auto plane01 = entity;
 
             entity = m_gameScene.createEntity();
             entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental02");
+            entity.getComponent<cro::AudioEmitter>().setLooped(false);
             auto plane02 = entity;
 
             entity = m_gameScene.createEntity();
@@ -666,6 +664,7 @@ void DrivingState::initAudio()
         if (as.hasEmitter("music"))
         {
             m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>() = as.getEmitter("music");
+            m_gameScene.getActiveCamera().getComponent<cro::AudioEmitter>().setLooped(false);
         }
     }
     else
@@ -1248,7 +1247,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width * 0.78f, 0.f, -0.5f });
 
-    auto flipped = false;// m_sharedData.localConnectionData.playerData[playerIndex].flipped;
+    auto flipped = m_sharedData.localConnectionData.playerData[playerIndex].flipped;
     if (flipped)
     {
         entity.getComponent<cro::Transform>().setScale({ -1.f, 0.f });
@@ -1395,7 +1394,7 @@ void DrivingState::createBall()
 
 
 
-    auto ballID = m_sharedData.connectionData[0].playerData[cro::Util::Random::value(0,3)].ballID;
+    auto ballID = m_sharedData.localConnectionData.playerData[cro::Util::Random::value(0,3)].ballID;
 
     //render the ball as a point so no perspective is applied to the scale
     auto material = m_resources.materials.get(ballMaterialID);

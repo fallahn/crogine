@@ -158,7 +158,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         {
         default: break;
         case GolfEvent::DriveComplete:
-        if (cro::Util::Random::value(0, 2) == 0)
+        if (cro::Util::Random::value(0, 2) != 0)
         {
             switch (data.score)
             {
