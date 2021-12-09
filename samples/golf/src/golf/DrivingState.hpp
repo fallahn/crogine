@@ -164,6 +164,7 @@ private:
         cro::Entity text02;
         cro::Entity summary;
         std::array<cro::Entity, 3u> stars = {};
+        cro::Entity audioEnt;
     }m_summaryScreen;
 
 #ifdef CRO_DEBUG_

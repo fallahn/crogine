@@ -56,4 +56,13 @@ audioscape menu
         mixer_channel = 2
         looped = false
     }
+
+    emitter star
+    {
+        path = "assets/golf/sound/menu/star.wav"
+        streaming = false
+        volume = 0.5
+        mixer_channel = 2
+        looped = false
+    }    
 }

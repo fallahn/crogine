@@ -35,6 +35,8 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "DrivingRangeDirector.hpp"
 
+#include <crogine/audio/AudioScape.hpp>
+
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -43,6 +45,7 @@ source distribution.
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Maths.hpp>
@@ -159,6 +162,7 @@ namespace
                 e.getComponent<cro::SpriteAnimation>().play(1);
                 e.getComponent<cro::Callback>().active = false;
                 e.getComponent<cro::ParticleEmitter>().start();
+                e.getComponent<cro::AudioEmitter>().play();
             }
         }
     };
@@ -543,7 +547,11 @@ void DrivingState::createGameOptions()
     };
 
     auto* uiSystem = m_uiScene.getSystem<cro::UISystem>();
-    auto buttonSelect = uiSystem->addCallback([](cro::Entity e) { e.getComponent<cro::Sprite>().setColour(cro::Colour::White); });
+    auto buttonSelect = uiSystem->addCallback([](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White); 
+            e.getComponent<cro::AudioEmitter>().play();
+        });
     auto buttonUnselect = uiSystem->addCallback([](cro::Entity e) { e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
 
 
@@ -551,6 +559,9 @@ void DrivingState::createGameOptions()
     auto dummyEnt = m_uiScene.createEntity();
     dummyEnt.addComponent<cro::Transform>();
     dummyEnt.addComponent<cro::UIInput>();
+
+    cro::AudioScape as;
+    as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
 
     //background
     cro::SpriteSheet spriteSheet;
@@ -623,6 +634,7 @@ score based on your overall accuracy. Good Luck!
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = buttonSelect;
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = buttonUnselect;
         buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Options);
+        buttonEnt.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
 
         return buttonEnt;
     };
@@ -666,6 +678,8 @@ score based on your overall accuracy. Good Luck!
                     m_strokeCountIndex = (m_strokeCountIndex + (m_strokeCounts.size() - 1)) % m_strokeCounts.size();
                     numberEnt.getComponent<cro::Text>().setString(std::to_string(m_strokeCounts[m_strokeCountIndex]));
                     centreText(numberEnt);
+
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                 }
             });
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
@@ -680,6 +694,8 @@ score based on your overall accuracy. Good Luck!
                     m_strokeCountIndex = (m_strokeCountIndex + 1) % m_strokeCounts.size();
                     numberEnt.getComponent<cro::Text>().setString(std::to_string(m_strokeCounts[m_strokeCountIndex]));
                     centreText(numberEnt);
+
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                 }
             });
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
@@ -733,6 +749,7 @@ score based on your overall accuracy. Good Luck!
     startButton.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 48.f, 0.2f });
     startButton.addComponent<cro::Drawable2D>();
     startButton.addComponent<cro::Sprite>() = spriteSheet.getSprite("start_button");
+    startButton.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     startButton.addComponent<cro::UIInput>().setGroup(MenuID::Options);
     startButton.getComponent<cro::UIInput>().area = startButton.getComponent<cro::Sprite>().getTextureBounds();
     startButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
@@ -741,6 +758,7 @@ score based on your overall accuracy. Good Luck!
             {
                 e.getComponent<cro::Sprite>().setTextureRect(selectedBounds);
                 e.getComponent<cro::Transform>().setOrigin({ selectedBounds.width / 2.f, selectedBounds.height / 2.f });
+                e.getComponent<cro::AudioEmitter>().play();
             });
     startButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
         uiSystem->addCallback(
@@ -763,6 +781,8 @@ score based on your overall accuracy. Good Luck!
                     m_gameScene.getDirector<DrivingRangeDirector>()->setHoleCount(m_strokeCounts[m_strokeCountIndex]);
 
                     setHole(m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole());
+
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                 }
             });
     centreSprite(startButton);
@@ -843,6 +863,12 @@ void DrivingState::createSummary()
     m_summaryScreen.summary = summaryEnt;
 
 
+    cro::AudioScape as;
+    as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
+    m_summaryScreen.audioEnt = m_uiScene.createEntity();
+    m_summaryScreen.audioEnt.addComponent<cro::Transform>();
+    m_summaryScreen.audioEnt.addComponent<cro::AudioEmitter>() = as.getEmitter("accept");
+
     //star ratings
     const float starWidth = spriteSheet.getSprite("star").getTextureBounds().width;
     glm::vec3 pos(std::floor((bounds.width / 2.f) - (starWidth * 1.5f)), 76.f, 0.02f);
@@ -855,6 +881,7 @@ void DrivingState::createSummary()
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("star");
         entity.addComponent<cro::SpriteAnimation>().play(0);
+        entity.addComponent<cro::AudioEmitter>() = as.getEmitter("star");
         entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/spark.xyp", m_resources.textures);
         entity.addComponent<cro::Callback>().function = StarAnimCallback(1.5f + (i * 0.5f));
         bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -887,6 +914,7 @@ void DrivingState::createSummary()
     entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) - 22.f, 48.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("yes_button");
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Summary);
     entity.getComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
@@ -895,6 +923,7 @@ void DrivingState::createSummary()
             {
                 e.getComponent<cro::Sprite>().setTextureRect(selectedBounds);
                 e.getComponent<cro::Transform>().setOrigin({ selectedBounds.width / 2.f, selectedBounds.height / 2.f });
+                e.getComponent<cro::AudioEmitter>().play();
             });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
         uiSystem->addCallback(
@@ -911,6 +940,7 @@ void DrivingState::createSummary()
                 if (state == MessageAnim::Hold
                     && activated(evt))
                 {
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                     state = MessageAnim::Close;
                     timeout = 1.f;
 
@@ -935,6 +965,7 @@ void DrivingState::createSummary()
     entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) + 22.f, 48.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("no_button");
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Summary);
     entity.getComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
@@ -943,6 +974,7 @@ void DrivingState::createSummary()
             {
                 e.getComponent<cro::Sprite>().setTextureRect(selectedBounds);
                 e.getComponent<cro::Transform>().setOrigin({ selectedBounds.width / 2.f, selectedBounds.height / 2.f });
+                e.getComponent<cro::AudioEmitter>().play();
             });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
         uiSystem->addCallback(
@@ -959,6 +991,7 @@ void DrivingState::createSummary()
                 if (state == MessageAnim::Hold
                     && activated(evt))
                 {
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                     requestStackClear();
                     requestStackPush(StateID::Menu);
                 }
