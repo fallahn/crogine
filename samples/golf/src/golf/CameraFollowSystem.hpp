@@ -95,6 +95,9 @@ public:
     void handleMessage(const cro::Message&) override;
     void process(float) override;
 
+    //resets back to player cam and raises a message
+    void resetCamera();
+
 private:
     std::int32_t m_closestCamera;
 };

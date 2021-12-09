@@ -208,3 +208,21 @@ void CameraFollowSystem::process(float dt)
         msg->data = m_closestCamera;
     }
 }
+
+void CameraFollowSystem::resetCamera()
+{
+    if (m_closestCamera != CameraID::Player)
+    {
+        m_closestCamera = CameraID::Player;
+
+        auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
+        msg->type = SceneEvent::RequestSwitchCamera;
+        msg->data = m_closestCamera;
+
+
+        for (auto entity : getEntities())
+        {
+            entity.getComponent<CameraFollower>().state = CameraFollower::Reset;
+        }
+    }
+}

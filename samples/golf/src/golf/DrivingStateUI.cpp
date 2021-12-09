@@ -1115,7 +1115,7 @@ void DrivingState::showMessage(float range)
             if (currTime > (HoldTime / 2.f))
             {
                 //this should be safe to call repeatedly
-                setActiveCamera(CameraID::Player);
+                m_gameScene.getSystem<CameraFollowSystem>()->resetCamera();
             }
 
             if (currTime == HoldTime)
@@ -1222,7 +1222,6 @@ void DrivingState::showMessage(float range)
                 else
                 {
                     setHole(m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole());
-                    //setActiveCamera(CameraID::Green);
                 }
             }
             break;

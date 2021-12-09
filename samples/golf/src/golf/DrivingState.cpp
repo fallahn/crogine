@@ -414,7 +414,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
         default: break;
         case SceneEvent::TransitionComplete:
         {
-            setActiveCamera(CameraID::Player);
+            m_gameScene.getSystem<CameraFollowSystem>()->resetCamera();
         }
         break;
         case SceneEvent::RequestSwitchCamera:
@@ -1416,7 +1416,7 @@ void DrivingState::createBall()
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(ballMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     entity.addComponent<Ball>();
-    entity.addComponent<ClientCollider>().state = 1; //needed to fudge the operation of cam follower system
+    entity.addComponent<ClientCollider>(); //needed to fudge the operation of cam follower system
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f); //stores the ground height under the ball for the shadows to read
@@ -1490,6 +1490,8 @@ void DrivingState::createBall()
         {
             ent.getComponent<cro::Callback>().setUserData<float>(0.f);
         }
+
+        ent.getComponent<ClientCollider>().state = static_cast<std::uint8_t>(state);
     };
 
     //ball shadow
@@ -1884,24 +1886,9 @@ void DrivingState::setHole(std::int32_t index)
     m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
 
 
-    //we also have to check the camera hasn't ended up too close to the centre one, else the
-    //camera director gets confused as to which should be active when the ball is in both radii
-    auto distVec = camPos - m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition();
-    auto len2 = glm::length2(distVec);
-    auto minLen = m_cameras[CameraID::Sky].getComponent<CameraFollower>().radius + m_cameras[CameraID::Green].getComponent<CameraFollower>().radius;
-    if (len2 < minLen)
-    {
-        auto len = std::sqrt(len2);
-        auto diff = std::sqrt(minLen) - len;
-        distVec /= len;
-        distVec *= (diff * 1.1f);
-        //m_cameras[CameraID::Green].getComponent<cro::Transform>().move(-distVec);
-        //m_cameras[CameraID::Sky].getComponent<cro::Transform>().move(distVec);
-    }
-
-
     //double check terrain height
     auto result = m_gameScene.getSystem<BallSystem>()->getTerrain(m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition());
+    result.intersection.y = std::max(result.intersection.y, holePos.y);
     result.intersection.y += GreenCamHeight;
     
     tx = glm::inverse(glm::lookAt(result.intersection, m_holeData[index].pin, cro::Transform::Y_AXIS));
@@ -1924,6 +1911,15 @@ void DrivingState::setActiveCamera(std::int32_t camID)
     if (m_cameras[camID].isValid()
         && camID != m_currentCamera)
     {
+        if (camID != CameraID::Player
+            && (camID < m_currentCamera))
+        {
+            //don't switch back to the previous camera
+            //ie if we're on the green cam don't switch
+            //back to sky
+            return;
+        }
+
         m_cameras[m_currentCamera].getComponent<cro::Camera>().active = false;
 
         //set scene camera
