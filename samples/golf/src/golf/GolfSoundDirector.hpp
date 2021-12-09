@@ -112,6 +112,10 @@ private:
             Hook,
             Slice,
 
+            DriveExcellent,
+            DriveGood,
+            DriveBad,
+
             Count
         };
     };

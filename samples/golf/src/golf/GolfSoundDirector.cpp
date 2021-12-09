@@ -106,6 +106,10 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
 
         "assets/golf/sound/kudos/hook.wav",
         "assets/golf/sound/kudos/slice.wav",
+
+        "assets/golf/sound/kudos/drive_excellent.wav",
+        "assets/golf/sound/kudos/drive_good.wav",
+        "assets/golf/sound/kudos/drive_poor.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -153,6 +157,24 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case GolfEvent::DriveComplete:
+        if (cro::Util::Random::value(0, 2) == 0)
+        {
+            switch (data.score)
+            {
+            default: break;
+            case 1:
+                playSoundDelayed(AudioID::DriveBad, glm::vec3(0.f), 0.2f, 1.f, MixerChannel::Voice);
+                break;
+            case 2:
+                playSoundDelayed(AudioID::DriveGood, glm::vec3(0.f), 0.2f, 1.f, MixerChannel::Voice);
+                break;
+            case 3:
+                playSoundDelayed(AudioID::DriveExcellent, glm::vec3(0.f), 0.2f, 1.f, MixerChannel::Voice);
+                break;
+            }
+        }
+            break;
         case GolfEvent::ClubChanged:
             if (data.score != 0)
             {

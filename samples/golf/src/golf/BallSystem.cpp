@@ -569,7 +569,8 @@ void BallSystem::doCollision(cro::Entity entity)
         }
 
         //stop the ball if velocity low enough
-        if (glm::length2(ball.velocity) < 0.01f)
+        auto len2 = glm::length2(ball.velocity);
+        if (len2 < 0.01f)
         {
             if (terrainResult.terrain == TerrainID::Water
                 || terrainResult.terrain == TerrainID::Scrub)
@@ -582,10 +583,16 @@ void BallSystem::doCollision(cro::Entity entity)
             }
         }
 
-        auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
-        msg->terrain = terrainResult.terrain;
-        msg->position = pos;
-        msg->type = CollisionEvent::Begin;
+        //these are only used for sound on client side
+        //usage - ie driving range, so don't raise them
+        //if the velocity is too low.
+        if (len2 > 0.05f)
+        {
+            auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+            msg->terrain = terrainResult.terrain;
+            msg->position = pos;
+            msg->type = CollisionEvent::Begin;
+        }
     }
     else if (pos.y < WaterLevel)
     {

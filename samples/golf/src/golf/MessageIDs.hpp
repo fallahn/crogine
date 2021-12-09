@@ -60,7 +60,8 @@ struct GolfEvent final
         SlicedBall,
         BallLanded,
         Scored,
-        NiceShot
+        NiceShot,
+        DriveComplete
     }type = HitBall;
 
     glm::vec3 position = glm::vec3(0.f);

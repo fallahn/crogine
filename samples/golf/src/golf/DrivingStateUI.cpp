@@ -31,6 +31,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MenuConsts.hpp"
 #include "CommandIDs.hpp"
+#include "MessageIDs.hpp"
 #include "TextAnimCallback.hpp"
 #include "DrivingRangeDirector.hpp"
 
@@ -1005,7 +1006,7 @@ void DrivingState::showMessage(float range)
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MessageBoard];
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard;
 
-    std::int32_t starCount = 0;
+    std::uint8_t starCount = 0;
     static constexpr float BadScore = 50.f;
     static constexpr float GoodScore = 75.f;
     static constexpr float ExcellentScore = 95.f;
@@ -1227,6 +1228,12 @@ void DrivingState::showMessage(float range)
             break;
         }
     };
+
+
+    //raise a message for sound effects etc
+    auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+    msg->type = GolfEvent::DriveComplete;
+    msg->score = starCount;
 }
 
 void DrivingState::floatingMessage(const std::string& msg)
