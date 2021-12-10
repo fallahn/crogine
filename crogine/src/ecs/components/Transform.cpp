@@ -344,6 +344,15 @@ glm::vec3 Transform::getScale() const
     return m_scale;
 }
 
+glm::vec3 Transform::getWorldScale() const
+{
+    if (m_parent)
+    {
+        return m_parent->getWorldScale() * m_scale;
+    }
+    return m_scale;
+}
+
 const glm::mat4& Transform::getLocalTransform() const
 {
     if (m_dirtyFlags & Tx)

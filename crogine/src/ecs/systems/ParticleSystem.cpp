@@ -343,9 +343,11 @@ void ParticleSystem::process(float dt)
                     auto randRot = glm::rotate(rotation, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::X_AXIS);
                     randRot = glm::rotate(randRot, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::Z_AXIS);
 
+                    auto worldScale = tx.getWorldScale();
+
                     p.velocity = randRot * settings.initialVelocity;
                     p.rotation = (settings.randomInitialRotation) ? Util::Random::value(-Util::Const::PI, Util::Const::PI) : 0.f;
-                    p.scale = 1.f;
+                    p.scale = std::abs((worldScale.x + worldScale.y) / 2.f);// 1.f;
                     p.acceleration = settings.acceleration;
                     p.frameID = (settings.useRandomFrame && settings.frameCount > 1) ? cro::Util::Random::value(0, static_cast<std::int32_t>(settings.frameCount) - 1) : 0;
                     p.frameTime = 0.f;
@@ -367,7 +369,7 @@ void ParticleSystem::process(float dt)
                     }*/
 
                     auto offset = settings.spawnOffset;
-                    offset *= tx.getScale();
+                    offset *= worldScale;
                     p.position += offset;
 
                     emitter.m_nextFreeParticle++;

@@ -203,9 +203,15 @@ namespace cro
 
         
         /*!
-        \brief Returns the current scale of the transform
+        \brief Returns the local scale of the transform
         */
         glm::vec3 getScale() const;
+
+        /*!
+        \brief Returns the the combined world scale of the transform
+        according to its scene graph hierarchy
+        */
+        glm::vec3 getWorldScale() const;
 
         /*!
         \brief Returns a matrix representing the complete transform
