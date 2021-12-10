@@ -876,8 +876,6 @@ void DrivingState::createSummary()
     {
         auto entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(pos);
-        //entity.getComponent<cro::Transform>().setOrigin({ -starWidth / 2.f, -starWidth / 2.f });
-        //entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("star");
         entity.addComponent<cro::SpriteAnimation>().play(0);

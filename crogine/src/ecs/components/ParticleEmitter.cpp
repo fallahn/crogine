@@ -226,10 +226,12 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
             }
         }
 
+#ifdef CRO_DEBUG_
         if (textureID == 0)
         {
             Logger::log(path + ": no texture property found", Logger::Type::Warning);
         }
+#endif
     }
 
     return false;
@@ -250,9 +252,8 @@ bool EmitterSettings::saveToFile(const std::string& path)
         {
             texPath = texPath.substr(1);
         }
+        cfg.addProperty("src", texPath);
     }
-
-    cfg.addProperty("src", texPath);
 
     if (blendmode == Add)
     {
