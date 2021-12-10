@@ -1478,10 +1478,10 @@ void DrivingState::createBall()
         [&](cro::Entity ent, float)
     {
         auto state = ent.getComponent<Ball>().state;
+        auto pos = ent.getComponent<cro::Transform>().getPosition();
+        
         if (state == Ball::State::Flight)
         {
-            auto pos = ent.getComponent<cro::Transform>().getPosition();
-
             //update pin distance on ui
             cro::Command cmd;
             cmd.targetFlags = CommandID::UI::PinDistance;
@@ -1536,14 +1536,10 @@ void DrivingState::createBall()
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-            pos.y = 0.f;
-            auto groundHeight = m_gameScene.getSystem<BallSystem>()->getTerrain(pos).intersection.y;
-            ent.getComponent<cro::Callback>().getUserData<float>() = groundHeight + 0.003f; //prevent z-fighting
         }
-        else
-        {
-            ent.getComponent<cro::Callback>().setUserData<float>(0.f);
-        }
+        pos.y = 0.f;
+        auto groundHeight = m_gameScene.getSystem<BallSystem>()->getTerrain(pos).intersection.y;
+        ent.getComponent<cro::Callback>().getUserData<float>() = groundHeight + 0.003f; //prevent z-fighting
 
         ent.getComponent<ClientCollider>().state = static_cast<std::uint8_t>(state);
     };
