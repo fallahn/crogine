@@ -415,7 +415,7 @@ void ParticleState::savePrefs()
 
     for (auto item = m_history.getHistory().crbegin(); item != m_history.getHistory().crend(); item++)
     {
-        cfg.addProperty("recent", *item);
+        cfg.addProperty("recent").setValue(*item);
     }
 
     cfg.save(prefPath);
