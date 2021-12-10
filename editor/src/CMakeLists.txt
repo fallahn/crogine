@@ -1,7 +1,8 @@
 
 set(PROJECT_SRC
-  ${PROJECT_DIR}/LayoutState.cpp
+  ${PROJECT_DIR}/FileHistory.cpp
   ${PROJECT_DIR}/FpsCameraSystem.cpp
+  ${PROJECT_DIR}/LayoutState.cpp
   ${PROJECT_DIR}/LayoutStateUI.cpp
   ${PROJECT_DIR}/LoadingScreen.cpp
   ${PROJECT_DIR}/main.cpp

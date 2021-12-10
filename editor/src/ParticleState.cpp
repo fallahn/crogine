@@ -394,6 +394,14 @@ void ParticleState::loadPrefs()
                 auto idx = prop.getValue<std::int32_t>();
                 m_cameraIndex = std::min(CameraID::Count - 1, std::max(0, idx));
             }
+            else if (name == "recent")
+            {
+                auto path = prop.getValue<std::string>();
+                if (cro::FileSystem::fileExists(path))
+                {
+                    m_history.add(path);
+                }
+            }
         }
     }
 }
@@ -404,6 +412,11 @@ void ParticleState::savePrefs()
     cfg.addProperty("sky_colour").setValue(getContext().appInstance.getClearColour());
     cfg.addProperty("render_colour").setValue(m_renderClearColour);
     cfg.addProperty("camera").setValue(m_cameraIndex);
+
+    for (auto item = m_history.getHistory().crbegin(); item != m_history.getHistory().crend(); item++)
+    {
+        cfg.addProperty("recent", *item);
+    }
 
     cfg.save(prefPath);
 }

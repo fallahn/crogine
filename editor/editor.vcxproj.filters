@@ -102,6 +102,9 @@
     <ClCompile Include="src\FpsCameraSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\FileHistory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -171,6 +174,9 @@
       <Filter>Header Files\model viewer</Filter>
     </ClInclude>
     <ClInclude Include="src\FpsCameraSystem.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FileHistory.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "StateIDs.hpp"
+#include "FileHistory.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -148,6 +149,8 @@ private:
     cro::Entity m_renderCamera;
     float m_renderFOV;
     float m_renderFrameRate;
+
+    FileHistory m_history;
 
     void initUI();
     void drawMenuBar();
