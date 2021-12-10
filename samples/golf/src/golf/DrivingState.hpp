@@ -69,6 +69,9 @@ private:
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_backgroundTexture;
 
+    bool m_mouseVisible;
+    cro::Clock m_mouseClock;
+
     struct MaterialID final
     {
         enum

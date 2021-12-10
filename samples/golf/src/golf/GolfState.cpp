@@ -111,7 +111,6 @@ namespace
     cro::Entity ballEntity;
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
-    const cro::Time MouseHideTime = cro::seconds(3.f);
 
     //use to move the flag as the player approaches
     struct FlagCallbackData final

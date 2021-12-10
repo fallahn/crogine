@@ -155,6 +155,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus()),
     m_viewScale         (1.f),
+    m_mouseVisible      (true),
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
 {
@@ -268,7 +269,19 @@ bool DrivingState::handleEvent(const cro::Event& evt)
             }
         }
     }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+#ifdef CRO_DEBUG_
+        if (!useFreeCam) {
+#endif
+            cro::App::getWindow().setMouseCaptured(false);
+            m_mouseVisible = true;
+            m_mouseClock.restart();
+#ifdef CRO_DEBUG_
+        }
+#endif // CRO_DEBUG_
 
+    }
 #ifdef CRO_DEBUG_
     m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
 #endif
@@ -437,6 +450,19 @@ bool DrivingState::simulate(float dt)
     m_inputParser.update(dt);
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
+
+    //auto hide the mouse
+    if (m_mouseVisible
+        && getStateCount() == 1)
+    {
+        if (m_mouseClock.elapsed() > MouseHideTime
+            && !ImGui::GetIO().WantCaptureMouse)
+        {
+            m_mouseVisible = false;
+            cro::App::getWindow().setMouseCaptured(true);
+        }
+    }
+
     return true;
 }
 

@@ -92,6 +92,8 @@ static constexpr glm::vec2 CourseDescPos(0.5f, 0.24f); // relative
 static constexpr glm::vec2 ClubTextPosition(0.01f, 1.f); //relative
 static constexpr glm::vec2 WindIndicatorPosition(-48.f, 40.f); //absolute from edge of the screen
 
+static const cro::Time MouseHideTime = cro::seconds(3.f);
+
 static inline bool activated(const cro::ButtonEvent& evt)
 {
     switch (evt.type)
