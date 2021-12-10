@@ -1333,11 +1333,14 @@ void DrivingState::showMessage(float range)
                     else if (totalScore < ExcellentScore)
                     {
                         s << "Great Job!";
+                        m_summaryScreen.stars[0].getComponent<cro::Callback>().active = true;
                         m_summaryScreen.stars[1].getComponent<cro::Callback>().active = true;
                     }
                     else
                     {
                         s << "Excellent!";
+                        m_summaryScreen.stars[0].getComponent<cro::Callback>().active = true;
+                        m_summaryScreen.stars[1].getComponent<cro::Callback>().active = true;
                         m_summaryScreen.stars[2].getComponent<cro::Callback>().active = true;
                     }
 
@@ -1351,6 +1354,12 @@ void DrivingState::showMessage(float range)
                         m_topScores[m_strokeCountIndex] = totalScore;
                         saveScores();
                         m_summaryScreen.bestMessage.getComponent<cro::Callback>().active = true;
+                    }
+                    else
+                    {
+                        auto c = TextNormalColour;
+                        c.setAlpha(0.f);
+                        m_summaryScreen.bestMessage.getComponent<cro::Text>().setFillColour(c);
                     }
                 }
                 else
