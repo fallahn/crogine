@@ -668,16 +668,51 @@ score based on your overall accuracy. Good Luck!
     centreText(numberEnt);
     countEnt.getComponent<cro::Transform>().addChild(numberEnt.getComponent<cro::Transform>());
 
+
+    //high score text
+    auto textEnt4 = m_uiScene.createEntity();
+    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 26.f, 0.02f });
+    textEnt4.addComponent<cro::Drawable2D>();
+    textEnt4.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+    textEnt4.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    if (m_topScores[m_strokeCountIndex] > 0)
+    {
+        std::stringstream s;
+        s.precision(3);
+        s << "Personal Best: " << m_topScores[m_strokeCountIndex] << "%";
+
+        textEnt4.getComponent<cro::Text>().setString(s.str());
+        centreText(textEnt4);
+    }
+    bgEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
+
+
+
+
     auto buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f));
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [&, numberEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, numberEnt, textEnt4](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
                     m_strokeCountIndex = (m_strokeCountIndex + (m_strokeCounts.size() - 1)) % m_strokeCounts.size();
                     numberEnt.getComponent<cro::Text>().setString(std::to_string(m_strokeCounts[m_strokeCountIndex]));
                     centreText(numberEnt);
+
+                    if (m_topScores[m_strokeCountIndex] > 0)
+                    {
+                        std::stringstream s;
+                        s.precision(3);
+                        s << "Personal Best: " << m_topScores[m_strokeCountIndex] << "%";
+
+                        textEnt4.getComponent<cro::Text>().setString(s.str());
+                        centreText(textEnt4);
+                    }
+                    else
+                    {
+                        textEnt4.getComponent<cro::Text>().setString(" ");
+                    }
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                 }
@@ -687,7 +722,7 @@ score based on your overall accuracy. Good Luck!
     buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f));
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [&, numberEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, numberEnt, textEnt4](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -695,51 +730,24 @@ score based on your overall accuracy. Good Luck!
                     numberEnt.getComponent<cro::Text>().setString(std::to_string(m_strokeCounts[m_strokeCountIndex]));
                     centreText(numberEnt);
 
+                    if (m_topScores[m_strokeCountIndex] > 0)
+                    {
+                        std::stringstream s;
+                        s.precision(3);
+                        s << "Personal Best: " << m_topScores[m_strokeCountIndex] << "%";
+
+                        textEnt4.getComponent<cro::Text>().setString(s.str());
+                        centreText(textEnt4);
+                    }
+                    else
+                    {
+                        textEnt4.getComponent<cro::Text>().setString(" ");
+                    }
+
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                 }
             });
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
-
-
-    //TODO replace this with stat-slot selection
-    /*auto playerEnt = m_uiScene.createEntity();
-    playerEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 48.f, 0.1f });
-    playerEnt.addComponent<cro::Drawable2D>();
-    playerEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("player_select");
-    playerEnt.getComponent<cro::Transform>().setOrigin({ spriteSheet.getSprite("player_select").getTextureBounds().width / 2.f, 0.f });
-    bgEntity.getComponent<cro::Transform>().addChild(playerEnt.getComponent<cro::Transform>());
-
-    auto avatarEnt = m_uiScene.createEntity();
-    avatarEnt.addComponent<cro::Transform>();
-    avatarEnt.addComponent<cro::Drawable2D>();
-    avatarEnt.addComponent<cro::Sprite>(m_sharedData.avatarTextures[0][0]);
-    avatarEnt.getComponent<cro::Sprite>().setTextureRect(m_sharedData.avatarInfo[0].buns);
-
-
-    buttonEnt = createButton("arrow_left", glm::vec2(-2.f, 42.f));
-    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem->addCallback(
-            [&](cro::Entity e, const cro::ButtonEvent& evt)
-            {
-                if (activated(evt))
-                {
-
-                }
-            });
-    playerEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
-
-    buttonEnt = createButton("arrow_right", glm::vec2(80.f, 42.f));
-    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem->addCallback(
-            [&](cro::Entity e, const cro::ButtonEvent& evt)
-            {
-                if (activated(evt))
-                {
-
-                }
-            });
-    playerEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());*/
-
 
 
     //start button
@@ -889,6 +897,32 @@ void DrivingState::createSummary()
     }
 
 
+    //high score text
+    auto textEnt4 = m_uiScene.createEntity();
+    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 26.f, 0.02f });
+    textEnt4.addComponent<cro::Drawable2D>();
+    textEnt4.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+    textEnt4.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    textEnt4.getComponent<cro::Text>().setString("New Personal Best!");
+    textEnt4.addComponent<cro::Callback>().setUserData<float>(0.f);
+    textEnt4.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime -= dt;
+        if (currTime < 0)
+        {
+            currTime += 1.f;
+
+            auto c = e.getComponent<cro::Text>().getFillColour();
+            c.setAlpha(c.getAlpha() > 0 ? 0.f : 1.f);
+            e.getComponent<cro::Text>().setFillColour(c);
+        }
+    };
+    centreText(textEnt4);
+    bgEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
+    m_summaryScreen.bestMessage = textEnt4;
+
     //replay text
     auto questionEnt = m_uiScene.createEntity();
     questionEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 72.f, 0.02f });
@@ -938,6 +972,11 @@ void DrivingState::createSummary()
                 if (state == MessageAnim::Hold
                     && activated(evt))
                 {
+                    auto c = TextNormalColour;
+                    c.setAlpha(0.f);
+                    m_summaryScreen.bestMessage.getComponent<cro::Text>().setFillColour(c);
+                    m_summaryScreen.bestMessage.getComponent<cro::Callback>().active = false;
+
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                     state = MessageAnim::Close;
                     timeout = 1.f;
@@ -1151,6 +1190,7 @@ void DrivingState::showMessage(float range)
     centreText(textEnt3);
     entity.getComponent<cro::Transform>().addChild(textEnt3.getComponent<cro::Transform>());
 
+
     //add mini graphic showing rank
     auto imgEnt = m_uiScene.createEntity();
     imgEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, 0.02f });
@@ -1305,6 +1345,13 @@ void DrivingState::showMessage(float range)
                     centreText(m_summaryScreen.summary);
                     
                     m_summaryScreen.root.getComponent<cro::Callback>().active = true;
+
+                    if (totalScore > m_topScores[m_strokeCountIndex])
+                    {
+                        m_topScores[m_strokeCountIndex] = totalScore;
+                        saveScores();
+                        m_summaryScreen.bestMessage.getComponent<cro::Callback>().active = true;
+                    }
                 }
                 else
                 {

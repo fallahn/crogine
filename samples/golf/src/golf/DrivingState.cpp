@@ -159,6 +159,9 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
 {
+    std::fill(m_topScores.begin(), m_topScores.end(), 0.f);
+    loadScores();   
+    
     context.mainWindow.loadResources([this]() {
         addSystems();
         loadAssets();
@@ -2011,4 +2014,41 @@ void DrivingState::setActiveCamera(std::int32_t camID)
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
+}
+
+void DrivingState::loadScores()
+{
+    const std::string loadPath = cro::App::getInstance().getPreferencePath() + "driving.scores";
+
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile(loadPath))
+    {
+        const auto& props = cfg.getProperties();
+        for (const auto& p : props)
+        {
+            if (p.getName() == "five")
+            {
+                m_topScores[0] = std::min(100.f, std::max(0.f, p.getValue<float>()));
+            }
+            else if (p.getName() == "nine")
+            {
+                m_topScores[1] = std::min(100.f, std::max(0.f, p.getValue<float>()));
+            }
+            else if (p.getName() == "eighteen")
+            {
+                m_topScores[2] = std::min(100.f, std::max(0.f, p.getValue<float>()));
+            }
+        }
+    }
+}
+
+void DrivingState::saveScores()
+{
+    const std::string savePath = cro::App::getInstance().getPreferencePath() + "driving.scores";
+
+    cro::ConfigFile cfg;
+    cfg.addProperty("five").setValue(m_topScores[0]);
+    cfg.addProperty("nine").setValue(m_topScores[1]);
+    cfg.addProperty("eighteen").setValue(m_topScores[2]);
+    cfg.save(savePath);
 }

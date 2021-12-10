@@ -45,14 +45,14 @@ driving_range
     prop
     {
         model = "assets/golf/models/driving_shed.cmt"
-        position = -5.500000,2.500000,124.500000
+        position = -5.500000,2.510000,124.500000
         rotation = 0.000000
     }
 
     prop
     {
         model = "assets/golf/models/driving_shed.cmt"
-        position = 5.500000,2.500000,124.500000
+        position = 5.500000,2.510000,124.500000
         rotation = 0.000000
     }
 
@@ -60,7 +60,7 @@ driving_range
     prop
     {
         model = "assets/golf/models/cart.cmt"
-        position = -5.000000,2.500000,122.000000
+        position = -5.000000,2.510000,122.000000
         rotation = 14.500849
     }
 
