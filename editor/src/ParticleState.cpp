@@ -300,7 +300,7 @@ void ParticleState::setupScene()
         size.y -= m_windowLayouts[WindowID::Browser].second.y;
 
         cam.setOrthographic(-size.x / 2.f, size.x / 2.f, -size.y / 2.f, size.y / 2.f, 0.1f, 10.f);
-        cam.viewport = { uiConst::InspectorWidth, uiConst::BrowserHeight, 1.f, 1.f };
+        cam.viewport = { uiConst::InspectorWidth, uiConst::BrowserHeight, 1.f - uiConst::InspectorWidth, 1.f - uiConst::BrowserHeight };
     };
     cam.resizeCallback(cam);
 
@@ -330,7 +330,7 @@ void ParticleState::setupScene()
     m_entities[EntityID::ArcBall].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    setCamera(m_cameraIndex); //assigns the emitter entity too
+    //setCamera(m_cameraIndex); //assigns the emitter entity too
 
     //sunlight node
     /*cro::ModelDefinition def;
@@ -349,17 +349,27 @@ void ParticleState::setCamera(std::int32_t idx)
     m_scene.setActiveCamera(m_cameras[m_cameraIndex].camera);
     m_cameras[m_cameraIndex].camera.getComponent<cro::Camera>().active = true;
 
-    if (idx == CameraID::TwoDee) //TODO this should work on any cam, but there's no callback on the 3D camera...
+    if (idx == CameraID::TwoDee)
     {
+        //TODO this should work on any cam, but there's no callback on the 3D camera...
         auto& cam = m_cameras[CameraID::TwoDee].camera.getComponent<cro::Camera>();
         cam.resizeCallback(cam);
-        cam.active = true;
-    }
 
-    m_entities[EntityID::Emitter] = m_cameras[m_cameraIndex].emitter;
-    m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().start();
-    m_particleSettings = &m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().settings;
-    m_selectedEntity = m_entities[EntityID::Emitter];
+        //hide any loaded model
+        if (m_entities[EntityID::Model].isValid())
+        {
+            m_entities[EntityID::Model].getComponent<cro::Model>().setHidden(true);
+        }
+    }
+    else
+    {
+        //m_selectedEntity = m_entities[EntityID::Emitter];
+        if (m_entities[EntityID::Model].isValid())
+        {
+            m_entities[EntityID::Model].getComponent<cro::Model>().setHidden(true);
+        }
+    }
+    m_particleSettings = &m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().settings;
 }
 
 void ParticleState::loadPrefs()

@@ -152,11 +152,12 @@ namespace
             coord /= u_textureSize;
 
             //frag depth should have geometry depth stored as depth writes are disabled
+            //TODO currently disabled as this looks really broken with ortho projections
             float geomDepth = linearise(gl_FragCoord.z);
             float diff = clamp(geomDepth - linearise(v_depth), 0.0, 1.0);
             float strength = smoothstep(0.0, 0.05, diff);
 
-            FRAG_OUT = v_colour * TEXTURE(u_texture, coord) * strength;
+            FRAG_OUT = v_colour * TEXTURE(u_texture, coord);// * strength;
         }
     )";
 
@@ -208,7 +209,10 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
         m_uniformIDs[UniformID::ParticleSize] = uniforms.find("u_particleSize")->second;
         m_uniformIDs[UniformID::TextureSize] = uniforms.find("u_textureSize")->second;
         m_uniformIDs[UniformID::FrameCount] = uniforms.find("u_frameCount")->second;
-        m_uniformIDs[UniformID::CameraRange] = uniforms.find("u_cameraRange")->second;
+        if (uniforms.count("u_cameraRange"))
+        {
+            m_uniformIDs[UniformID::CameraRange] = uniforms.find("u_cameraRange")->second;
+        }
 
         //map attributes
         const auto& attribMap = m_shader.getAttribMap();

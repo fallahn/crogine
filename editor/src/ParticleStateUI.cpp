@@ -112,7 +112,7 @@ void ParticleState::drawMenuBar()
                 auto path = cro::FileSystem::openFileDialogue(lastSavePath, "xyp,cps");
                 if (!path.empty())
                 {
-                    m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().stop();
+                    m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().stop();
 
                     (m_particleSettings->loadFromFile(path, m_resources.textures));
                     {
@@ -196,7 +196,8 @@ void ParticleState::drawMenuBar()
                 m_showPreferences = !m_showPreferences;
             }
 
-            if (ImGui::MenuItem("Load Preview Model", nullptr, nullptr))
+            if (m_cameraIndex == CameraID::ThreeDee &&
+                ImGui::MenuItem("Load Preview Model", nullptr, nullptr))
             {
                 if (m_sharedData.workingDirectory.empty())
                 {
@@ -379,18 +380,18 @@ void ParticleState::drawInspector()
 
         ImGui::EndTabBar();
 
-        if (m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().stopped())
+        if (m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().stopped())
         {
             if (ImGui::Button("Start"))
             {
-                m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().start();
+                m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().start();
             }
         }
         else
         {
             if (ImGui::Button("Stop"))
             {
-                m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().stop();
+                m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().stop();
             }
         }
     }
@@ -568,7 +569,7 @@ void ParticleState::drawRenderPreview()
 
             ImGui::Image(m_renderTexture.getTexture(), { size.x / scale.x, size.y / scale.y }, { 0.f, 1.f }, { 1.f, 0.f });
 
-            if (m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().stopped()
+            if (m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().stopped()
                 && m_particleSettings->releaseCount > 0)
             {
                 static bool spt = false;
@@ -587,7 +588,7 @@ void ParticleState::drawRenderPreview()
 
                         std::int32_t frameCount = 0;
                         const float dt = 1.f / m_renderFrameRate;
-                        m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().start();
+                        m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().start();
 
                         std::vector<std::string> fileNames;
 
@@ -609,7 +610,7 @@ void ParticleState::drawRenderPreview()
 
                             frameCount++;
 
-                        } while (!m_entities[EntityID::Emitter].getComponent<cro::ParticleEmitter>().stopped()
+                        } while (!m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().stopped()
                             && frameCount < 50); //just put a cap on the frame count
 
                         m_scene.setActiveCamera(oldCam);
@@ -763,7 +764,7 @@ void ParticleState::openModel(const std::string& path)
         entity.addComponent<cro::Transform>();
         modelDef.createModel(entity);
 
-        m_entities[EntityID::Emitter].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_cameras[CameraID::ThreeDee].emitter.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_entities[EntityID::Model] = entity;
     }
 }

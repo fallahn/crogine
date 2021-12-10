@@ -84,7 +84,6 @@ private:
         enum
         {
             ArcBall,
-            Emitter,
             Model,
 
             Count
