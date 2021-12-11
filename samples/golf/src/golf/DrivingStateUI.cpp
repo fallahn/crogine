@@ -53,7 +53,7 @@ source distribution.
 namespace
 {
     constexpr float SummaryOffset = 54.f;
-    constexpr float SummaryHeight = 246.f;
+    constexpr float SummaryHeight = 254.f;
 
     constexpr float BadScore = 50.f;
     constexpr float GoodScore = 75.f;
@@ -642,7 +642,7 @@ score based on your overall accuracy. Good Luck!
 
     //hole count
     auto countEnt = m_uiScene.createEntity();
-    countEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 90.f, 0.1f });
+    countEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 74.f, 0.1f });
     countEnt.addComponent<cro::Drawable2D>();
     countEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("stroke_select");
     auto strokeBounds = spriteSheet.getSprite("stroke_select").getTextureBounds();
@@ -650,7 +650,7 @@ score based on your overall accuracy. Good Luck!
     bgEntity.getComponent<cro::Transform>().addChild(countEnt.getComponent<cro::Transform>());
 
     auto strokeTextEnt = m_uiScene.createEntity();
-    strokeTextEnt.addComponent<cro::Transform>().setPosition({ strokeBounds.width / 2.f, strokeBounds.height + 11.f });
+    strokeTextEnt.addComponent<cro::Transform>().setPosition({ strokeBounds.width / 2.f, strokeBounds.height + 13.f });
     strokeTextEnt.addComponent<cro::Drawable2D>();
     strokeTextEnt.addComponent<cro::Text>(largeFont).setString("Strokes To Play");
     strokeTextEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -671,7 +671,7 @@ score based on your overall accuracy. Good Luck!
 
     //high score text
     auto textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 26.f, 0.02f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 32.f, 0.02f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -899,7 +899,7 @@ void DrivingState::createSummary()
 
     //high score text
     auto textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 26.f, 0.02f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 32.f, 0.02f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(TextNormalColour);
