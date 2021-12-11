@@ -1,0 +1,64 @@
+hole 05
+{
+    map="assets/golf/courses/course_02/05.png"
+    model="assets/golf/models/course_02/05.cmt"
+    par = 4
+
+    pin = 289.969238,2.144150,-160.218994
+    target = 223.434479,1.159649,-116.652519
+    tee = 25.313614,2.299997,-36.005295
+
+    prop
+    {
+        model = "assets/golf/models/driving_shed.cmt"
+        position = 187.093018,1.700596,-131.059479
+        rotation = 10.568031
+    }
+
+    crowd
+    {
+        position = 191.001740,1.499999,-129.962341
+        rotation = 0.000000
+    }
+
+    crowd
+    {
+        position = 177.478348,1.500001,-127.170433
+        rotation = 15.196595
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 302.824677,1.509998,-176.513763
+        rotation = -26.009904
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 307.582947,1.510002,-173.550400
+        rotation = -766.175060
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 297.830048,1.510000,-178.863983
+        rotation = -745.196739
+    }
+
+    prop
+    {
+        model = "assets/golf/models/boat01.cmt"
+        position = 333.610901,-0.967538,-152.669891
+        rotation = 85.056450
+    }
+
+    crowd
+    {
+        position = 309.456879,1.500001,-173.407776
+        rotation = -74.881565
+    }
+
+}

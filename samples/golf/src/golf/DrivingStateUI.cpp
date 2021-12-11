@@ -598,7 +598,7 @@ void DrivingState::createGameOptions()
 
     //header
     auto headerText = m_uiScene.createEntity();
-    headerText.addComponent<cro::Transform>().setPosition({ 14.f, 233.f, 0.02f });
+    headerText.addComponent<cro::Transform>().setPosition({ 13.f, 233.f, 0.02f });
     headerText.addComponent<cro::Drawable2D>();
     headerText.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     headerText.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -607,7 +607,7 @@ void DrivingState::createGameOptions()
 
     //help text
     auto infoText = m_uiScene.createEntity();
-    infoText.addComponent<cro::Transform>().setPosition({ 14.f, 220.f, 0.02f });
+    infoText.addComponent<cro::Transform>().setPosition({ 13.f, 220.f, 0.02f });
     infoText.addComponent<cro::Drawable2D>();
     infoText.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     infoText.getComponent<cro::Text>().setFillColour(TextNormalColour);

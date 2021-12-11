@@ -42,6 +42,22 @@ spritesheet ui
         bounds = 80,48,32,32
     }
 
+    sprite wind_speed
+    {
+        bounds = 0,128,40, 40
+
+        animation spin
+        {
+            frame = 0,128,40,40
+            frame = 40, 128, 40,40
+            frame = 80,128,40,40
+            frame = 120,128,40,40
+
+            loop = true
+            framerate = 17
+        }
+    }
+
     sprite message_board
     {
         bounds = 112,0,152, 80
