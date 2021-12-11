@@ -1,0 +1,51 @@
+hole 07
+{
+    map="assets/golf/courses/course_02/07.png"
+    model="assets/golf/models/course_02/07.cmt"
+    par = 3
+
+    pin = 254.517746,2.151919,-63.261360
+    target = 163.850357,1.338705,-108.964241
+    tee = 49.019135,1.800001,-146.417389
+
+    crowd
+    {
+        position = 277.745056,1.199982,-83.840904
+        rotation = -68.752957
+    }
+
+    crowd
+    {
+        position = 280.800415,1.199982,-72.712196
+        rotation = -107.395417
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 280.279358,1.209999,-75.573784
+        rotation = -799.928190
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 276.177856,1.210000,-85.469894
+        rotation = -770.489001
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 278.086182,1.210000,-62.070557
+        rotation = -108.605046
+    }
+
+    prop
+    {
+        model = "assets/golf/models/driving_shed.cmt"
+        position = 132.552216,1.200000,-130.308853
+        rotation = -9.452628
+    }
+
+}

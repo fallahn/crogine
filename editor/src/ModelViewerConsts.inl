@@ -41,7 +41,7 @@ static const glm::vec3 DefaultArcballPosition({ 0.f, 0.75f, 0.f });
 static constexpr float DefaultFOV = 35.f * cro::Util::Const::degToRad;
 static constexpr float MaxFOV = 120.f * cro::Util::Const::degToRad;
 static constexpr float MinFOV = 5.f * cro::Util::Const::degToRad;
-static constexpr float DefaultFarPlane = 30.f;
+static constexpr float DefaultFarPlane = 300.f;
 
 struct CameraSettings final
 {
