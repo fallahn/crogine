@@ -10,6 +10,20 @@ hole 04
 
     prop
     {
+        model = "assets/golf/models/birch01.cmt"
+        position = 210.612564,2.398726,-90.189430
+        rotation = 0.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/birch02.cmt"
+        position = 217.147629,2.367812,-100.961174
+        rotation = 18.808399
+    }
+
+    prop
+    {
         model = "assets/golf/models/view_platform.cmt"
         position = 212.435242,2.295681,-95.766335
         rotation = -720.135872

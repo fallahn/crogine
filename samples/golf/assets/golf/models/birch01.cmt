@@ -1,0 +1,17 @@
+model birch01
+{
+    mesh = assets/golf/models/birch01.cmb
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        blendmode = none
+        diffuse = "assets/golf/images/tree-texture.png"
+        alpha_clip = 0.274000
+
+    }
+}
