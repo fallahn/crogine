@@ -1,0 +1,58 @@
+hole 09
+{
+    map="assets/golf/courses/course_02/09.png"
+    model="assets/golf/models/course_02/09.cmt"
+    par = 3
+
+    pin = 76.670952,1.194330,-41.315582
+    target = 124.571838,1.425188,-105.154282
+    tee = 263.000824,1.653762,-160.068390
+
+    prop
+    {
+        model = "assets/golf/models/lighthouse.cmt"
+        position = 128.970612,0.000000,-26.044910
+        rotation = 0.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/boat01.cmt"
+        position = 91.639122,-0.871646,-134.273621
+        rotation = -131.948124
+    }
+
+    crowd
+    {
+        position = 63.540611,1.169254,-33.980080
+        rotation = -62.533060
+    }
+
+    prop
+    {
+        model = "assets/golf/models/birch02.cmt"
+        position = 118.432373,1.371866,-78.235847
+        rotation = -0.000067
+    }
+
+    prop
+    {
+        model = "assets/golf/models/birch01.cmt"
+        position = 111.953491,1.350885,-73.260796
+        rotation = -132.291488
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = 64.198502,1.234109,-46.060783
+        rotation = -837.401469
+    }
+
+    crowd
+    {
+        position = 69.899055,1.196225,-50.734509
+        rotation = 58.211338
+    }
+
+}
