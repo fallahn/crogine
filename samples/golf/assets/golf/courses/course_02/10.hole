@@ -1,0 +1,57 @@
+hole 10
+{
+    map="assets/golf/courses/course_02/10.png"
+    model="assets/golf/models/course_02/10.cmt"
+    par = 3
+
+    pin = 63.414368,1.048154,-124.838715
+    target = 129.822632,0.796782,-100.813255
+    tee = 267.351807,1.820629,-100.216591
+
+    prop
+    {
+        model = "assets/golf/models/boat02.cmt"
+        position = 2.355911,-0.869293,-165.778534
+        rotation = -118.001061
+    }
+
+    crowd
+    {
+        position = 43.962688,0.796787,-105.899437
+        rotation = -34.004720
+    }
+
+    crowd
+    {
+        position = 41.488945,0.796783,-109.035980
+        rotation = 104.330624
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = 184.156494,0.796783,-116.760956
+        rotation = -739.370035
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 189.435837,0.806782,-113.528511
+        rotation = -720.135872
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 178.526520,0.806783,-115.016808
+        rotation = -732.960305
+    }
+
+    crowd
+    {
+        position = 181.812256,0.796782,-113.263351
+        rotation = 0.000000
+    }
+
+}
