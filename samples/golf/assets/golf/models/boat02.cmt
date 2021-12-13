@@ -1,0 +1,16 @@
+model boat02
+{
+    mesh = assets/golf/models/boat02.cmb
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        blendmode = none
+        diffuse = "assets/golf/images/boat02.png"
+
+    }
+}
