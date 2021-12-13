@@ -1,0 +1,57 @@
+hole 11
+{
+    map="assets/golf/courses/course_02/11.png"
+    model="assets/golf/models/course_02/11.cmt"
+    par = 4
+
+    pin = 291.942535,1.642263,-166.480652
+    target = 149.481842,1.270000,-68.250572
+    tee = 32.045120,1.270000,-49.049728
+
+    prop
+    {
+        model = "assets/golf/models/driving_shed.cmt"
+        position = 157.255936,1.614896,-52.270676
+        rotation = 196.529842
+    }
+
+    crowd
+    {
+        position = 150.283829,1.648646,-48.588905
+        rotation = 50.303956
+    }
+
+    prop
+    {
+        model = "assets/golf/models/pine01.cmt"
+        position = 153.243195,1.978476,-47.831738
+        rotation = 0.399883
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 149.428268,1.370329,-51.893612
+        rotation = -840.269597
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 148.202286,1.357290,-47.829372
+        rotation = -812.983964
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 303.975403,1.279999,-176.909286
+        rotation = -53.042696
+    }
+
+    crowd
+    {
+        position = 307.712646,1.385887,-173.129822
+        rotation = -69.031183
+    }
+}
