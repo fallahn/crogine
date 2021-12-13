@@ -1,0 +1,72 @@
+hole 12
+{
+    map="assets/golf/courses/course_02/12.png"
+    model="assets/golf/models/course_02/12.cmt"
+    par = 4
+
+    pin = 287.637115,1.994914,-168.633377
+    target = 199.301849,1.408643,-81.474403
+    tee = 24.049332,2.263188,-43.206642
+
+    prop
+    {
+        model = "assets/golf/models/boat02.cmt"
+        position = 289.764069,-1.059266,-77.184418
+        rotation = 57.770038
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 37.730698,2.273188,-53.244507
+        rotation = -15.555361
+    }
+
+    prop
+    {
+        model = "assets/golf/models/birch02.cmt"
+        position = 248.386612,1.635663,-103.449448
+        rotation = 0.133583
+    }
+
+    prop
+    {
+        model = "assets/golf/models/birch01.cmt"
+        position = 243.237289,1.549785,-95.832993
+        rotation = 0.032999
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 240.819214,1.418644,-96.445404
+        rotation = -818.075546
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 243.689743,1.418643,-102.411171
+        rotation = -847.577475
+    }
+
+    crowd
+    {
+        position = 282.080078,1.408644,-186.528717
+        rotation = 0.000000
+    }
+
+    crowd
+    {
+        position = 295.975800,1.408643,-185.303665
+        rotation = -34.183585
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = 257.294098,1.420607,-163.643951
+        rotation = 37.501893
+    }
+
+}
