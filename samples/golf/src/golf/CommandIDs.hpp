@@ -54,17 +54,18 @@ struct CommandID final
             Root                 = 0x8,
             PlayerSprite         = 0x10,
             WindSock             = 0x20,
-            WindString           = 0x40,
-            HoleNumber           = 0x80,
-            PinDistance          = 0x100,
-            Scoreboard           = 0x200,
-            ScoreScroll          = 0x400,
-            ScoreboardController = 0x800,
-            MiniMap              = 0x1000,
-            MiniBall             = 0x2000,
-            MessageBoard         = 0x4000,
-            MiniGreen            = 0x8000,
-            DrivingBoard         = 0x10000
+            WindSpeed            = 0x40,
+            WindString           = 0x80,
+            HoleNumber           = 0x100,
+            PinDistance          = 0x200,
+            Scoreboard           = 0x400,
+            ScoreScroll          = 0x800,
+            ScoreboardController = 0x1000,
+            MiniMap              = 0x2000,
+            MiniBall             = 0x4000,
+            MessageBoard         = 0x8000,
+            MiniGreen            = 0x10000,
+            DrivingBoard         = 0x20000
         };
     };
 

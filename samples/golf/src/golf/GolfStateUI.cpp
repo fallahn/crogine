@@ -276,6 +276,18 @@ void GolfState::buildUI()
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
     entity.getComponent<cro::Transform>().move(glm::vec2(0.f, -bounds.height));
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto windDial = entity;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindSpeed];
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindSpeed;
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    entity.getComponent<cro::Transform>().setPosition(windDial.getComponent<cro::Transform>().getOrigin());
+    windDial.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
     //sets the initial cam rotation for the wind indicator compensation
     auto camDir = m_holeData[0].target - m_currentPlayer.position;
@@ -605,7 +617,7 @@ void GolfState::buildUI()
     auto updateView = [&, playerEnt, courseEnt, infoEnt, windEnt, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-        cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.5f, 2.f);
+        cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.5f, 20.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         auto vpSize = calcVPSize();
@@ -785,7 +797,7 @@ void GolfState::createScoreboard()
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 200.f, 293.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ 200.f, 293.f, 0.5f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("LEADERS");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -858,7 +870,7 @@ void GolfState::createScoreboard()
         scrollEnt.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         i++;
     }
-    ents.back().getComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions.back(), 0.2f));
+    ents.back().getComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions.back(), 0.5f));
 
     updateScoreboard();
 }
@@ -1045,7 +1057,7 @@ void GolfState::updateScoreboard()
         ents.back().getComponent<cro::Text>().setString(totalString);
         //for some reason we have to hack this to display and I'm too lazy to debug it
         auto pos = ents.back().getComponent<cro::Transform>().getPosition();
-        pos.z = 1.f;
+        pos.z = 1.5f;
         ents.back().getComponent<cro::Transform>().setPosition(pos);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -1153,6 +1165,13 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::UI::WindSpeed;
+    cmd.action = [direction](cro::Entity e, float)
+    {
+        e.getComponent<cro::SpriteAnimation>().playbackRate = std::max(0.0001f, direction.y * 2.f);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void GolfState::showMessageBoard(MessageBoardID messageType)

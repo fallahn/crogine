@@ -98,6 +98,7 @@ private:
             PowerBarInner,
             HookBar,
             WindIndicator,
+            WindSpeed,
             MessageBoard,
             Stars,
 

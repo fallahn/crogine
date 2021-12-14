@@ -185,6 +185,7 @@ private:
             PowerBarInner,
             HookBar,
             WindIndicator,
+            WindSpeed,
             MessageBoard,
             Bunker,
             Foul,

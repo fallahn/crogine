@@ -59,6 +59,7 @@ void SpriteAnimator::process(float dt)
     for (auto& entity : entities) 
     {
         auto& animation = entity.getComponent<SpriteAnimation>();
+
         if (animation.playing)
         {
             auto& sprite = entity.getComponent<Sprite>();
@@ -84,11 +85,13 @@ void SpriteAnimator::process(float dt)
             //really these two cases should be fixed by moving the frame
             //data into the animation component, however this will break sprite sheets.
             
-
-            animation.currentFrameTime -= dt;
+            const auto frameTime = (1.f / (sprite.m_animations[animation.id].framerate * animation.playbackRate));
+            animation.currentFrameTime = std::min(animation.currentFrameTime - dt, frameTime);
             if (animation.currentFrameTime < 0)
             {
-                animation.currentFrameTime += (1.f / sprite.m_animations[animation.id].framerate);
+                CRO_ASSERT(sprite.m_animations[animation.id].framerate > 0, "");
+                CRO_ASSERT(animation.playbackRate > 0, "");
+                animation.currentFrameTime += frameTime;
 
                 auto lastFrame = animation.frameID;
                 animation.frameID = (animation.frameID + 1) % sprite.m_animations[animation.id].frames.size();
