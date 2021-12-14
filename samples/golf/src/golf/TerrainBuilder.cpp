@@ -604,10 +604,11 @@ void TerrainBuilder::threadFunc()
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
                 constexpr float DashCount = 40.f; //actual div by TAU cos its sin but eh.
                 constexpr float SlopeSpeed = 40.f;
+                constexpr std::int32_t StepSize = 1;
 
-                for (auto y = startY; y < startY + SlopeGridSize; ++y)
+                for (auto y = startY; y < startY + SlopeGridSize; y+=StepSize)
                 {
-                    for (auto x = startX; x < startX + SlopeGridSize; ++x)
+                    for (auto x = startX; x < startX + SlopeGridSize; x+=StepSize)
                     {
                         auto terrain = readMap(mapImage, x, y).first;
                         if (terrain == TerrainID::Green)
@@ -636,7 +637,7 @@ void TerrainBuilder::threadFunc()
 
 
                             glm::vec3 offset(1.f, 0.f, 0.f);
-                            height = (readHeightMap(x + 1, y) - pinPos.y) + epsilon;
+                            height = (readHeightMap(x + StepSize, y) - pinPos.y) + epsilon;
 
                             SlopeVertex vert2;
                             vert2.position = vert.position + offset;
@@ -655,11 +656,11 @@ void TerrainBuilder::threadFunc()
                             
 
                             //we have to copy first vert as the tex coords will be different
-                            //shame we can just recycle the index...
+                            //shame we can't just recycle the index...
                             auto vert3 = vert;
 
                             offset = glm::vec3(0.f, 0.f, -1.f);
-                            height = (readHeightMap(x, y + 1) - pinPos.y) + epsilon;
+                            height = (readHeightMap(x, y + StepSize) - pinPos.y) + epsilon;
 
                             SlopeVertex vert4;
                             vert4.position = vert.position + offset;
