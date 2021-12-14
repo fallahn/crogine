@@ -573,6 +573,7 @@ void DrivingState::createGameOptions()
     cro::AudioScape as;
     as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
 
+
     //background
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
@@ -801,6 +802,10 @@ score based on your overall accuracy. Good Luck!
                     setHole(m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole());
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+
+                    //hide the black fade.
+                    m_summaryScreen.fadeEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
+                    m_summaryScreen.fadeEnt.getComponent<cro::Callback>().active = true;
                 }
             });
     centreSprite(startButton);
@@ -817,6 +822,52 @@ score based on your overall accuracy. Good Luck!
 void DrivingState::createSummary()
 {
     auto* uiSystem = m_uiScene.getSystem<cro::UISystem>();
+
+    //black fade
+    auto fadeEnt = m_uiScene.createEntity();
+    fadeEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 1.f });
+    fadeEnt.addComponent<cro::Drawable2D>().setVertexData(
+        {
+        cro::Vertex2D(glm::vec2(0.f, 1.f), cro::Colour::Transparent),
+        cro::Vertex2D(glm::vec2(0.f), cro::Colour::Transparent),
+        cro::Vertex2D(glm::vec2(1.f), cro::Colour::Transparent),
+        cro::Vertex2D(glm::vec2(1.f, 0.f), cro::Colour::Transparent)
+        }
+    );
+    fadeEnt.addComponent<cro::Callback>().setUserData<float>(BackgroundAlpha);
+    fadeEnt.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto size = glm::vec2(cro::App::getWindow().getSize());
+        e.getComponent<cro::Transform>().setScale(size);
+
+        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+        auto a = verts[0].colour.getAlpha();
+
+        auto target = e.getComponent<cro::Callback>().getUserData<float>();
+
+        if (a < target)
+        {
+            a = std::min(target, a + dt);
+        }
+        else
+        {
+            a = std::max(target, a - dt);
+
+            if (a == 0)
+            {
+                e.getComponent<cro::Callback>().setUserData<float>(BackgroundAlpha);
+                e.getComponent<cro::Callback>().active = false;
+                e.getComponent<cro::Transform>().setPosition({ -10000.f, -10000.f });
+            }
+        }
+
+        for (auto& v : verts)
+        {
+            v.colour.setAlpha(a);
+        }
+    };
+    m_summaryScreen.fadeEnt = fadeEnt;
 
     //background
     cro::SpriteSheet spriteSheet;
@@ -1000,6 +1051,11 @@ void DrivingState::createSummary()
                     cmd.targetFlags = CommandID::UI::DrivingBoard;
                     cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Callback>().active = true; };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                    //fade background should already be visible from showing summary
+                    /*m_summaryScreen.fadeEnt.getComponent<cro::Callback>().setUserData<float>(BackgroundAlpha);
+                    m_summaryScreen.fadeEnt.getComponent<cro::Callback>().active = true;
+                    m_summaryScreen.fadeEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, FadeDepth });*/
                 }
             });
     centreSprite(entity);
@@ -1364,6 +1420,9 @@ void DrivingState::showMessage(float range)
                     m_summaryScreen.summary.getComponent<cro::Text>().setString(s.str());
                     centreText(m_summaryScreen.summary);
                     
+                    m_summaryScreen.fadeEnt.getComponent<cro::Transform>().setPosition({0.f, 0.f, FadeDepth});
+                    m_summaryScreen.fadeEnt.getComponent<cro::Callback>().setUserData<float>(BackgroundAlpha);
+                    m_summaryScreen.fadeEnt.getComponent<cro::Callback>().active = true;
                     m_summaryScreen.root.getComponent<cro::Callback>().active = true;
 
                     if (totalScore > m_topScores[m_strokeCountIndex])

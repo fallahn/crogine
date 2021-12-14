@@ -973,6 +973,11 @@ void DrivingState::createScene()
             //show menu
             cmd.targetFlags = CommandID::UI::DrivingBoard;
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            //background fade
+            m_summaryScreen.fadeEnt.getComponent<cro::Callback>().setUserData<float>(BackgroundAlpha);
+            m_summaryScreen.fadeEnt.getComponent<cro::Callback>().active = true;
+            m_summaryScreen.fadeEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, FadeDepth });
         }
     };
 
