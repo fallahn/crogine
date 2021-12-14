@@ -1900,6 +1900,8 @@ void DrivingState::setHole(std::int32_t index)
     {
         std::string str("Turn ");
         str += std::to_string(m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentStroke() + 1);
+        str += " of ";
+        str += std::to_string(m_strokeCounts[m_strokeCountIndex]);
         e.getComponent<cro::Text>().setString(str);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

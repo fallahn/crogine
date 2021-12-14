@@ -285,7 +285,7 @@ void GolfState::buildUI()
     //entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindSpeed;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, 0.01f));
     entity.getComponent<cro::Transform>().setPosition(windDial.getComponent<cro::Transform>().getOrigin());
     windDial.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
@@ -523,7 +523,9 @@ void GolfState::buildUI()
     auto greenEnt = entity;
 
     //arrow pointing to player position on the green
-    entity = m_uiScene.createEntity();
+    //kinda made redundant now that the slope indicator is no longer visible
+    //on the mini view
+    /*entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
@@ -551,7 +553,7 @@ void GolfState::buildUI()
             e.getComponent<cro::Transform>().setRotation(currentRotation);
         }
     };
-    greenEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    greenEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
 
     createScoreboard();
 
@@ -1170,7 +1172,7 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
     cmd.action = [direction](cro::Entity e, float)
     {
         //e.getComponent<cro::SpriteAnimation>().playbackRate = std::max(0.0001f, direction.y * 2.f);
-        e.getComponent<cro::Transform>().rotate(-direction.y / 6.f);
+        e.getComponent<cro::Transform>().rotate(-direction.y / 4.f);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

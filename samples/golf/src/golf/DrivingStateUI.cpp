@@ -236,7 +236,7 @@ void DrivingState::createUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::HoleNumber;
-    entity.addComponent<UIElement>().relativePosition = { 0.76f, 1.f };
+    entity.addComponent<UIElement>().relativePosition = { 0.75f, 1.f };
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -282,7 +282,7 @@ void DrivingState::createUI()
     //entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindSpeed;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, 0.01f));
     entity.getComponent<cro::Transform>().setPosition(windDial.getComponent<cro::Transform>().getOrigin());
     windDial.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -864,14 +864,15 @@ void DrivingState::createSummary()
         auto a = verts[0].colour.getAlpha();
 
         auto target = e.getComponent<cro::Callback>().getUserData<float>();
+        const float step = dt * 2.f;
 
         if (a < target)
         {
-            a = std::min(target, a + dt);
+            a = std::min(target, a + step);
         }
         else
         {
-            a = std::max(target, a - dt);
+            a = std::max(target, a - step);
 
             if (a == 0)
             {
@@ -1202,7 +1203,7 @@ void DrivingState::updateWindDisplay(glm::vec3 direction)
     cmd.action = [direction](cro::Entity e, float)
     {
         //e.getComponent<cro::SpriteAnimation>().playbackRate = std::max(0.0001f, direction.y * 2.f);
-        e.getComponent<cro::Transform>().rotate(-direction.y / 6.f);
+        e.getComponent<cro::Transform>().rotate(-direction.y / 4.f);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

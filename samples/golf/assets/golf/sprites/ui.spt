@@ -44,6 +44,11 @@ spritesheet ui
 
     sprite wind_speed
     {
+        bounds = 160,128,44,44
+    }
+
+    sprite wind_speed_old
+    {
         bounds = 0,128,40, 40
 
         animation spin
