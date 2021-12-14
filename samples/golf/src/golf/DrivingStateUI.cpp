@@ -358,8 +358,19 @@ void DrivingState::createUI()
     updateMiniView(miniCam);
 
     //minimap view
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("minimap");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto mapEnt = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, std::ceil(bounds.height / 2.f) + 1.f });
     entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_mapTexture.getTexture());
@@ -407,8 +418,15 @@ void DrivingState::createUI()
         }
         e.getComponent<cro::Transform>().setScale(glm::vec2(newScale, 1.f));
     };
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto mapEnt = entity;
+    mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto miniEnt = entity;
+
+    mapEnt.addComponent<cro::Callback>().active = true;
+    mapEnt.getComponent<cro::Callback>().function =
+        [miniEnt](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setScale(miniEnt.getComponent<cro::Transform>().getScale());
+    };
 
     //ball icon on mini map
     entity = m_uiScene.createEntity();
@@ -446,9 +464,10 @@ void DrivingState::createUI()
             e.getComponent<cro::Callback>().active = false;
         }
     };
-    mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //stroke indicator
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ PlayerPosition.x / 2.f, -PlayerPosition.z / 2.f, 0.01f });
     entity.getComponent<cro::Transform>().move(RangeSize / 4.f);
@@ -468,7 +487,7 @@ void DrivingState::createUI()
     {
         e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
     };
-    mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //ui viewport is set 1:1 with window, then the scene
