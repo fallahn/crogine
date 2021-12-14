@@ -282,7 +282,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindSpeed];
-    entity.addComponent<cro::SpriteAnimation>().play(0);
+    //entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindSpeed;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
@@ -1169,7 +1169,8 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
     cmd.targetFlags = CommandID::UI::WindSpeed;
     cmd.action = [direction](cro::Entity e, float)
     {
-        e.getComponent<cro::SpriteAnimation>().playbackRate = std::max(0.0001f, direction.y * 2.f);
+        //e.getComponent<cro::SpriteAnimation>().playbackRate = std::max(0.0001f, direction.y * 2.f);
+        e.getComponent<cro::Transform>().rotate(-direction.y / 6.f);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
