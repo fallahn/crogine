@@ -221,13 +221,15 @@ static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, floa
     auto height = static_cast<float>(img.getPixelData()[index + 1]) / 255.f;
     height *= MaxTerrainHeight;
 
-    switch (terrain)
-    {
-    default:
-        return { terrain, height };
-    case TerrainID::Scrub:
-        return height > -(TerrainLevel - WaterLevel) ? std::make_pair(terrain, height) : std::make_pair(TerrainID::Water, height);
-    }
+    return { terrain, height };
+
+    //switch (terrain)
+    //{
+    //default:
+    //    return { terrain, height };
+    //case TerrainID::Scrub:
+    //    return height > -(TerrainLevel - WaterLevel) ? std::make_pair(terrain, height) : std::make_pair(TerrainID::Water, height);
+    //}
 }
 
 static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const cro::Image& img)
