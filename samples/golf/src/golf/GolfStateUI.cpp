@@ -977,10 +977,14 @@ void GolfState::updateScoreboard()
                     scoreString += "\n";
                 }
 
-                scoreString += "\n\n" + std::to_string(i + MaxCols) + "\n" + std::to_string(m_holeData[(i + MaxCols) - 1].par);
-                for (auto j = 0u; j < playerCount; ++j)
+                auto holeIndex = (i + MaxCols) - 1;
+                if (holeIndex < m_holeData.size())
                 {
-                    scoreString += "\n" + std::to_string(scores[j].holes[i + MaxCols - 1]);
+                    scoreString += "\n\n" + std::to_string(i + MaxCols) + "\n" + std::to_string(m_holeData[holeIndex].par);
+                    for (auto j = 0u; j < playerCount; ++j)
+                    {
+                        scoreString += "\n" + std::to_string(scores[j].holes[holeIndex]);
+                    }
                 }
             }
 
