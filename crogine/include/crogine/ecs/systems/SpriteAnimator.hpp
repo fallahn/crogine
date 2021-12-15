@@ -48,4 +48,6 @@ namespace cro
     private:
         std::vector<std::pair<cro::Entity, std::int32_t>> m_animationEvents;
     };
+
+    using SpriteAnimationSystem = SpriteAnimator;
 }

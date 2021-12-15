@@ -47,6 +47,8 @@ namespace cro
         Sphere();
         explicit Sphere(const Box&);
         Sphere& operator = (const Box&);
+
+        bool contains(glm::vec3);
     };
 
     enum class Planar

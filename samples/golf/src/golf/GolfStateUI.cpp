@@ -136,7 +136,7 @@ void GolfState::buildUI()
     m_currentPlayer.position = m_holeData[0].tee;
 
     //player reflection
-    auto origin = playerEnt.getComponent<cro::Transform>().getOrigin();
+    /*auto origin = playerEnt.getComponent<cro::Transform>().getOrigin();
     origin.x -= (bounds.width - (bounds.width - origin.x));
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin(origin);
@@ -160,14 +160,13 @@ void GolfState::buildUI()
         scale.y *= -1.f;
         e.getComponent<cro::Transform>().setScale(scale);
 
-        //TODO we only want to do this on player change?
         auto facing = playerEnt.getComponent<cro::Drawable2D>().getFacing();
         if (facing != e.getComponent<cro::Drawable2D>().getFacing())
         {
             e.getComponent<cro::Drawable2D>().setFacing(facing);
         }
     };
-    playerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    playerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
 
 
     //info panel background - vertices are set in resize callback

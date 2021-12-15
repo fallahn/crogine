@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/geometric.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 using namespace cro;
 
@@ -51,6 +52,12 @@ Sphere& Sphere::operator=(const Box& box)
     centre = box[0] + rad;
     radius = glm::length(rad);
     return *this;
+}
+
+bool Sphere::contains(glm::vec3 point)
+{
+    auto pointLen = glm::length2(point - centre);
+    return pointLen < (radius * radius);
 }
 
 namespace
