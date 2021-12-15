@@ -2390,7 +2390,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
 
 
-    //double check terrain height
+    //double check terrain height and make sure camera is always above
     auto result = m_collisionMesh.getTerrain(m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition());
     result.height = std::max(result.height, holePos.y);
     result.height += GreenCamHeight;
@@ -2400,22 +2400,6 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
     auto tx = glm::inverse(glm::lookAt(pos, m_holeData[hole].pin, cro::Transform::Y_AXIS));
     m_cameras[CameraID::Green].getComponent<cro::Transform>().setLocalTransform(tx);
-
-
-    //we also have to check the camera hasn't ended up too close to the centre one, else the
-    //camera director gets confused as to which should be active when the ball is in both radii
-    /*auto distVec = m_cameras[CameraID::Sky].getComponent<cro::Transform>().getPosition();
-    distVec -= m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition();
-    auto len2 = glm::length2(distVec);
-    auto minLen = m_cameras[CameraID::Sky].getComponent<CameraFollower>().radius + m_cameras[CameraID::Green].getComponent<CameraFollower>().radius;
-    if (len2 < minLen)
-    {
-        auto len = std::sqrt(len2);
-        auto diff = std::sqrt(minLen) - len;
-        distVec /= len;
-        distVec *= (diff * 1.1f);
-        m_cameras[CameraID::Green].getComponent<cro::Transform>().move(-distVec);
-    }*/
 
 
     //reset the flag

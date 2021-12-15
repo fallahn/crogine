@@ -88,9 +88,9 @@ namespace cro::Shaders::Billboard
             //TODO setting these as uniforms is more efficient, but also more faff.
             vec3 camRight = vec3(u_viewMatrix[0][0], u_viewMatrix[1][0], u_viewMatrix[2][0]);
 #if defined(LOCK_ROTATION)
-            vec3 camUp = vec3(0.0, -u_clipPlane.y, 0.0);
+            vec3 camUp = vec3(0.0, 1.0, 0.0);
 #else
-            vec3 camUp = vec3(u_viewMatrix[0][1], u_viewMatrix[1][1] * -u_clipPlane.y, u_viewMatrix[2][1]);
+            vec3 camUp = vec3(u_viewMatrix[0][1], u_viewMatrix[1][1], u_viewMatrix[2][1]) * -u_clipPlane.y;
 #endif
             position = position + camRight * a_position.x
                                 + camUp * a_position.y;
