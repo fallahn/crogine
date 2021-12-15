@@ -263,6 +263,34 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 //public
 bool MenuState::handleEvent(const cro::Event& evt)
 {
+    const auto quitMenu = 
+        [&]()
+    {
+        switch (m_currentMenu)
+        {
+        default: break;
+        case MenuID::Avatar:
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+            m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
+            m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+            break;
+        case MenuID::Join:
+            applyTextEdit();
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+            m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
+            m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+            break;
+        case MenuID::Lobby:
+            quitLobby();
+            break;
+        case MenuID::PlayerConfig:
+            applyTextEdit();
+            showPlayerConfig(false, m_activePlayerAvatar);
+            updateLocalAvatars(m_avatarCallbacks.first, m_avatarCallbacks.second);
+            break;
+        }
+    };
+
     if(cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
         return true;
@@ -338,30 +366,15 @@ bool MenuState::handleEvent(const cro::Event& evt)
         default: break;
             //leave the current menu when B is pressed.
         case cro::GameController::ButtonB:
-            switch (m_currentMenu)
-            {
-            default: break;
-            case MenuID::Avatar:
-                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
-                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
-                break;
-            case MenuID::Join:
-                applyTextEdit();
-                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
-                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
-                break;
-            case MenuID::Lobby:
-                quitLobby();
-                break;
-            case MenuID::PlayerConfig:
-                applyTextEdit();
-                showPlayerConfig(false, m_activePlayerAvatar);
-                updateLocalAvatars(m_avatarCallbacks.first, m_avatarCallbacks.second);
-                break;
-            }
+            quitMenu();
             break;
+        }
+    }
+    else if (evt.type == SDL_MOUSEBUTTONUP)
+    {
+        if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            quitMenu();
         }
     }
 

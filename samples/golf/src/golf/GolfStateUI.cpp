@@ -282,8 +282,15 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindSpeed];
-    //entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindSpeed;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+    {
+        auto speed = e.getComponent<cro::Callback>().getUserData<float>();
+        e.getComponent<cro::Transform>().rotate(speed / 6.f);
+    };
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, 0.01f));
     entity.getComponent<cro::Transform>().setPosition(windDial.getComponent<cro::Transform>().getOrigin());
@@ -1171,8 +1178,7 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
     cmd.targetFlags = CommandID::UI::WindSpeed;
     cmd.action = [direction](cro::Entity e, float)
     {
-        //e.getComponent<cro::SpriteAnimation>().playbackRate = std::max(0.0001f, direction.y * 2.f);
-        e.getComponent<cro::Transform>().rotate(-direction.y / 4.f);
+        e.getComponent<cro::Callback>().setUserData<float>(-direction.y);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

@@ -113,6 +113,15 @@ bool PracticeState::handleEvent(const cro::Event& evt)
         }
     }
 
+    else if (evt.type == SDL_MOUSEBUTTONUP)
+    {
+        if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            quitState();
+            return false;
+        }
+    }
+
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
     m_scene.forwardEvent(evt);
     return false;
