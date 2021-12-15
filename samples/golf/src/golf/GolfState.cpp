@@ -152,21 +152,22 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
     ballEntity = {};
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("buns"))
-    //        {
-    //            auto active = m_freeCam.getComponent<cro::Camera>().active;
-    //            ImGui::Text("Active %s", active ? "true" : "false");
-    //            
-    //            /*if (ballEntity.isValid())
-    //            {
-    //                auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
-    //                ImGui::Text("Ball Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-    //            }*/
-    //        }
-    //        ImGui::End();
-    //    });
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("buns"))
+            {
+                //auto active = m_freeCam.getComponent<cro::Camera>().active;
+                //ImGui::Text("Active %s", active ? "true" : "false");
+                
+                /*if (ballEntity.isValid())
+                {
+                    auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
+                    ImGui::Text("Ball Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+                }*/
+                ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 256.f, 256.f }, {0.f, 1.f}, { 1.f, 0.f });
+            }
+            ImGui::End();
+        });
 #endif
 }
 
@@ -700,6 +701,7 @@ bool GolfState::simulate(float dt)
 void GolfState::render()
 {
     //render reflections first
+    m_uiScene.getActiveCamera().getComponent<cro::Camera>().renderFlags = RenderFlags::Reflection;
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     auto oldVP = cam.viewport;
 
@@ -708,13 +710,14 @@ void GolfState::render()
     cam.setActivePass(cro::Camera::Pass::Reflection);
     cam.reflectionBuffer.clear(cro::Colour::Red);
     m_gameScene.render(cam.reflectionBuffer);
+    m_uiScene.render(cam.reflectionBuffer);
     cam.reflectionBuffer.display();
 
     cam.setActivePass(cro::Camera::Pass::Final);
     cam.viewport = oldVP;
 
     //then render scene
-    glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for
+    glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for... snow maybe?
     m_gameSceneTexture.clear();
     m_gameScene.render(m_gameSceneTexture);
 #ifdef CRO_DEBUG_
@@ -732,6 +735,7 @@ void GolfState::render()
         m_gameScene.setActiveCamera(oldCam);
     }
 
+    m_uiScene.getActiveCamera().getComponent<cro::Camera>().renderFlags = ~RenderFlags::Reflection;
     m_uiScene.render(*GolfGame::getActiveTarget());
 }
 

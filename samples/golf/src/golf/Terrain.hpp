@@ -36,8 +36,9 @@ struct RenderFlags final
 {
     enum
     {
-        MiniMap   = 0x1,
-        MiniGreen = 0x2
+        MiniMap    = 0x1,
+        MiniGreen  = 0x2,
+        Reflection = 0x4
     };
 };
 

@@ -59,8 +59,7 @@ using namespace cro;
 
 RenderSystem2D::RenderSystem2D(MessageBus& mb)
     : System        (mb, typeid(RenderSystem2D)),
-    m_sortOrder     (DepthAxis::Z),
-    m_filterFlags   (std::numeric_limits<std::uint64_t>::max())
+    m_sortOrder     (DepthAxis::Z)
 {
     requireComponent<Drawable2D>();
     requireComponent<Transform>();
@@ -215,7 +214,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
         const auto& tx = entity.getComponent<cro::Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();
 
-        if ((m_filterFlags & drawable.m_filterFlags) &&
+        if ((camComponent.renderFlags & drawable.m_filterFlags) &&
             drawable.m_shader && !drawable.m_updateBufferData)
         {
             //apply shader

@@ -279,16 +279,15 @@ bool GameState::handleEvent(const cro::Event& evt)
 #ifdef CRO_DEBUG_
         case SDLK_F4:
         {
-            auto flags = m_gameScene.getSystem<cro::RenderSystem2D>()->getFilterFlags();
-            if (flags & TwoDeeFlags::Debug)
+            auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+            if (cam.renderFlags & TwoDeeFlags::Debug)
             {
-                flags &= ~TwoDeeFlags::Debug;
+                cam.renderFlags &= ~TwoDeeFlags::Debug;
             }
             else
             {
-                flags |= TwoDeeFlags::Debug;
+                cam.renderFlags |= TwoDeeFlags::Debug;
             }
-            m_gameScene.getSystem<cro::RenderSystem2D>()->setFilterFlags(flags);
         }
             break;
         /*case SDLK_1:
@@ -532,9 +531,7 @@ void GameState::addSystems()
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     //m_gameScene.addSystem<cro::DeferredRenderSystem>(mb).setEnvironmentMap(m_environmentMap);
-#ifdef CRO_DEBUG_
-    m_gameScene.addSystem<cro::RenderSystem2D>(mb)->setFilterFlags(~TwoDeeFlags::Debug);
-#endif
+
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
 
     m_gameScene.addDirector<DayNightDirector>();
