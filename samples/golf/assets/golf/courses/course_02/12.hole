@@ -12,7 +12,7 @@ hole 12
     {
         model = "assets/golf/models/boat02.cmt"
         position = 289.764069,-1.059266,-77.184418
-        rotation = 57.770038
+        rotation = 237.804019
     }
 
     prop
@@ -64,9 +64,15 @@ hole 12
 
     prop
     {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 257.294098,1.420607,-163.643951
+        rotation = 72.146248
+    }
+
+    prop
+    {
         model = "assets/golf/models/crane.cmt"
         position = 257.294098,1.420607,-163.643951
         rotation = 37.501893
     }
-
 }

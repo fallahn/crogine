@@ -386,8 +386,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
             switch (evt.caxis.axis)
             {
             default: break;
-            case cro::GameController::AxisLeftY:
-                scrollScores(cro::Util::Maths::sgn(evt.caxis.value) * 19);
+            case cro::GameController::AxisRightY:
+                if (std::abs(evt.caxis.value) > 10000)
+                {
+                    scrollScores(cro::Util::Maths::sgn(evt.caxis.value) * 19);
+                }
                 break;
             }
         }
