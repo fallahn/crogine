@@ -52,8 +52,8 @@ ConfigProperty::ConfigProperty(const std::string& name, const std::string& value
     m_value(value), m_isStringValue(false)
 {
     m_isStringValue = !value.empty()
-        && value.front() == '\"'
-        && value.back() == '\"';
+        && ((value.front() == '\"' && value.back() == '\"')
+        || value.find(' ') != std::string::npos);
 }
 
 void ConfigProperty::setValue(const std::string& value)
@@ -394,11 +394,7 @@ std::vector<ConfigObject>& ConfigObject::getObjects()
 
 ConfigProperty& ConfigObject::addProperty(const std::string& name, const std::string& value)
 {
-    bool stringValue = !value.empty()
-        && value.front() == '\"'
-        && value.back() == '\"';
-
-    m_properties.emplace_back(name, value).m_isStringValue = stringValue;
+    m_properties.emplace_back(name, value);
     m_properties.back().setParent(this);
     return m_properties.back();
 }
