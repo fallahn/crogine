@@ -164,7 +164,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                     auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
                     ImGui::Text("Ball Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
                 }*/
-                ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 256.f, 256.f }, {0.f, 1.f}, { 1.f, 0.f });
+                ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 512.f, 512.f }, {0.f, 1.f}, { 1.f, 0.f });
             }
             ImGui::End();
         });
@@ -701,7 +701,11 @@ bool GolfState::simulate(float dt)
 void GolfState::render()
 {
     //render reflections first
-    m_uiScene.getActiveCamera().getComponent<cro::Camera>().renderFlags = RenderFlags::Reflection;
+    auto& uiCam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
+    uiCam.renderFlags = RenderFlags::Reflection;
+
+    //uiCam.setOrthographic(0.f, 680.f, 0.f, 480.f, -2.f, 10.f);
+
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     auto oldVP = cam.viewport;
 
@@ -715,6 +719,8 @@ void GolfState::render()
 
     cam.setActivePass(cro::Camera::Pass::Final);
     cam.viewport = oldVP;
+
+    //uiCam.setOrthographic(0.f, 640.f, 0.f, 480.f, -2.f, 10.f);
 
     //then render scene
     glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for... snow maybe?
@@ -735,7 +741,7 @@ void GolfState::render()
         m_gameScene.setActiveCamera(oldCam);
     }
 
-    m_uiScene.getActiveCamera().getComponent<cro::Camera>().renderFlags = ~RenderFlags::Reflection;
+    uiCam.renderFlags = ~RenderFlags::Reflection;
     m_uiScene.render(*GolfGame::getActiveTarget());
 }
 
@@ -1557,10 +1563,13 @@ void GolfState::buildScene()
     cam.resizeCallback = updateView;
     updateView(cam);
 
+    static const std::uint32_t ReflectionMapSize = 512u;
+
     //used by transition callback to interp camera
     camEnt.addComponent<TargetInfo>().waterPlane = waterEnt;
     camEnt.getComponent<TargetInfo>().targetLookAt = m_holeData[0].target;
-    cam.reflectionBuffer.create(1024, 1024);
+    cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+
 
     //create an overhead camera
     auto setPerspective = [](cro::Camera& cam)
@@ -1581,7 +1590,7 @@ void GolfState::buildScene()
         cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
-    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 80.f * 80.f;
@@ -1603,7 +1612,7 @@ void GolfState::buildScene()
         cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
-    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 30.f * 30.f;
@@ -1618,7 +1627,7 @@ void GolfState::buildScene()
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = updateView;
-    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();

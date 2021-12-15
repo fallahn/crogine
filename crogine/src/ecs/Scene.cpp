@@ -603,7 +603,6 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
 
     //make sure we're using the active viewport
     //generic target size - this might be a buffer not the window!
-    glm::vec2 size(rt.getSize());
     std::array<std::int32_t, 4u> previousViewport;
     glCheck(glGetIntegerv(GL_VIEWPORT, previousViewport.data()));
 
