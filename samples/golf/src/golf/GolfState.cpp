@@ -1752,7 +1752,7 @@ void GolfState::initAudio()
             if (md.loadFromFile("assets/golf/models/plane.cmt"))
             {
                 static constexpr glm::vec3 Start(-32.f, 60.f, 20.f);
-                static constexpr glm::vec3 End(353.f, 60.f, -220.f);
+                static constexpr glm::vec3 End(352.f, 60.f, -220.f);
 
                 entity = m_gameScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition(Start);
@@ -1774,7 +1774,7 @@ void GolfState::initAudio()
                     float scale = std::max(1.f - (currLen / MaxLen), 0.001f); //can't scale to 0 because it breaks normalizing the right vector above
                     tx.setScale({ scale, scale, scale });
 
-                    if (tx.getPosition().x > MapSize.x - Start.x)
+                    if (tx.getPosition().x > End.x)
                     {
                         tx.setPosition(Start);
                         e.getComponent<cro::Callback>().active = false;

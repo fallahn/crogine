@@ -670,12 +670,56 @@ void DrivingState::initAudio()
             entity.getComponent<cro::AudioEmitter>().setLooped(false);
             auto plane02 = entity;
 
+            cro::ModelDefinition md(m_resources);
+            cro::Entity planeEnt;
+            if (md.loadFromFile("assets/golf/models/plane.cmt"))
+            {
+                static constexpr glm::vec3 Start(-132.f, 60.f, 20.f);
+                static constexpr glm::vec3 End(252.f, 60.f, -220.f);
+
+                entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition(Start);
+                entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 32.f * cro::Util::Const::degToRad);
+                entity.getComponent<cro::Transform>().setScale({ 0.01f, 0.01f, 0.01f });
+                md.createModel(entity);
+
+                entity.addComponent<cro::Callback>().function =
+                    [](cro::Entity e, float dt)
+                {
+                    static constexpr float Speed = 10.f;
+                    const float MaxLen = glm::length2((Start - End) / 2.f);
+
+                    auto& tx = e.getComponent<cro::Transform>();
+                    auto dir = glm::normalize(tx.getRightVector()); //scaling means this isn't normalised :/
+                    tx.move(dir * Speed * dt);
+
+                    float currLen = glm::length2((Start + ((Start + End) / 2.f)) - tx.getPosition());
+                    float scale = std::max(1.f - (currLen / MaxLen), 0.001f); //can't scale to 0 because it breaks normalizing the right vector above
+                    tx.setScale({ scale, scale, scale });
+
+                    if (tx.getPosition().x > End.x)
+                    {
+                        tx.setPosition(Start);
+                        e.getComponent<cro::Callback>().active = false;
+                    }
+                };
+                entity.getComponent<cro::Callback>().active = true;
+
+                auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+                setTexture(md, material);
+                entity.getComponent<cro::Model>().setMaterial(0, material);
+
+                planeEnt = entity;
+            }
+
+
             entity = m_gameScene.createEntity();
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().setUserData<std::pair<float, float>>(0.f, static_cast<float>(cro::Util::Random::value(32, 64)));
             entity.getComponent<cro::Callback>().function =
-                [plane01, plane02](cro::Entity e, float dt) mutable
+                [plane01, plane02, planeEnt](cro::Entity e, float dt) mutable
             {
+                //TODO we want to temp disable this while a sound is playing
                 auto& [currTime, timeOut] = e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>();
                 currTime += dt;
 
@@ -688,6 +732,11 @@ void DrivingState::initAudio()
                     if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
                     {
                         ent.getComponent<cro::AudioEmitter>().play();
+
+                        if (planeEnt.isValid())
+                        {
+                            planeEnt.getComponent<cro::Callback>().active = true;
+                        }
                     }
                 }
             };
