@@ -96,6 +96,7 @@ struct ShaderID final
         Cel,
         CelTextured,
         Course,
+        Ball,
         Slope,
         Minimap,
         TutorialSlope,
@@ -149,6 +150,15 @@ static inline constexpr float smoothstep(float edge0, float edge1, float x)
 {
     float t = clamp((x - edge0) / (edge1 - edge0));
     return t * t * (3.f - 2.f * t);
+}
+
+static inline glm::quat rotationFromNormal(glm::vec3 normal)
+{
+    glm::vec3 rotationY = normal;
+    glm::vec3 rotationX = glm::cross(glm::vec3(0.f, 1.f, 0.f), rotationY);
+    glm::vec3 rotationZ = glm::cross(rotationY, rotationX);
+    glm::mat3 rotation(rotationX.x, rotationY.x, rotationZ.x, rotationX.y, rotationY.y, rotationZ.y, rotationX.z, rotationY.z, rotationZ.z);
+    return glm::quat_cast(rotation);
 }
 
 static inline glm::vec2 calcVPSize()

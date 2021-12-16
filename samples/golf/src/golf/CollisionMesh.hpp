@@ -42,6 +42,7 @@ source distribution.
 
 struct TerrainResult final
 {
+    glm::vec3 normal = glm::vec3(0.f);
     float height = WaterLevel;
     std::int32_t terrain = TerrainID::Scrub;
     bool wasRayHit = false;

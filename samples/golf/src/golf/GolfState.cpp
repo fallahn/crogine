@@ -755,14 +755,21 @@ void GolfState::loadAssets()
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
 
     //cel shaded material
-    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n");
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
+    m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
+    shader = &m_resources.shaders.get(ShaderID::Ball);
+    m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n");
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
-    m_materialIDs[MaterialID::Course] = m_materialIDs[MaterialID::CelTextured];
+
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
+    shader = &m_resources.shaders.get(ShaderID::Course);
+    m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
@@ -1647,12 +1654,13 @@ void GolfState::buildScene()
         cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
-    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<FpsCamera>();
-    //setPerspective(camEnt.getComponent<cro::Camera>());
+    setPerspective(camEnt.getComponent<cro::Camera>());
     m_freeCam = camEnt;
+
 #endif
 
 
@@ -1892,7 +1900,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         m_ballModels.begin()->second->createModel(entity);
     }
     
-    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Ball]));
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -2442,11 +2450,11 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     target *= 1.f - ((1.f - 0.08f) * distNorm);
     target += position;
 
-    auto [terrainHeight, terrainType, _] = m_collisionMesh.getTerrain(position);
+    auto result = m_collisionMesh.getTerrain(position);
 
-    camEnt.getComponent<cro::Transform>().setPosition({ position.x, terrainHeight + height, position.z });
+    camEnt.getComponent<cro::Transform>().setPosition({ position.x, result.height + height, position.z });
 
-    auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), glm::vec3(target.x, terrainHeight + (height * heightMultiplier), target.z), cro::Transform::Y_AXIS);
+    auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), glm::vec3(target.x, result.height + (height * heightMultiplier), target.z), cro::Transform::Y_AXIS);
     camEnt.getComponent<cro::Transform>().setRotation(glm::inverse(lookat));
 
     auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
@@ -2660,8 +2668,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             rotation += cro::Util::Const::PI;
         }
 
-        e.getComponent<cro::Transform>().setPosition(player.position);
+        e.getComponent<cro::Transform>().setPosition(player.position + glm::vec3(0.f, 0.01f, 0.f));
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+
+        /*auto result = m_collisionMesh.getTerrain(player.position);
+        auto rot = rotationFromNormal(result.normal);
+        e.getComponent<cro::Transform>().rotate(rot);*/
 
         e.getComponent<cro::Model>().setHidden(player.terrain == TerrainID::Green);
         e.getComponent<cro::Callback>().active = true;

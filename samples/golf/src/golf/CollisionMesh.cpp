@@ -118,6 +118,7 @@ TerrainResult CollisionMesh::getTerrain(glm::vec3 position) const
     {
         retVal.height = res.m_hitPointWorld.y();
         retVal.terrain = res.m_collisionObject->getUserIndex(); //contains the terrain
+        retVal.normal = { res.m_hitNormalWorld.getX(), res.m_hitNormalWorld.getY(), res.m_hitNormalWorld.getZ() };
         retVal.wasRayHit = true;
     }
 

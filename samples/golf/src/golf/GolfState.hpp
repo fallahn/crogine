@@ -113,6 +113,7 @@ private:
             Cel,
             CelTextured,
             Course,
+            Ball,
 
             Count
         };

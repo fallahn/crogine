@@ -132,7 +132,9 @@ static const std::string CelVertexShader = R"(
     uniform mat4 u_viewProjectionMatrix;
 
     uniform vec4 u_clipPlane;
+    uniform vec3 u_cameraWorldPosition;
 
+    VARYING_OUT float v_ditherAmount;
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec4 v_colour;
 #if defined (TEXTURED)
@@ -159,8 +161,17 @@ static const std::string CelVertexShader = R"(
 #if defined (NORMAL_MAP)
     v_normalTexCoord = vec2(position.x / MapSize.x, -position.z / MapSize.y);
 #endif
-
         gl_ClipDistance[0] = dot(position, u_clipPlane);
+
+#if defined(DITHERED)
+        const float fadeDistance = 4.0;
+        const float nearFadeDistance = 2.0;
+        const float farFadeDistance = 360.f;
+        float distance = length(position.xyz - u_cameraWorldPosition);
+
+        v_ditherAmount = pow(clamp((distance - nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
+        v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
+#endif
     })";
 
 static const std::string CelFragmentShader = R"(
@@ -178,8 +189,43 @@ static const std::string CelFragmentShader = R"(
 
     VARYING_IN vec3 v_normal;
     VARYING_IN vec4 v_colour;
+    VARYING_IN float v_ditherAmount;
 
     OUTPUT
+
+    //function based on example by martinsh.blogspot.com
+    const int MatrixSize = 8;
+    float findClosest(int x, int y, float c0)
+    {
+        /* 8x8 Bayer ordered dithering */
+        /* pattern. Each input pixel */
+        /* is scaled to the 0..63 range */
+        /* before looking in this table */
+        /* to determine the action. */
+
+        const int dither[64] = int[64](
+         0, 32, 8, 40, 2, 34, 10, 42, 
+        48, 16, 56, 24, 50, 18, 58, 26, 
+        12, 44, 4, 36, 14, 46, 6, 38, 
+        60, 28, 52, 20, 62, 30, 54, 22, 
+         3, 35, 11, 43, 1, 33, 9, 41, 
+        51, 19, 59, 27, 49, 17, 57, 25,
+        15, 47, 7, 39, 13, 45, 5, 37,
+        63, 31, 55, 23, 61, 29, 53, 21 );
+
+        float limit = 0.0;
+        if (x < MatrixSize)
+        {
+            limit = (dither[y * MatrixSize + x] + 1) / 64.0;
+        }
+
+        if (c0 < limit)
+        {
+            return 0.0;
+        }
+        return 1.0;
+    }
+
 
     const float Quantise = 10.0;
 
@@ -229,6 +275,15 @@ static const std::string CelFragmentShader = R"(
         colour.rgb *= amount;
 
         FRAG_OUT = vec4(colour.rgb, 1.0);
+
+#if defined(DITHERED)
+        vec2 xy = gl_FragCoord.xy;
+        int x = int(mod(xy.x, MatrixSize));
+        int y = int(mod(xy.y, MatrixSize));
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+
+        if(alpha < 0.1) discard;
+#endif
     })";
 
 

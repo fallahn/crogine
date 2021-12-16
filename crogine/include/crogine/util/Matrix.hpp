@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/mat4x4.hpp>
 
+#include <utility>
+
 namespace cro
 {
     namespace Util
@@ -72,6 +74,18 @@ namespace cro
             \param outScale A reference to a vec 3 which will receive the scale values
             */
             CRO_EXPORT_API bool decompose(const glm::mat4& in, glm::vec3& outTranslation, glm::quat& outRotation, glm::vec3& outScale);
+
+            /*!
+            \brief Returns a pair of floats containing the near and far plane values of the given projection matrix
+            \param projMat Projection matrix
+            \returns std::pair<float, float> Near nad Far plane values
+            */
+            static inline std::pair<float, float> getNearFar(glm::mat4 projMat)
+            {
+                auto c = projMat[2][2];
+                auto d = projMat[3][2];
+                return { (d / (c - 1.f)), (d / (c + 1.f)) };
+            }
         }
     }
 }
