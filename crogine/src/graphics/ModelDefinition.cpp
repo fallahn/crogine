@@ -295,6 +295,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         std::int32_t flags = instanced ? ShaderResource::Instanced : 0;
         bool smoothTextures = false;
         bool repeatTextures = false;
+        bool enableDepthTest = true;
         const auto& properties = mat.getProperties();
         for (const auto& p : properties)
         {
@@ -395,6 +396,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
             {
                 flags |= ShaderResource::AlphaClip;
             }
+            else if (name == "depth_test")
+            {
+                enableDepthTest = p.getValue<bool>();
+            }
         }
 
         if (lockRotation)
@@ -417,6 +422,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         auto matID = m_resources.materials.add(m_resources.shaders.get(shaderID));
         auto& material = m_resources.materials.get(matID);
         material.deferred = shaderType == ShaderResource::PBRDeferred;
+        material.enableDepthTest = enableDepthTest;
 
         //set a default mask colour - this is overwritten
         //below, if a custom property is found.

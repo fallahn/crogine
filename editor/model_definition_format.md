@@ -125,6 +125,10 @@ Models in crogine are described in a text format that can be loaded via the `Mod
             //left, bottom, width, height.
             subrect = 0.5,0.0,0.5,0.5
 
+            //depth testing can be disabled on a material, for example when rendering a wireframe
+            //this is optional and defaults to false.
+            depth_test = true
+
         }
 
         //Vertex lit materials support all of the above, plus accept these further properties

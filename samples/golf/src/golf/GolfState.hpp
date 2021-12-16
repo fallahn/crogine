@@ -125,6 +125,7 @@ private:
         enum
         {
             BallShadow,
+            PlayerShadow,
 
             Count
         };
