@@ -686,7 +686,7 @@ void DrivingState::initAudio()
                 entity.addComponent<cro::Callback>().function =
                     [](cro::Entity e, float dt)
                 {
-                    static constexpr float Speed = 10.f;
+                    static constexpr float Speed = 6.3f;
                     const float MaxLen = glm::length2((Start - End) / 2.f);
 
                     auto& tx = e.getComponent<cro::Transform>();
@@ -703,7 +703,6 @@ void DrivingState::initAudio()
                         e.getComponent<cro::Callback>().active = false;
                     }
                 };
-                entity.getComponent<cro::Callback>().active = true;
 
                 auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
                 setTexture(md, material);
@@ -753,6 +752,7 @@ void DrivingState::initAudio()
     }
     else
     {
+        m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>();
         LogE << "Invalid AudioScape file was found" << std::endl;
     }
 

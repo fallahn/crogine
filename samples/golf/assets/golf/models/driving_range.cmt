@@ -23,4 +23,15 @@ model driving_range
         diffuse = "assets/golf/images/scrub.png"
 
     }
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        blendmode = none
+        diffuse = "assets/golf/images/driving_range_02.png"
+        alpha_clip = 0.303000
+
+    }
 }

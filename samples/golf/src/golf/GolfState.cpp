@@ -1828,6 +1828,8 @@ void GolfState::initAudio()
     }
     else
     {
+        //still needs an emitter to stop crash playing non-loaded music
+        m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>();
         LogE << "Invalid AudioScape file was found" << std::endl;
     }
 
