@@ -2231,7 +2231,6 @@ void GolfState::removeClient(std::uint8_t clientID)
 void GolfState::setCurrentHole(std::uint32_t hole)
 {
     updateScoreboard();
-    m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
 
     //CRO_ASSERT(hole < m_holeData.size(), "");
     if (hole >= m_holeData.size())
@@ -3126,11 +3125,14 @@ void GolfState::startFlyBy()
             case 2:
                 //hope the player cam finished...
                 //tbh if this transition is replacing the existing one then
-                //we can remove the player cam transition completely. Probvlem is that it's
+                //we can remove the player cam transition completely. Problem is that it's
                 //created by setPlayer(), not setHole()
                 data.targets[3] = m_cameras[CameraID::Player].getComponent<cro::Transform>().getLocalTransform();
                 //data.ease = std::bind(&cro::Util::Easing::easeInSine, std::placeholders::_1);
                 data.speeds[2] = glm::length(glm::vec3(data.targets[2][3]) - glm::vec3(data.targets[3][3])) / MoveSpeed;
+
+                //play the transition music
+                m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
                 break;
             case 3:
                 //we're done here

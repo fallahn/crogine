@@ -62,7 +62,7 @@ audioscape ambience
 
     emitter incidental01
     {
-        path = "assets/golf/sound/ambience/plane.ogg"
+        path = "assets/golf/sound/ambience/inc01.ogg"
         streaming = true
         volume = 1.3
         mixer_channel = 1
@@ -72,9 +72,9 @@ audioscape ambience
 
     emitter incidental02
     {
-        path = "assets/golf/sound/ambience/plane02.ogg"
+        path = "assets/golf/sound/ambience/inc02.ogg"
         streaming = true
-        volume = 1.3
+        volume = 0.7
         mixer_channel = 1
         attenuation = 0
         looped = false
