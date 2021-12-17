@@ -156,6 +156,17 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("buns"))
             {
+                auto s = glm::vec2(m_gameSceneTexture.getSize());
+                ImGui::Text("Scene size: %3.3f, %3.3f", s.x, s.y);
+
+                auto s2 = glm::vec2(GolfGame::getActiveTarget()->getSize());
+                ImGui::Text("Output Size: %3.3f, %3.3f", s2.x, s2.y);
+
+                s2 /= m_viewScale;
+                ImGui::Text("Output Size (scaled): %3.3f, %3.3f", s2.x, s2.y);
+
+                ImGui::Text("Scale: %3.3f, %3.3f", m_viewScale.x, m_viewScale.y);
+
                 //auto active = m_freeCam.getComponent<cro::Camera>().active;
                 //ImGui::Text("Active %s", active ? "true" : "false");
                 
@@ -164,7 +175,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                     auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
                     ImGui::Text("Ball Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
                 }*/
-                ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 512.f, 512.f }, {0.f, 1.f}, { 1.f, 0.f });
+                //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 512.f, 512.f }, {0.f, 1.f}, { 1.f, 0.f });
             }
             ImGui::End();
         });
@@ -707,7 +718,17 @@ void GolfState::render()
     auto& uiCam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     uiCam.renderFlags = RenderFlags::Reflection;
 
-    //uiCam.setOrthographic(0.f, 680.f, 0.f, 480.f, -2.f, 10.f);
+    auto s = glm::vec2(m_gameSceneTexture.getSize());
+    auto s2 = glm::vec2(GolfGame::getActiveTarget()->getSize());
+    auto diff = (s - s2) / 2.f;
+    auto diffScaled = ((s - (s2 / m_viewScale)) / 2.f) * m_viewScale.y;
+
+    uiCam.setOrthographic(-diff.x, s.x-diff.x, -diffScaled.y, s.y-diffScaled.y, -2.f, 10.f);
+
+    float vpW = 1.f / m_viewScale.x;
+    float vpH = 1.f / m_viewScale.y;
+    uiCam.viewport = { (1.f - vpW) / 2.f, 0.f, vpW, vpH };
+
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     auto oldVP = cam.viewport;
@@ -723,7 +744,8 @@ void GolfState::render()
     cam.setActivePass(cro::Camera::Pass::Final);
     cam.viewport = oldVP;
 
-    //uiCam.setOrthographic(0.f, 640.f, 0.f, 480.f, -2.f, 10.f);
+    uiCam.setOrthographic(0.f, s2.x, 0.f, s2.y, -2.f, 10.f);
+    uiCam.viewport = { 0.f, 0.f, 1.f ,1.f };
 
     //then render scene
     glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for... snow maybe?
@@ -1574,12 +1596,13 @@ void GolfState::buildScene()
     cam.resizeCallback = updateView;
     updateView(cam);
 
-    static const std::uint32_t ReflectionMapSize = 512u;
+    static const std::uint32_t ReflectionMapSize = 1024u;
 
     //used by transition callback to interp camera
     camEnt.addComponent<TargetInfo>().waterPlane = waterEnt;
     camEnt.getComponent<TargetInfo>().targetLookAt = m_holeData[0].target;
     cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+    cam.reflectionBuffer.setSmooth(true);
 
 
     //create an overhead camera
@@ -1602,6 +1625,7 @@ void GolfState::buildScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 80.f * 80.f;
@@ -1624,6 +1648,7 @@ void GolfState::buildScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 30.f * 30.f;
@@ -1639,6 +1664,7 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = updateView;
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
@@ -1656,6 +1682,7 @@ void GolfState::buildScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<FpsCamera>();
@@ -1788,30 +1815,42 @@ void GolfState::initAudio()
                 planeEnt = entity;
             }
 
+            struct AudioData final
+            {
+                float currentTime = 0.f;
+                float timeout = static_cast<float>(cro::Util::Random::value(32, 64));
+                cro::Entity activeEnt;
+            };
 
             entity = m_gameScene.createEntity();
             entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().setUserData<std::pair<float, float>>(0.f, static_cast<float>(cro::Util::Random::value(32, 64)));
+            entity.getComponent<cro::Callback>().setUserData<AudioData>();
             entity.getComponent<cro::Callback>().function =
                 [plane01, plane02, planeEnt](cro::Entity e, float dt) mutable
             {
-                auto& [currTime, timeOut] = e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>();
-                currTime += dt;
-
-                if (currTime > timeOut)
+                auto& [currTime, timeOut, activeEnt] = e.getComponent<cro::Callback>().getUserData<AudioData>();
+                
+                if (!activeEnt.isValid()
+                    || activeEnt.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
                 {
-                    currTime = 0.f;
-                    timeOut = static_cast<float>(cro::Util::Random::value(120, 240));
+                    currTime += dt;
 
-                    auto ent = cro::Util::Random::value(0, 1) % 2 == 0 ? plane01 : plane02;
-                    if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                    if (currTime > timeOut)
                     {
-                        ent.getComponent<cro::AudioEmitter>().play();
+                        currTime = 0.f;
+                        timeOut = static_cast<float>(cro::Util::Random::value(120, 240));
 
-                        if (planeEnt.isValid())
+                        auto ent = cro::Util::Random::value(0, 1) % 2 == 0 ? plane01 : plane02;
+                        if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
                         {
-                            //starts model animation
-                            planeEnt.getComponent<cro::Callback>().active = true;
+                            ent.getComponent<cro::AudioEmitter>().play();
+                            activeEnt = ent;
+
+                            if (planeEnt.isValid())
+                            {
+                                //starts model animation
+                                planeEnt.getComponent<cro::Callback>().active = true;
+                            }
                         }
                     }
                 }
@@ -2249,7 +2288,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             //index should be updated by now (as this is a callback)
             //so we're actually targetting the next hole entity
             auto entity = m_holeData[m_currentHole].modelEntity;
-            entity.getComponent<cro::Model>().setHidden(false);
+            //entity.getComponent<cro::Model>().setHidden(false);
             entity.getComponent<cro::Transform>().setScale({ 0.f, 1.f, 0.f });
             entity.getComponent<cro::Callback>().setUserData<float>(0.f);
             entity.getComponent<cro::Callback>().active = true;

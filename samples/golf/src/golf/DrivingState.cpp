@@ -711,30 +711,41 @@ void DrivingState::initAudio()
                 planeEnt = entity;
             }
 
+            struct AudioData final
+            {
+                float currentTime = 0.f;
+                float timeout = static_cast<float>(cro::Util::Random::value(32, 64));
+                cro::Entity activeEnt;
+            };
 
             entity = m_gameScene.createEntity();
             entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().setUserData<std::pair<float, float>>(0.f, static_cast<float>(cro::Util::Random::value(32, 64)));
+            entity.getComponent<cro::Callback>().setUserData<AudioData>();
             entity.getComponent<cro::Callback>().function =
                 [plane01, plane02, planeEnt](cro::Entity e, float dt) mutable
             {
-                //TODO we want to temp disable this while a sound is playing
-                auto& [currTime, timeOut] = e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>();
-                currTime += dt;
+                auto& [currTime, timeOut, activeEnt] = e.getComponent<cro::Callback>().getUserData<AudioData>();
 
-                if (currTime > timeOut)
+                if (!activeEnt.isValid()
+                    || activeEnt.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
                 {
-                    currTime = 0.f;
-                    timeOut = static_cast<float>(cro::Util::Random::value(120, 240));
+                    currTime += dt;
 
-                    auto ent = cro::Util::Random::value(0, 1) % 2 == 0 ? plane01 : plane02;
-                    if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                    if (currTime > timeOut)
                     {
-                        ent.getComponent<cro::AudioEmitter>().play();
+                        currTime = 0.f;
+                        timeOut = static_cast<float>(cro::Util::Random::value(120, 240));
 
-                        if (planeEnt.isValid())
+                        auto ent = cro::Util::Random::value(0, 1) % 2 == 0 ? plane01 : plane02;
+                        if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
                         {
-                            planeEnt.getComponent<cro::Callback>().active = true;
+                            ent.getComponent<cro::AudioEmitter>().play();
+                            activeEnt = ent;
+
+                            if (planeEnt.isValid())
+                            {
+                                planeEnt.getComponent<cro::Callback>().active = true;
+                            }
                         }
                     }
                 }
