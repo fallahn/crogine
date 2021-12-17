@@ -398,8 +398,6 @@ void DrivingState::createUI()
 
             if (scale == 0)
             {
-                glm::vec2 offset = glm::vec2(0.f);
-
                 //update render
                 updateMinimap();
                 e.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
@@ -507,7 +505,6 @@ void DrivingState::createUI()
 
         auto vpSize = calcVPSize();
         m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
-        auto texSize = glm::vec2(m_backgroundTexture.getSize());
 
         courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -0.1f));
         courseEnt.getComponent<cro::Transform>().setScale(m_viewScale);

@@ -92,11 +92,6 @@ bool cro::Util::Frustum::visible(FrustumData frustum, const glm::mat4& viewSpace
     obb.extents *= 0.5f;
 
     {
-        glm::vec3 M = { 0.f, 0.f, 1.f };
-        float MoX = 0.f;
-        float MoY = 0.f;
-        float MoZ = 1.f;
-
         //projected center of our OBB
         float MoC = obb.centre.z;
         //projected size of OBB

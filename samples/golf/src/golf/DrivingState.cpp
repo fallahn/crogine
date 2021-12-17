@@ -612,8 +612,6 @@ void DrivingState::loadAssets()
 void DrivingState::initAudio()
 {
     //8 evenly spaced points with ambient audio
-    auto envOffset = RangeSize / 2.f;
-    const auto rangeOffset = glm::vec3(RangeSize.x / 2.f, 0.f, -RangeSize.y / 2.f);
     cro::AudioScape as;
     if (as.loadFromFile("assets/golf/sound/ambience.xas", m_resources.audio))
     {
