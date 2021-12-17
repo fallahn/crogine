@@ -123,6 +123,8 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
         {
             Logger::log("Unable to create requested context version");
             Logger::log("Returned version was: " + std::to_string(maj) + "." + std::to_string(min));
+
+            return false;// because out shader swill fail to compile.
         }
         LOG("Created OpenGL context version: " + std::to_string(maj) + "." + std::to_string(min), Logger::Type::Info);
     }

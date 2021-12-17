@@ -49,7 +49,7 @@ Drawable2D::Drawable2D()
     m_vbo               (0),
     m_vao               (0),
     m_updateBufferData  (false),
-    m_filterFlags       (DefaultFilterFlag),
+    m_renderFlags       (DefaultRenderFlag),
     m_croppingArea      (std::numeric_limits<float>::lowest() / 2.f, std::numeric_limits<float>::lowest() / 2.f,
                             std::numeric_limits<float>::max(), std::numeric_limits<float>::max()),
     m_cropped           (false),

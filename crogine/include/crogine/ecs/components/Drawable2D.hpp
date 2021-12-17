@@ -208,31 +208,32 @@ namespace cro
 
         /*!
         \brief Set filter flags for rendering.
-        Filter flags allow certain drawables to be omitted from a drawing
-        pass by the render system. This is useful for multipass effects which
-        require rendering different entities to different render buffers.
-        For example lighting objects may be flagged as such so that
-        when the lighting only flag is active on the render system only
-        illuminating objects are rendered to the output.
+        Render flags allow certain drawables to be omitted from a drawing
+        pass by the render system, by doing a bitwise AND comparison with
+        the render flags of the active camera. This is useful for multipass
+        effects which require rendering different entities to different 
+        render buffers. For example lighting objects may be flagged as such
+        so that when the lighting only flag is active on the render system 
+        only illuminating objects are rendered to the output.
         Flags are bitwise values so that drawables can be categorised in
         multiple filters by setting the appropriate flags. The default value
-        of the RenderSystem2D is uint64_t::max - ie all flags set (so will 
+        of a camera is uint64_t::max - ie all flags set (so will 
         always pass the render filter).
         \param flags a bitmask of filter flags
         */
-        void setFilterFlags(std::uint64_t flags) { m_filterFlags = flags; }
+        void setRenderFlags(std::uint64_t flags) { m_renderFlags = flags; }
 
         /*!
-        \brief Returns the current filter flags of this drawable.
-        \see setFilterFlags()
+        \brief Returns the current render flags of this drawable.
+        \see setRenderFlags()
         */
-        std::uint64_t getFilterFlags() const { return m_filterFlags; }
+        std::uint64_t getRenderFlags() const { return m_renderFlags; }
 
         /*!
         \brief default flag value for drawables
         0b1000000000000000000000000000000000000000000000000000000000000000
         */
-        static constexpr std::uint64_t DefaultFilterFlag = (1ull << 63);
+        static constexpr std::uint64_t DefaultRenderFlag = (1ull << 63);
 
 
         /*!
@@ -295,7 +296,7 @@ namespace cro
 
         FloatRect m_localBounds;
 
-        std::uint64_t m_filterFlags;
+        std::uint64_t m_renderFlags;
 
         //used to crop drawables
         FloatRect m_croppingArea;

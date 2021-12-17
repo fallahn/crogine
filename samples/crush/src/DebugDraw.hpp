@@ -90,7 +90,7 @@ static inline cro::Entity addBoxDebug(cro::Entity parent, cro::Scene& scene, cro
     verts.emplace_back(glm::vec2(bb.left, bb.bottom), cro::Colour::Transparent);
 
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-    entity.getComponent<cro::Drawable2D>().setFilterFlags(TwoDeeFlags::Debug);
+    entity.getComponent<cro::Drawable2D>().setRenderFlags(TwoDeeFlags::Debug);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&,parent](cro::Entity e, float)

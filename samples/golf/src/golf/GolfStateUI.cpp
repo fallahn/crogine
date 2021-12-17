@@ -146,7 +146,7 @@ void GolfState::buildUI()
     origin.x -= (bounds.width - (bounds.width - origin.x));
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin(origin);
-    entity.addComponent<cro::Drawable2D>().setFilterFlags(RenderFlags::Reflection);
+    entity.addComponent<cro::Drawable2D>().setRenderFlags(RenderFlags::Reflection);
     entity.addComponent<cro::Sprite>();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
