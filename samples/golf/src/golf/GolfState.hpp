@@ -173,6 +173,7 @@ private:
     std::array<cro::Entity, CameraID::Count> m_cameras = {};
     std::int32_t m_currentCamera;
     void setActiveCamera(std::int32_t);
+    void setPlayerPosition(cro::Entity, glm::vec3);
 
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;
@@ -223,6 +224,7 @@ private:
 
     cro::Entity m_courseEnt;
     cro::Entity m_waterEnt;
+    cro::Entity m_uiReflectionCam;
 
     void buildUI();
     void showCountdown(std::uint8_t);

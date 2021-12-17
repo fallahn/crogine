@@ -715,20 +715,7 @@ bool GolfState::simulate(float dt)
 void GolfState::render()
 {
     //render reflections first
-    auto& uiCam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
-    uiCam.renderFlags = RenderFlags::Reflection;
-
-    auto s = glm::vec2(m_gameSceneTexture.getSize());
-    auto s2 = glm::vec2(GolfGame::getActiveTarget()->getSize());
-    auto diff = (s - s2) / 2.f;
-    auto diffScaled = ((s - (s2 / m_viewScale)) / 2.f) * m_viewScale.y;
-
-    uiCam.setOrthographic(-diff.x, s.x-diff.x, -diffScaled.y, s.y-diffScaled.y, -2.f, 10.f);
-
-    float vpW = 1.f / m_viewScale.x;
-    float vpH = 1.f / m_viewScale.y;
-    uiCam.viewport = { (1.f - vpW) / 2.f, 0.f, vpW, vpH };
-
+    auto uiCam = m_uiScene.setActiveCamera(m_uiReflectionCam);
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     auto oldVP = cam.viewport;
@@ -736,16 +723,15 @@ void GolfState::render()
     cam.viewport = { 0.f,0.f,1.f,1.f };
 
     cam.setActivePass(cro::Camera::Pass::Reflection);
+    cam.renderFlags = RenderFlags::Reflection;
     cam.reflectionBuffer.clear(cro::Colour::Red);
     m_gameScene.render(cam.reflectionBuffer);
     m_uiScene.render(cam.reflectionBuffer);
     cam.reflectionBuffer.display();
 
     cam.setActivePass(cro::Camera::Pass::Final);
+    cam.renderFlags = RenderFlags::All;
     cam.viewport = oldVP;
-
-    uiCam.setOrthographic(0.f, s2.x, 0.f, s2.y, -2.f, 10.f);
-    uiCam.viewport = { 0.f, 0.f, 1.f ,1.f };
 
     //then render scene
     glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for... snow maybe?
@@ -766,7 +752,7 @@ void GolfState::render()
         m_gameScene.setActiveCamera(oldCam);
     }
 
-    uiCam.renderFlags = ~RenderFlags::Reflection;
+    m_uiScene.setActiveCamera(uiCam);
     m_uiScene.render(*GolfGame::getActiveTarget());
 }
 
@@ -1418,7 +1404,7 @@ void GolfState::buildScene()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     entity.getComponent<cro::Model>().setHidden(true);
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection));
 
 
     //draw the flag pole as a single line which can be
@@ -1521,7 +1507,7 @@ void GolfState::buildScene()
         }
     };
     m_modelDefs[ModelID::PlayerShadow]->createModel(entity);
-
+    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::Reflection);
 
     //carts
     md.loadFromFile("assets/golf/models/cart.cmt");
@@ -1582,9 +1568,7 @@ void GolfState::buildScene()
         cmd.targetFlags = CommandID::UI::PlayerSprite;
         cmd.action = [&](cro::Entity e, float)
         {
-            const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
-            auto pos = camera.coordsToPixel(m_currentPlayer.position, m_gameSceneTexture.getSize());
-            e.getComponent<cro::Transform>().setPosition(pos);
+            setPlayerPosition(e, m_currentPlayer.position);
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
@@ -2288,7 +2272,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             //index should be updated by now (as this is a callback)
             //so we're actually targetting the next hole entity
             auto entity = m_holeData[m_currentHole].modelEntity;
-            //entity.getComponent<cro::Model>().setHidden(false);
+            entity.getComponent<cro::Model>().setHidden(false);
             entity.getComponent<cro::Transform>().setScale({ 0.f, 1.f, 0.f });
             entity.getComponent<cro::Callback>().setUserData<float>(0.f);
             entity.getComponent<cro::Callback>().active = true;
@@ -2719,11 +2703,9 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
             }
 
+            //update sprite position
+            setPlayerPosition(e, player.position);
 
-            const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
-            auto pos = camera.coordsToPixel(player.position, m_gameSceneTexture.getSize());
-            e.getComponent<cro::Transform>().setPosition(pos);
-            
             //make sure we reset to player camera just in case
             setActiveCamera(CameraID::Player);
         }
@@ -3281,6 +3263,22 @@ void GolfState::setActiveCamera(std::int32_t camID)
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
+}
+
+void GolfState::setPlayerPosition(cro::Entity e, glm::vec3 position)
+{
+    const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
+    auto pos = camera.coordsToPixel(position, m_gameSceneTexture.getSize());
+    e.getComponent<cro::Transform>().setPosition(pos);
+
+    float playerY = pos.y;
+
+    auto reflectPos = position;
+    reflectPos.y -= WaterLevel;
+    reflectPos.y = WaterLevel - reflectPos.y;
+
+    pos = camera.coordsToPixel(reflectPos, m_gameSceneTexture.getSize());
+    e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>().second = pos.y - playerY;
 }
 
 void GolfState::toggleFreeCam()

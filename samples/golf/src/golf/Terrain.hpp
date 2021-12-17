@@ -31,14 +31,17 @@ source distribution.
 
 #include <array>
 #include <string>
+#include <limits>
 
 struct RenderFlags final
 {
     enum
     {
-        MiniMap    = 0x1,
-        MiniGreen  = 0x2,
-        Reflection = 0x4
+        MiniMap = 0x1,
+        MiniGreen = 0x2,
+        Reflection = 0x4,
+
+        All = std::numeric_limits<std::uint64_t>::max()
     };
 };
 
