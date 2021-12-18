@@ -1,0 +1,27 @@
+model willow01
+{
+    mesh = assets/golf/models/willow01.cmb
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        blendmode = none
+        diffuse = "assets/golf/images/willow_texture.png"
+
+    }
+    material Unlit
+    {
+        name = "Leaves"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        blendmode = none
+        diffuse = "assets/golf/images/willow_texture.png"
+        alpha_clip = 0.184000
+
+    }
+}

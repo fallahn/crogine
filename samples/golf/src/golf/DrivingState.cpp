@@ -705,6 +705,14 @@ void DrivingState::initAudio()
                 auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
                 setTexture(md, material);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
+                
+                //engine
+                entity.addComponent<cro::AudioEmitter>(); //always needs one in case audio doesn't exist
+                if (as.hasEmitter("plane"))
+                {
+                    entity.getComponent<cro::AudioEmitter>() = as.getEmitter("plane");
+                    entity.getComponent<cro::AudioEmitter>().setLooped(false);
+                }
 
                 planeEnt = entity;
             }
@@ -734,15 +742,24 @@ void DrivingState::initAudio()
                         currTime = 0.f;
                         timeOut = static_cast<float>(cro::Util::Random::value(120, 240));
 
-                        auto ent = cro::Util::Random::value(0, 1) % 2 == 0 ? plane01 : plane02;
-                        if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                        auto id = cro::Util::Random::value(0, 2);
+                        if (id == 0)
                         {
-                            ent.getComponent<cro::AudioEmitter>().play();
-                            activeEnt = ent;
-
+                            //fly the plane
                             if (planeEnt.isValid())
                             {
                                 planeEnt.getComponent<cro::Callback>().active = true;
+                                planeEnt.getComponent<cro::AudioEmitter>().play();
+                                activeEnt = planeEnt;
+                            }
+                        }
+                        else
+                        {
+                            auto ent = (id == 1) ? plane01 : plane02;
+                            if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                            {
+                                ent.getComponent<cro::AudioEmitter>().play();
+                                activeEnt = ent;
                             }
                         }
                     }

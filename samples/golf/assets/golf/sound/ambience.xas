@@ -80,6 +80,16 @@ audioscape ambience
         looped = false
     }
 
+    emitter plane
+    {
+        path = "assets/golf/sound/ambience/plane.ogg"
+        streaming = true
+        volume = 2
+        mixer_channel = 1
+        looped = false
+        attenuation = 0.01
+    }
+
     emitter music
     {
         path = "assets/golf/sound/new_hole.ogg"
@@ -87,5 +97,5 @@ audioscape ambience
         volume = 0.5
         mixer_channel = 0
         looped = false
-    }    
+    }
 }

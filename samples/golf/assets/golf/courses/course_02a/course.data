@@ -1,4 +1,4 @@
-course course_02
+course course_02a
 {
     skybox = "assets/golf/images/skybox/spring/sky.ccm"
     billboard_model = "assets/golf/models/shrubbery.cmt"
@@ -6,9 +6,8 @@ course course_02
     audio = "assets/golf/sound/ambience.xas"
 
     title = "Sunny Cove, Weald & Hedgeways"
-    description = "The Finest Gravel You'll Ever Tread"
+    description = "Front 9 Holes"
 
-    hole = "assets/golf/courses/course_02/15.hole"
     hole = "assets/golf/courses/course_02/01.hole"
     hole = "assets/golf/courses/course_02/02.hole"
     hole = "assets/golf/courses/course_02/03.hole"
@@ -18,10 +17,4 @@ course course_02
     hole = "assets/golf/courses/course_02/07.hole"
     hole = "assets/golf/courses/course_02/08.hole"
     hole = "assets/golf/courses/course_02/09.hole"
-    hole = "assets/golf/courses/course_02/10.hole"
-    hole = "assets/golf/courses/course_02/11.hole"
-    hole = "assets/golf/courses/course_02/12.hole"
-    hole = "assets/golf/courses/course_02/13.hole"
-    hole = "assets/golf/courses/course_02/14.hole"
-    hole = "assets/golf/courses/course_02/15.hole"
 }

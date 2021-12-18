@@ -647,10 +647,10 @@ void DrivingState::createGameOptions()
     infoText.getComponent<cro::Text>().setFillColour(TextNormalColour);
     const std::string helpString =
         R"(
-Pick the number of shots you wish to take. For each shot you will be
-given a new target. Hit the ball as close as possible to the target
-by selecting the appropriate club. When all your shots are taken you
-will be given a score based on your overall accuracy. Good Luck!
+Pick the number of strokes you wish to take. For each stroke you will
+be given a new target. Hit the ball as close as possible to the target
+by selecting the appropriate club. When all your strokes are taken
+you will be given a score based on your overall accuracy. Good Luck!
     )";
 
     infoText.getComponent<cro::Text>().setString(helpString);

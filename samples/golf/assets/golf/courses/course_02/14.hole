@@ -1,0 +1,50 @@
+hole 14
+{
+    map="assets/golf/courses/course_02/14.png"
+    model="assets/golf/models/course_02/14.cmt"
+    par = 4
+
+    pin = 274.977112,1.987075,-44.083359
+    target = 120.625191,1.679725,-97.260986
+    tee = 43.680023,1.679725,-172.472137
+
+    crowd
+    {
+        position = 297.034027,1.679726,-66.054520
+        rotation = -64.161384
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = 296.171692,1.679724,-71.940659
+        rotation = -759.911305
+    }
+
+    crowd
+    {
+        position = 286.653870,1.679725,-74.853928
+        rotation = -26.932936
+    }
+
+    prop
+    {
+        model = "assets/golf/models/spruce01.cmt"
+        position = 51.035168,1.679726,-152.139740
+        rotation = 0.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/driving_shed.cmt"
+        position = 53.636566,1.679725,-148.326950
+        rotation = -219.511330
+    }
+
+    prop
+    {
+        model = "assets/golf/models/spruce01.cmt"
+        position = 56.637779,1.679726,-144.911011
+        rotation = -25.632549
+    }
+}

@@ -1,4 +1,4 @@
-course course_03
+course course_01b
 {
     skybox = "assets/golf/images/skybox/spring/sky.ccm"
     billboard_model = "assets/golf/models/shrubbery.cmt"
@@ -6,7 +6,7 @@ course course_03
     audio = "assets/golf/sound/ambience.xas"
 
     title = "St. Billybob's links, Isle of Wibble"
-    description = "This is the back 9 holes"
+    description = "Back 9 holes"
 
     hole = "assets/golf/courses/course_01/10.hole"
     hole = "assets/golf/courses/course_01/11.hole"
