@@ -1,6 +1,6 @@
 model 02
 {
-    mesh = "assets/golf/models/course_02/02.cmb"
+    mesh = assets/golf/models/course_02/02.cmb
     cast_shadows = false
 
     material Unlit
@@ -9,7 +9,7 @@ model 02
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        blendmode = "none"
+        blendmode = none
         diffuse = "assets/golf/images/bunker.png"
 
     }
@@ -19,7 +19,7 @@ model 02
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        blendmode = "none"
+        blendmode = none
         diffuse = "assets/golf/images/fairway.png"
 
     }
@@ -29,7 +29,7 @@ model 02
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        blendmode = "none"
+        blendmode = none
         diffuse = "assets/golf/images/green.png"
 
     }
@@ -39,7 +39,7 @@ model 02
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        blendmode = "none"
+        blendmode = none
         diffuse = "assets/golf/images/rough.png"
 
     }
@@ -49,7 +49,7 @@ model 02
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        blendmode = "none"
+        blendmode = none
         diffuse = "assets/golf/images/scrub.png"
 
     }
