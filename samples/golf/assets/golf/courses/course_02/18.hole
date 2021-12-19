@@ -1,0 +1,92 @@
+hole 18
+{
+    map="assets/golf/courses/course_02/18.png"
+    model="assets/golf/models/course_02/18.cmt"
+    par = 4
+
+    pin = 27.500179,3.159639,-171.964966
+    target = 50.129066,1.827841,-68.492004
+    tee = 295.906616,3.195518,-40.131336
+
+    prop
+    {
+        model = "assets/golf/models/menu_pavilion.cmt"
+        position = 76.305649,3.0076,-121.080490
+        rotation = -56.770893
+    }
+
+    prop
+    {
+        model = "assets/golf/models/willow01.cmt"
+        position = 102.765518,3.494517,-46.430134
+        rotation = 0.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 106.310608,1.837841,-41.626144
+        rotation = -682.443001
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 108.199020,1.837841,-48.922226
+        rotation = -618.393414
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 108.269600,1.837841,-44.937386
+        rotation = -639.665926
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 184.260086,1.837841,-33.015804
+        rotation = -894.204826
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 189.566040,1.837841,-55.105541
+        rotation = -694.906404
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 185.707809,1.837841,-54.106579
+        rotation = -716.178916
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = 187.369614,2.329676,-30.059322
+        rotation = -720.092041
+    }
+
+    crowd
+    {
+        position = 182.227966,1.827842,-55.606010
+        rotation = 8.887163
+    }
+
+    crowd
+    {
+        position = 23.270889,3.195518,-187.758667
+        rotation = 0.000000
+    }
+
+    crowd
+    {
+        position = 11.959612,3.195518,-181.799469
+        rotation = 37.416462
+    }
+
+}

@@ -5,7 +5,7 @@ course course_01
     billboard_sprites = "assets/golf/sprites/shrubbery.spt"
     audio = "assets/golf/sound/ambience.xas"
 
-    title = "St. Billybob's links, Isle of Wibble"
+    title = "Westington links, Isle of Pendale"
     description = "Where we swing a stick at our balls"
 
     hole = "assets/golf/courses/course_01/01.hole"

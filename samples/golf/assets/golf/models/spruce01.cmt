@@ -1,0 +1,27 @@
+model spruce01
+{
+    mesh = assets/golf/models/spruce01.cmb
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "trunk"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        blendmode = none
+        diffuse = "assets/golf/images/spruce_texture.png"
+
+    }
+    material Unlit
+    {
+        name = "leaves"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        blendmode = none
+        diffuse = "assets/golf/images/spruce_texture.png"
+        alpha_clip = 0.343000
+
+    }
+}

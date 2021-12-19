@@ -1,0 +1,57 @@
+hole 16
+{
+    map="assets/golf/courses/course_02/16.png"
+    model="assets/golf/models/course_02/16.cmt"
+    par = 3
+
+    pin = 61.278732,2.185324,-67.710594
+    target = 175.560730,3.089482,-125.373001
+    tee = 252.402390,3.089483,-104.665817
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = 200.604187,1.999998,-170.751831
+        rotation = -876.479600
+    }
+
+    crowd
+    {
+        position = 192.821548,1.999999,-166.677094
+        rotation = 18.688985
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 205.032410,2.029085,-169.018921
+        rotation = -720.135872
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 209.351212,2.022929,-168.138992
+        rotation = -738.788375
+    }
+
+    crowd
+    {
+        position = 44.789368,1.999999,-75.906395
+        rotation = 45.736389
+    }
+
+    prop
+    {
+        model = "assets/golf/models/boat01.cmt"
+        position = -4.637539,-0.921081,-50.063534
+        rotation = -71.347819
+    }
+
+    prop
+    {
+        model = "assets/golf/models/boat02.cmt"
+        position = -3.421874,-0.998722,-21.132820
+        rotation = -31.903152
+    }
+}

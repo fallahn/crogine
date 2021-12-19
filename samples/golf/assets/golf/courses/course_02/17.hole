@@ -1,0 +1,78 @@
+hole 17
+{
+    map="assets/golf/courses/course_02/17.png"
+    model="assets/golf/models/course_02/17.cmt"
+    par = 3
+
+    pin = 31.832947,1.997845,-163.282333
+    target = 148.374725,2.000000,-77.661018
+    tee = 294.922516,2.000000,-28.568172
+
+    prop
+    {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 103.391953,2.050288,-94.598175
+        rotation = -49.060419
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = 103.391953,2.050288,-94.598175
+        rotation = -34.644351
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 109.043877,2.009997,-91.450638
+        rotation = -607.718110
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 98.742760,2.071973,-99.310722
+        rotation = -563.438656
+    }
+
+    prop
+    {
+        model = "assets/golf/models/pine02.cmt"
+        position = 108.037231,1.950040,-89.780319
+        rotation = 0.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 284.288940,2.010000,-44.235386
+        rotation = -17.912051
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 16.067093,2.009999,-153.661697
+        rotation = -612.974194
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 15.579146,2.010000,-163.238724
+        rotation = -632.107579
+    }
+
+    crowd
+    {
+        position = 14.637321,1.928724,-155.286453
+        rotation = 85.826453
+    }
+
+    crowd
+    {
+        position = 25.441029,1.928724,-180.964554
+        rotation = -1.139456
+    }
+}
