@@ -32,6 +32,7 @@ source distribution.
 #include "ParticleDirector.hpp"
 
 #include <crogine/ecs/components/ParticleEmitter.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 
 #include <array>
 
@@ -59,4 +60,8 @@ private:
     };
 
     std::array<cro::EmitterSettings, ParticleID::Count> m_emitterSettings = {};
+
+    //TODO recycle these - or do we use so few it doesn't matter?
+    cro::Sprite m_ringSprite;
+    void spawnRings(glm::vec3);
 };

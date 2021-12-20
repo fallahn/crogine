@@ -781,9 +781,9 @@ void ModelState::updateImportNode(CMFHeader header, std::vector<float>& imported
         //but as it's only needed to tell the renderer this model is visible
         //(imported models don't have the bounds display option)
         //this will work long enough to convert the model and calc the correct bounds
-        meshData.boundingBox[0] = glm::vec3(-5.5f);
-        meshData.boundingBox[1] = glm::vec3(5.5f);
-        meshData.boundingSphere.radius = 5.5f;
+        meshData.boundingBox[0] = glm::vec3(-500.f);
+        meshData.boundingBox[1] = glm::vec3(500.f);
+        meshData.boundingSphere.radius = 500.f;
 
         m_entities[EntityID::ActiveModel] = m_scene.createEntity();
         m_entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(m_entities[EntityID::ActiveModel].addComponent<cro::Transform>());

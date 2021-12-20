@@ -30,10 +30,16 @@ source distribution.
 #include "GolfParticleDirector.hpp"
 #include "MessageIDs.hpp"
 #include "Terrain.hpp"
+#include "GameConsts.hpp"
 
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 
 #include <crogine/graphics/TextureResource.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/util/Constants.hpp>
 
 GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr)
 {
@@ -42,6 +48,11 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr)
     m_emitterSettings[ParticleID::Sand].loadFromFile("assets/golf/particles/sand.cps", tr);
 
     //hmm how to set smoothing on the texture?
+    cro::SpriteSheet spriteSheet;
+    if (spriteSheet.loadFromFile("assets/golf/sprites/rings.spt", tr))
+    {
+        m_ringSprite = spriteSheet.getSprite("rings");
+    }
 }
 
 //public
@@ -98,10 +109,28 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
                 break;
             case TerrainID::Water:
                 getEnt(ParticleID::Water, data.position);
+                spawnRings(data.position);
                 break;
             }
         }
     }
     break;
     }
+}
+
+//private
+void GolfParticleDirector::spawnRings(glm::vec3 position)
+{
+    position.y = WaterLevel + 0.001f;
+    auto bounds = m_ringSprite.getTextureBounds();
+    //float scale = bounds.width / PixelsPerMetre;
+
+    auto entity = getScene().createEntity();
+    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
+    entity.getComponent<cro::Transform>().setScale({ 0.1f, 0.1f, 0.1f });
+    entity.addComponent<cro::Sprite>() = m_ringSprite;
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    entity.addComponent<cro::Model>();
 }

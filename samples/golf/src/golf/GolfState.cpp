@@ -56,6 +56,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -1281,6 +1282,8 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
+    m_gameScene.addSystem<cro::SpriteSystem3D>(mb);
+    m_gameScene.addSystem<cro::SpriteAnimator>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
 #ifdef CRO_DEBUG_

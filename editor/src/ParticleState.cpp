@@ -82,6 +82,16 @@ ParticleState::ParticleState(cro::StateStack& ss, cro::State::Context ctx, Share
 
     ctx.appInstance.resetFrameTime();
     ctx.mainWindow.setTitle("Crogine Particle Editor");
+
+    /*registerWindow([&]()
+        {
+            if (ImGui::Begin("buns"))
+            {
+                const auto& buff = m_scene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer;
+                ImGui::Image(buff.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();
+        });*/
 }
 
 ParticleState::~ParticleState()
@@ -252,6 +262,13 @@ void ParticleState::render()
         m_scene.setActiveCamera(oldCam);
     }
 
+    /*auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+    cam.setActivePass(1);
+    cam.reflectionBuffer.clear();
+    m_scene.render(cam.reflectionBuffer);
+    cam.reflectionBuffer.display();
+    cam.setActivePass(0);*/
+
     auto& rw = getContext().mainWindow;
     m_scene.render(rw);
 }
@@ -328,6 +345,10 @@ void ParticleState::setupScene()
     m_entities[EntityID::ArcBall] = m_scene.createEntity();
     m_entities[EntityID::ArcBall].addComponent<cro::Transform>().setPosition(DefaultArcballPosition);
     m_entities[EntityID::ArcBall].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //m_cameras[CameraID::TwoDee].camera.getComponent<cro::Camera>().reflectionBuffer.create(512, 512);
+    //m_cameras[CameraID::ThreeDee].camera.getComponent<cro::Camera>().reflectionBuffer.create(512, 512);
 
 
     //setCamera(m_cameraIndex); //assigns the emitter entity too
