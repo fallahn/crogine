@@ -65,6 +65,9 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
 {
     auto& camComponent = cameraEnt.getComponent<Camera>();
     auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
+    //assume if there's no reflection buffer there's no need to sort the
+    //entities for the second pass...
+    auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
 
     auto& entities = getEntities();    
 
@@ -93,8 +96,8 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         auto scale = tx.getScale();
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
-        //for each pass in the list (different passes may use different cameras, eg reflections)
-        for (auto p = 0u; p < m_visibleEnts.size(); ++p)
+        //for each pass in the list (different passes may use different projections, eg reflections)
+        for (auto p = 0u; p < passCount; ++p)
         {
             //TODO we need to fix cam component's frustum data for OBB testing
             if (camComponent.isOrthographic())
@@ -162,7 +165,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     //sort lists by depth
     //flag values make sure transparent materials are rendered last
     //with opaque going front to back and transparent back to front
-    for (auto i = 0u; i < m_visibleEnts.size(); ++i)
+    for (auto i = 0u; i < passCount; ++i)
     {
         std::sort(std::begin(m_visibleEnts[i]), std::end(m_visibleEnts[i]),
             [](MaterialPair& a, MaterialPair& b)

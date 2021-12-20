@@ -257,6 +257,7 @@ ParticleSystem::~ParticleSystem()
 void ParticleSystem::updateDrawList(Entity cameraEnt)
 {
     auto& cam = cameraEnt.getComponent<Camera>();
+    auto passCount = cam.reflectionBuffer.available() ? 2 : 1;
 
     for (auto& visible : m_visibleEntities)
     {
@@ -279,7 +280,7 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
             return visible;
         };
 
-        for (auto i = 0u; i < m_visibleEntities.size(); ++i)
+        for (auto i = 0u; i < passCount; ++i)
         {
             const auto& frustum = cam.getPass(i).getFrustum();
             if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum))
@@ -291,7 +292,7 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
 
     DPRINT("Visible particle Systems", std::to_string(m_visibleEntities[0].size()));
 
-    for (auto i = 0u; i < m_visibleEntities.size(); ++i)
+    for (auto i = 0u; i < passCount; ++i)
     {
         //TODO find a way to swap this buffer rather than copy each time.
         cam.getDrawList(i)[getType()] = std::make_any<std::vector<Entity>>(m_visibleEntities[i]);
