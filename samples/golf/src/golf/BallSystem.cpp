@@ -311,13 +311,18 @@ void BallSystem::process(float dt)
         case Ball::State::Reset:
         {
             ball.delay -= dt;
+
+            //hold ball under water until reset
+            auto& tx = entity.getComponent<cro::Transform>();
+            auto ballPos = tx.getPosition();
+            ballPos.y = -0.5f;
+            tx.setPosition(ballPos);
+
             if (ball.delay < 0)
             {
                 //move towards hole or target util we find non-water
-                auto& tx = entity.getComponent<cro::Transform>();
-
                 std::uint8_t terrain = TerrainID::Water;
-                auto ballPos = tx.getPosition();
+
                 //make sure ball height is level with target
                 //else moving it may cause the collision test
                 //to miss if the terrain is much higher than

@@ -42,7 +42,8 @@ class CollisionMesh;
 struct ClientCollider final
 {
     std::int32_t previousDirection = 0;
-    float previousHeight = 0.f;
+    float previousHeight = 0.f; //relative to terrain
+    float previousWorldHeight = 0.f;
     std::uint8_t terrain = 0;
     std::uint8_t state = 0;
     bool active = false;

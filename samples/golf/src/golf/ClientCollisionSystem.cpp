@@ -79,7 +79,6 @@ void ClientCollisionSystem::process(float)
             result.terrain = readMap(m_mapImage, position.x, -position.z).first;
         }
 
-
         collider.terrain = result.terrain;
 
         if (collider.terrain == TerrainID::Green)
@@ -95,7 +94,18 @@ void ClientCollisionSystem::process(float)
                 collider.terrain = TerrainID::Hole;
             }
         }
-
+        else if (collider.terrain == TerrainID::Water)
+        {
+            if (position.y <= WaterLevel
+                && collider.previousWorldHeight > WaterLevel)
+            {
+                auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+                msg->type = CollisionEvent::Begin;
+                msg->position = position;
+                msg->terrain = TerrainID::Water;
+                msg->clubID = m_club;
+            }
+        }
 
         const auto notify = [&](CollisionEvent::Type type, glm::vec3 position)
         {
@@ -151,6 +161,7 @@ void ClientCollisionSystem::process(float)
 
         collider.previousDirection = direction;
         collider.previousHeight = currentLevel;
+        collider.previousWorldHeight = position.y;
         collider.active = false; //forcibly reset this so it can only be explicitly set true by a server update
     }
 }

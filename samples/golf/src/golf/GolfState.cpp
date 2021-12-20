@@ -156,7 +156,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("buns"))
             {
-                auto s = glm::vec2(m_gameSceneTexture.getSize());
+                /*auto s = glm::vec2(m_gameSceneTexture.getSize());
                 ImGui::Text("Scene size: %3.3f, %3.3f", s.x, s.y);
 
                 auto s2 = glm::vec2(GolfGame::getActiveTarget()->getSize());
@@ -165,16 +165,16 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 s2 /= m_viewScale;
                 ImGui::Text("Output Size (scaled): %3.3f, %3.3f", s2.x, s2.y);
 
-                ImGui::Text("Scale: %3.3f, %3.3f", m_viewScale.x, m_viewScale.y);
+                ImGui::Text("Scale: %3.3f, %3.3f", m_viewScale.x, m_viewScale.y);*/
 
                 //auto active = m_freeCam.getComponent<cro::Camera>().active;
                 //ImGui::Text("Active %s", active ? "true" : "false");
                 
-                /*if (ballEntity.isValid())
+                if (ballEntity.isValid())
                 {
                     auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
                     ImGui::Text("Ball Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-                }*/
+                }
                 //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 512.f, 512.f }, {0.f, 1.f}, { 1.f, 0.f });
             }
             ImGui::End();
@@ -797,8 +797,8 @@ void GolfState::loadAssets()
     //water
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Water));
-    //forces rendering last to reduce overdraw - but unfortunately also disables backface culling :/
-    //m_resources.materials.get(m_materialIDs[MaterialID::Water]).blendMode = cro::Material::BlendMode::Alpha; 
+    //forces rendering last to reduce overdraw
+    m_resources.materials.get(m_materialIDs[MaterialID::Water]).blendMode = cro::Material::BlendMode::Alpha; 
 
     m_waterShader.shaderID = m_resources.shaders.get(ShaderID::Water).getGLHandle();
     m_waterShader.timeUniform = m_resources.shaders.get(ShaderID::Water).getUniformMap().at("u_time");
@@ -1455,6 +1455,7 @@ void GolfState::buildScene()
     auto waterEnt = m_gameScene.createEntity();
     waterEnt.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
     waterEnt.getComponent<cro::Transform>().move({ 0.f, 0.f, -30.f });
+    //waterEnt.getComponent<cro::Transform>().setOrigin({ 0.f, -0.04f, 0.f });
     waterEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
     waterEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::Water]));
     waterEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
@@ -1471,7 +1472,7 @@ void GolfState::buildScene()
         tx.move(diff * 5.f * dt);
     };
     m_waterEnt = waterEnt;
-    m_gameScene.setWaterLevel(WaterLevel);
+    m_gameScene.setWaterLevel(WaterLevel/* + 0.04f*/);
 
 
     //tee marker
@@ -2083,7 +2084,9 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
     m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+#ifdef CRO_DEBUG_
     ballEntity = ballEnt;
+#endif
 }
 
 void GolfState::handleNetEvent(const cro::NetEvent& evt)

@@ -179,6 +179,7 @@ static inline void setTexture(const cro::ModelDefinition& modelDef, cro::Materia
         {
             dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
         }
+        dest.doubleSided = m->doubleSided;
     }
 }
 
