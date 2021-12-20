@@ -342,7 +342,7 @@ void BallSystem::process(float dt)
 
                 auto length = glm::length(dir);
                 dir /= length;
-                std::int32_t maxDist = static_cast<std::int32_t>(length - 10.f);
+                std::int32_t maxDist = static_cast<std::int32_t>(length /*- 10.f*/);
 
                 for (auto i = 0; i < maxDist; ++i)
                 {
@@ -353,7 +353,10 @@ void BallSystem::process(float dt)
                     if (terrain != TerrainID::Water
                         && terrain != TerrainID::Scrub)
                     {
-                        //ballPos.y -= res.penetration;
+                        //move the ball a bit closer so we're not balancing on the edge
+                        ballPos += dir;
+                        res = getTerrain(ballPos);
+
                         ballPos = res.intersection;
                         tx.setPosition(ballPos);
                         break;

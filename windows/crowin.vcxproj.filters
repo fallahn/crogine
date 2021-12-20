@@ -642,6 +642,9 @@
     <ClInclude Include="..\crogine\include\crogine\util\Spline.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1111,5 +1114,10 @@
     <None Include="..\crogine\include\crogine\graphics\MeshData.inl">
       <Filter>Header Files\graphics</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="crogine.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

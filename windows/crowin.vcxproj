@@ -217,6 +217,7 @@
     <ClInclude Include="..\crogine\src\imgui\imgui_impl_sdl.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_internal.h" />
     <ClInclude Include="..\crogine\src\network\NetConf.hpp" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\android\Android.cpp" />
@@ -376,6 +377,9 @@
     <None Include="..\crogine\include\crogine\network\NetData.inl" />
     <None Include="..\crogine\include\crogine\network\NetHost.inl" />
     <None Include="..\crogine\src\graphics\postprocess\PostChromeAB.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="crogine.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
