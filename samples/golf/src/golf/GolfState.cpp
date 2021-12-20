@@ -1241,10 +1241,16 @@ void GolfState::loadAssets()
         }
     }
 
+    //remove holes which failed to load
+    m_holeData.erase(std::remove_if(m_holeData.begin(), m_holeData.end(), 
+        [](const HoleData& hd)
+        {
+            return !hd.modelEntity.isValid();
+        }), m_holeData.end());
 
     if (error)
     {
-        m_sharedData.errorMessage = "Failed to load course data\nSee console for more";
+        m_sharedData.errorMessage = "Failed to load course data\nSee console for more information";
         requestStackPush(StateID::Error);
     }
     //else

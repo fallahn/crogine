@@ -247,13 +247,24 @@ void ErrorState::buildScene()
     };
 
     //title
-    entity = createItem(glm::vec2(0.f, 10.f), "Error", menuEntity);
+    entity = createItem(glm::vec2(0.f, 80.f), "Error", menuEntity);
     entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
 
 
     //message
-    entity = createItem(glm::vec2(0.f), m_sharedData.errorMessage, menuEntity);
+    entity = createItem(glm::vec2(0.f, 70.f), m_sharedData.errorMessage, menuEntity);
     
+    std::string continueMsg;
+    if (cro::GameController::getControllerCount() != 0)
+    {
+        continueMsg = "Press A To Continue"; //TODO attach the controller button graphic
+    }
+    else
+    {
+        continueMsg = "Press Space To Continue";
+    }
+
+    entity = createItem(glm::vec2(0.f, 30.f), continueMsg, menuEntity);
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
