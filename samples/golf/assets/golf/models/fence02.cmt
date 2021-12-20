@@ -1,26 +1,30 @@
 model fence02
 {
-    mesh = "assets/golf/models/fence02.cmb"
+    mesh = assets/golf/models/fence02.cmb
     cast_shadows = false
 
     material Unlit
     {
-        name = "Untitled"
+        name = "Fence"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        blendmode = "none"
+        depth_test = true
+        double_sided = true
+        blendmode = none
         diffuse = "assets/golf/images/fence.png"
         alpha_clip = 0.142000
 
     }
     material Unlit
     {
-        name = "Untitled"
+        name = "Shadow"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        blendmode = "alpha"
+        depth_test = true
+        double_sided = false
+        blendmode = alpha
         diffuse = "assets/golf/images/fence.png"
 
     }

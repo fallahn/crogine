@@ -353,6 +353,7 @@ void ModelState::saveModel(const std::string& path)
         obj->addProperty("smooth").setValue(mat.smoothTexture);
         obj->addProperty("repeat").setValue(mat.repeatTexture);
         obj->addProperty("depth_test").setValue(mat.depthTest);
+        obj->addProperty("double_sided").setValue(mat.doubleSided);
 
         if (mat.useRimlighing)
         {

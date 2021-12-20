@@ -181,6 +181,7 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
 
     matDef.materialData.blendMode = matDef.blendMode;
     matDef.materialData.enableDepthTest = matDef.depthTest;
+    matDef.materialData.doubleSided = matDef.doubleSided;
 
     if (matDef.type == MaterialDefinition::PBR)
     {
@@ -273,6 +274,7 @@ void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)
     def.materialData.setShader(m_resources.shaders.get(def.shaderID));
     def.materialData.deferred = (shaderType == cro::ShaderResource::PBRDeferred);
     def.materialData.enableDepthTest = def.depthTest;
+    def.materialData.doubleSided = def.doubleSided;
 
     applyPreviewSettings(def);
     m_previewEntity.getComponent<cro::Model>().setMaterial(0, def.materialData);
@@ -322,6 +324,7 @@ void ModelState::exportMaterial() const
         file.addProperty("texture_smooth").setValue(matDef.smoothTexture);
         file.addProperty("texture_repeat").setValue(matDef.repeatTexture);
         file.addProperty("depth_test").setValue(matDef.depthTest);
+        file.addProperty("double_sided").setValue(matDef.doubleSided);
 
         //textures
         auto getTextureName = [&](std::uint32_t id)
@@ -486,6 +489,10 @@ void ModelState::importMaterial(const std::string& path)
                 {
                     def.depthTest = prop.getValue<bool>();
                 }
+                else if (name == "double_sided")
+                {
+                    def.doubleSided = prop.getValue<bool>();
+                }
             }
 
             addMaterialToBrowser(std::move(def));
@@ -631,6 +638,10 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
         else if (name == "depth_test")
         {
             matDef.depthTest = prop.getValue<bool>();
+        }
+        else if (name == "double_sided")
+        {
+            matDef.doubleSided = prop.getValue<bool>();
         }
     }
 }

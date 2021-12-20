@@ -1244,6 +1244,7 @@ void ModelState::drawInspector()
                     }
                 }
 
+                ImGui::NewLine();
                 ImGui::Checkbox("Receive Shadows", &matDef.receiveShadows);
                 ImGui::SameLine();
                 helpMarker("Check this box if the material should receive shadows from the active shadow map");
@@ -1252,16 +1253,20 @@ void ModelState::drawInspector()
                     shaderFlags |= cro::ShaderResource::RxShadows;
                 }
 
-                ImGui::NewLine();
                 if (ImGui::Checkbox("Enable Depth Test", &matDef.depthTest))
                 {
-                    //update preview material
                     applyMaterial = true;
                 }
                 ImGui::SameLine();
                 helpMarker("Enable or disable depth testing for this material");
 
-                ImGui::NewLine();
+                if (ImGui::Checkbox("Double Sided", &matDef.doubleSided))
+                {
+                    applyMaterial = true;
+                }
+                ImGui::SameLine();
+                helpMarker("Enables rendering both sides of a material.\nThis is usually desired for alpha blended materials\nor other instances where the back face would be visible");
+
                 ImGui::Checkbox("Use Vertex Colours", &matDef.vertexColoured);
                 ImGui::SameLine();
                 helpMarker("Any colour information stored in the model's vertex data will be multiplied with the diffuse colour of the material");
@@ -1272,7 +1277,6 @@ void ModelState::drawInspector()
 
                 if (type != MaterialDefinition::PBR)
                 {
-                    ImGui::NewLine();
                     ImGui::Checkbox("Use Rimlighting", &matDef.useRimlighing);
                     ImGui::SameLine();
                     helpMarker("Enable the rim lighting effect. Not available with the PBR shader");

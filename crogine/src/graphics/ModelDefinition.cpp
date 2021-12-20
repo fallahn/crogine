@@ -296,6 +296,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         bool smoothTextures = false;
         bool repeatTextures = false;
         bool enableDepthTest = true;
+        bool doubleSided = false;
         const auto& properties = mat.getProperties();
         for (const auto& p : properties)
         {
@@ -400,6 +401,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
             {
                 enableDepthTest = p.getValue<bool>();
             }
+            else if (name == "double_sided")
+            {
+                doubleSided = p.getValue<bool>();
+            }
         }
 
         if (lockRotation)
@@ -423,6 +428,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         auto& material = m_resources.materials.get(matID);
         material.deferred = shaderType == ShaderResource::PBRDeferred;
         material.enableDepthTest = enableDepthTest;
+        material.doubleSided = doubleSided;
 
         //set a default mask colour - this is overwritten
         //below, if a custom property is found.

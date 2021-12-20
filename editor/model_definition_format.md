@@ -129,6 +129,11 @@ Models in crogine are described in a text format that can be loaded via the `Mod
             //this is optional and defaults to false.
             depth_test = true
 
+            //by default materials are single-sided, that is rear-facing polygons are not drawn.
+            //Setting this to true will draw both sides of the geometry, for example when rendering
+            //semi-transparent objects like glass, or objects which have no thickness to them.
+            double_sided = false
+
         }
 
         //Vertex lit materials support all of the above, plus accept these further properties

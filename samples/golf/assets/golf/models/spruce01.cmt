@@ -9,6 +9,8 @@ model spruce01
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
+        depth_test = true
+        double_sided = false
         blendmode = none
         diffuse = "assets/golf/images/spruce_texture.png"
 
@@ -19,6 +21,8 @@ model spruce01
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
+        depth_test = true
+        double_sided = true
         blendmode = none
         diffuse = "assets/golf/images/spruce_texture.png"
         alpha_clip = 0.343000

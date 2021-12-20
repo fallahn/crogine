@@ -261,6 +261,12 @@ namespace cro
             bool deferred = false;
 
             /*!
+            \brief If this is true then face culling is disabled for the
+            material. Default value is false
+            */
+            bool doubleSided = false;
+
+            /*!
             \brief Applies a new shader to this material by updating the
             the uniform and vertex attribute maps
             */

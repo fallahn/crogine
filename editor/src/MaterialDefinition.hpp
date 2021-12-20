@@ -75,6 +75,7 @@ struct MaterialDefinition final
     bool receiveShadows = false;
     bool skinned = false;
     bool depthTest = true;
+    bool doubleSided = false;
 
     bool smoothTexture = true;
     bool repeatTexture = true;

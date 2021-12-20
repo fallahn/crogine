@@ -249,11 +249,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
             applyBlendMode(model.m_materials[Mesh::IndexData::Final][i].blendMode);
 
-            //check for depth test override
-            if (!model.m_materials[Mesh::IndexData::Final][i].enableDepthTest)
-            {
-                glCheck(glDisable(GL_DEPTH_TEST));
-            }
+            glCheck(model.m_materials[Mesh::IndexData::Final][i].doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
+            glCheck(model.m_materials[Mesh::IndexData::Final][i].enableDepthTest ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST));
 
 #ifdef PLATFORM_DESKTOP
             model.draw(i, Mesh::IndexData::Final);
@@ -408,6 +405,8 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
 
 void ModelRenderer::applyBlendMode(Material::BlendMode mode)
 {
+    //face culling is set by material 'double sided' property
+
     switch (mode)
     {
     default: break;
@@ -415,7 +414,7 @@ void ModelRenderer::applyBlendMode(Material::BlendMode mode)
         glCheck(glEnable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_FALSE));
-        glCheck(glEnable(GL_CULL_FACE));
+        //glCheck(glEnable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_ONE, GL_ONE));
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
@@ -425,7 +424,7 @@ void ModelRenderer::applyBlendMode(Material::BlendMode mode)
         glCheck(glEnable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_FALSE));
         glCheck(glEnable(GL_BLEND));
-        glCheck(glDisable(GL_CULL_FACE));
+        //glCheck(glDisable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
@@ -433,14 +432,14 @@ void ModelRenderer::applyBlendMode(Material::BlendMode mode)
         glCheck(glEnable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_FALSE));
-        glCheck(glEnable(GL_CULL_FACE));
+        //glCheck(glEnable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
     case Material::BlendMode::None:
         glCheck(glEnable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_TRUE));
-        glCheck(glEnable(GL_CULL_FACE));
+        //glCheck(glEnable(GL_CULL_FACE));
         glCheck(glDisable(GL_BLEND));
         break;
     }
