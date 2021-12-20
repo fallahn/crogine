@@ -496,7 +496,6 @@ void GolfState::handleMessage(const cro::Message& msg)
         default: break;
         case SceneEvent::TransitionComplete:
         {
-            setActiveCamera(CameraID::Player);
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
             break;
@@ -2558,10 +2557,11 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
     camEnt.getComponent<cro::Transform>().move(offset * viewOffset);
 
-    if (targetInfo.waterPlane.isValid())
+    //updated by camera follower
+    /*if (targetInfo.waterPlane.isValid())
     {
         targetInfo.waterPlane.getComponent<cro::Callback>().setUserData<glm::vec3>(target.x, WaterLevel, target.z);
-    }
+    }*/
 }
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
@@ -3159,6 +3159,8 @@ void GolfState::startFlyBy()
                 break;
             case 3:
                 //we're done here
+                m_gameScene.getSystem<CameraFollowSystem>()->resetCamera();
+                setActiveCamera(CameraID::Player);
             {
                 if (m_sharedData.tutorial)
                 {
@@ -3255,6 +3257,7 @@ void GolfState::setActiveCamera(std::int32_t camID)
 
         m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = waterEnt;
         m_cameras[m_currentCamera].getComponent<cro::Camera>().active = true;
+        
 
         //hide player based on cam id
         cro::Command cmd;
