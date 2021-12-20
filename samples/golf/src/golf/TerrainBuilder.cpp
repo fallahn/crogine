@@ -497,7 +497,9 @@ void TerrainBuilder::threadFunc()
         for (const auto prop : props)
         {
             auto propPos = pos - prop.getComponent<cro::Transform>().getPosition(); //don't use world pos because it'll be scaled by parent
-            if (prop.getComponent<cro::Model>().getBoundingSphere().contains(propPos))
+            float propRadius = prop.getComponent<cro::Model>().getBoundingSphere().radius * 1.2f;
+
+            if (glm::length2(glm::vec2(propPos.x, propPos.z)) < (propRadius * propRadius))
             {
                 return true;
             }
@@ -545,9 +547,12 @@ void TerrainBuilder::threadFunc()
                         float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
                         float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
 
-                        auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
-                        bb.position = { x, height, -y };
-                        bb.size *= scale;
+                        if (height > WaterLevel)
+                        {
+                            auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
+                            bb.position = { x, height, -y };
+                            bb.size *= scale;
+                        }
                     }
                 }
                 

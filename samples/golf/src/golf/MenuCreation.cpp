@@ -212,7 +212,7 @@ void MenuState::parseCourseDirectory()
         {
             std::string title;
             std::string description;
-            std::size_t holeCount = 0;
+            std::int32_t holeCount = 0;
 
             cro::ConfigFile cfg;
             cfg.loadFromFile(courseFile);
@@ -246,7 +246,7 @@ void MenuState::parseCourseDirectory()
                 if (!title.empty())data.title = title;
                 if(!description.empty()) data.description = description;
                 data.directory = dir;
-                data.holeCount = "Holes: " + std::to_string(holeCount);
+                data.holeCount = "Holes: " + std::to_string(std::min(holeCount, 18));
             }
         }
     }
