@@ -214,6 +214,12 @@ void Model::setMaterial(std::size_t idx, Material::Data data)
 #endif //DESKTOP
 }
 
+void Model::setDepthTestEnabled(std::size_t idx, bool enabled)
+{
+    CRO_ASSERT(idx < m_materials.size(), "Out of Range");
+    m_materials[Mesh::IndexData::Pass::Final][idx].enableDepthTest = enabled;
+}
+
 void Model::setSkeleton(glm::mat4* frame, std::size_t jointCount)
 {
     m_skeleton = frame;

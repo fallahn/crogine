@@ -76,6 +76,15 @@ namespace cro
         }
 
         /*!
+        \brief Enables of disables depth testing for a material at the given index
+        \param idx Index of the material to set the depth test paramter on
+        \param enabled Set to true to enable depth testing
+        This doesn't affect shadow pass materials. Useful for overlay materials
+        such as wireframe meshes.
+        */
+        void setDepthTestEnabled(std::size_t idx, bool enabled);
+
+        /*!
         \brief Returns a reference to the mesh data for this model.
         This can be used to update vertex data, but care should be taken to
         not modify the attribute layout as this will already be bound to the
@@ -141,7 +150,7 @@ namespace cro
         /*!
         \brief Returns the material data associated with the given submesh
         at the given pass.
-        \param pass Can be indexData::Final or IndexData::Shadow
+        \param pass Can be IndexData::Final or IndexData::Shadow
         \param submesh Index of the submesh to retrieve.
         \returns const reference to the material if it exists
         */

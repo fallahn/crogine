@@ -1252,6 +1252,14 @@ void ModelState::drawInspector()
                     shaderFlags |= cro::ShaderResource::RxShadows;
                 }
 
+                ImGui::NewLine();
+                if (ImGui::Checkbox("Enable Depth Test", &matDef.depthTest))
+                {
+                    //update preview material
+                    applyMaterial = true;
+                }
+                ImGui::SameLine();
+                helpMarker("Enable or disable depth testing for this material");
 
                 ImGui::NewLine();
                 ImGui::Checkbox("Use Vertex Colours", &matDef.vertexColoured);

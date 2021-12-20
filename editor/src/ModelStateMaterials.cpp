@@ -180,6 +180,7 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
     }
 
     matDef.materialData.blendMode = matDef.blendMode;
+    matDef.materialData.enableDepthTest = matDef.depthTest;
 
     if (matDef.type == MaterialDefinition::PBR)
     {
@@ -271,6 +272,7 @@ void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)
     def.shaderID = m_resources.shaders.loadBuiltIn(shaderType, def.shaderFlags);
     def.materialData.setShader(m_resources.shaders.get(def.shaderID));
     def.materialData.deferred = (shaderType == cro::ShaderResource::PBRDeferred);
+    def.materialData.enableDepthTest = def.depthTest;
 
     applyPreviewSettings(def);
     m_previewEntity.getComponent<cro::Model>().setMaterial(0, def.materialData);
@@ -319,6 +321,7 @@ void ModelState::exportMaterial() const
         file.addProperty("subrect").setValue(matDef.subrect);
         file.addProperty("texture_smooth").setValue(matDef.smoothTexture);
         file.addProperty("texture_repeat").setValue(matDef.repeatTexture);
+        file.addProperty("depth_test").setValue(matDef.depthTest);
 
         //textures
         auto getTextureName = [&](std::uint32_t id)
@@ -479,6 +482,10 @@ void ModelState::importMaterial(const std::string& path)
                 {
                     def.repeatTexture = prop.getValue<bool>();
                 }
+                else if (name == "depth_test")
+                {
+                    def.depthTest = prop.getValue<bool>();
+                }
             }
 
             addMaterialToBrowser(std::move(def));
@@ -620,6 +627,10 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
         else if (name == "repeat")
         {
             matDef.repeatTexture = prop.getValue<bool>();
+        }
+        else if (name == "depth_test")
+        {
+            matDef.depthTest = prop.getValue<bool>();
         }
     }
 }

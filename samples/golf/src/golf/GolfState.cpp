@@ -2672,6 +2672,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         position.y += 0.014f; //z-fighting
         e.getComponent<cro::Transform>().setPosition(position);
         e.getComponent<cro::Model>().setHidden(!localPlayer);
+        e.getComponent<cro::Model>().setDepthTestEnabled(0, player.terrain == TerrainID::Green);
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

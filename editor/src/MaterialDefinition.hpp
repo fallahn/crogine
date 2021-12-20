@@ -74,6 +74,7 @@ struct MaterialDefinition final
     bool useRimlighing = false;
     bool receiveShadows = false;
     bool skinned = false;
+    bool depthTest = true;
 
     bool smoothTexture = true;
     bool repeatTexture = true;
