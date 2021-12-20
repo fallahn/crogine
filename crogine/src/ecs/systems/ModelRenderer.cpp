@@ -97,7 +97,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
         //for each pass in the list (different passes may use different projections, eg reflections)
-        for (auto p = 0u; p < passCount; ++p)
+        for (auto p = 0; p < passCount; ++p)
         {
             //TODO we need to fix cam component's frustum data for OBB testing
             if (camComponent.isOrthographic())

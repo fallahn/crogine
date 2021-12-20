@@ -96,7 +96,7 @@ void ClientCollisionSystem::process(float)
         }
         else if (collider.terrain == TerrainID::Water)
         {
-            if (position.y <= WaterLevel
+            if (position.y < WaterLevel
                 && collider.previousWorldHeight > WaterLevel)
             {
                 auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);

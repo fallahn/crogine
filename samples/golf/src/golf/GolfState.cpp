@@ -2563,11 +2563,11 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
     camEnt.getComponent<cro::Transform>().move(offset * viewOffset);
 
-    //updated by camera follower
-    /*if (targetInfo.waterPlane.isValid())
+    //also updated by camera follower...
+    if (targetInfo.waterPlane.isValid())
     {
         targetInfo.waterPlane.getComponent<cro::Callback>().setUserData<glm::vec3>(target.x, WaterLevel, target.z);
-    }*/
+    }
 }
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)

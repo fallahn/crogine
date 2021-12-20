@@ -1,22 +1,26 @@
 spritesheet rings
 {
     src="assets/golf/images/rings.png"
-    blend_mode = "add"
+    blendmode = "add"
 
     sprite rings
     {
-        bounds = 0,0,64,64
+        bounds = 0,0,32,32
 
         animation expand
         {
-            frame = 0,0,64,64
-            frame = 64,0,64,64
-            frame = 128,0,64,64
-            frame = 192,0,64,64
-            frame = 256,0,64,64
+            frame = 0,0,32,32
+            frame = 32,0,32,32
+            frame = 64,0,32,32
+            frame = 96,0,32,32
+            frame = 128,0,32,32
+            frame = 160,0,32,32
+            frame = 192,0,32,32
+            frame = 224,0,32,32
+            frame = 0,0,0,0
 
-            loop = true
-            framerate = 8
+            loop = false
+            framerate = 12
         }
     }
 }

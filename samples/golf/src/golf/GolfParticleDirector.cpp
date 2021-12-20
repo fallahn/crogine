@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/SpriteAnimation.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/graphics/TextureResource.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
@@ -123,7 +124,6 @@ void GolfParticleDirector::spawnRings(glm::vec3 position)
 {
     position.y = WaterLevel + 0.001f;
     auto bounds = m_ringSprite.getTextureBounds();
-    //float scale = bounds.width / PixelsPerMetre;
 
     auto entity = getScene().createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
@@ -133,4 +133,13 @@ void GolfParticleDirector::spawnRings(glm::vec3 position)
     entity.addComponent<cro::Sprite>() = m_ringSprite;
     entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<cro::Model>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        if (!e.getComponent<cro::SpriteAnimation>().playing)
+        {
+            getScene().destroyEntity(e);
+        }
+    };
 }

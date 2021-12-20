@@ -9,6 +9,20 @@ model boat02
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
         repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+        diffuse = "assets/golf/images/boat02.png"
+
+    }
+    material Unlit
+    {
+        name = "sail"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = true
         blendmode = none
         diffuse = "assets/golf/images/boat02.png"
 

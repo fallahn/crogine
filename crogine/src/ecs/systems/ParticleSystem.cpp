@@ -280,7 +280,7 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
             return visible;
         };
 
-        for (auto i = 0u; i < passCount; ++i)
+        for (auto i = 0; i < passCount; ++i)
         {
             const auto& frustum = cam.getPass(i).getFrustum();
             if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum))
