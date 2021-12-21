@@ -34,6 +34,7 @@ source distribution.
 static const std::string WaterVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec3 a_normal;
+    ATTRIBUTE vec2 a_texCoord0;
 
     uniform mat3 u_normalMatrix;
     uniform mat4 u_worldMatrix;
@@ -44,11 +45,15 @@ static const std::string WaterVertex = R"(
     uniform mat4 u_lightViewProjectionMatrix;
 
     VARYING_OUT vec3 v_normal;
+    VARYING_OUT vec2 v_texCoord;
 
     VARYING_OUT vec3 v_worldPosition;
     VARYING_OUT vec4 v_reflectionPosition;
     VARYING_OUT vec4 v_refractionPosition;
     VARYING_OUT LOW vec4 v_lightWorldPosition;
+
+
+    const vec2 MapSize = vec2(50.0, 20.0);
 
     void main()
     {
@@ -56,6 +61,8 @@ static const std::string WaterVertex = R"(
         gl_Position = u_viewProjectionMatrix * position;
 
         v_normal = u_normalMatrix * a_normal;
+
+        v_texCoord = vec2(position.x / MapSize.x, -position.z / MapSize.y);
 
         v_worldPosition = position.xyz;
         v_reflectionPosition = u_reflectionMatrix * position;
@@ -74,6 +81,7 @@ static const std::string WaterFragment = R"(
     uniform float u_time;
 
     VARYING_IN vec3 v_normal;
+    VARYING_IN vec2 v_texCoord;
 
     VARYING_IN vec3 v_worldPosition;
     VARYING_IN vec4 v_reflectionPosition;
@@ -84,12 +92,12 @@ static const std::string WaterFragment = R"(
     //const vec3 WaterColour = vec3(0.2, 0.278, 0.278);
     //const vec3 WaterColour = vec3(0.137, 0.267, 0.53);
 
-//float rand(float n){return fract(sin(n) * 43758.5453123);}
-//
-//vec2 noise(vec2 pos)
-//{
-//    return vec2(rand(pos.x), rand(pos.y));
-//}
+    float rand(float n){return fract(sin(n) * 43758.5453123);}
+
+    /*vec2 noise(vec2 pos)
+    {
+        return vec2(rand(pos.x), rand(pos.y));
+    }*/
 
 
     void main()
@@ -98,7 +106,7 @@ static const std::string WaterFragment = R"(
 
         //reflection
         vec2 reflectCoords = v_reflectionPosition.xy / v_reflectionPosition.w / 2.0 + 0.5;
-
+        float waveCoord = reflectCoords.x;
         reflectCoords.x += sin(u_time + (gl_FragCoord.z * 325.0)) * 0.0005;
 
         vec4 reflectColour = TEXTURE(u_reflectionMap, reflectCoords);
@@ -120,6 +128,20 @@ static const std::string WaterFragment = R"(
         /*vec2 refractCoords = v_refractionPosition.xy / v_refractionPosition.w / 2.0 + 0.5;
         vec4 refractColour = TEXTURE(u_refractionMap, refractCoords);// + (normal.rg * Distortion));
         blendedColour.rgb *= refractColour.rgb;*/
+
+        float waveSpeed = u_time / 8.0;
+        float direction = mod(gl_FragCoord.y, 2.0);
+        direction *= 2.0;
+        direction -= 1.0;
+        waveSpeed *= direction;
+
+        float wave = sin(waveSpeed + ((waveCoord * (400.0 * (0.2 + (0.8 * reflectCoords.y)))) + (rand(gl_FragCoord.y) * 300.0))) + 1.0 / 2.0;
+        wave = smoothstep(0.8, 0.99, wave);
+        wave *= 0.4 * pow(reflectCoords.y, 2.0);
+        //blendedColour.rgb += wave;
+        //looks good until the camera moves. Need to map this to world coordinates.
+
+        //blendedColour.rgb *= mod(v_texCoord.x, 1.0);
 
         FRAG_OUT = vec4(blendedColour, 1.0);
     })";
