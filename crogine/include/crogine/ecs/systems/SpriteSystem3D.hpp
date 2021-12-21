@@ -59,13 +59,24 @@ namespace cro
         /*!
         \brief Constructor
         \param mb A reference to the active MessageBus
+        \param pixelsPerUnit By default sprite units are pixels, whereas
+        a 3D scene is metres - so a 64 pixel wide sprite will be
+        64 metres in the game world! Set this to the number of sprite
+        pixels equivalent to a single 3D world unit to have the system
+        automatically scale sprites to the 3D scene in whic they appear.
         */
-        explicit SpriteSystem3D(MessageBus& mb);
+        explicit SpriteSystem3D(MessageBus& mb, float pixelsPerUnit = 1.f);
 
         void process(float) override;
 
+        /*!
+        \brief Returns the number of pixels mapped to a world unit
+        */
+        float getPixelsPerUnit() const { return m_pixelsPerUnit; }
+
     private:
 
+        float m_pixelsPerUnit;
         Shader m_colouredShader;
         Shader m_texturedShader;
 

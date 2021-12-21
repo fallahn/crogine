@@ -40,10 +40,12 @@ source distribution.
 
 using namespace cro;
 
-SpriteSystem3D::SpriteSystem3D(MessageBus& mb)
+SpriteSystem3D::SpriteSystem3D(MessageBus& mb, float pixelsPerUnit)
     : System            (mb, typeid(SpriteSystem3D)),
+    m_pixelsPerUnit     (pixelsPerUnit),
     m_meshBuilder       (std::make_unique<DynamicMeshBuilder>(VertexProperty::Position | VertexProperty::Colour | VertexProperty::UV0, 1, GL_TRIANGLES))
 {
+    CRO_ASSERT(pixelsPerUnit > 0, "Must be positive value");
     requireComponent<Sprite>();
     requireComponent<Model>();
 
@@ -77,6 +79,9 @@ void SpriteSystem3D::process(float)
 
             //TODO check the flags to see if only the colour changed
             //this requires we keep a local copy of the vertex data somewhere.
+            
+            subRect.width /= m_pixelsPerUnit;
+            subRect.height /= m_pixelsPerUnit;
 
             std::vector<float> verts;
 
