@@ -47,6 +47,7 @@ static const std::string WaterVertex = R"(
 
     VARYING_OUT vec3 v_worldPosition;
     VARYING_OUT vec4 v_reflectionPosition;
+    VARYING_OUT vec4 v_refractionPosition;
     VARYING_OUT LOW vec4 v_lightWorldPosition;
 
     void main()
@@ -58,6 +59,7 @@ static const std::string WaterVertex = R"(
 
         v_worldPosition = position.xyz;
         v_reflectionPosition = u_reflectionMatrix * position;
+        v_refractionPosition = gl_Position;
         v_lightWorldPosition = u_lightViewProjectionMatrix * position;
 
     })";
@@ -66,6 +68,7 @@ static const std::string WaterFragment = R"(
     OUTPUT
 
     uniform sampler2D u_reflectionMap;
+    uniform sampler2D u_refractionMap;
 
     uniform vec3 u_cameraWorldPosition;
     uniform float u_time;
@@ -74,6 +77,7 @@ static const std::string WaterFragment = R"(
 
     VARYING_IN vec3 v_worldPosition;
     VARYING_IN vec4 v_reflectionPosition;
+    VARYING_IN vec4 v_refractionPosition;
 
 
     const vec3 WaterColour = vec3(0.02, 0.078, 0.578);
@@ -111,6 +115,11 @@ static const std::string WaterFragment = R"(
         float sparkleAmount = dot(normalize(noise(gl_FragCoord.xy)), sparkle);
         sparkleAmount = step(0.999, sparkleAmount);
         blendedColour.rgb += sparkleAmount;*/
+
+        //refraction
+        /*vec2 refractCoords = v_refractionPosition.xy / v_refractionPosition.w / 2.0 + 0.5;
+        vec4 refractColour = TEXTURE(u_refractionMap, refractCoords);// + (normal.rg * Distortion));
+        blendedColour.rgb *= refractColour.rgb;*/
 
         FRAG_OUT = vec4(blendedColour, 1.0);
     })";

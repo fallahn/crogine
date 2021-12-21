@@ -153,33 +153,33 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
     ballEntity = {};
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("buns"))
-            {
-                /*auto s = glm::vec2(m_gameSceneTexture.getSize());
-                ImGui::Text("Scene size: %3.3f, %3.3f", s.x, s.y);
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("buns"))
+    //        {
+    //            /*auto s = glm::vec2(m_gameSceneTexture.getSize());
+    //            ImGui::Text("Scene size: %3.3f, %3.3f", s.x, s.y);
 
-                auto s2 = glm::vec2(GolfGame::getActiveTarget()->getSize());
-                ImGui::Text("Output Size: %3.3f, %3.3f", s2.x, s2.y);
+    //            auto s2 = glm::vec2(GolfGame::getActiveTarget()->getSize());
+    //            ImGui::Text("Output Size: %3.3f, %3.3f", s2.x, s2.y);
 
-                s2 /= m_viewScale;
-                ImGui::Text("Output Size (scaled): %3.3f, %3.3f", s2.x, s2.y);
+    //            s2 /= m_viewScale;
+    //            ImGui::Text("Output Size (scaled): %3.3f, %3.3f", s2.x, s2.y);
 
-                ImGui::Text("Scale: %3.3f, %3.3f", m_viewScale.x, m_viewScale.y);*/
+    //            ImGui::Text("Scale: %3.3f, %3.3f", m_viewScale.x, m_viewScale.y);*/
 
-                //auto active = m_freeCam.getComponent<cro::Camera>().active;
-                //ImGui::Text("Active %s", active ? "true" : "false");
-                
-                if (ballEntity.isValid())
-                {
-                    auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
-                    ImGui::Text("Ball Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-                }
-                //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.getTexture(), { 512.f, 512.f }, {0.f, 1.f}, { 1.f, 0.f });
-            }
-            ImGui::End();
-        });
+    //            //auto active = m_freeCam.getComponent<cro::Camera>().active;
+    //            //ImGui::Text("Active %s", active ? "true" : "false");
+    //            
+    //            /*if (ballEntity.isValid())
+    //            {
+    //                auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
+    //                ImGui::Text("Ball Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+    //            }*/
+    //            //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().refractionBuffer.getTexture(), { 256.f, 256.f }, {0.f, 1.f}, { 1.f, 0.f });
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
@@ -497,6 +497,15 @@ void GolfState::handleMessage(const cro::Message& msg)
         default: break;
         case SceneEvent::TransitionComplete:
         {
+            //show miniball
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::MiniBall;
+            cmd.action = [](cro::Entity e, float)
+            {
+                e.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
             break;
@@ -721,6 +730,12 @@ void GolfState::render()
     auto oldVP = cam.viewport;
 
     cam.viewport = { 0.f,0.f,1.f,1.f };
+
+    //cam.setActivePass(cro::Camera::Pass::Refraction);
+    //cam.renderFlags = RenderFlags::Refraction;
+    //cam.refractionBuffer.clear(cro::Colour::White);
+    //m_gameScene.render(cam.refractionBuffer);
+    //cam.refractionBuffer.display();
 
     cam.setActivePass(cro::Camera::Pass::Reflection);
     cam.renderFlags = RenderFlags::Reflection;
@@ -1460,7 +1475,7 @@ void GolfState::buildScene()
     waterEnt.getComponent<cro::Transform>().move({ 0.f, 0.f, -30.f });
     waterEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
     waterEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::Water]));
-    waterEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    waterEnt.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::Refraction));
     waterEnt.addComponent<cro::Callback>().active = true;
     waterEnt.getComponent<cro::Callback>().setUserData<glm::vec3>(m_holeData[0].pin);
     waterEnt.getComponent<cro::Callback>().function =
@@ -1474,7 +1489,7 @@ void GolfState::buildScene()
         tx.move(diff * 5.f * dt);
     };
     m_waterEnt = waterEnt;
-    m_gameScene.setWaterLevel(WaterLevel/* + 0.04f*/);
+    m_gameScene.setWaterLevel(WaterLevel);
 
 
     //tee marker
@@ -1597,6 +1612,8 @@ void GolfState::buildScene()
     cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     cam.reflectionBuffer.setSmooth(true);
 
+    cam.refractionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+    cam.refractionBuffer.setSmooth(true);
 
     //create an overhead camera
     auto setPerspective = [](cro::Camera& cam)
@@ -3206,6 +3223,16 @@ void GolfState::startFlyBy()
 
 
     setActiveCamera(CameraID::Transition);
+
+
+    //hide the minimap ball
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::MiniBall;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 std::int32_t GolfState::getClub() const

@@ -417,7 +417,6 @@ void ModelRenderer::applyBlendMode(Material::BlendMode mode)
         glCheck(glEnable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_FALSE));
-        //glCheck(glEnable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_ONE, GL_ONE));
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
@@ -427,7 +426,6 @@ void ModelRenderer::applyBlendMode(Material::BlendMode mode)
         glCheck(glEnable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_FALSE));
         glCheck(glEnable(GL_BLEND));
-        //glCheck(glDisable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
@@ -435,14 +433,12 @@ void ModelRenderer::applyBlendMode(Material::BlendMode mode)
         glCheck(glEnable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_FALSE));
-        //glCheck(glEnable(GL_CULL_FACE));
         glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
     case Material::BlendMode::None:
         glCheck(glEnable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_TRUE));
-        //glCheck(glEnable(GL_CULL_FACE));
         glCheck(glDisable(GL_BLEND));
         break;
     }

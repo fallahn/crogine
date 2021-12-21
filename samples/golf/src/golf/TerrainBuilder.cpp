@@ -73,7 +73,7 @@ namespace
     constexpr float MaxShrubOffset = MaxTerrainHeight + 13.f;
     constexpr std::int32_t SlopeGridSize = 20;
     constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
-
+    constexpr std::int32_t NormalMapMultiplier = 4; //number of times the resolution of the map to increase normal map resolution by
 
     //callback data
     struct SwapData final
@@ -376,7 +376,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     glCheck(glUniformMatrix4fv(m_normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
     glCheck(glUseProgram(0));
 
-    m_normalMap.create(MapSize.x, MapSize.y, false);
+    m_normalMap.create(MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier, false);
     if (m_currentHole < m_holeData.size())
     {
         renderNormalMap();
@@ -474,10 +474,11 @@ void TerrainBuilder::threadFunc()
     const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y)
     {
         auto size = m_normalMapImage.getSize();
-        x = std::min(size.x - 1, std::max(0u, x));
-        y = std::min(size.y - 1, std::max(0u, y));
+        x = std::min(size.x - 1, std::max(0u, x * NormalMapMultiplier));
+        y = std::min(size.y - 1, std::max(0u, y * NormalMapMultiplier));
 
         float height = static_cast<float>(m_normalMapImage.getPixel(x, y)[3]) / 255.f;
+
         return m_holeHeight.bottom + (m_holeHeight.height * height);
     };
 
@@ -665,7 +666,8 @@ void TerrainBuilder::threadFunc()
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
                 constexpr float DashCount = 40.f; //actual div by TAU cos its sin but eh.
-                constexpr float SlopeSpeed = 40.f;
+                constexpr float SlopeSpeed = -50.f;
+                constexpr std::int32_t AvgDistance = 5;
 
                 for (auto y = startY; y < startY + SlopeGridSize; ++y)
                 {
@@ -700,10 +702,16 @@ void TerrainBuilder::threadFunc()
                             glm::vec3 offset(1.f, 0.f, 0.f);
                             height = (readHeightMap(x + 1, y) - pinPos.y) + epsilon;
 
+                            //because of the low precision of the height map
+                            //we average out the slope over a greater distance
+                            glm::vec3 avgPosition = vert.position + glm::vec3(AvgDistance, 0.f, 0.f);
+                            avgPosition.y = (readHeightMap(x + AvgDistance, y) - pinPos.y) + epsilon;
+
                             SlopeVertex vert2;
                             vert2.position = vert.position + offset;
                             vert2.position.y = height;
-                            vert2.texCoord = { DashCount, std::min(2.f, std::max(-2.f, (vert.position.y - height) * SlopeSpeed)) };
+                            //vert2.texCoord = { DashCount, std::min(2.f, std::max(-2.f, (vert.position.y - height) * SlopeSpeed)) };
+                            vert2.texCoord = { DashCount, glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed};
                             vert.texCoord.y = vert2.texCoord.y; //must be constant across segment
 
                             if (height < lowestHeight)
@@ -723,10 +731,14 @@ void TerrainBuilder::threadFunc()
                             offset = glm::vec3(0.f, 0.f, -1.f);
                             height = (readHeightMap(x, y + 1) - pinPos.y) + epsilon;
 
+                            avgPosition = vert.position + glm::vec3(0.f, 0.f, -AvgDistance);
+                            avgPosition.y = (readHeightMap(x, y + AvgDistance) - pinPos.y) + epsilon;
+
                             SlopeVertex vert4;
                             vert4.position = vert.position + offset;
                             vert4.position.y = height;
-                            vert4.texCoord = { DashCount, std::min(2.f, std::max(-2.f, (vert3.position.y - height) * SlopeSpeed)) };
+                            //vert4.texCoord = { DashCount, std::min(2.f, std::max(-2.f, (vert3.position.y - height) * SlopeSpeed)) };
+                            vert4.texCoord = { DashCount, glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed };
                             vert3.texCoord.y = vert4.texCoord.y;
 
                             if (height < lowestHeight)
@@ -759,7 +771,14 @@ void TerrainBuilder::threadFunc()
                     {
                         auto vertHeight = v.position.y - lowestHeight;
                         vertHeight /= maxHeight;
-                        v.colour = { 0.f, 0.4f * vertHeight, 1.f - vertHeight, 0.8f };
+                        //v.colour = { 0.f, 0.4f * vertHeight, 1.f - vertHeight, 0.8f };
+                        v.colour = 
+                        { 
+                            cro::Util::Easing::easeInQuint(std::max(0.f, (vertHeight - 0.5f) * 2.f)),
+                            0.f,
+                            cro::Util::Easing::easeInQuint(std::min(1.f, vertHeight * 2.f)),
+                            0.8f
+                        };
                     }
                 }
 

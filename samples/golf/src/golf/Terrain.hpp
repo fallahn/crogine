@@ -40,6 +40,7 @@ struct RenderFlags final
         MiniMap = 0x1,
         MiniGreen = 0x2,
         Reflection = 0x4,
+        Refraction = 0x8,
 
         All = std::numeric_limits<std::uint64_t>::max()
     };
