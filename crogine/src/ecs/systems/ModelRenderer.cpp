@@ -165,7 +165,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     //sort lists by depth
     //flag values make sure transparent materials are rendered last
     //with opaque going front to back and transparent back to front
-    for (auto i = 0u; i < passCount; ++i)
+    for (auto i = 0; i < passCount; ++i)
     {
         std::sort(std::begin(m_visibleEnts[i]), std::end(m_visibleEnts[i]),
             [](MaterialPair& a, MaterialPair& b)

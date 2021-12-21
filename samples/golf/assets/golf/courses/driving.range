@@ -1,6 +1,6 @@
 driving_range
 {
-    hole = -16.3, 2.5,      72.8
+    hole = -16.3, 2.5,   72.8
     hole = 7.3,   2.25,  52.4
     hole = 27.4,  2.25,  38
     hole = -26.9, 2.25,  37
@@ -8,7 +8,7 @@ driving_range
     hole = -11.9, 1.82,  7.3
     hole = -45.1, 1,     -13.3
     hole = 10.3,  1.25,  -21.2
-    hole = 56.5,  1,   -38.6
+    hole = 56.5,  1,    -38.6
     hole = -31,   1.25,  -45.1
     hole = -70.4, 0.66,  -82.6
     hole = -15.5, 0.48,  -94.5
@@ -70,4 +70,16 @@ driving_range
         position = -5.000000,3.500000,-189.000000
         rotation = 34.500849
     }
+
+    prop
+    {
+        model = "assets/golf/models/cart.cmt"
+        position = 2.62,3.42,-172.2
+        rotation = -7.92
+
+        path
+        {
+            point = 97.3,1.02,-162.4
+        }
+    }    
 }

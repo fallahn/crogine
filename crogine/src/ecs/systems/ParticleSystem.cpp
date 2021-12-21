@@ -292,7 +292,7 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
 
     DPRINT("Visible particle Systems", std::to_string(m_visibleEntities[0].size()));
 
-    for (auto i = 0u; i < passCount; ++i)
+    for (auto i = 0; i < passCount; ++i)
     {
         //TODO find a way to swap this buffer rather than copy each time.
         cam.getDrawList(i)[getType()] = std::make_any<std::vector<Entity>>(m_visibleEntities[i]);
