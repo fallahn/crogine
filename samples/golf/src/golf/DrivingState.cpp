@@ -804,6 +804,9 @@ void DrivingState::initAudio()
 
 void DrivingState::createScene()
 {
+    cro::AudioScape as;
+    as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
+
     const auto& quitFail = [&](const std::string msg)
     {
         //create a basic render texture in case a load
@@ -854,6 +857,8 @@ void DrivingState::createScene()
             glm::vec3 position(0.f);
             float rotation = 0.f;
 
+            std::vector<glm::vec3> targets;
+
             const auto& properties = obj.getProperties();
             for (const auto& p : properties)
             {
@@ -872,6 +877,23 @@ void DrivingState::createScene()
                 }
             }
 
+            //check for movement paths
+            const auto propObjs = obj.getObjects();
+            for (const auto& pObj : propObjs)
+            {
+                if (pObj.getName() == "path")
+                {
+                    const auto& points = pObj.getProperties();
+                    for (const auto& point : points)
+                    {
+                        if (point.getName() == "point")
+                        {
+                            targets.push_back(point.getValue<glm::vec3>());
+                        }
+                    }
+                }
+            }
+
             cro::ModelDefinition md(m_resources);
             if (!path.empty()
                 && md.loadFromFile(path))
@@ -886,6 +908,50 @@ void DrivingState::createScene()
                 setTexture(md, material);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
                 entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+
+                //if we have a path to follow, add it
+                if (!targets.empty())
+                {
+                    entity.addComponent<cro::Callback>().active = true;
+                    entity.getComponent<cro::Callback>().setUserData<std::pair<std::size_t, std::vector<glm::vec3>>>(0, targets);
+                    entity.getComponent<cro::Callback>().function =
+                        [](cro::Entity e, float dt)
+                    {
+                        auto& [index, targets] = e.getComponent<cro::Callback>().getUserData<std::pair<std::size_t, std::vector<glm::vec3>>>();
+                        auto& tx = e.getComponent<cro::Transform>();
+                        auto dir = targets[index] - tx.getPosition();
+
+                        float dist = glm::length(dir);
+                        dir /= dist;
+
+                        static constexpr float MinDist = 5.f;
+                        static constexpr float MinSpeed = 7.f;
+                        static constexpr float MaxSpeed = 14.f;
+
+                        float multiplier = std::min(1.f, dist / MinDist);
+                        float speed = MinSpeed + ((MaxSpeed - MinSpeed) * multiplier);
+
+                        dir *= speed;
+                        tx.move(dir * dt);
+
+                        e.getComponent<cro::AudioEmitter>().setVelocity(dir);
+                        e.getComponent<cro::AudioEmitter>().setPitch(speed / MaxSpeed);
+
+                        if (dist < 0.2f)
+                        {
+                            index++;
+                            if (index == targets.size())
+                            {
+                                e.getComponent<cro::AudioEmitter>().stop();
+                                e.getComponent<cro::Callback>().active = false;
+                            }
+                        }
+                    };
+
+                    //this assumes we're a cart, but hey
+                    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("cart");
+                    entity.getComponent<cro::AudioEmitter>().play();
+                }
             }
         }
     }
