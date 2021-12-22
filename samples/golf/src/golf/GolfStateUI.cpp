@@ -420,15 +420,15 @@ void GolfState::buildUI()
                 m_mapQuad.setPosition(offset);
                 m_mapQuad.setColour(cro::Colour(0.396f,0.263f,0.184f));
                 m_mapTexture.clear(cro::Colour::Transparent);
-                m_mapQuad.draw(m_mapBuffer);
+                m_mapQuad.draw();
 
                 m_mapQuad.setPosition(glm::vec2(0.f));
                 m_mapQuad.setColour(cro::Colour::White);
-                m_mapQuad.draw(m_mapBuffer);
+                m_mapQuad.draw();
 
                 auto holePos = m_holeData[m_currentHole].pin / 2.f;
                 m_flagQuad.setPosition({ holePos.x, -holePos.z });
-                m_flagQuad.draw(m_mapBuffer);
+                m_flagQuad.draw();
                 m_mapTexture.display();
 
                 //and set to grow

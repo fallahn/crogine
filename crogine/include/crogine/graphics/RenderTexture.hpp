@@ -166,5 +166,7 @@ namespace cro
 
         bool m_hasDepthBuffer;
         bool m_hasStencilBuffer;
+
+        std::uint32_t getFrameBufferID() const override { return m_fboID; }
     };
 }

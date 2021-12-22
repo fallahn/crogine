@@ -226,12 +226,8 @@ void MultiRenderTexture::clear(cro::Colour clearColour)
     glCheck(glGetIntegerv(GL_VIEWPORT, m_lastViewport.data()));
     glCheck(glViewport(m_viewport.left, m_viewport.bottom, m_viewport.width, m_viewport.height));
 
-    //store active buffer
-    m_lastBuffer = RenderTarget::ActiveTarget;
-
-    //set buffer active
-    glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fboID));
-    RenderTarget::ActiveTarget = m_fboID;
+    //store active buffer and bind this one
+    setActive(true);
 
     //store previous clear colour
     m_lastClearColour = App::getInstance().getClearColour();
@@ -251,12 +247,8 @@ void MultiRenderTexture::clear(const std::vector<Colour>& colours)
     glCheck(glGetIntegerv(GL_VIEWPORT, m_lastViewport.data()));
     glCheck(glViewport(m_viewport.left, m_viewport.bottom, m_viewport.width, m_viewport.height));
 
-    //store active buffer
-    m_lastBuffer = RenderTarget::ActiveTarget;
-
-    //set buffer active
-    glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fboID));
-    RenderTarget::ActiveTarget = m_fboID;
+    //store active buffer and bind this one
+    setActive(true);
 
     //store previous clear colour
     m_lastClearColour = App::getInstance().getClearColour();
@@ -277,8 +269,7 @@ void MultiRenderTexture::display()
     glCheck(glViewport(m_lastViewport[0], m_lastViewport[1], m_lastViewport[2], m_lastViewport[3]));
 
     //unbind buffer
-    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_lastBuffer));
-    RenderTarget::ActiveTarget = m_lastBuffer;
+    setActive(false);
 
     App::getInstance().setClearColour(m_lastClearColour);
 #endif

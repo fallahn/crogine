@@ -2786,15 +2786,15 @@ void MenuState::updateLobbyAvatars()
                     simpleText.setString(c.playerData[i].name);
                     auto bounds = simpleText.getLocalBounds().width;
                     simpleText.setPosition({ std::round((LabelTextureSize.x - bounds) / 2.f), (i * (LabelTextureSize.y / 4)) + 4.f });
-                    simpleText.draw(cro::App::getWindow());
+                    simpleText.draw();
 
                     simpleQuad.setPosition({ 4.f,(i * (LabelTextureSize.y / 4)) + 4.f });
                     simpleQuad.setColour(cro::Colour(pc::Palette[c.playerData[i].avatarFlags[1]].light));
-                    simpleQuad.draw(cro::App::getWindow());
+                    simpleQuad.draw();
 
                     simpleQuad.move({ 112.f, 0.f });
                     simpleQuad.setColour(cro::Colour(pc::Palette[c.playerData[i].avatarFlags[0]].light));
-                    simpleQuad.draw(cro::App::getWindow());
+                    simpleQuad.draw();
                 }
                 m_sharedData.nameTextures[c.connectionID].display();
             }

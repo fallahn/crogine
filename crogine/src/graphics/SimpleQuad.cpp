@@ -31,7 +31,6 @@ source distribution.
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/Vertex2D.hpp>
-#include <crogine/graphics/RenderTarget.hpp>
 
 using namespace cro;
 
@@ -87,9 +86,9 @@ void SimpleQuad::setColour(const cro::Colour& colour)
     updateVertexData();
 }
 
-void SimpleQuad::draw(const cro::RenderTarget& target)
+void SimpleQuad::draw()
 {
-    drawGeometry(getTransform(), target.getSize());
+    drawGeometry(getTransform());
 }
 
 //private

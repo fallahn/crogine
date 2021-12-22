@@ -1139,7 +1139,7 @@ void DrivingState::updateMinimap()
     auto holePos = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin / 2.f;
     m_flagQuad.setPosition({ holePos.x, -holePos.z });
     m_flagQuad.move(RangeSize / 4.f);
-    m_flagQuad.draw(m_mapTexture);
+    m_flagQuad.draw();
 
     m_mapTexture.display();
 

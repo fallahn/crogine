@@ -158,7 +158,7 @@ FloatRect SimpleText::getGlobalBounds()
     return getLocalBounds().transform(getTransform());
 }
 
-void SimpleText::draw(const RenderTarget& target)
+void SimpleText::draw()
 {
     if (m_dirtyFlags
         || (m_fontTexture && m_fontTexture->getSize() != m_lastTextureSize))
@@ -166,7 +166,7 @@ void SimpleText::draw(const RenderTarget& target)
         m_dirtyFlags = 0;
         updateVertices();
     }
-    drawGeometry(getTransform(), target.getSize());
+    drawGeometry(getTransform());
 }
 
 //private

@@ -170,6 +170,8 @@ bool Window::getMultisamplingEnabled() const
 
 void Window::clear()
 {
+    setActive(true);
+
     //glClearColor(1.f, 0.f, 0.f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
@@ -177,6 +179,9 @@ void Window::clear()
 void Window::display()
 {
     SDL_GL_SwapWindow(m_window);
+
+    //TODO hmmmm are we needlessly calling this 99.99999% of the time?
+    setActive(false);
 }
 
 bool Window::pollEvent(Event& evt)

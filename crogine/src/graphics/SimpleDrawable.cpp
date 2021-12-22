@@ -235,12 +235,12 @@ void SimpleDrawable::setVertexData(const std::vector<Vertex2D>& vertexData)
     m_vertexCount = static_cast<std::uint32_t>(vertexData.size());
 }
 
-void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform, glm::uvec2 targetSize) const
+void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
 {
     if (m_textureID)
     {
-        //check if screen size changed - TODO this should be checking the active buffer, not window
-        auto size = targetSize;// App::getWindow().getSize();
+        //check if screen size changed
+        auto size = RenderTarget::getActiveTarget()->getSize();
         if (size != screenSize)
         {
             projectionMatrix = glm::ortho(0.f, static_cast<float>(size.x), 0.f, static_cast<float>(size.y), -1.f, 1.f);

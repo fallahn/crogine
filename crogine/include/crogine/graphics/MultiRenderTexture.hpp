@@ -163,5 +163,7 @@ namespace cro
         std::array<std::int32_t, 4u> m_lastViewport = {};
         std::int32_t m_lastBuffer;
         cro::Colour m_lastClearColour;
+
+        std::uint32_t getFrameBufferID() const override { return m_fboID; }
     };
 }

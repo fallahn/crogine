@@ -230,7 +230,7 @@ void GolfGame::render()
         m_stateStack.render();
         m_postBuffer->display();
 
-        m_postQuad->draw(cro::App::getWindow());
+        m_postQuad->draw();
     }
     else
     {

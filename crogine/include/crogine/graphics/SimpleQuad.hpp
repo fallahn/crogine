@@ -93,9 +93,8 @@ namespace cro
 
         /*!
         \brief Draws the quad to the active target
-        \param target Reference to the active render target.
         */
-        void draw(const cro::RenderTarget& target) override;
+        void draw() override;
 
     private:
         cro::Colour m_colour;

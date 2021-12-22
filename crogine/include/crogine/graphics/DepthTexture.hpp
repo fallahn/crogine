@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -127,5 +127,7 @@ namespace cro
         URect m_viewport;
         std::array<std::int32_t, 4u> m_lastViewport = {};
         std::int32_t m_lastBuffer;
+
+        std::uint32_t getFrameBufferID() const override { return m_fboID; }
     };
 }

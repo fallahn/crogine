@@ -33,8 +33,6 @@ source distribution.
 
 using namespace cro;
 
-std::int32_t RenderTarget::ActiveTarget = 0;
-
 RenderTexture::RenderTexture()
     : m_fboID           (0),
     m_rboID             (0),
@@ -242,13 +240,8 @@ void RenderTexture::clear(Colour colour)
     glCheck(glGetIntegerv(GL_VIEWPORT, m_lastViewport.data()));
     glCheck(glViewport(m_viewport.left, m_viewport.bottom, m_viewport.width, m_viewport.height));
 
-    //store active buffer
-    //glCheck(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_lastBuffer));
-    m_lastBuffer = RenderTarget::ActiveTarget;
-
-    //set buffer active
-    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_fboID));
-    RenderTarget::ActiveTarget = m_fboID;
+    //store active buffer and bind this one
+    setActive(true);
 
     //clear buffer - UH OH this will clear the main buffer if FBO is null
     glCheck(glGetFloatv(GL_COLOR_CLEAR_VALUE, m_lastClearColour.data()));
@@ -265,8 +258,7 @@ void RenderTexture::display()
     glCheck(glClearColor(m_lastClearColour[0], m_lastClearColour[1], m_lastClearColour[2], m_lastClearColour[3]));
 
     //unbind buffer
-    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_lastBuffer));
-    RenderTarget::ActiveTarget = m_lastBuffer;
+    setActive(false);
 }
 
 void RenderTexture::setViewport(URect viewport)

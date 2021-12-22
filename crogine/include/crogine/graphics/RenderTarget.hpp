@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2021
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,8 +33,12 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
+#include <array>
+
 namespace cro
 {
+    class NullTarget;
+
     /*!
     \brief Base class used by Windows and RenderTextures to
     pass information about themselves to Scenes when rendering
@@ -61,14 +65,33 @@ namespace cro
                             static_cast<int>(0.5f + height * normalised.height));
         }
 
+        /*!
+        \brief Returns a pointer to the currently bound RenderTarget
+        or nullptr if not target has been activated.
+        */
+        static const RenderTarget* getActiveTarget();
+
+    protected:
+        /*!
+        \brief Used to track the active frame buffer.
+        Classes inheriting RenderTarget should set this to true
+        when clearing the target, and false once the buffer is displayed.
+        */
+        void setActive(bool);
+
+        /*!
+        \brief Return the implementation's FBO ID, used by setActive()
+        */
+        virtual std::uint32_t getFrameBufferID() const = 0;
+
     private:
+       friend class NullTarget;
 
-        friend class RenderTexture;
-        friend class DepthTexture;
-        friend class MultiRenderTexture;
-
-        //used by render targets such as render texture or depth texture
-        //to track the  current FBO without having to query OpenGL
-        static std::int32_t ActiveTarget;
+        //used to track the active render target. This only works as
+        //long as there's only one window/context active - else we
+        //need to refactor this to per-context tracking
+        static constexpr std::size_t MaxActiveTargets = 10;
+        static std::size_t m_bufferIndex;
+        static std::array<const RenderTarget*, MaxActiveTargets> m_bufferStack;
     };
 }

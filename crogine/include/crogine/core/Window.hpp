@@ -226,6 +226,7 @@ namespace cro
         */
         const Cursor* getCursor() const;
 
+
     private:
 
         SDL_Window* m_window;
@@ -245,6 +246,9 @@ namespace cro
         void destroy();
 
         friend class App;
+
+
+        std::uint32_t getFrameBufferID() const override { return 0; }
     };
 
     template <typename T, typename... Args>

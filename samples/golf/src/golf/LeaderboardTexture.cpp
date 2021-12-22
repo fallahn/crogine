@@ -69,9 +69,9 @@ void LeaderboardTexture::update(std::vector<LeaderboardEntry>& entries)
 
     m_texture.clear(cro::Colour::Red);
     m_backgroundSprite.setPosition({ 0.f, 0.f });
-    m_backgroundSprite.draw(m_texture);
+    m_backgroundSprite.draw();
     m_backgroundSprite.setPosition({ 0.f, offset });
-    m_backgroundSprite.draw(m_texture);
+    m_backgroundSprite.draw();
 
     for (auto& [position, str] : entries)
     {
@@ -80,7 +80,7 @@ void LeaderboardTexture::update(std::vector<LeaderboardEntry>& entries)
 
         m_text.setPosition(position);
         m_text.setString(str);
-        m_text.draw(m_texture);
+        m_text.draw();
     }
 
     m_texture.display();

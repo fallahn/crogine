@@ -324,6 +324,7 @@
     <ClCompile Include="..\crogine\src\graphics\postprocess\PostChromeAB.cpp" />
     <ClCompile Include="..\crogine\src\graphics\postprocess\PostProcess.cpp" />
     <ClCompile Include="..\crogine\src\graphics\PrimitiveBuilders.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\RenderTarget.cpp" />
     <ClCompile Include="..\crogine\src\graphics\RenderTexture.cpp" />
     <ClCompile Include="..\crogine\src\graphics\ModelDefinition.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Shader.cpp" />

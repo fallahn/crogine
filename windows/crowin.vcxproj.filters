@@ -1070,6 +1070,9 @@
     <ClCompile Include="..\crogine\src\util\Spline.cpp">
       <Filter>Source Files\util</Filter>
     </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\RenderTarget.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\crogine\include\crogine\ecs\Entity.inl">
