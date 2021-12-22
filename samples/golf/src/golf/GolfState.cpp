@@ -640,6 +640,34 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 bool GolfState::simulate(float dt)
 {
+#ifdef CRO_DEBUG_
+    glm::vec3 move(0.f);
+    if (cro::Keyboard::isKeyPressed(SDLK_UP))
+    {
+        move.z -= 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_DOWN))
+    {
+        move.z += 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_LEFT))
+    {
+        move.x -= 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_RIGHT))
+    {
+        move.x += 1.f;
+    }
+    
+    if (glm::length2(move) > 1)
+    {
+        move = glm::normalize(move);
+    }
+    m_waterEnt.getComponent<cro::Transform>().move(move * 10.f * dt);
+#endif
+
+
+
     if (m_sharedData.clientConnection.connected)
     {
         cro::NetEvent evt;
@@ -3366,6 +3394,7 @@ void GolfState::toggleFreeCam()
     }
 
     m_gameScene.setSystemActive<FpsCameraSystem>(useFreeCam);
+    m_waterEnt.getComponent<cro::Callback>().active = !useFreeCam;
     m_inputParser.setActive(!useFreeCam);
     cro::App::getWindow().setMouseCaptured(useFreeCam);
 }
