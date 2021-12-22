@@ -27,6 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include <crogine/core/App.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/graphics/RenderTarget.hpp>
 #include "../detail/GLCheck.hpp"
@@ -36,21 +37,12 @@ using namespace cro;
 std::size_t RenderTarget::m_bufferIndex = 0;
 std::array<const RenderTarget*, RenderTarget::MaxActiveTargets> RenderTarget::m_bufferStack = { nullptr };
 
-class cro::NullTarget final : public RenderTarget
+struct cro::NullTarget final
 {
-public:
-    static void init()
+    NullTarget()
     {
-        static NullTarget target;
-        RenderTarget::m_bufferStack[0] = &target;
+        RenderTarget::m_bufferStack[0] = &cro::App::getWindow();
     }
-
-    glm::uvec2 getSize() const { return { 0,0 }; }
-
-private:
-    NullTarget() = default;
-    
-    std::uint32_t getFrameBufferID() const override { return 0; }
 };
 
 const RenderTarget* RenderTarget::getActiveTarget()
@@ -62,10 +54,9 @@ void RenderTarget::setActive(bool active)
 {
     if (active)
     {
-        NullTarget::init();
+        static NullTarget nt; //places the window as the default target at the bottom of the stack
 
-        //TODO this assertion won't work if we're pointing to the null item on the stack
-        //CRO_ASSERT(getFrameBufferID() != RenderTarget::m_bufferStack[RenderTarget::m_bufferIndex]->getFrameBufferID(), "Target currently active");
+        CRO_ASSERT(getFrameBufferID() != RenderTarget::m_bufferStack[RenderTarget::m_bufferIndex]->getFrameBufferID(), "Target currently active");
 
         RenderTarget::m_bufferStack[++RenderTarget::m_bufferIndex] = this;
         CRO_ASSERT(RenderTarget::m_bufferIndex < RenderTarget::m_bufferStack.size(), "Max active buffers reached");
@@ -79,7 +70,6 @@ void RenderTarget::setActive(bool active)
         RenderTarget::m_bufferIndex--;
         CRO_ASSERT(RenderTarget::m_bufferIndex < RenderTarget::m_bufferStack.size(), "Uneven calls to setActive detected");
 
-        //TODO some nullimpl for when the index reaches 0
         glCheck(glBindFramebuffer(GL_FRAMEBUFFER, RenderTarget::m_bufferStack[RenderTarget::m_bufferIndex]->getFrameBufferID()));
     }
 }

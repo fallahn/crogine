@@ -37,7 +37,7 @@ source distribution.
 
 namespace cro
 {
-    class NullTarget;
+    struct NullTarget;
 
     /*!
     \brief Base class used by Windows and RenderTextures to
@@ -67,7 +67,6 @@ namespace cro
 
         /*!
         \brief Returns a pointer to the currently bound RenderTarget
-        or nullptr if not target has been activated.
         */
         static const RenderTarget* getActiveTarget();
 
@@ -85,7 +84,7 @@ namespace cro
         virtual std::uint32_t getFrameBufferID() const = 0;
 
     private:
-       friend class NullTarget;
+       friend struct NullTarget;
 
         //used to track the active render target. This only works as
         //long as there's only one window/context active - else we
