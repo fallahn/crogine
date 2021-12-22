@@ -87,7 +87,7 @@ static const std::string WaterFragment = R"(
     VARYING_IN vec4 v_refractionPosition;
 
     // pixels per metre
-    vec2 PixelCount = vec2(320.0 * 8.0, 200.0 * 8.0);
+    vec2 PixelCount = vec2(320.0 * 2.0, 200.0 * 2.0);
 
     const vec3 WaterColour = vec3(0.02, 0.078, 0.578);
     //const vec3 WaterColour = vec3(0.2, 0.278, 0.278);
@@ -103,9 +103,19 @@ static const std::string WaterFragment = R"(
 
     void main()
     {
-        vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+        //sparkle
+        float waveSpeed = u_time / 2.0;
+        vec2 coord = v_texCoord;
+        coord.y += waveSpeed / (PixelCount.y * 4.0);
 
-        float coordOffset = sin(u_time + (gl_FragCoord.z * 325.0)) * 0.0005;
+        vec2 pixelCoord = floor(mod(coord, 1.0) * PixelCount);
+        float wave = noise(pixelCoord);
+        wave *= sin(waveSpeed + (wave * 300.0)) + 1.0 / 2.0;
+        wave = smoothstep(0.25, 1.0, wave);
+        
+
+        float coordOffset = sin((u_time / 4.0) + (gl_FragCoord.z * 325.0)) * 0.0002;
+        coordOffset += wave * 0.002;
 
         //reflection
         vec2 reflectCoords = v_reflectionPosition.xy / v_reflectionPosition.w / 2.0 + 0.5;
@@ -113,6 +123,7 @@ static const std::string WaterFragment = R"(
 
         vec4 reflectColour = TEXTURE(u_reflectionMap, reflectCoords);
 
+        vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
         vec3 normal = normalize(v_normal);
 
         float fresnel = dot(reflect(-eyeDirection, normal), normal);
@@ -121,22 +132,7 @@ static const std::string WaterFragment = R"(
 
         vec3 blendedColour = mix(reflectColour.rgb, WaterColour.rgb, fresnel);
 
-
-        //refraction
-        /*vec2 refractCoords = v_refractionPosition.xy / v_refractionPosition.w / 2.0 + 0.5;
-        vec4 refractColour = TEXTURE(u_refractionMap, refractCoords);// + (normal.rg * Distortion));
-        blendedColour.rgb *= refractColour.rgb;*/
-
-        //sparkle
-        float waveSpeed = u_time / 2.0;
-        vec2 coord = v_texCoord;
-        coord.x += coordOffset * 0.1;
-        vec2 pixelCoord = floor(mod(coord, 1.0) * PixelCount);
-        float wave = noise(pixelCoord);
-        wave *= sin(waveSpeed + (wave * 300.0)) + 1.0 / 2.0;
-        wave = smoothstep(0.25, 1.0, wave);
-        wave *= 0.8 * pow(reflectCoords.y, 4.0);
-
+        wave *= 0.2 * pow(reflectCoords.y, 4.0);
         blendedColour.rgb += wave;
 
         FRAG_OUT = vec4(blendedColour, 1.0);

@@ -10,7 +10,7 @@ model leaderboard
         smooth = false
         repeat = true
         depth_test = true
-        double_sided = false
+        double_sided = true
         blendmode = none
         diffuse = "assets/golf/images/score_background.png"
         alpha_clip = 0.520000
