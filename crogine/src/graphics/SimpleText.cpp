@@ -31,6 +31,7 @@ source distribution.
 #include "../detail/glad.hpp"
 
 #include <crogine/graphics/SimpleText.hpp>
+#include <crogine/graphics/RenderTarget.hpp>
 
 using namespace cro;
 
@@ -42,7 +43,7 @@ SimpleText::SimpleText()
     setPrimitiveType(GL_TRIANGLES);
 }
 
-SimpleText::SimpleText(const cro::Font& font)
+SimpleText::SimpleText(const Font& font)
     : SimpleText()
 {
     setFont(font);
@@ -157,7 +158,7 @@ FloatRect SimpleText::getGlobalBounds()
     return getLocalBounds().transform(getTransform());
 }
 
-void SimpleText::draw()
+void SimpleText::draw(const RenderTarget& target)
 {
     if (m_dirtyFlags
         || (m_fontTexture && m_fontTexture->getSize() != m_lastTextureSize))
@@ -165,7 +166,7 @@ void SimpleText::draw()
         m_dirtyFlags = 0;
         updateVertices();
     }
-    drawGeometry(getTransform());
+    drawGeometry(getTransform(), target.getSize());
 }
 
 //private

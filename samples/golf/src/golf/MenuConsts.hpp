@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include <crogine/core/Clock.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/components/Text.hpp>
@@ -66,6 +67,7 @@ static const cro::Colour TextGreenColour(0x6ebe70ff);
 static const cro::Colour LeaderboardTextDark(0x1a1e2dff);
 static const cro::Colour LeaderboardTextLight(0xfff8e1ff);
 
+static constexpr float LeaderboardTextSpacing = 6.f;
 static constexpr float BackgroundAlpha = 0.7f;
 
 static constexpr float UIBarHeight = 16.f;

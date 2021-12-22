@@ -35,6 +35,7 @@ source distribution.
 #include "TerrainBuilder.hpp"
 #include "CameraFollowSystem.hpp"
 #include "CollisionMesh.hpp"
+#include "LeaderboardTexture.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -221,6 +222,7 @@ private:
     bool m_roundEnded;
     glm::vec2 m_viewScale;
     std::size_t m_scoreColumnCount;
+    LeaderboardTexture m_leaderboardTexture;
 
     cro::Entity m_courseEnt;
     cro::Entity m_waterEnt;

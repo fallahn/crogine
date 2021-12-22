@@ -38,6 +38,7 @@ namespace cro
 {
     class Shader;
     class Texture;
+    class RenderTarget;
 
     /*!
     \brief Simple drawable base class
@@ -91,8 +92,10 @@ namespace cro
         to update any vertex data as well as to submit a
         deriving class's transform to the protected
         drawGeometry() function
+        \param target The active render target to which to draw.
+        Could be a Window or RenderTexture for example.
         */
-        virtual void draw() = 0;
+        virtual void draw(const RenderTarget&) = 0;
 
     protected:
         /*!
@@ -117,7 +120,7 @@ namespace cro
         /*!
         \brief Draws the geometry with the given transform
         */
-        void drawGeometry(const glm::mat4& worldTransform) const;
+        void drawGeometry(const glm::mat4& worldTransform, glm::uvec2 targetSize) const;
 
     private:
         std::uint32_t m_primitiveType;

@@ -37,6 +37,7 @@ source distribution.
 namespace cro
 {
     class String;
+    class RenderTarget;
 
     /*!
     \brief SimpleText class.
@@ -159,8 +160,9 @@ namespace cro
 
         /*!
         \brief Draw the text to the active buffer
+        \param target Reference to the active render target.
         */
-        void draw() override;
+        void draw(const RenderTarget& target) override;
 
     private:
         TextContext m_context;

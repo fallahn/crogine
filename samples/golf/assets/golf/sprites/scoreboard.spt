@@ -12,6 +12,11 @@ spritesheet scoreboard
         bounds = 0,0,388,532
     }
 
+    sprite board
+    {
+        bounds = 0,0,388,266
+    }
+
     sprite player_select
     {
         bounds = 400,308,94,98

@@ -420,15 +420,15 @@ void GolfState::buildUI()
                 m_mapQuad.setPosition(offset);
                 m_mapQuad.setColour(cro::Colour(0.396f,0.263f,0.184f));
                 m_mapTexture.clear(cro::Colour::Transparent);
-                m_mapQuad.draw();
+                m_mapQuad.draw(m_mapBuffer);
 
                 m_mapQuad.setPosition(glm::vec2(0.f));
                 m_mapQuad.setColour(cro::Colour::White);
-                m_mapQuad.draw();
+                m_mapQuad.draw(m_mapBuffer);
 
                 auto holePos = m_holeData[m_currentHole].pin / 2.f;
                 m_flagQuad.setPosition({ holePos.x, -holePos.z });
-                m_flagQuad.draw();
+                m_flagQuad.draw(m_mapBuffer);
                 m_mapTexture.display();
 
                 //and set to grow
@@ -858,10 +858,14 @@ void GolfState::createScoreboard()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.getComponent<cro::Transform>().setOrigin({ -6.f, 253.f, -0.2f});
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
+    auto bgSprite = spriteSheet.getSprite("background");;
+    entity.addComponent<cro::Sprite>() = bgSprite;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     cro::FloatRect bgCrop({ 0.f, bounds.height - 266.f, 389.f, 266.f });
     entity.addComponent<cro::Drawable2D>().setCroppingArea(bgCrop);
+
+    bgSprite = spriteSheet.getSprite("board");;
+    m_leaderboardTexture.init(bgSprite, font);
 
     auto scrollEnt = m_uiScene.createEntity();
     scrollEnt.addComponent<cro::Transform>();
@@ -912,7 +916,7 @@ void GolfState::createScoreboard()
         e.addComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions[i], 1.3f));
         e.addComponent<cro::Drawable2D>();
         e.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
-        e.getComponent<cro::Text>().setVerticalSpacing(6.f);
+        e.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
         e.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
 
         scrollEnt.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
@@ -998,6 +1002,9 @@ void GolfState::updateScoreboard()
             page2 = std::min(MaxCols, holeCount - m_scoreColumnCount);
         }
 
+        //store the strings to update the leaderboard texture with
+        std::vector<LeaderboardEntry> leaderboardEntries;
+
         //name column
         cro::String nameString = "HOLE\nPAR";
         for (auto i = 0u; i < playerCount; ++i)
@@ -1019,6 +1026,7 @@ void GolfState::updateScoreboard()
             }
         }
         ents[0].getComponent<cro::Text>().setString(nameString);
+        leaderboardEntries.emplace_back(ents[0].getComponent<cro::Transform>().getPosition(), nameString);
 
         //score columns
         for (auto i = 1u; i < ents.size() - 1; ++i)
@@ -1049,6 +1057,7 @@ void GolfState::updateScoreboard()
             }
 
             ents[i].getComponent<cro::Text>().setString(scoreString);
+            leaderboardEntries.emplace_back(ents[i].getComponent<cro::Transform>().getPosition(), scoreString);
         }
 
         //total column
@@ -1103,10 +1112,15 @@ void GolfState::updateScoreboard()
         }
 
         ents.back().getComponent<cro::Text>().setString(totalString);
+        leaderboardEntries.emplace_back(ents.back().getComponent<cro::Transform>().getPosition(), totalString);
+
         //for some reason we have to hack this to display and I'm too lazy to debug it
         auto pos = ents.back().getComponent<cro::Transform>().getPosition();
         pos.z = 1.5f;
         ents.back().getComponent<cro::Transform>().setPosition(pos);
+
+
+        m_leaderboardTexture.update(leaderboardEntries);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
