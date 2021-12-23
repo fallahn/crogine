@@ -124,21 +124,6 @@ namespace cro
         void display();
 
         /*!
-        \brief Defines the area of the RenderTexture on to which to draw.
-        */
-        void setViewport(URect);
-
-        /*!
-        \brief Returns the active viewport for this texture
-        */
-        URect getViewport() const;
-
-        /*!
-        \brief Returns the default viewport of the RenderTexture
-        */
-        URect getDefaultViewport() const;
-
-        /*!
         \brief Returns true if the render texture is available for drawing.
         If create() has not yet been called, or previously failed then this
         will return false
@@ -159,10 +144,7 @@ namespace cro
         std::uint32_t m_rboID;
         std::uint32_t m_clearBits;
         Texture m_texture;
-        URect m_viewport;
-        std::array<std::int32_t, 4u> m_lastViewport = {};
         std::array<float, 4u> m_lastClearColour = {};
-        std::int32_t m_lastBuffer;
 
         bool m_hasDepthBuffer;
         bool m_hasStencilBuffer;

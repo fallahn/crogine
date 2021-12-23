@@ -127,6 +127,9 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
             return false;// because out shader swill fail to compile.
         }
         LOG("Created OpenGL context version: " + std::to_string(maj) + "." + std::to_string(min), Logger::Type::Info);
+
+        setViewport({ 0, 0, static_cast<std::int32_t>(width), static_cast<std::int32_t>(height) });
+        setView(FloatRect(getViewport()));
     }
     return true;
 }
@@ -170,6 +173,15 @@ bool Window::getMultisamplingEnabled() const
 
 void Window::clear()
 {
+    //we don't need to store the old viewport
+    //or (hopefully) renew our own as the window will
+    //always be at the bottom of the RenderTarget stack
+    //but we will need to apply it first in case this is
+    //the first time we cleared since updating the viewport
+
+    auto vp = getViewport();
+    glCheck(glViewport(vp.left, vp.bottom, vp.width, vp.height));
+
     //glClearColor(1.f, 0.f, 0.f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

@@ -37,8 +37,6 @@ RenderTexture::RenderTexture()
     : m_fboID           (0),
     m_rboID             (0),
     m_clearBits         (0),
-    m_viewport          (0,0,1,1),
-    m_lastBuffer        (0),
     m_hasDepthBuffer    (false),
     m_hasStencilBuffer  (false)
 {
@@ -64,14 +62,15 @@ RenderTexture::RenderTexture(RenderTexture&& other) noexcept
     m_rboID = other.m_rboID;
     m_clearBits = other.m_clearBits;
     m_texture = std::move(other.m_texture);
-    m_viewport = other.m_viewport;
-    m_lastViewport = other.m_lastViewport;
-    m_lastBuffer = other.m_lastBuffer;
+    setViewport(other.getViewport());
+    setView(other.getView());
     m_hasDepthBuffer = other.m_hasDepthBuffer;
     m_hasStencilBuffer = other.m_hasStencilBuffer;
 
     other.m_fboID = 0;
     other.m_rboID = 0;
+    other.setViewport({ 0, 0, 0, 0 });
+    other.setView({ 0.f, 0.f });
 }
 
 RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
@@ -92,14 +91,15 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
         m_rboID = other.m_rboID;
         m_clearBits = other.m_clearBits;
         m_texture = std::move(other.m_texture);
-        m_viewport = other.m_viewport;
-        m_lastViewport = other.m_lastViewport;
-        m_lastBuffer = other.m_lastBuffer;
+        setViewport(other.getViewport());
+        setView(other.getView());
         m_hasDepthBuffer = other.m_hasDepthBuffer;
         m_hasStencilBuffer = other.m_hasStencilBuffer;
 
         other.m_fboID = 0;
         other.m_rboID = 0;
+        other.setViewport({ 0, 0, 0, 0 });
+        other.setView({ 0.f, 0.f });
     }
     return *this;
 }
@@ -186,7 +186,8 @@ bool RenderTexture::create(std::uint32_t width, std::uint32_t height, bool depth
         {
             glCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
             m_fboID = fbo;
-            m_viewport = getDefaultViewport();
+            setViewport(getDefaultViewport());
+            setView(FloatRect(getViewport()));
 
             m_hasDepthBuffer = depthBuffer;
             m_hasStencilBuffer = stencilBuffer;
@@ -236,10 +237,6 @@ void RenderTexture::clear(Colour colour)
 {
     CRO_ASSERT(m_fboID, "No FBO created!");
 
-    //store existing viewport - and apply ours
-    glCheck(glGetIntegerv(GL_VIEWPORT, m_lastViewport.data()));
-    glCheck(glViewport(m_viewport.left, m_viewport.bottom, m_viewport.width, m_viewport.height));
-
     //store active buffer and bind this one
     setActive(true);
 
@@ -251,29 +248,11 @@ void RenderTexture::clear(Colour colour)
 
 void RenderTexture::display()
 {
-    //restore viewport
-    glCheck(glViewport(m_lastViewport[0], m_lastViewport[1], m_lastViewport[2], m_lastViewport[3]));
-
     //restore clear colour
     glCheck(glClearColor(m_lastClearColour[0], m_lastClearColour[1], m_lastClearColour[2], m_lastClearColour[3]));
 
     //unbind buffer
     setActive(false);
-}
-
-void RenderTexture::setViewport(URect viewport)
-{
-    m_viewport = viewport;
-}
-
-URect RenderTexture::getViewport() const
-{
-    return m_viewport;
-}
-
-URect RenderTexture::getDefaultViewport() const
-{
-    return { 0, 0, m_texture.getSize().x, m_texture.getSize().y };
 }
 
 bool RenderTexture::saveToFile(const std::string& path) const

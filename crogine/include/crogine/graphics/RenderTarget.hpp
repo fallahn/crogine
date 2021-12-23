@@ -30,15 +30,12 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
-#include <crogine/detail/glm/vec2.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
 #include <array>
 
 namespace cro
 {
-    struct NullTarget;
-
     /*!
     \brief Base class used by Windows and RenderTextures to
     pass information about themselves to Scenes when rendering
@@ -51,19 +48,48 @@ namespace cro
         virtual glm::uvec2 getSize() const = 0;
 
         /*!
-        \brief Returns the viewport in screen coordinates from
-        the given normalised viewport of a camera.
+        \brief Returns the viewport in screen coordinates 
+        converted from the given normalised viewport of a camera.
+        Note that this doesn't alter the target's current viewport,
+        rather that this is used by a render system to set the
+        correct view when rendering via a Scene.
         */
-        IntRect getViewport(FloatRect normalised) const
-        {
-            float width = static_cast<float>(getSize().x);
-            float height = static_cast<float>(getSize().y);
+        IntRect getViewport(FloatRect normalised) const;
 
-            return IntRect(static_cast<int>(0.5f + width * normalised.left),
-                            static_cast<int>(0.5f + height * normalised.bottom),
-                            static_cast<int>(0.5f + width * normalised.width),
-                            static_cast<int>(0.5f + height * normalised.height));
-        }
+        /*!
+        \brief Returns the currently active viewport of the target 
+        in device coords
+        */
+        IntRect getViewport() const;
+
+        /*!
+        \brief Returns the default viewport, that is the viewport
+        covering the entire target, in device coordinates.
+        */
+        IntRect getDefaultViewport() const;
+
+        /*!
+        \brief Sets the active viewport of this target.
+        Note that when rendering to the target via a Scene that
+        this will be ignored in favour of the Scene's active Camera.
+        */
+        void setViewport(IntRect view);
+
+        /*!
+        \brief Returns the current view
+        \see setView
+        */
+        FloatRect getView() const;
+
+        /*!
+        \brief Sets the view size
+        The size of the view is that of the world, in world units,
+        as seen through the current viewport.
+        \param size Size, in world units, to display in the viewport
+        Note that when rendering to the target via a Scene that
+        this will be ignored in favour of the Scene's active Camera.
+        */
+        void setView(FloatRect size);
 
         /*!
         \brief Returns a pointer to the currently bound RenderTarget
@@ -84,7 +110,11 @@ namespace cro
         virtual std::uint32_t getFrameBufferID() const = 0;
 
     private:
-       friend struct NullTarget;
+        friend struct NullTarget;
+
+        FloatRect m_view;
+        IntRect m_viewport;
+        std::array<std::int32_t, 4u> m_previousViewport;
 
         //used to track the active render target. This only works as
         //long as there's only one window/context active - else we

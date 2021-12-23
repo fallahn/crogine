@@ -45,7 +45,6 @@ namespace
     std::int32_t activeCount = 0;
     std::unique_ptr<Shader> shader;
 
-    glm::uvec2 screenSize = glm::uvec2(0);
     glm::mat4 projectionMatrix = glm::mat4(1.f);
 
     const std::string ShaderVertex =
@@ -239,18 +238,14 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
 {
     if (m_textureID)
     {
-        //check if screen size changed
-        auto size = RenderTarget::getActiveTarget()->getSize();
-        if (size != screenSize)
-        {
-            projectionMatrix = glm::ortho(0.f, static_cast<float>(size.x), 0.f, static_cast<float>(size.y), -1.f, 1.f);
-            screenSize = size;
-        }
+        //set projection
+        auto size = RenderTarget::getActiveTarget()->getView();
+        projectionMatrix = glm::ortho(size.left, size. left + size.width, size.bottom, size.bottom + size.height, -1.f, 1.f);
 
-        //store and set viewport
-        int oldVp[4];
-        glCheck(glGetIntegerv(GL_VIEWPORT, oldVp));
-        glCheck(glViewport(0, 0, size.x, size.y));
+
+        //set viewport
+        auto vp = RenderTarget::getActiveTarget()->getViewport();
+        glCheck(glViewport(vp.left, vp.bottom, vp.width, vp.height));
 
         //set culling/blend mode
         glCheck(glDepthMask(GL_FALSE));
@@ -300,7 +295,6 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
         //restore viewport/blendmode etc
         glCheck(glDepthMask(GL_TRUE));
         glCheck(glDisable(GL_BLEND));
-        glCheck(glViewport(oldVp[0], oldVp[1], oldVp[2], oldVp[3]));
 
         glCheck(glUseProgram(0));
     }

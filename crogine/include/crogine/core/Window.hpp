@@ -247,7 +247,6 @@ namespace cro
 
         friend class App;
 
-
         std::uint32_t getFrameBufferID() const override { return 0; }
     };
 

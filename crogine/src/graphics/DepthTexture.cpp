@@ -36,9 +36,7 @@ using namespace cro;
 DepthTexture::DepthTexture()
     : m_fboID   (0),
     m_textureID (0),
-    m_size      (0,0),
-    m_viewport  (0,0,1,1),
-    m_lastBuffer(0)
+    m_size      (0,0)
 {
 
 }
@@ -61,12 +59,13 @@ DepthTexture::DepthTexture(DepthTexture&& other) noexcept
 {
     m_fboID = other.m_fboID;
     m_textureID = other.m_textureID;
-    m_viewport = other.m_viewport;
-    m_lastViewport = other.m_lastViewport;
-    m_lastBuffer = other.m_lastBuffer;
+    setViewport(other.getViewport());
+    setView(other.getView());
 
     other.m_fboID = 0;
     other.m_textureID = 0;
+    other.setViewport({ 0, 0, 0, 0 });
+    other.setView({ 0.f, 0.f });
 }
 
 DepthTexture& DepthTexture::operator=(DepthTexture&& other) noexcept
@@ -86,12 +85,13 @@ DepthTexture& DepthTexture::operator=(DepthTexture&& other) noexcept
 
         m_fboID = other.m_fboID;
         m_textureID = other.m_textureID;
-        m_viewport = other.m_viewport;
-        m_lastViewport = other.m_lastViewport;
-        m_lastBuffer = other.m_lastBuffer;
+        setViewport(other.getViewport());
+        setView(other.getView());
 
         other.m_fboID = 0;
         other.m_textureID = 0;
+        other.setViewport({ 0, 0, 0, 0 });
+        other.setView({ 0.f, 0.f });
     }
     return *this;
 }
@@ -110,8 +110,8 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height)
         glCheck(glBindTexture(GL_TEXTURE_2D, m_textureID));
         glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
 
-        m_viewport.width = width;
-        m_viewport.height = height;
+        setViewport({ 0, 0, static_cast<std::int32_t>(width), static_cast<std::int32_t>(height) });
+        setView(FloatRect(getViewport()));
         m_size = { width, height };
 
         return true;
@@ -119,7 +119,7 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height)
 
     //else create it
     m_size = { 0, 0 };
-    m_viewport = { 0,0,0,0 };
+    setViewport({ 0, 0, 0, 0 });
 
     //create the texture
     glCheck(glGenTextures(1, &m_textureID));
@@ -146,8 +146,8 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height)
 
     if (result)
     {
-        m_viewport.width = width;
-        m_viewport.height = height;
+        setViewport({ 0, 0, static_cast<std::int32_t>(width), static_cast<std::int32_t>(height) });
+        setView(FloatRect(getViewport()));
         m_size = { width, height };
     }
 
@@ -165,10 +165,6 @@ void DepthTexture::clear()
 #ifdef PLATFORM_DESKTOP
     CRO_ASSERT(m_fboID, "No FBO created!");
 
-    //store existing viewport - and apply ours
-    glCheck(glGetIntegerv(GL_VIEWPORT, m_lastViewport.data()));
-    glCheck(glViewport(m_viewport.left, m_viewport.bottom, m_viewport.width, m_viewport.height));
-
     //store active buffer and bind this one
     setActive(true);
 
@@ -184,27 +180,9 @@ void DepthTexture::display()
 #ifdef PLATFORM_DESKTOP
     glCheck(glColorMask(true, true, true, true));
 
-    //restore viewport
-    glCheck(glViewport(m_lastViewport[0], m_lastViewport[1], m_lastViewport[2], m_lastViewport[3]));
-
     //unbind buffer
     setActive(false);
 #endif
-}
-
-void DepthTexture::setViewport(URect viewport)
-{
-    m_viewport = viewport;
-}
-
-URect DepthTexture::getViewport() const
-{
-    return m_viewport;
-}
-
-URect DepthTexture::getDefaultViewport() const
-{
-    return { 0, 0, m_size.x, m_size.y };
 }
 
 TextureID DepthTexture::getTexture() const

@@ -93,21 +93,6 @@ namespace cro
         void display();
 
         /*!
-        \brief Defines the area of the DepthTexture on to which to draw.
-        */
-        void setViewport(URect);
-
-        /*!
-        \brief Returns the active viewport for this texture
-        */
-        URect getViewport() const;
-
-        /*!
-        \brief Returns the default viewport of the DepthTexture
-        */
-        URect getDefaultViewport() const;
-
-        /*!
         \brief Returns true if the render texture is available for drawing.
         If create() has not yet been called, or previously failed then this
         will return false
@@ -124,9 +109,6 @@ namespace cro
         std::uint32_t m_fboID;
         std::uint32_t m_textureID;
         glm::uvec2 m_size;
-        URect m_viewport;
-        std::array<std::int32_t, 4u> m_lastViewport = {};
-        std::int32_t m_lastBuffer;
 
         std::uint32_t getFrameBufferID() const override { return m_fboID; }
     };
