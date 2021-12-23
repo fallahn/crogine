@@ -194,9 +194,8 @@ bool BatcatState::simulate(float dt)
 
 void BatcatState::render()
 {
-    auto& rt = cro::App::getWindow();
-    m_scene.render(rt);
-    m_overlayScene.render(rt);
+    m_scene.render();
+    m_overlayScene.render();
 }
 
 //private

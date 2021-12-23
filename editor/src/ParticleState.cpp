@@ -256,7 +256,7 @@ void ParticleState::render()
         auto oldCam = m_scene.getActiveCamera();
         m_scene.setActiveCamera(m_renderCamera);
         m_renderTexture.clear(m_renderClearColour);
-        m_scene.render(m_renderTexture);
+        m_scene.render();
         m_renderTexture.display();
 
         m_scene.setActiveCamera(oldCam);
@@ -269,8 +269,7 @@ void ParticleState::render()
     cam.reflectionBuffer.display();
     cam.setActivePass(0);*/
 
-    auto& rw = getContext().mainWindow;
-    m_scene.render(rw);
+    m_scene.render();
 }
 
 //private

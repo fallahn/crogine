@@ -146,7 +146,7 @@ bool PauseState::simulate(float dt)
 
 void PauseState::render()
 {
-    m_scene.render(*GolfGame::getActiveTarget());
+    m_scene.render();
 }
 
 //private

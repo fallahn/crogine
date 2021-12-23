@@ -114,7 +114,7 @@ bool ErrorState::simulate(float dt)
 
 void ErrorState::render()
 {
-    m_scene.render(*GolfGame::getActiveTarget());
+    m_scene.render();
 }
 
 //private

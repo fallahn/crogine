@@ -769,8 +769,8 @@ void GolfState::render()
     cam.setActivePass(cro::Camera::Pass::Reflection);
     cam.renderFlags = RenderFlags::Reflection;
     cam.reflectionBuffer.clear(cro::Colour::Red);
-    m_gameScene.render(cam.reflectionBuffer);
-    m_uiScene.render(cam.reflectionBuffer);
+    m_gameScene.render();
+    m_uiScene.render();
     cam.reflectionBuffer.display();
 
     cam.setActivePass(cro::Camera::Pass::Final);
@@ -780,7 +780,7 @@ void GolfState::render()
     //then render scene
     glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for... snow maybe?
     m_gameSceneTexture.clear();
-    m_gameScene.render(m_gameSceneTexture);
+    m_gameScene.render();
 #ifdef CRO_DEBUG_
     m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
 #endif
@@ -791,13 +791,13 @@ void GolfState::render()
     {
         auto oldCam = m_gameScene.setActiveCamera(m_greenCam);
         m_greenBuffer.clear();
-        m_gameScene.render(m_greenBuffer);
+        m_gameScene.render();
         m_greenBuffer.display();
         m_gameScene.setActiveCamera(oldCam);
     }
 
     m_uiScene.setActiveCamera(uiCam);
-    m_uiScene.render(*GolfGame::getActiveTarget());
+    m_uiScene.render();
 }
 
 //private

@@ -413,7 +413,7 @@ void GolfState::buildUI()
                 //update render
                 auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
                 m_mapBuffer.clear(cro::Colour::Transparent);
-                m_gameScene.render(m_mapBuffer);
+                m_gameScene.render();
                 m_mapBuffer.display();
                 m_gameScene.setActiveCamera(oldCam);
 

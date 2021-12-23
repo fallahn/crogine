@@ -667,7 +667,7 @@ void ParticleState::drawRenderPreview()
                             m_scene.simulate(dt);
 
                             m_renderTexture.clear(m_renderClearColour);
-                            m_scene.render(m_renderTexture);
+                            m_scene.render();
                             m_renderTexture.display();
 
                             //output file

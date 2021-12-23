@@ -495,16 +495,15 @@ void GameState::render()
         cam.viewport = oldVP;
     }*/
 
-    auto& rt = cro::App::getWindow();
-    m_gameScene.render(rt, m_cameras);
-    m_uiScene.render(rt);
+    m_gameScene.render(m_cameras);
+    m_uiScene.render();
 
 
 #ifdef CRO_DEBUG_
     //render a far view of the scene in debug to a render texture
     auto oldCam = m_gameScene.setActiveCamera(m_debugCam);
     m_debugViewTexture.clear();
-    m_gameScene.render(m_debugViewTexture);
+    m_gameScene.render();
     m_debugViewTexture.display();
     m_gameScene.setActiveCamera(oldCam);
 #endif

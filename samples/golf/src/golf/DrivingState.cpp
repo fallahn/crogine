@@ -472,14 +472,14 @@ bool DrivingState::simulate(float dt)
 void DrivingState::render()
 {
     m_backgroundTexture.clear();
-    m_gameScene.render(m_backgroundTexture);
+    m_gameScene.render();
 #ifdef CRO_DEBUG_
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     m_gameScene.getSystem<BallSystem>()->renderDebug(cam.getActivePass().viewProjectionMatrix, m_backgroundTexture.getSize());
 #endif
     m_backgroundTexture.display();
 
-    m_uiScene.render(*GolfGame::getActiveTarget());
+    m_uiScene.render();
 }
 
 //private

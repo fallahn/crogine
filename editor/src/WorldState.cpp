@@ -224,8 +224,7 @@ void WorldState::render()
 {
     if (getStateCount() == 1)
     {
-        auto& rw = getContext().mainWindow;
-        m_scene.render(rw);
+        m_scene.render();
     }
 }
 

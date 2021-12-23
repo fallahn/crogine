@@ -214,11 +214,11 @@ void ModelState::render()
     if (!m_materialDefs.empty())
     {
         m_materialDefs[m_selectedMaterial].previewTexture.clear(uiConst::PreviewClearColour);
-        m_previewScene.render(m_materialDefs[m_selectedMaterial].previewTexture);
+        m_previewScene.render();
         m_materialDefs[m_selectedMaterial].previewTexture.display();
     }
 
-    m_scene.render(cro::App::getWindow());
+    m_scene.render();
 }
 
 //private

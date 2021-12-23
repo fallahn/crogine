@@ -251,9 +251,8 @@ bool GameState::simulate(float dt)
 
 void GameState::render()
 {
-    auto& rt = cro::App::getWindow();
-    m_scene.render(rt);
-    m_uiScene.render(rt);
+    m_scene.render();
+    m_uiScene.render();
 }
 
 //private

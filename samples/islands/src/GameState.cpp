@@ -338,13 +338,13 @@ void GameState::render()
 
         cam.setActivePass(cro::Camera::Pass::Reflection);
         cam.reflectionBuffer.clear(cro::Colour::Red);
-        m_gameScene.render(cam.reflectionBuffer);
+        m_gameScene.render();
         cam.reflectionBuffer.display();
 
         cam.renderFlags = NoPlanes | NoReflect;
         cam.setActivePass(cro::Camera::Pass::Refraction);
         cam.refractionBuffer.clear(cro::Colour::Blue);
-        m_gameScene.render(cam.refractionBuffer);
+        m_gameScene.render();
         cam.refractionBuffer.display();
 
         cam.renderFlags = NoPlanes | PlayerPlanes[i] | NoReflect | NoRefract;
@@ -353,8 +353,8 @@ void GameState::render()
     }
 
     auto& rt = cro::App::getWindow();
-    m_gameScene.render(rt, m_cameras);
-    m_uiScene.render(rt);
+    m_gameScene.render(m_cameras);
+    m_uiScene.render();
 }
 
 //private

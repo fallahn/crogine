@@ -38,14 +38,6 @@ using namespace cro;
 std::size_t RenderTarget::m_bufferIndex = 0;
 std::array<const RenderTarget*, RenderTarget::MaxActiveTargets> RenderTarget::m_bufferStack = { nullptr };
 
-struct cro::NullTarget final
-{
-    NullTarget()
-    {
-        RenderTarget::m_bufferStack[0] = &cro::App::getWindow();
-    }
-};
-
 IntRect RenderTarget::getViewport(FloatRect normalised) const
 {
     float width = static_cast<float>(getSize().x);
@@ -91,8 +83,6 @@ void RenderTarget::setActive(bool active)
 {
     if (active)
     {
-        static NullTarget nt; //places the window as the default target at the bottom of the stack
-
         CRO_ASSERT(getFrameBufferID() != RenderTarget::m_bufferStack[RenderTarget::m_bufferIndex]->getFrameBufferID(), "Target currently active");
 
         RenderTarget::m_bufferStack[++RenderTarget::m_bufferIndex] = this;

@@ -128,6 +128,8 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
         }
         LOG("Created OpenGL context version: " + std::to_string(maj) + "." + std::to_string(min), Logger::Type::Info);
 
+        //place the window at the bottom of the stack
+        RenderTarget::m_bufferStack[0] = this;
         setViewport({ 0, 0, static_cast<std::int32_t>(width), static_cast<std::int32_t>(height) });
         setView(FloatRect(getViewport()));
     }

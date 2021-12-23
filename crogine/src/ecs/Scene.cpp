@@ -550,27 +550,27 @@ void Scene::forwardMessage(const Message& msg)
     }
 }
 
-void Scene::render(const RenderTarget& rt, bool doPost)
+void Scene::render(bool doPost)
 {
     if (doPost)
     {
-        currentRenderPath(rt, &m_activeCamera, 1);
+        currentRenderPath(*RenderTarget::getActiveTarget(), &m_activeCamera, 1);
     }
     else
     {
-        defaultRenderPath(rt, &m_activeCamera, 1);
+        defaultRenderPath(*RenderTarget::getActiveTarget(), &m_activeCamera, 1);
     }
 }
 
-void Scene::render(const RenderTarget& rt, const std::vector<Entity>& cameras, bool doPost)
+void Scene::render(const std::vector<Entity>& cameras, bool doPost)
 {
     if (doPost)
     {
-        currentRenderPath(rt, cameras.data(), cameras.size());
+        currentRenderPath(*RenderTarget::getActiveTarget(), cameras.data(), cameras.size());
     }
     else
     {
-        defaultRenderPath(rt, cameras.data(), cameras.size());
+        defaultRenderPath(*RenderTarget::getActiveTarget(), cameras.data(), cameras.size());
     }
 }
 

@@ -576,7 +576,7 @@ void WorldState::openModel(const std::string& path)
         mdl.thumbnail.create(128, 128);
         mdl.thumbnail.clear();
         //draw the thumbnail
-        m_previewScene.render(mdl.thumbnail);
+        m_previewScene.render();
         mdl.thumbnail.display();
 
         //TODO can we store thumbnails as images with scene?

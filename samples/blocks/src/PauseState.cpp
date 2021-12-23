@@ -122,7 +122,7 @@ bool PauseState::simulate(float dt)
 
 void PauseState::render()
 {
-    m_scene.render(cro::App::getWindow());
+    m_scene.render();
 }
 
 //private

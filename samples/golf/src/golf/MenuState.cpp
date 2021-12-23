@@ -422,15 +422,15 @@ void MenuState::render()
     //render ball preview first
     auto oldCam = m_backgroundScene.setActiveCamera(m_ballCam);
     m_ballTexture.clear(cro::Colour::Magenta);
-    m_backgroundScene.render(m_ballTexture);
+    m_backgroundScene.render();
     m_ballTexture.display();
 
     m_backgroundScene.setActiveCamera(oldCam);
     m_backgroundTexture.clear();
-    m_backgroundScene.render(m_backgroundTexture);
+    m_backgroundScene.render();
     m_backgroundTexture.display();
 
-    m_uiScene.render(*GolfGame::getActiveTarget());
+    m_uiScene.render();
 }
 
 //private

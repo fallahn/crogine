@@ -191,8 +191,7 @@ bool SplashState::simulate(float dt)
 
 void SplashState::render()
 {
-    auto& rt = cro::App::getWindow();
-    m_uiScene.render(rt);
+    m_uiScene.render();
 }
 
 //private

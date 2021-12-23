@@ -251,7 +251,7 @@ bool KeyboardState::simulate(float dt)
 
 void KeyboardState::render()
 {
-    m_scene.render(cro::App::getWindow());
+    m_scene.render();
 }
 
 //private

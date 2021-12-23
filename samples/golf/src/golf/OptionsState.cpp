@@ -264,7 +264,7 @@ bool OptionsState::simulate(float dt)
 
 void OptionsState::render()
 {
-    m_scene.render(*GolfGame::getActiveTarget());
+    m_scene.render();
 }
 
 //private

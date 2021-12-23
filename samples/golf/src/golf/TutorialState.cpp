@@ -198,7 +198,7 @@ bool TutorialState::simulate(float dt)
 void TutorialState::render()
 {
     glLineWidth(m_viewScale.y);
-    m_scene.render(*GolfGame::getActiveTarget());
+    m_scene.render();
     glLineWidth(1.f);
 }
 

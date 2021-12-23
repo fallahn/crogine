@@ -592,13 +592,13 @@ void LayoutState::loadFont(const std::string& path)
         texture.clear(cro::Colour::Black);
         for (auto i = 0u; i < 3; ++i)
         {
-            m_thumbScene.render(texture);
+            m_thumbScene.render();
             charSize /= 2;
             entity.getComponent<cro::Transform>().move(glm::vec2(0.f, -48.f));
             entity.getComponent<cro::Text>().setCharacterSize(charSize);
             m_thumbScene.simulate(0.f);
         }
-        m_thumbScene.render(texture);
+        m_thumbScene.render();
         texture.display();
 
         m_thumbScene.destroyEntity(entity);

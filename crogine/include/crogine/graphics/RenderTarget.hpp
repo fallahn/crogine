@@ -110,7 +110,7 @@ namespace cro
         virtual std::uint32_t getFrameBufferID() const = 0;
 
     private:
-        friend struct NullTarget;
+        friend class Window;
 
         FloatRect m_view;
         IntRect m_viewport;

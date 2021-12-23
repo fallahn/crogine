@@ -140,7 +140,7 @@ bool PracticeState::simulate(float dt)
 
 void PracticeState::render()
 {
-    m_scene.render(*GolfGame::getActiveTarget());
+    m_scene.render();
 }
 
 //private

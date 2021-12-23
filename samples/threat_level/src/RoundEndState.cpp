@@ -125,7 +125,7 @@ bool RoundEndState::simulate(float dt)
 
 void RoundEndState::render()
 {
-    m_uiScene.render(cro::App::getWindow());
+    m_uiScene.render();
 }
 
 //private

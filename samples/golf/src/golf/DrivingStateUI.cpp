@@ -1134,7 +1134,7 @@ void DrivingState::updateMinimap()
     auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
 
     m_mapTexture.clear(TextNormalColour);
-    m_gameScene.render(m_mapTexture);
+    m_gameScene.render();
 
     auto holePos = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin / 2.f;
     m_flagQuad.setPosition({ holePos.x, -holePos.z });

@@ -137,20 +137,20 @@ void BspState::render()
 
     cam.setActivePass(cro::Camera::Pass::Reflection);
     cam.reflectionBuffer.clear(cro::Colour::Red);
-    m_scene.render(cam.reflectionBuffer);
+    m_scene.render();
     cam.reflectionBuffer.display();
 
 
     cam.setActivePass(cro::Camera::Pass::Refraction);
     cam.refractionBuffer.clear(cro::Colour::Blue);
-    m_scene.render(cam.refractionBuffer);
+    m_scene.render();
     cam.refractionBuffer.display();
 
 
     //draw any renderable systems
     cam.setActivePass(cro::Camera::Pass::Final);
     cam.viewport = oldVp;
-    m_scene.render(cro::App::getWindow());
+    m_scene.render();
 }
 
 //private

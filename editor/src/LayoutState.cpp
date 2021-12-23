@@ -141,9 +141,8 @@ bool LayoutState::simulate(float dt)
 
 void LayoutState::render()
 {
-    auto& rt = cro::App::getWindow();
-    m_modelScene.render(rt);
-    m_uiScene.render(rt);
+    m_modelScene.render();
+    m_uiScene.render();
 }
 
 //private

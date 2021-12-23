@@ -158,8 +158,7 @@ bool CollisionState::simulate(float dt)
 
 void CollisionState::render()
 {
-    auto& rw = cro::App::getWindow();
-    m_scene.render(rw);
+    m_scene.render();
 
     //render the debug stuff
     auto viewProj = m_scene.getActiveCamera().getComponent<cro::Camera>().getActivePass().viewProjectionMatrix;
