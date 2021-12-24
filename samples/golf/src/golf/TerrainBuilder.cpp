@@ -498,7 +498,7 @@ void TerrainBuilder::threadFunc()
         for (const auto prop : props)
         {
             auto propPos = pos - prop.getComponent<cro::Transform>().getPosition(); //don't use world pos because it'll be scaled by parent
-            float propRadius = prop.getComponent<cro::Model>().getBoundingSphere().radius * 1.2f;
+            float propRadius = prop.getComponent<cro::Model>().getBoundingSphere().radius * 1.5f;
 
             if (glm::length2(glm::vec2(propPos.x, propPos.z)) < (propRadius * propRadius))
             {

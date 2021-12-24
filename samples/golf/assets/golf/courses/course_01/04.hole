@@ -1,36 +1,70 @@
 hole 04
 {
-    map = "assets/golf/courses/course_01/04.png"
-    model = "assets/golf/models/course_01/04.cmt"
-    pin = "204,0.180357,-39"
-    target = "204,0,-39"
-    tee = "85,0.887401,-175"
-    par = "3"
+    map="assets/golf/courses/course_01/04.png"
+    model="assets/golf/models/course_01/04.cmt"
+    par = 3
 
-    crowd 
-    {
-        position = 241.000000,0.000000,-45.000000
-        rotation = "78"
+    pin = 212.958405,1.675199,-31.269577
+    target = 166.754822,1.500000,-90.341545
+    tee = 90.065933,2.387402,-172.215851
 
-    }
-    crowd 
-    {
-        position = 229.600006,0.000000,-25.000000
-        rotation = "49.4"
-
-    }
-    prop 
+    prop
     {
         model = "assets/golf/models/crane.cmt"
-        position = 246.000000,0.000000,-80.599998
-        rotation = "-20.9"
-
+        position = 246.644485,1.860243,-81.215851
+        rotation = -34.644351
     }
-    prop 
+
+    prop
     {
         model = "assets/golf/models/crane_arm.cmt"
-        position = 246.000000,0.000000,-80.599998
-        rotation = "5.9"
+        position = 246.644485,1.860243,-81.215851
+        rotation = 0.000000
+    }
 
+    crowd
+    {
+        position = 254.451950,1.500000,-29.765955
+        rotation = -120.162322
+    }
+
+    crowd
+    {
+        position = 248.839752,1.500000,-22.341858
+        rotation = -120.162322
+    }
+
+    crowd
+    {
+        position = 234.483765,1.500000,-13.888721
+        rotation = 8.270696
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cart.cmt"
+        position = 83.470490,1.505000,-116.659927
+        rotation = -30.017733
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 79.437202,1.510000,-119.812317
+        rotation = -792.639604
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 78.413895,1.510000,-124.351349
+        rotation = -616.952464
+    }
+
+    prop
+    {
+        model = "assets/golf/models/willow01.cmt"
+        position = 79.690338,1.944621,-114.940994
+        rotation = -1.356225
     }
 }

@@ -1,6 +1,6 @@
 model windmill02
 {
-    mesh = "assets/golf/models/windmill02.cmb"
+    mesh = assets/golf/models/windmill02.cmb
     cast_shadows = false
 
     material Unlit
@@ -9,7 +9,9 @@ model windmill02
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        blendmode = "none"
+        depth_test = true
+        double_sided = true
+        blendmode = none
         diffuse = "assets/golf/images/windmill.png"
         alpha_clip = 0.998000
 

@@ -1,56 +1,49 @@
 hole 05
 {
-    map = "assets/golf/courses/course_01/05.png"
-    model = "assets/golf/models/course_01/05.cmt"
-    pin = "37,0.329877,-54"
-    target = "148,0,-80"
-    tee = "302,0,-175"
-    par = "3"
+    map="assets/golf/courses/course_01/05.png"
+    model="assets/golf/models/course_01/05.cmt"
+    par = 4
 
-    crowd 
-    {
-        position = 35.300003,0.000000,-26.000000
-        rotation = "4.3"
+    pin = 36.384407,1.827080,-52.284187
+    target = 93.203690,1.500000,-74.708725
+    tee = 299.955780,1.499999,-174.522339
 
-    }
-    crowd 
-    {
-        position = 18.399994,0.000000,-42.799999
-        rotation = "-57.7"
-
-    }
-    crowd 
-    {
-        position = 30.000000,0.000000,-74.000000
-        rotation = "27.6"
-
-    }
-    prop 
-    {
-        model = "assets/golf/models/crane.cmt"
-        position = 110.246140,0.000000,-39.511574
-        rotation = "186.614444"
-
-    }
-    prop 
+    prop
     {
         model = "assets/golf/models/crane_arm.cmt"
-        position = 110.246140,0.000000,-39.511574
-        rotation = "-107.697259"
-
+        position = 92.413818,1.500000,-38.855850
+        rotation = -17.288973
     }
-    prop 
+
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = 92.413818,1.500000,-38.855850
+        rotation = 0.000000
+    }
+
+    prop
     {
         model = "assets/golf/models/view_platform.cmt"
-        position = 52.400002,0.000000,-96.400002
-        rotation = "41.5"
-
+        position = 52.347786,1.500004,-94.613960
+        rotation = -872.056027
     }
-    prop 
-    {
-        model = "assets/golf/models/scoreboard.cmt"
-        position = -51.716568,0.000000,-5.188004
-        rotation = "33.126875"
 
+    crowd
+    {
+        position = 41.295231,1.499999,-84.925705
+        rotation = 25.570316
+    }
+
+    crowd
+    {
+        position = 19.685333,1.500000,-69.514908
+        rotation = 47.988506
+    }
+
+    crowd
+    {
+        position = 16.838402,1.500000,-62.414124
+        rotation = 74.449405
     }
 }
