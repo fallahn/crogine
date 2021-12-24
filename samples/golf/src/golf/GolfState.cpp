@@ -3398,4 +3398,13 @@ void GolfState::toggleFreeCam()
     m_waterEnt.getComponent<cro::Callback>().active = !useFreeCam;
     m_inputParser.setActive(!useFreeCam);
     cro::App::getWindow().setMouseCaptured(useFreeCam);
+
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::PlayerSprite;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        cro::Colour c = useFreeCam ? cro::Colour::Transparent : cro::Colour::White;
+        e.getComponent<cro::Sprite>().setColour(c);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
