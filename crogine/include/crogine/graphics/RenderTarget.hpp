@@ -96,6 +96,13 @@ namespace cro
         */
         static const RenderTarget* getActiveTarget();
 
+        /*!
+        \brief Returns an orthographic projection matrix based on
+        the RenderTarget's current view
+        \see setView()
+        */
+        const glm::mat4& getProjectionMatrix() const;
+
     protected:
         /*!
         \brief Used to track the active frame buffer.
@@ -115,6 +122,8 @@ namespace cro
         FloatRect m_view;
         IntRect m_viewport;
         std::array<std::int32_t, 4u> m_previousViewport;
+
+        glm::mat4 m_projectionMatrix = glm::mat4(1.f);
 
         //used to track the active render target. This only works as
         //long as there's only one window/context active - else we

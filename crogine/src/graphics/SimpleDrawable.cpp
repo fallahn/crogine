@@ -45,8 +45,6 @@ namespace
     std::int32_t activeCount = 0;
     std::unique_ptr<Shader> shader;
 
-    glm::mat4 projectionMatrix = glm::mat4(1.f);
-
     const std::string ShaderVertex =
         R"(
         ATTRIBUTE vec2 a_position;
@@ -239,8 +237,7 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     if (m_textureID)
     {
         //set projection
-        auto size = RenderTarget::getActiveTarget()->getView();
-        projectionMatrix = glm::ortho(size.left, size. left + size.width, size.bottom, size.bottom + size.height, -1.f, 1.f);
+        const auto& projectionMatrix = RenderTarget::getActiveTarget()->getProjectionMatrix();
 
 
         //set viewport

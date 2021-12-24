@@ -30,6 +30,8 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/detail/glm/vec2.hpp>
+#include <crogine/detail/glm/gtc/matrix_transform.hpp>
+
 #include <crogine/graphics/RenderTarget.hpp>
 #include "../detail/GLCheck.hpp"
 
@@ -77,6 +79,8 @@ FloatRect RenderTarget::getView() const
 void RenderTarget::setView(FloatRect view)
 {
     m_view = view;
+
+    m_projectionMatrix = glm::ortho(view.left, view.left + view.width, view.bottom, view.bottom + view.height, -1.f, 1.f);
 }
 
 void RenderTarget::setActive(bool active)
@@ -106,4 +110,9 @@ void RenderTarget::setActive(bool active)
         //restore viewport
         glCheck(glViewport(m_previousViewport[0], m_previousViewport[1], m_previousViewport[2], m_previousViewport[3]));
     }
+}
+
+const glm::mat4& RenderTarget::getProjectionMatrix() const
+{
+    return m_projectionMatrix;
 }
