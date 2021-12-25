@@ -85,6 +85,7 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_scene                 (context.appInstance.getMessageBus()),
     m_previewScene          (context.appInstance.getMessageBus()),
     m_showMaskEditor        (false),
+    m_showImageCombiner     (false),
     m_viewportRatio         (1.f),
     m_showPreferences       (false),
     m_showGroundPlane       (false),

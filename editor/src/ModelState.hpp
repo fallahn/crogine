@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/graphics/Image.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/gui/detail/imgui.h>
 
@@ -90,6 +91,7 @@ private:
 
     MaskEditor m_maskEditor;
     bool m_showMaskEditor;
+    bool m_showImageCombiner;
 
     float m_viewportRatio;
 
@@ -224,12 +226,14 @@ private:
 
     //---------ModelStateUI.cpp--------//
     ImVec4 m_messageColour;
+    std::array<std::pair<std::string, cro::Image>, 4u> m_combinedImages;
     void buildUI();
     void showSaveMessage();
     void drawInspector();
     void drawBrowser();
     void drawInfo();
     void drawGizmo();
+    void drawImageCombiner();
     void updateLayout(std::int32_t, std::int32_t);
     //---------------------------------//
 

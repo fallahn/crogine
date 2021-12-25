@@ -326,6 +326,12 @@ void ModelState::showSaveMessage()
 
 void ModelState::buildUI()
 {
+    for (auto& [s, i] : m_combinedImages)
+    {
+        s = "None Selected";
+        i = cro::Image(true);
+    }
+
     loadPrefs();
     registerWindow([&]()
         {
@@ -487,19 +493,10 @@ void ModelState::buildUI()
                     {
                         savePrefs();
                     }
-                    if (ImGui::MenuItem("AO Baker", nullptr, &m_showBakingWindow, m_entities[EntityID::ActiveModel].isValid() && m_importedVBO.empty()))
-                    {
-
-                    }
-                    if (ImGui::MenuItem("Mask Editor", nullptr, &m_showMaskEditor))
-                    {
-
-                    }
                     if (ImGui::MenuItem("Use Free Look", nullptr, nullptr))
                     {
                         toggleFreecam();
                     }  
-                    ImGui::MenuItem("Text Editor", nullptr, &m_textEditor.visible);
                     if (!m_useFreecam)
                     {
                         if (ImGui::MenuItem("Reset Camera"))
@@ -510,6 +507,23 @@ void ModelState::buildUI()
                             updateView(m_cameras[CameraID::Default].camera, DefaultFarPlane, DefaultFOV);
                         }
                     }
+                    ImGui::EndMenu();
+                }
+
+                //tools menu
+                if (ImGui::BeginMenu("Tools"))
+                {
+                    if (ImGui::MenuItem("AO Baker", nullptr, &m_showBakingWindow, m_entities[EntityID::ActiveModel].isValid() && m_importedVBO.empty()))
+                    {
+
+                    }
+                    if (ImGui::MenuItem("Mask Editor", nullptr, &m_showMaskEditor))
+                    {
+
+                    }
+                    ImGui::MenuItem("Text Editor", nullptr, &m_textEditor.visible);
+                    ImGui::MenuItem("Image Combiner", nullptr, &m_showImageCombiner);
+
                     ImGui::EndMenu();
                 }
 
@@ -665,6 +679,11 @@ void ModelState::buildUI()
             drawBrowser();
             drawInfo();
             drawGizmo();
+            
+            if (m_showImageCombiner)
+            {
+                drawImageCombiner();
+            }
 
             if (m_browseGLTF)
             {
@@ -1935,6 +1954,136 @@ void ModelState::drawGizmo()
         ImGuizmo::Manipulate(&cam.getActivePass().viewMatrix[0][0], &cam.getProjectionMatrix()[0][0], ImGuizmo::OPERATION::ROTATE, ImGuizmo::MODE::LOCAL, &tx[0][0]);
         m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setLocalTransform(tx);
     }*/
+}
+
+void ModelState::drawImageCombiner()
+{
+    ImGui::SetNextWindowSize({ 380.f, 160.f });
+    if (ImGui::Begin("Image Combiner", &m_showImageCombiner, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
+    {
+        static const std::array<std::string, 4u> labels =
+        {
+            "Red Channel: ", "Green Channel: ", "Blue Channel: ", "Alpha Channel: "
+        };
+
+        std::int32_t i = 0;
+        for (const auto& l : labels)
+        {
+            ImGui::Text(l.c_str());
+            ImGui::SameLine();
+            ImGui::Text(m_combinedImages[i].first.c_str());
+            ImGui::SameLine();
+
+            std::string button = "Open File##" + std::to_string(i);
+            if (ImGui::Button(button.c_str()))
+            {
+                auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
+                if (!path.empty())
+                {
+                    if (m_combinedImages[i].second.loadFromFile(path))
+                    {
+                        m_combinedImages[i].first = cro::FileSystem::getFileName(path);
+                    }
+                }
+            }
+            ImGui::SameLine();
+            button = "Clear##" + std::to_string(i);
+            if (ImGui::Button(button.c_str()))
+            {
+                m_combinedImages[i] = std::make_pair("None Selected", cro::Image(true));
+            }
+            i++;
+        }
+
+        if (ImGui::Button("Save##0034"))
+        {
+            std::uint32_t minWidth = 0;
+            glm::uvec2 lastSize(0);
+            bool imageOK = false;
+            for (const auto& [s,i] : m_combinedImages)
+            {
+                auto size = i.getSize();
+                if (size.x > minWidth)
+                {
+                    minWidth = size.x;
+                }
+
+                if (size.x != 0)
+                {
+                    if (size == lastSize)
+                    {
+                        imageOK = true;
+                    }
+                    else if (lastSize.x != 0)
+                    {
+                        cro::Console::print("Not all images are same dimension");
+                        cro::FileSystem::showMessageBox("Error", s + ": Not all images have the same dimensions");
+                        imageOK = false;
+                        break;
+                    }
+                    lastSize = size;
+                }
+
+            }
+
+            if (imageOK)
+            {
+                auto path = cro::FileSystem::saveFileDialogue("", "png");
+
+                if(!path.empty())
+                {
+                    if (cro::FileSystem::getFileExtension(path) != ".png")
+                    {
+                        path += ".png";
+                    }
+
+                    //write image file
+                    cro::Image output;
+                    output.create(lastSize.x, lastSize.y, cro::Colour::Black);
+
+                    for (auto y = 0; y < lastSize.y; ++y)
+                    {
+                        for (auto x = 0; x < lastSize.x; ++x)
+                        {
+                            auto red = m_combinedImages[0].second.getPixel(x, y);
+                            auto green = m_combinedImages[1].second.getPixel(x, y);
+                            auto blue = m_combinedImages[2].second.getPixel(x, y);
+                            auto alpha = m_combinedImages[3].second.getPixel(x, y);
+
+                            cro::Colour outPixel;
+                            if (red)
+                            {
+                                outPixel.setRed(red[0]);
+                            }
+                            if (green)
+                            {
+                                outPixel.setGreen(green[1]);
+                            }
+                            if (blue)
+                            {
+                                outPixel.setGreen(blue[2]);
+                            }
+                            if (alpha && m_combinedImages[3].second.getFormat() == cro::ImageFormat::RGBA)
+                            {
+                                outPixel.setAlpha(alpha[3]);
+                            }
+
+                            output.setPixel(x, y, outPixel);
+                        }
+                    }
+                    if (output.write(path))
+                    {
+                        cro::FileSystem::showMessageBox("Success", "Wrote image successfully");
+                    }
+                    else
+                    {
+                        cro::FileSystem::showMessageBox("Error", "Failed writing " + cro::FileSystem::getFileName(path));
+                    }
+                }
+            }
+        }
+    }
+    ImGui::End();
 }
 
 void ModelState::updateLayout(std::int32_t w, std::int32_t h)
