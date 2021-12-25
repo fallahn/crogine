@@ -498,7 +498,8 @@ void ModelState::buildUI()
                     if (ImGui::MenuItem("Use Free Look", nullptr, nullptr))
                     {
                         toggleFreecam();
-                    }                    
+                    }  
+                    ImGui::MenuItem("Text Editor", nullptr, &m_textEditor.visible);
                     if (!m_useFreecam)
                     {
                         if (ImGui::MenuItem("Reset Camera"))
@@ -659,6 +660,7 @@ void ModelState::buildUI()
                 ImGui::End();
             }
 
+
             drawInspector();
             drawBrowser();
             drawInfo();
@@ -670,6 +672,8 @@ void ModelState::buildUI()
             }
 
             m_maskEditor.doImGui(&m_showMaskEditor);
+            m_textEditor.update();
+
 
 #ifdef CRO_DEBUG_
             if (m_useDeferred)

@@ -11,6 +11,5 @@ model ball03
         repeat = true
         vertex_coloured = true
         blendmode = "none"
-
     }
 }

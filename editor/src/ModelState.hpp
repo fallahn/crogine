@@ -34,6 +34,7 @@ source distribution.
 #include "StateIDs.hpp"
 #include "MaterialDefinition.hpp"
 #include "MaskEditor.hpp"
+#include "EditorWindow.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -219,7 +220,7 @@ private:
     void readMaterialDefinition(MaterialDefinition&, const cro::ConfigObject&);
     //-------------------------------------//
 
-
+    EditorWindow m_textEditor;
 
     //---------ModelStateUI.cpp--------//
     ImVec4 m_messageColour;

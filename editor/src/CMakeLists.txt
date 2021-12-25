@@ -1,5 +1,6 @@
 
 set(PROJECT_SRC
+  ${PROJECT_DIR}/EditorWindow.cpp
   ${PROJECT_DIR}/FileHistory.cpp
   ${PROJECT_DIR}/FpsCameraSystem.cpp
   ${PROJECT_DIR}/LayoutState.cpp
@@ -17,6 +18,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ParticleState.cpp
   ${PROJECT_DIR}/ParticleStateUI.cpp
   ${PROJECT_DIR}/SrgbTransform.cpp
+  ${PROJECT_DIR}/TextEditor.cpp
   ${PROJECT_DIR}/WorldState.cpp
   ${PROJECT_DIR}/WorldStateUI.cpp
 
