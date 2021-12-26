@@ -66,6 +66,14 @@ struct MiniCamData final
     float currentSize = MinSize;
 };
 
+//used in player sprite animation
+struct PlayerCallbackData final
+{
+    std::int32_t direction = 0; //grow or shrink
+    float scale = 0.f;
+    float reflectionOffset = 0.f;
+};
+
 class GolfState final : public cro::State, public cro::GuiClient
 {
 public:

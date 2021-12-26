@@ -1544,19 +1544,34 @@ void GolfState::buildScene()
     entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f, 1.f, ShadowScale));
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::PlayerShadow;
-    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.addComponent<cro::Callback>().setUserData<PlayerCallbackData>();
     entity.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
     {
-        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-        currTime = std::min(1.f, currTime + (dt * 2.f));
-
-        e.getComponent<cro::Transform>().setScale({ ShadowScale * cro::Util::Easing::easeOutBounce(currTime), 1.f, ShadowScale });
-
-        if(currTime == 1)
+        auto& [direction, currTime, _] = e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>();
+        
+        if (direction == 0)
         {
-            currTime = 0.f;
-            e.getComponent<cro::Callback>().active = false;
+            currTime = std::min(1.f, currTime + (dt * 2.f));
+
+            e.getComponent<cro::Transform>().setScale({ ShadowScale * cro::Util::Easing::easeOutBounce(currTime), 1.f, ShadowScale });
+        
+            if (currTime == 1)
+            {
+                direction = 1;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        else
+        {
+            currTime = std::max(0.f, currTime - (dt * 3.f));
+            e.getComponent<cro::Transform>().setScale({ ShadowScale * cro::Util::Easing::easeOutBack(currTime), 1.f, ShadowScale });
+
+            if (currTime == 0)
+            {
+                direction = 0;
+                e.getComponent<cro::Callback>().active = false;
+            }
         }
     };
     m_modelDefs[ModelID::PlayerShadow]->createModel(entity);
@@ -2753,6 +2768,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
                 avatar.clubType = Avatar::Sprite::Iron;
                 e.getComponent<cro::Sprite>() = avatar.sprites[Avatar::Sprite::Iron].sprite;
             }
+            e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;
+            e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().scale = 0.f;
             e.getComponent<cro::Callback>().active = true;
 
             if (m_avatars[m_currentPlayer.client][m_currentPlayer.player].flipped)
@@ -2813,6 +2830,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         e.getComponent<cro::Transform>().rotate(rot);*/
 
         e.getComponent<cro::Model>().setHidden(player.terrain == TerrainID::Green);
+        
+        e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;
         e.getComponent<cro::Callback>().active = true;
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -2979,14 +2998,34 @@ void GolfState::updateActor(const ActorInfo& update)
 
 void GolfState::createTransition(const ActivePlayer& playerData)
 {
+    float targetDistance = glm::length2(playerData.position - m_currentPlayer.position);
+
     //hide player sprite
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::PlayerSprite;
-    cmd.action = [](cro::Entity e, float)
+    cmd.action = [targetDistance, playerData](cro::Entity e, float)
     {
-        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, 0.f));
+        if (targetDistance > 0.01
+            || playerData.terrain == TerrainID::Green)
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, 0.f));
+        }
+        else
+        {
+            e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 1;
+            e.getComponent<cro::Callback>().active = true;
+        }
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //hide player shadow
+    cmd.targetFlags = CommandID::PlayerShadow;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 1;
+        e.getComponent<cro::Callback>().active = true;
+    };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //hide hud
     cmd.targetFlags = CommandID::UI::Root;
@@ -3075,7 +3114,6 @@ void GolfState::createTransition(const ActivePlayer& playerData)
             targetInfo.startOffset = targetInfo.targetOffset;
 
             setCameraPosition(playerData.position, targetInfo.targetHeight, targetInfo.targetOffset);
-            //setCurrentPlayer(playerData);
             requestNextPlayer(playerData);
 
             m_gameScene.getActiveListener().getComponent<cro::AudioListener>().setVelocity(glm::vec3(0.f));
@@ -3368,7 +3406,7 @@ void GolfState::setPlayerPosition(cro::Entity e, glm::vec3 position)
     reflectPos.y = WaterLevel - reflectPos.y;
 
     pos = camera.coordsToPixel(reflectPos, m_gameSceneTexture.getSize());
-    e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>().second = pos.y - playerY;
+    e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().reflectionOffset = pos.y - playerY;
 }
 
 void GolfState::toggleFreeCam()

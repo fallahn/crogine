@@ -115,21 +115,34 @@ void GolfState::buildUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f, 0.f));
-    entity.addComponent<cro::Callback>().setUserData<std::pair<float, float>>(0.f, 0.f); //second value holds reflection offset
+    entity.addComponent<cro::Callback>().setUserData<PlayerCallbackData>();
     entity.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
     {
-        auto& scale = e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>().first;
-        scale = std::min(1.f, scale + (dt * 2.f));
+        auto& [direction, scale, _] = e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>();
+        const auto xScale = e.getComponent<cro::Transform>().getScale().x; //might be flipped
 
-        auto dir = e.getComponent<cro::Transform>().getScale().x; //might be flipped
-        e.getComponent<cro::Transform>().setScale(glm::vec2(dir, cro::Util::Easing::easeOutBounce(scale)));
-
-        if (scale == 1)
+        if (direction == 0)
         {
-            scale = 0.f;
-            e.getComponent<cro::Callback>().active = false;
+            scale = std::min(1.f, scale + (dt * 3.f));
+
+            if (scale == 1)
+            {
+                direction = 1;
+                e.getComponent<cro::Callback>().active = false;
+            }
         }
+        else
+        {
+            scale = std::max(0.f, scale - (dt * 3.f));
+
+            if (scale == 0)
+            {
+                direction = 0;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        e.getComponent<cro::Transform>().setScale(glm::vec2(xScale, cro::Util::Easing::easeOutBack(scale)));
     };
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
@@ -172,7 +185,7 @@ void GolfState::buildUI()
             e.getComponent<cro::Drawable2D>().setFacing(facing);
         }
 
-        auto offset = playerEnt.getComponent<cro::Callback>().getUserData< std::pair<float, float>>().second;
+        auto offset = playerEnt.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().reflectionOffset;
         e.getComponent<cro::Transform>().setPosition({ 0.f, offset });
     };
     playerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

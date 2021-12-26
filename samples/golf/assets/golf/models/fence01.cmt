@@ -13,7 +13,7 @@ model fence01
         double_sided = true
         blendmode = none
         diffuse = "assets/golf/images/fence.png"
-        alpha_clip = 0.142000
+        alpha_clip = 0.42000
 
     }
     material Unlit
