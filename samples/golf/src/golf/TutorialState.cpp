@@ -1578,7 +1578,7 @@ void TutorialState::tutorialFour(cro::Entity root)
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
-        cro::Vertex2D(glm::vec2(-60.f, 5.f), cro::Colour(0.f, 0.4f, 0.f, 0.f)),
+        cro::Vertex2D(glm::vec2(-60.f, 5.f), cro::Colour(1.f, 0.f, 1.f, 0.f)),
         cro::Vertex2D(glm::vec2(60.f, -5.f), cro::Colour(0.f, 0.f, 1.f, 01.f))
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();

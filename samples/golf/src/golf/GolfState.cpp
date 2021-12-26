@@ -3236,7 +3236,11 @@ void GolfState::startFlyBy()
                 data.speeds[2] = glm::length(glm::vec3(data.targets[2][3]) - glm::vec3(data.targets[3][3])) / MoveSpeed;
 
                 //play the transition music
-                m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
+                if (m_sharedData.tutorial)
+                {
+                    m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
+                }
+                //else we'll play it when the score board shows, below
                 break;
             case 3:
                 //we're done here
@@ -3251,6 +3255,7 @@ void GolfState::startFlyBy()
                 else
                 {
                     showScoreboard(true);
+                    m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
 
                     //delayed ent just to show the score board for a while
                     auto de = m_gameScene.createEntity();
