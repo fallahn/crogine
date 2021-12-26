@@ -571,7 +571,24 @@ void TerrainBuilder::threadFunc()
                         {
                             glm::vec3 position(x, height, -y);
 
-                            if (!nearProp(position))
+                            bool isNearProp = false;
+                            for (auto v = position.z - 1; v < position.z + 2; ++v)
+                            {
+                                for (auto u = position.x - 1; u < position.x + 2; ++u)
+                                {
+                                    isNearProp = nearProp({ u, height, v });
+                                    if (isNearProp)
+                                    {
+                                        break;
+                                    }
+                                }
+                                if (isNearProp)
+                                {
+                                    break;
+                                }
+                            }
+
+                            if (!isNearProp)
                             {
                                 float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)]);
