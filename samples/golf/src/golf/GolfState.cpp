@@ -2615,6 +2615,22 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     }
 }
 
+void GolfState::requestNextPlayer(const ActivePlayer& player)
+{
+    if (!m_sharedData.tutorial)
+    {
+        m_currentPlayer = player;
+        //setCurrentPlayer() is called when the sign closes
+
+        showMessageBoard(MessageBoardID::PlayerName);
+        showScoreboard(false);
+    }
+    else
+    {
+        setCurrentPlayer(player);
+    }
+}
+
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
     m_gameScene.getDirector<GolfSoundDirector>()->setActivePlayer(player.client, player.player);
@@ -2624,32 +2640,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
 
-    //self destructing ent to provide delay before popping up player name
-    if (!m_sharedData.tutorial)
-    {
-        auto entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<float>(1.5f);
-        entity.getComponent<cro::Callback>().function =
-            [&, localPlayer](cro::Entity e, float dt)
-        {
-            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-            currTime -= dt;
-            if (currTime <= 0)
-            {
-                showMessageBoard(MessageBoardID::PlayerName);
-                e.getComponent<cro::Callback>().active = false;
-                m_uiScene.destroyEntity(e);
+    m_inputParser.setActive(localPlayer);
 
-                m_inputParser.setActive(localPlayer);
-            }
-        };
-    }
-    else
-    {
-        m_inputParser.setActive(localPlayer);
-    }
 
     //player UI name
     cro::Command cmd;
@@ -2706,11 +2698,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.targetFlags = CommandID::UI::Root;
     cmd.action = [&,localPlayer](cro::Entity e, float)
     {
-        float sizeX = static_cast<float>(GolfGame::getActiveTarget()->getSize().x);
-        sizeX /= m_viewScale.x;
-
-        auto uiPos = localPlayer ? glm::vec2(sizeX / 2.f, UIBarHeight / 2.f) : UIHiddenPosition;
-        e.getComponent<cro::Transform>().setPosition(uiPos);
+        e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>().first = localPlayer ? 0 : 1;
+        e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -3003,7 +2992,8 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     cmd.targetFlags = CommandID::UI::Root;
     cmd.action = [](cro::Entity e, float) 
     {
-        e.getComponent<cro::Transform>().setPosition(UIHiddenPosition);
+        e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>().first = 1;
+        e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -3037,7 +3027,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
         else
         {
             //target the pin if the target is too close
-            if (targetDist < 5625) //remember this in len2
+            if (targetDist < /*5625*/2500) //remember this in len2
             {
                 targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
             }
@@ -3085,7 +3075,8 @@ void GolfState::createTransition(const ActivePlayer& playerData)
             targetInfo.startOffset = targetInfo.targetOffset;
 
             setCameraPosition(playerData.position, targetInfo.targetHeight, targetInfo.targetOffset);
-            setCurrentPlayer(playerData);
+            //setCurrentPlayer(playerData);
+            requestNextPlayer(playerData);
 
             m_gameScene.getActiveListener().getComponent<cro::AudioListener>().setVelocity(glm::vec3(0.f));
 
@@ -3260,6 +3251,15 @@ void GolfState::startFlyBy()
     cmd.action = [](cro::Entity e, float)
     {
         e.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //hide hud
+    cmd.targetFlags = CommandID::UI::Root;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>().first = 1;
+        e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

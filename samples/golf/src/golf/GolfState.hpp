@@ -162,6 +162,7 @@ private:
 
     void setCurrentHole(std::uint32_t);
     void setCameraPosition(glm::vec3, float, float);
+    void requestNextPlayer(const ActivePlayer&);
     void setCurrentPlayer(const ActivePlayer&);
     void hitBall();
     void updateActor(const ActorInfo&);

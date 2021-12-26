@@ -191,6 +191,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerName | CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.2f, 0.f };
+    entity.getComponent<UIElement>().depth = 0.05f;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
@@ -203,6 +204,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PinDistance | CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
+    entity.getComponent<UIElement>().depth = 0.05f;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
@@ -214,6 +216,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::ClubName | CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = ClubTextPosition;
+    entity.getComponent<UIElement>().depth = 0.05f;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -224,6 +227,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.61f, 0.f };
+    entity.getComponent<UIElement>().depth = 0.05f;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;
@@ -243,6 +247,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.76f, 1.f };
+    entity.getComponent<UIElement>().depth = 0.05f;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;
@@ -313,8 +318,44 @@ void GolfState::buildUI()
 
     //root used to show/hide input UI
     auto rootNode = m_uiScene.createEntity();
-    rootNode.addComponent<cro::Transform>().setPosition(UIHiddenPosition);
+    rootNode.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     rootNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::Root;
+    rootNode.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(0, 0.f);
+    rootNode.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& [dir, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+
+        if (dir == 0)
+        {
+            //grow
+            currTime = std::min(1.f, currTime + dt);
+            const float scale = cro::Util::Easing::easeOutElastic(currTime);
+
+            e.getComponent<cro::Transform>().setScale({ scale, scale });
+
+            if (currTime == 1)
+            {
+                dir = 1;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        else
+        {
+            //shrink
+            currTime = std::max(0.f, currTime - (dt * 2.f));
+            const float scale = cro::Util::Easing::easeOutBack(currTime);
+
+            e.getComponent<cro::Transform>().setScale({ scale, 1.f });
+
+            if (currTime == 0)
+            {
+                dir = 0;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        
+    };
     infoEnt.getComponent<cro::Transform>().addChild(rootNode.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
@@ -322,14 +363,14 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBar];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, -0.05f));
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //power bar
     auto barEnt = entity;
     auto barCentre = bounds.width / 2.f;
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(5.f, 0.f)); //TODO expel the magic number!!
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.05f)); //TODO expel the magic number!!
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBarInner];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1342,7 +1383,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<MessageAnim>();
     entity.getComponent<cro::Callback>().function =
-        [&, textEnt, textEnt2, imgEnt](cro::Entity e, float dt)
+        [&, textEnt, textEnt2, imgEnt, messageType](cro::Entity e, float dt)
     {
         static constexpr float HoldTime = 2.f;
         auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
@@ -1386,6 +1427,13 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
                 m_uiScene.destroyEntity(textEnt2);
                 m_uiScene.destroyEntity(imgEnt);
                 m_uiScene.destroyEntity(e);
+
+                if (messageType == MessageBoardID::PlayerName)
+                {
+                    //this assumes it was raised by an event
+                    //from requestNextPlayer
+                    setCurrentPlayer(m_currentPlayer);
+                }
             }
             break;
         }

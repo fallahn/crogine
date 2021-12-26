@@ -320,6 +320,9 @@ void BallSystem::process(float dt)
 
             if (ball.delay < 0)
             {
+                //TODO hmmm we might be better moving back towards the
+                //player, but we don't have the player position here to target...
+
                 //move towards hole or target util we find non-water
                 std::uint8_t terrain = TerrainID::Water;
 
@@ -359,7 +362,7 @@ void BallSystem::process(float dt)
                         && terrain != TerrainID::Scrub)
                     {
                         //move the ball a bit closer so we're not balancing on the edge
-                        ballPos += dir;
+                        ballPos += dir * 1.5f;
                         res = getTerrain(ballPos);
 
                         ballPos = res.intersection;
