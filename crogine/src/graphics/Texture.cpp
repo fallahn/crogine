@@ -137,17 +137,24 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
     auto wrap = m_repeated ? GL_REPEAT : GL_CLAMP_TO_EDGE;
     auto smooth = m_smooth ? GL_LINEAR : GL_NEAREST;
     GLint texFormat = GL_RGB;
+    std::int32_t pixelSize = 3;
     if (format == ImageFormat::RGBA)
     {
         texFormat = GL_RGBA;
+        pixelSize = 4;
     }
     else if(format == ImageFormat::A)
     {
         texFormat = GL_RED;
+        pixelSize = 1;
     }
 
+    //let's fill the texture with known empty values
+    std::vector<std::uint8_t> buffer(width * height * pixelSize);
+    std::fill(buffer.begin(), buffer.end(), 0);
+
     glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
-    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, NULL));
+    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, buffer.data()));
     glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap));
     glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap));
     glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, smooth));

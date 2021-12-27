@@ -532,7 +532,7 @@ void Console::init()
 
 
     //loads any convars which may have been saved
-    convars.loadFromFile(App::getPreferencePath() + convarName);
+    convars.loadFromFile(App::getPreferencePath() + convarName, false);
     //TODO execute callback for each to make sure values are applied
 }
 
