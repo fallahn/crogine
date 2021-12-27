@@ -757,9 +757,8 @@ void GolfState::buildUI()
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-        //relocate the power bar if we're the current client.
-        auto localPlayer = (m_currentPlayer.client == m_sharedData.clientConnection.connectionID);
-        auto uiPos = localPlayer ? glm::vec2(uiSize.x / 2.f, UIBarHeight / 2.f) : UIHiddenPosition;
+        //relocate the power bar
+        auto uiPos = glm::vec2(uiSize.x / 2.f, UIBarHeight / 2.f);
         rootNode.getComponent<cro::Transform>().setPosition(uiPos);
     };
 
@@ -805,7 +804,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
     cmd.targetFlags = CommandID::UI::Root;
     cmd.action = [](cro::Entity e, float)
     {
-        e.getComponent<cro::Transform>().setPosition(UIHiddenPosition);
+        e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>().first = 1;
+        e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
