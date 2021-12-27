@@ -79,7 +79,7 @@ namespace
         uniform LOW vec3 u_darkColour;
         uniform LOW vec3 u_lightColour;
 
-        uniform LOW vec4 u_skyColour;
+        uniform LOW vec3 u_skyColour;
 
         VARYING_IN vec3 v_texCoords;
 
@@ -94,14 +94,14 @@ namespace
             float dist = normalize(v_texCoords).y; /*v_texCoords.y + 0.5*/
 
             vec3 colour = mix(u_darkColour, u_lightColour, smoothstep(0.04, 0.88, dist));
-            FRAG_OUT = vec4(colour * u_skyColour.rgb, 1.0);
+            FRAG_OUT = vec4(colour * u_skyColour, 1.0);
         })";
     const std::string skyboxFragTextured =
         R"(
         OUTPUT
 
         uniform samplerCube u_skybox;
-        uniform vec4 u_skyColour;
+        uniform vec3 u_skyColour;
 
         VARYING_IN vec3 v_texCoords;
 
@@ -114,7 +114,7 @@ namespace
             colour = colour / (colour + vec3(1.0));
             colour = pow(colour, vec3(1.0/2.2));
 #endif
-            FRAG_OUT = vec4(colour * u_skyColour.rgb, 1.0);
+            FRAG_OUT = vec4(colour * u_skyColour, 1.0);
         })";
 
     const float DefaultFOV = 35.f * Util::Const::degToRad;
@@ -642,10 +642,10 @@ void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, 
             }
 
             //set sun colour if shader expects it
-            if (m_skybox.skyColourUniform)
+            if (m_skybox.skyColourUniform != -1) //this would be -1 if it doesn't exist, not 0
             {
                 auto c = m_sunlight.getComponent<Sunlight>().getColour();
-                glCheck(glUniform4f(m_skybox.skyColourUniform, c.getRed(), c.getGreen(), c.getBlue(), c.getAlpha()));
+                glCheck(glUniform3f(m_skybox.skyColourUniform, c.getRed(), c.getGreen(), c.getBlue()));
             }
 
             //draw cube

@@ -386,8 +386,8 @@ namespace cro
             std::uint32_t modelViewUniform = 0;
             std::uint32_t projectionUniform = 0;
             std::uint32_t texture = 0;
-            std::uint32_t textureUniform = 0;
-            std::uint32_t skyColourUniform = 0;
+            std::int32_t textureUniform = -1;
+            std::int32_t skyColourUniform = -1;
 
             const Shader* activeShader = nullptr;
 
@@ -399,23 +399,8 @@ namespace cro
 
                 modelViewUniform = shader.getUniformMap().at("u_modelViewMatrix");
                 projectionUniform = shader.getUniformMap().at("u_projectionMatrix");
-                if (shader.getUniformMap().count("u_skybox"))
-                {
-                    textureUniform = shader.getUniformMap().at("u_skybox");
-                }
-                else
-                {
-                    textureUniform = 0;
-                }
-
-                if (shader.getUniformMap().count("u_skyColour"))
-                {
-                    skyColourUniform = shader.getUniformMap().at("u_skyColour");
-                }
-                else
-                {
-                    skyColourUniform = 0;
-                }
+                textureUniform = shader.getUniformID("u_skybox");
+                skyColourUniform = shader.getUniformID("u_skyColour");
             }
         }m_skybox;
 
