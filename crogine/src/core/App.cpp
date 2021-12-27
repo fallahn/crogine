@@ -587,7 +587,7 @@ App::WindowSettings App::loadSettings()
     WindowSettings settings;
 
     ConfigFile cfg;
-    if (cfg.loadFromFile(m_prefPath + cfgName))
+    if (cfg.loadFromFile(m_prefPath + cfgName, false))
     {
         const auto& properties = cfg.getProperties();
         for (const auto& prop : properties)

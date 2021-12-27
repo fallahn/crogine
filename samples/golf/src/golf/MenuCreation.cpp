@@ -3031,7 +3031,7 @@ void MenuState::loadAvatars()
 {
     auto path = cro::App::getPreferencePath() + "avatars.cfg";
     cro::ConfigFile cfg;
-    if (cfg.loadFromFile(path))
+    if (cfg.loadFromFile(path, false))
     {
         std::uint32_t i = 0;
 

@@ -143,9 +143,9 @@ std::vector<float> ConfigProperty::valueAsArray() const
 ConfigObject::ConfigObject(const std::string& name, const std::string& id)
     : ConfigItem    (name), m_id(id){}
 
-bool ConfigObject::loadFromFile(const std::string& filePath)
+bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
 {
-    auto path = FileSystem::getResourcePath() + filePath;
+    auto path = relative ? FileSystem::getResourcePath() + filePath : filePath;
     currentLine = 0;
 
     m_id = "";

@@ -541,7 +541,7 @@ void GolfGame::loadPreferences()
     if (cro::FileSystem::fileExists(path))
     {
         cro::ConfigFile cfg;
-        if (cfg.loadFromFile(path))
+        if (cfg.loadFromFile(path, false))
         {
             const auto& properties = cfg.getProperties();
             for (const auto& prop : properties)

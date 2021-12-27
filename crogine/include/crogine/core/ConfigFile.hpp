@@ -210,9 +210,15 @@ namespace cro
 
         /*!
         \brief Attempts to load a config file into the object.
+        \param path String containing the path to a config file to open
+        \param relative On macOS we need to know if this is a relative path
+        ie a path to a file in a bundle, or an absolute path to a file
+        stored in a user directory such as Application Support. Does nothing
+        on Windows or Linux.
+        \param relative
         \returns true on success, else false if something went wrong
         */
-        bool loadFromFile(const std::string& path);
+        bool loadFromFile(const std::string& path, bool relative = true);
 
     private:
         std::string m_id;
