@@ -819,6 +819,10 @@ void GolfState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED");
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
+    m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
+
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
@@ -1242,15 +1246,22 @@ void GolfState::loadAssets()
                             modelDef.createModel(ent);
                             if (modelDef.hasSkeleton())
                             {
+                                for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
+                                {
+                                    auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+                                    setTexture(modelDef, texturedMat, i);
+                                    ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+                                }
                                 ent.getComponent<cro::Skeleton>().play(0);
-
-                                //TODO we need to specialise the material for skinned models.
                             }
                             else
                             {
-                                auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-                                setTexture(modelDef, texturedMat);
-                                ent.getComponent<cro::Model>().setMaterial(0, texturedMat);
+                                for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
+                                {
+                                    auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+                                    setTexture(modelDef, texturedMat, i);
+                                    ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+                                }
                             }
                             ent.getComponent<cro::Model>().setHidden(true);
                             ent.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));

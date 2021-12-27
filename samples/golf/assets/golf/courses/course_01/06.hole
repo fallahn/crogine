@@ -10,7 +10,7 @@ hole 06
 
     prop
     {
-        model = "assets/golf/models/windmill02.cmt"
+        model = "assets/golf/models/windmill.cmt"
         position = 79.944443,2.071287,-89.963554
         rotation = 0.000000
     }

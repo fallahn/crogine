@@ -95,6 +95,7 @@ struct ShaderID final
         Terrain,
         Cel,
         CelTextured,
+        CelTexturedSkinned,
         Course,
         Ball,
         Slope,
@@ -175,6 +176,14 @@ static inline void setTexture(const cro::ModelDefinition& modelDef, cro::Materia
 {
     if (auto* m = modelDef.getMaterial(matID); m != nullptr)
     {
+        //skip over materials with alpha blend as they are
+        //probably glass or  shadow materials
+        if (m->blendMode == cro::Material::BlendMode::Alpha)
+        {
+            dest = *m;
+            return;
+        }
+
         if (m->properties.count("u_diffuseMap"))
         {
             dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));

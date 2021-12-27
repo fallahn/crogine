@@ -121,6 +121,7 @@ private:
             Water,
             Cel,
             CelTextured,
+            CelTexturedSkinned,
             Course,
             Ball,
 

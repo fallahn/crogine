@@ -690,7 +690,7 @@ void ModelDefinition::reset()
     m_materialIDs = {};
     m_shadowIDs = {};
     m_materialCount = 0;
-    Skeleton m_skeleton = {};
+    m_skeleton = {};
     m_castShadows = false;
     m_billboard = false;
     m_instanced = false;

@@ -127,6 +127,13 @@ static const std::string CelVertexShader = R"(
     ATTRIBUTE vec2 a_texCoord0;
 #endif
 
+#if defined(SKINNED)
+    #define MAX_BONES 64
+    ATTRIBUTE vec4 a_boneIndices;
+    ATTRIBUTE vec4 a_boneWeights;
+    uniform mat4 u_boneMatrices[MAX_BONES];
+#endif
+
     uniform mat3 u_normalMatrix;
     uniform mat4 u_worldMatrix;
     uniform mat4 u_viewProjectionMatrix;
@@ -148,10 +155,24 @@ static const std::string CelVertexShader = R"(
 
     void main()
     {
-        vec4 position = u_worldMatrix * a_position;
-        gl_Position = u_viewProjectionMatrix * position;
+        vec4 position = a_position;
 
-        v_normal = u_normalMatrix * a_normal;
+    #if defined(SKINNED)
+        mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
+        skinMatrix += a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)];
+        skinMatrix += a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)];
+        skinMatrix += a_boneWeights.w * u_boneMatrices[int(a_boneIndices.w)];
+        position = skinMatrix * position;
+    #endif
+
+        gl_Position = u_viewProjectionMatrix * u_worldMatrix * position;
+
+        vec3 normal = a_normal;
+    #if defined(SKINNED)
+        normal = (skinMatrix * vec4(normal, 0.0)).xyz;
+    #endif
+        v_normal = u_normalMatrix * normal;
+
         v_colour = a_colour;
 
 #if defined (TEXTURED)
