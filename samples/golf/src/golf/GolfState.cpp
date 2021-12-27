@@ -1252,7 +1252,13 @@ void GolfState::loadAssets()
                                     setTexture(modelDef, texturedMat, i);
                                     ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
                                 }
-                                ent.getComponent<cro::Skeleton>().play(0);
+                                
+                                auto& skel = ent.getComponent<cro::Skeleton>();
+                                if (!skel.getAnimations().empty())
+                                {
+                                    ent.getComponent<cro::Skeleton>().play(0);
+                                    skel.getAnimations()[0].looped = true;
+                                }
                             }
                             else
                             {
@@ -3316,6 +3322,23 @@ void GolfState::startFlyBy()
         e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //hide player
+    cmd.targetFlags = CommandID::UI::PlayerSprite;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //hide stroke indicator
+    cmd.targetFlags = CommandID::StrokeIndicator;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Model>().setHidden(true);
+    };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
 }
 
 std::int32_t GolfState::getClub() const

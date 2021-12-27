@@ -148,10 +148,14 @@ void GolfGame::handleMessage(const cro::Message& msg)
             {
             default: break;
             case StateID::Options:
-                savePreferences();
                 saveSettings();
+                savePreferences();
                 break;
             }
+        }
+        else if (data.action == cro::Message::StateEvent::Cleared)
+        {
+            savePreferences();
         }
     }
     else if (msg.id == cro::Message::ConsoleMessage)

@@ -1,0 +1,32 @@
+model lilies
+{
+    mesh = assets/golf/models/lilies.cmb
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+        diffuse = "assets/golf/images/lilies.png"
+        alpha_clip = 0.520000
+
+    }
+    material Unlit
+    {
+        name = "flowers"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = true
+        blendmode = none
+        diffuse = "assets/golf/images/lilies.png"
+        alpha_clip = 0.319000
+
+    }
+}
