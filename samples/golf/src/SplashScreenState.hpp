@@ -38,7 +38,6 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/Shader.hpp>
-#include <crogine/graphics/SimpleQuad.hpp>
 
 namespace cro
 {

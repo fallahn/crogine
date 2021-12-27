@@ -175,12 +175,9 @@ bool Window::getMultisamplingEnabled() const
 
 void Window::clear()
 {
-    //we don't need to store the old viewport
-    //or (hopefully) renew our own as the window will
-    //always be at the bottom of the RenderTarget stack
-    //but we will need to apply it first in case this is
-    //the first time we cleared since updating the viewport
-
+    //we don't need to call RenderTarget::setActive()
+    //for the window as it is automatically set to be
+    //the bottom most target in the stack.
     auto vp = getViewport();
     glCheck(glViewport(vp.left, vp.bottom, vp.width, vp.height));
 
@@ -224,14 +221,24 @@ void Window::setSize(glm::uvec2 size)
 
 void Window::setFullScreen(bool fullscreen)
 {
+#ifdef __APPLE__
+#define FS_MODE SDL_WINDOW_FULLSCREEN
+#else
+#define FS_MODE SDL_WINDOW_FULLSCREEN_DESKTOP
+#endif
+
     CRO_ASSERT(m_window, "window not created");
-    if (SDL_SetWindowFullscreen(m_window, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0) == 0)
+    if (SDL_SetWindowFullscreen(m_window, fullscreen ? FS_MODE : 0) == 0)
     {
         m_fullscreen = fullscreen;
         if (!fullscreen)
         {
             SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
         }
+    }
+    else
+    {
+        LogE << SDL_GetError() << std::endl;
     }
 }
 
@@ -271,10 +278,7 @@ const std::vector<glm::uvec2>& Window::getAvailableResolutions() const
             {
                 if (SDL_GetDisplayMode(0, i, &mode) == 0)
                 {
-                    if (SDL_BITSPERPIXEL(mode.format) == 24)
-                    {
-                        m_resolutions.emplace_back(mode.w, mode.h);
-                    }
+                    m_resolutions.emplace_back(mode.w, mode.h);
                 }
             }
             m_resolutions.erase(std::unique(std::begin(m_resolutions), std::end(m_resolutions)), std::end(m_resolutions));
