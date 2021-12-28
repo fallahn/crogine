@@ -12,17 +12,8 @@ hole 09
     }
 
     pin = 264.879852,1.984637,-40.700531
-
     target = 182.080109,1.800000,-133.754654
-
     tee = 29.892410,1.800000,-161.606018
-
-    prop
-    {
-        model = "assets/golf/models/leaderboard.cmt"
-        position = 55.129177,1.746275,-133.829315
-        rotation = 167.224236
-    }
 
     prop
     {

@@ -42,8 +42,8 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
         file = open(self.properties.filepath, 'w')
 
         file.write("hole %s\n{\n" % Path(self.properties.filepath).stem)
-        file.write("    map=\"path/to/map.png\"\n")
-        file.write("    model=\"path/to/model.cmt\"\n")
+        file.write("    map=\"assets/golf/courses/course_0/%s.png\"\n" % Path(self.properties.filepath).stem)
+        file.write("    model=\"assets/golf/models/course_0/%s.cmt\"\n" % Path(self.properties.filepath).stem)
         file.write("    par = 4\n\n")
 
         teeWritten = False

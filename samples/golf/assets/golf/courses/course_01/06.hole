@@ -8,26 +8,6 @@ hole 06
     target = 111.655540,1.799999,-75.477547
     tee = 242.037460,1.799999,-141.975311
 
-    prop
-    {
-        model = "assets/golf/models/reeds.cmt"
-        position = 109.568916,-0.015048,-40.826260
-        rotation = 0.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/reeds.cmt"
-        position = 108.542221,-0.015048,-41.215229
-        rotation = 34.965465
-    }
-
-    prop
-    {
-        model = "assets/golf/models/reeds.cmt"
-        position = 109.205963,-0.015048,-41.115303
-        rotation = -53.675810
-    }
 
     prop
     {
