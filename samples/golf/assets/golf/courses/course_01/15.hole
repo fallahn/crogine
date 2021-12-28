@@ -1,57 +1,76 @@
 hole 15
 {
-    map = "assets/golf/courses/course_01/15.png"
-    model = "assets/golf/models/course_01/15.cmt"
-    pin = "29,0.109814,-66"
-    target = "167,0,-66"
-    tee = "300,0,-168"
-    par = "3"
+    map="assets/golf/courses/course_01/15.png"
+    model="assets/golf/models/course_01/15.cmt"
+    par = 4
 
-    prop 
-    {
-        model = "assets/golf/models/fence01.cmt"
-        position = 20.687439,0.000000,-77.847748
-        rotation = "-338.085060"
+    pin = 29.637815,1.711355,-66.093262
+    target = 141.924545,1.600240,-60.236271
+    tee = 296.111633,1.600240,-165.552704
 
-    }
-    prop 
-    {
-        model = "assets/golf/models/fence02.cmt"
-        position = 24.220520,0.000000,-80.174164
-        rotation = "-319.993995"
-
-    }
-    prop 
-    {
-        model = "assets/golf/models/crane.cmt"
-        position = 45.397346,0.000000,-33.788284
-        rotation = "-10.231739"
-
-    }
-    prop 
+    prop
     {
         model = "assets/golf/models/crane_arm.cmt"
-        position = 45.397346,0.000000,-33.788284
-        rotation = "-83.586466"
-
+        position = 84.319901,1.814339,-33.432014
+        rotation = -35.760833
+        scale = 1.0,1.0,1.0
     }
-    prop 
-    {
-        model = "assets/golf/models/view_platform.cmt"
-        position = 20.245483,-0.000004,-82.775024
-        rotation = "-709.188347"
 
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = 84.319901,1.814339,-33.432014
+        rotation = 0.828161
+        scale = 1.000000,1.000000,1.000000
     }
-    crowd 
-    {
-        position = 20.547546,0.000000,-74.827942
-        rotation = "-343.985216"
 
+    prop
+    {
+        model = "assets/golf/models/willow01.cmt"
+        position = 27.343744,1.600241,-83.516838
+        rotation = -118.994822
+        scale = 1.000000,1.000000,1.000000
     }
-    crowd 
-    {
-        position = 13.441299,0.000000,-54.641571
-        rotation = "-50.813687"
 
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 26.084000,1.620240,-80.133438
+        rotation = 26.831530
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 31.712067,1.620240,-81.997704
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 31.273514,1.600241,-82.737061
+        rotation = 0.000000
+    }
+
+    crowd
+    {
+        position = 15.462943,1.600241,-73.048347
+        rotation = 48.467519
+    }
+
+    crowd
+    {
+        position = 20.862873,1.600241,-46.122322
+        rotation = 136.265222
+    }
+
+    prop
+    {
+        model = "assets/golf/models/boat02.cmt"
+        position = 79.973740,-0.908025,-117.028465
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
     }
 }

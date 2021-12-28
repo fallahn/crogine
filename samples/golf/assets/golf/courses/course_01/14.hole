@@ -1,85 +1,101 @@
 hole 14
 {
-    map = "assets/golf/courses/course_01/14.png"
-    model = "assets/golf/models/course_01/14.cmt"
-    pin = "35,0.139739,-27"
-    target = "177,0,-83"
-    tee = "288,0,-180"
-    par = "3"
+    map="assets/golf/courses/course_01/14.png"
+    model="assets/golf/models/course_01/14.cmt"
+    par = 4
 
-    prop 
-    {
-        model = "assets/golf/models/cart.cmt"
-        position = 236.914948,0.000000,-169.314667
-        rotation = "39.732207"
+    pin = 38.909630,1.307054,-32.982445
+    target = 122.525909,1.201680,-62.193924
+    tee = 267.921295,1.201680,-171.831451
 
-    }
-    prop 
-    {
-        model = "assets/golf/models/fence01.cmt"
-        position = 49.355560,0.000000,-9.198372
-        rotation = "-167.590486"
-
-    }
-    prop 
-    {
-        model = "assets/golf/models/fence02.cmt"
-        position = 45.485840,0.000000,-7.489525
-        rotation = "-149.499420"
-
-    }
-    prop 
+    prop
     {
         model = "assets/golf/models/scoreboard.cmt"
-        position = 230.001663,0.000000,-162.289948
-        rotation = "45.009541"
-
+        position = 225.462067,1.221680,-165.048767
+        rotation = 46.948485
+        scale = 1.000000,1.000000,1.000000
     }
-    prop 
-    {
-        model = "assets/golf/models/lighthouse.cmt"
-        position = 159.272202,0.000000,68.048294
-        rotation = "0.000000"
 
-    }
-    prop 
-    {
-        model = "assets/golf/models/crane.cmt"
-        position = 32.495895,0.000000,-62.386490
-        rotation = "-157.061634"
-
-    }
-    prop 
-    {
-        model = "assets/golf/models/crane_arm.cmt"
-        position = 32.495895,0.000000,-62.386490
-        rotation = "129.651572"
-
-    }
-    prop 
-    {
-        model = "assets/golf/models/view_platform.cmt"
-        position = 48.974991,-0.000004,-4.265976
-        rotation = "-538.693786"
-
-    }
-    prop 
+    prop
     {
         model = "assets/golf/models/cart.cmt"
-        position = 235.402710,0.000000,-166.362213
-        rotation = "58.730386"
-
+        position = 228.577484,1.249006,-169.228897
+        rotation = 55.013502
+        scale = 1.000000,1.000000,1.000000
     }
-    crowd 
+
+    prop
     {
-        position = 49.993874,0.000000,-12.153259
-        rotation = "-173.490642"
-
+        model = "assets/golf/models/lighthouse.cmt"
+        position = 84.851067,-0.020000,61.643322
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
     }
-    crowd 
+
+    prop
     {
-        position = 288.997864,0.000005,-145.530945
-        rotation = "57.655617"
-
+        model = "assets/golf/models/crane.cmt"
+        position = 83.489098,1.240344,-76.952286
+        rotation = 20.979735
+        scale = 1.000000,1.000000,1.000000
     }
+
+    prop
+    {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 83.489098,1.240344,-76.952286
+        rotation = 55.624086
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = 40.696476,1.201681,-10.362507
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 44.007427,1.221680,-13.716692
+        rotation = 4.471424
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 37.009212,1.221680,-12.742150
+        rotation = 9.527329
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 27.347666,1.201680,-13.016158
+        rotation = -8.118060
+    }
+
+    crowd
+    {
+        position = 45.066612,1.201680,-12.928902
+        rotation = 15.147518
+    }
+
+    crowd
+    {
+        position = 19.805231,1.201680,-55.317558
+        rotation = 34.912343
+    }
+
+    prop
+    {
+        model = "assets/golf/models/willow01.cmt"
+        position = 18.642670,1.610107,-59.042175
+        rotation = 24.951983
+        scale = 1.000000,1.000000,1.000000
+    }
+
 }

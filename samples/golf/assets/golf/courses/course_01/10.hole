@@ -1,70 +1,57 @@
 hole 10
 {
-    map = "assets/golf/courses/course_01/10.png"
-    model = "assets/golf/models/course_01/10.cmt"
-    pin = "247,0.392042,-140"
-    target = "248,0,-140"
-    tee = "71,0,-77"
-    par = "3"
+    map="assets/golf/courses/course_01/10.png"
+    model="assets/golf/models/course_01/10.cmt"
+    par = 4
 
-    prop 
-    {
-        model = "assets/golf/models/cart.cmt"
-        position = 205.158051,0.000000,-150.519760
-        rotation = "57.503883"
+    pin = 247.897293,1.134525,-138.862686
+    target = 194.603439,0.731599,-106.615051
+    tee = 69.307632,0.731600,-78.717911
 
-    }
-    prop 
-    {
-        model = "assets/golf/models/fence01.cmt"
-        position = 204.478928,0.000000,-147.608276
-        rotation = "31.359022"
-
-    }
-    prop 
-    {
-        model = "assets/golf/models/fence02.cmt"
-        position = 207.585892,0.000000,-150.479111
-        rotation = "49.450063"
-
-    }
-    prop 
-    {
-        model = "assets/golf/models/scoreboard.cmt"
-        position = 264.771759,0.000000,-157.632462
-        rotation = "-32.612089"
-
-    }
-    prop 
+    prop
     {
         model = "assets/golf/models/crane.cmt"
-        position = 209.926666,0.000000,-96.362381
-        rotation = "-157.061634"
-
+        position = 205.920578,1.056533,-94.142319
+        rotation = -158.359301
     }
-    prop 
+
+    prop
     {
         model = "assets/golf/models/crane_arm.cmt"
-        position = 209.926666,0.000000,-96.362381
-        rotation = "-141.709145"
-
+        position = 205.920578,1.056533,-94.142319
+        rotation = -134.894021
     }
-    crowd 
-    {
-        position = 253.741455,0.000000,-113.140976
-        rotation = "25.458860"
 
+    crowd
+    {
+        position = 274.072510,0.731601,-150.067078
+        rotation = -74.953698
     }
-    crowd 
-    {
-        position = 268.607788,0.000000,-154.343674
-        rotation = "-50.813687"
 
+    crowd
+    {
+        position = 265.628510,0.731600,-116.898315
+        rotation = 51.988005
     }
-    crowd 
-    {
-        position = 108.108719,0.000000,-105.978867
-        rotation = "1.038276"
 
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 193.751526,-0.024437,-123.784683
+        rotation = 0.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 195.188522,-0.018525,-128.353729
+        rotation = 20.263830
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 269.921082,0.741600,-155.212494
+        rotation = -41.119021
     }
 }

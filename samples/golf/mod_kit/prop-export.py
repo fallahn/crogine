@@ -14,6 +14,16 @@ import os, math
 from pathlib import Path
 import bpy
 import bpy_extras.io_utils
+import mathutils
+
+def vecMultiply(vec, vec2):
+    temp = []
+
+    for x, i in enumerate(vec):
+        temp.append(i * vec2[x])
+
+    return mathutils.Vector(temp)
+
 
 def WriteProperty(file, propName, location):
     file.write("    %s = %f,%f,%f\n\n" % (propName, location[0], location[2], -location[1]))
@@ -69,7 +79,7 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                 else:
                     worldLocation = ob.matrix_world @ ob.location
                     worldRotation = ob.matrix_world.to_euler('XYZ')
-                    worldScale = ob.matrix_world @ ob.scale
+                    worldScale = vecMultiply(ob.parent.scale, ob.scale)
 
 
                 if "crowd" in modelName.lower():

@@ -1,77 +1,122 @@
 hole 16
 {
-    map = "assets/golf/courses/course_01/16.png"
-    model = "assets/golf/models/course_01/16.cmt"
-    pin = "292,0.151788,-43"
-    target = "149,0,-83"
-    tee = "39,0,-173"
-    par = "3"
+    map="assets/golf/courses/course_01/16.png"
+    model="assets/golf/models/course_01/16.cmt"
+    par = 4
 
-    prop 
+    pin = 283.639221,1.961370,-41.930649
+    target = 164.550858,1.800000,-60.562302
+    tee = 27.124619,1.800001,-173.292206
+
+    prop
     {
-        model = "assets/golf/models/fence01.cmt"
-        position = 306.629028,0.000000,-32.453285
-        rotation = "-492.613773"
-
+        model = "assets/golf/models/boat02.cmt"
+        position = 338.456146,-0.799822,-33.234573
+        rotation = 64.372893
+        scale = 1.000000,1.000000,1.000000
     }
-    prop 
+
+    prop
     {
-        model = "assets/golf/models/fence02.cmt"
-        position = 303.419891,0.000000,-29.371689
-        rotation = "-501.253188"
-
+        model = "assets/golf/models/boat01.cmt"
+        position = 326.724243,-0.799822,-83.173500
+        rotation = -47.745865
+        scale = 1.000000,1.000000,1.000000
     }
-    prop 
-    {
-        model = "assets/golf/models/scoreboard.cmt"
-        position = 73.228081,0.000000,-168.809692
-        rotation = "-38.641449"
 
-    }
-    prop 
-    {
-        model = "assets/golf/models/crane.cmt"
-        position = 273.072296,0.000000,-68.999908
-        rotation = "-174.353362"
-
-    }
-    prop 
-    {
-        model = "assets/golf/models/crane_arm.cmt"
-        position = 273.072296,0.000000,-68.999908
-        rotation = "112.359838"
-
-    }
-    prop 
+    prop
     {
         model = "assets/golf/models/view_platform.cmt"
-        position = 306.657837,-0.000004,-22.923866
-        rotation = "-873.310013"
-
+        position = 293.894226,1.884699,-22.123171
+        rotation = 27.657006
+        scale = 1.000000,1.000000,1.000000
     }
-    prop 
+
+    prop
     {
         model = "assets/golf/models/fence01.cmt"
-        position = 299.968140,0.000000,-26.049133
-        rotation = "-492.613773"
-
+        position = 288.419281,1.813354,-22.391504
+        rotation = 38.188197
+        scale = 1.000000,1.000000,1.000000
     }
-    crowd 
-    {
-        position = 308.219849,0.000000,-36.343929
-        rotation = "-508.106855"
 
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 291.662598,1.810000,-25.202085
+        rotation = 44.066213
+        scale = 1.000000,1.000000,1.000000
     }
-    crowd 
-    {
-        position = 309.520508,0.000000,-57.705029
-        rotation = "-214.935319"
 
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 294.794739,1.813354,-27.843552
+        rotation = 38.188197
+        scale = 1.000000,1.000000,1.000000
     }
-    crowd 
-    {
-        position = 79.474594,0.000005,-160.983124
-        rotation = "123.751034"
 
+    prop
+    {
+        model = "assets/golf/models/pine02.cmt"
+        position = 301.533539,1.303465,-23.857628
+        rotation = 0.000090
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/reeds_large.cmt"
+        position = 297.529266,2.188387,-25.813911
+        rotation = 24.304127
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/reeds.cmt"
+        position = 296.510010,2.064225,-27.608538
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 300.566925,1.800001,-58.308544
+        rotation = -63.184018
+    }
+
+    crowd
+    {
+        position = 300.144836,1.800002,-33.041027
+        rotation = -139.109248
+    }
+
+    prop
+    {
+        model = "assets/golf/models/pine01.cmt"
+        position = 291.177155,1.954564,-16.395086
+        rotation = 0.000000
+        scale = 0.766107,0.766107,0.766107
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 70.414375,1.820000,-164.760986
+        rotation = -39.916243
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 79.130127,1.800000,-156.162323
+        rotation = 127.670007
+    }
+
+    crowd
+    {
+        position = 82.114395,1.800001,-154.165756
+        rotation = -45.959844
     }
 }
