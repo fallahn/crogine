@@ -1,0 +1,30 @@
+model reeds_large
+{
+    mesh = assets/golf/models/reeds_large.cmb
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "stems"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+        diffuse = "assets/golf/images/reeds.png"
+
+    }
+    material Unlit
+    {
+        name = "leaves"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = true
+        blendmode = none
+        diffuse = "assets/golf/images/reeds.png"
+
+    }
+}

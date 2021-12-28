@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2021, 11, 3),
+    "version": (2021, 12, 28),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -18,11 +18,12 @@ import bpy_extras.io_utils
 def WriteProperty(file, propName, location):
     file.write("    %s = %f,%f,%f\n\n" % (propName, location[0], location[2], -location[1]))
 
-def WriteProp(file, modelName, location, rotation):
+def WriteProp(file, modelName, location, rotation, scale):
     file.write("    prop\n    {\n")
     file.write("        model = \"%s\"\n" % modelName)
     file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
     file.write("        rotation = %f\n" % (rotation[2] * (180.0 / 3.141)))
+    file.write("        scale = %f,%f,%f\n" % (scale[0], scale[2], scale[1]))
     file.write("    }\n\n")
 
 def WriteCrowd(file, location, rotation):
@@ -59,13 +60,16 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 
                 worldLocation = None
                 worldRotation = None
+                worldScale = None
 
                 if ob.parent is None:
                     worldLocation = ob.location
                     worldRotation = ob.rotation_euler
+                    worldScale = ob.scale
                 else:
                     worldLocation = ob.matrix_world @ ob.location
                     worldRotation = ob.matrix_world.to_euler('XYZ')
+                    worldScale = ob.matrix_world @ ob.scale
 
 
                 if "crowd" in modelName.lower():
@@ -84,7 +88,7 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                         teeWritten = True
                 else:
                     if ob.type == 'MESH':
-                        WriteProp(file, modelName, worldLocation, worldRotation)
+                        WriteProp(file, modelName, worldLocation, worldRotation, worldScale)
 
         file.write("}")
         file.close()

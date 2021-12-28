@@ -1216,6 +1216,7 @@ void GolfState::loadAssets()
                     const auto& modelProps = obj.getProperties();
                     glm::vec3 position(0.f);
                     float rotation = 0.f;
+                    glm::vec3 scale(1.f);
                     std::string path;
 
                     for (const auto& modelProp : modelProps)
@@ -1233,6 +1234,10 @@ void GolfState::loadAssets()
                         {
                             rotation = modelProp.getValue<float>();
                         }
+                        else if (propName == "scale")
+                        {
+                            scale = modelProp.getValue<glm::vec3>();
+                        }
                     }
 
                     if (!path.empty()
@@ -1243,6 +1248,7 @@ void GolfState::loadAssets()
                             auto ent = m_gameScene.createEntity();
                             ent.addComponent<cro::Transform>().setPosition(position);
                             ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
+                            ent.getComponent<cro::Transform>().setScale(scale);
                             modelDef.createModel(ent);
                             if (modelDef.hasSkeleton())
                             {

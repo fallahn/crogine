@@ -39,6 +39,7 @@ Hole files describe which models/assets make up the hole, as well as the positio
         {
             position = 70,0,45 //position in world units
             rotation = 45 //rotation around the Y axis (in degrees)
+            scale = 1.0,1.0,1.0 //scale of  the model
             model = "assets/golf/models/cart.cmt" //path to a model description to use as a prop
         }
 
