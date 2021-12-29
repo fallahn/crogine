@@ -2170,7 +2170,7 @@ void DrivingState::loadScores()
     const std::string loadPath = cro::App::getInstance().getPreferencePath() + "driving.scores";
 
     cro::ConfigFile cfg;
-    if (cfg.loadFromFile(loadPath))
+    if (cfg.loadFromFile(loadPath, false))
     {
         const auto& props = cfg.getProperties();
         for (const auto& p : props)
