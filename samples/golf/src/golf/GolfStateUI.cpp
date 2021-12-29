@@ -630,7 +630,7 @@ void GolfState::buildUI()
     createScoreboard();
 
 
-    //set up the overhead cam for the mini map - do we really need to do this on every resize?
+    //set up the overhead cam for the mini map
     auto updateMiniView = [&, mapEnt](cro::Camera& miniCam) mutable
     {
         glm::uvec2 previewSize = MapSize / 2u;
@@ -650,7 +650,7 @@ void GolfState::buildUI()
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
     miniCam.renderFlags = RenderFlags::MiniMap;
-    miniCam.resizeCallback = updateMiniView;
+    //miniCam.resizeCallback = updateMiniView; //don't do this on resize as recreating the buffer clears it..
     updateMiniView(miniCam);
 
 

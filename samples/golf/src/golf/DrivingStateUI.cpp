@@ -343,8 +343,7 @@ void DrivingState::createUI()
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    //camera for mini map - probably doesn't need to be a
-    //callback as it's not actually resized.
+    //camera for mini map
     auto updateMiniView = [&](cro::Camera& miniCam) mutable
     {
         glm::uvec2 previewSize(RangeSize / 2.f);
@@ -361,7 +360,7 @@ void DrivingState::createUI()
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
     miniCam.renderFlags = RenderFlags::MiniMap;
-    miniCam.resizeCallback = updateMiniView;
+    //miniCam.resizeCallback = updateMiniView;
     updateMiniView(miniCam);
 
     //minimap view
