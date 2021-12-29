@@ -727,8 +727,7 @@ void TerrainBuilder::threadFunc()
                             SlopeVertex vert2;
                             vert2.position = vert.position + offset;
                             vert2.position.y = height;
-                            //vert2.texCoord = { DashCount, std::min(2.f, std::max(-2.f, (vert.position.y - height) * SlopeSpeed)) };
-                            vert2.texCoord = { DashCount, glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed};
+                            vert2.texCoord = { DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
                             vert.texCoord.y = vert2.texCoord.y; //must be constant across segment
 
                             if (height < lowestHeight)
@@ -754,8 +753,7 @@ void TerrainBuilder::threadFunc()
                             SlopeVertex vert4;
                             vert4.position = vert.position + offset;
                             vert4.position.y = height;
-                            //vert4.texCoord = { DashCount, std::min(2.f, std::max(-2.f, (vert3.position.y - height) * SlopeSpeed)) };
-                            vert4.texCoord = { DashCount, glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed };
+                            vert4.texCoord = { DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
                             vert3.texCoord.y = vert4.texCoord.y;
 
                             if (height < lowestHeight)
