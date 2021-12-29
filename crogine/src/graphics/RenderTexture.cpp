@@ -124,6 +124,10 @@ bool RenderTexture::create(std::uint32_t width, std::uint32_t height, bool depth
                 glCheck(glRenderbufferStorage(GL_RENDERBUFFER, format, width, height));
                 glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
             }
+
+            setViewport(getDefaultViewport());
+            setView(FloatRect(getViewport()));
+
             return true;
         }
 

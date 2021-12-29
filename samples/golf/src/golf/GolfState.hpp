@@ -120,6 +120,7 @@ private:
             WireFrameCulled,
             Water,
             Cel,
+            CelSkinned,
             CelTextured,
             CelTexturedSkinned,
             Course,

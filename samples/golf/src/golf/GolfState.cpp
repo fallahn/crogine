@@ -811,6 +811,10 @@ void GolfState::loadAssets()
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define SKINNED\n");
+    shader = &m_resources.shaders.get(ShaderID::CelSkinned);
+    m_materialIDs[MaterialID::CelSkinned] = m_resources.materials.add(*shader);
+
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
     shader = &m_resources.shaders.get(ShaderID::Ball);
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
@@ -819,7 +823,7 @@ void GolfState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED");
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n");
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
@@ -1408,6 +1412,9 @@ void GolfState::buildScene()
     if (md.hasSkeleton())
     {
         entity.getComponent<cro::Skeleton>().play(0);
+
+        /*auto mat = m_resources.materials.get(m_materialIDs[MaterialID::CelSkinned]);
+        entity.getComponent<cro::Model>().setMaterial(0, mat);*/
     }
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<FlagCallbackData>();

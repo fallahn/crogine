@@ -217,6 +217,9 @@ void Window::setSize(glm::uvec2 size)
     CRO_ASSERT(m_window, "window not created");
     SDL_SetWindowSize(m_window, size.x, size.y);
     SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+
+    setViewport({ 0, 0, static_cast<std::int32_t>(size.x), static_cast<std::int32_t>(size.y) });
+    setView(FloatRect(getViewport()));
 }
 
 void Window::setFullScreen(bool fullscreen)
@@ -240,6 +243,9 @@ void Window::setFullScreen(bool fullscreen)
     {
         LogE << SDL_GetError() << std::endl;
     }
+
+    setViewport(getDefaultViewport());
+    setView(FloatRect(getViewport()));
 }
 
 void Window::setPosition(std::int32_t x, std::int32_t y)
