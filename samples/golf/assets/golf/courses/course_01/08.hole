@@ -68,4 +68,28 @@ hole 08
         position = 302.434906,1.800001,-141.247498
         rotation = 54.520136
     }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 139.657043,-0.018524,-123.298820
+        rotation = -128.021609
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 144.328735,-0.024437,-123.672974
+        rotation = 120.481365
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 150.811554,-0.018524,-116.059105
+        rotation = 48.294153
+        scale = 1.000000,1.000000,1.000000
+    }    
 }

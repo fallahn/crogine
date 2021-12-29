@@ -2,7 +2,7 @@ hole 10
 {
     map="assets/golf/courses/course_01/10.png"
     model="assets/golf/models/course_01/10.cmt"
-    par = 4
+    par = 3
 
     pin = 247.897293,1.134525,-138.862686
     target = 194.603439,0.731599,-106.615051
@@ -37,15 +37,17 @@ hole 10
     prop
     {
         model = "assets/golf/models/lilies.cmt"
-        position = 193.751526,-0.024437,-123.784683
+        position = 193.477997,-0.024437,-122.584442
         rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
     {
         model = "assets/golf/models/lilies_large.cmt"
-        position = 195.188522,-0.018525,-128.353729
+        position = 194.026184,-0.018525,-129.558411
         rotation = 20.263830
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop

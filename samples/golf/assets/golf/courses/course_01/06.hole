@@ -2,7 +2,7 @@ hole 06
 {
     map="assets/golf/courses/course_01/06.png"
     model="assets/golf/models/course_01/06.cmt"
-    par = 4
+    par = 3
 
     pin = 64.574738,2.231160,-46.389839
     target = 111.655540,1.799999,-75.477547
@@ -11,16 +11,34 @@ hole 06
 
     prop
     {
-        model = "assets/golf/models/lilies.cmt"
-        position = 110.706024,-0.029623,-41.267948
-        rotation = 0.000000
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 107.736008,-0.018524,-43.265160
+        rotation = -43.348156
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 118.151741,-0.018524,-47.458218
+        rotation = 18.259357
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
     {
         model = "assets/golf/models/lilies.cmt"
-        position = 109.115044,-0.029625,-42.618149
-        rotation = -60.422099
+        position = 117.643684,-0.019625,-49.476902
+        rotation = -100.384148
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 128.830231,-0.019625,-59.527180
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop

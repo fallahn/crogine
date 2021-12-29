@@ -24,13 +24,6 @@ hole 15
 
     prop
     {
-        model = "assets/golf/models/birch02.cmt"
-        position = 73.855125,1.782976,-69.553406
-        rotation = 0.000000
-    }
-
-    prop
-    {
         model = "assets/golf/models/willow01.cmt"
         position = 214.867554,1.055529,-127.829468
         rotation = 1.294320
@@ -68,4 +61,36 @@ hole 15
         position = 282.322906,0.934415,-146.163681
         rotation = -106.961331
     }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 97.577576,-0.018524,-53.447701
+        rotation = -82.311828
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 99.714882,-0.018524,-55.948341
+        rotation = 74.513860
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 71.098450,-0.024436,-46.452320
+        rotation = -18.682997
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 71.555038,-0.024436,-44.305244
+        rotation = 156.065618
+        scale = 1.000000,1.000000,1.000000
+    }    
 }

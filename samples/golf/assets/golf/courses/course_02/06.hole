@@ -55,4 +55,59 @@ hole 06
         rotation = -86.615557
     }
 
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 274.615875,-0.018526,-142.958893
+        rotation = 163.752056
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 276.659851,-0.018524,-140.694839
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 270.769592,-0.024439,-138.306274
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 287.048523,-0.018524,-107.320724
+        rotation = 128.394458
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 286.022247,-0.018526,-110.578369
+        rotation = 163.752056
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 291.162842,-0.024439,-108.620987
+        rotation = -170.201367
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 284.005585,-0.024439,-103.323425
+        rotation = -340.438395
+        scale = 1.000000,1.000000,1.000000
+    }
 }

@@ -2,7 +2,7 @@ hole 12
 {
     map="assets/golf/courses/course_01/12.png"
     model="assets/golf/models/course_01/12.cmt"
-    par = 4
+    par = 3
 
     pin = 92.662552,1.484566,-131.422150
     target = 119.343811,1.250000,-118.378113
