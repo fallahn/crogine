@@ -50,6 +50,7 @@ private:
     void open();
     void save(const std::string&);
     void saveAs();
+    void close();
 
     void  doHotkeys();
 };

@@ -2082,6 +2082,16 @@ void ModelState::drawImageCombiner()
                 }
             }
         }
+
+        if (!m_showImageCombiner)
+        {
+            //window was closed
+            for (auto& [str, img] : m_combinedImages)
+            {
+                str = "None Selected";
+                img = cro::Image(true);
+            }
+        }
     }
     ImGui::End();
 }

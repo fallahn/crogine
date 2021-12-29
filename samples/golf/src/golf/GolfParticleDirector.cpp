@@ -49,6 +49,7 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr)
     m_emitterSettings[ParticleID::Water].loadFromFile("assets/golf/particles/water.cps", tr);
     m_emitterSettings[ParticleID::Grass].loadFromFile("assets/golf/particles/dirt.cps", tr);
     m_emitterSettings[ParticleID::Sand].loadFromFile("assets/golf/particles/sand.cps", tr);
+    m_emitterSettings[ParticleID::Sparkle].loadFromFile("assets/golf/particles/new_ball.cps", tr);
 
     //hmm how to set smoothing on the texture?
     cro::SpriteSheet spriteSheet;
@@ -91,6 +92,13 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
             case TerrainID::Water:
                 getEnt(ParticleID::Water, data.position);
                 break;
+            }
+        }
+        else if (data.type == GolfEvent::RequestNewPlayer)
+        {
+            if (data.terrain != TerrainID::Green)
+            {
+                //getEnt(ParticleID::Sparkle, data.position);
             }
         }
     }

@@ -2680,6 +2680,12 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
     {
         setCurrentPlayer(player);
     }
+
+    //raise message for particles
+    auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+    msg->position = player.position;
+    msg->type = GolfEvent::RequestNewPlayer;
+    msg->terrain = player.terrain;
 }
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)

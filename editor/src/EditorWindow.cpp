@@ -49,7 +49,6 @@ void EditorWindow::update()
     //based on https://github.com/BalazsJako/ColorTextEditorDemo 
     if (visible)
     {
-
         auto cpos = m_editor.GetCursorPosition();
         ImGui::Begin("Text Editor", &visible, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoCollapse);
         ImGui::SetWindowSize(ImVec2(640.f, 480.f), ImGuiCond_FirstUseEver);
@@ -105,6 +104,10 @@ void EditorWindow::update()
                 if (ImGui::MenuItem("Save As"))
                 {
                     saveAs();
+                }
+                if (ImGui::MenuItem("Close"))
+                {
+                    close();
                 }
                 ImGui::EndMenu();
             }
@@ -190,6 +193,12 @@ void EditorWindow::update()
         m_editor.Render("TextEditor");
         ImGui::End();
 
+        if (!visible)
+        {
+            //window was closed
+            close();
+        }
+
         doHotkeys();
     }
 }
@@ -229,6 +238,24 @@ void EditorWindow::saveAs()
     {
         save(result);
     }
+}
+
+void EditorWindow::close() 
+{
+    if (cro::FileSystem::showMessageBox("Are You Sure?", "Do you want to save the current file?", cro::FileSystem::YesNo))
+    {
+        if (m_currentFile.empty())
+        {
+            saveAs();
+        }
+        else
+        {
+            save(m_currentFile);
+        }
+    }
+
+    m_currentFile.clear();
+    m_editor.SetText("");
 }
 
 void EditorWindow::doHotkeys()

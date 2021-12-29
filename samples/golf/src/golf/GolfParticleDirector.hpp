@@ -54,6 +54,7 @@ private:
         enum
         {
             Grass, Water, Sand,
+            Sparkle,
 
             Count
         };
