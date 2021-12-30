@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.2.2)
 
 #Xcode 10 will default to Mojave (must be done BEFORE project())
 if (APPLE)
- SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum OS X deployment version")
- SET(MACOS_BUNDLE True)
+ SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version")
+ SET(MACOS_BUNDLE False)
 endif()
 
 
@@ -39,7 +39,7 @@ SET (OpenGL_GL_PREFERENCE "GLVND")
 find_package(CROGINE REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
-#TODO specifiy version 2.83
+#TODO specify version 2.83
 find_package(Bullet REQUIRED)
 
 include_directories(
@@ -61,7 +61,7 @@ include(${PROJECT_DIR}/golf/CMakeLists.txt)
 if(APPLE AND MACOS_BUNDLE)
 
   # use, i.e. don't skip the full RPATH for the build tree
-  SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+  SET(CMAKE_SKIP_BUILD_RPATH FALSE)
 
   # when building, don't use the install RPATH already
   # (but later on when installing)
@@ -83,7 +83,7 @@ if(APPLE AND MACOS_BUNDLE)
       ${CMAKE_SOURCE_DIR}/assets PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
   set_source_files_properties(
       ${CMAKE_SOURCE_DIR}/icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
-  add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${PROJECT_SRC} ${CMAKE_SOURCE_DIR}/assets ${CMAKE_SOURCE_DIR}/icon.icns)
+  add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${PROJECT_SRC} ${GOLF_SRC} ${CMAKE_SOURCE_DIR}/assets ${CMAKE_SOURCE_DIR}/icon.icns)
   set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_ICON_FILE icon.icns)
 
 
@@ -121,6 +121,6 @@ if(APPLE AND MACOS_BUNDLE)
     verify_app(${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.app)")
     SET(CPACK_GENERATOR "DragNDrop")
 
-  install(CPack)
+  include(CPack)
 
 endif()
