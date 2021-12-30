@@ -10,6 +10,14 @@ hole 02
 
     prop
     {
+        model = "assets/golf/models/jetty.cmt"
+        position = 262.037476,-0.089841,-91.690079
+        rotation = -48.528544
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
         model = "assets/golf/models/boat02.cmt"
         position = 265.054596,-0.825552,-101.741470
         rotation = 95.085401

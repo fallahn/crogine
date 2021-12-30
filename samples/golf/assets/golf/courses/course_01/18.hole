@@ -10,6 +10,22 @@ hole 18
 
     prop
     {
+        model = "assets/golf/models/jetty.cmt"
+        position = 234.757034,-0.163734,-184.424744
+        rotation = 21.907947
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/boat02.cmt"
+        position = 236.028915,-0.956250,-193.200806
+        rotation = 22.950075
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
         model = "assets/golf/models/menu_pavilion.cmt"
         position = 178.839920,3.958121,-166.432892
         rotation = 17.538569

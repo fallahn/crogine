@@ -19,7 +19,16 @@ hole 09
     {
         model = "assets/golf/models/boat01.cmt"
         position = 91.639122,-0.871646,-134.273621
-        rotation = -131.948124
+        rotation = -308.340668
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/jetty.cmt"
+        position = 96.029434,-0.080604,-127.893723
+        rotation = 46.956727
+        scale = 1.000000,1.000000,1.000000
     }
 
     crowd

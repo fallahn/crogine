@@ -263,7 +263,7 @@ void BallSystem::process(float dt)
 
                 //spin based on velocity
                 auto vel2 = glm::length2(ball.velocity);
-                static constexpr float MaxVel = 5.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
+                static constexpr float MaxVel = 2.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
                 tx.rotate(cro::Transform::Y_AXIS, cro::Util::Const::TAU * (vel2 / MaxVel) * ball.spin * dt);
 
                 //if we've slowed down or fallen more than the
@@ -312,11 +312,15 @@ void BallSystem::process(float dt)
         {
             ball.delay -= dt;
 
-            //hold ball under water until reset
             auto& tx = entity.getComponent<cro::Transform>();
             auto ballPos = tx.getPosition();
-            ballPos.y = -0.5f;
-            tx.setPosition(ballPos);
+            
+            //hold ball under water until reset
+            if (ball.terrain == TerrainID::Water)
+            {
+                ballPos.y = -0.5f;
+                tx.setPosition(ballPos);
+            }
 
             if (ball.delay < 0)
             {
