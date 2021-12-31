@@ -539,10 +539,10 @@ void BallSystem::doCollision(cro::Entity entity)
         {
         default: break;
         case TerrainID::Water:
-        case TerrainID::Scrub:
             pos.y = WaterLevel - (Ball::Radius * 2.f);
             tx.setPosition(pos);
             [[fallthrough]];
+        case TerrainID::Scrub:
         case TerrainID::Bunker:
             ball.velocity = glm::vec3(0.f);
             break;

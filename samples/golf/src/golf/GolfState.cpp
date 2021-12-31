@@ -3078,6 +3078,14 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+    cmd.targetFlags = CommandID::UI::PlayerName;
+    cmd.action =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Text>().setString(" ");
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
     auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
     if (playerData.terrain == TerrainID::Green)
     {

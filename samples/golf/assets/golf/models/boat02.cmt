@@ -13,11 +13,12 @@ model boat02
         double_sided = false
         blendmode = none
         diffuse = "assets/golf/images/boat02.png"
+        skinned = true
 
     }
     material Unlit
     {
-        name = "sail"
+        name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
         repeat = true
@@ -25,6 +26,7 @@ model boat02
         double_sided = true
         blendmode = none
         diffuse = "assets/golf/images/boat02.png"
+        skinned = true
 
     }
 }
