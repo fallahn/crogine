@@ -65,6 +65,8 @@ namespace cro
         static std::string getFilePath(const std::string& path);
         /*!
         \brief Returns true if a file exists with the name at the given path
+        Note that when calling this from an app running in a macOS bundle
+        that the path should be prefixed with a call to getResourcePath()
         */
         static bool fileExists(const std::string&);
         /*!
@@ -77,6 +79,8 @@ namespace cro
         static bool createDirectory(const std::string&);
         /*!
         \brief Attempts to determine if a directory at the given path exists.
+        Note that when calling this from an app running in a macOS bundle
+        that the path should be prefixed with a call to getResourcePath()
         \returns true if the directory exists, else false. Attempts to log any
         errors to the console.
         */
@@ -84,6 +88,8 @@ namespace cro
         /*!
         \brief Returns a vector of strings containing the names of directories
         found in the given path.
+        Note that when calling this from an app running in a macOS bundle
+        that the path should be prefixed with a call to getResourcePath()
         */
         static std::vector<std::string> listDirectories(const std::string&);
         /*!
@@ -151,6 +157,9 @@ namespace cro
          \brief Currently only relevant on macOS when creating an app bundle.
          Basically a wrapper around the SFML resourcePath() function.
          \returns path to the resource directory
+         \see fileExists()
+         \see directoryExists()
+         \see listDirectories()
          */
         static std::string getResourcePath();
 
