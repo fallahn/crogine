@@ -4,7 +4,12 @@ cmake_minimum_required(VERSION 3.2.2)
 #Xcode 10 will default to Mojave (must be done BEFORE project())
 if (APPLE)
  SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version")
- SET(MACOS_BUNDLE False)
+ SET(MACOS_BUNDLE False CACHE BOOL "")
+
+  if(MACOS_BUNDLE)
+    SET(BUNDLE_NAME "VGA Golf")
+  endif()
+
 endif()
 
 
@@ -113,12 +118,12 @@ if(APPLE AND MACOS_BUNDLE)
 
   install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION .
-    BUNDLE DESTINATION ${CMAKE_SOURCE_DIR})
+    BUNDLE DESTINATION ${CMAKE_SOURCE_DIR}/bundle)
 
 
-    install(CODE " include(BundleUtilities)
-    fixup_bundle(${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.app \"\" \"/Library/Frameworks\")
-    verify_app(${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.app)")
+  install(CODE " include(BundleUtilities)
+    fixup_bundle(${CMAKE_SOURCE_DIR}/bundle/${PROJECT_NAME}.app \"\" \"/Library/Frameworks\")
+    verify_app(${CMAKE_SOURCE_DIR}/bundle/${PROJECT_NAME}.app)")
     SET(CPACK_GENERATOR "DragNDrop")
 
   include(CPack)

@@ -83,7 +83,7 @@ R"(
     VARYING_IN vec2 v_texCoord;
     VARYING_IN LOW vec4 v_colour;
 
-    OUTPUT;
+    OUTPUT
 
     const float lineSpacing = 2.0;
 
@@ -113,7 +113,7 @@ R"(
         float band = smoothstep(0.9951, 0.9992, sin((v_texCoord.y * 4.0) + (u_time * 0.2))) * 0.06;
 
         float glitchAmount = step(0.997, rand(vec2(u_time * 0.1))) * 0.08;
-#if defined DISTORTION
+#if defined (DISTORTION)
         vec2 texCoord = curve(v_texCoord);
 #else
         vec2 texCoord = v_texCoord;
