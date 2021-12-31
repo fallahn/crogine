@@ -263,7 +263,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 //public
 bool MenuState::handleEvent(const cro::Event& evt)
 {
-    return true;
     const auto quitMenu = 
         [&]()
     {
@@ -403,8 +402,6 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
-return true;
-
     if (m_sharedData.clientConnection.connected)
     {
         cro::NetEvent evt;
@@ -422,7 +419,6 @@ return true;
 
 void MenuState::render()
 {
-    return;
     //render ball preview first
     auto oldCam = m_backgroundScene.setActiveCamera(m_ballCam);
     m_ballTexture.clear(cro::Colour::Magenta);
@@ -662,7 +658,7 @@ void MenuState::createScene()
 
 
     //set up cam / models for ball preview
-    //createBallScene();    
+    createBallScene();    
 
     createUI();
 }
@@ -693,7 +689,7 @@ void MenuState::createBallScene()
 
     m_ballTexture.create(64, 64);
 
-    auto ballFiles = cro::FileSystem::listFiles("assets/golf/balls");
+    auto ballFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + "assets/golf/balls");
     if (ballFiles.empty())
     {
         LogE << "No ball files were found" << std::endl;
@@ -730,7 +726,7 @@ void MenuState::createBallScene()
             }
 
             if (uid > -1
-                && (!modelPath.empty() && cro::FileSystem::fileExists(modelPath)))
+                && (!modelPath.empty() && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + modelPath)))
             {
                 auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
                     [uid](const SharedStateData::BallInfo& ballPair)
