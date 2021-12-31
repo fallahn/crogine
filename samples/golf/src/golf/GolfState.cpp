@@ -1036,7 +1036,7 @@ void GolfState::loadAssets()
     auto mapDir = m_sharedData.mapDirectory.toAnsiString();
     auto mapPath = ConstVal::MapPath + mapDir + "/course.data";
 
-    if (!cro::FileSystem::fileExists(mapPath))
+    if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
     {
         LOG("Course file doesn't exist", cro::Logger::Type::Error);
         error = true;
@@ -1083,7 +1083,7 @@ void GolfState::loadAssets()
         else if (name == "audio")
         {
             auto audioPath = prop.getValue<std::string>();
-            if (cro::FileSystem::fileExists(audioPath))
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + audioPath))
             {
                 m_audioPath = audioPath;
             }
@@ -1091,13 +1091,13 @@ void GolfState::loadAssets()
     }
     
     if (theme.billboardModel.empty()
-        || !cro::FileSystem::fileExists(theme.billboardModel))
+        || !cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + theme.billboardModel))
     {
         LogE << "Missing or invalid billboard model definition" << std::endl;
         error = true;
     }
     if (theme.billboardSprites.empty()
-        || !cro::FileSystem::fileExists(theme.billboardSprites))
+        || !cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + theme.billboardSprites))
     {
         LogE << "Missing or invalid billboard sprite sheet" << std::endl;
         error = true;
@@ -1112,7 +1112,7 @@ void GolfState::loadAssets()
     cro::ModelDefinition modelDef(m_resources);
     for (const auto& hole : holeStrings)
     {
-        if (!cro::FileSystem::fileExists(hole))
+        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + hole))
         {
             LOG("Hole file is missing", cro::Logger::Type::Error);
             error = true;
@@ -1245,7 +1245,7 @@ void GolfState::loadAssets()
                     }
 
                     if (!path.empty()
-                        && cro::FileSystem::fileExists(path))
+                        && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + path))
                     {
                         if (modelDef.loadFromFile(path))
                         {

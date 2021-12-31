@@ -531,7 +531,7 @@ bool GameState::validateMap()
     auto mapDir = m_sharedData.mapDir.toAnsiString();
     auto mapPath = ConstVal::MapPath + mapDir + "/course.data";
 
-    if (!cro::FileSystem::fileExists(mapPath))
+    if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
     {
         //TODO what's the best state to leave this in
         //if we fail to load a map? If the clients all
@@ -568,7 +568,7 @@ bool GameState::validateMap()
     cro::ConfigFile holeCfg;
     for (const auto& hole : holeStrings)
     {
-        if (!cro::FileSystem::fileExists(hole))
+        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + hole))
         {
             return false;
         }
@@ -622,7 +622,7 @@ bool GameState::validateMap()
                         if (modelProp.getName() == "mesh")
                         {
                             auto modelPath = modelProp.getValue<std::string>();
-                            if (cro::FileSystem::fileExists(modelPath))
+                            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + modelPath))
                             {
                                 holeData.modelPath = modelPath;
                                 propCount++;
