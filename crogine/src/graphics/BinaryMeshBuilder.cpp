@@ -39,7 +39,7 @@ BinaryMeshBuilder::BinaryMeshBuilder(const std::string& path)
     : m_path    (cro::FileSystem::getResourcePath() + path),
     m_uid       (0)
 {
-    if (FileSystem::fileExists(path))
+    if (FileSystem::fileExists(m_path))
     {
         //calc a UID from the file path
         std::hash<std::string> hashAttack;

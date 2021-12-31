@@ -222,7 +222,7 @@ namespace cro
             Box m_aabb;
 
             std::uint32_t m_cullFace = 0;
-            float m_planeMultiplier = 1.f;;
+            float m_planeMultiplier = 1.f;
 
             friend struct Camera;
             friend class CameraSystem;

@@ -98,7 +98,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     std::fill(m_ballIndices.begin(), m_ballIndices.end(), 0);
     std::fill(m_avatarIndices.begin(), m_avatarIndices.end(), 0);    
-    
+
     
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
@@ -111,7 +111,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         //create some entities
         createScene();
     });
-
+ 
     context.mainWindow.setMouseCaptured(false);
     
     sd.inputBinding.controllerID = 0;
@@ -263,6 +263,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 //public
 bool MenuState::handleEvent(const cro::Event& evt)
 {
+    return true;
     const auto quitMenu = 
         [&]()
     {
@@ -402,6 +403,8 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
+return true;
+
     if (m_sharedData.clientConnection.connected)
     {
         cro::NetEvent evt;
@@ -419,6 +422,7 @@ bool MenuState::simulate(float dt)
 
 void MenuState::render()
 {
+    return;
     //render ball preview first
     auto oldCam = m_backgroundScene.setActiveCamera(m_ballCam);
     m_ballTexture.clear(cro::Colour::Magenta);
@@ -514,7 +518,6 @@ void MenuState::createScene()
             m_backgroundScene.destroyEntity(e);
         }
     };
-
 
     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
 
@@ -659,7 +662,7 @@ void MenuState::createScene()
 
 
     //set up cam / models for ball preview
-    createBallScene();    
+    //createBallScene();    
 
     createUI();
 }

@@ -2539,7 +2539,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
     m_avatarListEntities.clear();
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
-
+return;
     static constexpr glm::vec3 RootPos(131.f, 174.f, 0.f);
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {

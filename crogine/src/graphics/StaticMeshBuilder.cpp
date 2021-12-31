@@ -39,7 +39,7 @@ source distribution.
 using namespace cro;
 
 StaticMeshBuilder::StaticMeshBuilder(const std::string& path)
-    : m_path    (path),
+    : m_path    (FileSystem::getResourcePath() + path),
     m_uid       (0)
 {
     std::hash<std::string> hashAttack;

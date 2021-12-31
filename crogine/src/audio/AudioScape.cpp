@@ -98,7 +98,7 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
                 }
             }
 
-            if (!mediaPath.empty() && cro::FileSystem::fileExists(mediaPath))
+            if (!mediaPath.empty() && cro::FileSystem::fileExists(FileSystem::getResourcePath() + mediaPath))
             {
                 if (!streaming)
                 {

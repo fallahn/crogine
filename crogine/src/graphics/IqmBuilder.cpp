@@ -54,7 +54,7 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
 void loadAnimationData(const Iqm::Header& header, char* data, const std::string& strings, cro::Skeleton& out);
 
 IqmBuilder::IqmBuilder(const std::string& path)
-    : m_path    (path),
+    : m_path    (FileSystem::getResourcePath() + path),
     m_uid       (0),
     m_file      (nullptr)
 {
