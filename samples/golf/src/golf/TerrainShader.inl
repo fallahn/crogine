@@ -165,7 +165,8 @@ static const std::string CelVertexShader = R"(
         position = skinMatrix * position;
     #endif
 
-        gl_Position = u_viewProjectionMatrix * u_worldMatrix * position;
+        position = u_worldMatrix * position;
+        gl_Position = u_viewProjectionMatrix * position;
 
         vec3 normal = a_normal;
     #if defined(SKINNED)
