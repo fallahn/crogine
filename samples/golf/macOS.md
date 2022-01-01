@@ -25,4 +25,4 @@ This will create an xcode project in the current build directory. Invoke cmake t
 
     sudo cmake --build . --config Release --target install
 
-This command requires sudo as it will need to copy the libbullet libraries and modify them as part of the bundle. Golf will now build and xcode will copy the required libraries and fix them up as appropriate.
+This command requires sudo as it will need to copy the libbullet libraries and modify them as part of the bundle. Golf will now build and xcode will copy the required libraries and fix them up as appropriate. Make sure to restore proper permission to the finished bundle, else they'll be super users only ;)

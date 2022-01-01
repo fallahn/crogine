@@ -153,34 +153,34 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
     ballEntity = {};
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("buns"))
-            {
-                /*auto s = glm::vec2(m_gameSceneTexture.getSize());
-                ImGui::Text("Scene size: %3.3f, %3.3f", s.x, s.y);
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("buns"))
+    //        {
+    //            /*auto s = glm::vec2(m_gameSceneTexture.getSize());
+    //            ImGui::Text("Scene size: %3.3f, %3.3f", s.x, s.y);
 
-                auto s2 = glm::vec2(GolfGame::getActiveTarget()->getSize());
-                ImGui::Text("Output Size: %3.3f, %3.3f", s2.x, s2.y);
+    //            auto s2 = glm::vec2(GolfGame::getActiveTarget()->getSize());
+    //            ImGui::Text("Output Size: %3.3f, %3.3f", s2.x, s2.y);
 
-                s2 /= m_viewScale;
-                ImGui::Text("Output Size (scaled): %3.3f, %3.3f", s2.x, s2.y);
+    //            s2 /= m_viewScale;
+    //            ImGui::Text("Output Size (scaled): %3.3f, %3.3f", s2.x, s2.y);
 
-                ImGui::Text("Scale: %3.3f, %3.3f", m_viewScale.x, m_viewScale.y);*/
+    //            ImGui::Text("Scale: %3.3f, %3.3f", m_viewScale.x, m_viewScale.y);*/
 
-                //auto active = m_freeCam.getComponent<cro::Camera>().active;
-                //ImGui::Text("Active %s", active ? "true" : "false");
-                
-                /*if (ballEntity.isValid())
-                {
-                    auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
-                    ImGui::Text("Ball Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-                }*/
-                //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().refractionBuffer.getTexture(), { 256.f, 256.f }, {0.f, 1.f}, { 1.f, 0.f });
-                ImGui::Image(m_leaderboardTexture.getTexture(), {388.f, 532.f}, {0.f, 1.f}, {1.f, 0.f});
-            }
-            ImGui::End();
-        });
+    //            //auto active = m_freeCam.getComponent<cro::Camera>().active;
+    //            //ImGui::Text("Active %s", active ? "true" : "false");
+    //            
+    //            /*if (ballEntity.isValid())
+    //            {
+    //                auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
+    //                ImGui::Text("Ball Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+    //            }*/
+    //            //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().refractionBuffer.getTexture(), { 256.f, 256.f }, {0.f, 1.f}, { 1.f, 0.f });
+    //            ImGui::Image(m_leaderboardTexture.getTexture(), {388.f, 532.f}, {0.f, 1.f}, {1.f, 0.f});
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
