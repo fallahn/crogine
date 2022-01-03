@@ -115,6 +115,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/SimpleDrawable.cpp
   ${PROJECT_DIR}/graphics/SimpleQuad.cpp
   ${PROJECT_DIR}/graphics/SimpleText.cpp
+  ${PROJECT_DIR}/graphics/SimpleVertexArray.cpp
   ${PROJECT_DIR}/graphics/Spatial.cpp
   ${PROJECT_DIR}/graphics/SpriteSheet.cpp
   ${PROJECT_DIR}/graphics/StaticMeshBuilder.cpp

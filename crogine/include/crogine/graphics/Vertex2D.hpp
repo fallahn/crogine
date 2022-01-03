@@ -45,8 +45,11 @@ namespace cro
     providing a fixed layout. Custom Drawable2D shaders should
     provide these attributes in the vertex shader.
 
+    Vertex2D can also be used with SimpleVertexArray
+
     Texture coords should be provided in the normalised (0 - 1) range.
     \see Drawable2D
+    \see SimpleVertexArray
     */
     struct CRO_EXPORT_API Vertex2D final
     {

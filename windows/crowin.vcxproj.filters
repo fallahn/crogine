@@ -645,6 +645,9 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\SimpleVertexArray.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1071,6 +1074,9 @@
       <Filter>Source Files\util</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\RenderTarget.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\SimpleVertexArray.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
