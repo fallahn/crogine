@@ -179,9 +179,9 @@ void SimpleText::updateVertices()
         m_fontTexture = &m_context.font->getTexture(m_context.charSize);
         m_lastTextureSize = m_fontTexture->getSize();
         setTexture(*m_fontTexture);
+
+        std::vector<Vertex2D> verts;
+        m_localBounds = Detail::Text::updateVertices(verts, m_context);
+        setVertexData(verts);
     }
-    
-    std::vector<Vertex2D> verts;
-    m_localBounds = Detail::Text::updateVertices(verts, m_context);
-    setVertexData(verts);
 }
