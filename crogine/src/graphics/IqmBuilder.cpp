@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,6 +32,7 @@ source distribution.
 
 #include <crogine/detail/glm/mat4x4.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
+#include <crogine/detail/glm/gtx/matrix_decompose.hpp>
 
 #include <crogine/util/Matrix.hpp>
 
@@ -536,7 +537,8 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         if (joint.parent >= 0)
         {
             //multiply by parent's transform
-            bindPose[i] = bindPose[joint.parent] * bindPose[i];
+            //bindPose[i] = bindPose[joint.parent] * bindPose[i];
+            bindPose[i] *= bindPose[joint.parent];
             inverseBindPose[i] *= inverseBindPose[joint.parent];
         }
     }
@@ -564,6 +566,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     glm::quat rotation(1.f, 0.f, 0.f, 0.f);
                     glm::vec3 translation(0.f);
                     glm::vec3 scale(1.f);
+                    float buns = 0.f;
 
                     translation.x = pose.channelOffset[0];
                     if (pose.mask & 0x01) translation.x += *frameIter++ * pose.channelScale[0];

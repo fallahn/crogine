@@ -61,6 +61,7 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
     else
     {
         m_animations[idx].playbackRate = rate;
+        m_animations[idx].currentFrame = m_animations[idx].startFrame;
     }
 }
 

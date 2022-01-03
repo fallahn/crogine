@@ -29,14 +29,38 @@ source distribution.
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 
-#include <crogine/detail/glm/gtx/matrix_decompose.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 
 using namespace cro;
+
+namespace
+{
+    //interp tx and rot separately
+    //TODO convert to 4x3 to free up some uniform space
+    glm::mat4 mixJoint(const Joint& a, const Joint& b, float time)
+    {
+        glm::vec3 trans = glm::mix(a.translation, b.translation, time);
+        glm::quat rot = glm::slerp(a.rotation, b.rotation, time);
+        glm::vec3 scale = glm::mix(a.scale, b.scale, time);
+
+        glm::mat4 result = glm::translate(glm::mat4(1.f), trans);
+        result *= glm::transpose(glm::toMat4(rot));
+        return glm::scale(result, scale);
+    }
+
+    glm::mat4 applyJoint(const Joint& j)
+    {
+        glm::mat4 result = glm::translate(glm::mat4(1.f), j.translation);
+        result *= glm::transpose(glm::toMat4(j.rotation));
+        return glm::scale(result, j.scale);
+    }
+}
 
 SkeletalAnimator::SkeletalAnimator(MessageBus& mb)
     : System(mb, typeid(SkeletalAnimator))
@@ -48,6 +72,9 @@ SkeletalAnimator::SkeletalAnimator(MessageBus& mb)
 //public
 void SkeletalAnimator::process(float dt)
 {
+    auto camPos = getScene()->getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
+    auto camDir = getScene()->getActiveCamera().getComponent<cro::Transform>().getForwardVector();
+
     auto& entities = getEntities();
     for (auto& entity : entities)
     {      
@@ -59,33 +86,37 @@ void SkeletalAnimator::process(float dt)
         {
             //update current animation
             auto& anim = skel.m_animations[skel.m_currentAnimation];
+            skel.m_currentFrameTime += dt * anim.playbackRate;
 
             auto nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
             nextFrame += anim.startFrame;
 
-            skel.m_currentFrameTime += dt * anim.playbackRate;
-                              
-            //TODO this breaks if there is more than one camera
-            //or even more than one pass (ie reflections) and that pass
-            //leaves the model invisible despite being visible somewhere else
-            //if (entity.getComponent<Model>().isVisible())
-            if (!entity.getComponent<Model>().isHidden())
-            {
-                float interpTime = std::min(1.f, skel.m_currentFrameTime / skel.m_frameTime);
-                interpolate(anim.currentFrame, nextFrame, interpTime, skel);
-            }
-
-
             if (skel.m_currentFrameTime > skel.m_frameTime)
             {
                 //frame is done, move to next
-                if (nextFrame < anim.currentFrame && !anim.looped)
+
+                skel.m_currentFrameTime -= skel.m_frameTime;
+                anim.currentFrame = nextFrame;
+
+                nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
+                nextFrame += anim.startFrame;
+
+                //apply the current frame
+                auto offset = anim.currentFrame * skel.m_frameSize;
+                for (auto i = 0u; i < skel.m_frameSize; ++i)
                 {
-                    anim.playbackRate = 0.f;
+                    skel.m_currentFrame[i] = applyJoint(skel.m_frames[offset + i]);
                 }
 
-                anim.currentFrame = nextFrame;
-                skel.m_currentFrameTime -= skel.m_frameTime;
+                //stop playback if frame ID has looped
+                if (nextFrame < anim.currentFrame)
+                {
+                    if (!anim.looped)
+                    {
+                        anim.playbackRate = 0.f;
+                    }
+                }
+
 
                 //raise notification events
                 for (auto [joint, uid] : skel.m_notifications[anim.currentFrame])
@@ -97,6 +128,19 @@ void SkeletalAnimator::process(float dt)
                     msg->entity = entity;
                 }
             }
+                   
+            //only interpolate if model is visible and close to the active camera
+            if (!entity.getComponent<Model>().isHidden())
+            {
+                //check distance to camera and check if actually in front
+                auto direction = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
+                if (glm::dot(direction, camDir) > 0
+                    && glm::length2(direction) < 250.f) //arbitrary distance of 50 units
+                {
+                    float interpTime = skel.m_currentFrameTime / skel.m_frameTime;
+                    interpolate(anim.currentFrame, nextFrame, interpTime, skel);
+                }
+            }
         }
         else
         {
@@ -105,14 +149,14 @@ void SkeletalAnimator::process(float dt)
             //first frame of the next anim. Really we should interpolate the current
             //position of both animations, and then blend the results according to
             //the current blend time.
-            skel.m_currentBlendTime += dt;
+            /*skel.m_currentBlendTime += dt;
             if (entity.getComponent<Model>().isVisible())
             {
                 float interpTime = std::min(1.f, skel.m_currentBlendTime / skel.m_blendTime);
                 interpolate(skel.m_animations[skel.m_currentAnimation].currentFrame, skel.m_animations[skel.m_nextAnimation].startFrame, interpTime, skel);
             }
 
-            if (skel.m_currentBlendTime > skel.m_blendTime)
+            if (skel.m_currentBlendTime > skel.m_blendTime)*/
             {
                 skel.m_animations[skel.m_currentAnimation].playbackRate = 0.f;
                 skel.m_currentAnimation = skel.m_nextAnimation;
@@ -120,6 +164,13 @@ void SkeletalAnimator::process(float dt)
                 skel.m_frameTime = 1.f / skel.m_animations[skel.m_currentAnimation].frameRate;
                 skel.m_currentFrameTime = 0.f;
                 skel.m_animations[skel.m_currentAnimation].playbackRate = skel.m_playbackRate;
+                skel.m_animations[skel.m_currentAnimation].currentFrame = skel.m_animations[skel.m_currentAnimation].startFrame;
+
+                auto offset = skel.m_animations[skel.m_currentAnimation].currentFrame * skel.m_frameSize;
+                for (auto i = 0u; i < skel.m_frameSize; ++i)
+                {
+                    skel.m_currentFrame[i] = applyJoint(skel.m_frames[offset + i]);
+                }
             }
         }
     }
@@ -130,31 +181,19 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
 {
     auto& skeleton = entity.getComponent<Skeleton>();
 
-    if (skeleton.m_currentFrame.size() < skeleton.m_frameSize)
-    {
-        skeleton.m_currentFrame.resize(skeleton.m_frameSize);
-    }
-
     entity.getComponent<Model>().setSkeleton(&skeleton.m_currentFrame[0], skeleton.m_frameSize);
     skeleton.m_frameTime = 1.f / skeleton.m_animations[0].frameRate;
+
+    //set the initial frame so we actually see something
+    for (auto i = 0u; i < skeleton.m_frameSize; ++i)
+    {
+        skeleton.m_currentFrame[i] = applyJoint(skeleton.m_frames[i]);
+    }
 }
 
 void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Skeleton& skeleton)
 {
     //TODO interpolate hit boxes for key frames
-
-    //interp tx and rot separately
-    //TODO convert to 4x3 to free up some uniform space
-    auto mix = [](const Joint& a, const Joint& b, float time) -> glm::mat4
-    {
-        glm::vec3 trans = glm::mix(a.translation, b.translation, time);
-        glm::quat rot = glm::slerp(a.rotation, b.rotation, time);
-        glm::vec3 scale = glm::mix(a.scale, b.scale, time);
-
-        glm::mat4 result = glm::translate(glm::mat4(1.f), trans);
-        result *= glm::transpose(glm::toMat4(rot));
-        return glm::scale(result, scale);
-    };
 
     //NOTE a and b are FRAME INDICES not indices directly into the frame array
     std::size_t startA = a * skeleton.m_frameSize;
@@ -167,15 +206,7 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
         parents.
         */
 
-        /*if (skeleton.frames[i].parent < 0)
-        {*/
-            //root bone
-            skeleton.m_currentFrame[i] = mix(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time);
-        //}
-        //else
-        //{
-        //    //multiply by our parent
-        //    skeleton.currentFrame[i] = skeleton.currentFrame[skeleton.frames[i].parent] * mix(skeleton.frames[startA + i], skeleton.frames[startB + i], time);
-        //}
+        //root bone
+        skeleton.m_currentFrame[i] = mixJoint(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time);
     }
 }
