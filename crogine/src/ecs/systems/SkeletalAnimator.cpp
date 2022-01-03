@@ -41,13 +41,18 @@ using namespace cro;
 
 namespace
 {
+    glm::vec3 interp(const glm::vec3& a, const glm::vec3& b, float t)
+    {
+        return a + ((b - a) * t);
+    }
+
     //interp tx and rot separately
     //TODO convert to 4x3 to free up some uniform space
     glm::mat4 mixJoint(const Joint& a, const Joint& b, float time)
     {
-        glm::vec3 trans = glm::mix(a.translation, b.translation, time);
+        glm::vec3 trans = interp(a.translation, b.translation, time);
         glm::quat rot = glm::slerp(a.rotation, b.rotation, time);
-        glm::vec3 scale = glm::mix(a.scale, b.scale, time);
+        glm::vec3 scale = interp(a.scale, b.scale, time);
 
         glm::mat4 result = glm::translate(glm::mat4(1.f), trans);
         result *= glm::transpose(glm::toMat4(rot));
@@ -86,7 +91,7 @@ void SkeletalAnimator::process(float dt)
         {
             //update current animation
             auto& anim = skel.m_animations[skel.m_currentAnimation];
-            skel.m_currentFrameTime += dt * anim.playbackRate;
+            skel.m_currentFrameTime += dt * anim.playbackRate;// *0.10f;
 
             auto nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
             nextFrame += anim.startFrame;

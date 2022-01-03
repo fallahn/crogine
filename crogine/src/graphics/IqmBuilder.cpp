@@ -550,7 +550,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         std::uint16_t* frameIter = (std::uint16_t*)(data + header.frameOffset);
         if (bindPose.size() > 0)
         {
-            std::vector<std::tuple<std::int32_t, glm::mat4>> tempFrame;
+            std::vector<Joint> tempFrame;
 
             for (auto frameIndex = 0u; frameIndex < frameSize; frameIndex += header.poseCount)
             {
@@ -595,7 +595,9 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     if (pose.mask & 0x200) scale.z += *frameIter++ * pose.channelScale[8];
 
                     glm::mat4 mat = Iqm::createBoneMatrix(rotation, translation, scale);
-                    tempFrame[poseIndex] = std::make_tuple(pose.parent, mat);
+                    tempFrame[poseIndex] = Joint(translation, rotation, scale);
+                    tempFrame[poseIndex].parent = pose.parent;
+                    tempFrame[poseIndex].worldMatrix = mat;
                 }
 
                 //each joint pose is stored in a temp frame. For the final output
@@ -606,23 +608,26 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                 std::vector<cro::Joint> frame;
                 for (auto i = 0u; i < tempFrame.size(); ++i)
                 {
-                    const auto& [parent, mat] = tempFrame[i];
+                    const auto& tempJoint = tempFrame[i];
 
-                    auto result = mat;
-                    auto currentParent = parent;
+                    auto result = tempJoint.worldMatrix;
+                    auto currentParent = tempJoint.parent;
+                    auto finalScale = tempJoint.scale;
 
                     while (currentParent > -1)
                     {
-                        const auto& [p, m] = tempFrame[currentParent];
+                        const auto& j = tempFrame[currentParent];
 
-                        result = m * result;
-                        currentParent = p;
+                        result = j.worldMatrix * result;
+                        currentParent = j.parent;
+                        finalScale *= j.scale;
                     }
 
-                    auto& joint = frame.emplace_back();
-                    joint.parent = parent;
-                    joint.worldMatrix = result;
-                    cro::Util::Matrix::decompose(result * inverseBindPose[i], joint.translation, joint.rotation, joint.scale);
+                    auto& newJoint = frame.emplace_back();
+                    newJoint.parent = tempJoint.parent;
+                    newJoint.worldMatrix = result;
+
+                    cro::Util::Matrix::decompose(result * inverseBindPose[i], newJoint.translation, newJoint.rotation, newJoint.scale);
                 }
                 out.addFrame(frame);
             }

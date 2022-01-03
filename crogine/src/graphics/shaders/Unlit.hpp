@@ -291,7 +291,15 @@ namespace cro::Shaders::Unlit
                     shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
                 }
             }
-            return 1.0 - (shadow / 9.0);
+
+            float amount = shadow / 9.0;
+
+//if(amount < 0.45 && amount > 0.0)
+//{
+//    amount *= mod(gl_FragCoord.x + gl_FragCoord.y, 2.0);
+//}
+
+            return 1.0 - amount;
         }
     #endif
 
