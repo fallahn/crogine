@@ -41,29 +41,17 @@ using namespace cro;
 
 namespace
 {
-    glm::vec3 interp(const glm::vec3& a, const glm::vec3& b, float t)
-    {
-        return a + ((b - a) * t);
-    }
-
     //interp tx and rot separately
     //TODO convert to 4x3 to free up some uniform space
     glm::mat4 mixJoint(const Joint& a, const Joint& b, float time)
     {
-        glm::vec3 trans = interp(a.translation, b.translation, time);
+        glm::vec3 trans = mix(a.translation, b.translation, time);
         glm::quat rot = glm::slerp(a.rotation, b.rotation, time);
-        glm::vec3 scale = interp(a.scale, b.scale, time);
+        glm::vec3 scale = mix(a.scale, b.scale, time);
 
         glm::mat4 result = glm::translate(glm::mat4(1.f), trans);
-        result *= glm::transpose(glm::toMat4(rot));
+        result *= glm::toMat4(rot);
         return glm::scale(result, scale);
-    }
-
-    glm::mat4 applyJoint(const Joint& j)
-    {
-        glm::mat4 result = glm::translate(glm::mat4(1.f), j.translation);
-        result *= glm::transpose(glm::toMat4(j.rotation));
-        return glm::scale(result, j.scale);
     }
 }
 
@@ -143,7 +131,7 @@ void SkeletalAnimator::process(float dt)
                     && glm::length2(direction) < 250.f) //arbitrary distance of 50 units
                 {
                     float interpTime = skel.m_currentFrameTime / skel.m_frameTime;
-                    //interpolate(anim.currentFrame, nextFrame, interpTime, skel);
+                    interpolate(anim.currentFrame, nextFrame, interpTime, skel);
                 }
             }
         }
@@ -203,20 +191,22 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
 
 void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Skeleton& skeleton)
 {
-    //TODO interpolate hit boxes for key frames
+    //TODO interpolate hit boxes for key frames(?)
 
     //NOTE a and b are FRAME INDICES not indices directly into the frame array
     std::size_t startA = a * skeleton.m_frameSize;
     std::size_t startB = b * skeleton.m_frameSize;
     for (auto i = 0u; i < skeleton.m_frameSize; ++i)
     {
-        /*
-        NOTE for this to work the animation importer must make sure
-        all keyframes have their joints fully pre-multiplied by their
-        parents.
-        */
+        glm::mat4 worldMatrix = mixJoint(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time);
 
-        //root bone
-        skeleton.m_currentFrame[i] = mixJoint(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time);
+        std::int32_t parent = skeleton.m_frames[startA + i].parent;
+        while (parent > -1)
+        {
+            worldMatrix = mixJoint(skeleton.m_frames[startA + parent], skeleton.m_frames[startB + parent], time) * worldMatrix;
+            parent = skeleton.m_frames[startA + parent].parent;
+        }
+
+        skeleton.m_currentFrame[i] = worldMatrix * skeleton.m_invBindPose[i];
     }
 }

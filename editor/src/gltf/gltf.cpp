@@ -310,7 +310,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     auto sceneNodes = m_GLTFScene.nodes;
 
     //functions to process a frame
-    auto getLocalJoint = [](const tf::Node& node)
+    const auto getLocalJoint = [](const tf::Node& node)
     {
         glm::mat4 jointMat = glm::mat4(1.f);
         glm::vec3 translation(0.f);
@@ -343,7 +343,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         return j;
     };
     
-    auto getWorldJoint = [&](std::int32_t i)
+    const auto getWorldJoint = [&](std::int32_t i)
     {
         const auto& node = sceneNodes[i];
         auto tempJoint = getLocalJoint(node);
@@ -352,38 +352,31 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         std::int32_t currentParent = tempJoint.parent;
         while (currentParent > -1)
         {
-            tempJoint.worldMatrix = getLocalJoint(sceneNodes[currentParent]).worldMatrix * tempJoint.worldMatrix;
+            auto j = getLocalJoint(sceneNodes[currentParent]);
+            tempJoint.worldMatrix = j.worldMatrix * tempJoint.worldMatrix;
             currentParent = parents[currentParent];
         }
+
         return tempJoint;
     };
 
-    std::function<void(std::int32_t)> createFrame =
-        [&](std::int32_t nodeIdx)
+    auto createFrame = [&]()
     {
-        //applying this undoes the scale/rot applied to the armature with
-        //blender and, in general, makes the model huge and lying on its back..
-        //however this will need to be applied if we're updating child nodes
-        //so that they take on their parent's transform correctly
-        /*auto inverseTx = glm::inverse(getMatrix(nodeIdx));*/
-        /*auto inverseTx = glm::inverse(rootTransform);*/
         std::vector<cro::Joint> frame;
         for (auto i = 0u; i < inverseBindPose.size(); ++i)
         {
             frame.emplace_back(getWorldJoint(skin.joints[i]));
 
-
-            //as the joints list is smaller than the overall nodes list we have
-            //to find the position the parent appears in the joints list.
-            // 
-            // ACTUALLY this gives different result to reading the joint data
-            // so it's probably wrong. We'll see. :)
-            // 
-            //if (auto result = std::find(skin.joints.begin(), skin.joints.end(), parents[skin.joints[i]]); result != skin.joints.end())
-            //{
-            //    joint.parent = std::distance(skin.joints.begin(), result);
-            //    //LogI << "Distance " << std::distance(skin.joints.begin(), result) << std::endl;
-            //}
+            //skins are parented to a scene node, so we need to re-adjust
+            //the frame's nodes parent IDs to be local to the frame.
+            if (auto result = std::find(skin.joints.begin(), skin.joints.end(), parents[skin.joints[i]]); result != skin.joints.end())
+            {
+                frame.back().parent = std::distance(skin.joints.begin(), result);
+            }
+            else
+            {
+                frame.back().parent = -1;
+            }
         }
         dest.addFrame(frame);
     };
@@ -391,7 +384,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     //base frame
     if (animations.empty())
     {
-        createFrame(idx);
+        createFrame();
 
         //update the output so we have something to look at.
         cro::SkeletalAnim anim;
@@ -415,9 +408,9 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         //the main problem with this approach is that, especially
         //at low sample rates, we may miss the actual keyframes
         //stored in the file. Higher samples rates, however,
-        //cost significantly more memory.
+        //cost more memory.
 
-        static constexpr float SampleRate = 12.f;
+        static constexpr float SampleRate = 20.f;
         static constexpr float FixedStep = 1.f / SampleRate;
         skelAnim.frameRate = SampleRate;
 
@@ -438,7 +431,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
                     if ((anim.currentTime >= sampler.inputs[i])
                         && (anim.currentTime <= sampler.inputs[i + 1]))
                     {
-                        //calculate and interpolated time and render results into
+                        //calculate an interpolated time and render results into
                         //node's transforms.
                         float t = (anim.currentTime - sampler.inputs[i]) / (sampler.inputs[i + 1] - sampler.inputs[i]);
 
@@ -477,7 +470,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
 
             if (addFrame)
             {
-                createFrame(idx);
+                createFrame();
                 skelAnim.frameCount++;
             }
             anim.currentTime += FixedStep;
