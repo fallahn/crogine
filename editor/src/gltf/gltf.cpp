@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -350,7 +350,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         tempJoint.parent = parents[i];
 
         std::int32_t currentParent = tempJoint.parent;
-        while (currentParent > -1)
+        while (currentParent != -1)
         {
             auto j = getLocalJoint(sceneNodes[currentParent]);
             tempJoint.worldMatrix = j.worldMatrix * tempJoint.worldMatrix;
@@ -360,22 +360,32 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         return tempJoint;
     };
 
+    //if the mesh has a parent node, we want to apply its world
+    //transform to the joints, as it will get pruned from the tree
+    //when we move nodes into our frames
+    glm::mat4 parentTx(1.f);
+    if (parents[idx] != -1)
+    {
+        parentTx = getWorldJoint(parents[idx]).worldMatrix;
+    }
+    dest.setRootTransform(parentTx);
+
     auto createFrame = [&]()
     {
         std::vector<cro::Joint> frame;
         for (auto i = 0u; i < inverseBindPose.size(); ++i)
         {
-            frame.emplace_back(getWorldJoint(skin.joints[i]));
+            auto& j = frame.emplace_back(getWorldJoint(skin.joints[i]));
 
             //skins are parented to a scene node, so we need to re-adjust
             //the frame's nodes parent IDs to be local to the frame.
-            if (auto result = std::find(skin.joints.begin(), skin.joints.end(), parents[skin.joints[i]]); result != skin.joints.end())
+            if (auto result = std::find(skin.joints.begin(), skin.joints.end(), parents[skin.joints[i]]); result == skin.joints.end())
             {
-                frame.back().parent = std::distance(skin.joints.begin(), result);
+                j.parent = -1;
             }
             else
             {
-                frame.back().parent = -1;
+                j.parent = std::distance(skin.joints.begin(), result);
             }
         }
         dest.addFrame(frame);

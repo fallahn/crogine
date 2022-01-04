@@ -532,7 +532,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
 
         inverseBindPose[i] = glm::inverse(Iqm::createBoneMatrix(rotation, translation, scale));
 
-        if (joint.parent >= 0)
+        if (joint.parent != -1)
         {
             //multiply by parent's transform
             inverseBindPose[i] *= inverseBindPose[joint.parent];
@@ -610,7 +610,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     auto result = tempJoint.worldMatrix;
                     auto currentParent = tempJoint.parent;
 
-                    while (currentParent > -1)
+                    while (currentParent != -1)
                     {
                         const auto& j = tempFrame[currentParent];
 

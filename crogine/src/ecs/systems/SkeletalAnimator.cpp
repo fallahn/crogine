@@ -201,12 +201,12 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
         glm::mat4 worldMatrix = mixJoint(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time);
 
         std::int32_t parent = skeleton.m_frames[startA + i].parent;
-        while (parent > -1)
+        while (parent != -1)
         {
             worldMatrix = mixJoint(skeleton.m_frames[startA + parent], skeleton.m_frames[startB + parent], time) * worldMatrix;
             parent = skeleton.m_frames[startA + parent].parent;
         }
 
-        skeleton.m_currentFrame[i] = worldMatrix * skeleton.m_invBindPose[i];
+        skeleton.m_currentFrame[i] = skeleton.m_rootTransform * worldMatrix *  skeleton.m_invBindPose[i];
     }
 }

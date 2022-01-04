@@ -289,6 +289,14 @@ namespace cro
         */
         void setInverseBindPose(const std::vector<glm::mat4>& invBindPose) { m_invBindPose = invBindPose; }
 
+        /*!
+        \brief Sets the root transform applied to a frame during interpolation.
+        Use this if the parsed animation data (eg from a custom MeshBuilder) is parented
+        to a node/transform not included in the frame data.
+        */
+        void setRootTransform(const glm::mat4& transform) { m_rootTransform = transform; }
+
+
     private:
 
         float m_playbackRate;
@@ -308,6 +316,7 @@ namespace cro
         std::vector<Joint> m_frames; //indexed by steps of frameSize
         std::vector<glm::mat4> m_currentFrame; //current interpolated output
         std::vector<glm::mat4> m_invBindPose;
+        glm::mat4 m_rootTransform = glm::mat4(1.f);
 
         std::vector<SkeletalAnim> m_animations;
 
