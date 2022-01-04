@@ -219,7 +219,7 @@ namespace
         static int selectedAnim = 0;
         selectedAnim = std::min(selectedAnim, static_cast<std::int32_t>(animations.size() - 1));
         ImGui::SetNextItemWidth(WindowLayouts[WindowID::Inspector].second.x * 0.92f);
-        if (ImGui::ListBox("##43345", &selectedAnim, items.data(), items.size(), 4))
+        if (ImGui::ListBox("##43345", &selectedAnim, items.data(), static_cast<std::int32_t>(items.size()), 4))
         {
             //play new anim if playing
             if (animations[skel.getCurrentAnimation()].playbackRate != 0)
@@ -2041,9 +2041,9 @@ void ModelState::drawImageCombiner()
                     cro::Image output;
                     output.create(lastSize.x, lastSize.y, cro::Colour::Black);
 
-                    for (auto y = 0; y < lastSize.y; ++y)
+                    for (auto y = 0u; y < lastSize.y; ++y)
                     {
-                        for (auto x = 0; x < lastSize.x; ++x)
+                        for (auto x = 0u; x < lastSize.x; ++x)
                         {
                             auto red = m_combinedImages[0].second.getPixel(x, y);
                             auto green = m_combinedImages[1].second.getPixel(x, y);

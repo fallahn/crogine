@@ -385,7 +385,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
             }
             else
             {
-                j.parent = std::distance(skin.joints.begin(), result);
+                j.parent = static_cast<std::int32_t>(std::distance(skin.joints.begin(), result));
             }
         }
         dest.addFrame(frame);

@@ -43,6 +43,7 @@ namespace cro
     namespace Detail::ModelBinary
     {
         struct SkeletonHeader;
+        struct SkeletonHeaderV2;
         struct SerialAttachment;
     }
 
@@ -326,5 +327,6 @@ namespace cro
 
         friend class SkeletalAnimator;
         friend struct Detail::ModelBinary::SkeletonHeader;
+        friend struct Detail::ModelBinary::SkeletonHeaderV2;
     };
 }

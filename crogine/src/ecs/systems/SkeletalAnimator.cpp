@@ -79,7 +79,7 @@ void SkeletalAnimator::process(float dt)
         {
             //update current animation
             auto& anim = skel.m_animations[skel.m_currentAnimation];
-            skel.m_currentFrameTime += dt * anim.playbackRate;// *0.10f;
+            skel.m_currentFrameTime += dt * anim.playbackRate;
 
             auto nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
             nextFrame += anim.startFrame;

@@ -128,7 +128,7 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
             meshHeader.flags &= ~(VertexProperty::BlendIndices | VertexProperty::BlendWeights);
         }
 
-        for (auto i = 0u; i < vertexData.size(); i += vertStride)
+        for (auto i = 0ull; i < vertexData.size(); i += vertStride)
         {
             for (auto j = 0u; j < meshData.attributes.size(); ++j)
             {

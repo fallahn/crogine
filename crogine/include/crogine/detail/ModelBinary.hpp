@@ -44,7 +44,7 @@ namespace cro::Detail::ModelBinary
 {
     //appears at the beginning of the file
     static constexpr std::uint32_t MAGIC = 0x736e7542;
-    struct CRO_EXPORT_API Header final
+    struct CRO_EXPORT_API Header
     {
         //magic
         std::uint32_t magic = MAGIC;
@@ -69,7 +69,13 @@ namespace cro::Detail::ModelBinary
     is used to discover which of the subsequent properties are valid.
     */
 
-
+    //version 2 header for updated skeletal data
+    //version 2 includes SkeletonHeaderV2 rather than
+    //SkeletonHeader and the inverse bind pose.
+    struct CRO_EXPORT_API HeaderV2 final : public Header
+    {
+        HeaderV2() { version = 2; };
+    };
 
 
     //appears at Header::meshOffset bytes from beginning of the file
@@ -84,7 +90,6 @@ namespace cro::Detail::ModelBinary
         //number of index arrays. If this is zero
         //the vertices are expected to be drawn with glDrawArrays()
         std::uint16_t indexArrayCount = 0;
-
     };
     /*!
     Mesh data follows the header:
@@ -111,7 +116,7 @@ namespace cro::Detail::ModelBinary
 
     //appears at Header::skeletonOffset bytes from the beginning of the file
     //and always after the mesh data, if the mesh data exists
-    struct CRO_EXPORT_API SkeletonHeader final
+    struct CRO_EXPORT_API SkeletonHeader
     {
         std::size_t frameSize = 0; //number of joints in a frame
         std::size_t frameCount = 0;
@@ -136,7 +141,26 @@ namespace cro::Detail::ModelBinary
                 notificationCount += static_cast<std::uint32_t>(nFrame.size());
             }
 
+            return *this;
+        }
+    };
 
+    //skeleton v2 header includes a root transform for animations
+    struct CRO_EXPORT_API SkeletonHeaderV2 final : public SkeletonHeader
+    {
+        float rootTransform[16] =
+        {
+            1.f,0.f,0.f,0.f,
+            0.f,1.f,0.f,0.f,
+            0.f,0.f,1.f,0.f,
+            0.f,0.f,0.f,1.f
+        };
+
+        SkeletonHeaderV2& operator = (const cro::Skeleton& skel)
+        {
+            SkeletonHeader::operator=(skel);
+
+            std::memcpy(rootTransform, &skel.m_rootTransform[0][0], sizeof(float) * 16);
             return *this;
         }
     };
