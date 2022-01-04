@@ -301,17 +301,16 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     }
 
     //read the inv bindpose
-    for (auto i = 0u; i < inverseBindPose.size(); ++i)
-    {
-        std::memcpy(&inverseBindPose[i], &buffer.data[index], sizeof(glm::mat4));
-        index += sizeof(glm::mat4);
-    }
+    std::memcpy(inverseBindPose.data(), buffer.data.data() + index, sizeof(glm::mat4) * inverseBindPose.size());
+    index += sizeof(glm::mat4) * inverseBindPose.size();
+
+    dest.setInverseBindPose(inverseBindPose);
 
     //copy the nodes as we'll modify the transforms for each key frame
     auto sceneNodes = m_GLTFScene.nodes;
 
     //functions to process a frame
-    auto getLocalMatrix = [](const tf::Node& node)
+    auto getLocalJoint = [](const tf::Node& node)
     {
         glm::mat4 jointMat = glm::mat4(1.f);
         glm::vec3 translation(0.f);
@@ -337,24 +336,26 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
             scale.y = static_cast<float>(node.scale[1]);
             scale.z = static_cast<float>(node.scale[2]);
         }
-        jointMat = glm::translate(jointMat, translation);
-        jointMat *= glm::toMat4(rotation);
-        jointMat = glm::scale(jointMat, scale);
-        return jointMat;
+
+        cro::Joint j(translation, rotation, scale);
+        j.worldMatrix = cro::Joint::combine(j);
+
+        return j;
     };
     
-    auto getMatrix = [&](std::int32_t i)
+    auto getWorldJoint = [&](std::int32_t i)
     {
-        const auto& joint = sceneNodes[i];
-        auto jointMat = getLocalMatrix(joint);
+        const auto& node = sceneNodes[i];
+        auto tempJoint = getLocalJoint(node);
+        tempJoint.parent = parents[i];
 
-        std::int32_t currentParent = parents[i];
+        std::int32_t currentParent = tempJoint.parent;
         while (currentParent > -1)
         {
-            jointMat = getLocalMatrix(sceneNodes[currentParent]) * jointMat;
+            tempJoint.worldMatrix = getLocalJoint(sceneNodes[currentParent]).worldMatrix * tempJoint.worldMatrix;
             currentParent = parents[currentParent];
         }
-        return jointMat;
+        return tempJoint;
     };
 
     std::function<void(std::int32_t)> createFrame =
@@ -369,18 +370,20 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         std::vector<cro::Joint> frame;
         for (auto i = 0u; i < inverseBindPose.size(); ++i)
         {
-            auto& joint = frame.emplace_back();
-            joint.worldMatrix = getMatrix(skin.joints[i]);
-            auto mat = /*inverseTx **/joint.worldMatrix * inverseBindPose[i];
-            cro::Util::Matrix::decompose(mat, joint.translation, joint.rotation, joint.scale);
+            frame.emplace_back(getWorldJoint(skin.joints[i]));
 
 
             //as the joints list is smaller than the overall nodes list we have
             //to find the position the parent appears in the joints list.
-            if (auto result = std::find(skin.joints.begin(), skin.joints.end(), parents[skin.joints[i]]); result != skin.joints.end())
-            {
-                joint.parent = std::distance(skin.joints.begin(), result);
-            }
+            // 
+            // ACTUALLY this gives different result to reading the joint data
+            // so it's probably wrong. We'll see. :)
+            // 
+            //if (auto result = std::find(skin.joints.begin(), skin.joints.end(), parents[skin.joints[i]]); result != skin.joints.end())
+            //{
+            //    joint.parent = std::distance(skin.joints.begin(), result);
+            //    //LogI << "Distance " << std::distance(skin.joints.begin(), result) << std::endl;
+            //}
         }
         dest.addFrame(frame);
     };

@@ -508,7 +508,6 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
 {
     //load joints into bind pose
     char* jointIter = data + header.jointOffset;
-    std::vector<glm::mat4> bindPose(header.jointCount);
     std::vector<glm::mat4> inverseBindPose(header.jointCount);
 
     //warn if bone count > 64 as this is the limit on mobile devices (or even lower!)
@@ -531,24 +530,22 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         glm::vec3 translation(joint.translate[0], joint.translate[2], -joint.translate[1]);
         glm::vec3 scale(joint.scale[0], joint.scale[2], joint.scale[1]);
 
-        bindPose[i] = Iqm::createBoneMatrix(rotation, translation, scale);
-        inverseBindPose[i] = glm::inverse(bindPose[i]);
+        inverseBindPose[i] = glm::inverse(Iqm::createBoneMatrix(rotation, translation, scale));
 
         if (joint.parent >= 0)
         {
             //multiply by parent's transform
-            //bindPose[i] = bindPose[joint.parent] * bindPose[i];
-            bindPose[i] *= bindPose[joint.parent];
             inverseBindPose[i] *= inverseBindPose[joint.parent];
         }
     }
+    out.setInverseBindPose(inverseBindPose);
 
     //load keyframes - a 'pose' is a single posed joint, and a set of poses makes up one frame equivalent to a posed skeleton
     if (header.frameCount > 0)
     {
         std::uint32_t frameSize = header.frameCount * header.jointCount;
         std::uint16_t* frameIter = (std::uint16_t*)(data + header.frameOffset);
-        if (bindPose.size() > 0)
+        if (inverseBindPose.size() > 0)
         {
             std::vector<Joint> tempFrame;
 
@@ -602,17 +599,16 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
 
                 //each joint pose is stored in a temp frame. For the final output
                 //we walk the node tree multiplying each joint by its parent, creating
-                //a fully transformed keyframe. This means that the only work the
-                //animation system has to do is interpolation.
+                //a world matrix for every joint in the frame. TRS remains local for
+                //interpolation. (temp joint actually contains local matrix in worldMatrix field)
 
                 std::vector<cro::Joint> frame;
                 for (auto i = 0u; i < tempFrame.size(); ++i)
                 {
-                    const auto& tempJoint = tempFrame[i];
+                    auto& tempJoint = tempFrame[i];
 
                     auto result = tempJoint.worldMatrix;
                     auto currentParent = tempJoint.parent;
-                    auto finalScale = tempJoint.scale;
 
                     while (currentParent > -1)
                     {
@@ -620,14 +616,10 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
 
                         result = j.worldMatrix * result;
                         currentParent = j.parent;
-                        finalScale *= j.scale;
                     }
 
-                    auto& newJoint = frame.emplace_back();
-                    newJoint.parent = tempJoint.parent;
+                    auto& newJoint = frame.emplace_back(tempJoint);
                     newJoint.worldMatrix = result;
-
-                    cro::Util::Matrix::decompose(result * inverseBindPose[i], newJoint.translation, newJoint.rotation, newJoint.scale);
                 }
                 out.addFrame(frame);
             }
@@ -635,7 +627,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
     }
     else
     {
-        std::vector<cro::Joint> frame(bindPose.size());
+        std::vector<cro::Joint> frame(inverseBindPose.size());
         out.addFrame(frame); //use an empty frame in case we haven't loaded any animations
     }
 

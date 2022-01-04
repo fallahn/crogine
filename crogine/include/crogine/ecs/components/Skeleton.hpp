@@ -280,6 +280,15 @@ namespace cro
         */
         const std::vector<AttachmentPoint>& getAttachmentPoints() const { return m_attachmentPoints; }
 
+        /*
+        \brief Set the inverse bind pose for the skeleton.
+        \param invBindPose A std::vector of glm::mat4 which contain
+        the inverse bind pose (world to bone space) matrices.
+        Size must match the frame size. That is there must be
+        as many matrices as there are joints.
+        */
+        void setInverseBindPose(const std::vector<glm::mat4>& invBindPose) { m_invBindPose = invBindPose; }
+
     private:
 
         float m_playbackRate;
@@ -298,6 +307,7 @@ namespace cro
         std::size_t m_frameCount;
         std::vector<Joint> m_frames; //indexed by steps of frameSize
         std::vector<glm::mat4> m_currentFrame; //current interpolated output
+        std::vector<glm::mat4> m_invBindPose;
 
         std::vector<SkeletalAnim> m_animations;
 

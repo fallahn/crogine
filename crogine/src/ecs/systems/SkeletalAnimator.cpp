@@ -110,7 +110,7 @@ void SkeletalAnimator::process(float dt)
                 auto offset = anim.currentFrame * skel.m_frameSize;
                 for (auto i = 0u; i < skel.m_frameSize; ++i)
                 {
-                    skel.m_currentFrame[i] = applyJoint(skel.m_frames[offset + i]);
+                    skel.m_currentFrame[i] = skel.m_frames[offset + i].worldMatrix * skel.m_invBindPose[i];
                 }
 
                 //stop playback if frame ID has looped
@@ -143,7 +143,7 @@ void SkeletalAnimator::process(float dt)
                     && glm::length2(direction) < 250.f) //arbitrary distance of 50 units
                 {
                     float interpTime = skel.m_currentFrameTime / skel.m_frameTime;
-                    interpolate(anim.currentFrame, nextFrame, interpTime, skel);
+                    //interpolate(anim.currentFrame, nextFrame, interpTime, skel);
                 }
             }
         }
@@ -174,7 +174,7 @@ void SkeletalAnimator::process(float dt)
                 auto offset = skel.m_animations[skel.m_currentAnimation].currentFrame * skel.m_frameSize;
                 for (auto i = 0u; i < skel.m_frameSize; ++i)
                 {
-                    skel.m_currentFrame[i] = applyJoint(skel.m_frames[offset + i]);
+                    skel.m_currentFrame[i] = skel.m_frames[offset + i].worldMatrix * skel.m_invBindPose[i];
                 }
             }
         }
@@ -189,10 +189,15 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
     entity.getComponent<Model>().setSkeleton(&skeleton.m_currentFrame[0], skeleton.m_frameSize);
     skeleton.m_frameTime = 1.f / skeleton.m_animations[0].frameRate;
 
+    if (skeleton.m_invBindPose.empty())
+    {
+        skeleton.m_invBindPose.resize(skeleton.m_frameSize);
+    }
+
     //set the initial frame so we actually see something
     for (auto i = 0u; i < skeleton.m_frameSize; ++i)
     {
-        skeleton.m_currentFrame[i] = applyJoint(skeleton.m_frames[i]);
+        skeleton.m_currentFrame[i] = skeleton.m_frames[i].worldMatrix * skeleton.m_invBindPose[i];
     }
 }
 
