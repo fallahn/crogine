@@ -367,12 +367,17 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     }
     dest.setRootTransform(parentTx);
 
+    auto inverseParentTx = glm::inverse(parentTx);
+
     auto createFrame = [&]()
     {
         std::vector<cro::Joint> frame;
         for (auto i = 0u; i < inverseBindPose.size(); ++i)
         {
             auto& j = frame.emplace_back(getWorldJoint(skin.joints[i]));
+
+            //remove any root transform here so it's applied during animation
+            j.worldMatrix = inverseParentTx * j.worldMatrix;
 
             //skins are parented to a scene node, so we need to re-adjust
             //the frame's nodes parent IDs to be local to the frame.

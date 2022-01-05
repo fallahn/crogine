@@ -98,7 +98,7 @@ void SkeletalAnimator::process(float dt)
                 auto offset = anim.currentFrame * skel.m_frameSize;
                 for (auto i = 0u; i < skel.m_frameSize; ++i)
                 {
-                    skel.m_currentFrame[i] = skel.m_frames[offset + i].worldMatrix * skel.m_invBindPose[i];
+                    skel.m_currentFrame[i] = skel.m_rootTransform * skel.m_frames[offset + i].worldMatrix * skel.m_invBindPose[i];
                 }
 
                 //stop playback if frame ID has looped
@@ -185,7 +185,7 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
     //set the initial frame so we actually see something
     for (auto i = 0u; i < skeleton.m_frameSize; ++i)
     {
-        skeleton.m_currentFrame[i] = skeleton.m_frames[i].worldMatrix * skeleton.m_invBindPose[i];
+        skeleton.m_currentFrame[i] = skeleton.m_rootTransform * skeleton.m_frames[i].worldMatrix * skeleton.m_invBindPose[i];
     }
 }
 

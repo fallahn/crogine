@@ -697,7 +697,7 @@ void ModelState::importIQM(const std::string& path)
     updateImportNode(header, verts, indices);
 
     //yoink the anim info if it exists and apply to preview skel
-    if (builder.getSkeleton())
+    if (header.animated)
     {
         m_entities[EntityID::ActiveModel].addComponent<cro::Skeleton>() = builder.getSkeleton();
     }

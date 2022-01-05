@@ -386,7 +386,7 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
     //NOTE these have to match attribute order of Mesh::Data
     for (auto i = 0u; i < header.vertexCount; ++i)
     {
-        if(!positions.empty())
+        if (!positions.empty())
         {
             glm::vec3 position = yUpMatrix * glm::vec4(positions[posIndex], positions[posIndex+1], positions[posIndex+2], 1.f);
 
@@ -410,7 +410,7 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
             vertexData.push_back(static_cast<float>(colours[colourIndex++]) / 255.f);
         }
 
-        if(!normals.empty())
+        if (!normals.empty())
         {
             glm::vec3 normal = yUpMatrix * glm::vec4(normals[normalIndex], normals[normalIndex+1], normals[normalIndex+2], 1.f);
 
@@ -421,7 +421,7 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
             vertexData.push_back(normal.z);
         }
 
-        if(!pureTangents.empty())
+        if (!pureTangents.empty())
         {
             glm::vec3 tan = yUpMatrix * glm::vec4(pureTangents[tanIndex], pureTangents[tanIndex+1], pureTangents[tanIndex+2], 1.f);
 
@@ -432,7 +432,7 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
             vertexData.push_back(tan.z);
         }
 
-        if(!bitangents.empty())
+        if (!bitangents.empty())
         {
             glm::vec3 bitan = yUpMatrix * glm::vec4(bitangents[bitanIndex], bitangents[bitanIndex+1], bitangents[bitanIndex+2], 1.f);
 
@@ -612,7 +612,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     }
 
                     auto& newJoint = frame.emplace_back(tempJoint);
-                    newJoint.worldMatrix = rootTransform * result;
+                    newJoint.worldMatrix = /*rootTransform * */result;
                 }
                 out.addFrame(frame);
             }
