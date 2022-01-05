@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 #include <crogine/detail/glm/gtx/matrix_decompose.hpp>
 
+#include <crogine/util/Constants.hpp>
 #include <crogine/util/Matrix.hpp>
 
 #include <cstring>
@@ -380,8 +381,8 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
             glm::vec3 position
             (
                 positions[posIndex],
-                positions[posIndex+2],
-                -positions[posIndex+1]
+                positions[posIndex+1],
+                positions[posIndex+2]
                 );
             posIndex += Iqm::positionSize;
 
@@ -408,8 +409,8 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
         {
             glm::vec3 normal(
                 normals[normalIndex],
-                normals[normalIndex+2],
-                -normals[normalIndex+1]
+                normals[normalIndex+1],
+                normals[normalIndex+2]
                 );
             normalIndex += Iqm::normalSize;
 
@@ -423,8 +424,8 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
         {
             glm::vec3 tan(
                 pureTangents[tanIndex],
-                pureTangents[tanIndex + 2],
-                -pureTangents[tanIndex + 1]
+                pureTangents[tanIndex + 1],
+                pureTangents[tanIndex + 2]
                 );
 
             tanIndex += Iqm::normalSize;
@@ -439,8 +440,8 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
         {
             glm::vec3 bitan(
                 bitangents[bitanIndex],
-                bitangents[bitanIndex+2],
-                -bitangents[bitanIndex+1]
+                bitangents[bitanIndex+1],
+                bitangents[bitanIndex+2]
                 );
 
             bitanIndex += Iqm::normalSize;
@@ -524,11 +525,11 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         glm::quat rotation(1.f, 0.f, 0.f, 0.f);
         rotation.w = joint.rotate[3];
         rotation.x = joint.rotate[0];
-        rotation.y = joint.rotate[2];
-        rotation.z = -joint.rotate[1];
+        rotation.y = joint.rotate[1];
+        rotation.z = joint.rotate[2];
 
-        glm::vec3 translation(joint.translate[0], joint.translate[2], -joint.translate[1]);
-        glm::vec3 scale(joint.scale[0], joint.scale[2], joint.scale[1]);
+        glm::vec3 translation(joint.translate[0], joint.translate[1], joint.translate[2]);
+        glm::vec3 scale(joint.scale[0], joint.scale[1], joint.scale[2]);
 
         inverseBindPose[i] = glm::inverse(Iqm::createBoneMatrix(rotation, translation, scale));
 
@@ -539,6 +540,10 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         }
     }
     out.setInverseBindPose(inverseBindPose);
+
+    //corrects for y-up
+    glm::mat4 rootTransform = glm::toMat4(glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), -90.f * Util::Const::degToRad, glm::vec3(1.f, 0.f, 0.f)));
+    out.setRootTransform(rootTransform);
 
     //load keyframes - a 'pose' is a single posed joint, and a set of poses makes up one frame equivalent to a posed skeleton
     if (header.frameCount > 0)
@@ -566,10 +571,10 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
 
                     translation.x = pose.channelOffset[0];
                     if (pose.mask & 0x01) translation.x += *frameIter++ * pose.channelScale[0];
-                    translation.y = pose.channelOffset[2];
-                    if (pose.mask & 0x02) translation.y += *frameIter++ * pose.channelScale[2];
-                    translation.z = -pose.channelOffset[1];
-                    if (pose.mask & 0x04) translation.z -= *frameIter++ * pose.channelScale[1];
+                    translation.y = pose.channelOffset[1];
+                    if (pose.mask & 0x02) translation.y += *frameIter++ * pose.channelScale[1];
+                    translation.z = pose.channelOffset[2];
+                    if (pose.mask & 0x04) translation.z += *frameIter++ * pose.channelScale[2];
 
                     rotation.x = pose.channelOffset[3];
                     if (pose.mask & 0x08) rotation.x += *frameIter++ * pose.channelScale[3];
@@ -579,16 +584,16 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     if (pose.mask & 0x20) rotation.z += *frameIter++ * pose.channelScale[5];
                     rotation.w = pose.channelOffset[6];
                     if (pose.mask & 0x40) rotation.w += *frameIter++ * pose.channelScale[6];
-                    float temp = rotation.y;
+                    /*float temp = rotation.y;
                     rotation.y = rotation.z;
-                    rotation.z = -temp;
+                    rotation.z = -temp;*/
 
                     scale.x = pose.channelOffset[7];
                     if (pose.mask & 0x80) scale.x += *frameIter++ * pose.channelScale[7];
-                    scale.y = pose.channelOffset[9];
-                    if (pose.mask & 0x100) scale.y += *frameIter++ * pose.channelScale[9];
-                    scale.z = pose.channelOffset[8];
-                    if (pose.mask & 0x200) scale.z += *frameIter++ * pose.channelScale[8];
+                    scale.y = pose.channelOffset[8];
+                    if (pose.mask & 0x100) scale.y += *frameIter++ * pose.channelScale[8];
+                    scale.z = pose.channelOffset[9];
+                    if (pose.mask & 0x200) scale.z += *frameIter++ * pose.channelScale[9];
 
                     glm::mat4 mat = Iqm::createBoneMatrix(rotation, translation, scale);
                     tempFrame[poseIndex] = Joint(translation, rotation, scale);
@@ -618,7 +623,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     }
 
                     auto& newJoint = frame.emplace_back(tempJoint);
-                    newJoint.worldMatrix = result;
+                    newJoint.worldMatrix = rootTransform * result;
                 }
                 out.addFrame(frame);
             }
