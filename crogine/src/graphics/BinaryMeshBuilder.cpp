@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/graphics/BinaryMeshBuilder.hpp>
 #include <crogine/detail/ModelBinary.hpp>
+#include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/core/FileSystem.hpp>
 
 #include "../detail/GLCheck.hpp"
@@ -81,7 +82,8 @@ Mesh::Data BinaryMeshBuilder::build() const
         SDL_RWseek(file.file, 0, RW_SEEK_SET);
         SDL_RWread(file.file, &header, sizeof(header), 1);
 
-        if (header.magic != Detail::ModelBinary::MAGIC)
+        if (header.magic != Detail::ModelBinary::MAGIC
+            && header.magic != Detail::ModelBinary::MAGIC_V1)
         {
             LogE << "Invalid header found" << std::endl;
             return {};
@@ -300,24 +302,33 @@ Mesh::Data BinaryMeshBuilder::build() const
             meshData.boundingSphere.radius = glm::length(rad);
         }
 
+        m_skeleton = {};
         if (header.skeletonOffset)
         {
-            if (SDL_RWseek(file.file, header.skeletonOffset, RW_SEEK_SET) > -1)
+            if (header.version < 2)
             {
-                Detail::ModelBinary::SkeletonHeader skelHeader;
+                LogW << "Skeletal animation requires version 2 or greater. Please re-export the model" << std::endl;
+            }
+
+            else if (SDL_RWseek(file.file, header.skeletonOffset, RW_SEEK_SET) > -1)
+            {
+                Detail::ModelBinary::SkeletonHeaderV2 skelHeader;
                 SDL_RWread(file.file, &skelHeader, sizeof(skelHeader), 1);
+                m_skeleton.setRootTransform(glm::make_mat4(skelHeader.rootTransform));
 
                 std::vector<Joint> inFrames(skelHeader.frameCount * skelHeader.frameSize);
                 std::vector<Detail::ModelBinary::SerialAnimation> inAnims(skelHeader.animationCount);
                 std::vector<Detail::ModelBinary::SerialNotification> inNotifications(skelHeader.notificationCount);
                 std::vector<Detail::ModelBinary::SerialAttachment> inAttachments(skelHeader.attachmentCount);
+                std::vector<float> inverseBindPose(skelHeader.frameSize * 16);
 
                 SDL_RWread(file.file, inFrames.data(), sizeof(Joint), inFrames.size());
                 SDL_RWread(file.file, inAnims.data(), sizeof(Detail::ModelBinary::SerialAnimation), inAnims.size());
                 SDL_RWread(file.file, inNotifications.data(), sizeof(Detail::ModelBinary::SerialNotification), inNotifications.size());
                 SDL_RWread(file.file, inAttachments.data(), sizeof(Detail::ModelBinary::SerialAttachment), inAttachments.size());
+                SDL_RWread(file.file, inverseBindPose.data(), sizeof(float), inverseBindPose.size());
 
-                m_skeleton = {};
+
                 CRO_ASSERT(inFrames.size() % skelHeader.frameSize == 0, "");
                 for (auto i = 0u; i < skelHeader.frameCount; ++i)
                 {
@@ -329,6 +340,7 @@ Mesh::Data BinaryMeshBuilder::build() const
 
                     m_skeleton.addFrame(frame);
                 }
+
                 for (const auto& inAnim : inAnims)
                 {
                     SkeletalAnim anim;
@@ -340,14 +352,23 @@ Mesh::Data BinaryMeshBuilder::build() const
 
                     m_skeleton.addAnimation(anim);
                 }
+
                 for (auto [frameID, jointID, userID] : inNotifications)
                 {
                     m_skeleton.addNotification(frameID, { jointID, userID });
                 }
+
                 for (const auto& [rotation, translation, parent] : inAttachments)
                 {
                     m_skeleton.addAttachmentPoint({ parent, translation, rotation });
                 }
+
+                std::vector<glm::mat4> invBindMatrices(skelHeader.frameSize);
+                for (auto i = 0; i < inverseBindPose.size(); i += 16)
+                {
+                    std::memcpy(&invBindMatrices[i / 16][0][0], inverseBindPose.data() + i, sizeof(glm::mat4));
+                }
+                m_skeleton.setInverseBindPose(invBindMatrices);
             }
             else
             {

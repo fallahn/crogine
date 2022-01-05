@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -43,7 +43,8 @@ source distribution.
 namespace cro::Detail::ModelBinary
 {
     //appears at the beginning of the file
-    static constexpr std::uint32_t MAGIC = 0x736e7542;
+    static constexpr std::uint32_t MAGIC_V1 = 0x736e7542;
+    static constexpr std::uint32_t MAGIC = 0x32424d43;
     struct CRO_EXPORT_API Header
     {
         //magic
@@ -170,11 +171,13 @@ namespace cro::Detail::ModelBinary
     Array of animations [animationCount]
     Array of notifications [notificationCount]
     Array of attachments [attachmentCount]
+    Array of float for inverse bind pose [frameSize * 16] (4x4 matrix)
 
     Joints are stored as Joint struct
     Animations are stored as SerialAnimation struct
     Notifications are stored as SerialNotification struct
     Attachments are stored as SerialAttachment struct
+    Bind pose is array of floats making up 4x4 matrices
 
     */
 

@@ -584,9 +584,6 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     if (pose.mask & 0x20) rotation.z += *frameIter++ * pose.channelScale[5];
                     rotation.w = pose.channelOffset[6];
                     if (pose.mask & 0x40) rotation.w += *frameIter++ * pose.channelScale[6];
-                    /*float temp = rotation.y;
-                    rotation.y = rotation.z;
-                    rotation.z = -temp;*/
 
                     scale.x = pose.channelOffset[7];
                     if (pose.mask & 0x80) scale.x += *frameIter++ * pose.channelScale[7];

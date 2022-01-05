@@ -291,9 +291,15 @@ namespace cro
         void setInverseBindPose(const std::vector<glm::mat4>& invBindPose) { m_invBindPose = invBindPose; }
 
         /*!
+        \brief Returns a reference to the inverse bind pose
+        */
+        const std::vector<glm::mat4>& getInverseBindPose() const { return m_invBindPose; }
+
+        /*!
         \brief Sets the root transform applied to a frame during interpolation.
         Use this if the parsed animation data (eg from a custom MeshBuilder) is parented
-        to a node/transform not included in the frame data.
+        to a node/transform not included in the frame data, or needs to be converted
+        from a different coordinate system eg z-up to y-up.
         */
         void setRootTransform(const glm::mat4& transform) { m_rootTransform = transform; }
 

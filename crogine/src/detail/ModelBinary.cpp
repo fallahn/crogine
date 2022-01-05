@@ -40,7 +40,7 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
 {
     bool retVal = false;
 
-    Detail::ModelBinary::Header header;
+    Detail::ModelBinary::HeaderV2 header;
     std::uint32_t skelOffset = sizeof(header);
 
     //if these are not empty after processing
@@ -253,10 +253,11 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
     }
 
     //skeleton output
-    Detail::ModelBinary::SkeletonHeader skelHeader;
+    Detail::ModelBinary::SkeletonHeaderV2 skelHeader;
     std::vector<Detail::ModelBinary::SerialAnimation> outAnimations;
     std::vector<Detail::ModelBinary::SerialNotification> outNotifications;
     std::vector<Detail::ModelBinary::SerialAttachment> outAttachments;
+    std::vector<float> outInverseBindPose;
 
     if (includeSkeleton &&
         entity.hasComponent<Skeleton>())
@@ -288,6 +289,11 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
         {
             outAttachments.emplace_back(attachment);
         }
+
+        const auto& ibp = skeleton.getInverseBindPose();
+        CRO_ASSERT(!ibp.empty(), "inverse bind pose data is missing");
+        outInverseBindPose.resize(ibp.size() * 16);
+        std::memcpy(outInverseBindPose.data(), ibp.data(), sizeof(float)* outInverseBindPose.size());
 
         retVal = true;
     }
@@ -327,6 +333,7 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
             SDL_RWwrite(file.file, outAnimations.data(), sizeof(SerialAnimation), outAnimations.size());
             SDL_RWwrite(file.file, outNotifications.data(), sizeof(SerialNotification), outNotifications.size());
             SDL_RWwrite(file.file, outAttachments.data(), sizeof(SerialAttachment), outAttachments.size());
+            SDL_RWwrite(file.file, outInverseBindPose.data(), sizeof(float), outInverseBindPose.size());
         }
         SDL_RWclose(file.file);
     }
