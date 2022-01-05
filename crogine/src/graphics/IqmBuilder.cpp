@@ -137,7 +137,7 @@ cro::Mesh::Data IqmBuilder::build() const
         std::memcpy(&strings[0], fileData.data() + header.textOffset, header.textCount);
 
         //check for vertex data
-        if (header.vertexCount > 0)
+        if (header.vertexCount != 0)
         {
             loadVertexData(header, fileData.data(), strings, returnData);
         }
@@ -145,7 +145,11 @@ cro::Mesh::Data IqmBuilder::build() const
         {
             Logger::log("No vertex data was found in " + m_path + ", this file may contain only animation data", Logger::Type::Warning);
         }
-        loadAnimationData(header, fileData.data(), strings, m_skeleton);
+
+        if (header.jointCount != 0)
+        {
+            loadAnimationData(header, fileData.data(), strings, m_skeleton);
+        }
     }
     else
     {
@@ -371,6 +375,12 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
     std::size_t blendWeightIndex = 0;
     std::size_t colourIndex = 0;
 
+    glm::mat4 yUpMatrix(1.f);
+    if (header.animCount == 0)
+    {
+        yUpMatrix = glm::toMat4(glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), -90.f * Util::Const::degToRad, glm::vec3(1.f, 0.f, 0.f)));
+    }
+
     glm::vec3 boundsMin(std::numeric_limits<float>::max());
     glm::vec3 boundsMax(0.f);
     //NOTE these have to match attribute order of Mesh::Data
@@ -378,12 +388,8 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
     {
         if(!positions.empty())
         {
-            glm::vec3 position
-            (
-                positions[posIndex],
-                positions[posIndex+1],
-                positions[posIndex+2]
-                );
+            glm::vec3 position = yUpMatrix * glm::vec4(positions[posIndex], positions[posIndex+1], positions[posIndex+2], 1.f);
+
             posIndex += Iqm::positionSize;
 
             vertexData.push_back(position.x);
@@ -404,14 +410,10 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
             vertexData.push_back(static_cast<float>(colours[colourIndex++]) / 255.f);
         }
 
-        //for (auto j = 0u; j < Iqm::normalSize && !normals.empty(); /*++j*/j += Iqm::normalSize)
         if(!normals.empty())
         {
-            glm::vec3 normal(
-                normals[normalIndex],
-                normals[normalIndex+1],
-                normals[normalIndex+2]
-                );
+            glm::vec3 normal = yUpMatrix * glm::vec4(normals[normalIndex], normals[normalIndex+1], normals[normalIndex+2], 1.f);
+
             normalIndex += Iqm::normalSize;
 
             vertexData.push_back(normal.x);
@@ -419,14 +421,9 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
             vertexData.push_back(normal.z);
         }
 
-        //for (auto j = 0u; j < Iqm::normalSize && !pureTangents.empty(); /*++j*/j += Iqm::normalSize)
         if(!pureTangents.empty())
         {
-            glm::vec3 tan(
-                pureTangents[tanIndex],
-                pureTangents[tanIndex + 1],
-                pureTangents[tanIndex + 2]
-                );
+            glm::vec3 tan = yUpMatrix * glm::vec4(pureTangents[tanIndex], pureTangents[tanIndex+1], pureTangents[tanIndex+2], 1.f);
 
             tanIndex += Iqm::normalSize;
 
@@ -435,14 +432,9 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
             vertexData.push_back(tan.z);
         }
 
-        //for (auto j = 0u; j < Iqm::normalSize && !bitangents.empty(); /*++j*/j += Iqm::normalSize)
         if(!bitangents.empty())
         {
-            glm::vec3 bitan(
-                bitangents[bitanIndex],
-                bitangents[bitanIndex+1],
-                bitangents[bitanIndex+2]
-                );
+            glm::vec3 bitan = yUpMatrix * glm::vec4(bitangents[bitanIndex], bitangents[bitanIndex+1], bitangents[bitanIndex+2], 1.f);
 
             bitanIndex += Iqm::normalSize;
 
