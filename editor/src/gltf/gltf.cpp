@@ -80,6 +80,7 @@ namespace
     //TODO this should be a member really
     std::vector<Anim> animations;
     bool convertVertexColourspace = true;
+    float SampleRate = 15.f;
 }
 
 void ModelState::showGLTFBrowser()
@@ -103,6 +104,19 @@ void ModelState::showGLTFBrowser()
                 {
                     auto boxLabel = "Import Animation##" + IDString;
                     ImGui::Checkbox(boxLabel.c_str(), &importAnim);
+
+                    if (importAnim)
+                    {
+                        ImGui::PushItemWidth(100.f);
+                        if (ImGui::InputFloat("Resample Rate", &SampleRate, 1.f, 5.f, "%.1f"))
+                        {
+                            SampleRate = std::min(60.f, std::max(2.f, SampleRate));
+                        }
+                        ImGui::PopItemWidth();
+                        ImGui::SameLine();
+                        uiConst::showToolTip("Number of keyframes per second to resample the animation.\nLower values create smaller model files but may lose detail.\n15-20 is usually reasonable.");
+                    }
+                    ImGui::Separator();
                 }
                 else
                 {
@@ -110,7 +124,7 @@ void ModelState::showGLTFBrowser()
                 }
                 ImGui::Checkbox("Convert Vertex Colourspace", &convertVertexColourspace);
                 ImGui::SameLine();
-                uiConst::showToolTip("Converts incoming vertex colour data from sRGB to linear space.");
+                uiConst::showToolTip("Converts incoming vertex colour data from sRGB to linear space.\nUseful if you have data rather than colour information stored in the vertex colour channel");
 
                 auto buttonLabel = "Import##" + IDString;
                 if (ImGui::Button(buttonLabel.c_str()))
@@ -422,8 +436,8 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         //stored in the file. Higher samples rates, however,
         //cost more memory.
 
-        static constexpr float SampleRate = 20.f;
-        static constexpr float FixedStep = 1.f / SampleRate;
+        //static constexpr float SampleRate = 20.f;
+        const float FixedStep = 1.f / SampleRate;
         skelAnim.frameRate = SampleRate;
 
         while(anim.currentTime < anim.end)

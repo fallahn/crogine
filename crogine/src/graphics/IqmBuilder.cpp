@@ -50,6 +50,8 @@ namespace
     {
 #include "Iqm.inl"
     }
+
+    glm::mat4 rootTransform;
 }
 
 void loadVertexData(const Iqm::Header& header, char* data, const std::string& strings, cro::Mesh::Data& out);
@@ -62,6 +64,8 @@ IqmBuilder::IqmBuilder(const std::string& path)
 {
     std::hash<std::string> hashAttack;
     m_uid = hashAttack(path);
+
+    rootTransform = glm::toMat4(glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), -90.f * Util::Const::degToRad, glm::vec3(1.f, 0.f, 0.f)));
 }
 
 IqmBuilder::~IqmBuilder()
@@ -150,6 +154,10 @@ cro::Mesh::Data IqmBuilder::build() const
         {
             loadAnimationData(header, fileData.data(), strings, m_skeleton);
         }
+
+        //update the bounding box to match the rootTransform.
+        returnData.boundingSphere.centre = glm::vec3(rootTransform * glm::vec4(returnData.boundingSphere.centre, 1.f));
+        returnData.boundingBox = rootTransform * returnData.boundingBox;
     }
     else
     {
@@ -378,7 +386,7 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
     glm::mat4 yUpMatrix(1.f);
     if (header.animCount == 0)
     {
-        yUpMatrix = glm::toMat4(glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), -90.f * Util::Const::degToRad, glm::vec3(1.f, 0.f, 0.f)));
+        yUpMatrix = rootTransform;
     }
 
     glm::vec3 boundsMin(std::numeric_limits<float>::max());
@@ -534,7 +542,6 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
     out.setInverseBindPose(inverseBindPose);
 
     //corrects for y-up
-    glm::mat4 rootTransform = glm::toMat4(glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), -90.f * Util::Const::degToRad, glm::vec3(1.f, 0.f, 0.f)));
     out.setRootTransform(rootTransform);
 
     //load keyframes - a 'pose' is a single posed joint, and a set of poses makes up one frame equivalent to a posed skeleton

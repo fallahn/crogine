@@ -845,12 +845,13 @@ void ModelState::buildSkeleton()
                 auto frameOffsetA = skeleton.getFrameSize() * skeleton.getCurrentFrame();
                 auto frameOffsetB = skeleton.getFrameSize() * nextFrame;
 
+                auto rootTx = skeleton.getRootTransform();
 
                 for (auto i = 0u; i < skeleton.getFrameSize(); ++i)
                 {
                     const auto& jointA = skeleton.getFrames()[frameOffsetA + i];
                     const auto& jointB = skeleton.getFrames()[frameOffsetB + i];
-                    const auto& position = glm::interpolate(jointA.worldMatrix, jointB.worldMatrix, skeleton.getCurrentFrameTime()) * glm::vec4(glm::vec3(0.f), 1.f);
+                    const auto& position = rootTx * glm::interpolate(jointA.worldMatrix, jointB.worldMatrix, skeleton.getCurrentFrameTime()) * glm::vec4(glm::vec3(0.f), 1.f);
 
                     verts.push_back(position.x);
                     verts.push_back(position.y);

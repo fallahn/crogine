@@ -297,12 +297,14 @@ namespace cro
 
         /*!
         \brief Sets the root transform applied to a frame during interpolation.
-        Use this if the parsed animation data (eg from a custom MeshBuilder) is parented
-        to a node/transform not included in the frame data, or needs to be converted
-        from a different coordinate system eg z-up to y-up.
+        Use this to rescale/orientate a model, fo example if importing a z-up model
         */
         void setRootTransform(const glm::mat4& transform) { m_rootTransform = transform; }
 
+        /*!
+        \brief Gets the current root transform of the skeleton.
+        */
+        const glm::mat4& getRootTransform() const { return m_rootTransform; }
 
     private:
 
