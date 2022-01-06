@@ -61,6 +61,6 @@ void PostChromeAB::apply(const RenderTexture& input)
     glCheck(glBindTexture(GL_TEXTURE_2D, input.getTexture().getGLHandle()));
     glCheck(glUniform1i(m_textureIndex, 0));
 
-    auto size = glm::vec2(getCurrentBufferSize());
+    auto size = glm::vec2(RenderTarget::getActiveTarget()->getSize());
     drawQuad(0, { 0.f, 0.f, size.x, size.y });
 }

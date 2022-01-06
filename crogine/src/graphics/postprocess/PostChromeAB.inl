@@ -45,6 +45,6 @@ static const std::string FragChromeAB = R"(
         colour.g = TEXTURE(u_input, texCoord).g;
         colour.b = TEXTURE(u_input, texCoord - offset).b;
 
-        FRAG_OUT.rgb = colour;
+        FRAG_OUT = vec4(colour, 1.0);
     }
 )";
