@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
+#include <crogine/graphics/MeshData.hpp>
 
 namespace cro
 {
@@ -48,5 +49,9 @@ namespace cro
         void onEntityAdded(Entity) override;
 
         void interpolate(std::size_t a, std::size_t b, float time, Skeleton& skelteton);
+
+        void buildKeyframe(std::size_t frame, Skeleton&);
+
+        void updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::Data&);
     };
 }

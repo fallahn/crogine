@@ -95,11 +95,11 @@ void SkeletalAnimator::process(float dt)
                 nextFrame += anim.startFrame;
 
                 //apply the current frame
-                auto offset = anim.currentFrame * skel.m_frameSize;
-                for (auto i = 0u; i < skel.m_frameSize; ++i)
-                {
-                    skel.m_currentFrame[i] = skel.m_rootTransform * skel.m_frames[offset + i].worldMatrix * skel.m_invBindPose[i];
-                }
+                buildKeyframe(anim.currentFrame, skel);
+
+                auto& meshData = entity.getComponent<Model>().getMeshData();
+                meshData.boundingBox = skel.m_keyFrameBounds[anim.currentFrame];
+                meshData.boundingSphere = skel.m_keyFrameBounds[anim.currentFrame];
 
                 //stop playback if frame ID has looped
                 if (nextFrame < anim.currentFrame)
@@ -182,11 +182,14 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
         skeleton.m_invBindPose.resize(skeleton.m_frameSize);
     }
 
-    //set the initial frame so we actually see something
-    for (auto i = 0u; i < skeleton.m_frameSize; ++i)
+    //update the bounds for each key frame
+    for (auto i = 0u; i < skeleton.m_frameCount; ++i)
     {
-        skeleton.m_currentFrame[i] = skeleton.m_rootTransform * skeleton.m_frames[i].worldMatrix * skeleton.m_invBindPose[i];
+        buildKeyframe(i, skeleton);
+        updateBoundsFromCurrentFrame(skeleton, entity.getComponent<Model>().getMeshData());
     }
+    entity.getComponent<Model>().getMeshData().boundingBox = skeleton.m_keyFrameBounds[0];
+    entity.getComponent<Model>().getMeshData().boundingSphere = skeleton.m_keyFrameBounds[0];
 }
 
 void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Skeleton& skeleton)
@@ -208,5 +211,63 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
         }
 
         skeleton.m_currentFrame[i] = skeleton.m_rootTransform * worldMatrix *  skeleton.m_invBindPose[i];
+    }
+}
+
+void SkeletalAnimator::buildKeyframe(std::size_t frame, Skeleton& skeleton)
+{
+    auto offset = skeleton.m_frameSize * frame;
+    for (auto i = 0u; i < skeleton.m_frameSize; ++i)
+    {
+        skeleton.m_currentFrame[i] = skeleton.m_rootTransform * skeleton.m_frames[offset + i].worldMatrix * skeleton.m_invBindPose[i];
+    }
+}
+
+void SkeletalAnimator::updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::Data& source)
+{
+    //store these in case we want to update the bounds
+    std::vector<glm::vec3> positions;
+    for (auto i = 0u; i < dest.m_frameSize; ++i)
+    {
+        positions.push_back(glm::vec3(dest.m_currentFrame[i] * glm::inverse(dest.m_invBindPose[i]) * glm::vec4(0.f, 0.f, 0.f, 1.f)));
+    }
+
+
+    if (!positions.empty())
+    {
+        if (positions.size() > 1)
+        {
+            //update the bounds - this only covers the skeleton however
+            auto [minX, maxX] = std::minmax_element(positions.begin(), positions.end(),
+                [](const glm::vec3& l, const glm::vec3& r)
+                {
+                    return l.x < r.x;
+                });
+
+            auto [minY, maxY] = std::minmax_element(positions.begin(), positions.end(),
+                [](const glm::vec3& l, const glm::vec3& r)
+                {
+                    return l.y < r.y;
+                });
+
+            auto [minZ, maxZ] = std::minmax_element(positions.begin(), positions.end(),
+                [](const glm::vec3& l, const glm::vec3& r)
+                {
+                    return l.z < r.z;
+                });
+
+            cro::Box aabb(glm::vec3(minX->x, minY->y, minZ->z), glm::vec3(maxX->x, maxY->y, maxZ->z) + glm::vec3(0.001f));
+            dest.m_keyFrameBounds.push_back(aabb);
+        }
+        else
+        {
+            //re-centre existing bounds on position
+            auto boundingBox = dest.m_currentFrame[0] * source.boundingBox;
+            dest.m_keyFrameBounds.push_back(boundingBox);
+        }
+    }
+    else
+    {
+        dest.m_keyFrameBounds.push_back(source.boundingBox);
     }
 }

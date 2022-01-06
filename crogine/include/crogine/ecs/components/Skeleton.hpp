@@ -35,6 +35,8 @@ source distribution.
 #include <crogine/detail/glm/mat4x4.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 
+#include <crogine/graphics/BoundingBox.hpp>
+
 #include <vector>
 #include <string>
 
@@ -332,6 +334,8 @@ namespace cro
         std::vector<std::vector<Notification>> m_notifications; //for each frame a pair of jointID and message ID
 
         std::vector<AttachmentPoint> m_attachmentPoints;
+
+        std::vector<cro::Box> m_keyFrameBounds; //calc'd on joining the System for each key frame
 
         friend class SkeletalAnimator;
         friend struct Detail::ModelBinary::SkeletonHeader;

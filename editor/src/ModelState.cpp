@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -206,6 +206,18 @@ bool ModelState::simulate(float dt)
 
     m_previewScene.simulate(dt);
     m_scene.simulate(dt);
+
+    if (m_entities[EntityID::ActiveModel].isValid()
+        && (m_showAABB || m_showSphere))
+    {
+        const auto& meshData = m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+        std::optional<cro::Sphere> sphere;
+        if (m_showSphere) sphere = meshData.boundingSphere;
+
+        std::optional<cro::Box> box;
+        if (m_showAABB) box = meshData.boundingBox;
+        updateGridMesh(m_entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), sphere, box);
+    }
     return false;
 }
 

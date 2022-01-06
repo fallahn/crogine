@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -261,6 +261,8 @@ void ModelState::openModelAtPath(const std::string& path)
     else
     {
         cro::Logger::log("Check current working directory (Options)?", cro::Logger::Type::Error);
+        m_showAABB = m_showSphere = false;
+        updateGridMesh(m_entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), std::nullopt, std::nullopt);
     }
 }
 
