@@ -1,0 +1,22 @@
+model batcat02
+{
+    mesh = assets/batcat/models/batcat02.cmb
+    cast_shadows = true
+
+    material PBR
+    {
+        mask = "assets/batcat/textures/batcatm_mask_pbr.png"
+        normal = "assets/batcat/textures/batcat_normal.png"
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        rx_shadows = true
+        blendmode = none
+        diffuse = "assets/batcat/textures/batcat_diffuse.png"
+        skinned = true
+
+    }
+}
