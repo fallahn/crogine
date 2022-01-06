@@ -123,7 +123,8 @@ void SkeletalAnimator::process(float dt)
             }
                    
             //only interpolate if model is visible and close to the active camera
-            if (!entity.getComponent<Model>().isHidden())
+            if (!entity.getComponent<Model>().isHidden()
+                && anim.playbackRate != 0)
             {
                 //check distance to camera and check if actually in front
                 auto direction = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
@@ -159,11 +160,7 @@ void SkeletalAnimator::process(float dt)
                 skel.m_animations[skel.m_currentAnimation].playbackRate = skel.m_playbackRate;
                 skel.m_animations[skel.m_currentAnimation].currentFrame = skel.m_animations[skel.m_currentAnimation].startFrame;
 
-                auto offset = skel.m_animations[skel.m_currentAnimation].currentFrame * skel.m_frameSize;
-                for (auto i = 0u; i < skel.m_frameSize; ++i)
-                {
-                    skel.m_currentFrame[i] = skel.m_frames[offset + i].worldMatrix * skel.m_invBindPose[i];
-                }
+                buildKeyframe(skel.m_animations[skel.m_currentAnimation].currentFrame, skel);
             }
         }
     }
