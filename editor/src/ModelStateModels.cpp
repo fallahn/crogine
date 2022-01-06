@@ -677,6 +677,18 @@ void ModelState::importModel()
             savePrefs();
         }
         updateGridMesh(m_entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), {}, {});
+
+        if (m_entities[EntityID::ActiveModel].isValid())
+        {
+            if (m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+            {
+                m_importedTransform.rootTransform = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>().getRootTransform();
+            }
+            else
+            {
+                m_importedTransform.rootTransform = glm::mat4(1.f);
+            }
+        }
     }
 }
 
@@ -992,85 +1004,97 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
 void ModelState::applyImportTransform()
 {
     const auto& transform = m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().getLocalTransform();
-    auto meshData = m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
-    auto vertexSize = meshData.vertexSize / sizeof(float);
 
-    std::size_t normalOffset = 0;
-    std::size_t tanOffset = 0;
-    std::size_t bitanOffset = 0;
-
-    //calculate the offset index into a single vertex which points
-    //to any normal / tan / bitan values
-    if (meshData.attributes[cro::Mesh::Attribute::Normal] != 0)
+    if (m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
     {
-        for (auto i = 0; i < cro::Mesh::Attribute::Normal; ++i)
-        {
-            normalOffset += meshData.attributes[i];
-        }
+        //update the root transform
+        m_importedTransform.rootTransform = transform * m_importedTransform.rootTransform;
+        m_importedTransform.scale = 1.f;
+        m_importedTransform.rotation = glm::vec3(0.f);
+
+        m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>().setRootTransform(m_importedTransform.rootTransform);
     }
-
-    if (meshData.attributes[cro::Mesh::Attribute::Tangent] != 0)
+    else
     {
-        for (auto i = 0; i < cro::Mesh::Attribute::Tangent; ++i)
+        auto meshData = m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+        auto vertexSize = meshData.vertexSize / sizeof(float);
+
+        std::size_t normalOffset = 0;
+        std::size_t tanOffset = 0;
+        std::size_t bitanOffset = 0;
+
+        //calculate the offset index into a single vertex which points
+        //to any normal / tan / bitan values
+        if (meshData.attributes[cro::Mesh::Attribute::Normal] != 0)
         {
-            tanOffset += meshData.attributes[i];
+            for (auto i = 0; i < cro::Mesh::Attribute::Normal; ++i)
+            {
+                normalOffset += meshData.attributes[i];
+            }
         }
+
+        if (meshData.attributes[cro::Mesh::Attribute::Tangent] != 0)
+        {
+            for (auto i = 0; i < cro::Mesh::Attribute::Tangent; ++i)
+            {
+                tanOffset += meshData.attributes[i];
+            }
+        }
+
+        if (meshData.attributes[cro::Mesh::Attribute::Bitangent] != 0)
+        {
+            for (auto i = 0; i < cro::Mesh::Attribute::Bitangent; ++i)
+            {
+                bitanOffset += meshData.attributes[i];
+            }
+        }
+
+        auto applyTransform = [&](const glm::mat4& tx, std::size_t idx, bool normalise = false)
+        {
+            glm::vec4 v(m_importedVBO[idx], m_importedVBO[idx + 1], m_importedVBO[idx + 2], 1.f);
+            v = tx * v;
+
+            if (normalise)
+            {
+                v = glm::normalize(v);
+            }
+
+            m_importedVBO[idx] = v.x;
+            m_importedVBO[idx + 1] = v.y;
+            m_importedVBO[idx + 2] = v.z;
+        };
+
+        //loop over the vertex data and modify
+        for (std::size_t i = 0u; i < m_importedVBO.size(); i += vertexSize)
+        {
+            //position
+            applyTransform(transform, i);
+
+            if (normalOffset != 0)
+            {
+                auto idx = i + normalOffset;
+                applyTransform(transform, idx, true);
+            }
+
+            if (tanOffset != 0)
+            {
+                auto idx = i + tanOffset;
+                applyTransform(transform, idx, true);
+            }
+
+            if (bitanOffset != 0)
+            {
+                auto idx = i + bitanOffset;
+                applyTransform(transform, idx, true);
+            }
+        }
+
+        //upload the data to the preview model
+        glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+        glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, m_importedVBO.data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        m_importedTransform = {};
     }
-
-    if (meshData.attributes[cro::Mesh::Attribute::Bitangent] != 0)
-    {
-        for (auto i = 0; i < cro::Mesh::Attribute::Bitangent; ++i)
-        {
-            bitanOffset += meshData.attributes[i];
-        }
-    }
-
-    auto applyTransform = [&](const glm::mat4& tx, std::size_t idx, bool normalise = false)
-    {
-        glm::vec4 v(m_importedVBO[idx], m_importedVBO[idx + 1], m_importedVBO[idx + 2], 1.f);
-        v = tx * v;
-
-        if (normalise)
-        {
-            v = glm::normalize(v);
-        }
-
-        m_importedVBO[idx] = v.x;
-        m_importedVBO[idx + 1] = v.y;
-        m_importedVBO[idx + 2] = v.z;
-    };
-
-    //loop over the vertex data and modify
-    for (std::size_t i = 0u; i < m_importedVBO.size(); i += vertexSize)
-    {
-        //position
-        applyTransform(transform, i);
-
-        if (normalOffset != 0)
-        {
-            auto idx = i + normalOffset;
-            applyTransform(transform, idx, true);
-        }
-
-        if (tanOffset != 0)
-        {
-            auto idx = i + tanOffset;
-            applyTransform(transform, idx, true);
-        }
-
-        if (bitanOffset != 0)
-        {
-            auto idx = i + bitanOffset;
-            applyTransform(transform, idx, true);
-        }
-    }
-
-    //upload the data to the preview model
-    glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
-    glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, m_importedVBO.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    m_importedTransform = {};
     m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
     m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTY);
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -49,8 +49,6 @@ namespace cro
         void onEntityAdded(Entity) override;
 
         void interpolate(std::size_t a, std::size_t b, float time, Skeleton& skelteton);
-
-        void buildKeyframe(std::size_t frame, Skeleton&);
 
         void updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::Data&);
     };

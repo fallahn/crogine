@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -95,7 +95,7 @@ void SkeletalAnimator::process(float dt)
                 nextFrame += anim.startFrame;
 
                 //apply the current frame
-                buildKeyframe(anim.currentFrame, skel);
+                skel.buildKeyframe(anim.currentFrame);
 
                 auto& meshData = entity.getComponent<Model>().getMeshData();
                 meshData.boundingBox = skel.m_keyFrameBounds[anim.currentFrame];
@@ -160,7 +160,7 @@ void SkeletalAnimator::process(float dt)
                 skel.m_animations[skel.m_currentAnimation].playbackRate = skel.m_playbackRate;
                 skel.m_animations[skel.m_currentAnimation].currentFrame = skel.m_animations[skel.m_currentAnimation].startFrame;
 
-                buildKeyframe(skel.m_animations[skel.m_currentAnimation].currentFrame, skel);
+                skel.buildKeyframe(skel.m_animations[skel.m_currentAnimation].currentFrame);
             }
         }
     }
@@ -182,7 +182,7 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
     //update the bounds for each key frame
     for (auto i = 0u; i < skeleton.m_frameCount; ++i)
     {
-        buildKeyframe(i, skeleton);
+        skeleton.buildKeyframe(i);
         updateBoundsFromCurrentFrame(skeleton, entity.getComponent<Model>().getMeshData());
     }
     entity.getComponent<Model>().getMeshData().boundingBox = skeleton.m_keyFrameBounds[0];
@@ -211,15 +211,6 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
     }
 }
 
-void SkeletalAnimator::buildKeyframe(std::size_t frame, Skeleton& skeleton)
-{
-    auto offset = skeleton.m_frameSize * frame;
-    for (auto i = 0u; i < skeleton.m_frameSize; ++i)
-    {
-        skeleton.m_currentFrame[i] = skeleton.m_rootTransform * skeleton.m_frames[offset + i].worldMatrix * skeleton.m_invBindPose[i];
-    }
-}
-
 void SkeletalAnimator::updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::Data& source)
 {
     //store these in case we want to update the bounds
@@ -228,7 +219,6 @@ void SkeletalAnimator::updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::
     {
         positions.push_back(glm::vec3(dest.m_currentFrame[i] * glm::inverse(dest.m_invBindPose[i]) * glm::vec4(0.f, 0.f, 0.f, 1.f)));
     }
-
 
     if (!positions.empty())
     {

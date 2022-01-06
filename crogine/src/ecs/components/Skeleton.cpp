@@ -161,5 +161,34 @@ glm::mat4 Skeleton::getAttachmentPoint(std::int32_t id) const
     const auto& jointA = m_frames[frameOffsetA + ap.m_parent];
     const auto& jointB = m_frames[frameOffsetB + ap.m_parent];
 
+    //TODO replace this with correct per-component interpolation
     return glm::interpolate(jointA.worldMatrix, jointB.worldMatrix, m_currentFrameTime / m_frameTime) * ap.m_transform;
+}
+
+void Skeleton::setRootTransform(const glm::mat4& transform)
+{
+    auto undoTx = glm::inverse(m_rootTransform);
+    m_rootTransform = transform;
+
+    for(auto i = 0u; i < m_frameCount; ++i)
+    {
+        //make sure to rebuild our bounding volumes
+        buildKeyframe(i);
+
+        if (i < m_keyFrameBounds.size())
+        {
+            auto bounds = undoTx * m_keyFrameBounds[i];
+            m_keyFrameBounds[i] = m_rootTransform * bounds;
+        }
+    }
+}
+
+//private
+void Skeleton::buildKeyframe(std::size_t frame)
+{
+    auto offset = m_frameSize * frame;
+    for (auto i = 0u; i < m_frameSize; ++i)
+    {
+       m_currentFrame[i] = m_rootTransform * m_frames[offset + i].worldMatrix * m_invBindPose[i];
+    }
 }

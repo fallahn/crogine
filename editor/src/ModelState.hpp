@@ -155,6 +155,7 @@ private:
     std::unordered_map<std::uint16_t, std::size_t> m_importedMeshes; //< maps created VBOs to vert flags - this recycles matching VBOs if they exist and only creates new when necessary
     struct ImportTransform final
     {
+        glm::mat4 rootTransform = glm::mat4(1.f); //imported from skeleton
         glm::vec3 rotation = glm::vec3(0.f);
         float scale = 1.f;
     }m_importedTransform;
