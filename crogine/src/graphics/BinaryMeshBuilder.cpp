@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -307,7 +307,7 @@ Mesh::Data BinaryMeshBuilder::build() const
         {
             if (header.version < 2)
             {
-                LogW << "Skeletal animation requires version 2 or greater. Please re-export the model" << std::endl;
+                LogW << m_path <<  "\nSkeletal animation requires version 2 or greater. Please re-export the model" << std::endl;
             }
 
             else if (SDL_RWseek(file.file, header.skeletonOffset, RW_SEEK_SET) > -1)

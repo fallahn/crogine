@@ -303,25 +303,24 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
     if (retVal)
     {
         //open the file
-        RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "wb");
+        SDL_RWops* file = SDL_RWFromFile(path.c_str(), "wb");
 
-        if (!file.file)
+        if (!file)
         {
             LogE << "Failed opening " << path << " for writing" << std::endl;
         }
         else
         {
             //write the header
-            SDL_RWwrite(file.file, &header, sizeof(header), 1);
+            SDL_RWwrite(file, &header, sizeof(header), 1);
 
             if (header.meshOffset)
             {
                 //write mesh data
-                SDL_RWwrite(file.file, &meshHeader, sizeof(meshHeader), 1);
-                SDL_RWwrite(file.file, outIndexSizes.data(), sizeof(std::uint32_t), outIndexSizes.size());
-                SDL_RWwrite(file.file, outVertexData.data(), sizeof(float), outVertexData.size());
-                SDL_RWwrite(file.file, outIndexData.data(), sizeof(std::uint32_t), outIndexData.size());
+                SDL_RWwrite(file, &meshHeader, sizeof(meshHeader), 1);
+                SDL_RWwrite(file, outIndexSizes.data(), sizeof(std::uint32_t), outIndexSizes.size());
+                SDL_RWwrite(file, outVertexData.data(), sizeof(float), outVertexData.size());
+                SDL_RWwrite(file, outIndexData.data(), sizeof(std::uint32_t), outIndexData.size());
             }
 
             if (header.skeletonOffset)
@@ -329,15 +328,15 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
                 const auto& frames = entity.getComponent<cro::Skeleton>().getFrames();
 
                 //write skel data
-                SDL_RWwrite(file.file, &skelHeader, sizeof(skelHeader), 1);
-                SDL_RWwrite(file.file, frames.data(), sizeof(Joint), frames.size());
-                SDL_RWwrite(file.file, outAnimations.data(), sizeof(SerialAnimation), outAnimations.size());
-                SDL_RWwrite(file.file, outNotifications.data(), sizeof(SerialNotification), outNotifications.size());
-                SDL_RWwrite(file.file, outAttachments.data(), sizeof(SerialAttachment), outAttachments.size());
-                SDL_RWwrite(file.file, outInverseBindPose.data(), sizeof(float), outInverseBindPose.size());
+                SDL_RWwrite(file, &skelHeader, sizeof(skelHeader), 1);
+                SDL_RWwrite(file, frames.data(), sizeof(Joint), frames.size());
+                SDL_RWwrite(file, outAnimations.data(), sizeof(SerialAnimation), outAnimations.size());
+                SDL_RWwrite(file, outNotifications.data(), sizeof(SerialNotification), outNotifications.size());
+                SDL_RWwrite(file, outAttachments.data(), sizeof(SerialAttachment), outAttachments.size());
+                SDL_RWwrite(file, outInverseBindPose.data(), sizeof(float), outInverseBindPose.size());
             }
 
-            if (SDL_RWclose(file.file))
+            if (SDL_RWclose(file))
             {
                 LogE << SDL_GetError() << std::endl;
             }
