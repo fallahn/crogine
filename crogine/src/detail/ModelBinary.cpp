@@ -40,7 +40,7 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
 {
     bool retVal = false;
 
-    Detail::ModelBinary::Header header;
+    Detail::ModelBinary::HeaderV2 header;
     std::uint32_t skelOffset = sizeof(header);
 
     //if these are not empty after processing
@@ -128,7 +128,7 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
             meshHeader.flags &= ~(VertexProperty::BlendIndices | VertexProperty::BlendWeights);
         }
 
-        for (auto i = 0u; i < vertexData.size(); i += vertStride)
+        for (auto i = 0ull; i < vertexData.size(); i += vertStride)
         {
             for (auto j = 0u; j < meshData.attributes.size(); ++j)
             {
@@ -253,10 +253,11 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
     }
 
     //skeleton output
-    Detail::ModelBinary::SkeletonHeader skelHeader;
+    Detail::ModelBinary::SkeletonHeaderV2 skelHeader;
     std::vector<Detail::ModelBinary::SerialAnimation> outAnimations;
     std::vector<Detail::ModelBinary::SerialNotification> outNotifications;
     std::vector<Detail::ModelBinary::SerialAttachment> outAttachments;
+    std::vector<float> outInverseBindPose;
 
     if (includeSkeleton &&
         entity.hasComponent<Skeleton>())
@@ -289,6 +290,11 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
             outAttachments.emplace_back(attachment);
         }
 
+        const auto& ibp = skeleton.getInverseBindPose();
+        CRO_ASSERT(!ibp.empty(), "inverse bind pose data is missing");
+        outInverseBindPose.resize(ibp.size() * 16);
+        std::memcpy(outInverseBindPose.data(), ibp.data(), sizeof(float)* outInverseBindPose.size());
+
         retVal = true;
     }
 
@@ -297,38 +303,44 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
     if (retVal)
     {
         //open the file
-        RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "wb");
+        SDL_RWops* file = SDL_RWFromFile(path.c_str(), "wb");
 
-        if (!file.file)
+        if (!file)
         {
             LogE << "Failed opening " << path << " for writing" << std::endl;
         }
-
-        //write the header
-        SDL_RWwrite(file.file, &header, sizeof(header), 1);
-
-        if (header.meshOffset)
+        else
         {
-            //write mesh data
-            SDL_RWwrite(file.file, &meshHeader, sizeof(meshHeader), 1);
-            SDL_RWwrite(file.file, outIndexSizes.data(), sizeof(std::uint32_t), outIndexSizes.size());
-            SDL_RWwrite(file.file, outVertexData.data(), sizeof(float), outVertexData.size());
-            SDL_RWwrite(file.file, outIndexData.data(), sizeof(std::uint32_t), outIndexData.size());
-        }
+            //write the header
+            SDL_RWwrite(file, &header, sizeof(header), 1);
 
-        if (header.skeletonOffset)
-        {
-            const auto& frames = entity.getComponent<cro::Skeleton>().getFrames();
+            if (header.meshOffset)
+            {
+                //write mesh data
+                SDL_RWwrite(file, &meshHeader, sizeof(meshHeader), 1);
+                SDL_RWwrite(file, outIndexSizes.data(), sizeof(std::uint32_t), outIndexSizes.size());
+                SDL_RWwrite(file, outVertexData.data(), sizeof(float), outVertexData.size());
+                SDL_RWwrite(file, outIndexData.data(), sizeof(std::uint32_t), outIndexData.size());
+            }
 
-            //write skel data
-            SDL_RWwrite(file.file, &skelHeader, sizeof(skelHeader), 1);
-            SDL_RWwrite(file.file, frames.data(), sizeof(Joint), frames.size());
-            SDL_RWwrite(file.file, outAnimations.data(), sizeof(SerialAnimation), outAnimations.size());
-            SDL_RWwrite(file.file, outNotifications.data(), sizeof(SerialNotification), outNotifications.size());
-            SDL_RWwrite(file.file, outAttachments.data(), sizeof(SerialAttachment), outAttachments.size());
+            if (header.skeletonOffset)
+            {
+                const auto& frames = entity.getComponent<cro::Skeleton>().getFrames();
+
+                //write skel data
+                SDL_RWwrite(file, &skelHeader, sizeof(skelHeader), 1);
+                SDL_RWwrite(file, frames.data(), sizeof(Joint), frames.size());
+                SDL_RWwrite(file, outAnimations.data(), sizeof(SerialAnimation), outAnimations.size());
+                SDL_RWwrite(file, outNotifications.data(), sizeof(SerialNotification), outNotifications.size());
+                SDL_RWwrite(file, outAttachments.data(), sizeof(SerialAttachment), outAttachments.size());
+                SDL_RWwrite(file, outInverseBindPose.data(), sizeof(float), outInverseBindPose.size());
+            }
+
+            if (SDL_RWclose(file))
+            {
+                LogE << SDL_GetError() << std::endl;
+            }
         }
-        SDL_RWclose(file.file);
     }
 
     return retVal;

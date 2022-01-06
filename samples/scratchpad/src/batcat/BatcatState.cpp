@@ -231,7 +231,7 @@ void BatcatState::loadAssets()
         md = std::make_unique<cro::ModelDefinition>(m_resources);
     }
 
-    m_modelDefs[GameModelID::BatCat]->loadFromFile("assets/batcat/models/batcat.cmt", true);
+    m_modelDefs[GameModelID::BatCat]->loadFromFile("assets/batcat/models/batcat02.cmt", true);
     m_modelDefs[GameModelID::TestRoom]->loadFromFile("assets/batcat/models/scene03.cmt");
     m_modelDefs[GameModelID::Moon]->loadFromFile("assets/batcat/models/moon.cmt");
     m_modelDefs[GameModelID::Stars]->loadFromFile("assets/batcat/models/stars.cmt");
@@ -250,10 +250,10 @@ void BatcatState::createScene()
     std::vector<glm::mat4> tx;
     for (auto i = 0; i < 7; ++i)
     {
-        float x = 120.f * i;
+        float x = 2.f * i;
         for (auto j = 0; j < 10; ++j)
         {
-            float z = 160.f * j;
+            float z = 3.f * j;
             tx.push_back(glm::translate(glm::mat4(1.f), glm::vec3(-x, 0.f, z)));
         }
     }
@@ -261,7 +261,7 @@ void BatcatState::createScene()
 
     //dat cat man
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.03f));
+    entity.addComponent<cro::Transform>().setScale(glm::vec3(2.f));
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f);
     entity.getComponent<cro::Transform>().setPosition({ -21.f, 0.f, -6.f });
     m_modelDefs[GameModelID::BatCat]->createModel(entity);
@@ -535,6 +535,7 @@ void BatcatState::createUI()
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Cursor;
 
     m_resources.fonts.load(1, "assets/fonts/VeraMono.ttf");
+    m_resources.fonts.get(1).setSmooth(true);
     
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 200.f, 100.f });

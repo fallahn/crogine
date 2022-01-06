@@ -31,6 +31,7 @@ source distribution.
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/RenderTarget.hpp>
 
 #include "../../detail/GLCheck.hpp"
 
@@ -95,6 +96,9 @@ void PostProcess::drawQuad(std::size_t passIndex, FloatRect size)
     glCheck(glUseProgram(shader.getGLHandle()));
     glCheck(glUniformMatrix4fv(uniforms.find("u_worldMatrix")->second, 1, GL_FALSE, glm::value_ptr(m_transform)));
     glCheck(glUniformMatrix4fv(uniforms.find("u_projectionMatrix")->second, 1, GL_FALSE, glm::value_ptr(m_projection)));
+
+    auto vp = RenderTarget::getActiveTarget()->getDefaultViewport();
+    glViewport(vp.left, vp.bottom, vp.width, vp.height);
 
     //bind any textures / apply misc uniforms
     const auto& params = m_uniforms[shader.getGLHandle()];

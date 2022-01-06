@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,29 +41,17 @@ using namespace cro;
 
 namespace
 {
-    glm::vec3 interp(const glm::vec3& a, const glm::vec3& b, float t)
-    {
-        return a + ((b - a) * t);
-    }
-
     //interp tx and rot separately
     //TODO convert to 4x3 to free up some uniform space
     glm::mat4 mixJoint(const Joint& a, const Joint& b, float time)
     {
-        glm::vec3 trans = interp(a.translation, b.translation, time);
+        glm::vec3 trans = mix(a.translation, b.translation, time);
         glm::quat rot = glm::slerp(a.rotation, b.rotation, time);
-        glm::vec3 scale = interp(a.scale, b.scale, time);
+        glm::vec3 scale = mix(a.scale, b.scale, time);
 
         glm::mat4 result = glm::translate(glm::mat4(1.f), trans);
-        result *= glm::transpose(glm::toMat4(rot));
+        result *= glm::toMat4(rot);
         return glm::scale(result, scale);
-    }
-
-    glm::mat4 applyJoint(const Joint& j)
-    {
-        glm::mat4 result = glm::translate(glm::mat4(1.f), j.translation);
-        result *= glm::transpose(glm::toMat4(j.rotation));
-        return glm::scale(result, j.scale);
     }
 }
 
@@ -91,7 +79,7 @@ void SkeletalAnimator::process(float dt)
         {
             //update current animation
             auto& anim = skel.m_animations[skel.m_currentAnimation];
-            skel.m_currentFrameTime += dt * anim.playbackRate;// *0.10f;
+            skel.m_currentFrameTime += dt * anim.playbackRate;
 
             auto nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
             nextFrame += anim.startFrame;
@@ -107,11 +95,11 @@ void SkeletalAnimator::process(float dt)
                 nextFrame += anim.startFrame;
 
                 //apply the current frame
-                auto offset = anim.currentFrame * skel.m_frameSize;
-                for (auto i = 0u; i < skel.m_frameSize; ++i)
-                {
-                    skel.m_currentFrame[i] = applyJoint(skel.m_frames[offset + i]);
-                }
+                skel.buildKeyframe(anim.currentFrame);
+
+                auto& meshData = entity.getComponent<Model>().getMeshData();
+                meshData.boundingBox = skel.m_keyFrameBounds[anim.currentFrame];
+                meshData.boundingSphere = skel.m_keyFrameBounds[anim.currentFrame];
 
                 //stop playback if frame ID has looped
                 if (nextFrame < anim.currentFrame)
@@ -135,7 +123,8 @@ void SkeletalAnimator::process(float dt)
             }
                    
             //only interpolate if model is visible and close to the active camera
-            if (!entity.getComponent<Model>().isHidden())
+            if (!entity.getComponent<Model>().isHidden()
+                && anim.playbackRate != 0)
             {
                 //check distance to camera and check if actually in front
                 auto direction = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
@@ -171,11 +160,7 @@ void SkeletalAnimator::process(float dt)
                 skel.m_animations[skel.m_currentAnimation].playbackRate = skel.m_playbackRate;
                 skel.m_animations[skel.m_currentAnimation].currentFrame = skel.m_animations[skel.m_currentAnimation].startFrame;
 
-                auto offset = skel.m_animations[skel.m_currentAnimation].currentFrame * skel.m_frameSize;
-                for (auto i = 0u; i < skel.m_frameSize; ++i)
-                {
-                    skel.m_currentFrame[i] = applyJoint(skel.m_frames[offset + i]);
-                }
+                skel.buildKeyframe(skel.m_animations[skel.m_currentAnimation].currentFrame);
             }
         }
     }
@@ -189,29 +174,87 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
     entity.getComponent<Model>().setSkeleton(&skeleton.m_currentFrame[0], skeleton.m_frameSize);
     skeleton.m_frameTime = 1.f / skeleton.m_animations[0].frameRate;
 
-    //set the initial frame so we actually see something
-    for (auto i = 0u; i < skeleton.m_frameSize; ++i)
+    if (skeleton.m_invBindPose.empty())
     {
-        skeleton.m_currentFrame[i] = applyJoint(skeleton.m_frames[i]);
+        skeleton.m_invBindPose.resize(skeleton.m_frameSize);
     }
+
+    //update the bounds for each key frame
+    for (auto i = 0u; i < skeleton.m_frameCount; ++i)
+    {
+        skeleton.buildKeyframe(i);
+        updateBoundsFromCurrentFrame(skeleton, entity.getComponent<Model>().getMeshData());
+    }
+    entity.getComponent<Model>().getMeshData().boundingBox = skeleton.m_keyFrameBounds[0];
+    entity.getComponent<Model>().getMeshData().boundingSphere = skeleton.m_keyFrameBounds[0];
 }
 
 void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Skeleton& skeleton)
 {
-    //TODO interpolate hit boxes for key frames
+    //TODO interpolate hit boxes for key frames(?)
 
     //NOTE a and b are FRAME INDICES not indices directly into the frame array
     std::size_t startA = a * skeleton.m_frameSize;
     std::size_t startB = b * skeleton.m_frameSize;
     for (auto i = 0u; i < skeleton.m_frameSize; ++i)
     {
-        /*
-        NOTE for this to work the animation importer must make sure
-        all keyframes have their joints fully pre-multiplied by their
-        parents.
-        */
+        glm::mat4 worldMatrix = mixJoint(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time);
 
-        //root bone
-        skeleton.m_currentFrame[i] = mixJoint(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time);
+        std::int32_t parent = skeleton.m_frames[startA + i].parent;
+        while (parent != -1)
+        {
+            worldMatrix = mixJoint(skeleton.m_frames[startA + parent], skeleton.m_frames[startB + parent], time) * worldMatrix;
+            parent = skeleton.m_frames[startA + parent].parent;
+        }
+
+        skeleton.m_currentFrame[i] = skeleton.m_rootTransform * worldMatrix *  skeleton.m_invBindPose[i];
+    }
+}
+
+void SkeletalAnimator::updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::Data& source)
+{
+    //store these in case we want to update the bounds
+    std::vector<glm::vec3> positions;
+    for (auto i = 0u; i < dest.m_frameSize; ++i)
+    {
+        positions.push_back(glm::vec3(dest.m_currentFrame[i] * glm::inverse(dest.m_invBindPose[i]) * glm::vec4(0.f, 0.f, 0.f, 1.f)));
+    }
+
+    if (!positions.empty())
+    {
+        if (positions.size() > 1)
+        {
+            //update the bounds - this only covers the skeleton however
+            auto [minX, maxX] = std::minmax_element(positions.begin(), positions.end(),
+                [](const glm::vec3& l, const glm::vec3& r)
+                {
+                    return l.x < r.x;
+                });
+
+            auto [minY, maxY] = std::minmax_element(positions.begin(), positions.end(),
+                [](const glm::vec3& l, const glm::vec3& r)
+                {
+                    return l.y < r.y;
+                });
+
+            auto [minZ, maxZ] = std::minmax_element(positions.begin(), positions.end(),
+                [](const glm::vec3& l, const glm::vec3& r)
+                {
+                    return l.z < r.z;
+                });
+
+            cro::Box aabb(glm::vec3(minX->x, minY->y, minZ->z), glm::vec3(maxX->x, maxY->y, maxZ->z) + glm::vec3(0.001f));
+            dest.m_keyFrameBounds.push_back(aabb);
+        }
+        else
+        {
+            //re-centre existing bounds on position
+            auto boundingBox = dest.m_currentFrame[0] * source.boundingBox;
+            dest.m_keyFrameBounds.push_back(boundingBox);
+        }
+    }
+    else
+    {
+        dest.m_keyFrameBounds.push_back(source.boundingBox);
     }
 }

@@ -45,14 +45,9 @@ source distribution.
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
-//why do I have to hack this? there has to be a catch...
 #ifdef PLATFORM_DESKTOP
-#ifndef GL_PROGRAM_POINT_SIZE
-#define GL_PROGRAM_POINT_SIZE 34370
-#endif //GL_PROGRAM_POINT_SIZE
-#define GL_POINT_SPRITE 34913
-#define ENABLE_POINT_SPRITES  glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); glCheck(glEnable(GL_POINT_SPRITE))
-#define DISABLE_POINT_SPRITES glCheck(glDisable(GL_PROGRAM_POINT_SIZE)); glCheck(glDisable(GL_POINT_SPRITE))
+#define ENABLE_POINT_SPRITES glCheck(glEnable(GL_PROGRAM_POINT_SIZE));
+#define DISABLE_POINT_SPRITES glCheck(glDisable(GL_PROGRAM_POINT_SIZE));
 #else
 #define ENABLE_POINT_SPRITES
 #define DISABLE_POINT_SPRITES

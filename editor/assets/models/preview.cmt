@@ -12,6 +12,5 @@ model material_preview
         repeat = true
         blendmode = "none"
         skinned = true
-
     }
 }

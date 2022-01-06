@@ -722,10 +722,11 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
         SDL_RWseek(file.file, 0, RW_SEEK_SET);
         SDL_RWread(file.file, &header, sizeof(header), 1);
 
-        if (header.magic != cro::Detail::ModelBinary::MAGIC)
+        if (header.magic != cro::Detail::ModelBinary::MAGIC
+            && header.magic != cro::Detail::ModelBinary::MAGIC_V1)
         {
             LogE << "Invalid header found" << std::endl;
-            return {};
+            return false;
         }
 
         if (header.meshOffset)

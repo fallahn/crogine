@@ -343,7 +343,8 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
             else if (name == "skinned")
             {
                 //model uses skinning
-                if (p.getValue<bool>())
+                if (m_skeleton
+                    && p.getValue<bool>())
                 {
                     flags |= ShaderResource::Skinning;
                 }

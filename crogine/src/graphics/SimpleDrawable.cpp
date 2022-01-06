@@ -278,7 +278,8 @@ void SimpleDrawable::setTexture(const Texture& texture)
 
     //only replace the texture if  active shader is
     //colour shader (don't replace custom shaders)
-    if (m_uniforms.shaderID == colourShader->getGLHandle())
+    if (colourShader &&
+        m_uniforms.shaderID == colourShader->getGLHandle())
     {
         increaseTextureShader();
 

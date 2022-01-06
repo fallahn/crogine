@@ -35,6 +35,8 @@ source distribution.
 #include <crogine/detail/glm/mat4x4.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 
+#include <crogine/graphics/BoundingBox.hpp>
+
 #include <vector>
 #include <string>
 
@@ -43,6 +45,7 @@ namespace cro
     namespace Detail::ModelBinary
     {
         struct SkeletonHeader;
+        struct SkeletonHeaderV2;
         struct SerialAttachment;
     }
 
@@ -280,6 +283,31 @@ namespace cro
         */
         const std::vector<AttachmentPoint>& getAttachmentPoints() const { return m_attachmentPoints; }
 
+        /*
+        \brief Set the inverse bind pose for the skeleton.
+        \param invBindPose A std::vector of glm::mat4 which contain
+        the inverse bind pose (world to bone space) matrices.
+        Size must match the frame size. That is there must be
+        as many matrices as there are joints.
+        */
+        void setInverseBindPose(const std::vector<glm::mat4>& invBindPose) { m_invBindPose = invBindPose; }
+
+        /*!
+        \brief Returns a reference to the inverse bind pose
+        */
+        const std::vector<glm::mat4>& getInverseBindPose() const { return m_invBindPose; }
+
+        /*!
+        \brief Sets the root transform applied to a frame during interpolation.
+        Use this to rescale/orientate a model, fo example if importing a z-up model
+        */
+        void setRootTransform(const glm::mat4& transform);
+
+        /*!
+        \brief Gets the current root transform of the skeleton.
+        */
+        const glm::mat4& getRootTransform() const { return m_rootTransform; }
+
     private:
 
         float m_playbackRate;
@@ -298,6 +326,8 @@ namespace cro
         std::size_t m_frameCount;
         std::vector<Joint> m_frames; //indexed by steps of frameSize
         std::vector<glm::mat4> m_currentFrame; //current interpolated output
+        std::vector<glm::mat4> m_invBindPose;
+        glm::mat4 m_rootTransform = glm::mat4(1.f);
 
         std::vector<SkeletalAnim> m_animations;
 
@@ -305,7 +335,12 @@ namespace cro
 
         std::vector<AttachmentPoint> m_attachmentPoints;
 
+        std::vector<cro::Box> m_keyFrameBounds; //calc'd on joining the System for each key frame
+
         friend class SkeletalAnimator;
         friend struct Detail::ModelBinary::SkeletonHeader;
+        friend struct Detail::ModelBinary::SkeletonHeaderV2;
+
+        void buildKeyframe(std::size_t frame);
     };
 }

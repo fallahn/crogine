@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 #include <crogine/detail/glm/gtx/matrix_decompose.hpp>
 
+#include <crogine/util/Constants.hpp>
 #include <crogine/util/Matrix.hpp>
 
 #include <cstring>
@@ -49,6 +50,8 @@ namespace
     {
 #include "Iqm.inl"
     }
+
+    glm::mat4 rootTransform;
 }
 
 void loadVertexData(const Iqm::Header& header, char* data, const std::string& strings, cro::Mesh::Data& out);
@@ -61,6 +64,8 @@ IqmBuilder::IqmBuilder(const std::string& path)
 {
     std::hash<std::string> hashAttack;
     m_uid = hashAttack(path);
+
+    rootTransform = glm::toMat4(glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), -90.f * Util::Const::degToRad, glm::vec3(1.f, 0.f, 0.f)));
 }
 
 IqmBuilder::~IqmBuilder()
@@ -136,7 +141,7 @@ cro::Mesh::Data IqmBuilder::build() const
         std::memcpy(&strings[0], fileData.data() + header.textOffset, header.textCount);
 
         //check for vertex data
-        if (header.vertexCount > 0)
+        if (header.vertexCount != 0)
         {
             loadVertexData(header, fileData.data(), strings, returnData);
         }
@@ -144,7 +149,15 @@ cro::Mesh::Data IqmBuilder::build() const
         {
             Logger::log("No vertex data was found in " + m_path + ", this file may contain only animation data", Logger::Type::Warning);
         }
-        loadAnimationData(header, fileData.data(), strings, m_skeleton);
+
+        if (header.jointCount != 0)
+        {
+            loadAnimationData(header, fileData.data(), strings, m_skeleton);
+        }
+
+        //update the bounding box to match the rootTransform.
+        returnData.boundingSphere.centre = glm::vec3(rootTransform * glm::vec4(returnData.boundingSphere.centre, 1.f));
+        returnData.boundingBox = rootTransform * returnData.boundingBox;
     }
     else
     {
@@ -370,19 +383,21 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
     std::size_t blendWeightIndex = 0;
     std::size_t colourIndex = 0;
 
+    glm::mat4 yUpMatrix(1.f);
+    if (header.animCount == 0)
+    {
+        yUpMatrix = rootTransform;
+    }
+
     glm::vec3 boundsMin(std::numeric_limits<float>::max());
     glm::vec3 boundsMax(0.f);
     //NOTE these have to match attribute order of Mesh::Data
     for (auto i = 0u; i < header.vertexCount; ++i)
     {
-        if(!positions.empty())
+        if (!positions.empty())
         {
-            glm::vec3 position
-            (
-                positions[posIndex],
-                positions[posIndex+2],
-                -positions[posIndex+1]
-                );
+            glm::vec3 position = yUpMatrix * glm::vec4(positions[posIndex], positions[posIndex+1], positions[posIndex+2], 1.f);
+
             posIndex += Iqm::positionSize;
 
             vertexData.push_back(position.x);
@@ -403,14 +418,10 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
             vertexData.push_back(static_cast<float>(colours[colourIndex++]) / 255.f);
         }
 
-        //for (auto j = 0u; j < Iqm::normalSize && !normals.empty(); /*++j*/j += Iqm::normalSize)
-        if(!normals.empty())
+        if (!normals.empty())
         {
-            glm::vec3 normal(
-                normals[normalIndex],
-                normals[normalIndex+2],
-                -normals[normalIndex+1]
-                );
+            glm::vec3 normal = yUpMatrix * glm::vec4(normals[normalIndex], normals[normalIndex+1], normals[normalIndex+2], 1.f);
+
             normalIndex += Iqm::normalSize;
 
             vertexData.push_back(normal.x);
@@ -418,14 +429,9 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
             vertexData.push_back(normal.z);
         }
 
-        //for (auto j = 0u; j < Iqm::normalSize && !pureTangents.empty(); /*++j*/j += Iqm::normalSize)
-        if(!pureTangents.empty())
+        if (!pureTangents.empty())
         {
-            glm::vec3 tan(
-                pureTangents[tanIndex],
-                pureTangents[tanIndex + 2],
-                -pureTangents[tanIndex + 1]
-                );
+            glm::vec3 tan = yUpMatrix * glm::vec4(pureTangents[tanIndex], pureTangents[tanIndex+1], pureTangents[tanIndex+2], 1.f);
 
             tanIndex += Iqm::normalSize;
 
@@ -434,14 +440,9 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
             vertexData.push_back(tan.z);
         }
 
-        //for (auto j = 0u; j < Iqm::normalSize && !bitangents.empty(); /*++j*/j += Iqm::normalSize)
-        if(!bitangents.empty())
+        if (!bitangents.empty())
         {
-            glm::vec3 bitan(
-                bitangents[bitanIndex],
-                bitangents[bitanIndex+2],
-                -bitangents[bitanIndex+1]
-                );
+            glm::vec3 bitan = yUpMatrix * glm::vec4(bitangents[bitanIndex], bitangents[bitanIndex+1], bitangents[bitanIndex+2], 1.f);
 
             bitanIndex += Iqm::normalSize;
 
@@ -475,10 +476,12 @@ void loadVertexData(const Iqm::Header& header, char* data, const std::string& st
     }
     
 
-    //use bounds data from file if available
+    //use bounds data from file if available, else use the calculated
+    //bounds fro mthe vertex data. Note this only creates the mesh's
+    //AABB, the skin/animated AABBs are generated by the SkeletalAnimator
+    //at runtime, if any animations exist.
     if (header.boundsOffset > 0)
     {
-        //TODO this only supplies the bounds for the rest pose, not the keyframes
         Iqm::Bounds bounds;
         std::memcpy(&bounds, dataStart + header.boundsOffset, sizeof(Iqm::Bounds));
         out.boundingBox[0] = { bounds.bbmin[0], bounds.bbmin[1], bounds.bbmin[2] };
@@ -508,7 +511,6 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
 {
     //load joints into bind pose
     char* jointIter = data + header.jointOffset;
-    std::vector<glm::mat4> bindPose(header.jointCount);
     std::vector<glm::mat4> inverseBindPose(header.jointCount);
 
     //warn if bone count > 64 as this is the limit on mobile devices (or even lower!)
@@ -525,30 +527,31 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
         glm::quat rotation(1.f, 0.f, 0.f, 0.f);
         rotation.w = joint.rotate[3];
         rotation.x = joint.rotate[0];
-        rotation.y = joint.rotate[2];
-        rotation.z = -joint.rotate[1];
+        rotation.y = joint.rotate[1];
+        rotation.z = joint.rotate[2];
 
-        glm::vec3 translation(joint.translate[0], joint.translate[2], -joint.translate[1]);
-        glm::vec3 scale(joint.scale[0], joint.scale[2], joint.scale[1]);
+        glm::vec3 translation(joint.translate[0], joint.translate[1], joint.translate[2]);
+        glm::vec3 scale(joint.scale[0], joint.scale[1], joint.scale[2]);
 
-        bindPose[i] = Iqm::createBoneMatrix(rotation, translation, scale);
-        inverseBindPose[i] = glm::inverse(bindPose[i]);
+        inverseBindPose[i] = glm::inverse(Iqm::createBoneMatrix(rotation, translation, scale));
 
-        if (joint.parent >= 0)
+        if (joint.parent != -1)
         {
             //multiply by parent's transform
-            //bindPose[i] = bindPose[joint.parent] * bindPose[i];
-            bindPose[i] *= bindPose[joint.parent];
             inverseBindPose[i] *= inverseBindPose[joint.parent];
         }
     }
+    out.setInverseBindPose(inverseBindPose);
+
+    //corrects for y-up
+    out.setRootTransform(rootTransform);
 
     //load keyframes - a 'pose' is a single posed joint, and a set of poses makes up one frame equivalent to a posed skeleton
     if (header.frameCount > 0)
     {
         std::uint32_t frameSize = header.frameCount * header.jointCount;
         std::uint16_t* frameIter = (std::uint16_t*)(data + header.frameOffset);
-        if (bindPose.size() > 0)
+        if (inverseBindPose.size() > 0)
         {
             std::vector<Joint> tempFrame;
 
@@ -566,14 +569,13 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     glm::quat rotation(1.f, 0.f, 0.f, 0.f);
                     glm::vec3 translation(0.f);
                     glm::vec3 scale(1.f);
-                    float buns = 0.f;
 
                     translation.x = pose.channelOffset[0];
                     if (pose.mask & 0x01) translation.x += *frameIter++ * pose.channelScale[0];
-                    translation.y = pose.channelOffset[2];
-                    if (pose.mask & 0x02) translation.y += *frameIter++ * pose.channelScale[2];
-                    translation.z = -pose.channelOffset[1];
-                    if (pose.mask & 0x04) translation.z -= *frameIter++ * pose.channelScale[1];
+                    translation.y = pose.channelOffset[1];
+                    if (pose.mask & 0x02) translation.y += *frameIter++ * pose.channelScale[1];
+                    translation.z = pose.channelOffset[2];
+                    if (pose.mask & 0x04) translation.z += *frameIter++ * pose.channelScale[2];
 
                     rotation.x = pose.channelOffset[3];
                     if (pose.mask & 0x08) rotation.x += *frameIter++ * pose.channelScale[3];
@@ -583,16 +585,13 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
                     if (pose.mask & 0x20) rotation.z += *frameIter++ * pose.channelScale[5];
                     rotation.w = pose.channelOffset[6];
                     if (pose.mask & 0x40) rotation.w += *frameIter++ * pose.channelScale[6];
-                    float temp = rotation.y;
-                    rotation.y = rotation.z;
-                    rotation.z = -temp;
 
                     scale.x = pose.channelOffset[7];
                     if (pose.mask & 0x80) scale.x += *frameIter++ * pose.channelScale[7];
-                    scale.y = pose.channelOffset[9];
-                    if (pose.mask & 0x100) scale.y += *frameIter++ * pose.channelScale[9];
-                    scale.z = pose.channelOffset[8];
-                    if (pose.mask & 0x200) scale.z += *frameIter++ * pose.channelScale[8];
+                    scale.y = pose.channelOffset[8];
+                    if (pose.mask & 0x100) scale.y += *frameIter++ * pose.channelScale[8];
+                    scale.z = pose.channelOffset[9];
+                    if (pose.mask & 0x200) scale.z += *frameIter++ * pose.channelScale[9];
 
                     glm::mat4 mat = Iqm::createBoneMatrix(rotation, translation, scale);
                     tempFrame[poseIndex] = Joint(translation, rotation, scale);
@@ -602,32 +601,27 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
 
                 //each joint pose is stored in a temp frame. For the final output
                 //we walk the node tree multiplying each joint by its parent, creating
-                //a fully transformed keyframe. This means that the only work the
-                //animation system has to do is interpolation.
+                //a world matrix for every joint in the frame. TRS remains local for
+                //interpolation. (temp joint actually contains local matrix in worldMatrix field)
 
                 std::vector<cro::Joint> frame;
                 for (auto i = 0u; i < tempFrame.size(); ++i)
                 {
-                    const auto& tempJoint = tempFrame[i];
+                    auto& tempJoint = tempFrame[i];
 
                     auto result = tempJoint.worldMatrix;
                     auto currentParent = tempJoint.parent;
-                    auto finalScale = tempJoint.scale;
 
-                    while (currentParent > -1)
+                    while (currentParent != -1)
                     {
                         const auto& j = tempFrame[currentParent];
 
                         result = j.worldMatrix * result;
                         currentParent = j.parent;
-                        finalScale *= j.scale;
                     }
 
-                    auto& newJoint = frame.emplace_back();
-                    newJoint.parent = tempJoint.parent;
-                    newJoint.worldMatrix = result;
-
-                    cro::Util::Matrix::decompose(result * inverseBindPose[i], newJoint.translation, newJoint.rotation, newJoint.scale);
+                    auto& newJoint = frame.emplace_back(tempJoint);
+                    newJoint.worldMatrix = /*rootTransform * */result;
                 }
                 out.addFrame(frame);
             }
@@ -635,7 +629,7 @@ void loadAnimationData(const Iqm::Header& header, char* data, const std::string&
     }
     else
     {
-        std::vector<cro::Joint> frame(bindPose.size());
+        std::vector<cro::Joint> frame(inverseBindPose.size());
         out.addFrame(frame); //use an empty frame in case we haven't loaded any animations
     }
 

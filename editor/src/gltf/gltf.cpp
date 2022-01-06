@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -80,8 +80,7 @@ namespace
     //TODO this should be a member really
     std::vector<Anim> animations;
     bool convertVertexColourspace = true;
-
-    glm::mat4 rootTransform = glm::mat4(1.f);
+    float SampleRate = 15.f;
 }
 
 void ModelState::showGLTFBrowser()
@@ -105,6 +104,19 @@ void ModelState::showGLTFBrowser()
                 {
                     auto boxLabel = "Import Animation##" + IDString;
                     ImGui::Checkbox(boxLabel.c_str(), &importAnim);
+
+                    if (importAnim)
+                    {
+                        ImGui::PushItemWidth(100.f);
+                        if (ImGui::InputFloat("Resample Rate", &SampleRate, 1.f, 5.f, "%.1f"))
+                        {
+                            SampleRate = std::min(60.f, std::max(2.f, SampleRate));
+                        }
+                        ImGui::PopItemWidth();
+                        ImGui::SameLine();
+                        uiConst::showToolTip("Number of keyframes per second to resample the animation.\nLower values create smaller model files but may lose detail.\n15-20 is usually reasonable.");
+                    }
+                    ImGui::Separator();
                 }
                 else
                 {
@@ -112,7 +124,7 @@ void ModelState::showGLTFBrowser()
                 }
                 ImGui::Checkbox("Convert Vertex Colourspace", &convertVertexColourspace);
                 ImGui::SameLine();
-                uiConst::showToolTip("Converts incoming vertex colour data from sRGB to linear space.");
+                uiConst::showToolTip("Converts incoming vertex colour data from sRGB to linear space.\nUseful if you have data rather than colour information stored in the vertex colour channel");
 
                 auto buttonLabel = "Import##" + IDString;
                 if (ImGui::Button(buttonLabel.c_str()))
@@ -156,7 +168,6 @@ void ModelState::showGLTFBrowser()
 
 void ModelState::parseGLTFNode(std::int32_t idx, bool loadAnims)
 {
-    rootTransform = glm::mat4(1.f);
     auto success = importGLTF(idx, loadAnims);
 
     //load animations if selected
@@ -301,17 +312,16 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     }
 
     //read the inv bindpose
-    for (auto i = 0u; i < inverseBindPose.size(); ++i)
-    {
-        std::memcpy(&inverseBindPose[i], &buffer.data[index], sizeof(glm::mat4));
-        index += sizeof(glm::mat4);
-    }
+    std::memcpy(inverseBindPose.data(), buffer.data.data() + index, sizeof(glm::mat4) * inverseBindPose.size());
+    index += sizeof(glm::mat4) * inverseBindPose.size();
+
+    dest.setInverseBindPose(inverseBindPose);
 
     //copy the nodes as we'll modify the transforms for each key frame
     auto sceneNodes = m_GLTFScene.nodes;
 
     //functions to process a frame
-    auto getLocalMatrix = [](const tf::Node& node)
+    const auto getLocalJoint = [](const tf::Node& node)
     {
         glm::mat4 jointMat = glm::mat4(1.f);
         glm::vec3 translation(0.f);
@@ -337,49 +347,61 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
             scale.y = static_cast<float>(node.scale[1]);
             scale.z = static_cast<float>(node.scale[2]);
         }
-        jointMat = glm::translate(jointMat, translation);
-        jointMat *= glm::toMat4(rotation);
-        jointMat = glm::scale(jointMat, scale);
-        return jointMat;
+
+        cro::Joint j(translation, rotation, scale);
+        j.worldMatrix = cro::Joint::combine(j);
+
+        return j;
     };
     
-    auto getMatrix = [&](std::int32_t i)
+    const auto getWorldJoint = [&](std::int32_t i)
     {
-        const auto& joint = sceneNodes[i];
-        auto jointMat = getLocalMatrix(joint);
+        const auto& node = sceneNodes[i];
+        auto tempJoint = getLocalJoint(node);
+        tempJoint.parent = parents[i];
 
-        std::int32_t currentParent = parents[i];
-        while (currentParent > -1)
+        std::int32_t currentParent = tempJoint.parent;
+        while (currentParent != -1)
         {
-            jointMat = getLocalMatrix(sceneNodes[currentParent]) * jointMat;
+            auto j = getLocalJoint(sceneNodes[currentParent]);
+            tempJoint.worldMatrix = j.worldMatrix * tempJoint.worldMatrix;
             currentParent = parents[currentParent];
         }
-        return jointMat;
+
+        return tempJoint;
     };
 
-    std::function<void(std::int32_t)> createFrame =
-        [&](std::int32_t nodeIdx)
+    //if the mesh has a parent node, we want to apply its world
+    //transform to the joints, as it will get pruned from the tree
+    //when we move nodes into our frames
+    glm::mat4 parentTx(1.f);
+    if (parents[idx] != -1)
     {
-        //applying this undoes the scale/rot applied to the armature with
-        //blender and, in general, makes the model huge and lying on its back..
-        //however this will need to be applied if we're updating child nodes
-        //so that they take on their parent's transform correctly
-        /*auto inverseTx = glm::inverse(getMatrix(nodeIdx));*/
-        /*auto inverseTx = glm::inverse(rootTransform);*/
+        parentTx = getWorldJoint(parents[idx]).worldMatrix;
+    }
+    dest.setRootTransform(parentTx);
+
+    auto inverseParentTx = glm::inverse(parentTx);
+
+    auto createFrame = [&]()
+    {
         std::vector<cro::Joint> frame;
         for (auto i = 0u; i < inverseBindPose.size(); ++i)
         {
-            auto& joint = frame.emplace_back();
-            joint.worldMatrix = getMatrix(skin.joints[i]);
-            auto mat = /*inverseTx **/joint.worldMatrix * inverseBindPose[i];
-            cro::Util::Matrix::decompose(mat, joint.translation, joint.rotation, joint.scale);
+            auto& j = frame.emplace_back(getWorldJoint(skin.joints[i]));
 
+            //remove any root transform here so it's applied during animation
+            j.worldMatrix = inverseParentTx * j.worldMatrix;
 
-            //as the joints list is smaller than the overall nodes list we have
-            //to find the position the parent appears in the joints list.
-            if (auto result = std::find(skin.joints.begin(), skin.joints.end(), parents[skin.joints[i]]); result != skin.joints.end())
+            //skins are parented to a scene node, so we need to re-adjust
+            //the frame's nodes parent IDs to be local to the frame.
+            if (auto result = std::find(skin.joints.begin(), skin.joints.end(), parents[skin.joints[i]]); result == skin.joints.end())
             {
-                joint.parent = std::distance(skin.joints.begin(), result);
+                j.parent = -1;
+            }
+            else
+            {
+                j.parent = static_cast<std::int32_t>(std::distance(skin.joints.begin(), result));
             }
         }
         dest.addFrame(frame);
@@ -388,7 +410,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     //base frame
     if (animations.empty())
     {
-        createFrame(idx);
+        createFrame();
 
         //update the output so we have something to look at.
         cro::SkeletalAnim anim;
@@ -412,10 +434,10 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         //the main problem with this approach is that, especially
         //at low sample rates, we may miss the actual keyframes
         //stored in the file. Higher samples rates, however,
-        //cost significantly more memory.
+        //cost more memory.
 
-        static constexpr float SampleRate = 12.f;
-        static constexpr float FixedStep = 1.f / SampleRate;
+        //static constexpr float SampleRate = 20.f;
+        const float FixedStep = 1.f / SampleRate;
         skelAnim.frameRate = SampleRate;
 
         while(anim.currentTime < anim.end)
@@ -435,7 +457,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
                     if ((anim.currentTime >= sampler.inputs[i])
                         && (anim.currentTime <= sampler.inputs[i + 1]))
                     {
-                        //calculate and interpolated time and render results into
+                        //calculate an interpolated time and render results into
                         //node's transforms.
                         float t = (anim.currentTime - sampler.inputs[i]) / (sampler.inputs[i + 1] - sampler.inputs[i]);
 
@@ -474,7 +496,7 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
 
             if (addFrame)
             {
-                createFrame(idx);
+                createFrame();
                 skelAnim.frameCount++;
             }
             anim.currentTime += FixedStep;
@@ -491,8 +513,6 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
 bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
 {
     //traverse the node and acumulate any previous transforms in the tree
-    rootTransform = glm::rotate(rootTransform, 1.4f, glm::vec3(0.f, 0.f, 1.f));
-    rootTransform = glm::scale(rootTransform, glm::vec3(0.5f));
 
     //start with mesh. This contains a Primitive for each sub-mesh
     //which in turn contains the indices into the accessor array.
@@ -748,29 +768,6 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
         }
 
         CRO_ASSERT(!tempData[0].first.empty(), "Position data missing");
-
-        //apply the root transform to geometry
-        //this works for static meshes but I'll be buggered if I can
-        //figure out how to apply it to the skeleton.
-        /*auto normalMat = glm::inverseTranspose(glm::mat3(rootTransform));
-        auto& positions = tempData[cro::Mesh::Attribute::Position].first;
-        for (auto i = 0u; i < positions.size(); i += 3)
-        {
-            glm::vec3 pos = glm::make_vec3(&positions[i]);
-            glm::vec4 newPos = rootTransform * glm::vec4(pos, 1.f);
-            positions[i] = newPos.x;
-            positions[i+1] = newPos.y;
-            positions[i+2] = newPos.z;
-        }
-        auto& normals = tempData[cro::Mesh::Attribute::Normal].first;
-        for (auto i = 0u; i < normals.size(); i += 3)
-        {
-            glm::vec3 normal = glm::make_vec3(&normals[i]);
-            normal = normalMat * normal;
-            normals[i] = normal.x;
-            normals[i+1] = normal.y;
-            normals[i+2] = normal.z;
-        }*/
 
         auto vertexCount = tempData[0].first.size() / tempData[0].second;
         for (auto i = 0u; i < vertexCount; ++i)

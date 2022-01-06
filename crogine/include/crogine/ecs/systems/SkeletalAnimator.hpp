@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
+#include <crogine/graphics/MeshData.hpp>
 
 namespace cro
 {
@@ -48,5 +49,7 @@ namespace cro
         void onEntityAdded(Entity) override;
 
         void interpolate(std::size_t a, std::size_t b, float time, Skeleton& skelteton);
+
+        void updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::Data&);
     };
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -219,7 +219,7 @@ namespace
         static int selectedAnim = 0;
         selectedAnim = std::min(selectedAnim, static_cast<std::int32_t>(animations.size() - 1));
         ImGui::SetNextItemWidth(WindowLayouts[WindowID::Inspector].second.x * 0.92f);
-        if (ImGui::ListBox("##43345", &selectedAnim, items.data(), items.size(), 4))
+        if (ImGui::ListBox("##43345", &selectedAnim, items.data(), static_cast<std::int32_t>(items.size()), 4))
         {
             //play new anim if playing
             if (animations[skel.getCurrentAnimation()].playbackRate != 0)
@@ -446,10 +446,6 @@ void ModelState::buildUI()
                 //view menu
                 if (ImGui::BeginMenu("View"))
                 {
-                    if (ImGui::MenuItem("Options", nullptr, nullptr))
-                    {
-                        m_showPreferences = true;
-                    }
                     if (ImGui::MenuItem("Choose Skybox", nullptr, nullptr))
                     {
                         auto lastPath = m_sharedData.skymapTexture.empty() ? m_sharedData.workingDirectory + "/untitled.hdr" : m_sharedData.skymapTexture;
@@ -513,6 +509,10 @@ void ModelState::buildUI()
                 //tools menu
                 if (ImGui::BeginMenu("Tools"))
                 {
+                    if (ImGui::MenuItem("Options", nullptr, nullptr))
+                    {
+                        m_showPreferences = true;
+                    }
                     if (ImGui::MenuItem("AO Baker", nullptr, &m_showBakingWindow, m_entities[EntityID::ActiveModel].isValid() && m_importedVBO.empty()))
                     {
 
@@ -783,40 +783,39 @@ void ModelState::drawInspector()
                     {
                         drawAnimationData(m_entities);
                     }
-                    else //don't really want to do this but I can't work out how to apply the transform to the skeleton :3
+
+                    ImGui::NewLine();
+                    ImGui::Text("Transform"); ImGui::SameLine(); helpMarker("Double Click to change Values");
+                    if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], 1.f, -180.f, 180.f))
                     {
-                        ImGui::NewLine();
-                        ImGui::Text("Transform"); ImGui::SameLine(); helpMarker("Double Click to change Values");
-                        if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], 1.f, -180.f, 180.f))
-                        {
-                            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, m_importedTransform.rotation.z * cro::Util::Const::degToRad);
-                            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, m_importedTransform.rotation.y * cro::Util::Const::degToRad);
-                            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, m_importedTransform.rotation.x * cro::Util::Const::degToRad);
-                        }
-                        if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.01f, 0.1f, 10.f))
-                        {
-                            //scale needs to be uniform, else we'd have to recalc all the normal data
-                            m_importedTransform.scale = std::min(10.f, std::max(0.1f, m_importedTransform.scale));
-                            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
-                        }
-                        ImGui::Text("Quick Scale:"); ImGui::SameLine();
-                        if (ImGui::Button("0.5"))
-                        {
-                            m_importedTransform.scale = std::max(0.1f, m_importedTransform.scale / 2.f);
-                            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
-                        }ImGui::SameLine();
-                        if (ImGui::Button("2.0"))
-                        {
-                            m_importedTransform.scale = std::min(10.f, m_importedTransform.scale * 2.f);
-                            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
-                        }
-                        if (ImGui::Button("Apply Transform"))
-                        {
-                            applyImportTransform();
-                        }
-                        ImGui::SameLine();
-                        helpMarker("Applies this transform directly to the vertex data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.\nTIP: if a model doesn't scale enough in either direction try applying the current scale first before rescaling");
+                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, m_importedTransform.rotation.z * cro::Util::Const::degToRad);
+                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, m_importedTransform.rotation.y * cro::Util::Const::degToRad);
+                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, m_importedTransform.rotation.x * cro::Util::Const::degToRad);
                     }
+                    if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.01f, 0.1f, 10.f))
+                    {
+                        //scale needs to be uniform, else we'd have to recalc all the normal data
+                        m_importedTransform.scale = std::min(10.f, std::max(0.1f, m_importedTransform.scale));
+                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+                    }
+                    ImGui::Text("Quick Scale:"); ImGui::SameLine();
+                    if (ImGui::Button("0.5"))
+                    {
+                        m_importedTransform.scale = std::max(0.1f, m_importedTransform.scale / 2.f);
+                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+                    }ImGui::SameLine();
+                    if (ImGui::Button("2.0"))
+                    {
+                        m_importedTransform.scale = std::min(10.f, m_importedTransform.scale * 2.f);
+                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+                    }
+                    if (ImGui::Button("Apply Transform"))
+                    {
+                        applyImportTransform();
+                    }
+                    ImGui::SameLine();
+                    helpMarker("Applies this transform directly to the model data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.\nTIP: if a model doesn't scale enough in either direction try applying the current scale first before rescaling");
+
                     ImGui::NewLine();
                     static bool modelOnly = false;
                     ImGui::Checkbox("Export Model Only", &modelOnly);
@@ -2041,9 +2040,9 @@ void ModelState::drawImageCombiner()
                     cro::Image output;
                     output.create(lastSize.x, lastSize.y, cro::Colour::Black);
 
-                    for (auto y = 0; y < lastSize.y; ++y)
+                    for (auto y = 0u; y < lastSize.y; ++y)
                     {
-                        for (auto x = 0; x < lastSize.x; ++x)
+                        for (auto x = 0u; x < lastSize.x; ++x)
                         {
                             auto red = m_combinedImages[0].second.getPixel(x, y);
                             auto green = m_combinedImages[1].second.getPixel(x, y);
