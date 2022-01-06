@@ -446,10 +446,6 @@ void ModelState::buildUI()
                 //view menu
                 if (ImGui::BeginMenu("View"))
                 {
-                    if (ImGui::MenuItem("Options", nullptr, nullptr))
-                    {
-                        m_showPreferences = true;
-                    }
                     if (ImGui::MenuItem("Choose Skybox", nullptr, nullptr))
                     {
                         auto lastPath = m_sharedData.skymapTexture.empty() ? m_sharedData.workingDirectory + "/untitled.hdr" : m_sharedData.skymapTexture;
@@ -513,6 +509,10 @@ void ModelState::buildUI()
                 //tools menu
                 if (ImGui::BeginMenu("Tools"))
                 {
+                    if (ImGui::MenuItem("Options", nullptr, nullptr))
+                    {
+                        m_showPreferences = true;
+                    }
                     if (ImGui::MenuItem("AO Baker", nullptr, &m_showBakingWindow, m_entities[EntityID::ActiveModel].isValid() && m_importedVBO.empty()))
                     {
 
