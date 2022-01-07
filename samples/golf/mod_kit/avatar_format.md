@@ -18,6 +18,6 @@ Once the resources have been created an avatar definition file needs to be added
        uid = 10 //see below
     }
 
-The file must be saved with an `*.avt` extension for VGA Golf to find it. Each avatar file requires a unique ID associated with it - this is used to syncronise avatars across network games. The number should be between 0 and 255, and not have the same value as another avatar in the the current directory. If an exisiting UID is already loaded then the avatar file will be skipped when VGA Golf loads, printing a message to the console warning which uid was duplicated.
+The file must be saved with an `*.avt` extension for VGA Golf to find it. Each avatar file requires a unique ID associated with it - this is used to synchronise avatars across network games. The number should be between 0 and 255, and not have the same value as another avatar in the the current directory. If an exisiting UID is already loaded then the avatar file will be skipped when VGA Golf loads, printing a message to the console warning which uid was duplicated.
 
 To use an avatar in multiple clients each `*.avt`, sprite sheet, sprite image and optional audioscape must be copied to all player's assets directory.

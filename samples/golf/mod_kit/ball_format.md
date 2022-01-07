@@ -12,4 +12,4 @@ Then create a ball definition and place it in the balls directory with the exten
         tint = 0.23, 0.44, 0.288, 1 //this is the tint colour of the ball as it is seen from a distance. Omitting this will use a white colour.
     }
 
-Ball models are syncronised across network games via their UIDs. If a ball has no matching UID on a client, then the default ball model is loaded. You must share your ball definition and model files with all clients should you want other players to be able to see them.
+Ball models are synchronised across network games via their UIDs. If a ball has no matching UID on a client, then the default ball model is loaded. You must share your ball definition and model files with all clients should you want other players to be able to see them.

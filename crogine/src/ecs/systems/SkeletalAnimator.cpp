@@ -244,6 +244,20 @@ void SkeletalAnimator::updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::
                 });
 
             cro::Box aabb(glm::vec3(minX->x, minY->y, minZ->z), glm::vec3(maxX->x, maxY->y, maxZ->z) + glm::vec3(0.001f));
+
+            //check the ratios of the boxes - if there are few bones or all
+            //bones are aligned on a plane then the box probably isn't covering
+            //the model very well
+            auto defaultVolume = source.boundingBox.getVolume();
+            auto newVolume = aabb.getVolume();
+            if (auto ratio = newVolume / defaultVolume; ratio < 0.1f)
+            {
+                //new volume is considerably smaller
+                //best fit is default bounds, although this might be very different
+                //if the skeleton is creating a lot of deformation
+                aabb = dest.m_rootTransform * source.boundingBox;
+            }
+
             dest.m_keyFrameBounds.push_back(aabb);
         }
         else

@@ -99,6 +99,8 @@ namespace cro
 
         float getPerimeter() const;
 
+        float getVolume() const;
+
         /*!
         \brief Adds the given position to the box
         */
