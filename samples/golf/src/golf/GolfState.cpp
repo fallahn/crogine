@@ -193,6 +193,18 @@ bool GolfState::handleEvent(const cro::Event& evt)
         return true;
     }
 
+    const auto rescaleBuffer = [&](float oldVal)
+    {
+        if (oldVal != m_sharedData.pixelScale)
+        {
+            //raise a window resize message to trigger callbacks
+            auto size = cro::App::getWindow().getSize();
+            auto* msg = getContext().appInstance.getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+            msg->data0 = size.x;
+            msg->data1 = size.y;
+            msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+        }
+    };
 
     const auto scrollScores = [&](std::int32_t step)
     {
@@ -211,6 +223,20 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
+        case SDLK_KP_PLUS:
+        {
+            auto oldVal = m_sharedData.pixelScale;
+            m_sharedData.pixelScale = std::min(MaxPixelScale, oldVal + 1.f);
+            rescaleBuffer(oldVal);
+        }
+        break;
+        case SDLK_KP_MINUS:
+        {
+            auto oldVal = m_sharedData.pixelScale;
+            m_sharedData.pixelScale = std::max(MinPixelScale, oldVal - 1.f);
+            rescaleBuffer(oldVal);
+        }
+        break;
         case SDLK_TAB:
             showScoreboard(false);
             break;
@@ -760,12 +786,6 @@ void GolfState::render()
 
     cam.viewport = { 0.f,0.f,1.f,1.f };
 
-    //cam.setActivePass(cro::Camera::Pass::Refraction);
-    //cam.renderFlags = RenderFlags::Refraction;
-    //cam.refractionBuffer.clear(cro::Colour::White);
-    //m_gameScene.render(cam.refractionBuffer);
-    //cam.refractionBuffer.display();
-
     cam.setActivePass(cro::Camera::Pass::Reflection);
     cam.renderFlags = RenderFlags::Reflection;
     cam.reflectionBuffer.clear(cro::Colour::Red);
@@ -778,7 +798,7 @@ void GolfState::render()
     cam.viewport = oldVP;
 
     //then render scene
-    glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for... snow maybe?
+    //glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for... snow maybe?
     m_gameSceneTexture.clear();
     m_gameScene.render();
 #ifdef CRO_DEBUG_
@@ -943,7 +963,7 @@ void GolfState::loadAssets()
 
     //ball resources - ball is rendered as a single point
     //at a distance, and as a model when closer
-    glCheck(glPointSize(BallPointSize));
+    //glCheck(glPointSize(BallPointSize)); - this is set in resize callback based on the buffer resolution/pixel scale
 
     m_ballResources.materialID = m_materialIDs[MaterialID::WireFrameCulled];
     m_ballResources.ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
@@ -1644,20 +1664,14 @@ void GolfState::buildScene()
         auto vpSize = calcVPSize();
 
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float scale = std::floor(winSize.y / vpSize.y);
-        auto texSize = vpSize;
-        if (texSize.x * scale <= winSize.x)
-        {
-            //for odd res like 720x480 expand out to the sides
-            texSize *= 1.6f;
-        }
-
+        float scale = std::min(std::floor(winSize.y / vpSize.y), m_sharedData.pixelScale);
+        auto texSize = winSize / scale;
         m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
+        glCheck(glPointSize((InversePixelScale - scale) * BallPointSize));
+        glCheck(glLineWidth(InversePixelScale - scale));
 
-        //the resize actually extends the target vertically so we need to maintain a
-        //horizontal FOV, not the vertical one expected by default.
-        cam.setPerspective(FOV * (texSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, /*vpSize.x*/static_cast<float>(MapSize.x) * 1.5f);
+        cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         //because we don't know in which order the cam callbacks are raised
@@ -1692,11 +1706,9 @@ void GolfState::buildScene()
     //create an overhead camera
     auto setPerspective = [](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize();
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
 
-        //the resize actually extends the target vertically so we need to maintain a
-        //horizontal FOV, not the vertical one expected by default.
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(FOV, vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
@@ -1704,8 +1716,8 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = 
         [camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
-        auto vpSize = calcVPSize();
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
+        cam.setPerspective(FOV * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
@@ -1727,8 +1739,8 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [camEnt](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize();
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
+        cam.setPerspective(FOV * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
@@ -1761,8 +1773,8 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [camEnt](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize();
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
+        cam.setPerspective(FOV, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);

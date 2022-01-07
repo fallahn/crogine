@@ -171,6 +171,8 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
 {
     auto& skeleton = entity.getComponent<Skeleton>();
 
+    //TODO reject this if it has no animations (or atleast prevent div0)
+
     entity.getComponent<Model>().setSkeleton(&skeleton.m_currentFrame[0], skeleton.m_frameSize);
     skeleton.m_frameTime = 1.f / skeleton.m_animations[0].frameRate;
 

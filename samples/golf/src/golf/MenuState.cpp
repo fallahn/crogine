@@ -354,14 +354,14 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_KP_PLUS:
         {
             auto oldVal = m_sharedData.pixelScale;
-            m_sharedData.pixelScale = std::min(3.f, oldVal + 1.f);
+            m_sharedData.pixelScale = std::min(MaxPixelScale, oldVal + 1.f);
             rescaleBuffer(oldVal);
         }
         break;
         case SDLK_KP_MINUS:
         {
             auto oldVal = m_sharedData.pixelScale;
-            m_sharedData.pixelScale = std::max(1.f, oldVal - 1.f);
+            m_sharedData.pixelScale = std::max(MinPixelScale, oldVal - 1.f);
             rescaleBuffer(oldVal);
         }
         break;

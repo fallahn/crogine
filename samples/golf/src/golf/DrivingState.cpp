@@ -233,14 +233,14 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_KP_PLUS:
         {
             auto oldVal = m_sharedData.pixelScale;
-            m_sharedData.pixelScale = std::min(3.f, oldVal + 1.f);
+            m_sharedData.pixelScale = std::min(MaxPixelScale, oldVal + 1.f);
             rescaleBuffer(oldVal);
         }
             break;
         case SDLK_KP_MINUS:
         {
             auto oldVal = m_sharedData.pixelScale;
-            m_sharedData.pixelScale = std::max(1.f, oldVal - 1.f);
+            m_sharedData.pixelScale = std::max(MinPixelScale, oldVal - 1.f);
             rescaleBuffer(oldVal);
         }
             break;
@@ -1034,6 +1034,9 @@ void DrivingState::createScene()
         auto texSize = winSize / scale;
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
+        glCheck(glPointSize((InversePixelScale - scale) * BallPointSize));
+        glCheck(glLineWidth(InversePixelScale - scale));
+
         cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
@@ -1577,7 +1580,7 @@ void DrivingState::createBall()
 {
     //ball is rendered as a single point
     //at a distance, and as a model when closer
-    glCheck(glPointSize(BallPointSize));
+    //glCheck(glPointSize(BallPointSize)); - this is set in resize callback based on the buffer resolution/pixel scale
 
     auto ballMaterialID = m_materialIDs[MaterialID::WireframeCulled];
     auto ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));

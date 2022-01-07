@@ -698,8 +698,10 @@ void GolfState::buildUI()
         m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
         auto texSize = glm::vec2(m_gameSceneTexture.getSize());
 
+        glm::vec2 courseScale(std::min(m_sharedData.pixelScale, m_viewScale.x));
+
         courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -0.1f));
-        courseEnt.getComponent<cro::Transform>().setScale(m_viewScale);
+        courseEnt.getComponent<cro::Transform>().setScale(courseScale);
         courseEnt.getComponent<cro::Callback>().active = true; //makes sure to delay so updating the texture size is complete first
 
 

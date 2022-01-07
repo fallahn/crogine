@@ -7,11 +7,12 @@ model player_zero
     {
         mask_colour = 1.000000,0.000000,0.000000,1.000000
         name = "Untitled"
-        colour = 0.750881,0.758764,0.831858,1.000000
+        colour = 1.000000,0.999990,1.000000,1.000000
         smooth = true
         repeat = true
         depth_test = true
         double_sided = false
+        vertex_coloured = true
         blendmode = none
         skinned = true
 

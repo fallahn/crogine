@@ -2,5 +2,5 @@ ball
 {
     model = "assets/golf/models/ball_wings.cmt"
     uid = 9
-    tint = 0.447,0.125,0.188
+    tint = 0.447,0.125,0.188,1.0
 }
