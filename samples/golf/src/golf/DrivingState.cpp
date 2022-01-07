@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -201,6 +201,19 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         return true;
     }
 
+    const auto rescaleBuffer = [&](float oldVal)
+    {
+        if (oldVal != m_sharedData.pixelScale)
+        {
+            //raise a window resize message to trigger callbacks
+            auto size = cro::App::getWindow().getSize();
+            auto* msg = getContext().appInstance.getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+            msg->data0 = size.x;
+            msg->data1 = size.y;
+            msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+        }
+    };
+
     if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
@@ -212,10 +225,24 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_PAUSE:
             requestStackPush(StateID::Pause);
             break;
-            //make sure sysem buttons don't do anything
+            //make sure system buttons don't do anything
         case SDLK_F1:
         case SDLK_F5:
 
+            break;
+        case SDLK_KP_PLUS:
+        {
+            auto oldVal = m_sharedData.pixelScale;
+            m_sharedData.pixelScale = std::min(3.f, oldVal + 1.f);
+            rescaleBuffer(oldVal);
+        }
+            break;
+        case SDLK_KP_MINUS:
+        {
+            auto oldVal = m_sharedData.pixelScale;
+            m_sharedData.pixelScale = std::max(1.f, oldVal - 1.f);
+            rescaleBuffer(oldVal);
+        }
             break;
 #ifdef CRO_DEBUG_
         case SDLK_HOME:
@@ -1003,19 +1030,11 @@ void DrivingState::createScene()
         auto vpSize = calcVPSize();
 
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float scale = std::floor(winSize.y / vpSize.y);
-        auto texSize = vpSize;
-        if (texSize.x * scale <= winSize.x)
-        {
-            //for odd res like 720x480 expand out to the sides
-            texSize *= 1.6f;
-        }
-
+        float scale = std::min(std::floor(winSize.y / vpSize.y), m_sharedData.pixelScale);
+        auto texSize = winSize / scale;
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
-        //the resize actually extends the target vertically so we need to maintain a
-        //horizontal FOV, not the vertical one expected by default.
-        cam.setPerspective(FOV * (texSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         //because we don't know in which order the cam callbacks are raised
@@ -1127,11 +1146,9 @@ void DrivingState::createScene()
     //create an overhead camera
     auto setPerspective = [](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize();
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
 
-        //the resize actually extends the target vertically so we need to maintain a
-        //horizontal FOV, not the vertical one expected by default.
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(FOV, vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
@@ -1139,8 +1156,8 @@ void DrivingState::createScene()
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
-        auto vpSize = calcVPSize();
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
+        cam.setPerspective(FOV * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().active = false;
@@ -1160,8 +1177,8 @@ void DrivingState::createScene()
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [camEnt](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize();
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
+        cam.setPerspective(FOV * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().active = false;
@@ -1548,6 +1565,12 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
     entity.getComponent<cro::Model>().setHidden(true);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+
+
+    md.loadFromFile("assets/golf/models/player_zero.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
+    md.createModel(entity);
 }
 
 void DrivingState::createBall()

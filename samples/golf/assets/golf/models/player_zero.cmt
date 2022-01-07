@@ -1,0 +1,19 @@
+model player_zero
+{
+    mesh = assets/golf/models/player_zero.cmb
+    cast_shadows = false
+
+    material VertexLit
+    {
+        mask_colour = 1.000000,0.000000,0.000000,1.000000
+        name = "Untitled"
+        colour = 0.750881,0.758764,0.831858,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+        skinned = true
+
+    }
+}

@@ -47,6 +47,15 @@ find_package(OpenGL REQUIRED)
 #TODO specify version 2.83
 find_package(Bullet REQUIRED)
 
+if(NOT CROGINE_FOUND)
+  #build it from source
+  add_subdirectory(../../crogine)
+
+  #SET (CROGINE_INCLUDE_DIR ../../crogine/include)
+  #SET (CROGINE_LIBRARIES TODO set lib output dir)
+
+endif()
+
 include_directories(
   ${CROGINE_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}

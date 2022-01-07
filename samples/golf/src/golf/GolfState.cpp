@@ -1790,7 +1790,20 @@ void GolfState::buildScene()
 
 #ifdef CRO_DEBUG_
     //createWeather();
-#endif 
+#endif
+
+
+    md.loadFromFile("assets/golf/models/player_zero.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    md.createModel(entity);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setPosition(m_currentPlayer.position);
+        e.getComponent<cro::Transform>().setRotation(glm::inverse(glm::lookAt(m_currentPlayer.position, m_holeData[m_currentHole].pin, cro::Transform::Y_AXIS)));
+    };
 }
 
 void GolfState::initAudio()

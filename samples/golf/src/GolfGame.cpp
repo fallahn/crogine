@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -576,6 +576,10 @@ void GolfGame::loadPreferences()
                         m_sharedData.targetIP = "255.255.255.255";
                     }
                 }
+                else if (name == "pixel_scale")
+                {
+                    m_sharedData.pixelScale = std::min(3.f, std::max(1.f, prop.getValue<float>()));
+                }
             }
         }
     }
@@ -612,6 +616,7 @@ void GolfGame::savePreferences()
         cfg.addProperty("custom_shader").setValue(m_sharedData.customShaderPath);
     }
     cfg.addProperty("last_ip").setValue(m_sharedData.targetIP.toAnsiString());
+    cfg.addProperty("pixel_scale").setValue(m_sharedData.pixelScale);
     cfg.save(path);
 
 

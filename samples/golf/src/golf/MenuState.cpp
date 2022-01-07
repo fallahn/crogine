@@ -296,6 +296,19 @@ bool MenuState::handleEvent(const cro::Event& evt)
         return true;
     }
 
+    const auto rescaleBuffer = [&](float oldVal)
+    {
+        if (oldVal != m_sharedData.pixelScale)
+        {
+            //raise a window resize message to trigger callbacks
+            auto size = cro::App::getWindow().getSize();
+            auto* msg = getContext().appInstance.getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+            msg->data0 = size.x;
+            msg->data1 = size.y;
+            msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+        }
+    };
+
     if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
@@ -338,6 +351,20 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 applyTextEdit();
             }
             break;
+        case SDLK_KP_PLUS:
+        {
+            auto oldVal = m_sharedData.pixelScale;
+            m_sharedData.pixelScale = std::min(3.f, oldVal + 1.f);
+            rescaleBuffer(oldVal);
+        }
+        break;
+        case SDLK_KP_MINUS:
+        {
+            auto oldVal = m_sharedData.pixelScale;
+            m_sharedData.pixelScale = std::max(1.f, oldVal - 1.f);
+            rescaleBuffer(oldVal);
+        }
+        break;
         }
     }
     else if (evt.type == SDL_KEYDOWN)
@@ -622,18 +649,12 @@ void MenuState::createScene()
         auto vpSize = calcVPSize();
 
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float scale = std::floor(winSize.y / vpSize.y);
-        auto texSize = vpSize;
-        if (texSize.x * scale <= winSize.x)
-        {
-            texSize *= 1.6f;
-        }
+        float scale = std::min(std::floor(winSize.y / vpSize.y), m_sharedData.pixelScale);
+        auto texSize = winSize / scale;
 
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
-        //the resize actually extends the target vertically so we need to maintain a
-        //horizontal FOV, not the vertical one expected by default.
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -642,10 +663,9 @@ void MenuState::createScene()
     cam.resizeCallback = updateView;
     updateView(cam);
 
-    //camEnt.getComponent<cro::Transform>().setPosition(CameraBasePosition);
-    camEnt.getComponent<cro::Transform>().setPosition({ -17.8273, 4.9, 25.0144 });
-    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -34.f * cro::Util::Const::degToRad);
-    //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -0.84f * cro::Util::Const::degToRad);
+    //camEnt.getComponent<cro::Transform>().setPosition({ -17.8273, 4.9, 25.0144 });
+    camEnt.getComponent<cro::Transform>().setPosition({ -18.3, 4.9, 23.3144 });
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -31.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
 
     //add the ambience to the cam cos why not
