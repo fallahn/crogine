@@ -54,6 +54,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Easings.hpp>
 #include <crogine/core/GameController.hpp>
@@ -113,10 +114,10 @@ bool TutorialState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default:
-            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+            /*if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
             {
                 doCurrentAction();
-            }
+            }*/
             break;
         case SDLK_p:
         case SDLK_ESCAPE:
@@ -134,6 +135,13 @@ bool TutorialState::handleEvent(const cro::Event& evt)
             quitState();
             break;
 #endif
+        }
+    }
+    else if (evt.type == SDL_KEYDOWN)
+    {
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        {
+            doCurrentAction();
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -214,6 +222,11 @@ void TutorialState::buildScene()
     m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
+    m_scene.addSystem<cro::AudioPlayerSystem>(mb);
+
+
+    m_audioScape.loadFromFile("assets/golf/sound/tutorial.xas", m_sharedData.sharedResources->audio);
+
 
     //used to animate the slope line
     auto& shader = m_sharedData.sharedResources->shaders.get(ShaderID::TutorialSlope);
@@ -286,9 +299,6 @@ void TutorialState::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_backgroundEnt = entity;
 
-
-
-
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -302,7 +312,7 @@ void TutorialState::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_messageEnt = entity;
 
-
+    playSound("wipe");
 
     cro::String str;
     if (cro::GameController::getControllerCount() != 0)
@@ -637,10 +647,17 @@ void TutorialState::tutorialOne(cro::Entity root)
             case 0:
             {
                 //move in
+                auto oldTime = currTime;
                 currTime = std::min(1.f, currTime + (dt * 2.f));
 
                 auto position = cro::Util::Easing::easeOutBounce(currTime);
                 e.getComponent<cro::Transform>().setPosition({ size.x / 2.f, size.y - ((size.y / 2.f) * position) });
+
+                static constexpr float TriggerTime = 0.1f;
+                if (oldTime < TriggerTime && currTime >= TriggerTime)
+                {
+                    playSound("appear");
+                }
 
                 if (currTime == 1)
                 {
@@ -884,7 +901,6 @@ void TutorialState::tutorialTwo(cro::Entity root)
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto icon = entity;
 
-
     //wind indicator arrow
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -917,6 +933,8 @@ void TutorialState::tutorialTwo(cro::Entity root)
                 e.getComponent<cro::Callback>().active = false;
                 text01.getComponent<cro::Callback>().active = true;
                 icon.getComponent<cro::Callback>().active = true;
+
+                playSound("appear");
             }
         }
     };
@@ -1706,7 +1724,28 @@ void TutorialState::doCurrentAction()
         m_actionActive = false;
         m_actionCallbacks[m_currentAction]();
         m_currentAction++;
+
+        //play button sound
+        playSound("accept");
     }
+}
+
+void TutorialState::playSound(const std::string& sound)
+{
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::AudioEmitter>() = m_audioScape.getEmitter(sound);
+    entity.getComponent<cro::AudioEmitter>().play();
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_scene.destroyEntity(e);
+        }
+    };
 }
 
 void TutorialState::quitState()

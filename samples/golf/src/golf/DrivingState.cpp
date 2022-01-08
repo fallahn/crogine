@@ -1044,11 +1044,12 @@ void DrivingState::createScene()
         //we need to send the player repos command from here when we know the view is correct
         cro::Command cmd;
         cmd.targetFlags = CommandID::UI::PlayerSprite;
-        cmd.action = [&](cro::Entity e, float)
+        cmd.action = [&,scale](cro::Entity e, float)
         {
             const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
             auto pos = camera.coordsToPixel(PlayerPosition, m_backgroundTexture.getSize());
             e.getComponent<cro::Transform>().setPosition(pos);
+            //e.getComponent<cro::Transform>().setScale(glm::vec2(InversePixelScale - scale)); //this works but remember the animation is based on scale.
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
