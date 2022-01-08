@@ -149,20 +149,10 @@ glm::mat4 Skeleton::getAttachmentPoint(std::int32_t id) const
 {
     CRO_ASSERT(id > -1 && id < m_attachmentPoints.size(), "");
 
-    const auto& currentAnim = m_animations[m_currentAnimation];
-    auto nextFrame = ((currentAnim.currentFrame - currentAnim.startFrame) + 1) % currentAnim.frameCount;
-    nextFrame += currentAnim.startFrame;
-
-    auto frameOffsetA = m_frameSize * currentAnim.currentFrame;
-    auto frameOffsetB = m_frameSize * nextFrame;
-
+    //TODO do attachment points really need a local transform?
+    //TODO do we want to cache the bind pose so we don't need the inverse?
     const auto& ap = m_attachmentPoints[id];
-
-    const auto& jointA = m_frames[frameOffsetA + ap.m_parent];
-    const auto& jointB = m_frames[frameOffsetB + ap.m_parent];
-
-    //TODO replace this with correct per-component interpolation
-    return glm::interpolate(jointA.worldMatrix, jointB.worldMatrix, m_currentFrameTime / m_frameTime) * ap.m_transform;
+    return m_currentFrame[ap.m_parent] * glm::inverse(m_invBindPose[ap.m_parent]) * ap.getLocalTransform();
 }
 
 void Skeleton::setRootTransform(const glm::mat4& transform)

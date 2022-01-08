@@ -410,11 +410,14 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
     //base frame
     if (animations.empty())
     {
+        //animations need at least 2 frames
+        createFrame();
         createFrame();
 
         //update the output so we have something to look at.
         cro::SkeletalAnim anim;
-        anim.frameCount = 1;
+        anim.frameCount = 2;
+        anim.name = "Default";
         dest.addAnimation(anim); //empty 1 frame anim
     }
     
@@ -505,6 +508,13 @@ void ModelState::parseGLTFSkin(std::int32_t idx, cro::Skeleton& dest)
         skelAnim.looped = true; //glTF doesn't have this property... 
         //TODO use the extras property to tag message triggers, looping etc?
         //or shall we make this part of the editor?
+
+        //we won't get anything if the animation contains only one frame
+        if (skelAnim.frameCount == 0)
+        {
+            createFrame();
+            skelAnim.frameCount++;
+        }
 
         dest.addAnimation(skelAnim);
     }
