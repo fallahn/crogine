@@ -481,7 +481,7 @@ bool DrivingState::simulate(float dt)
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 
-    //auto hide the mouse
+    //auto hide the mouse if not paused
     if (m_mouseVisible
         && getStateCount() == 1)
     {

@@ -222,10 +222,10 @@ namespace
         if (ImGui::ListBox("##43345", &selectedAnim, items.data(), static_cast<std::int32_t>(items.size()), 4))
         {
             //play new anim if playing
-            if (animations[skel.getCurrentAnimation()].playbackRate != 0)
+            auto rate = animations[skel.getCurrentAnimation()].playbackRate;
             {
                 skel.stop();
-                skel.play(selectedAnim);
+                skel.play(selectedAnim, rate);
             }
         }
         auto& anim = animations[selectedAnim];

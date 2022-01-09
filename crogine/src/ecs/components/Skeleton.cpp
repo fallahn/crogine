@@ -50,7 +50,7 @@ Skeleton::Skeleton()
 void Skeleton::play(std::size_t idx, float rate, float blendingTime)
 {
     CRO_ASSERT(idx < m_animations.size(), "Index out of range");
-    CRO_ASSERT(rate > 0, "");
+    CRO_ASSERT(rate >= 0, "");
     m_playbackRate = rate;
     if (idx != m_currentAnimation)
     {
@@ -69,17 +69,13 @@ void Skeleton::prevFrame()
 
 {
     CRO_ASSERT(!m_animations.empty(), "No animations loaded");
-    if (m_currentFrameTime > 0)
-    {
-        m_currentFrameTime = 0.f;
-    }
-    else
-    {
-        auto& anim = m_animations[m_currentAnimation];
-        auto frame = anim.currentFrame - anim.startFrame;
-        frame = (frame + (anim.frameCount - 1)) % anim.frameCount;
-        anim.currentFrame = frame + anim.startFrame;
-    }
+
+    auto& anim = m_animations[m_currentAnimation];
+    auto frame = anim.currentFrame - anim.startFrame;
+    frame = (frame + (anim.frameCount - 1)) % anim.frameCount;
+    anim.currentFrame = frame + anim.startFrame;
+    m_currentFrameTime = 0.f;
+    buildKeyframe(anim.currentFrame);
 }
 
 void Skeleton::nextFrame()
@@ -90,6 +86,7 @@ void Skeleton::nextFrame()
     frame = (frame + 1) % anim.frameCount;
     anim.currentFrame = frame + anim.startFrame;
     m_currentFrameTime = 0.f;
+    buildKeyframe(anim.currentFrame);
 }
 
 void Skeleton::stop()

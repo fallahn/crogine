@@ -143,14 +143,14 @@ void SkeletalAnimator::process(float dt)
             //first frame of the next anim. Really we should interpolate the current
             //position of both animations, and then blend the results according to
             //the current blend time.
-            /*skel.m_currentBlendTime += dt;
+            skel.m_currentBlendTime += dt;
             if (entity.getComponent<Model>().isVisible())
             {
                 float interpTime = std::min(1.f, skel.m_currentBlendTime / skel.m_blendTime);
                 interpolate(skel.m_animations[skel.m_currentAnimation].currentFrame, skel.m_animations[skel.m_nextAnimation].startFrame, interpTime, skel);
             }
 
-            if (skel.m_currentBlendTime > skel.m_blendTime)*/
+            if (skel.m_currentBlendTime > skel.m_blendTime)
             {
                 skel.m_animations[skel.m_currentAnimation].playbackRate = 0.f;
                 skel.m_currentAnimation = skel.m_nextAnimation;

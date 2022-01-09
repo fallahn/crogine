@@ -68,6 +68,9 @@ private:
 
     cro::AudioScape m_audioScape;
 
+    bool m_mouseVisible;
+    cro::Clock m_mouseClock;
+
     std::vector<std::function<void()>> m_actionCallbacks;
     std::size_t m_currentAction;
     bool m_actionActive;

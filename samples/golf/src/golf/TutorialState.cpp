@@ -83,6 +83,7 @@ TutorialState::TutorialState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_sharedData    (sd),
     m_scene         (ctx.appInstance.getMessageBus()),
     m_viewScale     (2.f),
+    m_mouseVisible  (true),
     m_currentAction (0),
     m_actionActive  (false)
 {
@@ -170,6 +171,12 @@ bool TutorialState::handleEvent(const cro::Event& evt)
             }
         }
     }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
+        m_mouseVisible = true;
+        m_mouseClock.restart();
+    }
 
     m_scene.forwardEvent(evt);
     return false;
@@ -200,6 +207,19 @@ bool TutorialState::simulate(float dt)
     glCheck(glUseProgram(0));
 
     m_scene.simulate(dt);
+
+    //auto hide the mouse if not paused
+    if (m_mouseVisible
+        && getStateCount() == 2)
+    {
+        if (m_mouseClock.elapsed() > MouseHideTime
+            && !ImGui::GetIO().WantCaptureMouse)
+        {
+            m_mouseVisible = false;
+            cro::App::getWindow().setMouseCaptured(true);
+        }
+    }
+
     return true;
 }
 
