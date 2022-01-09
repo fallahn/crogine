@@ -225,9 +225,12 @@ bool TutorialState::simulate(float dt)
 
 void TutorialState::render()
 {
+    float currWidth = 0.f;
+    glGetFloatv(GL_LINE_WIDTH, &currWidth);
+    
     glLineWidth(m_viewScale.y);
     m_scene.render();
-    glLineWidth(1.f);
+    glLineWidth(currWidth);
 }
 
 //private
