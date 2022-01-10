@@ -123,6 +123,8 @@ private:
         std::int32_t spriteIndex = Sprite::Wood;
     }m_avatar;
 
+    std::array<std::size_t, AnimationID::Count> m_animationIDs = { };
+
     std::array<std::int32_t, 3u> m_strokeCounts = { 5,9,18 };
     std::size_t m_strokeCountIndex;
 

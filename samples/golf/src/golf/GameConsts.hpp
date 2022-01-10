@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -41,9 +41,9 @@ source distribution.
 
 #include <cstdint>
 
-static constexpr float CameraStrokeHeight = 3.2f;// 2.6f;
+static constexpr float CameraStrokeHeight = 2.f;// 3.2f;// 2.6f;
 static constexpr float CameraPuttHeight = 0.3f;
-static constexpr float CameraStrokeOffset = 7.5f;// 5.1f;
+static constexpr float CameraStrokeOffset = 5.f;// 7.5f;// 5.1f;
 static constexpr float CameraPuttOffset = 0.8f;
 static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
 
@@ -65,7 +65,6 @@ static constexpr float PlayerShadowOffset = 0.04f;
 
 static constexpr float MinPixelScale = 1.f;
 static constexpr float MaxPixelScale = 3.f;
-static constexpr float InversePixelScale = MinPixelScale + MaxPixelScale;
 
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
@@ -117,7 +116,7 @@ struct AnimationID final
 {
     enum
     {
-        Idle, Swing,
+        Idle, Swing, Chip,
         Count
     };
 };

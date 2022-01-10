@@ -1664,12 +1664,13 @@ void GolfState::buildScene()
         auto vpSize = calcVPSize();
 
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float scale = std::min(std::floor(winSize.y / vpSize.y), m_sharedData.pixelScale);
+        float maxScale = std::floor(winSize.y / vpSize.y);
+        float scale = std::min(maxScale, m_sharedData.pixelScale);
         auto texSize = winSize / scale;
         m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
-        glCheck(glPointSize((InversePixelScale - scale) * BallPointSize));
-        glCheck(glLineWidth(InversePixelScale - scale));
+        glCheck(glPointSize(((maxScale + 1.f) - scale) * BallPointSize));
+        glCheck(glLineWidth((maxScale + 1.f) - scale));
 
         cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

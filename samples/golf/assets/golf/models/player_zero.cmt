@@ -11,7 +11,7 @@ model player_zero
         smooth = true
         repeat = true
         depth_test = true
-        double_sided = false
+        double_sided = true
         vertex_coloured = true
         blendmode = none
         skinned = true

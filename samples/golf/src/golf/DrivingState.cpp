@@ -1030,12 +1030,13 @@ void DrivingState::createScene()
         auto vpSize = calcVPSize();
 
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float scale = std::min(std::floor(winSize.y / vpSize.y), m_sharedData.pixelScale);
+        auto maxScale = std::floor(winSize.y / vpSize.y);
+        float scale = std::min(maxScale, m_sharedData.pixelScale);
         auto texSize = winSize / scale;
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
-        glCheck(glPointSize((InversePixelScale - scale) * BallPointSize));
-        glCheck(glLineWidth(InversePixelScale - scale));
+        glCheck(glPointSize(((maxScale + 1.f) - scale) * BallPointSize));
+        glCheck(glLineWidth((maxScale + 1.f) - scale));
 
         cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
@@ -1469,7 +1470,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_avatar.sprites[Avatar::Sprite::Wood].sprite;
     entity.addComponent<cro::SpriteAnimation>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
+    //entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite; //temp disable this so it remains hidden
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width * 0.78f, 0.f, -0.5f });
 
@@ -1574,7 +1575,36 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     md.loadFromFile("assets/golf/models/player_zero.cmt");
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
     md.createModel(entity);
+    if (flipped)
+    {
+        entity.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
+        //hmmm how do we set the cull-face direction when it's set
+        //by the active camera pass?
+        //setting material to double sided will have to do I suppose...
+    }
+
+    //map the animation IDs
+    if (entity.hasComponent<cro::Skeleton>())
+    {
+        const auto& anims = entity.getComponent<cro::Skeleton>().getAnimations();
+        for (auto i = 0u; i < anims.size(); ++i)
+        {
+            if (anims[i].name == "idle")
+            {
+                m_animationIDs[AnimationID::Idle] = i;
+            }
+            else if (anims[i].name == "drive")
+            {
+                m_animationIDs[AnimationID::Swing] = i;
+            }
+            else if (anims[i].name == "chip")
+            {
+                m_animationIDs[AnimationID::Chip] = i;
+            }
+        }
+    }
 }
 
 void DrivingState::createBall()
@@ -1971,7 +2001,8 @@ void DrivingState::hitBall()
             ball.state = Ball::State::Flight;
             //this is a kludge to wait for the anim before hitting the ball
             //Ideally we want to read the frame data from the sprite sheet
-            ball.delay = 0.32f;
+            //ball.delay = 0.32f;
+            ball.delay = 1.32f;
             ball.startPoint = e.getComponent<cro::Transform>().getPosition();
         }
     };
@@ -1980,9 +2011,19 @@ void DrivingState::hitBall()
     cmd.targetFlags = CommandID::UI::PlayerSprite;
     cmd.action = [&](cro::Entity e, float)
     {
-        e.getComponent<cro::SpriteAnimation>().play(m_avatar.sprites[m_avatar.spriteIndex].animIDs[AnimationID::Swing]);
+        //e.getComponent<cro::SpriteAnimation>().play(m_avatar.sprites[m_avatar.spriteIndex].animIDs[AnimationID::Swing]);
+        
+        if (m_inputParser.getClub() < ClubID::PitchWedge)
+        {
+            e.getComponent<cro::Skeleton>().play(m_animationIDs[AnimationID::Swing]);
+        }
+        else
+        {
+            e.getComponent<cro::Skeleton>().play(m_animationIDs[AnimationID::Chip]);
+        }        
     };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    //m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     m_inputParser.setActive(false);
 }
@@ -2006,9 +2047,11 @@ void DrivingState::setHole(std::int32_t index)
     cmd.targetFlags = CommandID::UI::PlayerSprite;
     cmd.action = [&](cro::Entity e, float)
     {
-        e.getComponent<cro::SpriteAnimation>().play(m_avatar.sprites[m_avatar.spriteIndex].animIDs[AnimationID::Idle]);
+        //e.getComponent<cro::SpriteAnimation>().play(m_avatar.sprites[m_avatar.spriteIndex].animIDs[AnimationID::Idle]);
+        e.getComponent<cro::Skeleton>().play(m_animationIDs[AnimationID::Idle]);
     };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    //m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //update club text colour based on distance
     cmd.targetFlags = CommandID::UI::ClubName;
