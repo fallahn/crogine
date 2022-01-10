@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -552,18 +552,18 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::Minimap));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniGreen;
     entity.addComponent<cro::Sprite>(); //updated by the camera callback with correct texture
-    entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
+    entity.addComponent<cro::Callback>().setUserData<GreenCallbackData>();
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt) mutable
     {
         static constexpr float Speed = 2.f;
-        auto& [currTime, state] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+        auto& [currTime, state, targetScale] = e.getComponent<cro::Callback>().getUserData<GreenCallbackData>();
         if (state == 0)
         {
             //expand
             currTime = std::min(1.f, currTime + (dt * Speed));
-            float scale = cro::Util::Easing::easeOutQuint(currTime);
-            e.getComponent<cro::Transform>().setScale({ scale,  1.f });
+            float scale = cro::Util::Easing::easeOutQuint(currTime) * targetScale;
+            e.getComponent<cro::Transform>().setScale({ scale,  targetScale });
 
             if (currTime == 1)
             {
@@ -578,8 +578,8 @@ void GolfState::buildUI()
         {
             //contract
             currTime = std::max(0.f, currTime - (dt * Speed));
-            float scale = cro::Util::Easing::easeOutQuint(currTime);
-            e.getComponent<cro::Transform>().setScale({ 1.f, scale });
+            float scale = cro::Util::Easing::easeOutQuint(currTime) * targetScale;
+            e.getComponent<cro::Transform>().setScale({ targetScale, scale });
 
             if (currTime == 0)
             {
@@ -659,10 +659,20 @@ void GolfState::buildUI()
     auto updateGreenView = [&, greenEnt](cro::Camera& greenCam) mutable
     {
         auto texSize = MapSize.y / 2u;
+
+        auto windowScale = std::floor(cro::App::getWindow().getSize().y / calcVPSize().y);
+        auto scale = std::min(windowScale, m_sharedData.pixelScale);
+        scale = (windowScale + 1.f) - scale;
+        texSize *= static_cast<std::uint32_t>(scale);
+
         m_greenBuffer.create(texSize, texSize); //yes, it's square
         greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
 
-        greenEnt.getComponent<cro::Transform>().setOrigin({ texSize / 2, texSize / 2 }); //must divide to a whole pixel!
+        auto targetScale = glm::vec2(1.f / scale);
+        greenEnt.getComponent<cro::Transform>().setScale(targetScale);
+        greenEnt.getComponent<cro::Transform>().setOrigin({ (texSize / 2), (texSize / 2) }); //must divide to a whole pixel!
+
+        greenEnt.getComponent<cro::Callback>().getUserData<GreenCallbackData>().targetScale = targetScale.x;
     };
 
     m_greenCam = m_gameScene.createEntity();
@@ -716,8 +726,9 @@ void GolfState::buildUI()
         mapSize /= 2.f;
         mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y, uiSize.y - (mapSize.x) - (UIBarHeight * 1.5f) }); //map sprite is rotated 90
 
+
         greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - (MapSize.y / 2) - UIBarHeight - 2.f });
-        greenEnt.getComponent<cro::Transform>().move(greenEnt.getComponent<cro::Transform>().getOrigin());
+        greenEnt.getComponent<cro::Transform>().move(glm::vec2(static_cast<float>(MapSize.y) / 4.f));
 
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(uiSize.x + WindIndicatorPosition.x, WindIndicatorPosition.y));
 

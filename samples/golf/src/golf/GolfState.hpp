@@ -57,6 +57,14 @@ namespace cro
     struct NetEvent;
 }
 
+//sprite which carries green overhead view
+struct GreenCallbackData final
+{
+    float currTime = 0.f;
+    float state = 0;
+    float targetScale = 1.f;
+};
+
 //callback data for green overhead view
 struct MiniCamData final
 {

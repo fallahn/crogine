@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -2606,7 +2606,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     cmd.targetFlags = CommandID::UI::MiniGreen;
     cmd.action = [](cro::Entity e, float)
     {
-        e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
+        e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 1;
         e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -2912,12 +2912,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
         if (!hidden)
         {
-            e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 0;
+            e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 0;
             e.getComponent<cro::Callback>().active = true;
         }
         else
         {
-            e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
+            e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 1;
             e.getComponent<cro::Callback>().active = true;
         }
     };

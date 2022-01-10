@@ -693,8 +693,9 @@ void MenuState::createBallScene()
         auto vpSize = calcVPSize().y;
         auto windowSize = static_cast<float>(cro::App::getWindow().getSize().y);
 
-        float scale = std::min(m_sharedData.pixelScale, std::floor(windowSize / vpSize));
-        auto size = BallPreviewSize * static_cast<std::uint32_t>(scale);
+        float windowScale = std::floor(windowSize / vpSize);
+        float scale = std::min(m_sharedData.pixelScale, windowScale);
+        auto size = BallPreviewSize * static_cast<std::uint32_t>((windowScale + 1.f) - scale);
         m_ballTexture.create(size, size);
     };
 
