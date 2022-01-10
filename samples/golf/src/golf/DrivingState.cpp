@@ -582,8 +582,12 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
 
     //materials
-    m_materialIDs[MaterialID::Cel] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Cel));
-    m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(m_resources.shaders.get(ShaderID::CelTextured));
+    auto* shader = &m_resources.shaders.get(ShaderID::Cel);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+    shader = &m_resources.shaders.get(ShaderID::CelTextured);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
 
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
@@ -1035,8 +1039,16 @@ void DrivingState::createScene()
         auto texSize = winSize / scale;
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
-        glCheck(glPointSize(((maxScale + 1.f) - scale) * BallPointSize));
-        glCheck(glLineWidth((maxScale + 1.f) - scale));
+        auto invScale = (maxScale + 1.f) - scale;
+        glCheck(glPointSize(invScale * BallPointSize));
+        glCheck(glLineWidth(invScale));
+
+        //update checker uniforms
+        for (auto [shader, uniform] : m_scaleUniforms)
+        {
+            glCheck(glUseProgram(shader));
+            glCheck(glUniform1f(uniform, invScale));
+        }
 
         cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

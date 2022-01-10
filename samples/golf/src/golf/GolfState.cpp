@@ -829,26 +829,32 @@ void GolfState::loadAssets()
     //cel shaded material
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n");
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define SKINNED\n");
     shader = &m_resources.shaders.get(ShaderID::CelSkinned);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelSkinned] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
     shader = &m_resources.shaders.get(ShaderID::Ball);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n");
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n");
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
     shader = &m_resources.shaders.get(ShaderID::Course);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
     //scanline transition
@@ -1669,8 +1675,15 @@ void GolfState::buildScene()
         auto texSize = winSize / scale;
         m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
-        glCheck(glPointSize(((maxScale + 1.f) - scale) * BallPointSize));
-        glCheck(glLineWidth((maxScale + 1.f) - scale));
+        auto invScale = (maxScale + 1.f) - scale;
+        glCheck(glPointSize(invScale * BallPointSize));
+        glCheck(glLineWidth(invScale));
+
+        for (auto [shader, uniform] : m_scaleUniforms)
+        {
+            glCheck(glUseProgram(shader));
+            glCheck(glUniform1f(uniform, invScale));
+        }
 
         cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

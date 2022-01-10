@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -198,6 +198,7 @@ static const std::string CelVertexShader = R"(
 
 static const std::string CelFragmentShader = R"(
     uniform vec3 u_lightDirection;
+    uniform float u_pixelScale = 1.0;
 
 #if defined(TEXTURED)
     uniform sampler2D u_diffuseMap;
@@ -291,15 +292,15 @@ static const std::string CelFragmentShader = R"(
 
         colour.rgb *= amount;
         
-        //float check = mod(floor(gl_FragCoord.x / 3.0) + floor(gl_FragCoord.y / 3.0), 2.0) * checkAmount;
-        float check = mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) * checkAmount;
+        float check = mod(floor(gl_FragCoord.x / u_pixelScale) + floor(gl_FragCoord.y / u_pixelScale), 2.0) * checkAmount;
+        //float check = mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) * checkAmount;
         amount = (1.0 - check) + (check * amount);
         colour.rgb *= amount;
 
         FRAG_OUT = vec4(colour.rgb, 1.0);
 
 #if defined(DITHERED)
-        vec2 xy = gl_FragCoord.xy;
+        vec2 xy = gl_FragCoord.xy / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));

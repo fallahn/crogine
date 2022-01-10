@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -68,6 +68,8 @@ private:
 
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_backgroundTexture;
+
+    std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
 
     bool m_mouseVisible;
     cro::Clock m_mouseClock;

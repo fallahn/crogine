@@ -669,7 +669,10 @@ void GolfState::buildUI()
         greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
 
         auto targetScale = glm::vec2(1.f / scale);
-        greenEnt.getComponent<cro::Transform>().setScale(targetScale);
+        if (m_currentPlayer.terrain == TerrainID::Green)
+        {
+            greenEnt.getComponent<cro::Transform>().setScale(targetScale);
+        }
         greenEnt.getComponent<cro::Transform>().setOrigin({ (texSize / 2), (texSize / 2) }); //must divide to a whole pixel!
 
         greenEnt.getComponent<cro::Callback>().getUserData<GreenCallbackData>().targetScale = targetScale.x;

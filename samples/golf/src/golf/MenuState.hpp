@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -109,8 +109,9 @@ private:
         };
     };
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
-
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
+
+    std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
 
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
