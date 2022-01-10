@@ -431,7 +431,7 @@ void MenuState::createUI()
 
 
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, -0.5f});
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_backgroundTexture.getTexture());
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -2466,6 +2466,17 @@ void MenuState::createPlayerConfigMenu()
     entity.addComponent<cro::Transform>().setPosition({ 206.f, 70.f, ButtonDepth });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_ballTexture.getTexture());
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+    {
+        //hmm we only want to this in a resize callback really...
+        auto size = glm::vec2(e.getComponent<cro::Sprite>().getTexture()->getSize());
+        e.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, size.x, size.y });
+
+        float scale = static_cast<float>(BallPreviewSize) / size.y;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    };
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //ball select left
@@ -2928,6 +2939,16 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
         //this is an assumption, but a fair one I feel.
         //I'm probably going to regret that.
         m_currentMenu = MenuID::Avatar;
+
+        //this is a fudge to get around the edge case where the window
+        //was resized while the avatar menu was open - the background menu,
+        //being inactive, will have now been misplaced... calling this should
+        //replace it again
+        auto size = cro::App::getWindow().getSize();
+        auto* msg = getContext().appInstance.getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+        msg->data0 = size.x;
+        msg->data1 = size.y;
+        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
     }
 }
 

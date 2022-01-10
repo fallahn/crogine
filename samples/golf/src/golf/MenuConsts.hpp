@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -89,6 +89,8 @@ static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);
 static constexpr glm::vec2 MenuSpacing(1920.f, 1080.f);
 static constexpr float MenuBottomBorder = 15.f;
 static constexpr float BannerPosition = MenuBottomBorder - 3.f;
+
+static constexpr std::uint32_t BallPreviewSize = 64u;
 
 static constexpr glm::vec2 CourseDescPos(0.5f, 0.24f); // relative
 static constexpr glm::vec2 ClubTextPosition(0.01f, 1.f); //relative

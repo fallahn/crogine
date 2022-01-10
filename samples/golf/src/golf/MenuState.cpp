@@ -688,10 +688,21 @@ void MenuState::createBallScene()
     static constexpr float RootPoint = 100.f;
     static constexpr float BallSpacing = 0.09f;
 
+    auto ballTexCallback = [&](cro::Camera&)
+    {
+        auto vpSize = calcVPSize().y;
+        auto windowSize = static_cast<float>(cro::App::getWindow().getSize().y);
+
+        float scale = std::min(m_sharedData.pixelScale, std::floor(windowSize / vpSize));
+        auto size = BallPreviewSize * static_cast<std::uint32_t>(scale);
+        m_ballTexture.create(size, size);
+    };
+
     m_ballCam = m_backgroundScene.createEntity();
     m_ballCam.addComponent<cro::Transform>().setPosition({ RootPoint, 0.045f, 0.095f });
     m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
     m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, 1.f, 0.001f, 2.f);
+    m_ballCam.getComponent<cro::Camera>().resizeCallback = ballTexCallback;
     m_ballCam.addComponent<cro::Callback>().active = true;
     m_ballCam.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
     m_ballCam.getComponent<cro::Callback>().function =
@@ -707,7 +718,8 @@ void MenuState::createBallScene()
         e.getComponent<cro::Transform>().setPosition(pos);
     };
 
-    m_ballTexture.create(64, 64);
+    ballTexCallback(m_ballCam.getComponent<cro::Camera>());
+
 
     auto ballFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + "assets/golf/balls");
     if (ballFiles.empty())
