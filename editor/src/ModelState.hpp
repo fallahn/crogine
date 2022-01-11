@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -228,6 +228,7 @@ private:
     //---------ModelStateUI.cpp--------//
     ImVec4 m_messageColour;
     std::array<std::pair<std::string, cro::Image>, 4u> m_combinedImages;
+    std::int32_t m_attachmentIndex;
     void buildUI();
     void showSaveMessage();
     void drawInspector();

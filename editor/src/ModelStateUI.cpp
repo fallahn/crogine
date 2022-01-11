@@ -1868,8 +1868,106 @@ void ModelState::drawBrowser()
         }
 
         if (m_entities[EntityID::ActiveModel].isValid()
+            && m_importedVBO.empty()
             && m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
         {
+            if (ImGui::BeginTabItem("Attachments"))
+            {
+                auto& skel = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+                auto& attachments = skel.getAttachments();
+                if (attachments.empty())
+                {
+                    m_attachmentIndex = 0;
+                }
+
+                ImGui::BeginChild("##attachments", {200.f, 0.f});
+                if (ImGui::Button("Add##attachment"))
+                {
+                    attachments.emplace_back();
+                    m_attachmentIndex = attachments.size() - 1;
+                }
+                if (!attachments.empty())
+                {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Remove##attachment"))
+                    {
+                        attachments.erase(attachments.begin() + m_attachmentIndex);
+                        if (m_attachmentIndex > 0)
+                        {
+                            m_attachmentIndex--;
+                        }
+                    }
+                }
+                //I'll be buggered if I can figure this out
+                /*ImGui::ListBoxHeader("##attachments_list");
+                for (auto i = 0u; i < attachments.size(); ++i)
+                {
+                    bool isSelected = (m_attachmentIndex == i);
+                    if (ImGui::Selectable(attachments[i].getName().c_str(), isSelected))
+                    {
+                        m_attachmentIndex = i;
+                    }
+                }
+                ImGui::ListBoxFooter();*/
+
+                std::vector<const char*> names;
+                for (const auto& a : attachments)
+                {
+                    names.push_back(a.getName().c_str());
+                }
+                ImGui::PushItemWidth(200.f);
+                if (ImGui::ListBox("##attachment_list", &m_attachmentIndex, names.data(), static_cast<std::int32_t>(names.size()), 6))
+                {
+
+                }
+                ImGui::PopItemWidth();
+
+                ImGui::EndChild();
+                ImGui::SameLine();
+                ImGui::BeginChild("##attachment_options");
+                if (attachments.empty())
+                {
+                    ImGui::Text("No attachments added");
+                }
+                else
+                {
+                    ImGui::Text("Attachment Properties");
+
+                    auto& ap = attachments[m_attachmentIndex];
+                    auto name = ap.getName();
+                    if (ImGui::InputText("Name##attachment", &name))
+                    {
+                        //auto size = std::min(name.size(), cro::Attachment::MaxNameLength);
+                        //because we're using a specialised version for std::string
+                        //the callback does something weird if we try to manually clamp the
+                        //length and triggers an infinite loop...
+                        ap.setName(name);
+                    }
+                    auto pos = ap.getPosition();
+                    if (ImGui::InputFloat3("Position##attachment", &pos[0]))
+                    {
+                        ap.setPosition(pos);
+                    }
+                    glm::vec3 rot = glm::eulerAngles(ap.getRotation());
+                    if (ImGui::DragFloat3("Rotation##attachment", &rot[0], -180.f, 180.f))
+                    {
+                        auto q = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rot[2] * cro::Util::Const::degToRad, cro::Transform::Z_AXIS);
+                        q = glm::rotate(q, rot[1] * cro::Util::Const::degToRad, cro::Transform::Y_AXIS);
+                        q = glm::rotate(q, rot[0] * cro::Util::Const::degToRad, cro::Transform::X_AXIS);
+                        ap.setRotation(q);
+                    }
+                    auto parent = ap.getParent();
+                    if (ImGui::InputInt("Parent##attachment", &parent))
+                    {
+                        parent = std::max(0, std::min(static_cast<std::int32_t>(skel.getFrameSize()), parent));
+                        ap.setParent(parent);
+                    }
+                }
+                ImGui::EndChild();
+
+                ImGui::EndTabItem();
+            }
+            
             if (ImGui::BeginTabItem("Animation"))
             {
                 ImGui::Text("Select an animation to edit from the Model tab of the Inspector pane");

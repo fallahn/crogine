@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -285,10 +285,10 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
             }
         }
 
-        for (const auto& attachment : skeleton.getAttachmentPoints())
+        /*for (const auto& attachment : skeleton.getAttachmentPoints())
         {
             outAttachments.emplace_back(attachment);
-        }
+        }*/
 
         const auto& ibp = skeleton.getInverseBindPose();
         CRO_ASSERT(!ibp.empty(), "inverse bind pose data is missing");

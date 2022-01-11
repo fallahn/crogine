@@ -87,7 +87,6 @@ void SkeletalAnimator::process(float dt)
             if (skel.m_currentFrameTime > skel.m_frameTime)
             {
                 //frame is done, move to next
-
                 skel.m_currentFrameTime -= skel.m_frameTime;
                 anim.currentFrame = nextFrame;
 
@@ -161,6 +160,18 @@ void SkeletalAnimator::process(float dt)
                 skel.m_animations[skel.m_currentAnimation].currentFrame = skel.m_animations[skel.m_currentAnimation].startFrame;
 
                 skel.buildKeyframe(skel.m_animations[skel.m_currentAnimation].currentFrame);
+            }
+        }
+
+        //update the position of attachments.
+        //TODO only do this if the frame was updated
+        //TODO set the model transform in a way which doesn't call decompose internally
+        for (auto i = 0u; i < skel.m_attachments.size(); ++i)
+        {
+            auto& ap = skel.m_attachments[i];
+            if (ap.m_model.isValid())
+            {
+                ap.m_model.getComponent<cro::Transform>().setLocalTransform(skel.getAttachment(i));
             }
         }
     }

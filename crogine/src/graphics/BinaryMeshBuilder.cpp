@@ -360,7 +360,12 @@ Mesh::Data BinaryMeshBuilder::build() const
 
                 for (const auto& [rotation, translation, parent] : inAttachments)
                 {
-                    m_skeleton.addAttachmentPoint({ parent, translation, rotation });
+                    Attachment ap;
+                    ap.setParent(parent);
+                    ap.setPosition(translation);
+                    ap.setRotation(rotation);
+
+                    m_skeleton.addAttachment(ap);
                 }
 
                 std::vector<glm::mat4> invBindMatrices(skelHeader.frameSize);
