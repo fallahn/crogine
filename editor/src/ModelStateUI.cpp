@@ -1871,7 +1871,6 @@ void ModelState::drawBrowser()
             && m_importedVBO.empty()
             && m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
         {
-            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setPosition({ -1.f, 1.f, 1.5f });
             if (ImGui::BeginTabItem("Attachments"))
             {
                 auto& skel = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();

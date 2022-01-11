@@ -154,7 +154,7 @@ namespace cro
     /*!
     \brief A hierarchy of bones stored as
     transforms, used to animate 3D models.
-    These are updated by the SkeletalAnimation system.
+    These are updated by the SkeletalAnimator system.
     */
     class CRO_EXPORT_API Skeleton final
     {
@@ -296,7 +296,7 @@ namespace cro
         \param id The id of the attachment point to retrieve. This is the ID returned
         by addAttachment()
         */
-        glm::mat4 getAttachment(std::int32_t id) const;
+        glm::mat4 getAttachmentTransform(std::int32_t id) const;
 
         /*!
         \brief Return a reference to the vector of attachments

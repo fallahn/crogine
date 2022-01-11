@@ -165,14 +165,13 @@ void SkeletalAnimator::process(float dt)
 
         //update the position of attachments.
         //TODO only do this if the frame was updated (? won't account for entity transform changing though)
-        //TODO set the model transform in a way which doesn't call decompose internally
-        //this way we can use the model position as an offset instead of overriding it
         for (auto i = 0u; i < skel.m_attachments.size(); ++i)
         {
             auto& ap = skel.m_attachments[i];
             if (ap.m_model.isValid())
             {
-                ap.m_model.getComponent<cro::Transform>().setLocalTransform(entity.getComponent<cro::Transform>().getWorldTransform() * skel.getAttachment(i));
+                //ap.m_model.getComponent<cro::Transform>().m_attachmentTransform = entity.getComponent<cro::Transform>().getWorldTransform() * skel.getAttachmentTransform(i);
+                ap.m_model.getComponent<cro::Transform>().setLocalTransform(entity.getComponent<cro::Transform>().getWorldTransform() * skel.getAttachmentTransform(i));
             }
         }
     }

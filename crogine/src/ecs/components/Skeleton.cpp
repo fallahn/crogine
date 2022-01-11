@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 #include <crogine/detail/glm/gtx/matrix_interpolation.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 
 using namespace cro;
 
@@ -145,7 +146,7 @@ std::int32_t Skeleton::addAttachment(const Attachment& ap)
     return -1;
 }
 
-glm::mat4 Skeleton::getAttachment(std::int32_t id) const
+glm::mat4 Skeleton::getAttachmentTransform(std::int32_t id) const
 {
     CRO_ASSERT(id > -1 && id < m_attachments.size(), "");
 
@@ -201,6 +202,14 @@ void Attachment::setParent(std::int32_t parent)
 
 void Attachment::setModel(cro::Entity model)
 {
+    //reset any existing transform
+    if (m_model != model &&
+        m_model.isValid() &&
+        m_model.hasComponent<cro::Transform>())
+    {
+        m_model.getComponent<cro::Transform>().m_attachmentTransform = glm::mat4(1.f);
+    }
+
     m_model = model;
 }
 
