@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -95,7 +95,6 @@ void Skeleton::stop()
     m_animations[m_currentAnimation].playbackRate = 0.f;
 }
 
-
 Skeleton::State Skeleton::getState() const
 {
     CRO_ASSERT(!m_animations.empty(), "");
@@ -135,21 +134,34 @@ void Skeleton::addNotification(std::size_t frameID, Notification n)
     m_notifications[frameID].push_back(n);
 }
 
-std::int32_t Skeleton::addAttachmentPoint(const AttachmentPoint& ap)
+std::int32_t Skeleton::addAttachment(const Attachment& ap)
 {
-    CRO_ASSERT(ap.m_parent < m_frameSize, "");
-    m_attachmentPoints.push_back(ap);
-    return static_cast<std::int32_t>(m_attachmentPoints.size() - 1);
+    if (ap.m_model.isValid())
+    {
+        m_attachments.push_back(ap);
+        return static_cast<std::int32_t>(m_attachments.size() - 1);
+    }
+    LogE << "No valid model on attachment" << std::endl;
+    return -1;
 }
 
-glm::mat4 Skeleton::getAttachmentPoint(std::int32_t id) const
+glm::mat4 Skeleton::getAttachment(std::int32_t id) const
 {
-    CRO_ASSERT(id > -1 && id < m_attachmentPoints.size(), "");
+    CRO_ASSERT(id > -1 && id < m_attachments.size(), "");
 
-    //TODO do attachment points really need a local transform?
-    //TODO do we want to cache the bind pose so we don't need the inverse?
-    const auto& ap = m_attachmentPoints[id];
-    return m_currentFrame[ap.m_parent] * glm::inverse(m_invBindPose[ap.m_parent]) * ap.getLocalTransform();
+    const auto& ap = m_attachments[id];
+    return  m_currentFrame[ap.m_parent] * m_bindPose[ap.m_parent] * ap.m_transform;
+}
+
+void Skeleton::setInverseBindPose(const std::vector<glm::mat4>& invBindPose)
+{
+    m_invBindPose = invBindPose; 
+    m_bindPose.resize(invBindPose.size());
+
+    for (auto i = 0u; i < invBindPose.size(); ++i)
+    {
+        m_bindPose[i] = glm::inverse(invBindPose[i]);
+    }
 }
 
 void Skeleton::setRootTransform(const glm::mat4& transform)
@@ -178,4 +190,50 @@ void Skeleton::buildKeyframe(std::size_t frame)
     {
        m_currentFrame[i] = m_rootTransform * m_frames[offset + i].worldMatrix * m_invBindPose[i];
     }
+}
+
+
+//----attachment struct-----//
+void Attachment::setParent(std::int32_t parent)
+{
+    m_parent = parent;
+}
+
+void Attachment::setModel(cro::Entity model)
+{
+    m_model = model;
+}
+
+void Attachment::setPosition(glm::vec3 position)
+{
+    m_position = position;
+    updateLocalTransform();
+}
+
+void Attachment::setRotation(glm::quat rotation)
+{
+    m_rotation = rotation;
+    updateLocalTransform();
+}
+
+void Attachment::setScale(glm::vec3 scale)
+{
+    m_scale = scale;
+    updateLocalTransform();
+}
+
+void Attachment::setName(const std::string& name)
+{
+    m_name = name;
+    if (name.size() > MaxNameLength)
+    {
+        LogW << name << ": max character length is " << MaxNameLength << ", this name will be truncated when the model is saved." << std::endl;
+    }
+}
+
+void Attachment::updateLocalTransform()
+{
+    m_transform = glm::translate(glm::mat4(1.f), m_position);
+    m_transform *= glm::toMat4(m_rotation);
+    m_transform = glm::scale(m_transform, m_scale);
 }

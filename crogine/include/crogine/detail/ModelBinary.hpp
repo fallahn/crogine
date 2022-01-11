@@ -135,7 +135,7 @@ namespace cro::Detail::ModelBinary
             frameSize = skel.m_frameSize;
             frameCount = skel.m_frameCount;
             animationCount = static_cast<std::uint32_t>(skel.m_animations.size());
-            attachmentCount = static_cast<std::uint32_t>(skel.m_attachmentPoints.size());
+            attachmentCount = static_cast<std::uint32_t>(skel.m_attachments.size());
 
             for (const auto& nFrame : skel.m_notifications)
             {
@@ -237,17 +237,17 @@ namespace cro::Detail::ModelBinary
         std::int32_t parent = -1;
 
         SerialAttachment() = default;
-        explicit SerialAttachment(const cro::AttachmentPoint& ap)
+        explicit SerialAttachment(const cro::Attachment& ap)
             : rotation  (ap.m_rotation),
-            translation (ap.m_translation),
+            translation (ap.m_position),
             parent      (ap.m_parent)
         {
 
         }
-        SerialAttachment& operator = (const cro::AttachmentPoint& ap)
+        SerialAttachment& operator = (const cro::Attachment& ap)
         {
             rotation = ap.m_rotation;
-            translation = ap.m_translation;
+            translation = ap.m_position;
             parent = ap.m_parent;
             return *this;
         }

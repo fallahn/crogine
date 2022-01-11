@@ -99,7 +99,8 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_showAABB              (false),
     m_showSphere            (false),
     m_selectedTexture       (std::numeric_limits<std::uint32_t>::max()),
-    m_selectedMaterial      (std::numeric_limits<std::uint32_t>::max())
+    m_selectedMaterial      (std::numeric_limits<std::uint32_t>::max()),
+    m_attachmentIndex       (0)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -485,6 +486,21 @@ void ModelState::createScene()
 
     m_cameras[CameraID::FreeLook].FarPlane = DefaultFarPlane * 3.f;
     m_cameras[CameraID::FreeLook].camera = entity;
+
+
+    //default model for previewing attachment points
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    if (modelDef.loadFromFile("assets/models/gizmoo.cmt"))
+    {
+        modelDef.createModel(entity);
+        m_attachmentModels.push_back(entity);
+        entity.getComponent<cro::Model>().setHidden(true);
+    }
+    else
+    {
+        m_scene.destroyEntity(entity);
+    }
 }
 
 void ModelState::toggleFreecam()

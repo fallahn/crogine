@@ -1868,8 +1868,145 @@ void ModelState::drawBrowser()
         }
 
         if (m_entities[EntityID::ActiveModel].isValid()
+            && m_importedVBO.empty()
             && m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
         {
+            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setPosition({ -1.f, 1.f, 1.5f });
+            if (ImGui::BeginTabItem("Attachments"))
+            {
+                auto& skel = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+                auto& attachments = skel.getAttachments();
+                if (attachments.empty())
+                {
+                    m_attachmentIndex = 0;
+                }
+
+                ImGui::BeginChild("##attachments", {200.f, 0.f});
+                if (ImGui::Button("Add##attachment"))
+                {
+                    attachments.emplace_back();
+                    m_attachmentIndex = attachments.size() - 1;
+                }
+                if (!attachments.empty())
+                {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Remove##attachment"))
+                    {
+                        attachments.erase(attachments.begin() + m_attachmentIndex);
+                        if (m_attachmentIndex > 0)
+                        {
+                            m_attachmentIndex--;
+                        }
+                    }
+                }
+                //I'll be buggered if I can figure this out
+                /*ImGui::ListBoxHeader("##attachments_list");
+                for (auto i = 0u; i < attachments.size(); ++i)
+                {
+                    bool isSelected = (m_attachmentIndex == i);
+                    if (ImGui::Selectable(attachments[i].getName().c_str(), isSelected))
+                    {
+                        m_attachmentIndex = i;
+                    }
+                }
+                ImGui::ListBoxFooter();*/
+
+                std::vector<const char*> names;
+                for (const auto& a : attachments)
+                {
+                    names.push_back(a.getName().c_str());
+                }
+
+                auto lastIndex = m_attachmentIndex;
+                ImGui::PushItemWidth(200.f);
+                if (ImGui::ListBox("##attachment_list", &m_attachmentIndex, names.data(), static_cast<std::int32_t>(names.size()), 6))
+                {
+                    if (!m_attachmentModels.empty())
+                    {
+                        auto oldModel = attachments[lastIndex].getModel();
+                        if (oldModel.isValid())
+                        {
+                            oldModel.getComponent<cro::Model>().setHidden(true);
+                        }
+
+                        attachments[lastIndex].setModel(cro::Entity());
+                        attachments[m_attachmentIndex].setModel(m_attachmentModels[0]);
+                        m_attachmentModels[0].getComponent<cro::Model>().setHidden(false);
+                    }
+                }
+                ImGui::PopItemWidth();
+                ImGui::EndChild();
+
+                ImGui::SameLine();
+
+                ImGui::BeginChild("##attachment_options", {240.f, 0.f});
+                if (attachments.empty())
+                {
+                    ImGui::Text("No attachments added");
+                }
+                else
+                {
+                    ImGui::Text("Attachment Properties");
+
+                    auto& ap = attachments[m_attachmentIndex];
+                    auto name = ap.getName();
+                    if (ImGui::InputText("Name##attachment", &name))
+                    {
+                        //auto size = std::min(name.size(), cro::Attachment::MaxNameLength);
+                        //because we're using a specialised version for std::string
+                        //the callback does something weird if we try to manually clamp the
+                        //length and triggers an infinite loop...
+                        ap.setName(name);
+                    }
+                    auto pos = ap.getPosition();
+                    if (ImGui::DragFloat3("Position##attachment", &pos[0], 1.f, 0.f, 0.f, "%3.2f"))
+                    {
+                        ap.setPosition(pos);
+                    }
+                    //TODO replace this with a gizmo or something cos the quat->euler and back is balls.
+                    glm::vec3 rot = glm::eulerAngles(ap.getRotation());
+                    if (ImGui::DragFloat3("Rotation##attachment", &rot[0], 1.f, -180.f, 180.f, "%3.2f"))
+                    {
+                        auto q = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rot[2] * cro::Util::Const::degToRad, cro::Transform::Z_AXIS);
+                        q = glm::rotate(q, rot[1] * cro::Util::Const::degToRad, cro::Transform::Y_AXIS);
+                        q = glm::rotate(q, rot[0] * cro::Util::Const::degToRad, cro::Transform::X_AXIS);
+                        ap.setRotation(q);
+                    }
+
+                    auto scale = ap.getScale();
+                    if (ImGui::DragFloat3("Scale##attachment", &scale[0], 1.f, 0.f, 0.f, "%3.2f"))
+                    {
+                        ap.setScale(scale);
+                    }
+
+                    auto parent = ap.getParent();
+                    if (ImGui::InputInt("Parent##attachment", &parent))
+                    {
+                        parent = std::max(0, std::min(static_cast<std::int32_t>(skel.getFrameSize()), parent));
+                        ap.setParent(parent);
+                    }
+                }
+                ImGui::EndChild();
+
+                ImGui::SameLine();
+
+                ImGui::BeginChild("##attachment_details");
+                ImGui::Text("World Transform:");
+                auto aPos = m_attachmentModels[0].getComponent<cro::Transform>().getPosition();
+                ImGui::Text("World Pos: %3.3f, %3.3f, %3.3f", aPos.x, aPos.y, aPos.z);
+                auto aScale = m_attachmentModels[0].getComponent<cro::Transform>().getScale();
+                ImGui::Text("World Scale: %3.3f, %3.3f, %3.3f", aScale.x, aScale.y, aScale.z);
+                if (ImGui::Button("Quick Scale"))
+                {
+                    attachments[m_attachmentIndex].setScale(glm::vec3(1.f) / aScale);
+                }
+                ImGui::SameLine();
+                helpMarker("Resizes the attachment to a world scale of 1.0");
+                ImGui::EndChild();
+
+                ImGui::EndTabItem();
+            }
+            
             if (ImGui::BeginTabItem("Animation"))
             {
                 ImGui::Text("Select an animation to edit from the Model tab of the Inspector pane");
