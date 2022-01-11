@@ -150,7 +150,7 @@ glm::mat4 Skeleton::getAttachment(std::int32_t id) const
     CRO_ASSERT(id > -1 && id < m_attachments.size(), "");
 
     const auto& ap = m_attachments[id];
-    return m_currentFrame[ap.m_parent] * m_bindPose[ap.m_parent] * ap.m_transform;
+    return  m_currentFrame[ap.m_parent] * m_bindPose[ap.m_parent] * ap.m_transform;
 }
 
 void Skeleton::setInverseBindPose(const std::vector<glm::mat4>& invBindPose)
@@ -216,6 +216,11 @@ void Attachment::setRotation(glm::quat rotation)
     updateLocalTransform();
 }
 
+void Attachment::setScale(glm::vec3 scale)
+{
+    m_scale = scale;
+    updateLocalTransform();
+}
 
 void Attachment::setName(const std::string& name)
 {
@@ -230,4 +235,5 @@ void Attachment::updateLocalTransform()
 {
     m_transform = glm::translate(glm::mat4(1.f), m_position);
     m_transform *= glm::toMat4(m_rotation);
+    m_transform = glm::scale(m_transform, m_scale);
 }

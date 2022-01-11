@@ -122,11 +122,14 @@ namespace cro
 
         void setPosition(glm::vec3 position);
         void setRotation(glm::quat rotation);
+        void setScale(glm::vec3 scale);
         void setName(const std::string&);
 
         std::int32_t getParent() const { return m_parent; }
+        cro::Entity getModel() const { return m_model; }
         glm::vec3 getPosition() const { return m_position; }
         glm::quat getRotation() const { return m_rotation; }
+        glm::vec3 getScale() const { return m_scale; }
         const std::string& getName() const { return m_name; }
 
         static constexpr std::size_t MaxNameLength = 30;
@@ -136,6 +139,7 @@ namespace cro
         std::int32_t m_parent = 0;
         glm::vec3 m_position = glm::vec3(0.f);
         glm::quat m_rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
+        glm::vec3 m_scale = glm::vec3(1.f);
         glm::mat4 m_transform = glm::mat4(1.f);
 
         std::string m_name = "Attachment";

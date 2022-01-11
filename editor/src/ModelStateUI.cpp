@@ -1871,6 +1871,7 @@ void ModelState::drawBrowser()
             && m_importedVBO.empty()
             && m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
         {
+            m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setPosition({ -1.f, 1.f, 1.5f });
             if (ImGui::BeginTabItem("Attachments"))
             {
                 auto& skel = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
@@ -1915,16 +1916,30 @@ void ModelState::drawBrowser()
                 {
                     names.push_back(a.getName().c_str());
                 }
+
+                auto lastIndex = m_attachmentIndex;
                 ImGui::PushItemWidth(200.f);
                 if (ImGui::ListBox("##attachment_list", &m_attachmentIndex, names.data(), static_cast<std::int32_t>(names.size()), 6))
                 {
+                    if (!m_attachmentModels.empty())
+                    {
+                        auto oldModel = attachments[lastIndex].getModel();
+                        if (oldModel.isValid())
+                        {
+                            oldModel.getComponent<cro::Model>().setHidden(true);
+                        }
 
+                        attachments[lastIndex].setModel(cro::Entity());
+                        attachments[m_attachmentIndex].setModel(m_attachmentModels[0]);
+                        m_attachmentModels[0].getComponent<cro::Model>().setHidden(false);
+                    }
                 }
                 ImGui::PopItemWidth();
-
                 ImGui::EndChild();
+
                 ImGui::SameLine();
-                ImGui::BeginChild("##attachment_options");
+
+                ImGui::BeginChild("##attachment_options", {240.f, 0.f});
                 if (attachments.empty())
                 {
                     ImGui::Text("No attachments added");
@@ -1944,18 +1959,26 @@ void ModelState::drawBrowser()
                         ap.setName(name);
                     }
                     auto pos = ap.getPosition();
-                    if (ImGui::InputFloat3("Position##attachment", &pos[0]))
+                    if (ImGui::DragFloat3("Position##attachment", &pos[0], 1.f, 0.f, 0.f, "%3.2f"))
                     {
                         ap.setPosition(pos);
                     }
+                    //TODO replace this with a gizmo or something cos the quat->euler and back is balls.
                     glm::vec3 rot = glm::eulerAngles(ap.getRotation());
-                    if (ImGui::DragFloat3("Rotation##attachment", &rot[0], -180.f, 180.f))
+                    if (ImGui::DragFloat3("Rotation##attachment", &rot[0], 1.f, -180.f, 180.f, "%3.2f"))
                     {
                         auto q = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rot[2] * cro::Util::Const::degToRad, cro::Transform::Z_AXIS);
                         q = glm::rotate(q, rot[1] * cro::Util::Const::degToRad, cro::Transform::Y_AXIS);
                         q = glm::rotate(q, rot[0] * cro::Util::Const::degToRad, cro::Transform::X_AXIS);
                         ap.setRotation(q);
                     }
+
+                    auto scale = ap.getScale();
+                    if (ImGui::DragFloat3("Scale##attachment", &scale[0], 1.f, 0.f, 0.f, "%3.2f"))
+                    {
+                        ap.setScale(scale);
+                    }
+
                     auto parent = ap.getParent();
                     if (ImGui::InputInt("Parent##attachment", &parent))
                     {
@@ -1963,6 +1986,22 @@ void ModelState::drawBrowser()
                         ap.setParent(parent);
                     }
                 }
+                ImGui::EndChild();
+
+                ImGui::SameLine();
+
+                ImGui::BeginChild("##attachment_details");
+                ImGui::Text("World Transform:");
+                auto aPos = m_attachmentModels[0].getComponent<cro::Transform>().getPosition();
+                ImGui::Text("World Pos: %3.3f, %3.3f, %3.3f", aPos.x, aPos.y, aPos.z);
+                auto aScale = m_attachmentModels[0].getComponent<cro::Transform>().getScale();
+                ImGui::Text("World Scale: %3.3f, %3.3f, %3.3f", aScale.x, aScale.y, aScale.z);
+                if (ImGui::Button("Quick Scale"))
+                {
+                    attachments[m_attachmentIndex].setScale(glm::vec3(1.f) / aScale);
+                }
+                ImGui::SameLine();
+                helpMarker("Resizes the attachment to a world scale of 1.0");
                 ImGui::EndChild();
 
                 ImGui::EndTabItem();

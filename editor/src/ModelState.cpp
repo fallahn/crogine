@@ -486,6 +486,21 @@ void ModelState::createScene()
 
     m_cameras[CameraID::FreeLook].FarPlane = DefaultFarPlane * 3.f;
     m_cameras[CameraID::FreeLook].camera = entity;
+
+
+    //default model for previewing attachment points
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    if (modelDef.loadFromFile("assets/models/gizmoo.cmt"))
+    {
+        modelDef.createModel(entity);
+        m_attachmentModels.push_back(entity);
+        entity.getComponent<cro::Model>().setHidden(true);
+    }
+    else
+    {
+        m_scene.destroyEntity(entity);
+    }
 }
 
 void ModelState::toggleFreecam()

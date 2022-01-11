@@ -225,6 +225,8 @@ private:
 
     EditorWindow m_textEditor;
 
+    std::vector<cro::Entity> m_attachmentModels;
+
     //---------ModelStateUI.cpp--------//
     ImVec4 m_messageColour;
     std::array<std::pair<std::string, cro::Image>, 4u> m_combinedImages;
