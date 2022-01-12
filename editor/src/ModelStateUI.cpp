@@ -2008,12 +2008,26 @@ void ModelState::drawBrowser()
                             ap.setName(name);
                         }
                     }
+                    
+                    if (ImGui::Button("R##pos"))
+                    {
+                        ap.setPosition(glm::vec3(0.f));
+                    }
+                    toolTip("Reset Transform");
+                    ImGui::SameLine();                    
                     auto pos = ap.getPosition();
                     if (ImGui::DragFloat3("Position##attachment", &pos[0], 1.f, 0.f, 0.f, "%3.2f"))
                     {
                         ap.setPosition(pos);
                     }
-                    
+
+                    if (ImGui::Button("R##rot"))
+                    {
+                        ap.setRotation(glm::quat(1.f, 0.f, 0.f, 0.f));
+                        m_attachmentAngles[m_attachmentIndex] = glm::vec3(0.f);
+                    }
+                    toolTip("Reset Rotation");
+                    ImGui::SameLine();
                     glm::vec3& rot = m_attachmentAngles[m_attachmentIndex];
                     if (ImGui::DragFloat3("Rotation##attachment", &rot[0], 1.f, -180.f, 180.f, "%3.2f"))
                     {
@@ -2023,11 +2037,18 @@ void ModelState::drawBrowser()
                         ap.setRotation(q);
                     }
 
+                    if (ImGui::Button("R##scale"))
+                    {
+                        ap.setScale(glm::vec3(1.f));
+                    }
+                    toolTip("Reset Scale");
+                    ImGui::SameLine();
                     auto scale = ap.getScale();
                     if (ImGui::DragFloat3("Scale##attachment", &scale[0], 1.f, 0.f, 0.f, "%3.2f"))
                     {
                         ap.setScale(scale);
                     }
+
 
                     auto parent = ap.getParent();
                     if (ImGui::InputInt("Parent##attachment", &parent))
@@ -2050,6 +2071,86 @@ void ModelState::drawBrowser()
                 }
                 ImGui::SameLine();
                 helpMarker("Resizes the attachment to a world scale of 1.0");
+
+                std::vector<const char*> labels;
+                for (auto e : m_attachmentModels)
+                {
+                    labels.push_back(e.getLabel().c_str());
+                }
+                static std::int32_t selectedModel = 0;
+                if (ImGui::ListBox("##preview_model", &selectedModel, labels.data(), static_cast<std::int32_t>(labels.size()), 4))
+                {
+                    if (!attachments.empty())
+                    {
+                        attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(true);
+                        attachments[m_attachmentIndex].setModel(m_attachmentModels[selectedModel]);
+                        attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(false);
+                    }
+                }
+                if (ImGui::Button("Add##preview_model"))
+                {
+                    auto path = cro::FileSystem::openFileDialogue("", "cmt");
+                    if (!path.empty())
+                    {
+                        std::replace(path.begin(), path.end(), '\\', '/');
+                        /*if (auto found = path.find(m_sharedData.workingDirectory); found != std::string::npos)
+                        {
+                            path = path.substr(found);
+                        }*/
+
+                        cro::ModelDefinition md(m_resources, nullptr, m_sharedData.workingDirectory);
+                        if (md.loadFromFile(path))
+                        {
+                            auto entity = m_scene.createEntity();
+                            entity.addComponent<cro::Transform>();
+                            md.createModel(entity);
+                            entity.setLabel(cro::FileSystem::getFileName(path));
+                            entity.getComponent<cro::Model>().setHidden(true);
+                            m_attachmentModels.push_back(entity);
+                        }
+                    }
+                }
+
+                if (selectedModel != 0)
+                {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Remove##preview_model"))
+                    {
+                        m_scene.destroyEntity(m_attachmentModels[selectedModel]);
+                        m_attachmentModels.erase(m_attachmentModels.begin() + selectedModel);
+
+                        if (selectedModel > 0)
+                        {
+                            selectedModel--;
+                            if (!attachments.empty())
+                            {
+                                attachments[m_attachmentIndex].setModel(m_attachmentModels[selectedModel]);
+                                attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(false);
+                            }
+                        }
+                    }
+                }
+
+                if (m_attachmentModels.size() > 1)
+                {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Clear##preview_models"))
+                    {
+                        for (auto i = 1u; i < m_attachmentModels.size(); ++i)
+                        {
+                            m_scene.destroyEntity(m_attachmentModels[i]);
+                        }
+                        m_attachmentModels.resize(1);
+
+                        selectedModel = 0;
+                        if (!attachments.empty())
+                        {
+                            attachments[m_attachmentIndex].setModel(m_attachmentModels[selectedModel]);
+                            attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(false);
+                        }
+                    }
+                }
+
                 ImGui::EndChild();
 
                 ImGui::EndTabItem();

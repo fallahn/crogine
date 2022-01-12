@@ -496,6 +496,7 @@ void ModelState::createScene()
         modelDef.createModel(entity);
         m_attachmentModels.push_back(entity);
         entity.getComponent<cro::Model>().setHidden(true);
+        entity.setLabel("Default");
     }
     else
     {
