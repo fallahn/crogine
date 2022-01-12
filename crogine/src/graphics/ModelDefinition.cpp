@@ -575,7 +575,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         //check to see if we can map environment lighting
         if (shaderType == ShaderResource::PBR)
         {
-            CRO_ASSERT(m_envMap, "No environment map was pass on construction");
+            CRO_ASSERT(m_envMap, "No environment map was passed on construction");
             material.setProperty("u_irradianceMap", m_envMap->getIrradianceMap());
             material.setProperty("u_prefilterMap", m_envMap->getPrefilterMap());
             material.setProperty("u_brdfMap", m_envMap->getBRDFMap());

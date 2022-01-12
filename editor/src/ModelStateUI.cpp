@@ -2061,7 +2061,7 @@ void ModelState::drawBrowser()
 
                 ImGui::SameLine();
 
-                ImGui::BeginChild("##attachment_details");
+                ImGui::BeginChild("##attachment_details", { 240.f, 0.f });
                 if (ImGui::Button("Quick Scale"))
                 {
                     glm::vec3 aPos, aScale;
@@ -2070,7 +2070,7 @@ void ModelState::drawBrowser()
                     attachments[m_attachmentIndex].setScale(glm::vec3(1.f) / aScale);
                 }
                 ImGui::SameLine();
-                helpMarker("Resizes the attachment to a world scale of 1.0");
+                helpMarker("Resizes the attachment to a world scale of 1.0, to compensate any scale applied by the skeleton");
 
                 std::vector<const char*> labels;
                 for (auto e : m_attachmentModels)
@@ -2082,7 +2082,10 @@ void ModelState::drawBrowser()
                 {
                     if (!attachments.empty())
                     {
-                        attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(true);
+                        if (attachments[m_attachmentIndex].getModel().isValid())
+                        {
+                            attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(true);
+                        }
                         attachments[m_attachmentIndex].setModel(m_attachmentModels[selectedModel]);
                         attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(false);
                     }
@@ -2098,7 +2101,7 @@ void ModelState::drawBrowser()
                             path = path.substr(found);
                         }*/
 
-                        cro::ModelDefinition md(m_resources, nullptr, m_sharedData.workingDirectory);
+                        cro::ModelDefinition md(m_resources, &m_environmentMap, m_sharedData.workingDirectory);
                         if (md.loadFromFile(path))
                         {
                             auto entity = m_scene.createEntity();
