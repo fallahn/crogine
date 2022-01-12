@@ -358,12 +358,14 @@ Mesh::Data BinaryMeshBuilder::build() const
                     m_skeleton.addNotification(frameID, { jointID, userID });
                 }
 
-                for (const auto& [rotation, translation, parent] : inAttachments)
+                for (const auto& [rotation, translation, scale, parent, name] : inAttachments)
                 {
                     Attachment ap;
                     ap.setParent(parent);
                     ap.setPosition(translation);
                     ap.setRotation(rotation);
+                    ap.setScale(scale);
+                    ap.setName(name);
 
                     m_skeleton.addAttachment(ap);
                 }

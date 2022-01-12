@@ -290,6 +290,13 @@ namespace cro
         std::int32_t addAttachment(const Attachment&);
 
         /*!
+        \brief Returns the index of the attachment with the given
+        name, or -1 if the attachment does not exist. If more than
+        one attachment with the same name exists the first result is returned.
+        */
+        std::int32_t getAttachmentIndex(const std::string& name) const;
+
+        /*!
         \brief Returns the requested attachment transform in world space.
         This transform is automatically applied to the attached model by the
         SkeletalAnimationSystem.

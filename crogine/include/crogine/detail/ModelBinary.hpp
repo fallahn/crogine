@@ -234,21 +234,32 @@ namespace cro::Detail::ModelBinary
     {
         glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
         glm::vec3 translation = glm::vec3(0.f);
+        glm::vec3 scale = glm::vec3(1.f);
         std::int32_t parent = -1;
+        char name[Attachment::MaxNameLength + 1];
 
         SerialAttachment() = default;
         explicit SerialAttachment(const cro::Attachment& ap)
             : rotation  (ap.m_rotation),
             translation (ap.m_position),
+            scale       (ap.m_scale),
             parent      (ap.m_parent)
         {
-
+            auto len = std::min(Attachment::MaxNameLength, ap.getName().size());
+            std::memcpy(name, ap.getName().c_str(), len);
+            name[len] = 0;
         }
         SerialAttachment& operator = (const cro::Attachment& ap)
         {
             rotation = ap.m_rotation;
             translation = ap.m_position;
+            scale = ap.m_scale;
             parent = ap.m_parent;
+
+            auto len = std::min(Attachment::MaxNameLength, ap.getName().size());
+            std::memcpy(name, ap.getName().c_str(), len);
+            name[len] = 0;
+
             return *this;
         }
     };

@@ -137,12 +137,21 @@ void Skeleton::addNotification(std::size_t frameID, Notification n)
 
 std::int32_t Skeleton::addAttachment(const Attachment& ap)
 {
-    if (ap.m_model.isValid())
+    m_attachments.push_back(ap);
+    return static_cast<std::int32_t>(m_attachments.size() - 1);
+}
+
+std::int32_t Skeleton::getAttachmentIndex(const std::string& name) const
+{
+    if (auto result = std::find_if(m_attachments.begin(), m_attachments.end(),
+        [&name](const Attachment& a)
+        {
+            return name == a.getName();
+        }); result != m_attachments.end())
     {
-        m_attachments.push_back(ap);
-        return static_cast<std::int32_t>(m_attachments.size() - 1);
+        return static_cast<std::int32_t>(std::distance(m_attachments.begin(), result));
     }
-    LogE << "No valid model on attachment" << std::endl;
+
     return -1;
 }
 
