@@ -45,6 +45,9 @@ source distribution.
 #include <crogine/util/String.hpp>
 #include <crogine/util/Matrix.hpp>
 
+#include <sstream>
+#include <iomanip>
+
 namespace
 {
     const std::array ShaderStrings =
@@ -278,6 +281,14 @@ namespace
 
     bool setInspectorTab = false;
     std::int32_t inspectorTabIndex = 0;
+
+    std::string uniqueID()
+    {
+        static std::size_t uid = 0;
+        std::stringstream ss;
+        ss << "." << std::setfill('0') << std::setw(4) << uid++;
+        return ss.str();
+    }
 }
 
 float updateView(cro::Entity entity, float farPlane, float fov)
@@ -1884,7 +1895,7 @@ void ModelState::drawBrowser()
                 ImGui::BeginChild("##attachments", {200.f, 0.f});
                 if (ImGui::Button("Add##attachment"))
                 {
-                    attachments.emplace_back();
+                    attachments.emplace_back().setName("attachment" + uniqueID());
                     m_attachmentAngles.emplace_back(0.f, 0.f, 0.f);
                     
                     if (attachments[m_attachmentIndex].getModel().isValid())
@@ -1974,13 +1985,28 @@ void ModelState::drawBrowser()
 
                     auto& ap = attachments[m_attachmentIndex];
                     auto name = ap.getName();
-                    if (ImGui::InputText("Name##attachment", &name))
+                    if (ImGui::InputText("Name##attachment", &name, ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue))
                     {
                         //auto size = std::min(name.size(), cro::Attachment::MaxNameLength);
                         //because we're using a specialised version for std::string
                         //the callback does something weird if we try to manually clamp the
                         //length and triggers an infinite loop...
-                        ap.setName(name);
+                        if (!name.empty())
+                        {
+                            //this works as long as we don't have too many attachments...
+                            auto result = std::find_if(attachments.begin(), attachments.end(), 
+                                [&name](const cro::Attachment& a) 
+                                {
+                                    return a.getName() == name;
+                                });
+                            //TODO we need to clamp this to the character limit
+
+                            if (result != attachments.end())
+                            {
+                                name += uniqueID();
+                            }
+                            ap.setName(name);
+                        }
                     }
                     auto pos = ap.getPosition();
                     if (ImGui::DragFloat3("Position##attachment", &pos[0], 1.f, 0.f, 0.f, "%3.2f"))
