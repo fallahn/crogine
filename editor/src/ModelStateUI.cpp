@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/graphics/MeshBuilder.hpp>
 
 #include <crogine/util/String.hpp>
+#include <crogine/util/Matrix.hpp>
 
 namespace
 {
@@ -1884,18 +1885,42 @@ void ModelState::drawBrowser()
                 if (ImGui::Button("Add##attachment"))
                 {
                     attachments.emplace_back();
+                    m_attachmentAngles.emplace_back(0.f, 0.f, 0.f);
+                    
+                    if (attachments[m_attachmentIndex].getModel().isValid())
+                    {
+                        attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(true);
+                    }
+                    attachments[m_attachmentIndex].setModel(cro::Entity());
                     m_attachmentIndex = attachments.size() - 1;
+
+                    attachments[m_attachmentIndex].setModel(m_attachmentModels[0]);
+                    m_attachmentModels[0].getComponent<cro::Model>().setHidden(false);
                 }
                 if (!attachments.empty())
                 {
                     ImGui::SameLine();
                     if (ImGui::Button("Remove##attachment"))
                     {
-                        attachments.erase(attachments.begin() + m_attachmentIndex);
+                        auto removeIndex = m_attachmentIndex;
                         if (m_attachmentIndex > 0)
                         {
+                            if (attachments[m_attachmentIndex].getModel().isValid())
+                            {
+                                attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(true);
+                            }
                             m_attachmentIndex--;
+                        }                        
+                        
+                        attachments.erase(attachments.begin() + removeIndex);
+                        m_attachmentAngles.erase(m_attachmentAngles.begin() + removeIndex);
+
+                        if (!attachments.empty())
+                        {
+                            //TODO set to selected preview
+                            attachments[m_attachmentIndex].setModel(m_attachmentModels[0]);
                         }
+                        m_attachmentModels[0].getComponent<cro::Model>().setHidden(false);
                     }
                 }
                 //I'll be buggered if I can figure this out
@@ -1962,8 +1987,8 @@ void ModelState::drawBrowser()
                     {
                         ap.setPosition(pos);
                     }
-                    //TODO replace this with a gizmo or something cos the quat->euler and back is balls.
-                    glm::vec3 rot = glm::eulerAngles(ap.getRotation());
+                    
+                    glm::vec3& rot = m_attachmentAngles[m_attachmentIndex];
                     if (ImGui::DragFloat3("Rotation##attachment", &rot[0], 1.f, -180.f, 180.f, "%3.2f"))
                     {
                         auto q = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rot[2] * cro::Util::Const::degToRad, cro::Transform::Z_AXIS);
@@ -1990,13 +2015,11 @@ void ModelState::drawBrowser()
                 ImGui::SameLine();
 
                 ImGui::BeginChild("##attachment_details");
-                ImGui::Text("World Transform:");
-                auto aPos = m_attachmentModels[0].getComponent<cro::Transform>().getPosition();
-                ImGui::Text("World Pos: %3.3f, %3.3f, %3.3f", aPos.x, aPos.y, aPos.z);
-                auto aScale = m_attachmentModels[0].getComponent<cro::Transform>().getScale();
-                ImGui::Text("World Scale: %3.3f, %3.3f, %3.3f", aScale.x, aScale.y, aScale.z);
                 if (ImGui::Button("Quick Scale"))
                 {
+                    glm::vec3 aPos, aScale;
+                    glm::quat aRot;
+                    cro::Util::Matrix::decompose(skel.getAttachmentTransform(m_attachmentIndex), aPos, aRot, aScale);
                     attachments[m_attachmentIndex].setScale(glm::vec3(1.f) / aScale);
                 }
                 ImGui::SameLine();

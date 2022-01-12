@@ -231,6 +231,7 @@ private:
     ImVec4 m_messageColour;
     std::array<std::pair<std::string, cro::Image>, 4u> m_combinedImages;
     std::int32_t m_attachmentIndex;
+    std::vector<glm::vec3> m_attachmentAngles;
     void buildUI();
     void showSaveMessage();
     void drawInspector();

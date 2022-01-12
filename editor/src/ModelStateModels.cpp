@@ -442,6 +442,8 @@ void ModelState::closeModel()
             m_scene.destroyEntity(m_entities[EntityID::ActiveSkeleton]);
             m_entities[EntityID::ActiveSkeleton] = {};
         }
+
+        m_attachmentAngles.clear();
     }
 
     if (m_entities[EntityID::NormalVis].isValid())
