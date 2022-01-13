@@ -160,7 +160,7 @@ glm::mat4 Skeleton::getAttachmentTransform(std::int32_t id) const
     CRO_ASSERT(id > -1 && id < m_attachments.size(), "");
 
     const auto& ap = m_attachments[id];
-    return  m_currentFrame[ap.m_parent] * m_bindPose[ap.m_parent] * ap.m_transform;
+    return  m_currentFrame[ap.getParent()] * m_bindPose[ap.getParent()] * ap.getLocalTransform();
 }
 
 void Skeleton::setInverseBindPose(const std::vector<glm::mat4>& invBindPose)

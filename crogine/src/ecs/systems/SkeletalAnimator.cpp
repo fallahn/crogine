@@ -168,10 +168,9 @@ void SkeletalAnimator::process(float dt)
         for (auto i = 0u; i < skel.m_attachments.size(); ++i)
         {
             auto& ap = skel.m_attachments[i];
-            if (ap.m_model.isValid())
+            if (ap.getModel().isValid())
             {
-                ap.m_model.getComponent<cro::Transform>().m_attachmentTransform = entity.getComponent<cro::Transform>().getWorldTransform() * skel.getAttachmentTransform(i);
-                //ap.m_model.getComponent<cro::Transform>().setLocalTransform(entity.getComponent<cro::Transform>().getWorldTransform() * skel.getAttachmentTransform(i));
+                ap.getModel().getComponent<cro::Transform>().m_attachmentTransform = entity.getComponent<cro::Transform>().getWorldTransform() * skel.getAttachmentTransform(i);
             }
         }
     }

@@ -47,7 +47,6 @@ namespace cro
     {
         struct SkeletonHeader;
         struct SkeletonHeaderV2;
-        struct SerialAttachment;
     }
 
     /*!
@@ -130,6 +129,7 @@ namespace cro
         glm::vec3 getPosition() const { return m_position; }
         glm::quat getRotation() const { return m_rotation; }
         glm::vec3 getScale() const { return m_scale; }
+        const glm::mat4& getLocalTransform() const { return m_transform; }
         const std::string& getName() const { return m_name; }
 
         static constexpr std::size_t MaxNameLength = 30;
@@ -145,10 +145,6 @@ namespace cro
         std::string m_name = "Attachment";
 
         void updateLocalTransform();
-
-        friend class Skeleton;
-        friend class SkeletalAnimator;
-        friend struct cro::Detail::ModelBinary::SerialAttachment;
     };
 
     /*!

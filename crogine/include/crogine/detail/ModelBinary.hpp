@@ -240,10 +240,10 @@ namespace cro::Detail::ModelBinary
 
         SerialAttachment() = default;
         explicit SerialAttachment(const cro::Attachment& ap)
-            : rotation  (ap.m_rotation),
-            translation (ap.m_position),
-            scale       (ap.m_scale),
-            parent      (ap.m_parent)
+            : rotation  (ap.getRotation()),
+            translation (ap.getPosition()),
+            scale       (ap.getScale()),
+            parent      (ap.getParent())
         {
             auto len = std::min(Attachment::MaxNameLength, ap.getName().size());
             std::memcpy(name, ap.getName().c_str(), len);
@@ -251,10 +251,10 @@ namespace cro::Detail::ModelBinary
         }
         SerialAttachment& operator = (const cro::Attachment& ap)
         {
-            rotation = ap.m_rotation;
-            translation = ap.m_position;
-            scale = ap.m_scale;
-            parent = ap.m_parent;
+            rotation = ap.getRotation();
+            translation = ap.getPosition();
+            scale = ap.getScale();
+            parent = ap.getParent();
 
             auto len = std::min(Attachment::MaxNameLength, ap.getName().size());
             std::memcpy(name, ap.getName().c_str(), len);
