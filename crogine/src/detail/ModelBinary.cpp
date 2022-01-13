@@ -280,7 +280,10 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
             {
                 for (auto j = 0u; j < notifications[i].size(); ++j)
                 {
-                    outNotifications.emplace_back(i, notifications[i][j].jointID, notifications[i][j].userID);
+                    auto& n = outNotifications.emplace_back(i, notifications[i][j].jointID, notifications[i][j].userID);
+                    auto len = std::min(Attachment::MaxNameLength, notifications[i][j].name.size());
+                    std::memcpy(n.name, notifications[i][j].name.c_str(), len);
+                    n.name[len] = 0;
                 }
             }
         }

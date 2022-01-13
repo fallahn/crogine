@@ -256,6 +256,7 @@ namespace cro
         {
             std::int32_t jointID = -1; //!< The joint which should raise this notification
             std::int32_t userID = -1; //!< The user defined ID to include in the notification message
+            std::string name; //!< Name as it appears in the editor
         };
 
         /*!
@@ -276,6 +277,7 @@ namespace cro
         \brief Returns a reference to the vector of notifications associated with the skeleton
         */
         const std::vector<std::vector<Notification>>& getNotifications() const { return m_notifications; }
+        std::vector<std::vector<Notification>>& getNotifications() { return m_notifications; }
 
         /*!
         \brief Adds an attachment to the skeleton.

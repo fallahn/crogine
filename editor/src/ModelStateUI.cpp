@@ -200,15 +200,17 @@ namespace
         return retVal;
     }
 
-    void drawAnimationData(std::array<cro::Entity, EntityID::Count>& entities)
+    void drawAnimationData(std::array<cro::Entity, EntityID::Count>& entities, bool skelCheck = true)
     {
-        bool showSkel = !entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().isHidden();
-        if (ImGui::Checkbox("Show Skeleton##234897", &showSkel))
+        if (skelCheck)
         {
-            entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().setHidden(!showSkel);
+            bool showSkel = !entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().isHidden();
+            if (ImGui::Checkbox("Show Skeleton##234897", &showSkel))
+            {
+                entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().setHidden(!showSkel);
+            }
+            ImGui::NewLine();
         }
-        ImGui::NewLine();
-
         auto& skel = entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
         auto& animations = skel.getAnimations();
 
@@ -236,6 +238,9 @@ namespace
         auto name = anim.name.substr(0, 16);
         ImGui::Text("Frames: %lu", anim.frameCount);
         toolTip(anim.name.c_str());
+
+        ImGui::SameLine();
+        ImGui::Text(" - Current Frame: %lu", animations[skel.getCurrentAnimation()].currentFrame - animations[skel.getCurrentAnimation()].startFrame);
 
         if (ImGui::Button("<")
             && animations[skel.getCurrentAnimation()].playbackRate == 0)
@@ -272,9 +277,7 @@ namespace
 
         ImGui::SameLine();
         ImGui::Checkbox("Loop", &anim.looped);
-
-        ImGui::Text("Current Frame: %lu", animations[skel.getCurrentAnimation()].currentFrame - animations[skel.getCurrentAnimation()].startFrame);
-
+        
         ImGui::NewLine();
         ImGui::Separator();
     }
@@ -2170,8 +2173,76 @@ void ModelState::drawBrowser()
             
             if (ImGui::BeginTabItem("Animation"))
             {
-                ImGui::Text("Select an animation to edit from the Model tab of the Inspector pane");
+                //ImGui::Text("Select an animation to edit from the Model tab of the Inspector pane");
+                ImGui::BeginChild("##anim_controls", { 300.f, 0.f });
+                drawAnimationData(m_entities, false);
+                ImGui::EndChild();
+                ImGui::SameLine();
+                ImGui::BeginChild("##anim_notifications", { 200.f, 0.f });
+                auto& skeleton = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+                auto& notifications = skeleton.getNotifications()[skeleton.getCurrentFrame()];
+                static std::int32_t notIndex = 0;
 
+                if (ImGui::Button("Add##notification"))
+                {
+                    auto& n = notifications.emplace_back();
+                    n.name = "Notif" + uniqueID();
+                    notIndex = notifications.size() - 1;
+                }
+                if (!notifications.empty())
+                {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Remove##notification"))
+                    {
+                        notifications.erase(notifications.begin() + notIndex);
+                        if (notIndex > 0)
+                        {
+                            notIndex--;
+                        }
+                    }
+                }
+                std::vector<const char*> names;
+                for (const auto& n : notifications)
+                {
+                    names.push_back(n.name.c_str());
+                }
+
+                if (ImGui::ListBox("##notifs", &notIndex, names.data(), static_cast<std::int32_t>(names.size()), 6))
+                {
+
+                }
+                ImGui::EndChild();
+                ImGui::SameLine();
+                ImGui::BeginChild("##anim_notif_details");
+
+                if (!notifications.empty())
+                {
+                    auto name = notifications[notIndex].name;
+                    if (ImGui::InputText("Name##notif", &name, ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue))
+                    {
+                        if (name.empty())
+                        {
+                            name = "Notif" + uniqueID();
+                        }
+                        //TODO check if name already exists
+                        notifications[notIndex].name = name;
+                    }
+
+                    auto jointID = notifications[notIndex].jointID;
+                    if (ImGui::InputInt("JointID##notif", &jointID))
+                    {
+                        jointID = std::max(0, std::min(jointID, static_cast<std::int32_t>(skeleton.getFrameSize()) - 1));
+                        notifications[notIndex].jointID = jointID;
+                    }
+
+                    ImGui::InputInt("User Data##notif", &notifications[notIndex].userID);
+                }
+                else
+                {
+                    ImGui::Text("No Events Tthis Frame");
+                }
+
+                ImGui::EndChild();
                 ImGui::EndTabItem();
             }
         }
