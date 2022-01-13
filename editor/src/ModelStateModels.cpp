@@ -251,6 +251,7 @@ void ModelState::openModelAtPath(const std::string& path)
             for (const auto& attachment : skel.getAttachments())
             {
                 auto rot = glm::eulerAngles(attachment.getRotation());
+                rot *= cro::Util::Const::radToDeg;
                 m_attachmentAngles.push_back(rot);
             }
         }
@@ -463,6 +464,16 @@ void ModelState::closeModel()
         }
 
         m_attachmentAngles.clear();
+
+        if (m_attachmentModels.size() > 1)
+        {
+            for (auto i = 1u; i < m_attachmentModels.size(); ++i)
+            {
+                m_scene.destroyEntity(m_attachmentModels[i]);
+            }
+            m_attachmentModels.resize(1);
+        }
+        m_attachmentModels[0].getComponent<cro::Model>().setHidden(true);
     }
 
     if (m_entities[EntityID::NormalVis].isValid())
