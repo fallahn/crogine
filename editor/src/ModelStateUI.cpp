@@ -1930,8 +1930,12 @@ void ModelState::drawBrowser()
                         {
                             //TODO set to selected preview
                             attachments[m_attachmentIndex].setModel(m_attachmentModels[0]);
+                            m_attachmentModels[0].getComponent<cro::Model>().setHidden(false);
                         }
-                        m_attachmentModels[0].getComponent<cro::Model>().setHidden(false);
+                        else
+                        {
+                            m_attachmentModels[0].getComponent<cro::Model>().setHidden(true);
+                        }
                     }
                 }
                 //I'll be buggered if I can figure this out
@@ -1959,14 +1963,19 @@ void ModelState::drawBrowser()
                     if (!m_attachmentModels.empty())
                     {
                         auto oldModel = attachments[lastIndex].getModel();
-                        if (oldModel.isValid())
+                        //if (oldModel.isValid())
+                        if (oldModel == m_attachmentModels[0])
                         {
                             oldModel.getComponent<cro::Model>().setHidden(true);
+                            attachments[lastIndex].setModel(cro::Entity());
                         }
 
-                        attachments[lastIndex].setModel(cro::Entity());
-                        attachments[m_attachmentIndex].setModel(m_attachmentModels[0]);
-                        m_attachmentModels[0].getComponent<cro::Model>().setHidden(false);
+                        if (!attachments[m_attachmentIndex].getModel().isValid())
+                        {
+                            //show default model
+                            attachments[m_attachmentIndex].setModel(m_attachmentModels[0]);
+                            m_attachmentModels[0].getComponent<cro::Model>().setHidden(false);
+                        }
                     }
                 }
                 ImGui::PopItemWidth();
@@ -2053,7 +2062,7 @@ void ModelState::drawBrowser()
                     auto parent = ap.getParent();
                     if (ImGui::InputInt("Parent##attachment", &parent))
                     {
-                        parent = std::max(0, std::min(static_cast<std::int32_t>(skel.getFrameSize()), parent));
+                        parent = std::max(0, std::min(static_cast<std::int32_t>(skel.getFrameSize()) - 1, parent));
                         ap.setParent(parent);
                     }
                 }
