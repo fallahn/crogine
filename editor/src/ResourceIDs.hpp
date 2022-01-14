@@ -56,6 +56,7 @@ namespace EntityID
         GridMesh, //< also has AABB and Sphere attached
         ActiveModel, //< model being viewed
         ActiveSkeleton,
+        JointNode, //< highlights selected join when editing animation events
         RootNode, //< has the ground plane / model attached to it
         NormalVis,
         GroundPlane,

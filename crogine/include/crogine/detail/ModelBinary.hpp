@@ -221,7 +221,7 @@ namespace cro::Detail::ModelBinary
     struct CRO_EXPORT_API SerialNotification final
     {
         std::uint32_t frameID = 0;
-        std::int32_t jointID = -1;
+        std::uint32_t jointID = 0;
         std::int32_t userID = -1;
         char name[Attachment::MaxNameLength + 1];
 
@@ -230,7 +230,7 @@ namespace cro::Detail::ModelBinary
         {
             name[0] = 0;
         };
-        SerialNotification(std::uint32_t f, std::int32_t j, std::int32_t u)
+        SerialNotification(std::uint32_t f, std::uint32_t j, std::int32_t u)
             : frameID(f), jointID(j), userID(u)
         {
             name[0] = 0;

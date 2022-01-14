@@ -131,7 +131,7 @@ std::size_t Skeleton::getCurrentFrame() const
 void Skeleton::addNotification(std::size_t frameID, Notification n)
 {
     CRO_ASSERT(frameID < m_frameCount, "Out of range");
-    CRO_ASSERT(n.jointID > -1 && n.jointID < m_frameSize, "Out of range");
+    CRO_ASSERT(n.jointID < m_frameSize, "Out of range");
     m_notifications[frameID].push_back(n);
 }
 

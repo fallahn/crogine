@@ -254,7 +254,7 @@ namespace cro
         */
         struct Notification final
         {
-            std::int32_t jointID = -1; //!< The joint which should raise this notification
+            std::uint32_t jointID = 0; //!< The joint which should raise this notification
             std::int32_t userID = -1; //!< The user defined ID to include in the notification message
             std::string name; //!< Name as it appears in the editor
         };

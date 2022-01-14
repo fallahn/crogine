@@ -264,6 +264,7 @@ namespace
             if (ImGui::Button("Play", ImVec2(50.f, 22.f)))
             {
                 skel.play(selectedAnim);
+                entities[EntityID::JointNode].getComponent<cro::Model>().setHidden(true);
             }
         }
 
@@ -1906,7 +1907,7 @@ void ModelState::drawBrowser()
                         attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(true);
                     }
                     attachments[m_attachmentIndex].setModel(cro::Entity());
-                    m_attachmentIndex = attachments.size() - 1;
+                    m_attachmentIndex = static_cast<std::int32_t>(attachments.size()) - 1;
 
                     attachments[m_attachmentIndex].setModel(m_attachmentModels[0]);
                     m_attachmentModels[0].getComponent<cro::Model>().setHidden(false);
@@ -2173,77 +2174,102 @@ void ModelState::drawBrowser()
             
             if (ImGui::BeginTabItem("Animation"))
             {
-                //ImGui::Text("Select an animation to edit from the Model tab of the Inspector pane");
                 ImGui::BeginChild("##anim_controls", { 300.f, 0.f });
                 drawAnimationData(m_entities, false);
                 ImGui::EndChild();
-                ImGui::SameLine();
-                ImGui::BeginChild("##anim_notifications", { 200.f, 0.f });
-                auto& skeleton = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
-                auto& notifications = skeleton.getNotifications()[skeleton.getCurrentFrame()];
-                static std::int32_t notIndex = 0;
 
-                if (ImGui::Button("Add##notification"))
-                {
-                    auto& n = notifications.emplace_back();
-                    n.name = "Notif" + uniqueID();
-                    notIndex = notifications.size() - 1;
-                }
-                if (!notifications.empty())
+
+                auto& skeleton = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+                const auto& animations = skeleton.getAnimations();
+                if (animations[skeleton.getCurrentAnimation()].playbackRate == 0)
                 {
                     ImGui::SameLine();
-                    if (ImGui::Button("Remove##notification"))
+                    ImGui::BeginChild("##anim_notifications", { 200.f, 0.f });
+                    auto& notifications = skeleton.getNotifications()[skeleton.getCurrentFrame()];
+                    static std::int32_t notIndex = 0;
+
+                    if (ImGui::Button("Add##notification"))
                     {
-                        notifications.erase(notifications.begin() + notIndex);
-                        if (notIndex > 0)
+                        auto& n = notifications.emplace_back();
+                        n.name = "Notif" + uniqueID();
+                        notIndex = static_cast<std::int32_t>(notifications.size()) - 1;
+                    }
+                    if (!notifications.empty())
+                    {
+                        ImGui::SameLine();
+                        if (ImGui::Button("Remove##notification"))
                         {
-                            notIndex--;
+                            notifications.erase(notifications.begin() + notIndex);
+                            if (notIndex > 0)
+                            {
+                                notIndex--;
+                            }
                         }
+
+                        m_entities[EntityID::JointNode].getComponent<cro::Model>().setHidden(false);
+                        auto pos = glm::vec3(
+                            skeleton.getRootTransform() *
+                            skeleton.getFrames()[(skeleton.getCurrentFrame() * skeleton.getFrameSize()) + notifications[notIndex].jointID].worldMatrix[3]);
+                        m_entities[EntityID::JointNode].getComponent<cro::Transform>().setPosition(pos);
                     }
-                }
-                std::vector<const char*> names;
-                for (const auto& n : notifications)
-                {
-                    names.push_back(n.name.c_str());
-                }
-
-                if (ImGui::ListBox("##notifs", &notIndex, names.data(), static_cast<std::int32_t>(names.size()), 6))
-                {
-
-                }
-                ImGui::EndChild();
-                ImGui::SameLine();
-                ImGui::BeginChild("##anim_notif_details");
-
-                if (!notifications.empty())
-                {
-                    auto name = notifications[notIndex].name;
-                    if (ImGui::InputText("Name##notif", &name, ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue))
+                    else
                     {
-                        if (name.empty())
+                        m_entities[EntityID::JointNode].getComponent<cro::Model>().setHidden(true);
+                    }
+                    std::vector<const char*> names;
+                    for (const auto& n : notifications)
+                    {
+                        names.push_back(n.name.c_str());
+                    }
+
+                    ImGui::SetNextItemWidth(200.f);
+                    if (ImGui::ListBox("##notifs", &notIndex, names.data(), static_cast<std::int32_t>(names.size()), 6))
+                    {
+
+                    }
+                    ImGui::EndChild();
+                    ImGui::SameLine();
+                    ImGui::BeginChild("##anim_notif_details", { 400.f, 0.f});
+
+                    if (!notifications.empty())
+                    {
+                        auto name = notifications[notIndex].name;
+                        if (ImGui::InputText("Name##notif", &name, ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue))
                         {
-                            name = "Notif" + uniqueID();
+                            if (name.empty())
+                            {
+                                name = "Notif" + uniqueID();
+                            }
+                            //TODO check if name already exists
+                            notifications[notIndex].name = name;
                         }
-                        //TODO check if name already exists
-                        notifications[notIndex].name = name;
-                    }
 
-                    auto jointID = notifications[notIndex].jointID;
-                    if (ImGui::InputInt("JointID##notif", &jointID))
+                        auto jointID = static_cast<std::int32_t>(notifications[notIndex].jointID);
+                        if (ImGui::InputInt("JointID##notif", &jointID))
+                        {
+                            jointID = std::max(0, std::min(jointID, static_cast<std::int32_t>(skeleton.getFrameSize()) - 1));
+                            notifications[notIndex].jointID = jointID;
+                        }
+
+                        ImGui::InputInt("User Data##notif", &notifications[notIndex].userID);
+                    }
+                    else
                     {
-                        jointID = std::max(0, std::min(jointID, static_cast<std::int32_t>(skeleton.getFrameSize()) - 1));
-                        notifications[notIndex].jointID = jointID;
+                        ImGui::Text("No Events This Frame");
                     }
 
-                    ImGui::InputInt("User Data##notif", &notifications[notIndex].userID);
+                    ImGui::EndChild();
                 }
-                else
+                /*else
                 {
-                    ImGui::Text("No Events Tthis Frame");
-                }
+                    m_entities[EntityID::JointNode].getComponent<cro::Model>().setHidden(true);
+                }*/
 
-                ImGui::EndChild();
                 ImGui::EndTabItem();
+            }
+            else
+            {
+                m_entities[EntityID::JointNode].getComponent<cro::Model>().setHidden(true);
             }
         }
 
