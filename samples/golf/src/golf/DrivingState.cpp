@@ -334,9 +334,9 @@ void DrivingState::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
-    case cro::Message::SpriteAnimationMessage:
+    case cro::Message::SkeletalAnimationMessage:
     {
-        const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
+        const auto& data = msg.getData<cro::Message::SkeletalAnimEvent>();
         if (data.userType == SpriteAnimID::Swing)
         {
             //relay this message with the info needed for particle/sound effects
@@ -577,6 +577,7 @@ void DrivingState::loadAssets()
     //models
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n");
 
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
@@ -585,10 +586,14 @@ void DrivingState::loadAssets()
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+    
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
-
+   
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
     m_materialIDs[MaterialID::Wireframe] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
@@ -635,6 +640,30 @@ void DrivingState::loadAssets()
         {
             m_ballModels.insert(std::make_pair(uid, std::move(def)));
         }
+    }
+
+    //club models - TODO update material
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/golf/models/club_wood.cmt"))
+    {
+        m_clubModels[ClubModel::Wood] = m_gameScene.createEntity();
+        m_clubModels[ClubModel::Wood].addComponent<cro::Transform>();
+        md.createModel(m_clubModels[ClubModel::Wood]);
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+        setTexture(md, material, 0);
+        m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setMaterial(0, material);
+    }
+
+    if (md.loadFromFile("assets/golf/models/club_iron.cmt"))
+    {
+        m_clubModels[ClubModel::Iron] = m_gameScene.createEntity();
+        m_clubModels[ClubModel::Iron].addComponent<cro::Transform>();
+        md.createModel(m_clubModels[ClubModel::Iron]);
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+        setTexture(md, material, 0);
+        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterial(0, material);
     }
 
     initAudio();
@@ -1584,6 +1613,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
 
 
+    //3D Player Model
     md.loadFromFile("assets/golf/models/player_zero.cmt");
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
@@ -1597,10 +1627,19 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
         //setting material to double sided will have to do I suppose...
     }
 
-    //map the animation IDs
+    auto count = entity.getComponent<cro::Model>().getMeshData().submeshCount;
+    for (auto i = 0u; i < count; ++i)
+    {
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+        setTexture(md, material, i);
+        entity.getComponent<cro::Model>().setMaterial(i, material);
+    }
+
     if (entity.hasComponent<cro::Skeleton>())
     {
-        const auto& anims = entity.getComponent<cro::Skeleton>().getAnimations();
+        //map the animation IDs
+        auto& skel = entity.getComponent<cro::Skeleton>();
+        const auto& anims = skel.getAnimations();
         for (auto i = 0u; i < anims.size(); ++i)
         {
             if (anims[i].name == "idle")
@@ -1615,6 +1654,13 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
             {
                 m_animationIDs[AnimationID::Chip] = i;
             }
+        }
+
+        //find attachment points for club model
+        auto id = skel.getAttachmentIndex("hands");
+        if (id > -1)
+        {
+            skel.getAttachments()[id].setModel(m_clubModels[ClubModel::Wood]);
         }
     }
 }

@@ -10,7 +10,7 @@ model player_zero
         smooth = true
         repeat = true
         depth_test = true
-        double_sided = false
+        double_sided = true
         blendmode = none
         diffuse = "assets/golf/images/player_zero.png"
         skinned = true

@@ -187,11 +187,6 @@ void ModelState::handleMessage(const cro::Message& msg)
             }
         }
     }
-    else if (msg.id == cro::Message::SkeletalAnimationMessage)
-    {
-        const auto& data = msg.getData<cro::Message::SkeletalAnimEvent>();
-        LogI << data.userType << " - " << data.position << std::endl;
-    }
 
     m_previewScene.forwardMessage(msg);
     m_scene.forwardMessage(msg);
