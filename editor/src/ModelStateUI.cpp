@@ -1530,7 +1530,7 @@ void ModelState::drawInspector()
 void ModelState::drawBrowser()
 {
     auto [pos, size] = WindowLayouts[WindowID::Browser];
-
+    //ImGui::ShowDemoWindow();
     ImGui::SetNextWindowPos({ pos.x, pos.y });
     ImGui::SetNextWindowSize({ size.x, size.y });
     if (ImGui::Begin("Browser", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
@@ -1896,7 +1896,7 @@ void ModelState::drawBrowser()
                     m_attachmentIndex = 0;
                 }
 
-                ImGui::BeginChild("##attachments", {200.f, 0.f});
+                ImGui::BeginChild("##attachments", {200.f, 0.f}, true);
                 if (ImGui::Button("Add##attachment"))
                 {
                     attachments.emplace_back().setName("attachment" + uniqueID());
@@ -1987,7 +1987,7 @@ void ModelState::drawBrowser()
 
                 ImGui::SameLine();
 
-                ImGui::BeginChild("##attachment_options", {240.f, 0.f});
+                ImGui::BeginChild("##attachment_options", {240.f, 0.f}, true);
                 if (attachments.empty())
                 {
                     ImGui::Text("No attachments added");
@@ -2000,23 +2000,23 @@ void ModelState::drawBrowser()
                     auto name = ap.getName();
                     if (ImGui::InputText("Name##attachment", &name, ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue))
                     {
-                        //auto size = std::min(name.size(), cro::Attachment::MaxNameLength);
-                        //because we're using a specialised version for std::string
-                        //the callback does something weird if we try to manually clamp the
-                        //length and triggers an infinite loop...
                         if (!name.empty())
                         {
+                            if (name.length() >= cro::Attachment::MaxNameLength)
+                            {
+                                name = name.substr(0, cro::Attachment::MaxNameLength - 1);
+                            }
+
                             //this works as long as we don't have too many attachments...
                             auto result = std::find_if(attachments.begin(), attachments.end(), 
                                 [&name](const cro::Attachment& a) 
                                 {
                                     return a.getName() == name;
                                 });
-                            //TODO we need to clamp this to the character limit
 
                             if (result != attachments.end())
                             {
-                                name += uniqueID();
+                                name = name.substr(0, std::min(name.length(), cro::Attachment::MaxNameLength - 6)) += uniqueID();
                             }
                             ap.setName(name);
                         }
@@ -2074,7 +2074,7 @@ void ModelState::drawBrowser()
 
                 ImGui::SameLine();
 
-                ImGui::BeginChild("##attachment_details", { 240.f, 0.f });
+                ImGui::BeginChild("##attachment_details", { 240.f, 0.f }, true);
                 if (ImGui::Button("Quick Scale"))
                 {
                     glm::vec3 aPos, aScale;
@@ -2171,10 +2171,14 @@ void ModelState::drawBrowser()
 
                 ImGui::EndTabItem();
             }
-            
+            else
+            {
+                m_attachmentModels[0].getComponent<cro::Model>().setHidden(true);
+            }
+
             if (ImGui::BeginTabItem("Animation"))
             {
-                ImGui::BeginChild("##anim_controls", { 300.f, 0.f });
+                ImGui::BeginChild("##anim_controls", { 300.f, -44.f }, true);
                 drawAnimationData(m_entities, false);
                 ImGui::EndChild();
 
@@ -2184,7 +2188,7 @@ void ModelState::drawBrowser()
                 if (animations[skeleton.getCurrentAnimation()].playbackRate == 0)
                 {
                     ImGui::SameLine();
-                    ImGui::BeginChild("##anim_notifications", { 200.f, 0.f });
+                    ImGui::BeginChild("##anim_notifications", { 200.f, -44.f }, true);
                     auto& notifications = skeleton.getNotifications()[skeleton.getCurrentFrame()];
                     static std::int32_t notIndex = 0;
 
@@ -2206,11 +2210,14 @@ void ModelState::drawBrowser()
                             }
                         }
 
-                        m_entities[EntityID::JointNode].getComponent<cro::Model>().setHidden(false);
-                        auto pos = glm::vec3(
-                            skeleton.getRootTransform() *
-                            skeleton.getFrames()[(skeleton.getCurrentFrame() * skeleton.getFrameSize()) + notifications[notIndex].jointID].worldMatrix[3]);
-                        m_entities[EntityID::JointNode].getComponent<cro::Transform>().setPosition(pos);
+                        if (!notifications.empty())
+                        {
+                            m_entities[EntityID::JointNode].getComponent<cro::Model>().setHidden(false);
+                            auto pos = glm::vec3(
+                                skeleton.getRootTransform() *
+                                skeleton.getFrames()[(skeleton.getCurrentFrame() * skeleton.getFrameSize()) + notifications[notIndex].jointID].worldMatrix[3]);
+                            m_entities[EntityID::JointNode].getComponent<cro::Transform>().setPosition(pos);
+                        }
                     }
                     else
                     {
@@ -2229,19 +2236,33 @@ void ModelState::drawBrowser()
                     }
                     ImGui::EndChild();
                     ImGui::SameLine();
-                    ImGui::BeginChild("##anim_notif_details", { 400.f, 0.f});
+                    ImGui::BeginChild("##anim_notif_details", { 400.f, -44.f }, true);
 
                     if (!notifications.empty())
                     {
                         auto name = notifications[notIndex].name;
                         if (ImGui::InputText("Name##notif", &name, ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue))
                         {
-                            if (name.empty())
+                            if (!name.empty())
                             {
-                                name = "Notif" + uniqueID();
+                                //we need to clamp this to the character limit
+                                if (name.length() >= cro::Attachment::MaxNameLength)
+                                {
+                                    name = name.substr(0, cro::Attachment::MaxNameLength - 1);
+                                }
+                                //and make duplicates unique
+                                auto result = std::find_if(notifications.begin(), notifications.end(),
+                                    [&name](const cro::Skeleton::Notification& a)
+                                    {
+                                        return a.name == name;
+                                    });
+                                
+                                if (result != notifications.end())
+                                {
+                                    name = name.substr(0, std::min(name.length(), cro::Attachment::MaxNameLength - 6)) += uniqueID();
+                                }
+                                notifications[notIndex].name = name;
                             }
-                            //TODO check if name already exists
-                            notifications[notIndex].name = name;
                         }
 
                         auto jointID = static_cast<std::int32_t>(notifications[notIndex].jointID);
@@ -2258,6 +2279,35 @@ void ModelState::drawBrowser()
                         ImGui::Text("No Events This Frame");
                     }
 
+                    ImGui::EndChild();
+
+                    //creates a button per frame and highlights those with events
+                    const auto& anim = animations[skeleton.getCurrentAnimation()];
+                    ImGui::BeginChild("##frame_buttons", { 0.f, 0.f }, true, ImGuiWindowFlags_::ImGuiWindowFlags_HorizontalScrollbar);
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 1.0f));
+                    for (auto i = anim.startFrame; i < anim.startFrame + anim.frameCount; ++i)
+                    {
+                        auto notifCount = skeleton.getNotifications()[i].size();
+                        if (notifCount)
+                        {
+                            ImGui::PushStyleColor(ImGuiCol_Button, { 1.f, 0.f, 0.f, 1.f });
+                        }
+                        else
+                        {
+                            ImGui::PushStyleColor(ImGuiCol_Button, { 1.f, 1.f, 0.f, 1.f });
+                        }
+
+                        std::string label = /*std::to_string(i - anim.startFrame) + */"##" + std::to_string(i);
+                        if (ImGui::Button(label.c_str(), { 10.f, 14.f }))
+                        {
+                            skeleton.gotoFrame(i - anim.startFrame);
+                        }
+                        ImGui::PopStyleColor();
+                        std::string tip = "Frame " + std::to_string(i - anim.startFrame) + ": " + std::to_string(notifCount) + " notification(s)";
+                        toolTip(tip.c_str());
+                        ImGui::SameLine();
+                    }
+                    ImGui::PopStyleVar();
                     ImGui::EndChild();
                 }
                 /*else

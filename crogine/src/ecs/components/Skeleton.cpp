@@ -90,6 +90,18 @@ void Skeleton::nextFrame()
     buildKeyframe(anim.currentFrame);
 }
 
+void Skeleton::gotoFrame(std::uint32_t frame)
+{
+    CRO_ASSERT(!m_animations.empty(), "No animations loaded");
+    auto& anim = m_animations[m_currentAnimation];
+    if (frame < anim.frameCount)
+    {
+        anim.currentFrame = frame + anim.startFrame;
+        m_currentFrameTime = 0.f;
+        buildKeyframe(anim.currentFrame);
+    }
+}
+
 void Skeleton::stop()
 {
     CRO_ASSERT(!m_animations.empty(), "");

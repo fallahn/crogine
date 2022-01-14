@@ -179,6 +179,13 @@ namespace cro
         void nextFrame();
 
         /*!
+        \brief Jumps to the given frame in the current animation
+        \param frame Index of the frame relative to the beginning of
+        the animation. Does nothing if the frame is out of range.
+        */
+        void gotoFrame(std::uint32_t frame);
+
+        /*!
         \brief Stops any active animations
         */
         void stop();
