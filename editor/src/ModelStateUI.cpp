@@ -1941,6 +1941,16 @@ void ModelState::drawBrowser()
                             m_attachmentModels[0].getComponent<cro::Model>().setHidden(true);
                         }
                     }
+
+                    ImGui::SameLine();
+                    if (ImGui::Button("Clear##attachments")
+                        && cro::FileSystem::showMessageBox("Warning", "Are You Sure?", cro::FileSystem::YesNo, cro::FileSystem::Warning))
+                    {
+                        attachments.clear();
+                        m_attachmentAngles.clear();
+                        m_attachmentIndex = 0;
+                        m_attachmentModels[0].getComponent<cro::Model>().setHidden(true);
+                    }
                 }
                 //I'll be buggered if I can figure this out
                 /*ImGui::ListBoxHeader("##attachments_list");
@@ -1983,6 +1993,101 @@ void ModelState::drawBrowser()
                     }
                 }
                 ImGui::PopItemWidth();
+
+                if (ImGui::Button("Export##attachments"))
+                {
+                    auto path = cro::FileSystem::saveFileDialogue("", "atc");
+                    if (!path.empty())
+                    {
+                        cro::ConfigFile cfg("attachments");
+                        for (auto i = 0u; i < attachments.size(); ++i)
+                        {
+                            const auto& attachment = attachments[i];
+                            auto* a = cfg.addObject("attachment", attachment.getName());
+                            a->addProperty("position").setValue(attachment.getPosition());
+                            a->addProperty("rotation").setValue(m_attachmentAngles[i]);
+                            a->addProperty("scale").setValue(attachment.getScale());
+                            a->addProperty("parent").setValue(attachment.getParent());
+                        }
+                        if (!cfg.save(path))
+                        {
+                            cro::FileSystem::showMessageBox("Error", "Failed to export attachements\nSee console for details");
+                        }
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Import##attachments")
+                    && cro::FileSystem::showMessageBox("Warning", "This will replace all existing attachement data", cro::FileSystem::OKCancel, cro::FileSystem::Warning))
+                {
+                    auto path = cro::FileSystem::openFileDialogue("", "atc");
+                    if (!path.empty())
+                    {
+                        cro::ConfigFile cfg;
+                        if (!cfg.loadFromFile(path))
+                        {
+                            cro::FileSystem::showMessageBox("Error", "Failed to open attachment file\nSee console for details");
+                        }
+                        else
+                        {
+                            attachments.clear();
+                            m_attachmentAngles.clear();
+                            m_attachmentIndex = 0;
+
+                            const auto& objs = cfg.getObjects();
+                            for (const auto& obj : objs)
+                            {
+                                const auto& name = obj.getName();
+                                if (name == "attachment")
+                                {
+                                    auto aName = obj.getId();
+                                    if (!aName.empty())
+                                    {
+                                        if (aName.length() >= cro::Attachment::MaxNameLength)
+                                        {
+                                            aName = aName.substr(0, cro::Attachment::MaxNameLength - 1);
+                                        }
+
+                                        auto& attachment = attachments.emplace_back();
+                                        auto& rotation = m_attachmentAngles.emplace_back();
+
+                                        attachment.setName(aName);
+
+                                        const auto& props = obj.getProperties();
+                                        for (const auto& prop : props)
+                                        {
+                                            auto pName = prop.getName();
+                                            if (pName == "position")
+                                            {
+                                                attachment.setPosition(prop.getValue<glm::vec3>());
+                                            }
+                                            else if (pName == "rotation")
+                                            {
+                                                rotation = prop.getValue<glm::vec3>();
+                                                glm::quat r = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rotation.z * cro::Util::Const::degToRad, cro::Transform::Z_AXIS);
+                                                r = glm::rotate(r, rotation.y * cro::Util::Const::degToRad, cro::Transform::Y_AXIS);
+                                                r = glm::rotate(r, rotation.x * cro::Util::Const::degToRad, cro::Transform::X_AXIS);
+                                                attachment.setRotation(r);                                                
+                                            }
+                                            else if (pName == "scale")
+                                            {
+                                                attachment.setScale(prop.getValue<glm::vec3>());
+                                            }
+                                            else if (pName == "parent")
+                                            {
+                                                attachment.setParent(prop.getValue<std::int32_t>());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            //TODO we want to make sure to remove duplicate names
+                            //at some point...
+                        }
+                    }
+                }
+
+
                 ImGui::EndChild();
 
                 ImGui::SameLine();

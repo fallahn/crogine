@@ -1,0 +1,18 @@
+model hair01
+{
+    mesh = assets/golf/models/hair01.cmb
+    cast_shadows = false
+
+    material PBR
+    {
+        mask_colour = 0.000000,1.000000,1.000000,1.000000
+        name = "Untitled"
+        colour = 0.982301,0.932759,0.738899,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+
+    }
+}
