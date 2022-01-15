@@ -91,7 +91,7 @@ GolfGame::GolfGame()
     m_activeIndex       (0)
 {
     //must be set before anything, else cfg is still loaded from default path
-    setApplicationStrings("trederia", "golf");
+    setApplicationStrings("Trederia", "golf");
 
     m_stateStack.registerState<SplashState>(StateID::SplashScreen);
     m_stateStack.registerState<KeyboardState>(StateID::Keyboard);

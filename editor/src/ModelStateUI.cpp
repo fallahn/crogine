@@ -2283,13 +2283,121 @@ void ModelState::drawBrowser()
 
             if (ImGui::BeginTabItem("Animation"))
             {
+                auto& skeleton = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+                const auto& animations = skeleton.getAnimations();
+
                 ImGui::BeginChild("##anim_controls", { 300.f, -44.f }, true);
                 drawAnimationData(m_entities, false);
+
+
+                if (animations[skeleton.getCurrentAnimation()].playbackRate == 0)
+                {
+                    if (ImGui::Button("Export##notif"))
+                    {
+                        auto path = cro::FileSystem::saveFileDialogue("", "ntf");
+                        if (!path.empty())
+                        {
+                            cro::ConfigFile cfg("animation_data");
+                            const auto& notifications = skeleton.getNotifications();
+                            for (auto i = 0u; i < notifications.size(); ++i)
+                            {
+                                const auto& nFrame = notifications[i];
+                                auto* nObj = cfg.addObject("frame");
+                                for (const auto& notif : nFrame)
+                                {
+                                    auto* nfObj = nObj->addObject("event", notif.name);
+                                    nfObj->addProperty("joint").setValue(static_cast<std::int32_t>(notif.jointID));
+                                    nfObj->addProperty("user_data").setValue(notif.userID);
+                                }
+                            }
+
+                            if (!cfg.save(path))
+                            {
+                                cro::FileSystem::showMessageBox("Error", "Failed to export animation data.\nSee console for information");
+                            }
+                        }
+                    }
+                    toolTip("Export all frame notifications to a file");
+                    ImGui::SameLine();
+                    if (ImGui::Button("Import##notif")
+                        && cro::FileSystem::showMessageBox("Warning", "This will overwrite all existing animation data", cro::FileSystem::OKCancel, cro::FileSystem::Warning))
+                    {
+                        auto path = cro::FileSystem::openFileDialogue("", "ntf");
+                        if (!path.empty())
+                        {
+                            cro::ConfigFile cfg;
+                            if (!cfg.loadFromFile(path))
+                            {
+                                cro::FileSystem::showMessageBox("Error", "Failed to open animation data.\nSeeconsole for details", cro::FileSystem::OK, cro::FileSystem::Error);
+                            }
+                            else
+                            {
+                                auto& notifications = skeleton.getNotifications();
+                                auto size = notifications.size();
+                                notifications.clear();
+
+                                const auto objs = cfg.getObjects();
+                                auto i = 0u;
+
+                                for (const auto& obj : objs)
+                                {
+                                    //don't load too many frames
+                                    if (i == size)
+                                    {
+                                        break;
+                                    }
+
+                                    if (obj.getName() == "frame")
+                                    {
+                                        auto& frame = notifications.emplace_back();
+
+                                        const auto& fObjs = obj.getObjects();
+                                        for (const auto& fObj : fObjs)
+                                        {
+                                            if (fObj.getName() == "event")
+                                            {
+                                                auto name = fObj.getId();
+                                                if (!name.empty())
+                                                {
+                                                    if (name.length() >= cro::Attachment::MaxNameLength)
+                                                    {
+                                                        name = name.substr(0, cro::Attachment::MaxNameLength - 1);
+                                                    }
+                                                    auto& n = frame.emplace_back();
+                                                    n.name = name;
+                                                    
+                                                    for (const auto& prop : fObj.getProperties())
+                                                    {
+                                                        if (prop.getName() == "joint")
+                                                        {
+                                                            n.jointID = prop.getValue<std::int32_t>();
+                                                        }
+                                                        else if (prop.getName() == "user_data")
+                                                        {
+                                                            n.userID = prop.getValue<std::int32_t>();
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        i++;
+                                    }
+                                }
+
+                                //pad out to correct size if too small
+                                while (notifications.size() < size)
+                                {
+                                    notifications.emplace_back();
+                                }
+                            }
+                        }
+                    }
+                }
                 ImGui::EndChild();
 
 
-                auto& skeleton = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
-                const auto& animations = skeleton.getAnimations();
+
                 if (animations[skeleton.getCurrentAnimation()].playbackRate == 0)
                 {
                     ImGui::SameLine();
