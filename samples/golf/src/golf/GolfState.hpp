@@ -132,6 +132,7 @@ private:
             CelSkinned,
             CelTextured,
             CelTexturedSkinned,
+            Player,
             Course,
             Ball,
 

@@ -1,19 +1,18 @@
-model player_zero
+model ball_wings
 {
-    mesh = assets/golf/models/player_zero.cmb
+    mesh = assets/golf/models/balls/ball_wings.cmb
     cast_shadows = false
 
     material Unlit
     {
         name = "Untitled"
-        colour = 1.000000,1.000000,1.000000,1.000000
+        colour = 1.000000,0.999990,1.000000,1.000000
         smooth = true
         repeat = true
         depth_test = true
         double_sided = false
+        vertex_coloured = true
         blendmode = none
-        diffuse = "assets/golf/images/player_zero.png"
-        skinned = true
 
     }
 }

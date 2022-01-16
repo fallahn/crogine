@@ -1,7 +1,7 @@
-model ball02
+model ball_pot
 {
-    mesh = "assets/golf/models/ball02.cmb"
-    cast_shadows = true
+    mesh = "assets/golf/models/balls/ball_pot.cmb"
+    cast_shadows = false
 
     material Unlit
     {

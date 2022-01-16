@@ -1,9 +1,9 @@
 model hair01
 {
-    mesh = assets/golf/models/hair01.cmb
+    mesh = assets/golf/models/avatars/hair/hair01.cmb
     cast_shadows = false
 
-    material PBR
+    material Unlit
     {
         mask_colour = 0.000000,1.000000,1.000000,1.000000
         name = "Untitled"

@@ -825,6 +825,11 @@ void GolfState::loadAssets()
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n");
+    shader = &m_resources.shaders.get(ShaderID::Player);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_materialIDs[MaterialID::Player] = m_resources.materials.add(*shader);
+
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
@@ -1792,10 +1797,13 @@ void GolfState::buildScene()
 #endif
 
 
-    md.loadFromFile("assets/golf/models/player_zero.cmt");
+    md.loadFromFile("assets/golf/models/avatars/player_zero.cmt");
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
+    material = m_resources.materials.get(m_materialIDs[MaterialID::Player]);
+    setTexture(md, material, 0);
+    entity.getComponent<cro::Model>().setMaterial(0, material);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)

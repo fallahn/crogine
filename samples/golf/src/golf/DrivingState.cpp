@@ -1587,7 +1587,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
 
     //3D Player Model
-    md.loadFromFile("assets/golf/models/player_zero.cmt");
+    md.loadFromFile("assets/golf/models/avatars/player_zero.cmt");
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
