@@ -1556,7 +1556,7 @@ void GolfState::buildScene()
     entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Tee;
     md.createModel(entity);
-    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Ball]));
     
     auto targetDir = m_holeData[m_currentHole].target - m_holeData[0].tee;
     m_camRotation = std::atan2(-targetDir.z, targetDir.x);

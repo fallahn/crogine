@@ -223,7 +223,7 @@ private:
 
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);
-    void applyTextEdit();
+    bool applyTextEdit(); //returns true if this consumed event
     void updateLocalAvatars(std::uint32_t, std::uint32_t);
     void updateLobbyData(const cro::NetEvent&);
     void updateLobbyAvatars();

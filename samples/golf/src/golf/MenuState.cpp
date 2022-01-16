@@ -377,6 +377,15 @@ bool MenuState::handleEvent(const cro::Event& evt)
         {
             quitMenu();
         }
+        else if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            if (applyTextEdit())
+            {
+                //we applied a text edit so don't update the
+                //UISystem
+                return true;
+            }
+        }
     }
 
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -1079,7 +1088,7 @@ void MenuState::handleTextEdit(const cro::Event& evt)
     //}
 }
 
-void MenuState::applyTextEdit()
+bool MenuState::applyTextEdit()
 {
     if (m_textEdit.string && m_textEdit.entity.isValid())
     {
@@ -1109,6 +1118,9 @@ void MenuState::applyTextEdit()
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         SDL_StopTextInput();
+        m_textEdit = {};
+        return true;
     }
     m_textEdit = {};
+    return false;
 }

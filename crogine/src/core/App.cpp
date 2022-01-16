@@ -55,6 +55,8 @@ source distribution.
 
 #include <algorithm>
 
+#define DEBUG_NO_CONTROLLER
+
 using namespace cro;
 
 cro::App* App::m_instance = nullptr;
