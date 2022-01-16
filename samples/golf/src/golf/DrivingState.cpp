@@ -201,19 +201,6 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    const auto rescaleBuffer = [&](float oldVal)
-    {
-        if (oldVal != m_sharedData.pixelScale)
-        {
-            //raise a window resize message to trigger callbacks
-            auto size = cro::App::getWindow().getSize();
-            auto* msg = getContext().appInstance.getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
-            msg->data0 = size.x;
-            msg->data1 = size.y;
-            msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
-        }
-    };
-
     if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
@@ -229,20 +216,6 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_F1:
         case SDLK_F5:
 
-            break;
-        case SDLK_KP_PLUS:
-        {
-            auto oldVal = m_sharedData.pixelScale;
-            m_sharedData.pixelScale = std::min(MaxPixelScale, oldVal + 1.f);
-            rescaleBuffer(oldVal);
-        }
-            break;
-        case SDLK_KP_MINUS:
-        {
-            auto oldVal = m_sharedData.pixelScale;
-            m_sharedData.pixelScale = std::max(MinPixelScale, oldVal - 1.f);
-            rescaleBuffer(oldVal);
-        }
             break;
 #ifdef CRO_DEBUG_
         case SDLK_HOME:
@@ -1529,7 +1502,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("assets/golf/models/ball_shadow.cmt"))
     {
-        float offset = -0.72f; //TODO this should actually be scaled to aspect ratio - compmare position in 4:3 to 16:9...
+        float offset = -0.72f;
         if (flipped)
         {
             offset *= -1.f;
@@ -1614,7 +1587,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
 
     //3D Player Model
-    md.loadFromFile("assets/golf/models/player_zero.cmt");
+    md.loadFromFile("assets/golf/models/player_one.cmt");
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;

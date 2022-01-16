@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "Terrain.hpp"
+#include "SharedStateData.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/graphics/Colour.hpp>
@@ -174,6 +175,34 @@ static inline glm::vec2 calcVPSize()
     static constexpr float ViewportWidth = 640.f;
 
     return glm::vec2(ViewportWidth, ratio < Widescreen ? ViewportHeightWide : ViewportHeight);
+}
+
+static inline void adjustPixelScale(SharedStateData& sharedData, bool up)
+{
+    auto vpSize = calcVPSize();
+    auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+    float maxPixelScale = std::min(std::floor(windowSize.y / vpSize.y), MaxPixelScale);
+
+    auto oldVal = sharedData.pixelScale;
+    
+    if (up)
+    {
+        sharedData.pixelScale = std::min(maxPixelScale, oldVal + 1.f);
+    }
+    else
+    {
+        sharedData.pixelScale = std::max(MinPixelScale, oldVal - 1.f);
+    }
+
+    if (oldVal != sharedData.pixelScale)
+    {
+        //raise a window resize message to trigger callbacks
+        auto size = cro::App::getWindow().getSize();
+        auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+        msg->data0 = size.x;
+        msg->data1 = size.y;
+        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+    }
 }
 
 static inline void setTexture(const cro::ModelDefinition& modelDef, cro::Material::Data& dest, std::size_t matID = 0)

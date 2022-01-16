@@ -193,19 +193,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-    const auto rescaleBuffer = [&](float oldVal)
-    {
-        if (oldVal != m_sharedData.pixelScale)
-        {
-            //raise a window resize message to trigger callbacks
-            auto size = cro::App::getWindow().getSize();
-            auto* msg = getContext().appInstance.getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
-            msg->data0 = size.x;
-            msg->data1 = size.y;
-            msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
-        }
-    };
-
     const auto scrollScores = [&](std::int32_t step)
     {
         cro::Command cmd;
@@ -223,20 +210,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
-        case SDLK_KP_PLUS:
-        {
-            auto oldVal = m_sharedData.pixelScale;
-            m_sharedData.pixelScale = std::min(MaxPixelScale, oldVal + 1.f);
-            rescaleBuffer(oldVal);
-        }
-        break;
-        case SDLK_KP_MINUS:
-        {
-            auto oldVal = m_sharedData.pixelScale;
-            m_sharedData.pixelScale = std::max(MinPixelScale, oldVal - 1.f);
-            rescaleBuffer(oldVal);
-        }
-        break;
         case SDLK_TAB:
             showScoreboard(false);
             break;

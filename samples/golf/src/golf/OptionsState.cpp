@@ -194,8 +194,15 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         case SDLK_RETURN:
         case SDLK_RETURN2:
         case SDLK_KP_ENTER:
+        case SDLK_KP_PLUS:
+        case SDLK_KP_MINUS:
+        case SDLK_F1:
+        case SDLK_F5:
+        case SDLK_TAB:
             //handle these cases just so
             //they can't be applied to keybinds
+            //TODO need to print some sort of user feedback
+            //letting them know why this doesen't work
             break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:

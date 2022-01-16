@@ -120,19 +120,25 @@ void GolfGame::handleEvent(const cro::Event& evt)
     {
         
     }
-#ifdef CRO_DEBUG_
     else if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
         {
         default: break;
+#ifdef CRO_DEBUG_
         case SDLK_ESCAPE:
         case SDLK_AC_BACK:
             App::quit();
             break;
+#endif
+        case SDLK_KP_MINUS:
+            adjustPixelScale(m_sharedData, false);
+            break;
+        case SDLK_KP_PLUS:
+            adjustPixelScale(m_sharedData, true);
+            break;
         }
     }
-#endif
     
     m_stateStack.handleEvent(evt);
 }
