@@ -661,7 +661,7 @@ void GolfState::buildUI()
         auto texSize = MapSize.y / 2u;
 
         auto windowScale = std::floor(cro::App::getWindow().getSize().y / calcVPSize().y);
-        auto scale = std::min(windowScale, m_sharedData.pixelScale);
+        float scale = m_sharedData.pixelScale ? windowScale : 1.f;
         scale = (windowScale + 1.f) - scale;
         texSize *= static_cast<std::uint32_t>(scale);
 
@@ -711,7 +711,7 @@ void GolfState::buildUI()
         m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
         auto texSize = glm::vec2(m_gameSceneTexture.getSize());
 
-        glm::vec2 courseScale(std::min(m_sharedData.pixelScale, m_viewScale.x));
+        glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);
 
         courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -0.1f));
         courseEnt.getComponent<cro::Transform>().setScale(courseScale);

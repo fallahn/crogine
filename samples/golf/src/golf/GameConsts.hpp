@@ -177,25 +177,12 @@ static inline glm::vec2 calcVPSize()
     return glm::vec2(ViewportWidth, ratio < Widescreen ? ViewportHeightWide : ViewportHeight);
 }
 
-static inline void adjustPixelScale(SharedStateData& sharedData, bool up)
+static inline void adjustPixelScale(SharedStateData& sharedData, bool on)
 {
-    auto vpSize = calcVPSize();
-    auto windowSize = glm::vec2(cro::App::getWindow().getSize());
-    float maxPixelScale = std::min(std::floor(windowSize.y / vpSize.y), MaxPixelScale);
+    if (on != sharedData.pixelScale)
+    {
+        sharedData.pixelScale = on;
 
-    auto oldVal = sharedData.pixelScale;
-    
-    if (up)
-    {
-        sharedData.pixelScale = std::min(maxPixelScale, oldVal + 1.f);
-    }
-    else
-    {
-        sharedData.pixelScale = std::max(MinPixelScale, oldVal - 1.f);
-    }
-
-    if (oldVal != sharedData.pixelScale)
-    {
         //raise a window resize message to trigger callbacks
         auto size = cro::App::getWindow().getSize();
         auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);

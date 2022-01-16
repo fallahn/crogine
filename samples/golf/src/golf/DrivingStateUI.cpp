@@ -505,7 +505,7 @@ void DrivingState::createUI()
         auto vpSize = calcVPSize();
         m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
 
-        glm::vec2 courseScale(std::min(m_sharedData.pixelScale, m_viewScale.x));
+        glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);
 
         courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -0.1f));
         courseEnt.getComponent<cro::Transform>().setScale(courseScale);

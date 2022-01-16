@@ -584,7 +584,7 @@ void GolfGame::loadPreferences()
                 }
                 else if (name == "pixel_scale")
                 {
-                    m_sharedData.pixelScale = std::min(3.f, std::max(1.f, prop.getValue<float>()));
+                    m_sharedData.pixelScale = prop.getValue<bool>();
                 }
             }
         }

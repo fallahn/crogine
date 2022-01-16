@@ -628,7 +628,7 @@ void MenuState::createScene()
 
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
         float maxScale = std::floor(winSize.y / vpSize.y);
-        float scale = std::min(maxScale, m_sharedData.pixelScale);
+        float scale = m_sharedData.pixelScale ? maxScale : 1.f;
         auto texSize = winSize / scale;
 
         auto invScale = (maxScale + 1) - scale;
@@ -680,7 +680,7 @@ void MenuState::createBallScene()
         auto windowSize = static_cast<float>(cro::App::getWindow().getSize().y);
 
         float windowScale = std::floor(windowSize / vpSize);
-        float scale = std::min(m_sharedData.pixelScale, windowScale);
+        float scale = m_sharedData.pixelScale ? windowScale : 1.f;
         auto size = BallPreviewSize * static_cast<std::uint32_t>((windowScale + 1.f) - scale);
         m_ballTexture.create(size, size);
     };

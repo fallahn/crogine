@@ -1644,7 +1644,7 @@ void GolfState::buildScene()
 
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
         float maxScale = std::floor(winSize.y / vpSize.y);
-        float scale = std::min(maxScale, m_sharedData.pixelScale);
+        float scale = m_sharedData.pixelScale ? maxScale : 1.f;
         auto texSize = winSize / scale;
         m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 

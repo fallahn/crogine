@@ -1037,7 +1037,7 @@ void DrivingState::createScene()
 
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
         auto maxScale = std::floor(winSize.y / vpSize.y);
-        float scale = std::min(maxScale, m_sharedData.pixelScale);
+        float scale = m_sharedData.pixelScale ? maxScale : 1.f;
         auto texSize = winSize / scale;
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 

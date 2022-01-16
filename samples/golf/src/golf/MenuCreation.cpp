@@ -488,7 +488,7 @@ void MenuState::createUI()
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(m_menuPositions[m_currentMenu] * m_viewScale);
 
-        glm::vec2 courseScale(std::min(m_sharedData.pixelScale, m_viewScale.x));
+        glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);
         courseEnt.getComponent<cro::Transform>().setScale(courseScale);
         courseEnt.getComponent<cro::Callback>().active = true; //makes sure to delay so updating the texture size is complete first
         courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -1.f));

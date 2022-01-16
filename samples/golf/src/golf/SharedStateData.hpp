@@ -129,7 +129,7 @@ struct SharedStateData final
     bool usePostProcess = false;
     std::string customShaderPath;
     InputBinding inputBinding;
-    float pixelScale = 1.f;
+    bool pixelScale = true;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;
