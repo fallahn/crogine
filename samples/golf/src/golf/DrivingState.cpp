@@ -1587,7 +1587,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
 
     //3D Player Model
-    md.loadFromFile("assets/golf/models/player_one.cmt");
+    md.loadFromFile("assets/golf/models/player_zero.cmt");
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
@@ -1595,9 +1595,10 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     if (flipped)
     {
         entity.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
-        //hmmm how do we set the cull-face direction when it's set
-        //by the active camera pass?
-        //setting material to double sided will have to do I suppose...
+        entity.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+
+        m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
     }
 
     auto count = entity.getComponent<cro::Model>().getMeshData().submeshCount;

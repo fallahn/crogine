@@ -152,7 +152,15 @@ App::App(std::uint32_t styleFlags)
 {
     CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+#ifdef DEBUG_NO_CONTROLLER
+    //urg sometimes some USB driver or something crashes and causes SDL_Init to hang
+    //until the PC is restarted - this hacks around it while debugging (but disables controllers)
+#define INIT_FLAGS SDL_INIT_EVERYTHING & ~(SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK)
+#else
+#define INIT_FLAGS SDL_INIT_EVERYTHING
+#endif
+
+    if (SDL_Init(INIT_FLAGS) < 0)
     {
         const std::string err(SDL_GetError());
         Logger::log("Failed init: " + err, Logger::Type::Error);

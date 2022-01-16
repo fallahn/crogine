@@ -11,7 +11,7 @@ model club_iron
         smooth = true
         repeat = true
         depth_test = true
-        double_sided = true
+        double_sided = false
         vertex_coloured = true
         blendmode = none
 
