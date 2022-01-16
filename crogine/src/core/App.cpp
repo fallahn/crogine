@@ -55,7 +55,7 @@ source distribution.
 
 #include <algorithm>
 
-#define DEBUG_NO_CONTROLLER
+//#define DEBUG_NO_CONTROLLER
 
 using namespace cro;
 

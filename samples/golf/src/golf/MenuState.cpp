@@ -571,10 +571,10 @@ void MenuState::createScene()
 
         auto& collection = entity.getComponent<cro::BillboardCollection>();
 
-        auto trees = pd::PoissonDiskSampling(4.8f, minBounds, maxBounds);
+        auto trees = pd::PoissonDiskSampling(2.8f, minBounds, maxBounds);
         for (auto [x, y] : trees)
         {
-            float scale = static_cast<float>(cro::Util::Random::value(8, 12)) / 10.f;
+            float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
 
             auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)];
             bb.position = { x, 0.f, -y };

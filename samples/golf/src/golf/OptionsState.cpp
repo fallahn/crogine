@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -144,6 +144,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_updatingKeybind   (false),
     m_lastMousePos      (0.f),
     m_bindingIndex      (-1),
+    m_currentTabFunction(1),
     m_viewScale         (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -220,9 +221,12 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(0)
-            && evt.cbutton.button == cro::GameController::ButtonB)
+        if (evt.cbutton.which == cro::GameController::deviceID(0))
         {
+        
+        switch (evt.cbutton.button)
+        {
+        case cro::GameController::ButtonB:
             if (!m_updatingKeybind)
             {
                 quitState();
@@ -232,7 +236,16 @@ bool OptionsState::handleEvent(const cro::Event& evt)
                 updateKeybind(SDLK_ESCAPE);
             }
             return false;
+        case cro::GameController::ButtonLeftShoulder:
+        case cro::GameController::ButtonRightShoulder:
+            if (!m_updatingKeybind)
+            {
+                m_tabFunctions[m_currentTabFunction]();
+                m_currentTabFunction = (m_currentTabFunction + 1) % 2;
+            }
+            break;
         }
+    }
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
@@ -611,6 +624,20 @@ void OptionsState::buildScene()
     unselectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
 
     //tab button to switch to video
+    m_tabFunctions[0] = [&, tabEnt, videoButtonEnt, controlButtonEnt]() mutable
+    {
+        tabEnt.getComponent<cro::Callback>().active = true;
+        controlButtonEnt.getComponent<cro::Transform>().move(glm::vec2(-10000.f));
+
+        //reset position for video button ent
+        videoButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
+
+        //set the active group to a dummy until animation is complete
+        uiSystem.setActiveGroup(MenuID::Dummy);
+
+        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+    };
+
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 130.f, 0.2f));
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -622,23 +649,29 @@ void OptionsState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&, tabEnt, videoButtonEnt, controlButtonEnt](cro::Entity e, cro::ButtonEvent evt)  mutable
+        [&](cro::Entity e, cro::ButtonEvent evt)
     {
             if (activated(evt))
             {
-                tabEnt.getComponent<cro::Callback>().active = true;
-                controlButtonEnt.getComponent<cro::Transform>().move(glm::vec2(-10000.f));
-
-                //reset position for video button ent
-                videoButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
-
-                //set the active group to a dummy until animation is complete
-                uiSystem.setActiveGroup(MenuID::Dummy);
-
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                m_tabFunctions[0]();
+                m_currentTabFunction = 1;
             }
     });
     controlButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    m_tabFunctions[1] = [&, tabEnt, videoButtonEnt, controlButtonEnt]() mutable
+    {
+        tabEnt.getComponent<cro::Callback>().active = true;
+        videoButtonEnt.getComponent<cro::Transform>().move(glm::vec2(-10000.f));
+
+        //reset position for control button ent
+        controlButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
+
+        //set the active group to a dummy until animation is complete
+        uiSystem.setActiveGroup(MenuID::Dummy);
+
+        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+    };
 
     //tab button to switch to controls
     entity = m_scene.createEntity();
@@ -652,20 +685,12 @@ void OptionsState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&, tabEnt, videoButtonEnt, controlButtonEnt](cro::Entity e, cro::ButtonEvent evt)  mutable
+        [&](cro::Entity e, cro::ButtonEvent evt)  mutable
         {
             if (activated(evt))
             {
-                tabEnt.getComponent<cro::Callback>().active = true;
-                videoButtonEnt.getComponent<cro::Transform>().move(glm::vec2(-10000.f));
-
-                //reset position for control button ent
-                controlButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
-
-                //set the active group to a dummy until animation is complete
-                uiSystem.setActiveGroup(MenuID::Dummy);
-
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                m_tabFunctions[1]();
+                m_currentTabFunction = 0;
             }
         });
     videoButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
