@@ -30,6 +30,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/PracticeState.cpp
   ${PROJECT_DIR}/golf/SharedStateData.cpp
   ${PROJECT_DIR}/golf/SoundEffectsDirector.cpp
+  ${PROJECT_DIR}/golf/spooky2.cpp
   ${PROJECT_DIR}/golf/TerrainBuilder.cpp
   ${PROJECT_DIR}/golf/TutorialDirector.cpp
   ${PROJECT_DIR}/golf/TutorialState.cpp

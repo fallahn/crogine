@@ -1431,7 +1431,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
 void DrivingState::createPlayer(cro::Entity courseEnt)
 {
     //load sprites from avatar info
-    const auto indexFromSkinID = [&](std::uint8_t skinID)->std::size_t
+    const auto indexFromSkinID = [&](std::uint32_t skinID)->std::size_t
     {
         auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
             [skinID](const SharedStateData::AvatarInfo& ai)

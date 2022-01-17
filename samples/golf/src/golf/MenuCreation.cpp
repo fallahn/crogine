@@ -34,6 +34,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "Utility.hpp"
 #include "CommandIDs.hpp"
+#include "spooky2.hpp"
 #include "../ErrorCheck.hpp"
 #include "server/ServerPacketData.hpp"
 
@@ -335,9 +336,18 @@ void MenuState::parseAvatarDirectory()
                             texturePath = spritesheet.getTexturePath();
                         }
                     }
-                    else if (name == "uid")
+                    else if (name == "model")
                     {
-                        info.uid = prop.getValue<std::int32_t>();
+                        //info.uid = prop.getValue<std::int32_t>();
+
+                        //create the UID based on a the string hash.
+                        //uses Bob Jenkins' spooky hash, untested on M1 processors
+                        info.modelPath = prop.getValue<std::string>();
+                        if (!info.modelPath.empty())
+                        {
+                            info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                            //LogI << "Got hash of " << info.uid << std::endl;
+                        }
                     }
                     else if (name == "audio")
                     {
@@ -346,7 +356,8 @@ void MenuState::parseAvatarDirectory()
                 }
 
                 if (info.uid >= 0
-                    && !info.spritePath.empty())
+                    && !info.spritePath.empty()
+                    && !info.modelPath.empty())
                 {
                     //check uid doesn't exist
                     auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
@@ -380,9 +391,54 @@ void MenuState::parseAvatarDirectory()
             m_avatarIndices[i] = indexFromAvatarID(m_sharedData.localConnectionData.playerData[i].skinID);
         }
     }
+
+    createAvatarScene();
 }
 
-std::int32_t MenuState::indexFromAvatarID(std::uint8_t id)
+void MenuState::createAvatarScene()
+{
+    static const glm::uvec2 PreviewSize(54, 68);
+
+    auto avatarTexCallback = [&](cro::Camera&)
+    {
+        auto vpSize = calcVPSize().y;
+        auto windowSize = static_cast<float>(cro::App::getWindow().getSize().y);
+
+        float windowScale = std::floor(windowSize / vpSize);
+        float scale = m_sharedData.pixelScale ? windowScale : 1.f;
+        auto size = PreviewSize * static_cast<std::uint32_t>((windowScale + 1.f) - scale);
+        m_avatarTexture.create(size.x, size.y);
+    };
+
+    m_avatarCam = m_backgroundScene.createEntity();
+    m_avatarCam.addComponent<cro::Transform>().setPosition({ 12.13f, 1.45f, 20.73f });
+    //m_avatarCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
+    m_avatarCam.addComponent<cro::Camera>().setPerspective(75.f * cro::Util::Const::degToRad, static_cast<float>(PreviewSize.x) / PreviewSize.y, 0.001f, 80.f);
+    m_avatarCam.getComponent<cro::Camera>().resizeCallback = avatarTexCallback;
+    avatarTexCallback(m_avatarCam.getComponent<cro::Camera>());
+
+    //load the preview models
+    cro::ModelDefinition md(m_resources);
+    for (const auto& avatar : m_sharedData.avatarInfo)
+    {
+        if (md.loadFromFile(avatar.modelPath))
+        {
+            auto entity = m_backgroundScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({ 13.25f, 0.f, 18.f });
+            entity.getComponent<cro::Transform>().setScale(glm::vec3(2.f));
+            md.createModel(entity);
+
+            //TODO store this entity somewhere so we can animate it.
+            //TODO add animation callback
+        }
+        else
+        {
+            LogE << avatar.modelPath << ": model not loaded!" << std::endl;
+        }
+    }    
+}
+
+std::int32_t MenuState::indexFromAvatarID(std::uint32_t id)
 {
     auto avatar = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
         [id](const SharedStateData::AvatarInfo& info)
@@ -3074,8 +3130,7 @@ void MenuState::loadAvatars()
                     }
                     else if (name == "skin_id")
                     {
-                        auto id = prop.getValue<std::int32_t>();
-                        id = std::min(255, std::max(0, id)); //can only store uint8
+                        auto id = prop.getValue<std::uint32_t>();
                         m_sharedData.localConnectionData.playerData[i].skinID = id;
                     }
                     else if (name == "flipped")
@@ -3084,10 +3139,7 @@ void MenuState::loadAvatars()
                     }
                     else if (name == "ball_id")
                     {
-                        auto id = prop.getValue<std::int32_t>();
-                        //id = std::min(BallID::Count - 1, std::max(0, id));
-                        //this is corrected if not found when loading the state
-                        //see the constructor.
+                        auto id = prop.getValue<std::uint32_t>();
                         m_sharedData.localConnectionData.playerData[i].ballID = id;
                     }
                     else if (name == "flags0")

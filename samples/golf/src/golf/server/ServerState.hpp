@@ -46,9 +46,9 @@ namespace sv
     {
         cro::String name;
         std::array<std::uint8_t, 4> avatarFlags = {}; //not really flags per se, but let's at least keep naming consistent
-        std::uint8_t skinID = 0;
+        std::uint32_t skinID = 0;
         bool flipped = false; //we don't really care about this on the server, but we do need to forward it to clients.
-        std::uint8_t ballID = 0;
+        std::uint32_t ballID = 0;
     };
 
     struct ClientConnection final

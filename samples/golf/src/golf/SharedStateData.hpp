@@ -48,9 +48,9 @@ struct PlayerData final
 {
     cro::String name;
     std::array<std::uint8_t, 4u> avatarFlags = {1,0,3,6}; //indices into colour pairs
-    std::uint8_t skinID = 0; //as loaded from the avatar data file
+    std::uint32_t skinID = 0; //as loaded from the avatar data file
     bool flipped = false; //whether or not avatar flipped
-    std::uint8_t ballID = 0;
+    std::uint32_t ballID = 0;
 
     std::vector<std::uint8_t> holeScores;
     std::uint8_t score = 0;
@@ -91,9 +91,9 @@ struct SharedStateData final
     struct BallInfo final
     {
         cro::Colour tint;
-        std::int32_t uid = -1;
+        std::uint32_t uid = 0;
         std::string modelPath;
-        BallInfo(cro::Colour c, std::int32_t i, const std::string& str)
+        BallInfo(cro::Colour c, std::uint32_t i, const std::string& str)
             : tint(c), uid(i), modelPath(str) {}
     };
     std::vector<BallInfo> ballModels;
@@ -101,8 +101,9 @@ struct SharedStateData final
     //available avatar sprites mapped to ID
     struct AvatarInfo final
     {
-        std::int32_t uid = -1;
+        std::uint32_t uid = 0;
         std::string spritePath;
+        std::string modelPath;
         std::string audioscape;
     };
     std::vector<AvatarInfo> avatarInfo;

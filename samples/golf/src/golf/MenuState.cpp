@@ -39,6 +39,7 @@ source distribution.
 #include "PoissonDisk.hpp"
 #include "GolfCartSystem.hpp"
 #include "MessageIDs.hpp"
+#include "spooky2.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
@@ -66,6 +67,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
@@ -243,20 +245,22 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
 
 #ifdef CRO_DEBUG_
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("Debug"))
-    //        {
-    //            /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
-    //            ImGui::Image(m_ballTexture.getTexture(), { 64, 64 }, { 0,1 }, { 1,0 });
-    //        }
-    //        ImGui::End();
-    //    });
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Debug"))
+            {
+                /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
+                ImGui::Image(m_avatarTexture.getTexture(), { 108.f, 136.f }, { 0,1 }, { 1,0 });
+                auto pos = m_avatarCam.getComponent<cro::Transform>().getPosition();
+                ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+            }
+            ImGui::End();
+        });
 #endif
 }
 
@@ -422,6 +426,37 @@ bool MenuState::simulate(float dt)
         }
     }
 
+    glm::vec3 move(0.f);
+    if (cro::Keyboard::isKeyPressed(SDLK_d))
+    {
+        move.x = 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_a))
+    {
+        move.x -= 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_w))
+    {
+        move.z = -1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_s))
+    {
+        move.z += 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_q))
+    {
+        move.y = 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_e))
+    {
+        move.y -= 1.f;
+    }
+    if (glm::length2(move) > 1)
+    {
+        move = glm::normalize(move);
+    }
+    m_avatarCam.getComponent<cro::Transform>().move(move * dt);
+
     m_backgroundScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -435,6 +470,13 @@ void MenuState::render()
     m_backgroundScene.render();
     m_ballTexture.display();
 
+    //and avatar preview
+    m_backgroundScene.setActiveCamera(m_avatarCam);
+    m_avatarTexture.clear(cro::Colour::Magenta);
+    m_backgroundScene.render();
+    m_avatarTexture.display();
+
+    //then background scene
     m_backgroundScene.setActiveCamera(oldCam);
     m_backgroundTexture.clear();
     m_backgroundScene.render();
@@ -451,6 +493,7 @@ void MenuState::addSystems()
     m_backgroundScene.addSystem<GolfCartSystem>(mb);
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
+    m_backgroundScene.addSystem<cro::SkeletalAnimator>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
@@ -731,7 +774,7 @@ void MenuState::createBallScene()
         if (cro::FileSystem::getFileExtension(file) == ".ball"
             && cfg.loadFromFile("assets/golf/balls/" + file))
         {
-            std::int32_t uid = -1;
+            std::uint32_t uid = SpookyHash::Hash32(file.data(), file.size(), 0);
             std::string modelPath;
             cro::Colour colour = cro::Colour::White;
 
@@ -743,18 +786,18 @@ void MenuState::createBallScene()
                 {
                     modelPath = p.getValue<std::string>();
                 }
-                else if (name == "uid")
+                /*else if (name == "uid")
                 {
                     uid = p.getValue<std::int32_t>();
-                }
+                }*/
                 else if (name == "tint")
                 {
                     colour = p.getValue<cro::Colour>();
                 }
             }
 
-            if (uid > -1
-                && (!modelPath.empty() && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + modelPath)))
+            if (/*uid > -1
+                &&*/ (!modelPath.empty() && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + modelPath)))
             {
                 auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
                     [uid](const SharedStateData::BallInfo& ballPair)
@@ -807,7 +850,7 @@ void MenuState::createBallScene()
     }
 }
 
-std::int32_t MenuState::indexFromBallID(std::uint8_t ballID)
+std::int32_t MenuState::indexFromBallID(std::uint32_t ballID)
 {
     auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
         [ballID](const SharedStateData::BallInfo& ballPair)

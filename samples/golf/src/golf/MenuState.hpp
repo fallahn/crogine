@@ -204,14 +204,17 @@ private:
     cro::Entity m_ballCam;
     cro::RenderTexture m_ballTexture;
     void createBallScene();
-    std::int32_t indexFromBallID(std::uint8_t);
+    std::int32_t indexFromBallID(std::uint32_t);
 
     std::vector<PlayerAvatar> m_playerAvatars;
     //this is the index for each player into m_playerAvatars - skinID is read from PlayerAvatar struct
     std::array<std::size_t, 4u> m_avatarIndices = {};
+    cro::Entity m_avatarCam;
     std::uint8_t m_activePlayerAvatar; //which player is current editing their avatar
+    cro::RenderTexture m_avatarTexture;
     void parseAvatarDirectory();
-    std::int32_t indexFromAvatarID(std::uint8_t);
+    void createAvatarScene();
+    std::int32_t indexFromAvatarID(std::uint32_t);
     void applyAvatar(std::size_t);
 
     void createUI();
