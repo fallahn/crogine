@@ -89,6 +89,7 @@ namespace
     std::uint8_t mixerChannelIndex = MixerChannel::Music;
 
     constexpr float SliderWidth = 144.f;
+    constexpr glm::vec3 ToolTipOffset(10.f, 10.f, 0.f);
 
     struct SliderData final
     {
@@ -314,24 +315,6 @@ void OptionsState::pickSlider()
             break;
         }
     }
-
-    //if we didn't pick a slider knob test to see if we clicked in a runner
-    /*if (!m_activeSlider.isValid())
-    {
-        for (auto i = 0u; i < SliderRects.size(); ++i)
-        {
-            const auto& slider = SliderRects[i];
-            LogI << slider << std::endl;
-            if (slider.contains(mousePos))
-            {
-                float pos = mousePos.x - slider.left;
-                float vol = pos / slider.width;
-                cro::AudioMixer::setVolume(vol, i);
-
-                break;
-            }
-        }
-    }*/
 }
 
 void OptionsState::updateSlider()
@@ -708,6 +691,43 @@ void OptionsState::buildScene()
     buildControlMenu(controlEnt, spriteSheet);
 
 
+    //tool tips for options
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    auto createToolTip = [&](const cro::String& tip)
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, 0.2f});
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString(tip);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        
+        constexpr float Padding = 10.f;
+        auto bounds = cro::Text::getLocalBounds(entity);
+        bounds.width += Padding;
+        bounds.height += Padding;
+        bounds.left -= (Padding / 2.f);
+        bounds.bottom -= (Padding / 2.f);
+
+        auto colour = cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha);
+        auto bgEnt = m_scene.createEntity();
+        bgEnt.addComponent<cro::Transform>().setPosition({0.f, 0.f, - 0.5f});
+        bgEnt.addComponent<cro::Drawable2D>().setVertexData(
+            {
+                cro::Vertex2D(glm::vec2(bounds.left, bounds.bottom + bounds.height), colour),
+                cro::Vertex2D(glm::vec2(bounds.left, bounds.bottom), colour),
+                cro::Vertex2D(glm::vec2(bounds.left + bounds.width, bounds.bottom + bounds.height), colour),
+                cro::Vertex2D(glm::vec2(bounds.left + bounds.width, bounds.bottom), colour)
+            }
+        );
+        entity.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
+
+        return entity;
+    };
+    m_tooltips[ToolTipID::Volume] = createToolTip("Vol: 100");
+    m_tooltips[ToolTipID::Pixel] = createToolTip("Scale up pixels to match\nthe current resolution.");
+
+
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
         glm::vec2 size(GolfGame::getActiveTarget()->getSize());
@@ -774,7 +794,26 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     centreText(resLabel);
 
     //pixel scale label
-    createLabel(glm::vec2(72.f, 31.f), "Pixel Scaling");
+    auto pixelLabel = createLabel(glm::vec2(72.f, 31.f), "Pixel Scaling");
+    pixelLabel.addComponent<cro::Callback>().active = true;
+    pixelLabel.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float) mutable
+    {
+        auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+        auto bounds = e.getComponent<cro::Drawable2D>().getLocalBounds();
+        bounds = e.getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+        if (bounds.contains(mousePos))
+        {
+            mousePos.z = 1.f;
+            m_tooltips[ToolTipID::Pixel].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
+            m_tooltips[ToolTipID::Pixel].getComponent<cro::Transform>().setScale(m_viewScale);
+        }
+        else
+        {
+            m_tooltips[ToolTipID::Pixel].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+    };
 
     //full screen label
     createLabel(glm::vec2(72.f, 15.f), "Full Screen");
@@ -793,6 +832,32 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<SliderData>(position);
         entity.getComponent<cro::Callback>().function = SliderCallback();
+
+        auto tipEnt = m_scene.createEntity();
+        tipEnt.addComponent<cro::Transform>();
+        tipEnt.addComponent<cro::Callback>().active = true;
+        tipEnt.getComponent<cro::Callback>().function =
+            [&, entity](cro::Entity, float)
+        {
+            auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+            auto bounds = entity.getComponent<cro::Drawable2D>().getLocalBounds();
+            bounds = entity.getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+            if (bounds.contains(mousePos))
+            {
+                mousePos.z = 1.f;
+                m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
+                m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setScale(m_viewScale);
+
+                float vol = cro::AudioMixer::getVolume(mixerChannelIndex);
+                m_tooltips[ToolTipID::Volume].getComponent<cro::Text>().setString("Vol: " + std::to_string(static_cast<std::int32_t>(vol * 100.f)));
+            }
+            else
+            {
+                m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+        entity.getComponent<cro::Transform>().addChild(tipEnt.getComponent<cro::Transform>());
 
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

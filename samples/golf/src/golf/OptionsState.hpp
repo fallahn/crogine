@@ -92,6 +92,16 @@ private:
     std::array<std::function<void()>, 2u> m_tabFunctions = {};
     std::size_t m_currentTabFunction;
 
+    struct ToolTipID final
+    {
+        enum
+        {
+            Volume, Pixel,
+            Count
+        };
+    };
+    std::array<cro::Entity, ToolTipID::Count> m_tooltips = {};
+
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     void buildScene();
