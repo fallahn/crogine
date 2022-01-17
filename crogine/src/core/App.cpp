@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -55,7 +55,9 @@ source distribution.
 
 #include <algorithm>
 
+#ifdef CRO_DEBUG_
 //#define DEBUG_NO_CONTROLLER
+#endif // CRO_DEBUG_
 
 using namespace cro;
 

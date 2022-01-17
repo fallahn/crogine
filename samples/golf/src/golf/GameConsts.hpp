@@ -87,7 +87,9 @@ struct MixerChannel final
 {
     enum
     {
-        Music, Effects, Menu, Voice
+        Music, Effects, Menu, Voice,
+
+        Count
     };
 };
 
@@ -178,7 +180,7 @@ static inline glm::vec2 calcVPSize()
     return glm::vec2(ViewportWidth, ratio < Widescreen ? ViewportHeightWide : ViewportHeight);
 }
 
-static inline void adjustPixelScale(SharedStateData& sharedData, bool on)
+static inline void togglePixelScale(SharedStateData& sharedData, bool on)
 {
     if (on != sharedData.pixelScale)
     {

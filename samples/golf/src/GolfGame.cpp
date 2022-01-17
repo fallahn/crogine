@@ -132,10 +132,10 @@ void GolfGame::handleEvent(const cro::Event& evt)
             break;
 #endif
         case SDLK_KP_MINUS:
-            adjustPixelScale(m_sharedData, false);
+            togglePixelScale(m_sharedData, false);
             break;
         case SDLK_KP_PLUS:
-            adjustPixelScale(m_sharedData, true);
+            togglePixelScale(m_sharedData, true);
             break;
         }
     }
