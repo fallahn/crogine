@@ -435,6 +435,9 @@ void MenuState::createAvatarScene()
     m_avatarScene.setActiveCamera(avatarCam);
 
     //load the preview models
+    cro::ModelDefinition clubDef(m_resources);
+    clubDef.loadFromFile("assets/golf/models/club_iron.cmt");
+
     cro::ModelDefinition md(m_resources);
     for (auto i = 0u; i <  m_sharedData.avatarInfo.size(); ++i)
     {
@@ -442,6 +445,7 @@ void MenuState::createAvatarScene()
         {
             auto entity = m_avatarScene.createEntity();
             entity.addComponent<cro::Transform>().setOrigin(glm::vec2(-0.34f, 0.f));
+            entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
             md.createModel(entity);
             entity.getComponent<cro::Model>().setHidden(true);
 
@@ -451,6 +455,24 @@ void MenuState::createAvatarScene()
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
             setTexture(md, material);
             entity.getComponent<cro::Model>().setMaterial(0, material);
+
+            if (entity.hasComponent<cro::Skeleton>())
+            {
+                auto id = entity.getComponent<cro::Skeleton>().getAttachmentIndex("hands");
+                if (id > -1)
+                {
+                    auto e = m_avatarScene.createEntity();
+                    e.addComponent<cro::Transform>();
+                    clubDef.createModel(e);
+
+                    material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+                    setTexture(clubDef, material);
+                    material.doubleSided = true; //we could update front face with parent model but meh
+                    e.getComponent<cro::Model>().setMaterial(0, material);
+
+                    entity.getComponent<cro::Skeleton>().getAttachments()[id].setModel(e);
+                }
+            }
 
             m_playerAvatars[i].previewModel = entity;
         }
@@ -510,12 +532,14 @@ void MenuState::setPreviewModel(std::size_t playerIndex, bool flipped)
     auto index = m_avatarIndices[playerIndex];
 
     //hmm this would be quicker if we just tracked the active model...
+    //in fact it might be contributing to the slow down when entering main lobby.
     for (auto i = 0u; i < m_playerAvatars.size(); ++i)
     {
         if (m_playerAvatars[i].previewModel.isValid()
             && m_playerAvatars[i].previewModel.hasComponent<cro::Model>())
         {
             m_playerAvatars[i].previewModel.getComponent<cro::Model>().setHidden(i != index);
+            m_playerAvatars[i].previewModel.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
 
             if (i == index)
             {
