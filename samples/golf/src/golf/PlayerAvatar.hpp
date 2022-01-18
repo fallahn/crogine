@@ -31,6 +31,8 @@ source distribution.
 
 #include "PlayerColours.hpp"
 
+#include <crogine/ecs/Entity.hpp>
+
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/Colour.hpp>
@@ -47,6 +49,7 @@ public:
     void apply();
 
     cro::FloatRect previewRect;
+    cro::Entity previewModel;
 
 private:
     cro::Texture* m_target;

@@ -84,6 +84,7 @@ private:
 
     cro::Scene m_uiScene;
     cro::Scene m_backgroundScene;
+    cro::Scene m_avatarScene;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final
@@ -209,13 +210,12 @@ private:
     std::vector<PlayerAvatar> m_playerAvatars;
     //this is the index for each player into m_playerAvatars - skinID is read from PlayerAvatar struct
     std::array<std::size_t, 4u> m_avatarIndices = {};
-    cro::Entity m_avatarCam;
     std::uint8_t m_activePlayerAvatar; //which player is current editing their avatar
     cro::RenderTexture m_avatarTexture;
     void parseAvatarDirectory();
     void createAvatarScene();
     std::int32_t indexFromAvatarID(std::uint32_t);
-    void applyAvatar(std::size_t);
+    void applyAvatarColours(std::size_t);
 
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);

@@ -297,6 +297,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
     glCheck(glUseProgram(0));
     
+    glCheck(glFrontFace(GL_CCW));
     glCheck(glDisable(GL_BLEND));
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_DEPTH_TEST));

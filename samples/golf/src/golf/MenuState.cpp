@@ -91,6 +91,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_sharedData        (sd),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_backgroundScene   (context.appInstance.getMessageBus()),
+    m_avatarScene       (context.appInstance.getMessageBus()),
     m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu       (MenuID::Main),
     m_prevMenu          (MenuID::Main),
@@ -135,7 +136,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             m_sharedData.localConnectionData.playerData[i].ballID = 0;
         }
-        applyAvatar(i);
+        applyAvatarColours(i);
     }
 
     //reset the state if we came from the tutorial (this is
@@ -256,7 +257,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::SameLine();
                 ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
                 ImGui::Image(m_avatarTexture.getTexture(), { 108.f, 136.f }, { 0,1 }, { 1,0 });
-                auto pos = m_avatarCam.getComponent<cro::Transform>().getPosition();
+                auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
                 ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
             }
             ImGui::End();
@@ -411,6 +412,7 @@ void MenuState::handleMessage(const cro::Message& msg)
     }
 
     m_backgroundScene.forwardMessage(msg);
+    m_avatarScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
 
@@ -455,9 +457,10 @@ bool MenuState::simulate(float dt)
     {
         move = glm::normalize(move);
     }
-    m_avatarCam.getComponent<cro::Transform>().move(move * dt);
+    m_avatarScene.getActiveCamera().getComponent<cro::Transform>().move(move * dt);
 
     m_backgroundScene.simulate(dt);
+    m_avatarScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
 }
@@ -471,9 +474,9 @@ void MenuState::render()
     m_ballTexture.display();
 
     //and avatar preview
-    m_backgroundScene.setActiveCamera(m_avatarCam);
-    m_avatarTexture.clear(cro::Colour::Magenta);
-    m_backgroundScene.render();
+    m_avatarTexture.clear(cro::Colour::Transparent);
+    //m_avatarTexture.clear(cro::Colour::Magenta);
+    m_avatarScene.render();
     m_avatarTexture.display();
 
     //then background scene
@@ -493,12 +496,16 @@ void MenuState::addSystems()
     m_backgroundScene.addSystem<GolfCartSystem>(mb);
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
-    m_backgroundScene.addSystem<cro::SkeletalAnimator>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
 
     m_backgroundScene.addDirector<MenuSoundDirector>(m_resources.audio, m_currentMenu);
+
+    m_avatarScene.addSystem<cro::CallbackSystem>(mb);
+    m_avatarScene.addSystem<cro::SkeletalAnimator>(mb);
+    m_avatarScene.addSystem<cro::CameraSystem>(mb);
+    m_avatarScene.addSystem<cro::ModelRenderer>(mb);
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
