@@ -112,21 +112,10 @@ private:
 
     struct Avatar final
     {
-        struct Sprite final
-        {
-            cro::Sprite sprite;
-            std::array<std::size_t, AnimationID::Count> animIDs = {};
-
-            enum
-            {
-                Wood, Iron, Count
-            };
-        };
-        std::array<Sprite, Sprite::Count> sprites = {};
-        std::int32_t spriteIndex = Sprite::Wood;
+        std::array<std::size_t, AnimationID::Count> animationIDs = {};
+        cro::Attachment* handsAttachment = nullptr;
     }m_avatar;
 
-    std::array<std::size_t, AnimationID::Count> m_animationIDs = {};
 
     struct ClubModel final
     {

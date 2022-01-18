@@ -384,25 +384,6 @@ void DrivingState::handleMessage(const cro::Message& msg)
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-            //update the sprite with correct club
-            cmd.targetFlags = CommandID::UI::PlayerSprite;
-            cmd.action = [&](cro::Entity e, float)
-            {
-                auto colour = e.getComponent<cro::Sprite>().getColour();
-                if (m_inputParser.getClub() < ClubID::FiveIron)
-                {
-                    e.getComponent<cro::Sprite>() = m_avatar.sprites[Avatar::Sprite::Wood].sprite;
-                    m_avatar.spriteIndex = Avatar::Sprite::Wood;
-                }
-                else
-                {
-                    e.getComponent<cro::Sprite>() = m_avatar.sprites[Avatar::Sprite::Iron].sprite;
-                    m_avatar.spriteIndex = Avatar::Sprite::Iron;
-                }
-                e.getComponent<cro::Sprite>().setColour(colour);
-            };
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
             //update club text colour based on distance
             cmd.targetFlags = CommandID::UI::ClubName;
             cmd.action = [&](cro::Entity e, float)
@@ -421,6 +402,27 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 }
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+            //set the correct club model on our attachment
+            if (m_avatar.handsAttachment)
+            {
+                //TODO handle cases when club model failed to load...
+                if (m_inputParser.getClub() < ClubID::FiveIron)
+                {
+                    m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setHidden(true);
+                    m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setHidden(false);
+
+                    m_avatar.handsAttachment->setModel(m_clubModels[ClubModel::Wood]);
+                }
+                else
+                {
+                    m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setHidden(false);
+                    m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setHidden(true);
+
+                    m_avatar.handsAttachment->setModel(m_clubModels[ClubModel::Iron]);
+                }
+            }
         }
         break;
         }
@@ -615,7 +617,7 @@ void DrivingState::loadAssets()
         }
     }
 
-    //club models - TODO update material
+    //club models
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("assets/golf/models/club_wood.cmt"))
     {
@@ -1054,19 +1056,6 @@ void DrivingState::createScene()
 
         cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-
-        //because we don't know in which order the cam callbacks are raised
-        //we need to send the player repos command from here when we know the view is correct
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::UI::PlayerSprite;
-        cmd.action = [&,scale](cro::Entity e, float)
-        {
-            const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
-            auto pos = camera.coordsToPixel(PlayerPosition, m_backgroundTexture.getSize());
-            e.getComponent<cro::Transform>().setPosition(pos);
-            //e.getComponent<cro::Transform>().setScale(glm::vec2(InversePixelScale - scale)); //this works but remember the animation is based on scale.
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
@@ -1134,12 +1123,9 @@ void DrivingState::createScene()
             cmd.targetFlags = CommandID::UI::PlayerSprite;
             cmd.action = [&](cro::Entity e, float)
             {
-                const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
-                auto pos = camera.coordsToPixel(PlayerPosition, m_backgroundTexture.getSize());
-                e.getComponent<cro::Transform>().setPosition(pos);
                 e.getComponent<cro::Callback>().active = true;
             };
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             //show shadow
             cmd.targetFlags = CommandID::PlayerShadow;
@@ -1449,54 +1435,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     auto playerIndex = cro::Util::Random::value(0, 3);
     auto idx = indexFromSkinID(m_sharedData.localConnectionData.playerData[playerIndex].skinID);
 
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile(m_sharedData.avatarInfo[idx].spritePath, m_resources.textures);
-
-    m_avatar.sprites[Avatar::Sprite::Iron].sprite = spriteSheet.getSprite("iron");
-    m_avatar.sprites[Avatar::Sprite::Iron].sprite.setTexture(m_sharedData.avatarTextures[0][playerIndex], false);
-    m_avatar.sprites[Avatar::Sprite::Iron].animIDs[AnimationID::Idle] = spriteSheet.getAnimationIndex("idle", "iron");
-    m_avatar.sprites[Avatar::Sprite::Iron].animIDs[AnimationID::Swing] = spriteSheet.getAnimationIndex("swing", "iron");
-
-    m_avatar.sprites[Avatar::Sprite::Wood].sprite = spriteSheet.getSprite("wood");
-    m_avatar.sprites[Avatar::Sprite::Wood].sprite.setTexture(m_sharedData.avatarTextures[0][playerIndex], false);
-    m_avatar.sprites[Avatar::Sprite::Wood].animIDs[AnimationID::Idle] = spriteSheet.getAnimationIndex("idle", "wood");
-    m_avatar.sprites[Avatar::Sprite::Wood].animIDs[AnimationID::Swing] = spriteSheet.getAnimationIndex("swing", "wood");
-
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -1000.f, -1000.f }); //hide until transition callback sets our position
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f, 0.f));
-    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
-    entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
-    {
-        auto& scale = e.getComponent<cro::Callback>().getUserData<float>();
-        scale = std::min(1.f, scale + (dt * 2.f));
-
-        auto dir = e.getComponent<cro::Transform>().getScale().x; //might be flipped
-        e.getComponent<cro::Transform>().setScale(glm::vec2(dir, cro::Util::Easing::easeOutBounce(scale)));
-
-        if (scale == 1)
-        {
-            scale = 0.f;
-            e.getComponent<cro::Callback>().active = false;
-        }
-    };
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_avatar.sprites[Avatar::Sprite::Wood].sprite;
-    entity.addComponent<cro::SpriteAnimation>();
-    //entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite; //temp disable this so it remains hidden
-    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width * 0.78f, 0.f, -0.5f });
-
     auto flipped = m_sharedData.localConnectionData.playerData[playerIndex].flipped;
-    if (flipped)
-    {
-        entity.getComponent<cro::Transform>().setScale({ -1.f, 0.f });
-        entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-    }
-
-    courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto playerEnt = entity;
 
     //shadow
     cro::ModelDefinition md(m_resources);
@@ -1508,7 +1447,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
             offset *= -1.f;
         }
 
-        entity = m_gameScene.createEntity();
+        auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
         entity.getComponent<cro::Transform>().move({ offset, 0.1f, 0.4f});
         entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
@@ -1534,24 +1473,25 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
 
     //displays the stroke direction
+    //TODO do we want to fade the player model here?
     auto pos = PlayerPosition;
     pos.y += 0.01f;
-    entity = m_gameScene.createEntity();
+    auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&, playerEnt](cro::Entity e, float) mutable
+        [&/*, playerEnt*/](cro::Entity e, float) mutable
     {
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
         
-        //fade the palyer sprite at high angles
+        //fade the player sprite at high angles
         //so we don't obstruct the view of the indicator
         float alpha = std::abs(m_inputParser.getYaw());
         alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / 0.35f));
 
         cro::Colour c = cro::Colour::White;
         c.setAlpha(alpha);
-        playerEnt.getComponent<cro::Sprite>().setColour(c);
+        //playerEnt.getComponent<cro::Sprite>().setColour(c);
     };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
 
@@ -1587,46 +1527,65 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
 
     //3D Player Model
-    md.loadFromFile("assets/golf/models/avatars/player_zero.cmt");
+    md.loadFromFile(m_sharedData.avatarInfo[idx].modelPath);
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
     md.createModel(entity);
+    
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(1.f, 0.f, 0.f));
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& scale = e.getComponent<cro::Callback>().getUserData<float>();
+        scale = std::min(1.f, scale + (dt * 2.f));
+
+        auto dir = e.getComponent<cro::Transform>().getScale().x; //might be flipped
+        e.getComponent<cro::Transform>().setScale(glm::vec2(dir, cro::Util::Easing::easeOutBounce(scale)));
+
+        if (scale == 1)
+        {
+            scale = 0.f;
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
+    
+    
     if (flipped)
     {
-        entity.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
+        entity.getComponent<cro::Transform>().setScale({ -1.f, 0.f, 0.f });
         entity.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
 
         m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
         m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
     }
 
-    auto count = entity.getComponent<cro::Model>().getMeshData().submeshCount;
-    for (auto i = 0u; i < count; ++i)
-    {
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
-        setTexture(md, material, i);
-        entity.getComponent<cro::Model>().setMaterial(i, material);
-    }
+    //avatar requirement is single material
+    material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+    setTexture(md, material);
+    material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[0][playerIndex]);
+    entity.getComponent<cro::Model>().setMaterial(0, material);
 
     if (entity.hasComponent<cro::Skeleton>())
     {
-        //map the animation IDs
+        //map the animation IDs - TODO move these into
+        //avatar struct when removing sprite
         auto& skel = entity.getComponent<cro::Skeleton>();
         const auto& anims = skel.getAnimations();
         for (auto i = 0u; i < anims.size(); ++i)
         {
             if (anims[i].name == "idle")
             {
-                m_animationIDs[AnimationID::Idle] = i;
+                m_avatar.animationIDs[AnimationID::Idle] = i;
             }
             else if (anims[i].name == "drive")
             {
-                m_animationIDs[AnimationID::Swing] = i;
+                m_avatar.animationIDs[AnimationID::Swing] = i;
             }
             else if (anims[i].name == "chip")
             {
-                m_animationIDs[AnimationID::Chip] = i;
+                m_avatar.animationIDs[AnimationID::Chip] = i;
             }
         }
 
@@ -1634,7 +1593,14 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
         auto id = skel.getAttachmentIndex("hands");
         if (id > -1)
         {
-            skel.getAttachments()[id].setModel(m_clubModels[ClubModel::Wood]);
+            m_avatar.handsAttachment = &skel.getAttachments()[id];
+            m_avatar.handsAttachment->setModel(m_clubModels[ClubModel::Wood]);
+        }
+        else
+        {
+            //although this should have been validated when loading
+            //avatar data in to the menu
+            LogW << "No attachment point named \'hands\' was found" << std::endl;
         }
     }
 }
@@ -2043,18 +2009,15 @@ void DrivingState::hitBall()
     cmd.targetFlags = CommandID::UI::PlayerSprite;
     cmd.action = [&](cro::Entity e, float)
     {
-        //e.getComponent<cro::SpriteAnimation>().play(m_avatar.sprites[m_avatar.spriteIndex].animIDs[AnimationID::Swing]);
-        
-        if (m_inputParser.getClub() < ClubID::PitchWedge)
+        //if (m_inputParser.getClub() < ClubID::PitchWedge)
         {
-            e.getComponent<cro::Skeleton>().play(m_animationIDs[AnimationID::Swing]);
+            e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Swing]);
         }
-        else
+        /*else
         {
-            e.getComponent<cro::Skeleton>().play(m_animationIDs[AnimationID::Chip]);
-        }        
+            e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Chip]);
+        }*/        
     };
-    //m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     m_inputParser.setActive(false);
@@ -2075,14 +2038,12 @@ void DrivingState::setHole(std::int32_t index)
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    //reset sprite
+    //reset avatar
     cmd.targetFlags = CommandID::UI::PlayerSprite;
     cmd.action = [&](cro::Entity e, float)
     {
-        //e.getComponent<cro::SpriteAnimation>().play(m_avatar.sprites[m_avatar.spriteIndex].animIDs[AnimationID::Idle]);
-        e.getComponent<cro::Skeleton>().play(m_animationIDs[AnimationID::Idle]);
+        e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Idle]);
     };
-    //m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //update club text colour based on distance
@@ -2232,38 +2193,6 @@ void DrivingState::setActiveCamera(std::int32_t camID)
         m_currentCamera = camID;
 
         m_cameras[m_currentCamera].getComponent<cro::Camera>().active = true;
-
-        //hide player based on cam id
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::UI::PlayerSprite;
-        cmd.action = [&, camID](cro::Entity e, float)
-        {
-            //show/hide player based on camera
-            //flipping the sprite render dir will stop it drawing
-            if (e.getComponent<cro::Transform>().getScale().x < 0)
-            {
-                if (camID == CameraID::Player)
-                {
-                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-                }
-                else
-                {
-                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-                }
-            }
-            else
-            {
-                if (camID == CameraID::Player)
-                {
-                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-                }
-                else
-                {
-                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-                }
-            }
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
 }
 
