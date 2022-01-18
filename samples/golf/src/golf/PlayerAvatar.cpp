@@ -87,6 +87,7 @@ PlayerAvatar::PlayerAvatar(const std::string& path)
     }
     else
     {
+        LogE << path << ": file not loaded or not RGBA" << std::endl;
         m_image.create(48, 52, cro::Colour::Magenta);
     }
 }

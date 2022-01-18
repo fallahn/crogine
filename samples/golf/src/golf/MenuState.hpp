@@ -105,6 +105,7 @@ private:
         {
             Cel,
             CelTextured,
+            CelTexturedSkinned,
 
             Count
         };
@@ -210,12 +211,15 @@ private:
     std::vector<PlayerAvatar> m_playerAvatars;
     //this is the index for each player into m_playerAvatars - skinID is read from PlayerAvatar struct
     std::array<std::size_t, 4u> m_avatarIndices = {};
+    std::array<cro::RenderTexture, 4u> m_avatarThumbs = {};
     std::uint8_t m_activePlayerAvatar; //which player is current editing their avatar
     cro::RenderTexture m_avatarTexture;
     void parseAvatarDirectory();
     void createAvatarScene();
     std::int32_t indexFromAvatarID(std::uint32_t);
     void applyAvatarColours(std::size_t);
+    void setPreviewModel(std::size_t, bool);
+    void updateThumb(std::size_t);
 
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);

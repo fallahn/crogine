@@ -256,9 +256,17 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
                 ImGui::SameLine();
                 ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
-                ImGui::Image(m_avatarTexture.getTexture(), { 108.f, 136.f }, { 0,1 }, { 1,0 });
-                auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
-                ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+                /*float x = static_cast<float>(AvatarThumbSize.x);
+                float y = static_cast<float>(AvatarThumbSize.y);
+                ImGui::Image(m_avatarThumbs[0].getTexture(), {x,y}, {0,1}, {1,0});
+                ImGui::SameLine();
+                ImGui::Image(m_avatarThumbs[1].getTexture(), { x,y }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_avatarThumbs[2].getTexture(), { x,y }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
+                //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
+                //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
             }
             ImGui::End();
         });
@@ -428,7 +436,7 @@ bool MenuState::simulate(float dt)
         }
     }
 
-    glm::vec3 move(0.f);
+    /*glm::vec3 move(0.f);
     if (cro::Keyboard::isKeyPressed(SDLK_d))
     {
         move.x = 1.f;
@@ -457,7 +465,7 @@ bool MenuState::simulate(float dt)
     {
         move = glm::normalize(move);
     }
-    m_avatarScene.getActiveCamera().getComponent<cro::Transform>().move(move * dt);
+    m_avatarScene.getActiveCamera().getComponent<cro::Transform>().move(move * dt);*/
 
     m_backgroundScene.simulate(dt);
     m_avatarScene.simulate(dt);
@@ -524,13 +532,21 @@ void MenuState::loadAssets()
 
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n");
 
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
+
+
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
@@ -549,6 +565,11 @@ void MenuState::loadAssets()
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+
+    for (auto& thumb : m_avatarThumbs)
+    {
+        thumb.create(AvatarThumbSize.x, AvatarThumbSize.y);
+    }
 }
 
 void MenuState::createScene()
