@@ -515,7 +515,7 @@ void MenuState::applyAvatarColours(std::size_t playerIndex)
 
 void MenuState::updateThumb(std::size_t index)
 {
-    setPreviewModel(index, m_sharedData.localConnectionData.playerData[index].flipped);
+    setPreviewModel(index);
     
     //we have to make sure model data is updated correctly before each
     //draw call as this func might be called in a loop to update multiple
@@ -527,9 +527,10 @@ void MenuState::updateThumb(std::size_t index)
     m_avatarThumbs[index].display();
 }
 
-void MenuState::setPreviewModel(std::size_t playerIndex, bool flipped)
+void MenuState::setPreviewModel(std::size_t playerIndex)
 {
     auto index = m_avatarIndices[playerIndex];
+    auto flipped = m_sharedData.localConnectionData.playerData[playerIndex].flipped;
 
     //hmm this would be quicker if we just tracked the active model...
     //in fact it might be contributing to the slow down when entering main lobby.
@@ -2445,7 +2446,7 @@ void MenuState::createPlayerConfigMenu()
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].skinID = skinID;
 
                     applyAvatarColours(m_activePlayerAvatar);
-                    setPreviewModel(m_activePlayerAvatar, flipped);
+                    setPreviewModel(m_activePlayerAvatar);
 
                     /*cro::Command cmd;
                     cmd.targetFlags = CommandID::Menu::PlayerAvatar;
@@ -2493,7 +2494,7 @@ void MenuState::createPlayerConfigMenu()
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].skinID = skinID;
 
                     applyAvatarColours(m_activePlayerAvatar);
-                    setPreviewModel(m_activePlayerAvatar, flipped);
+                    setPreviewModel(m_activePlayerAvatar);
 
                     /*cro::Command cmd;
                     cmd.targetFlags = CommandID::Menu::PlayerAvatar;
@@ -2564,7 +2565,7 @@ void MenuState::createPlayerConfigMenu()
                     applyAvatarColours(m_activePlayerAvatar);
 
                     //update texture
-                    setPreviewModel(m_activePlayerAvatar, flipped);
+                    setPreviewModel(m_activePlayerAvatar);
                     /*cro::Command cmd;
                     cmd.targetFlags = CommandID::Menu::PlayerAvatar;
                     cmd.action = [&, flipped](cro::Entity en, float)
@@ -3057,35 +3058,10 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //make sure the preview is set to the current player's settings
+    applyAvatarColours(playerIndex);
+    setPreviewModel(playerIndex);
+
     auto index = m_avatarIndices[m_activePlayerAvatar];
-    m_playerAvatars[index].setTarget(m_sharedData.avatarTextures[0][m_activePlayerAvatar]);
-    m_playerAvatars[index].apply();
-
-    for (auto i = 0u; i < m_playerAvatars.size(); ++i)
-    {
-        if (m_playerAvatars[i].previewModel.isValid()
-            && m_playerAvatars[i].previewModel.hasComponent<cro::Model>())
-        {
-            m_playerAvatars[i].previewModel.getComponent<cro::Model>().setHidden(i != index);
-
-            if (i == index)
-            {
-                if (m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].flipped)
-                {
-                    m_playerAvatars[i].previewModel.getComponent<cro::Transform>().setScale({ -1.f, 1.f, 1.f });
-                    m_playerAvatars[i].previewModel.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
-                }
-                else
-                {
-                    m_playerAvatars[i].previewModel.getComponent<cro::Transform>().setScale({ 1.f, 1.f, 1.f });
-                    m_playerAvatars[i].previewModel.getComponent<cro::Model>().setFacing(cro::Model::Facing::Front);
-                }
-                //TODO cater to all materials on model?
-                //this will have to be limited to one per avatr methinks
-                m_playerAvatars[i].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", cro::TextureID(m_sharedData.avatarTextures[0][m_activePlayerAvatar].getGLHandle()));
-            }
-        }
-    }
 
     //cmd.targetFlags = CommandID::Menu::PlayerAvatar;
     //cmd.action = [&](cro::Entity e, float)
@@ -3125,7 +3101,7 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
 
         m_currentMenu = MenuID::PlayerConfig;
 
-        m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = static_cast<std::int32_t>(m_ballIndices[m_activePlayerAvatar]);// indexFromBallID(m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID);
+        m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = static_cast<std::int32_t>(m_ballIndices[m_activePlayerAvatar]);
     }
     else
     {

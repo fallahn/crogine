@@ -218,7 +218,7 @@ private:
     void createAvatarScene();
     std::int32_t indexFromAvatarID(std::uint32_t);
     void applyAvatarColours(std::size_t);
-    void setPreviewModel(std::size_t, bool);
+    void setPreviewModel(std::size_t);
     void updateThumb(std::size_t);
 
     void createUI();
