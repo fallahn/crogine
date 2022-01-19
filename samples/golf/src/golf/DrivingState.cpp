@@ -619,26 +619,36 @@ void DrivingState::loadAssets()
 
     //club models
     cro::ModelDefinition md(m_resources);
+    m_clubModels[ClubModel::Wood] = m_gameScene.createEntity();
+    m_clubModels[ClubModel::Wood].addComponent<cro::Transform>();
     if (md.loadFromFile("assets/golf/models/club_wood.cmt"))
     {
-        m_clubModels[ClubModel::Wood] = m_gameScene.createEntity();
-        m_clubModels[ClubModel::Wood].addComponent<cro::Transform>();
         md.createModel(m_clubModels[ClubModel::Wood]);
 
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
         applyMaterialData(md, material, 0);
         m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setMaterial(0, material);
     }
+    else
+    {
+        createFallbackModel(m_clubModels[ClubModel::Wood], m_resources);
+    }
 
+
+    m_clubModels[ClubModel::Iron] = m_gameScene.createEntity();
+    m_clubModels[ClubModel::Iron].addComponent<cro::Transform>();
     if (md.loadFromFile("assets/golf/models/club_iron.cmt"))
     {
-        m_clubModels[ClubModel::Iron] = m_gameScene.createEntity();
-        m_clubModels[ClubModel::Iron].addComponent<cro::Transform>();
         md.createModel(m_clubModels[ClubModel::Iron]);
 
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
         applyMaterialData(md, material, 0);
         m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterial(0, material);
+    }
+    else
+    {
+        createFallbackModel(m_clubModels[ClubModel::Iron], m_resources);
+        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Cyan);
     }
 
     initAudio();

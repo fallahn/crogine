@@ -33,9 +33,11 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "../GolfGame.hpp"
 
+#include <crogine/ecs/components/Model.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Matrix.hpp>
@@ -327,6 +329,22 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
     loadNormalMap(dst, img);
 
     return img;
+}
+
+static inline void createFallbackModel(cro::Entity target, cro::ResourceCollection& resources)
+{
+    CRO_ASSERT(target.isValid(), "");
+    static auto shaderID = resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::BuiltInFlags::DiffuseColour);
+    auto& shader = resources.shaders.get(shaderID);
+
+    static auto materialID = resources.materials.add(shader);
+    auto material = resources.materials.get(materialID);
+    material.setProperty("u_colour", cro::Colour::Magenta);
+
+    static auto meshID = resources.meshes.loadMesh(cro::CubeBuilder(glm::vec3(0.25f)));
+    auto meshData = resources.meshes.getMesh(meshID);
+
+    target.addComponent<cro::Model>(meshData, material);
 }
 
 //TODO use this for interpolating slope height on a height map
