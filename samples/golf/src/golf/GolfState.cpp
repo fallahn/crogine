@@ -554,6 +554,20 @@ void GolfState::handleMessage(const cro::Message& msg)
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+            if (m_activeAvatar
+                && m_activeAvatar->hands)
+            {
+                if (getClub() < ClubID::FiveIron)
+                {
+                    m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Wood]);
+                }
+                else
+                {
+                    m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Iron]);
+                }
+                m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
+            }
+
             //update club text colour based on distance
             cmd.targetFlags = CommandID::UI::ClubName;
             cmd.action = [&](cro::Entity e, float)
@@ -954,7 +968,7 @@ void GolfState::loadAssets()
                 entity.addComponent<cro::Transform>();
                 entity.addComponent<cro::Callback>().setUserData<PlayerCallbackData>();
                 entity.getComponent<cro::Callback>().function =
-                    [](cro::Entity e, float dt)
+                    [&](cro::Entity e, float dt)
                 {
                     auto& [direction, scale, _] = e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>();
                     const auto xScale = e.getComponent<cro::Transform>().getScale().x; //might be flipped
@@ -978,6 +992,15 @@ void GolfState::loadAssets()
                             direction = 0;
                             e.getComponent<cro::Callback>().active = false;
                             e.getComponent<cro::Model>().setHidden(true);
+
+                            //seems counter-intuitive to search the avatar here
+                            //but we have a, uh.. 'handy' handle (to the hands)
+                            if (m_activeAvatar->hands)
+                            {
+                                //we have to free this up alse the model might
+                                //become attached to two avatars...
+                                m_activeAvatar->hands->setModel({});
+                            }
                         }
                     }
                     auto yScale = cro::Util::Easing::easeOutBack(scale);
@@ -1032,6 +1055,42 @@ void GolfState::loadAssets()
             }
         }
     }
+
+
+    //club models
+    m_clubModels[ClubModel::Wood] = m_gameScene.createEntity();
+    m_clubModels[ClubModel::Wood].addComponent<cro::Transform>();
+    if (md.loadFromFile("assets/golf/models/club_wood.cmt"))
+    {
+        md.createModel(m_clubModels[ClubModel::Wood]);
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+        applyMaterialData(md, material, 0);
+        m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setMaterial(0, material);
+    }
+    else
+    {
+        createFallbackModel(m_clubModels[ClubModel::Wood], m_resources);
+    }
+
+
+    m_clubModels[ClubModel::Iron] = m_gameScene.createEntity();
+    m_clubModels[ClubModel::Iron].addComponent<cro::Transform>();
+    if (md.loadFromFile("assets/golf/models/club_iron.cmt"))
+    {
+        md.createModel(m_clubModels[ClubModel::Iron]);
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+        applyMaterialData(md, material, 0);
+        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterial(0, material);
+    }
+    else
+    {
+        createFallbackModel(m_clubModels[ClubModel::Iron], m_resources);
+        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Cyan);
+    }
+
+
 
     //ball resources - ball is rendered as a single point
     //at a distance, and as a model when closer
@@ -2946,6 +3005,19 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;
         m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().scale = 0.f;
         m_activeAvatar->model.getComponent<cro::Callback>().active = true;
+
+        if (m_activeAvatar->hands)
+        {
+            if (getClub() < ClubID::FiveIron)
+            {
+                m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Wood]);
+            }
+            else
+            {
+                m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Iron]);
+            }
+            m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
+        }
     }
     setActiveCamera(CameraID::Player);
 
@@ -3181,7 +3253,18 @@ void GolfState::createTransition(const ActivePlayer& playerData)
         if (targetDistance > 0.01
             || playerData.terrain == TerrainID::Green)
         {
+            auto scale = m_activeAvatar->model.getComponent<cro::Transform>().getScale();
+            scale.y = 0.f;
+            scale.z = 0.f;
+            m_activeAvatar->model.getComponent<cro::Transform>().setScale(scale);
             m_activeAvatar->model.getComponent<cro::Model>().setHidden(true);
+
+            if (m_activeAvatar->hands)
+            {
+                //we have to free this up alse the model might
+                //become attached to two avatars...
+                m_activeAvatar->hands->setModel({});
+            }
         }
         else
         {
@@ -3493,6 +3576,22 @@ void GolfState::startFlyBy()
         e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    if (m_activeAvatar)
+    {
+        auto scale = m_activeAvatar->model.getComponent<cro::Transform>().getScale();
+        scale.y = 0.f;
+        scale.z = 0.f;
+        m_activeAvatar->model.getComponent<cro::Transform>().setScale(scale);
+        m_activeAvatar->model.getComponent<cro::Model>().setHidden(true);
+
+        if (m_activeAvatar->hands)
+        {
+            //we have to free this up alse the model might
+            //become attached to two avatars...
+            m_activeAvatar->hands->setModel({});
+        }
+    }
 
     //hide stroke indicator
     cmd.targetFlags = CommandID::StrokeIndicator;

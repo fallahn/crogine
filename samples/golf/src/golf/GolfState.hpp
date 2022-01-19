@@ -243,6 +243,11 @@ private:
     std::array<std::array<Avatar, ConnectionData::MaxPlayers>, ConstVal::MaxClients> m_avatars;
     Avatar* m_activeAvatar = nullptr;
 
+    struct ClubModel final
+    {
+        enum { Wood, Iron, Count };
+    };
+    std::array<cro::Entity, ClubModel::Count> m_clubModels = {};
 
     float m_camRotation; //used to offset the rotation of the wind indicator
     bool m_roundEnded;

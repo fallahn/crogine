@@ -77,7 +77,7 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
         if (m_currentMenu == MenuState::MenuID::Lobby)
         {
-
+            //these are raised by the small ball animations
             switch (data.userType)
             {
             default: break;
