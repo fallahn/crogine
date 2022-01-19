@@ -478,9 +478,24 @@ void MenuState::createAvatarScene()
         }
         else
         {
+            //we'll use this to signify failure by clearing
+            //the string and using that to erase the entry
+            //from the avatar list (below). An empty avatar 
+            //list will display an error on the menu and stop
+            //the game from being playable.
+            m_sharedData.avatarInfo[i].modelPath.clear();
             LogE << m_sharedData.avatarInfo[i].modelPath << ": model not loaded!" << std::endl;
         }
-    }    
+    }
+
+    m_sharedData.avatarInfo.erase(std::remove_if(
+        m_sharedData.avatarInfo.begin(),
+        m_sharedData.avatarInfo.end(),
+        [](const SharedStateData::AvatarInfo& ai)
+        {
+            return ai.modelPath.empty();
+        }),
+        m_sharedData.avatarInfo.end());
 }
 
 std::int32_t MenuState::indexFromAvatarID(std::uint32_t id)
