@@ -309,7 +309,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
     default: break;
     case cro::Message::SkeletalAnimationMessage:
     {
-        const auto& data = msg.getData<cro::Message::SkeletalAnimEvent>();
+        const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
         if (data.userType == SpriteAnimID::Swing)
         {
             //relay this message with the info needed for particle/sound effects
@@ -1579,8 +1579,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
     if (entity.hasComponent<cro::Skeleton>())
     {
-        //map the animation IDs - TODO move these into
-        //avatar struct when removing sprite
+        //map the animation IDs
         auto& skel = entity.getComponent<cro::Skeleton>();
         const auto& anims = skel.getAnimations();
         for (auto i = 0u; i < anims.size(); ++i)
@@ -1677,6 +1676,11 @@ void DrivingState::createBall()
     if (ball != m_sharedData.ballModels.end())
     {
         material.setProperty("u_colour", ball->tint);
+    }
+    else
+    {
+        //this should at least line up with the fallback model
+        material.setProperty("u_colour", m_sharedData.ballModels.begin()->tint);
     }
 
     auto entity = m_gameScene.createEntity();
@@ -1997,6 +2001,8 @@ void DrivingState::hitBall()
     impulse *= Dampening[TerrainID::Fairway];
 
     //apply impulse to ball component
+    //TODO in this offline mode we could just use
+    //the animation event to trigger this
     cro::Command cmd;
     cmd.targetFlags = CommandID::Ball;
     cmd.action = [impulse](cro::Entity e, float)

@@ -136,7 +136,7 @@ namespace cro
             }level = Info;
         };
 
-        struct SkeletalAnimEvent final
+        struct SkeletalAnimationEvent final
         {
             std::int32_t userType = -1; //! < User assigned event ID
             glm::vec3 position = glm::vec3(0.f); //! < Local position of the joint which raised this event

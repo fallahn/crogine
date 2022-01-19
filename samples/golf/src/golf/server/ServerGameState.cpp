@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -361,7 +361,8 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
             //this is a kludge to wait for the anim before hitting the ball
             //Ideally we want to read the frame data from the sprite sheet
             //as well as account for a frame of interp delay on the client
-            ball.delay = 0.32f;
+            ball.delay = 1.32f;
+            //ball.delay = 0.32f;
             ball.startPoint = m_playerInfo[0].ballEntity.getComponent<cro::Transform>().getPosition();
 
             //calc the amount of spin based on if we're going towards the hole

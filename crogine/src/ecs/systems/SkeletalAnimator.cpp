@@ -118,7 +118,7 @@ void SkeletalAnimator::process(float dt)
                         (worldTransform * skel.m_rootTransform *
                         skel.m_frames[(anim.currentFrame * skel.m_frameSize) + joint].worldMatrix)[3];// *glm::vec4(0.f, 0.f, 0.f, 1.f);
 
-                    auto* msg = postMessage<cro::Message::SkeletalAnimEvent>(cro::Message::SkeletalAnimationMessage);
+                    auto* msg = postMessage<cro::Message::SkeletalAnimationEvent>(cro::Message::SkeletalAnimationMessage);
                     msg->position = position;
                     msg->userType = uid;
                     msg->entity = entity;

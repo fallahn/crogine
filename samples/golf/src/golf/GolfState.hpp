@@ -234,9 +234,14 @@ private:
         };
         std::int32_t clubType = Sprite::Wood;
         std::array<Sprite, Sprite::Count> sprites = {};
+
         bool flipped = false;
+        cro::Entity model;
+        cro::Attachment* hands = nullptr;
+        std::array<std::size_t, AnimationID::Count> animationIDs = {};
     };
     std::array<std::array<Avatar, ConnectionData::MaxPlayers>, ConstVal::MaxClients> m_avatars;
+    Avatar* m_activeAvatar = nullptr;
 
 
     float m_camRotation; //used to offset the rotation of the wind indicator
