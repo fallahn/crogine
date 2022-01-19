@@ -222,26 +222,13 @@ private:
 
     struct Avatar final
     {
-        struct Sprite final
-        {
-            cro::Sprite sprite;
-            std::array<std::size_t, AnimationID::Count> animIDs = {};
-
-            enum
-            {
-                Wood, Iron, Count
-            };
-        };
-        std::int32_t clubType = Sprite::Wood;
-        std::array<Sprite, Sprite::Count> sprites = {};
-
         bool flipped = false;
         cro::Entity model;
         cro::Attachment* hands = nullptr;
         std::array<std::size_t, AnimationID::Count> animationIDs = {};
     };
     std::array<std::array<Avatar, ConnectionData::MaxPlayers>, ConstVal::MaxClients> m_avatars;
-    Avatar* m_activeAvatar = nullptr;
+    Avatar* m_activeAvatar;
 
     struct ClubModel final
     {

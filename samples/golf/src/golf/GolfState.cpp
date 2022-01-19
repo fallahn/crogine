@@ -134,6 +134,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_terrainBuilder    (m_holeData),
     m_audioPath         ("assets/golf/sound/ambience.xas"),
     m_currentCamera     (CameraID::Player),
+    m_activeAvatar      (nullptr),
     m_camRotation       (0.f),
     m_roundEnded        (false),
     m_viewScale         (1.f),
@@ -533,27 +534,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-            //update the sprite with correct club
-            cmd.targetFlags = CommandID::UI::PlayerSprite;
-            cmd.action = [&](cro::Entity e, float)
-            {
-                auto colour = e.getComponent<cro::Sprite>().getColour();
-                if (getClub() < ClubID::FiveIron)
-                {
-                    auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
-                    avatar.clubType = Avatar::Sprite::Wood;
-                    e.getComponent<cro::Sprite>() = avatar.sprites[Avatar::Sprite::Wood].sprite;
-                }
-                else
-                {
-                    auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
-                    avatar.clubType = Avatar::Sprite::Iron;
-                    e.getComponent<cro::Sprite>() = avatar.sprites[Avatar::Sprite::Iron].sprite;
-                }
-                e.getComponent<cro::Sprite>().setColour(colour);
-            };
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
+            //update the player with correct club
             if (m_activeAvatar
                 && m_activeAvatar->hands)
             {
@@ -766,7 +747,7 @@ bool GolfState::simulate(float dt)
 void GolfState::render()
 {
     //render reflections first
-    auto uiCam = m_uiScene.setActiveCamera(m_uiReflectionCam);
+    //auto uiCam = m_uiScene.setActiveCamera(m_uiReflectionCam);
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     auto oldVP = cam.viewport;
@@ -777,7 +758,7 @@ void GolfState::render()
     cam.renderFlags = RenderFlags::Reflection;
     cam.reflectionBuffer.clear(cro::Colour::Red);
     m_gameScene.render();
-    m_uiScene.render();
+    //m_uiScene.render();
     cam.reflectionBuffer.display();
 
     cam.setActivePass(cro::Camera::Pass::Final);
@@ -803,7 +784,7 @@ void GolfState::render()
         m_gameScene.setActiveCamera(oldCam);
     }
 
-    m_uiScene.setActiveCamera(uiCam);
+    //m_uiScene.setActiveCamera(uiCam);
     m_uiScene.render();
 }
 
@@ -908,11 +889,9 @@ void GolfState::loadAssets()
     m_flagQuad.setTexture(*flagSprite.getTexture());
     m_flagQuad.setTextureRect(flagSprite.getTextureRect());
 
-    //load sprites from avatar info
-    std::vector<cro::SpriteSheet> spriteSheets;
+    //load audio from avatar info
     for (const auto& avatar : m_sharedData.avatarInfo)
     {
-        spriteSheets.emplace_back().loadFromFile(avatar.spritePath, m_resources.textures);
         m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape(avatar.audioscape, m_resources.audio);
     }
 
@@ -943,18 +922,6 @@ void GolfState::loadAssets()
         {
             auto skinID = m_sharedData.connectionData[i].playerData[j].skinID;
             auto avatarIndex = indexFromSkinID(skinID);
-
-            m_avatars[i][j].sprites[Avatar::Sprite::Iron].sprite = spriteSheets[avatarIndex].getSprite("iron");
-            m_avatars[i][j].sprites[Avatar::Sprite::Iron].animIDs[AnimationID::Idle] = spriteSheets[avatarIndex].getAnimationIndex("idle", "iron");
-            m_avatars[i][j].sprites[Avatar::Sprite::Iron].animIDs[AnimationID::Swing] = spriteSheets[avatarIndex].getAnimationIndex("swing", "iron");
-
-            m_avatars[i][j].sprites[Avatar::Sprite::Wood].sprite = spriteSheets[avatarIndex].getSprite("wood");
-            m_avatars[i][j].sprites[Avatar::Sprite::Wood].animIDs[AnimationID::Idle] = spriteSheets[avatarIndex].getAnimationIndex("idle", "wood");
-            m_avatars[i][j].sprites[Avatar::Sprite::Wood].animIDs[AnimationID::Swing] = spriteSheets[avatarIndex].getAnimationIndex("swing", "wood");
-            m_avatars[i][j].flipped = m_sharedData.connectionData[i].playerData[j].flipped;
-
-            m_avatars[i][j].sprites[Avatar::Sprite::Iron].sprite.setTexture(m_sharedData.avatarTextures[i][j], false);
-            m_avatars[i][j].sprites[Avatar::Sprite::Wood].sprite.setTexture(m_sharedData.avatarTextures[i][j], false);
 
             m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, static_cast<std::int32_t>(avatarIndex));
 
@@ -1812,16 +1779,6 @@ void GolfState::buildScene()
 
         cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-
-        //because we don't know in which order the cam callbacks are raised
-        //we need to send the player repos command from here when we know the view is correct
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::UI::PlayerSprite;
-        cmd.action = [&](cro::Entity e, float)
-        {
-            setPlayerPosition(e, m_currentPlayer.position);
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
@@ -2406,18 +2363,9 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             break;
         case PacketID::ActorAnimation:
         {
-            auto animID = evt.packet.as<std::uint8_t>();
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::UI::PlayerSprite;
-            cmd.action = [&,animID](cro::Entity e, float)
-            {
-                const auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
-                e.getComponent<cro::SpriteAnimation>().play(avatar.sprites[avatar.clubType].animIDs[animID]);
-            };
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
             if (m_activeAvatar)
             {
+                auto animID = evt.packet.as<std::uint8_t>();
                 m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID]);
             }
         }
@@ -2953,47 +2901,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 
-    //apply the correct sprite to the player entity
-    cmd.targetFlags = CommandID::UI::PlayerSprite;
-    cmd.action = [&,player](cro::Entity e, float)
-    {
-        if (player.terrain != TerrainID::Green)
-        {
-            if (getClub() < ClubID::FiveIron)
-            {
-                auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
-                avatar.clubType = Avatar::Sprite::Wood;
-                e.getComponent<cro::Sprite>() = avatar.sprites[Avatar::Sprite::Wood].sprite;
-            }
-            else
-            {
-                auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
-                avatar.clubType = Avatar::Sprite::Iron;
-                e.getComponent<cro::Sprite>() = avatar.sprites[Avatar::Sprite::Iron].sprite;
-            }
-            e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;
-            e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().scale = 0.f;
-            e.getComponent<cro::Callback>().active = true;
-
-            if (m_avatars[m_currentPlayer.client][m_currentPlayer.player].flipped)
-            {
-                e.getComponent<cro::Transform>().setScale({ -1.f, 0.f });
-                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-            }
-            else
-            {
-                e.getComponent<cro::Transform>().setScale({ 1.f, 0.f });
-                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-            }
-
-            //update sprite position
-            setPlayerPosition(e, player.position);
-
-            //make sure we reset to player camera just in case
-            setActiveCamera(CameraID::Player);
-        }
-    };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //show the new player model
     m_activeAvatar = &m_avatars[m_currentPlayer.client][m_currentPlayer.player];
@@ -3229,24 +3136,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 {
     float targetDistance = glm::length2(playerData.position - m_currentPlayer.position);
 
-    //hide player sprite
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::UI::PlayerSprite;
-    cmd.action = [targetDistance, playerData](cro::Entity e, float)
-    {
-        if (targetDistance > 0.01
-            || playerData.terrain == TerrainID::Green)
-        {
-            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, 0.f));
-        }
-        else
-        {
-            e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 1;
-            e.getComponent<cro::Callback>().active = true;
-        }
-    };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
+    //hide player avatar
     if (m_activeAvatar)
     {
         //check distance and animate 
@@ -3274,6 +3164,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     }
 
     //hide player shadow
+    cro::Command cmd;
     cmd.targetFlags = CommandID::PlayerShadow;
     cmd.action = [](cro::Entity e, float)
     {
@@ -3570,13 +3461,6 @@ void GolfState::startFlyBy()
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //hide player
-    cmd.targetFlags = CommandID::UI::PlayerSprite;
-    cmd.action = [](cro::Entity e, float)
-    {
-        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
     if (m_activeAvatar)
     {
         auto scale = m_activeAvatar->model.getComponent<cro::Transform>().getScale();
@@ -3658,39 +3542,6 @@ void GolfState::setActiveCamera(std::int32_t camID)
 
         m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = waterEnt;
         m_cameras[m_currentCamera].getComponent<cro::Camera>().active = true;
-        
-
-        //hide player based on cam id
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::UI::PlayerSprite;
-        cmd.action = [&,camID](cro::Entity e, float)
-        {
-            //show/hide player based on camera
-            //flipping the sprite render dir will stop it drawing
-            if (m_avatars[m_currentPlayer.client][m_currentPlayer.player].flipped)
-            {
-                if (camID == CameraID::Player)
-                {
-                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-                }
-                else
-                {
-                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-                }
-            }
-            else
-            {
-                if (camID == CameraID::Player)
-                {
-                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-                }
-                else
-                {
-                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-                }
-            }
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
 }
 
@@ -3737,13 +3588,4 @@ void GolfState::toggleFreeCam()
     m_waterEnt.getComponent<cro::Callback>().active = !useFreeCam;
     m_inputParser.setActive(!useFreeCam);
     cro::App::getWindow().setMouseCaptured(useFreeCam);
-
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::UI::PlayerSprite;
-    cmd.action = [&](cro::Entity e, float)
-    {
-        cro::Colour c = useFreeCam ? cro::Colour::Transparent : cro::Colour::White;
-        e.getComponent<cro::Sprite>().setColour(c);
-    };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

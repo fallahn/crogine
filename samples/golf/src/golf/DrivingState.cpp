@@ -1130,7 +1130,7 @@ void DrivingState::createScene()
 
             //position player sprite
             cro::Command cmd;
-            cmd.targetFlags = CommandID::UI::PlayerSprite;
+            cmd.targetFlags = CommandID::PlayerAvatar;
             cmd.action = [&](cro::Entity e, float)
             {
                 e.getComponent<cro::Callback>().active = true;
@@ -1540,7 +1540,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     md.loadFromFile(m_sharedData.avatarInfo[idx].modelPath);
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::PlayerAvatar;
     md.createModel(entity);
     
     entity.getComponent<cro::Transform>().setScale(glm::vec3(1.f, 0.f, 0.f));
@@ -2022,7 +2022,7 @@ void DrivingState::hitBall()
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    cmd.targetFlags = CommandID::UI::PlayerSprite;
+    cmd.targetFlags = CommandID::PlayerAvatar;
     cmd.action = [&](cro::Entity e, float)
     {
         //if (m_inputParser.getClub() < ClubID::PitchWedge)
@@ -2055,7 +2055,7 @@ void DrivingState::setHole(std::int32_t index)
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //reset avatar
-    cmd.targetFlags = CommandID::UI::PlayerSprite;
+    cmd.targetFlags = CommandID::PlayerAvatar;
     cmd.action = [&](cro::Entity e, float)
     {
         e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Idle]);
