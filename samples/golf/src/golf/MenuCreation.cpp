@@ -472,6 +472,23 @@ void MenuState::createAvatarScene()
 
                     entity.getComponent<cro::Skeleton>().getAttachments()[id].setModel(e);
                 }
+                else
+                {
+                    //no hands, no good
+                    LogE << cro::FileSystem::getFileName(m_sharedData.avatarInfo[i].modelPath) << ": no hands attachment found, avatar not loaded" << std::endl;
+                    m_avatarScene.destroyEntity(entity);
+                    m_sharedData.avatarInfo[i].modelPath.clear();
+                }
+
+                //TODO fail to load if there's no animations? This shouldn't
+                //be game breaking if there are none, it'll just look wrong.
+            }
+            else
+            {
+                //no skeleton, no good (see why this works, below)
+                LogE << cro::FileSystem::getFileName(m_sharedData.avatarInfo[i].modelPath) << ": no skeleton found, avatar not loaded" << std::endl;
+                m_avatarScene.destroyEntity(entity);
+                m_sharedData.avatarInfo[i].modelPath.clear();
             }
 
             m_playerAvatars[i].previewModel = entity;
@@ -488,6 +505,7 @@ void MenuState::createAvatarScene()
         }
     }
 
+    //remove all info with no valid path
     m_sharedData.avatarInfo.erase(std::remove_if(
         m_sharedData.avatarInfo.begin(),
         m_sharedData.avatarInfo.end(),
@@ -496,6 +514,14 @@ void MenuState::createAvatarScene()
             return ai.modelPath.empty();
         }),
         m_sharedData.avatarInfo.end());
+
+    //remove all models with no valid preview
+    m_playerAvatars.erase(std::remove_if(m_playerAvatars.begin(), m_playerAvatars.end(), 
+        [](const PlayerAvatar& a)
+        {
+            return !a.previewModel.isValid();
+        }),
+        m_playerAvatars.end());
 }
 
 std::int32_t MenuState::indexFromAvatarID(std::uint32_t id)
