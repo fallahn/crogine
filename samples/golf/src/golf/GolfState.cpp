@@ -1194,7 +1194,7 @@ void GolfState::loadAssets()
                     for (auto m = 0u; m < holeData.modelEntity.getComponent<cro::Model>().getMeshData().submeshCount; ++m)
                     {
                         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
-                        setTexture(modelDef, material, m);
+                        applyMaterialData(modelDef, material, m);
                         holeData.modelEntity.getComponent<cro::Model>().setMaterial(m, material);
                     }
                     propCount++;
@@ -1263,7 +1263,7 @@ void GolfState::loadAssets()
                                 for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
                                 {
                                     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
-                                    setTexture(modelDef, texturedMat, i);
+                                    applyMaterialData(modelDef, texturedMat, i);
                                     ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
                                 }
                                 
@@ -1279,7 +1279,7 @@ void GolfState::loadAssets()
                                 for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
                                 {
                                     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-                                    setTexture(modelDef, texturedMat, i);
+                                    applyMaterialData(modelDef, texturedMat, i);
                                     ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
                                 }
                             }
@@ -1614,7 +1614,7 @@ void GolfState::buildScene()
     //carts
     md.loadFromFile("assets/golf/models/cart.cmt");
     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-    setTexture(md, texturedMat);
+    applyMaterialData(md, texturedMat);
     std::array cartPositions =
     {
         glm::vec3(-0.4f, 0.f, -5.9f),
@@ -1802,7 +1802,7 @@ void GolfState::buildScene()
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
     material = m_resources.materials.get(m_materialIDs[MaterialID::Player]);
-    setTexture(md, material, 0);
+    applyMaterialData(md, material, 0);
     entity.getComponent<cro::Model>().setMaterial(0, material);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -1913,7 +1913,7 @@ void GolfState::initAudio()
                 };
 
                 auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-                setTexture(md, material);
+                applyMaterialData(md, material);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
 
                 //engine

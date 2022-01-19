@@ -604,7 +604,7 @@ void MenuState::createScene()
 
     cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/menu_pavilion.cmt");
-    setTexture(md, texturedMat);
+    applyMaterialData(md, texturedMat);
 
     auto entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -616,7 +616,7 @@ void MenuState::createScene()
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
     texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-    setTexture(md, texturedMat);
+    applyMaterialData(md, texturedMat);
     entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
     md.loadFromFile("assets/golf/models/phone_box.cmt");
@@ -625,7 +625,7 @@ void MenuState::createScene()
     md.createModel(entity);
 
     texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-    setTexture(md, texturedMat);
+    applyMaterialData(md, texturedMat);
     entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
 
@@ -680,7 +680,7 @@ void MenuState::createScene()
     md.createModel(entity);
 
     texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-    setTexture(md, texturedMat);
+    applyMaterialData(md, texturedMat);
     entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
     //these ones move :)

@@ -626,7 +626,7 @@ void DrivingState::loadAssets()
         md.createModel(m_clubModels[ClubModel::Wood]);
 
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
-        setTexture(md, material, 0);
+        applyMaterialData(md, material, 0);
         m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setMaterial(0, material);
     }
 
@@ -637,7 +637,7 @@ void DrivingState::loadAssets()
         md.createModel(m_clubModels[ClubModel::Iron]);
 
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
-        setTexture(md, material, 0);
+        applyMaterialData(md, material, 0);
         m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterial(0, material);
     }
 
@@ -738,7 +738,7 @@ void DrivingState::initAudio()
                 };
 
                 auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-                setTexture(md, material);
+                applyMaterialData(md, material);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
                 
                 //engine
@@ -940,7 +940,7 @@ void DrivingState::createScene()
 
                 //not sure we need to set all submeshes - for one thing it breaks the cart shadow
                 auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-                setTexture(md, material);
+                applyMaterialData(md, material);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
                 entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
 
@@ -1015,7 +1015,7 @@ void DrivingState::createScene()
     for (auto i = 0u; i < count; ++i)
     {
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-        setTexture(md, material, i);
+        applyMaterialData(md, material, i);
         entity.getComponent<cro::Model>().setMaterial(i, material);
     }
 
@@ -1563,7 +1563,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
     //avatar requirement is single material
     material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
-    setTexture(md, material);
+    applyMaterialData(md, material);
     material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[0][playerIndex]);
     entity.getComponent<cro::Model>().setMaterial(0, material);
 

@@ -453,7 +453,7 @@ void MenuState::createAvatarScene()
             //only update a single image though, so 1 material should
             //be a hard limit.
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
-            setTexture(md, material);
+            applyMaterialData(md, material);
             entity.getComponent<cro::Model>().setMaterial(0, material);
 
             if (entity.hasComponent<cro::Skeleton>())
@@ -466,7 +466,7 @@ void MenuState::createAvatarScene()
                     clubDef.createModel(e);
 
                     material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
-                    setTexture(clubDef, material);
+                    applyMaterialData(clubDef, material);
                     material.doubleSided = true; //we could update front face with parent model but meh
                     e.getComponent<cro::Model>().setMaterial(0, material);
 

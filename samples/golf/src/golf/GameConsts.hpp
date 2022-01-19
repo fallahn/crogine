@@ -195,12 +195,13 @@ static inline void togglePixelScale(SharedStateData& sharedData, bool on)
     }
 }
 
-static inline void setTexture(const cro::ModelDefinition& modelDef, cro::Material::Data& dest, std::size_t matID = 0)
+//applies material data loaded in a model definition such as texture info to custom materials
+static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::Material::Data& dest, std::size_t matID = 0)
 {
     if (auto* m = modelDef.getMaterial(matID); m != nullptr)
     {
         //skip over materials with alpha blend as they are
-        //probably glass or  shadow materials
+        //probably glass or shadow materials
         if (m->blendMode == cro::Material::BlendMode::Alpha)
         {
             dest = *m;
