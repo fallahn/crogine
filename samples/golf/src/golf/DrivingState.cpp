@@ -312,42 +312,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
         if (data.userType == SpriteAnimID::Swing)
         {
-            //relay this message with the info needed for particle/sound effects
-            auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-            msg2->type = GolfEvent::ClubSwing;
-            msg2->position = PlayerPosition;
-            msg2->terrain = TerrainID::Fairway;
-            msg2->club = static_cast<std::uint8_t>(m_inputParser.getClub());
-
-            cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 50000, 35000, 200);
-
-            //check if we hooked/sliced
-            auto hook = m_inputParser.getHook();
-            if (hook < -0.15f)
-            {
-                auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-                msg2->type = GolfEvent::HookedBall;
-                floatingMessage("Hook");
-            }
-            else if (hook > 0.15f)
-            {
-                auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-                msg2->type = GolfEvent::SlicedBall;
-                floatingMessage("Slice");
-            }
-
-            auto power = m_inputParser.getPower();
-            hook *= 20.f;
-            hook = std::round(hook);
-            hook /= 20.f;
-
-            if (power > 0.9f
-                && std::fabs(hook) < 0.05f)
-            {
-                auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-                msg2->type = GolfEvent::NiceShot;
-            }
-
+            hitBall();
 
             //enable the camera following
             m_gameScene.setSystemActive<CameraFollowSystem>(true);
@@ -371,7 +336,18 @@ void DrivingState::handleMessage(const cro::Message& msg)
         {
         default: break;
         case GolfEvent::HitBall:
-            hitBall();
+        {
+            //animation event triggers actual ball hit
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::PlayerAvatar;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Swing]);
+            };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            m_inputParser.setActive(false);
+        }
             break;
         case GolfEvent::ClubChanged:
         {
@@ -2001,8 +1977,6 @@ void DrivingState::hitBall()
     impulse *= Dampening[TerrainID::Fairway];
 
     //apply impulse to ball component
-    //TODO in this offline mode we could just use
-    //the animation event to trigger this
     cro::Command cmd;
     cmd.targetFlags = CommandID::Ball;
     cmd.action = [impulse](cro::Entity e, float)
@@ -2013,30 +1987,49 @@ void DrivingState::hitBall()
         {
             ball.velocity = impulse;
             ball.state = Ball::State::Flight;
-            //this is a kludge to wait for the anim before hitting the ball
-            //Ideally we want to read the frame data from the sprite sheet
-            //ball.delay = 0.32f;
-            ball.delay = 1.32f;
+            ball.delay = 0.f;
             ball.startPoint = e.getComponent<cro::Transform>().getPosition();
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    cmd.targetFlags = CommandID::PlayerAvatar;
-    cmd.action = [&](cro::Entity e, float)
-    {
-        //if (m_inputParser.getClub() < ClubID::PitchWedge)
-        {
-            e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Swing]);
-        }
-        /*else
-        {
-            e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Chip]);
-        }*/        
-    };
-    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    m_inputParser.setActive(false);
+
+    //relay this message with the info needed for particle/sound effects
+    auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+    msg->type = GolfEvent::ClubSwing;
+    msg->position = PlayerPosition;
+    msg->terrain = TerrainID::Fairway;
+    msg->club = static_cast<std::uint8_t>(m_inputParser.getClub());
+
+    cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 50000, 35000, 200);
+
+    //check if we hooked/sliced
+    auto hook = m_inputParser.getHook();
+    if (hook < -0.15f)
+    {
+        auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+        msg2->type = GolfEvent::HookedBall;
+        floatingMessage("Hook");
+    }
+    else if (hook > 0.15f)
+    {
+        auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+        msg2->type = GolfEvent::SlicedBall;
+        floatingMessage("Slice");
+    }
+
+    auto power = m_inputParser.getPower();
+    hook *= 20.f;
+    hook = std::round(hook);
+    hook /= 20.f;
+
+    if (power > 0.9f
+        && std::fabs(hook) < 0.05f)
+    {
+        auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+        msg2->type = GolfEvent::NiceShot;
+    }
 }
 
 void DrivingState::setHole(std::int32_t index)
