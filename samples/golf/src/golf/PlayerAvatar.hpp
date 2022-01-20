@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -48,7 +48,6 @@ public:
     void setColour(pc::ColourKey::Index, std::int8_t);
     void apply();
 
-    cro::FloatRect previewRect;
     cro::Entity previewModel;
 
 private:

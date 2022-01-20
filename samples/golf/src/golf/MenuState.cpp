@@ -246,30 +246,30 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("Debug"))
-            {
-                /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-                ImGui::SameLine();
-                ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-                ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-                ImGui::SameLine();
-                ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
-                /*float x = static_cast<float>(AvatarThumbSize.x);
-                float y = static_cast<float>(AvatarThumbSize.y);
-                ImGui::Image(m_avatarThumbs[0].getTexture(), {x,y}, {0,1}, {1,0});
-                ImGui::SameLine();
-                ImGui::Image(m_avatarThumbs[1].getTexture(), { x,y }, { 0,1 }, { 1,0 });
-                ImGui::SameLine();
-                ImGui::Image(m_avatarThumbs[2].getTexture(), { x,y }, { 0,1 }, { 1,0 });
-                ImGui::SameLine();
-                ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
-                //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
-                //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-            }
-            ImGui::End();
-        });
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Debug"))
+    //        {
+    //            /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+    //            ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
+    //            /*float x = static_cast<float>(AvatarThumbSize.x);
+    //            float y = static_cast<float>(AvatarThumbSize.y);
+    //            ImGui::Image(m_avatarThumbs[0].getTexture(), {x,y}, {0,1}, {1,0});
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_avatarThumbs[1].getTexture(), { x,y }, { 0,1 }, { 1,0 });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_avatarThumbs[2].getTexture(), { x,y }, { 0,1 }, { 1,0 });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
+    //            //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
+    //            //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
@@ -435,37 +435,6 @@ bool MenuState::simulate(float dt)
             handleNetEvent(evt);
         }
     }
-
-    /*glm::vec3 move(0.f);
-    if (cro::Keyboard::isKeyPressed(SDLK_d))
-    {
-        move.x = 1.f;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_a))
-    {
-        move.x -= 1.f;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_w))
-    {
-        move.z = -1.f;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_s))
-    {
-        move.z += 1.f;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_q))
-    {
-        move.y = 1.f;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_e))
-    {
-        move.y -= 1.f;
-    }
-    if (glm::length2(move) > 1)
-    {
-        move = glm::normalize(move);
-    }
-    m_avatarScene.getActiveCamera().getComponent<cro::Transform>().move(move * dt);*/
 
     m_backgroundScene.simulate(dt);
     m_avatarScene.simulate(dt);

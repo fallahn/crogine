@@ -924,7 +924,7 @@ void GolfState::loadAssets()
             auto avatarIndex = indexFromSkinID(skinID);
 
             m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, static_cast<std::int32_t>(avatarIndex));
-
+            m_avatars[i][j].flipped = m_sharedData.connectionData[i].playerData[j].flipped;
 
             //player avatar model
             //TODO we might want error checking here, but the model files

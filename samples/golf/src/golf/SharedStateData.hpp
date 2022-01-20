@@ -102,7 +102,6 @@ struct SharedStateData final
     struct AvatarInfo final
     {
         std::uint32_t uid = 0;
-        std::string spritePath;
         std::string modelPath;
         std::string audioscape;
     };
