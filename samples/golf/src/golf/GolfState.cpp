@@ -1032,7 +1032,7 @@ void GolfState::loadAssets()
     {
         md.createModel(m_clubModels[ClubModel::Wood]);
 
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
         applyMaterialData(md, material, 0);
         m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setMaterial(0, material);
     }
@@ -1048,7 +1048,7 @@ void GolfState::loadAssets()
     {
         md.createModel(m_clubModels[ClubModel::Iron]);
 
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
         applyMaterialData(md, material, 0);
         m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterial(0, material);
     }
