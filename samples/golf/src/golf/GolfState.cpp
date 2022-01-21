@@ -2287,6 +2287,9 @@ void GolfState::spawnBall(const ActorInfo& info)
             colour.setAlpha(std::max(0.f, colour.getAlpha() - dt));
             e.getComponent<cro::Sprite>().setColour(colour);
         }
+
+        float scale = m_sharedData.pixelScale ? 1.f : m_viewScale.x;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
     m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
