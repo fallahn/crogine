@@ -821,7 +821,7 @@ void GolfState::loadAssets()
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
+    m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n#define RX_SHADOWS\n");
     shader = &m_resources.shaders.get(ShaderID::Player);
     //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::Player] = m_resources.materials.add(*shader);
@@ -2725,10 +2725,26 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
     camEnt.getComponent<cro::Transform>().move(offset * viewOffset);
 
-    //clamp above ground height
+    //clamp above ground height and hole radius
     auto newPos = camEnt.getComponent<cro::Transform>().getPosition();
+
+    constexpr float MinRad = 0.3f + CameraPuttOffset;
+    constexpr float MinRadSqr = MinRad * MinRad;
+
+    auto holeDir = m_holeData[m_currentHole].pin - newPos;
+    auto holeDist = glm::length2(holeDir);
+    /*if (holeDist < MinRadSqr)
+    {
+        auto len = std::sqrt(holeDist);
+        auto move = MinRad - len;
+        holeDir /= len;
+        holeDir *= move;
+        newPos -= holeDir;
+    }*/
+
     auto groundHeight = m_collisionMesh.getTerrain(newPos).height;
     newPos.y = std::max(groundHeight + CameraPuttHeight, newPos.y);
+
     camEnt.getComponent<cro::Transform>().setPosition(newPos);
 
     //also updated by camera follower...

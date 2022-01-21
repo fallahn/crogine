@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -61,6 +61,7 @@ public:
     void update(float);
 
     bool inProgress() const;
+    bool getActive() const;
 
 private:
     const InputBinding& m_inputBinding;

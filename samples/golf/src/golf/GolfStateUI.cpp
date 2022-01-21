@@ -462,6 +462,38 @@ void GolfState::buildUI()
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //stroke indicator
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    auto endColour = TextGoldColour;
+    endColour.setAlpha(0.f);
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(-0.5f, 18.f), endColour),
+        cro::Vertex2D(glm::vec2(-0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.5f, 18.f), endColour),
+        cro::Vertex2D(glm::vec2(0.5f, -0.5f), TextGoldColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() - (cro::Util::Const::PI / 2.f));
+        auto pos = m_currentPlayer.position;
+        pos.y = -pos.z;
+        pos.z = 1.f;
+        e.getComponent<cro::Transform>().setPosition(pos / 2.f);
+
+        float scale = 1.f;
+        if (m_currentPlayer.terrain == TerrainID::Green
+            || !m_inputParser.getActive())
+        {
+            scale = 0.f;
+        }
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    };
+    mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //green close up view
     entity = m_uiScene.createEntity();

@@ -331,7 +331,6 @@ void InputParser::update(float dt)
 
     if (m_active)
     {
-
         m_inputFlags &= m_enableFlags;
 
         switch (m_state)
@@ -443,6 +442,11 @@ void InputParser::update(float dt)
 bool InputParser::inProgress() const
 {
     return (m_state == State::Power || m_state == State::Stroke);
+}
+
+bool InputParser::getActive() const
+{
+    return m_active;
 }
 
 //private
