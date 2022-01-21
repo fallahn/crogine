@@ -235,6 +235,21 @@ static const std::string CelFragmentShader = R"(
 #if defined(RX_SHADOWS)
     VARYING_IN LOW vec4 v_lightWorldPosition;
 
+    float shadowAmount(LOW vec4 lightWorldPos)
+    {
+        vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
+        projectionCoords = projectionCoords * 0.5 + 0.5;
+        float depthSample = TEXTURE(u_shadowMap, projectionCoords.xy).r;
+        float currDepth = projectionCoords.z - 0.005;
+
+        if (currDepth > 1.0)
+        {
+            return 1.0;
+        }
+
+        return (currDepth < depthSample) ? 1.0 : 0.7;
+    }
+
     const vec2 kernel[16] = vec2[](
         vec2(-0.94201624, -0.39906216),
         vec2(0.94558609, -0.76890725),
@@ -254,7 +269,7 @@ static const std::string CelFragmentShader = R"(
         vec2(0.14383161, -0.14100790)
     );
     const int filterSize = 3;
-    float shadowAmount(vec4 lightWorldPos)
+    float shadowAmountSoft(vec4 lightWorldPos)
     {
         vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
         projectionCoords = projectionCoords * 0.5 + 0.5;

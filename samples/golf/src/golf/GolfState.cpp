@@ -60,6 +60,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
@@ -825,7 +826,7 @@ void GolfState::loadAssets()
     //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::Player] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
@@ -1475,6 +1476,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::SpriteAnimator>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(50.f);
 #ifdef CRO_DEBUG_
     m_gameScene.addSystem<FpsCameraSystem>(mb);
 #endif
@@ -1530,9 +1532,6 @@ void GolfState::buildScene()
     if (md.hasSkeleton())
     {
         entity.getComponent<cro::Skeleton>().play(0);
-
-        /*auto mat = m_resources.materials.get(m_materialIDs[MaterialID::CelSkinned]);
-        entity.getComponent<cro::Model>().setMaterial(0, mat);*/
     }
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<FlagCallbackData>();
@@ -1684,47 +1683,6 @@ void GolfState::buildScene()
     auto teeEnt = entity;
 
 
-    //player shadow
-    static constexpr float ShadowScale = 20.f;
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
-    entity.getComponent<cro::Transform>().setOrigin({0.f, 0.f, PlayerShadowOffset});
-    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f, 1.f, ShadowScale));
-    entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::PlayerShadow;
-    entity.addComponent<cro::Callback>().setUserData<PlayerCallbackData>();
-    entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
-    {
-        auto& [direction, currTime, _] = e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>();
-        
-        if (direction == 0)
-        {
-            currTime = std::min(1.f, currTime + (dt * 2.f));
-
-            e.getComponent<cro::Transform>().setScale({ ShadowScale * cro::Util::Easing::easeOutBounce(currTime), 1.f, ShadowScale });
-        
-            if (currTime == 1)
-            {
-                direction = 1;
-                e.getComponent<cro::Callback>().active = false;
-            }
-        }
-        else
-        {
-            currTime = std::max(0.f, currTime - (dt * 3.f));
-            e.getComponent<cro::Transform>().setScale({ ShadowScale * cro::Util::Easing::easeOutBack(currTime), 1.f, ShadowScale });
-
-            if (currTime == 0)
-            {
-                direction = 0;
-                e.getComponent<cro::Callback>().active = false;
-            }
-        }
-    };
-    m_modelDefs[ModelID::PlayerShadow]->createModel(entity);
-    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::Reflection);
-
     //carts
     md.loadFromFile("assets/golf/models/cart.cmt");
     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
@@ -1788,16 +1746,16 @@ void GolfState::buildScene()
     cam.resizeCallback = updateView;
     updateView(cam);
 
-    static const std::uint32_t ReflectionMapSize = 1024u;
+    constexpr std::uint32_t ReflectionMapSize = 1024u;
+    constexpr std::uint32_t ShadowMapSize = 2048u;
 
     //used by transition callback to interp camera
     camEnt.addComponent<TargetInfo>().waterPlane = waterEnt;
     camEnt.getComponent<TargetInfo>().targetLookAt = m_holeData[0].target;
     cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     cam.reflectionBuffer.setSmooth(true);
-
-    cam.refractionBuffer.create(ReflectionMapSize, ReflectionMapSize);
-    cam.refractionBuffer.setSmooth(true);
+    cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+;
 
     //create an overhead camera
     auto setPerspective = [](cro::Camera& cam)
@@ -1818,6 +1776,7 @@ void GolfState::buildScene()
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(16, 16); //not really rendering shadows as such, but without this we get artifcating
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 80.f * 80.f;
@@ -1841,6 +1800,7 @@ void GolfState::buildScene()
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(16, 16);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 30.f * 30.f;
@@ -1857,6 +1817,7 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = updateView;
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
@@ -1880,7 +1841,6 @@ void GolfState::buildScene()
     camEnt.addComponent<FpsCamera>();
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_freeCam = camEnt;
-
 #endif
 
 
@@ -2951,30 +2911,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    //update player shadow position
-    cmd.targetFlags = CommandID::PlayerShadow;
-    cmd.action = [&,player](cro::Entity e, float)
-    {
-        float rotation = m_camRotation;
-        if (m_avatars[m_currentPlayer.client][m_currentPlayer.player].flipped)
-        {
-            rotation += cro::Util::Const::PI;
-        }
-
-        e.getComponent<cro::Transform>().setPosition(player.position + glm::vec3(0.f, 0.01f, 0.f));
-        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
-
-        /*auto result = m_collisionMesh.getTerrain(player.position);
-        auto rot = rotationFromNormal(result.normal);
-        e.getComponent<cro::Transform>().rotate(rot);*/
-
-        e.getComponent<cro::Model>().setHidden(player.terrain == TerrainID::Green);
-        
-        e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;
-        e.getComponent<cro::Callback>().active = true;
-    };
-    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
     //also check if we need to display mini map for green
     cmd.targetFlags = CommandID::UI::MiniGreen;
     cmd.action = [player](cro::Entity e, float)
@@ -3166,17 +3102,9 @@ void GolfState::createTransition(const ActivePlayer& playerData)
         }
     }
 
-    //hide player shadow
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::PlayerShadow;
-    cmd.action = [](cro::Entity e, float)
-    {
-        e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 1;
-        e.getComponent<cro::Callback>().active = true;
-    };
-    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
+    
     //hide hud
+    cro::Command cmd;
     cmd.targetFlags = CommandID::UI::Root;
     cmd.action = [](cro::Entity e, float) 
     {

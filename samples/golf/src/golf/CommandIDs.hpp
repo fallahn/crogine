@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -40,7 +40,7 @@ struct CommandID final
         Tee             = 0x10,
         Cart            = 0x20,
         SlopeIndicator  = 0x40,
-        PlayerShadow    = 0x80,
+        //PlayerShadow    = 0x80,
         SpectatorCam    = 0x100,
         PlayerAvatar    = 0x200
     };

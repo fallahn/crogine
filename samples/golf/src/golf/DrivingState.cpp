@@ -170,14 +170,14 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     });
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]()
+    /*registerWindow([&]()
         {
             if (ImGui::Begin("Window"))
             {
                 ImGui::Image(m_cameras[CameraID::Player].getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
-        });
+        });*/
 #endif
 }
 
@@ -1125,14 +1125,6 @@ void DrivingState::createScene()
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-            //show shadow
-            cmd.targetFlags = CommandID::PlayerShadow;
-            cmd.action = [&](cro::Entity e, float)
-            {
-                e.getComponent<cro::Callback>().active = true;
-            };
-            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
             //show menu
             cmd.targetFlags = CommandID::UI::DrivingBoard;
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -1164,6 +1156,7 @@ void DrivingState::createScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(16, 16); //not really rendering shadows as such, but without this we get artifcating
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 85.f * 85.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
@@ -1185,6 +1178,7 @@ void DrivingState::createScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(16, 16);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 20.f * 20.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
