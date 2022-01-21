@@ -43,6 +43,11 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Random.hpp>
 
+namespace
+{
+    constexpr float MaxTargetDiff = 25.f; //dist sqr
+}
+
 CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
     : cro::System   (mb, typeid(CameraFollowSystem)),
     m_closestCamera (CameraID::Player)
@@ -121,6 +126,7 @@ void CameraFollowSystem::process(float dt)
         {
             auto target = follower.target.getComponent<cro::Transform>().getPosition();
             auto diff = target - follower.currentTarget;
+
             follower.currentTarget += diff * (dt * (4.f + (4.f * follower.zoom.progress)));
 
             auto& tx = entity.getComponent<cro::Transform>();
