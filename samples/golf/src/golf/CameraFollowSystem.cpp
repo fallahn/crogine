@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -127,7 +127,9 @@ void CameraFollowSystem::process(float dt)
             auto target = follower.target.getComponent<cro::Transform>().getPosition();
             auto diff = target - follower.currentTarget;
 
-            follower.currentTarget += diff * (dt * (4.f + (4.f * follower.zoom.progress)));
+            float diffMultiplier = std::min(1.f, std::max(0.f, glm::length2(diff) / MaxTargetDiff));
+            diffMultiplier *= 4.f;
+            follower.currentTarget += diff * (dt * (diffMultiplier + (4.f * follower.zoom.progress)));
 
             auto& tx = entity.getComponent<cro::Transform>();
             auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);

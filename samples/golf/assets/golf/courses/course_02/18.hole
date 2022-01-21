@@ -11,7 +11,7 @@ hole 18
     prop
     {
         model = "assets/golf/models/menu_pavilion.cmt"
-        position = 76.305649,4.5,-121.080490
+        position = 76.305649,3.8,-121.080490
         rotation = -56.770893
     }
 
