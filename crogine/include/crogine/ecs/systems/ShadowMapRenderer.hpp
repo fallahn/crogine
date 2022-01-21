@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -73,12 +73,34 @@ namespace cro
         */
         explicit ShadowMapRenderer(MessageBus& mb);
 
+        /*!
+        \brief Sets the max distance which shadows are drawn
+        Note that this is clamped to the far plane distance of
+        the active camera. The default is 100 units
+        \param distance Maximum world distance to draw shadows.
+        Must be greater than 0
+        */
+        void setMaxDistance(float distance);
+
+        /*!
+        \brief Sets the number of cascades to use when rendering
+        the shadow map. Currently only the first cascade is implemented
+        however this value will affect how much of the MaxDistance is
+        covered. For instance setting this to 3 will only cover the
+        first third of the MaxDistance value.
+        \param count Number of cascades to use. Must be greater than 0
+        */
+        void setNumCascades(std::int32_t count);
+
         void process(float) override;
 
         void updateDrawList(Entity) override;
         void render(Entity, const RenderTarget&) override {};
 
     private:
+        float m_maxDistance;
+        std::int32_t m_cascadeCount;
+        
         std::vector<Entity> m_activeCameras;
         std::vector<std::vector<std::pair<Entity, float>>> m_drawLists;
 

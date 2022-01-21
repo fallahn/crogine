@@ -1,7 +1,7 @@
 model player_one
 {
     mesh = assets/golf/models/avatars/player_one.cmb
-    cast_shadows = false
+    cast_shadows = true
 
     material Unlit
     {

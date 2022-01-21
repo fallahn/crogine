@@ -1,7 +1,7 @@
 model club_wood
 {
     mesh = assets/golf/models/club_wood.cmb
-    cast_shadows = false
+    cast_shadows = true
 
     material VertexLit
     {

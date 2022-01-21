@@ -72,6 +72,7 @@ source distribution.
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
@@ -169,27 +170,14 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     });
 
 #ifdef CRO_DEBUG_
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Window"))
-    //        {
-    //            /*ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][0].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
-    //            ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][1].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
-    //            ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][2].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});
-    //            ImGui::Image(cro::TextureID(m_sharedData.avatarTextures[0][3].getGLHandle()), {256.f, 256.f}, {0.f,1.f}, {1.f, 0.f});*/ 
-    //            //ImGui::Image(cro::TextureID(m_debugHeightmap.getGLHandle()), { 280.f, 290.f }, { 0.f, 1.f }, { 1.f, 0.f });
-
-    //            ImGui::Text("Dot Prod: %3.3f", dotProd);
-
-    //            const auto& ball = ballEntity.getComponent<Ball>();
-    //            ImGui::Text("Ball Terrain: %s", TerrainStrings[ball.terrain].c_str());
-    //            ImGui::Text("Ball State: %s", Ball::StateStrings[static_cast<std::int32_t>(ball.state)].c_str());
-
-    //            auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
-    //            ImGui::Text("Ball Pos: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-    //        }
-    //        ImGui::End();
-    //    });
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Window"))
+            {
+                ImGui::Image(m_cameras[CameraID::Player].getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();
+        });
 #endif
 }
 
@@ -493,6 +481,7 @@ void DrivingState::addSystems()
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(50.f);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
@@ -529,6 +518,7 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
 
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
@@ -545,6 +535,10 @@ void DrivingState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
     //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::Course);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
     m_materialIDs[MaterialID::Wireframe] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
@@ -993,6 +987,9 @@ void DrivingState::createScene()
         return;
     }
 
+    //we use this model twice, with a second copy for the minimap
+    //it's a pita but the shadow receiving version has artifacts
+    //when drawn in the mini view
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
@@ -1000,10 +997,24 @@ void DrivingState::createScene()
     auto count = entity.getComponent<cro::Model>().getMeshData().submeshCount;
     for (auto i = 0u; i < count; ++i)
     {
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
+        applyMaterialData(md, material, i);
+        entity.getComponent<cro::Model>().setMaterial(i, material);
+    }
+    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    md.createModel(entity);
+
+    for (auto i = 0u; i < count; ++i)
+    {
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
         applyMaterialData(md, material, i);
         entity.getComponent<cro::Model>().setMaterial(i, material);
     }
+    entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::MiniMap);
+
 
     //create the billboards
     createFoliage(entity);
@@ -1046,6 +1057,7 @@ void DrivingState::createScene()
 
     auto camEnt = m_gameScene.getActiveCamera();
     auto& cam = camEnt.getComponent<cro::Camera>();
+    cam.shadowMapBuffer.create(2048, 2048);
     cam.resizeCallback = updateView;
     updateView(cam);
     
@@ -1423,102 +1435,14 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
     auto flipped = m_sharedData.localConnectionData.playerData[playerIndex].flipped;
 
-    //shadow
-    cro::ModelDefinition md(m_resources);
-    if (md.loadFromFile("assets/golf/models/ball_shadow.cmt"))
-    {
-        float offset = -0.72f;
-        if (flipped)
-        {
-            offset *= -1.f;
-        }
-
-        auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
-        entity.getComponent<cro::Transform>().move({ offset, 0.1f, 0.4f});
-        entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
-        md.createModel(entity);
-
-        entity.addComponent<cro::CommandTarget>().ID = CommandID::PlayerShadow;
-        entity.addComponent<cro::Callback>().setUserData<float>(0.f);
-        entity.getComponent<cro::Callback>().function =
-            [](cro::Entity e, float dt)
-        {
-            static constexpr float ShadowScale = 20.f;
-
-            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-            currTime = std::min(1.f, currTime + (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale({ ShadowScale * cro::Util::Easing::easeOutBounce(currTime), 1.f, ShadowScale });
-
-            if (currTime == 1)
-            {
-                e.getComponent<cro::Callback>().active = false;
-            }
-        };
-    }
-
-
-    //displays the stroke direction
-    //TODO do we want to fade the player model here?
-    auto pos = PlayerPosition;
-    pos.y += 0.01f;
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(pos);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&/*, playerEnt*/](cro::Entity e, float) mutable
-    {
-        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
-        
-        //fade the player sprite at high angles
-        //so we don't obstruct the view of the indicator
-        float alpha = std::abs(m_inputParser.getYaw());
-        alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / 0.35f));
-
-        cro::Colour c = cro::Colour::White;
-        c.setAlpha(alpha);
-        //playerEnt.getComponent<cro::Sprite>().setColour(c);
-    };
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
-
-    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
-    auto material = m_resources.materials.get(m_materialIDs[MaterialID::Wireframe]);
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
-
-    std::vector<float> verts =
-    {
-        0.f, 0.05f, 0.f,    1.f, 0.97f, 0.88f, 1.f,
-        0.f, 0.1f, -5.f,    1.f, 0.97f, 0.88f, 0.2f
-    };
-    std::vector<std::uint32_t> indices =
-    {
-        0,1
-    };
-
-    auto vertStride = (meshData->vertexSize / sizeof(float));
-    meshData->vertexCount = verts.size() / vertStride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-    auto* submesh = &meshData->indexData[0];
-    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-    entity.getComponent<cro::Model>().setHidden(true);
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
-
-
     //3D Player Model
+    cro::ModelDefinition md(m_resources);
     md.loadFromFile(m_sharedData.avatarInfo[idx].modelPath);
-    entity = m_gameScene.createEntity();
+    auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::PlayerAvatar;
     md.createModel(entity);
-    
+
     entity.getComponent<cro::Transform>().setScale(glm::vec3(1.f, 0.f, 0.f));
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
@@ -1536,8 +1460,8 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
             e.getComponent<cro::Callback>().active = false;
         }
     };
-    
-    
+
+
     if (flipped)
     {
         entity.getComponent<cro::Transform>().setScale({ -1.f, 0.f, 0.f });
@@ -1548,7 +1472,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     }
 
     //avatar requirement is single material
-    material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+    auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
     applyMaterialData(md, material);
     material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[0][playerIndex]);
     entity.getComponent<cro::Model>().setMaterial(0, material);
@@ -1590,6 +1514,60 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
         //skel.setInterpolationEnabled(false);
     }
+
+
+    //displays the stroke direction
+    //TODO do we want to fade the player model here?
+    auto pos = PlayerPosition;
+    pos.y += 0.01f;
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(pos);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&/*, playerEnt*/](cro::Entity e, float) mutable
+    {
+        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
+        
+        //fade the player sprite at high angles
+        //so we don't obstruct the view of the indicator
+        /*float alpha = std::abs(m_inputParser.getYaw());
+        alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / 0.35f));
+
+        cro::Colour c = cro::Colour::White;
+        c.setAlpha(alpha);
+        playerEnt.getComponent<cro::Sprite>().setColour(c);*/
+    };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
+
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+    material = m_resources.materials.get(m_materialIDs[MaterialID::Wireframe]);
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
+
+    std::vector<float> verts =
+    {
+        0.f, 0.05f, 0.f,    1.f, 0.97f, 0.88f, 1.f,
+        0.f, 0.1f, -5.f,    1.f, 0.97f, 0.88f, 0.2f
+    };
+    std::vector<std::uint32_t> indices =
+    {
+        0,1
+    };
+
+    auto vertStride = (meshData->vertexSize / sizeof(float));
+    meshData->vertexCount = verts.size() / vertStride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    entity.getComponent<cro::Model>().setHidden(true);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
 }
 
 void DrivingState::createBall()

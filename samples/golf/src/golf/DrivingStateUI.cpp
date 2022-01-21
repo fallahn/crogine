@@ -349,14 +349,14 @@ void DrivingState::createUI()
         glm::uvec2 previewSize(RangeSize / 2.f);
         m_mapTexture.create(previewSize.x, previewSize.y);
 
-        miniCam.setOrthographic((-RangeSize.x / 2.f) + 1.f, (RangeSize.x / 2.f) - 1.f, -RangeSize.y / 2.f, RangeSize.y / 2.f, -0.1f, 20.f);
+        miniCam.setOrthographic((-RangeSize.x / 2.f) + 1.f, (RangeSize.x / 2.f) - 1.f, -RangeSize.y / 2.f, RangeSize.y / 2.f, -0.1f, 7.f);
         float xPixel = 1.f / (RangeSize.x / 2.f);
         float yPixel = 1.f / (RangeSize.y / 2.f);
         miniCam.viewport = { xPixel, yPixel, 1.f - (xPixel * 2.f), 1.f - (yPixel * 2.f) };
     };
 
     m_mapCam = m_gameScene.createEntity();
-    m_mapCam.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 0.f });
+    m_mapCam.addComponent<cro::Transform>().setPosition({ 0.f, 5.f, 0.f });
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
     miniCam.renderFlags = RenderFlags::MiniMap;
