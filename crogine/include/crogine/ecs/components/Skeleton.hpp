@@ -341,6 +341,13 @@ namespace cro
         */
         const glm::mat4& getRootTransform() const { return m_rootTransform; }
 
+        /*!
+        \brief Sets whether or not the animation frames are interpolated
+        Setting this to false can improve performance with a lot of models
+        (or during debugging) but animation will appear less smooth
+        */
+        void setInterpolationEnabled(bool enabled) { m_useInterpolation = enabled; }
+
     private:
 
         float m_playbackRate;
@@ -353,7 +360,7 @@ namespace cro
 
         float m_frameTime;
         float m_currentFrameTime;
-
+        bool m_useInterpolation;
 
         std::size_t m_frameSize; //joints in a frame
         std::size_t m_frameCount;

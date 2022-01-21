@@ -127,7 +127,8 @@ void SkeletalAnimator::process(float dt)
                    
             //only interpolate if model is visible and close to the active camera
             if (!entity.getComponent<Model>().isHidden()
-                && anim.playbackRate != 0)
+                && anim.playbackRate != 0
+                && skel.m_useInterpolation)
             {
                 //check distance to camera and check if actually in front
                 auto direction = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
@@ -153,7 +154,8 @@ void SkeletalAnimator::process(float dt)
                 interpolate(skel.m_animations[skel.m_currentAnimation].currentFrame, skel.m_animations[skel.m_nextAnimation].startFrame, interpTime, skel);
             }
 
-            if (skel.m_currentBlendTime > skel.m_blendTime)
+            if (skel.m_currentBlendTime > skel.m_blendTime
+                || !skel.m_useInterpolation)
             {
                 skel.m_animations[skel.m_currentAnimation].playbackRate = 0.f;
                 skel.m_currentAnimation = skel.m_nextAnimation;

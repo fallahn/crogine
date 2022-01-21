@@ -42,6 +42,7 @@ Skeleton::Skeleton()
     m_currentBlendTime  (0.f),
     m_frameTime         (1.f),
     m_currentFrameTime  (0.f),
+    m_useInterpolation  (true),
     m_frameSize         (0),
     m_frameCount        (0)
 {

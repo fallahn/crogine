@@ -1587,6 +1587,8 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
             //avatar data in to the menu
             LogW << "No attachment point named \'hands\' was found" << std::endl;
         }
+
+        //skel.setInterpolationEnabled(false);
     }
 }
 
