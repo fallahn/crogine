@@ -42,7 +42,7 @@ spritesheet player_menu
         bounds = 0, 259 ,190, 51
     }
 
-    sprite thumb_gh
+    sprite thumb_bg
     {
         bounds = 224, 214, 58,72
     }

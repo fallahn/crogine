@@ -1067,6 +1067,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     m_sprites[SpriteID::ArrowRightHighlight] = spriteSheet.getSprite("arrow_r_h");
     m_sprites[SpriteID::Controller] = spriteSheet.getSprite("controller");
     m_sprites[SpriteID::Keyboard] = spriteSheet.getSprite("keyboard");
+    m_sprites[SpriteID::ThumbBackground] = spriteSheet.getSprite("thumb_bg");
 
     //this entity has the player edit text ents added to it by updateLocalAvatars
     auto avatarEnt = m_uiScene.createEntity();
@@ -2413,8 +2414,36 @@ void MenuState::createPlayerConfigMenu()
     }
 
 
+    //hair left
+    entity = createButton({ 95.f, 77.f }, "arrow_left");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    applyTextEdit();
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                }
+            });
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //hair right
+    entity = createButton({ 177.f, 77.f }, "arrow_right");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    applyTextEdit();
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     //skin left
-    entity = createButton({ 95.f, 92.f }, "arrow_left");
+    entity = createButton({ 95.f, 52.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2442,7 +2471,7 @@ void MenuState::createPlayerConfigMenu()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //skin right
-    entity = createButton({ 177.f, 92.f }, "arrow_right");
+    entity = createButton({ 177.f, 52.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2563,7 +2592,7 @@ void MenuState::createPlayerConfigMenu()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //ball select left
-    entity = createButton({ 213.f, 49.f }, "arrow_left");
+    entity = createButton({ 213.f, 52.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2583,7 +2612,7 @@ void MenuState::createPlayerConfigMenu()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //ball select right
-    entity = createButton({ 246.f, 49.f }, "arrow_right");
+    entity = createButton({ 246.f, 52.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2629,6 +2658,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
     //these can have fixed positions as they are attached to a menuEntity[] which is UI scaled
     constexpr glm::vec3 EditButtonOffset(-47.f, -57.f, 0.f);
     constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-68.f, -18.f, 0.f);
+    constexpr glm::vec3 BGOffset = AvatarOffset + glm::vec3(1.f, 7.f, -0.02f);
     constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(115.f, 42.f, 0.f);
     constexpr float LineHeight = 11.f; //-8.f
 
@@ -2661,6 +2691,14 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
 
+        //add avatar background
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(localPos + BGOffset);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ThumbBackground];
+
+        m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_avatarListEntities.push_back(entity);
 
         //add avatar preview
         applyAvatarColours(i);

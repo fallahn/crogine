@@ -130,6 +130,7 @@ private:
         {
             Controller,
             Keyboard,
+            ThumbBackground,
             ArrowLeft,
             ArrowRight,
             ArrowLeftHighlight,
