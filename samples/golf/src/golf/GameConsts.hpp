@@ -122,7 +122,7 @@ struct AnimationID final
 {
     enum
     {
-        Idle, Swing, Chip,
+        Idle, Swing, Chip, Putt,
         Count
     };
 };

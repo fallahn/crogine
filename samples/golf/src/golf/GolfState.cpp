@@ -993,6 +993,7 @@ void GolfState::loadAssets()
                 if (entity.hasComponent<cro::Skeleton>())
                 {
                     auto& skel = entity.getComponent<cro::Skeleton>();
+                    //skel.setInterpolationEnabled(false);
                     const auto& anims = skel.getAnimations();
                     for (auto k = 0u; k < anims.size(); ++k)
                     {
@@ -1007,6 +1008,10 @@ void GolfState::loadAssets()
                         else if (anims[k].name == "chip")
                         {
                             m_avatars[i][j].animationIDs[AnimationID::Chip] = k;
+                        }
+                        else if (anims[k].name == "putt")
+                        {
+                            m_avatars[i][j].animationIDs[AnimationID::Putt] = k;
                         }
                     }
 

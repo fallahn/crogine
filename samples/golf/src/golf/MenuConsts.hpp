@@ -92,7 +92,7 @@ static constexpr float BannerPosition = MenuBottomBorder - 3.f;
 
 static constexpr std::uint32_t BallPreviewSize = 64u;
 static constexpr glm::uvec2 AvatarPreviewSize(70, 90);
-static constexpr glm::uvec2 AvatarThumbSize(60, 66);
+static constexpr glm::uvec2 AvatarThumbSize(60, 77);
 
 static constexpr glm::vec2 CourseDescPos(0.5f, 0.24f); //relative
 static constexpr glm::vec2 ClubTextPosition(0.01f, 1.f); //relative

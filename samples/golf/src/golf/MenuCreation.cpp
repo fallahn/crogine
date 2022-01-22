@@ -371,7 +371,12 @@ void MenuState::createAvatarScene()
 
     auto avatarCam = m_avatarScene.createEntity();
     avatarCam.addComponent<cro::Transform>().setPosition({ 0.f, 0.649f, 1.3f });
-    avatarCam.addComponent<cro::Camera>().setPerspective(75.f * cro::Util::Const::degToRad, static_cast<float>(AvatarPreviewSize.x) / AvatarPreviewSize.y, 0.001f, 10.f);
+    //avatarCam.addComponent<cro::Camera>().setPerspective(75.f * cro::Util::Const::degToRad, static_cast<float>(AvatarPreviewSize.x) / AvatarPreviewSize.y, 0.001f, 10.f);
+
+    constexpr float ratio = static_cast<float>(AvatarPreviewSize.y) / AvatarPreviewSize.x;
+    constexpr float orthoWidth = 0.7f;
+    auto orthoSize = glm::vec2(orthoWidth, orthoWidth * ratio);
+    avatarCam.addComponent<cro::Camera>().setOrthographic(-orthoSize.x, orthoSize.x, -orthoSize.y, orthoSize.y, 0.001f, 10.f);
     avatarCam.getComponent<cro::Camera>().resizeCallback = avatarTexCallback;
     avatarTexCallback(avatarCam.getComponent<cro::Camera>());
 
@@ -2623,9 +2628,9 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
 {
     //these can have fixed positions as they are attached to a menuEntity[] which is UI scaled
     constexpr glm::vec3 EditButtonOffset(-47.f, -57.f, 0.f);
-    constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-68.f, -6.f, 0.f);
-    constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(115.f, 34.f, 0.f);
-    constexpr float LineHeight = 28.f; //-8.f
+    constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-68.f, -18.f, 0.f);
+    constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(115.f, 42.f, 0.f);
+    constexpr float LineHeight = 11.f; //-8.f
 
     for (auto e : m_avatarListEntities)
     {
