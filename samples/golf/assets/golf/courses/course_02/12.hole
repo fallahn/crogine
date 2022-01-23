@@ -18,7 +18,7 @@ hole 12
     prop
     {
         model = "assets/golf/models/scoreboard.cmt"
-        position = 42.372272,2.273188,-57.253128
+        position = 42.372272,1.45,-57.253128
         rotation = -15.555361
     }
 

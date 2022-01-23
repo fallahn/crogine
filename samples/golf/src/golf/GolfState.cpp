@@ -1582,7 +1582,7 @@ void GolfState::buildScene()
 
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
-    material.enableDepthTest = false;
+    //material.enableDepthTest = false;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
 
@@ -2862,7 +2862,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         position.y += 0.014f; //z-fighting
         e.getComponent<cro::Transform>().setPosition(position);
         e.getComponent<cro::Model>().setHidden(!localPlayer);
-        e.getComponent<cro::Model>().setDepthTestEnabled(0, player.terrain == TerrainID::Green);
+        //e.getComponent<cro::Model>().setDepthTestEnabled(0, player.terrain == TerrainID::Green);
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
