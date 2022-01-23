@@ -7,6 +7,7 @@ See http://fallahn.itch.io/vga-golf for more details.
 
 
 avatar_format.md - description of the *.avt files used for creating in-game avatars
+avatar_keys.ase - a photoshop palette containing the key colours used by avatars
 ball_format.md - description of the *.ball files used to load custom balls. Written in markdown format.
 ball_template.blend - ball template file for Blender
 collision_colours.ase - A Photoshop palette which contains colours for terrain collision. Not an Aseprite file.
