@@ -284,6 +284,36 @@ void MenuState::parseAvatarDirectory()
     }
 
     createAvatarScene();
+
+    //load hair models
+    //push an empty model on the front so index 0 is always no hair
+    m_hairModels.emplace_back();
+
+    const std::string HairPath = "assets/golf/models/avatars/hair/";
+    const auto hairFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + HairPath);
+
+    cro::ModelDefinition md(m_resources);
+    for (const auto& file : hairFiles)
+    {
+        if (cro::FileSystem::getFileExtension(file) != ".cmt")
+        {
+            continue;
+        }
+
+        if (md.loadFromFile(HairPath + file))
+        {
+            auto& info = m_hairModels.emplace_back();
+            info.model = m_avatarScene.createEntity();
+            info.model.addComponent<cro::Transform>();
+            md.createModel(info.model);
+
+            info.model.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hair]));
+            info.model.getComponent<cro::Model>().setHidden(true);
+            //info.model.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Blue);
+
+            info.id = SpookyHash::Hash32(file.data(), file.size(), 0);
+        }
+    }
 }
 
 void MenuState::createAvatarScene()
@@ -488,9 +518,10 @@ void MenuState::saveAvatars()
     {
         auto* avatar = cfg.addObject("avatar");
         avatar->addProperty("name", player.name.empty() ? "Player" : player.name.toAnsiString()); //hmmm shame we can't save the encoding here
+        avatar->addProperty("ball_id").setValue(player.ballID);
+        avatar->addProperty("hair_id").setValue(player.hairID);
         avatar->addProperty("skin_id").setValue(player.skinID);
         avatar->addProperty("flipped").setValue(player.flipped);
-        avatar->addProperty("ball_id").setValue(player.ballID);
         avatar->addProperty("flags0").setValue(player.avatarFlags[0]);
         avatar->addProperty("flags1").setValue(player.avatarFlags[1]);
         avatar->addProperty("flags2").setValue(player.avatarFlags[2]);
@@ -524,6 +555,16 @@ void MenuState::loadAvatars()
                         //TODO try running this through unicode parser
                         m_sharedData.localConnectionData.playerData[i].name = prop.getValue<std::string>();
                     }
+                    else if (name == "ball_id")
+                    {
+                        auto id = prop.getValue<std::uint32_t>();
+                        m_sharedData.localConnectionData.playerData[i].ballID = id;
+                    }
+                    else if (name == "hair_id")
+                    {
+                        auto id = prop.getValue<std::uint32_t>();
+                        m_sharedData.localConnectionData.playerData[i].hairID = id;
+                    }
                     else if (name == "skin_id")
                     {
                         auto id = prop.getValue<std::uint32_t>();
@@ -533,11 +574,7 @@ void MenuState::loadAvatars()
                     {
                         m_sharedData.localConnectionData.playerData[i].flipped = prop.getValue<bool>();
                     }
-                    else if (name == "ball_id")
-                    {
-                        auto id = prop.getValue<std::uint32_t>();
-                        m_sharedData.localConnectionData.playerData[i].ballID = id;
-                    }
+
                     else if (name == "flags0")
                     {
                         auto flag = prop.getValue<std::int32_t>();
@@ -577,7 +614,16 @@ void MenuState::loadAvatars()
 
 std::int32_t MenuState::indexFromHairID(std::uint32_t id)
 {
+    auto hair = std::find_if(m_hairModels.begin(), m_hairModels.end(), 
+        [id](const MenuState::HairInfo& h)
+        {
+            return h.id == id;
+        });
 
+    if (hair != m_hairModels.end())
+    {
+        return static_cast<std::int32_t>(std::distance(m_hairModels.begin(), hair));
+    }
 
     return 0;
 }

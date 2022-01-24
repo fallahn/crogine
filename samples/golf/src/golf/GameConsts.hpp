@@ -106,6 +106,7 @@ struct ShaderID final
         CelTextured,
         CelTexturedSkinned,
         Player,
+        Hair,
         Course,
         Ball,
         Slope,

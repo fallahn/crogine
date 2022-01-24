@@ -106,6 +106,7 @@ private:
             Cel,
             CelTextured,
             CelTexturedSkinned,
+            Hair,
 
             Count
         };

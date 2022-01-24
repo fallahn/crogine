@@ -216,6 +216,10 @@ static const std::string CelFragmentShader = R"(
     uniform sampler2D u_shadowMap;
 #endif
 
+#if defined (USER_COLOUR)
+    uniform vec4 u_colour = vec4(1.0);
+#endif
+
 #if defined(TEXTURED)
     uniform sampler2D u_diffuseMap;
     VARYING_IN vec2 v_texCoord;
@@ -331,7 +335,11 @@ static const std::string CelFragmentShader = R"(
 
     void main()
     {
+#if defined (USER_COLOUR)
+        vec4 colour = u_colour;
+#else
         vec4 colour = vec4(1.0);
+#endif
 
 #if defined (TEXTURED)
         vec4 c = TEXTURE(u_diffuseMap, v_texCoord);
@@ -341,10 +349,6 @@ static const std::string CelFragmentShader = R"(
             discard;
         }
         colour *= c;
-
-        /*colour.rgb *= Quantise;
-        colour.rgb = round(colour.rgb);
-        colour.rgb /= Quantise;*/
 #endif
 #if defined (VERTEX_COLOURED)
         colour *= v_colour;

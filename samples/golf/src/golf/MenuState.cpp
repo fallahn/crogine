@@ -501,6 +501,7 @@ void MenuState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
+    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX");
 
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
@@ -511,10 +512,11 @@ void MenuState::loadAssets()
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
-
+    shader = &m_resources.shaders.get(ShaderID::Hair);
+    m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
