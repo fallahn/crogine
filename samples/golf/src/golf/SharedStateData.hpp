@@ -48,9 +48,10 @@ struct PlayerData final
 {
     cro::String name;
     std::array<std::uint8_t, 4u> avatarFlags = {1,0,3,6}; //indices into colour pairs
+    std::uint32_t ballID = 0;
+    std::uint32_t hairID = 0;
     std::uint32_t skinID = 0; //as loaded from the avatar data file
     bool flipped = false; //whether or not avatar flipped
-    std::uint32_t ballID = 0;
 
     std::vector<std::uint8_t> holeScores;
     std::uint8_t score = 0;
