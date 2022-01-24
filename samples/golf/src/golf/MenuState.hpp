@@ -33,6 +33,7 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "PlayerAvatar.hpp"
 #include "Billboard.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/State.hpp>
@@ -45,7 +46,6 @@ source distribution.
 
 #include <array>
 
-struct SharedStateData;
 namespace cro
 {
     struct NetEvent;
@@ -201,9 +201,10 @@ private:
         cro::String holeCount = "0";
     };
     std::vector<CourseData> m_courseData;
-    std::array<std::size_t, 4u> m_ballIndices = {}; //index into the model list, not ballID
     void parseCourseDirectory();
 
+    //----ball, avatar and hair funcs are in MenuCustomisation.cpp----//
+    std::array<std::size_t, ConnectionData::MaxPlayers> m_ballIndices = {}; //index into the model list, not ballID
     cro::Entity m_ballCam;
     cro::RenderTexture m_ballTexture;
     void createBallScene();
@@ -211,8 +212,8 @@ private:
 
     std::vector<PlayerAvatar> m_playerAvatars;
     //this is the index for each player into m_playerAvatars - skinID is read from PlayerAvatar struct
-    std::array<std::size_t, 4u> m_avatarIndices = {};
-    std::array<cro::RenderTexture, 4u> m_avatarThumbs = {};
+    std::array<std::size_t, ConnectionData::MaxPlayers> m_avatarIndices = {};
+    std::array<cro::RenderTexture, ConnectionData::MaxPlayers> m_avatarThumbs = {};
     std::uint8_t m_activePlayerAvatar; //which player is current editing their avatar
     cro::RenderTexture m_avatarTexture;
     void parseAvatarDirectory();
@@ -221,6 +222,18 @@ private:
     void applyAvatarColours(std::size_t);
     void setPreviewModel(std::size_t);
     void updateThumb(std::size_t);
+
+    
+    struct HairInfo final
+    {
+        std::uint8_t id = 0;
+        cro::Entity model;
+    };
+    std::vector<HairInfo> m_hairModels;
+    //index into hair model vector - converted from hairID with indexFromHairID
+    std::array<std::size_t, ConnectionData::MaxPlayers> m_hairIndices = {};
+    std::int32_t indexFromHairID(std::uint32_t);
+
 
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
