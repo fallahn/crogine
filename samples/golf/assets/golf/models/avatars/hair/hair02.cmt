@@ -6,11 +6,12 @@ model hair02
     material Unlit
     {
         name = "Untitled"
-        colour = 1.000000,1.000,1.000000,1.000000
+        colour = 1.000000,0.999990,1.000000,1.000000
         smooth = true
         repeat = true
         depth_test = true
         double_sided = false
+        rx_shadows = true
         blendmode = none
 
     }
