@@ -2278,6 +2278,12 @@ void MenuState::createPlayerConfigMenu()
                     }
                     applyAvatarColours(m_activePlayerAvatar);
 
+                    //random hair
+                    m_hairIndices[m_activePlayerAvatar] = cro::Util::Random::value(0u, m_playerAvatars[m_activePlayerAvatar].hairModels.size() - 1);
+                    auto hairID = m_sharedData.hairInfo[m_hairIndices[m_activePlayerAvatar]].uid;
+                    m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].hairID = hairID;
+
+
                     //update texture
                     setPreviewModel(m_activePlayerAvatar);
 

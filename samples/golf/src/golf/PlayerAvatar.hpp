@@ -54,7 +54,7 @@ public:
 
     struct HairInfo final
     {
-        std::uint8_t uid = 0;
+        std::uint32_t uid = 0;
         cro::Entity model;
     };
     std::vector<HairInfo> hairModels;

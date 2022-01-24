@@ -99,7 +99,7 @@ struct SharedStateData final
     };
     std::vector<BallInfo> ballModels;
 
-    //available avatar sprites mapped to ID
+    //available avatar models mapped to ID
     struct AvatarInfo final
     {
         std::uint32_t uid = 0;
@@ -107,6 +107,16 @@ struct SharedStateData final
         std::string audioscape;
     };
     std::vector<AvatarInfo> avatarInfo;
+
+    //available hair models mapped to ID
+    struct HairInfo final
+    {
+        std::uint32_t uid = 0;
+        std::string modelPath;
+        HairInfo(std::uint32_t i, const std::string& str)
+            :uid(i), modelPath(str) {}
+    };
+    std::vector<HairInfo> hairInfo;
 
     //our local player data
     ConnectionData localConnectionData;

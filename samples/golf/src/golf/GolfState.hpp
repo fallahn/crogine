@@ -133,6 +133,7 @@ private:
             CelTextured,
             CelTexturedSkinned,
             Player,
+            Hair,
             Course,
             Ball,
 

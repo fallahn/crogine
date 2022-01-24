@@ -826,6 +826,12 @@ void GolfState::loadAssets()
     //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::Player] = m_resources.materials.add(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n");
+    shader = &m_resources.shaders.get(ShaderID::Hair);
+    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
+
+
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
@@ -901,7 +907,7 @@ void GolfState::loadAssets()
     //however: while it may load unnecessary audioscapes, it does ensure they are loaded in the correct order :S
 
     //copy into active player slots
-    auto indexFromSkinID = [&](std::uint32_t skinID)->std::size_t
+    const auto indexFromSkinID = [&](std::uint32_t skinID)->std::size_t
     {
         auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
             [skinID](const SharedStateData::AvatarInfo& ai) 
@@ -913,6 +919,18 @@ void GolfState::loadAssets()
         {
             return std::distance(m_sharedData.avatarInfo.begin(), result);
         }
+        return 0;
+    };
+
+    const auto indexFromHairID = [&](std::uint32_t hairID)
+    {
+        if (auto hair = std::find_if(m_sharedData.hairInfo.begin(), m_sharedData.hairInfo.end(),
+            [hairID](const SharedStateData::HairInfo& h) {return h.uid == hairID;});
+            hair != m_sharedData.hairInfo.end())
+        {
+            return static_cast<std::int32_t>(std::distance(m_sharedData.hairInfo.begin(), hair));
+        }
+
         return 0;
     };
 
@@ -1020,6 +1038,32 @@ void GolfState::loadAssets()
                     if (id > -1)
                     {
                         m_avatars[i][j].hands = &skel.getAttachments()[id];
+                    }
+
+                    id = skel.getAttachmentIndex("head");
+                    if (id > -1)
+                    {
+                        //look to see if we have a hair model to attach
+                        auto hairID = indexFromHairID(m_sharedData.connectionData[i].playerData[j].hairID);
+                        if (hairID != 0
+                            && md.loadFromFile(m_sharedData.hairInfo[hairID].modelPath))
+                        {
+                            auto hairEnt = m_gameScene.createEntity();
+                            hairEnt.addComponent<cro::Transform>();
+                            md.createModel(hairEnt);
+
+                            //set material and colour
+                            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
+                            material.setProperty("u_colour", cro::Colour(pc::Palette[m_sharedData.connectionData[i].playerData[j].avatarFlags[pc::ColourKey::Hair]].light));
+                            hairEnt.getComponent<cro::Model>().setMaterial(0, material);
+
+                            skel.getAttachments()[id].setModel(hairEnt);
+
+                            if (m_avatars[i][j].flipped)
+                            {
+                                hairEnt.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+                            }
+                        }
                     }
                 }
 

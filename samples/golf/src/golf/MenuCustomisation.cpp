@@ -277,7 +277,10 @@ void MenuState::parseAvatarDirectory()
 
 
     //load hair models
+    m_sharedData.hairInfo.clear();
+
     //push an empty model on the front so index 0 is always no hair
+    m_sharedData.hairInfo.emplace_back(0, "");
     for (auto& avatar : m_playerAvatars)
     {
         avatar.hairModels.emplace_back();
@@ -297,6 +300,8 @@ void MenuState::parseAvatarDirectory()
         if (md.loadFromFile(HairPath + file))
         {
             auto uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+            m_sharedData.hairInfo.emplace_back(uid, HairPath + file);
+
             for (auto& avatar : m_playerAvatars)
             {
                 auto& info = avatar.hairModels.emplace_back();
@@ -306,7 +311,6 @@ void MenuState::parseAvatarDirectory()
 
                 info.model.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hair]));
                 info.model.getComponent<cro::Model>().setHidden(true);
-                //info.model.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Blue);
 
                 info.uid = uid;
             }
@@ -530,6 +534,7 @@ void MenuState::setPreviewModel(std::size_t playerIndex)
                     if (m_playerAvatars[i].hairAttachment->getModel().isValid())
                     {
                         m_playerAvatars[i].hairAttachment->getModel().getComponent<cro::Model>().setHidden(true);
+                        m_playerAvatars[i].hairAttachment->getModel().getComponent<cro::Transform>().setScale(glm::vec3(0.f));
                     }
 
                     auto hairIndex = m_hairIndices[playerIndex];
@@ -538,6 +543,7 @@ void MenuState::setPreviewModel(std::size_t playerIndex)
 
                     if (m_playerAvatars[i].hairModels[hairIndex].model.isValid())
                     {
+                        m_playerAvatars[i].hairAttachment->getModel().getComponent<cro::Transform>().setScale(glm::vec3(1.f));
                         m_playerAvatars[i].hairModels[hairIndex].model.getComponent<cro::Model>().setHidden(false);
                         m_playerAvatars[i].hairModels[hairIndex].model.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", m_playerAvatars[i].getColour(pc::ColourKey::Hair).first);
                     }
