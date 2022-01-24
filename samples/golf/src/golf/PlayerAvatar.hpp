@@ -32,6 +32,7 @@ source distribution.
 #include "PlayerColours.hpp"
 
 #include <crogine/ecs/Entity.hpp>
+#include <crogine/ecs/components/Skeleton.hpp>
 
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/Image.hpp>
@@ -46,9 +47,18 @@ public:
 
     void setTarget(cro::Texture&);
     void setColour(pc::ColourKey::Index, std::int8_t);
+    std::pair<cro::Colour, cro::Colour> getColour(pc::ColourKey::Index) const;
     void apply();
 
     cro::Entity previewModel;
+
+    struct HairInfo final
+    {
+        std::uint8_t uid = 0;
+        cro::Entity model;
+    };
+    std::vector<HairInfo> hairModels;
+    cro::Attachment* hairAttachment = nullptr;
 
 private:
     cro::Texture* m_target;

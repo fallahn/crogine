@@ -225,12 +225,6 @@ private:
     void updateThumb(std::size_t);
 
     
-    struct HairInfo final
-    {
-        std::uint8_t id = 0;
-        cro::Entity model;
-    };
-    std::vector<HairInfo> m_hairModels;
     //index into hair model vector - converted from hairID with indexFromHairID
     std::array<std::size_t, ConnectionData::MaxPlayers> m_hairIndices = {};
     std::int32_t indexFromHairID(std::uint32_t);

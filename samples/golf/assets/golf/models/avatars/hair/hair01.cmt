@@ -1,7 +1,7 @@
 model hair01
 {
     mesh = assets/golf/models/avatars/hair/hair01.cmb
-    cast_shadows = false
+    cast_shadows = true
 
     material Unlit
     {

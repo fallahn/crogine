@@ -132,6 +132,11 @@ void PlayerAvatar::setColour(pc::ColourKey::Index idx, std::int8_t pairIdx)
     }
 }
 
+std::pair<cro::Colour, cro::Colour> PlayerAvatar::getColour(pc::ColourKey::Index idx) const
+{
+    return { m_lightColours[idx], m_darkColours[idx] };
+}
+
 void PlayerAvatar::apply()
 {
     if (m_target)

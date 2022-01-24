@@ -275,19 +275,13 @@ void MenuState::parseAvatarDirectory()
         }
     }
 
-    if (!m_playerAvatars.empty())
-    {
-        for (auto i = 0u; i < ConnectionData::MaxPlayers; ++i)
-        {
-            m_avatarIndices[i] = indexFromAvatarID(m_sharedData.localConnectionData.playerData[i].skinID);
-        }
-    }
-
-    createAvatarScene();
 
     //load hair models
     //push an empty model on the front so index 0 is always no hair
-    m_hairModels.emplace_back();
+    for (auto& avatar : m_playerAvatars)
+    {
+        avatar.hairModels.emplace_back();
+    }
 
     const std::string HairPath = "assets/golf/models/avatars/hair/";
     const auto hairFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + HairPath);
@@ -302,18 +296,34 @@ void MenuState::parseAvatarDirectory()
 
         if (md.loadFromFile(HairPath + file))
         {
-            auto& info = m_hairModels.emplace_back();
-            info.model = m_avatarScene.createEntity();
-            info.model.addComponent<cro::Transform>();
-            md.createModel(info.model);
+            auto uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+            for (auto& avatar : m_playerAvatars)
+            {
+                auto& info = avatar.hairModels.emplace_back();
+                info.model = m_avatarScene.createEntity();
+                info.model.addComponent<cro::Transform>();
+                md.createModel(info.model);
 
-            info.model.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hair]));
-            info.model.getComponent<cro::Model>().setHidden(true);
-            //info.model.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Blue);
+                info.model.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hair]));
+                info.model.getComponent<cro::Model>().setHidden(true);
+                //info.model.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Blue);
 
-            info.id = SpookyHash::Hash32(file.data(), file.size(), 0);
+                info.uid = uid;
+            }
         }
     }
+
+
+    if (!m_playerAvatars.empty())
+    {
+        for (auto i = 0u; i < ConnectionData::MaxPlayers; ++i)
+        {
+            m_avatarIndices[i] = indexFromAvatarID(m_sharedData.localConnectionData.playerData[i].skinID);
+            m_hairIndices[i] = indexFromHairID(m_sharedData.localConnectionData.playerData[i].hairID);
+        }
+    }
+
+    createAvatarScene();
 }
 
 void MenuState::createAvatarScene()
@@ -386,6 +396,13 @@ void MenuState::createAvatarScene()
                     LogE << cro::FileSystem::getFileName(m_sharedData.avatarInfo[i].modelPath) << ": no hands attachment found, avatar not loaded" << std::endl;
                     m_avatarScene.destroyEntity(entity);
                     m_sharedData.avatarInfo[i].modelPath.clear();
+                }
+
+                id = entity.getComponent<cro::Skeleton>().getAttachmentIndex("head");
+                if (id > -1)
+                {
+                    //hair is optional so OK if this doesn't exist
+                    m_playerAvatars[i].hairAttachment = &entity.getComponent<cro::Skeleton>().getAttachments()[id];
                 }
 
                 //TODO fail to load if there's no animations? This shouldn't
@@ -506,6 +523,25 @@ void MenuState::setPreviewModel(std::size_t playerIndex)
                 }
                 auto texID = cro::TextureID(m_sharedData.avatarTextures[0][playerIndex].getGLHandle());
                 m_playerAvatars[i].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", texID);
+
+                //check to see if we have a hair model and apply its properties
+                if (m_playerAvatars[i].hairAttachment != nullptr)
+                {
+                    if (m_playerAvatars[i].hairAttachment->getModel().isValid())
+                    {
+                        m_playerAvatars[i].hairAttachment->getModel().getComponent<cro::Model>().setHidden(true);
+                    }
+
+                    auto hairIndex = m_hairIndices[playerIndex];
+                    m_playerAvatars[i].hairAttachment->setModel(m_playerAvatars[i].hairModels[hairIndex].model);
+
+
+                    if (m_playerAvatars[i].hairModels[hairIndex].model.isValid())
+                    {
+                        m_playerAvatars[i].hairModels[hairIndex].model.getComponent<cro::Model>().setHidden(false);
+                        m_playerAvatars[i].hairModels[hairIndex].model.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", m_playerAvatars[i].getColour(pc::ColourKey::Hair).first);
+                    }
+                }
             }
         }
     }
@@ -614,15 +650,16 @@ void MenuState::loadAvatars()
 
 std::int32_t MenuState::indexFromHairID(std::uint32_t id)
 {
-    auto hair = std::find_if(m_hairModels.begin(), m_hairModels.end(), 
-        [id](const MenuState::HairInfo& h)
+    //assumes all avatars contain some list of models...
+    auto hair = std::find_if(m_playerAvatars[0].hairModels.begin(), m_playerAvatars[0].hairModels.end(),
+        [id](const PlayerAvatar::HairInfo& h)
         {
-            return h.id == id;
+            return h.uid == id;
         });
 
-    if (hair != m_hairModels.end())
+    if (hair != m_playerAvatars[0].hairModels.end())
     {
-        return static_cast<std::int32_t>(std::distance(m_hairModels.begin(), hair));
+        return static_cast<std::int32_t>(std::distance(m_playerAvatars[0].hairModels.begin(), hair));
     }
 
     return 0;

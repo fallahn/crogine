@@ -2017,6 +2017,14 @@ void MenuState::createPlayerConfigMenu()
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowLeftCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
                 arrowLeftCallback(evt, pc::ColourKey::Hair);
+
+                //update the hair model too, if it exists
+                auto hairID = m_hairIndices[m_activePlayerAvatar];
+                if (m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.isValid())
+                {
+                    auto colour = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].getColour(pc::ColourKey::Hair).first;
+                    m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", colour);
+                }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -2026,6 +2034,13 @@ void MenuState::createPlayerConfigMenu()
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowRightCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
                 arrowRightCallback(evt, pc::ColourKey::Hair);
+
+                auto hairID = m_hairIndices[m_activePlayerAvatar];
+                if (m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.isValid())
+                {
+                    auto colour = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].getColour(pc::ColourKey::Hair).first;
+                    m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", colour);
+                }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -2132,6 +2147,12 @@ void MenuState::createPlayerConfigMenu()
                     applyTextEdit();
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 
+                    m_hairIndices[m_activePlayerAvatar] = 
+                        (m_hairIndices[m_activePlayerAvatar] + (m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels.size() - 1)) % m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels.size();
+                    auto hairID = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[m_hairIndices[m_activePlayerAvatar]].uid;
+                    m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].hairID = hairID;
+
+                    setPreviewModel(m_activePlayerAvatar);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2145,6 +2166,12 @@ void MenuState::createPlayerConfigMenu()
                 {
                     applyTextEdit();
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    m_hairIndices[m_activePlayerAvatar] = (m_hairIndices[m_activePlayerAvatar] + 1) % m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels.size();
+                    auto hairID = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[m_hairIndices[m_activePlayerAvatar]].uid;
+                    m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].hairID = hairID;
+
+                    setPreviewModel(m_activePlayerAvatar);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

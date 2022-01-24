@@ -100,6 +100,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     std::fill(m_ballIndices.begin(), m_ballIndices.end(), 0);
     std::fill(m_avatarIndices.begin(), m_avatarIndices.end(), 0);    
+    std::fill(m_hairIndices.begin(), m_hairIndices.end(), 0);    
 
     
     //launches a loading screen (registered in MyApp.cpp)
@@ -517,6 +518,8 @@ void MenuState::loadAssets()
 
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
+    //fudge this for the previews
+    m_resources.materials.get(m_materialIDs[MaterialID::Hair]).doubleSided = true;
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
