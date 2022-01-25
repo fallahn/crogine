@@ -2397,6 +2397,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             {
                 player.score = su.score;
                 player.holeScores[su.hole] = su.stroke;
+                LogI << "Last stroke distance: " << su.strokeDistance << std::endl;
             }
         }
             break;

@@ -389,6 +389,7 @@ void GameState::setNextPlayer()
 {
     //broadcast current player's score first
     ScoreUpdate su;
+    su.strokeDistance = m_playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance;
     su.client = m_playerInfo[0].client;
     su.player = m_playerInfo[0].player;
     su.score = m_playerInfo[0].totalScore;

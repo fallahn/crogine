@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -424,6 +424,8 @@ void BallSystem::process(float dt)
                 }
                 //LogI << "Distance: " << len2 << ", terrain: " << TerrainStrings[ball.terrain] << std::endl;
 
+                ball.lastStrokeDistance = glm::length(ball.startPoint - position);
+                msg->distance = ball.lastStrokeDistance;
                 ball.state = Ball::State::Idle;
                 updateWind(); //is a bit less random but at least stops the wind
                 //changing direction mid-stroke which is just annoying.

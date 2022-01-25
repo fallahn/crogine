@@ -79,6 +79,7 @@ static inline bool operator == (const ActorInfo& actor, const ActivePlayer& play
 
 struct ScoreUpdate final
 {
+    float strokeDistance = 0.f;
     std::uint8_t client = 0;
     std::uint8_t player = 0;
     std::uint8_t stroke = 0;

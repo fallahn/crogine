@@ -533,7 +533,8 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
                     Util::Maths::clamp(c.b, 0.f, 1.f),
                     Util::Maths::clamp(c.a, 0.f, 1.f)));
             }
-            else if (name == "mask_colour")
+            else if (name == "mask_colour"
+                && shaderType != ShaderResource::Unlit)
             {
                 auto c = p.getValue<glm::vec4>();
                 material.setProperty("u_maskColour", Colour(
