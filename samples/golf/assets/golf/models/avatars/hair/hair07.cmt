@@ -1,20 +1,18 @@
-model player_zero
+model hair07
 {
-    mesh = assets/golf/models/avatars/player_zero.cmb
+    mesh = assets/golf/models/avatars/hair/hair07.cmb
     cast_shadows = true
 
     material Unlit
     {
         name = "Untitled"
-        colour = 1.000000,1.000000,1.000000,1.000000
+        colour = 1.000000,0.999990,1.000000,1.000000
         smooth = true
         repeat = true
         depth_test = true
         double_sided = false
         rx_shadows = true
         blendmode = none
-        diffuse = "assets/golf/images/player_zero.png"
-        skinned = true
 
     }
 }

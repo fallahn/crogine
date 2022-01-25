@@ -11,6 +11,7 @@ model player_one
         repeat = true
         depth_test = true
         double_sided = false
+        rx_shadows = true
         blendmode = none
         diffuse = "assets/golf/images/player_one.png"
         skinned = true
