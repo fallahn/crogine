@@ -97,7 +97,7 @@ void MenuState::createBallScene()
         if (cro::FileSystem::getFileExtension(file) == ".ball"
             && cfg.loadFromFile("assets/golf/balls/" + file))
         {
-            std::uint32_t uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+            std::uint32_t uid = 0;// SpookyHash::Hash32(file.data(), file.size(), 0);
             std::string modelPath;
             cro::Colour colour = cro::Colour::White;
 
@@ -109,14 +109,22 @@ void MenuState::createBallScene()
                 {
                     modelPath = p.getValue<std::string>();
                 }
-                /*else if (name == "uid")
+                else if (name == "uid")
                 {
-                    uid = p.getValue<std::int32_t>();
-                }*/
+                    uid = p.getValue<std::uint32_t>();
+                }
                 else if (name == "tint")
                 {
                     colour = p.getValue<cro::Colour>();
                 }
+            }
+
+            //if we didn't find a UID create one from the file name and save it to the cfg
+            if (uid == 0)
+            {
+                uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                cfg.addProperty("uid").setValue(uid);
+                cfg.save("assets/golf/balls/" + file);
             }
 
             if (/*uid > -1
@@ -214,16 +222,9 @@ void MenuState::parseAvatarDirectory()
                     const auto& name = prop.getName();
                     if (name == "model")
                     {
-                        //info.uid = prop.getValue<std::int32_t>();
-
-                        //create the UID based on a the string hash.
-                        //uses Bob Jenkins' spooky hash, untested on M1 processors
                         info.modelPath = prop.getValue<std::string>();
                         if (!info.modelPath.empty())
                         {
-                            info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
-                            //LogI << "Got hash of " << info.uid << std::endl;
-
                             cro::ConfigFile modelData;
                             modelData.loadFromFile(info.modelPath);
                             for (const auto& o : modelData.getObjects())
@@ -245,11 +246,23 @@ void MenuState::parseAvatarDirectory()
                     {
                         info.audioscape = prop.getValue<std::string>();
                     }
+                    else if (name == "uid")
+                    {
+                        info.uid = prop.getValue<std::uint32_t>();
+                    }
                 }
 
-                if (info.uid != 0
-                    && !info.modelPath.empty())
+                if (!info.modelPath.empty())
                 {
+                    if (info.uid == 0)
+                    {
+                        //create a uid from the file name and save it to the cfg
+                        //uses Bob Jenkins' spooky hash
+                        info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                        cfg.addProperty("uid").setValue(info.uid);
+                        cfg.save(AvatarPath + file);
+                    }
+
                     //check uid doesn't exist
                     auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
                         [&info](const SharedStateData::AvatarInfo& i)
@@ -286,33 +299,65 @@ void MenuState::parseAvatarDirectory()
         avatar.hairModels.emplace_back();
     }
 
-    const std::string HairPath = "assets/golf/models/avatars/hair/";
+    const std::string HairPath = "assets/golf/avatars/hair/";
     const auto hairFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + HairPath);
 
     cro::ModelDefinition md(m_resources);
     for (const auto& file : hairFiles)
     {
-        if (cro::FileSystem::getFileExtension(file) != ".cmt")
+        if (cro::FileSystem::getFileExtension(file) != ".hct")
         {
             continue;
         }
 
-        if (md.loadFromFile(HairPath + file))
+        cro::ConfigFile cfg;
+        if (cfg.loadFromFile(HairPath + file))
         {
-            auto uid = SpookyHash::Hash32(file.data(), file.size(), 0);
-            m_sharedData.hairInfo.emplace_back(uid, HairPath + file);
+            std::string modelPath;
+            std::uint32_t uid = 0;
 
-            for (auto& avatar : m_playerAvatars)
+            const auto& props = cfg.getProperties();
+            for (const auto& p : props)
             {
-                auto& info = avatar.hairModels.emplace_back();
-                info.model = m_avatarScene.createEntity();
-                info.model.addComponent<cro::Transform>();
-                md.createModel(info.model);
+                const auto& name = p.getName();
+                if (name == "model")
+                {
+                    auto model = p.getValue<std::string>();
+                    if (cro::FileSystem::getFileExtension(model) == ".cmt"
+                        && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + model))
+                    {
+                        modelPath = model;
+                    }
+                }
+                else if (name == "uid")
+                {
+                    uid = p.getValue<std::uint32_t>();
+                }
+            }
 
-                info.model.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hair]));
-                info.model.getComponent<cro::Model>().setHidden(true);
+            if (md.loadFromFile(modelPath))
+            {
+                //if uid is missing write it to cfg
+                if (uid == 0)
+                {
+                    uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                    cfg.addProperty("uid").setValue(uid);
+                    cfg.save(HairPath + file);
+                }
+                m_sharedData.hairInfo.emplace_back(uid, modelPath);
 
-                info.uid = uid;
+                for (auto& avatar : m_playerAvatars)
+                {
+                    auto& info = avatar.hairModels.emplace_back();
+                    info.model = m_avatarScene.createEntity();
+                    info.model.addComponent<cro::Transform>();
+                    md.createModel(info.model);
+
+                    info.model.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hair]));
+                    info.model.getComponent<cro::Model>().setHidden(true);
+
+                    info.uid = uid;
+                }
             }
         }
     }
