@@ -7,7 +7,7 @@ model 01
     {
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = true
+        smooth = false
         repeat = true
         depth_test = true
         double_sided = false
@@ -19,7 +19,7 @@ model 01
     {
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = true
+        smooth = false
         repeat = true
         depth_test = true
         double_sided = false

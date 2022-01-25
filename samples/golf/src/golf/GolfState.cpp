@@ -659,7 +659,7 @@ bool GolfState::simulate(float dt)
     {
         move = glm::normalize(move);
     }
-    m_waterEnt.getComponent<cro::Transform>().move(move * 10.f * dt);
+    //m_waterEnt.getComponent<cro::Transform>().move(move * 10.f * dt);
 #endif
 
 
@@ -1560,8 +1560,10 @@ void GolfState::addSystems()
 
 void GolfState::buildScene()
 {
+    bool clearHoles = false;
     if (m_holeData.empty())
     {
+        //TODO fix crash caused by incomplete scene
         return;
     }
 
@@ -1911,6 +1913,8 @@ void GolfState::buildScene()
 #ifdef CRO_DEBUG_
     //createWeather();
 #endif
+
+
 }
 
 void GolfState::initAudio()

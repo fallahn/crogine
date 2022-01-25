@@ -1,0 +1,12 @@
+course course_03
+{
+    skybox = "assets/golf/images/skybox/spring/sky.ccm"
+    billboard_model = "assets/golf/models/shrubbery.cmt"
+    billboard_sprites = "assets/golf/sprites/shrubbery.spt"
+    audio = "assets/golf/sound/ambience.xas"
+
+    title = "Old Stemmer's Lane"
+    description = "A Putter's Delight"
+
+    hole = "assets/golf/courses/course_03/01.hole"
+}
