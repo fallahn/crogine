@@ -2199,6 +2199,14 @@ void MenuState::createPlayerConfigMenu()
                     auto skinID = m_sharedData.avatarInfo[m_avatarIndices[m_activePlayerAvatar]].uid;
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].skinID = skinID;
 
+
+                    auto soundSize = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].previewSounds.size();
+                    if (soundSize != 0)
+                    {
+                        auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
+                        m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
+                    }
+
                     applyAvatarColours(m_activePlayerAvatar);
                     setPreviewModel(m_activePlayerAvatar);
                 }
@@ -2227,6 +2235,13 @@ void MenuState::createPlayerConfigMenu()
                     auto skinID = m_sharedData.avatarInfo[m_avatarIndices[m_activePlayerAvatar]].uid;
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].skinID = skinID;
 
+
+                    auto soundSize = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].previewSounds.size();
+                    if (soundSize != 0)
+                    {
+                        auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
+                        m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
+                    }
                     applyAvatarColours(m_activePlayerAvatar);
                     setPreviewModel(m_activePlayerAvatar);
                 }

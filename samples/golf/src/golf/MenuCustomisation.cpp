@@ -496,6 +496,31 @@ void MenuState::createAvatarScene()
             return !a.previewModel.isValid();
         }),
         m_playerAvatars.end());
+
+    //if any remain, load the preview audio
+    const std::array<std::string, 3u> emitterNames =
+    {
+        "bunker", "fairway", "green"
+    };
+    for (auto i = 0u; i < m_playerAvatars.size(); ++i)
+    {
+        cro::AudioScape as;
+        if (!m_sharedData.avatarInfo[i].audioscape.empty() &&
+            as.loadFromFile(m_sharedData.avatarInfo[i].audioscape, m_resources.audio))
+        {
+            for (const auto name : emitterNames)
+            {
+                if (as.hasEmitter(name))
+                {
+                    auto entity = m_uiScene.createEntity();
+                    entity.addComponent<cro::Transform>();
+                    entity.addComponent<cro::AudioEmitter>() = as.getEmitter(name);
+                    entity.getComponent<cro::AudioEmitter>().setLooped(false);
+                    m_playerAvatars[i].previewSounds.push_back(entity);
+                }
+            }
+        }
+    }
 }
 
 std::int32_t MenuState::indexFromAvatarID(std::uint32_t id)

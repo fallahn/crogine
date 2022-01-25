@@ -60,6 +60,8 @@ public:
     std::vector<HairInfo> hairModels;
     cro::Attachment* hairAttachment = nullptr;
 
+    std::vector<cro::Entity> previewSounds;
+
 private:
     cro::Texture* m_target;
     cro::Image m_image;
