@@ -39,6 +39,7 @@ source distribution.
 #include "BallSystem.hpp"
 #include "MessageIDs.hpp"
 #include "Clubs.hpp"
+#include "PlayerColours.hpp"
 #include "GolfParticleDirector.hpp"
 #include "GolfSoundDirector.hpp"
 #include "CameraFollowSystem.hpp"
@@ -519,6 +520,7 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
+    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n");
 
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
@@ -535,6 +537,9 @@ void DrivingState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
     //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::Hair);
+    m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
@@ -1425,9 +1430,8 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     };
 
     auto playerIndex = cro::Util::Random::value(0, 3);
-    auto idx = indexFromSkinID(m_sharedData.localConnectionData.playerData[playerIndex].skinID);
-
-    auto flipped = m_sharedData.localConnectionData.playerData[playerIndex].flipped;
+    const auto& playerData = m_sharedData.localConnectionData.playerData[playerIndex];
+    auto idx = indexFromSkinID(playerData.skinID);
 
     //3D Player Model
     cro::ModelDefinition md(m_resources);
@@ -1456,7 +1460,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     };
 
 
-    if (flipped)
+    if (playerData.flipped)
     {
         entity.getComponent<cro::Transform>().setScale({ -1.f, 0.f, 0.f });
         entity.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
@@ -1504,6 +1508,39 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
             //although this should have been validated when loading
             //avatar data in to the menu
             LogW << "No attachment point named \'hands\' was found" << std::endl;
+        }
+
+        id = skel.getAttachmentIndex("head");
+        if (id > -1)
+        {
+            //see if we have a hair model
+            std::int32_t hairID = 0;
+            if (auto hair = std::find_if(m_sharedData.hairInfo.begin(), m_sharedData.hairInfo.end(),
+                [&](const SharedStateData::HairInfo& h) {return h.uid == playerData.hairID; });
+                hair != m_sharedData.hairInfo.end())
+            {
+                hairID = static_cast<std::int32_t>(std::distance(m_sharedData.hairInfo.begin(), hair));
+            }
+
+            if (hairID != 0
+                && md.loadFromFile(m_sharedData.hairInfo[hairID].modelPath))
+            {
+                auto hairEnt = m_gameScene.createEntity();
+                hairEnt.addComponent<cro::Transform>();
+                md.createModel(hairEnt);
+
+                //set material and colour
+                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
+                material.setProperty("u_colour", cro::Colour(pc::Palette[playerData.avatarFlags[pc::ColourKey::Hair]].light));
+                hairEnt.getComponent<cro::Model>().setMaterial(0, material);
+
+                skel.getAttachments()[id].setModel(hairEnt);
+
+                if (playerData.flipped)
+                {
+                    hairEnt.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+                }
+            }
         }
 
         //skel.setInterpolationEnabled(false);

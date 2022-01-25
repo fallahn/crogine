@@ -2,5 +2,4 @@ avatar
 {
     model = "assets/golf/models/avatars/player_three.cmt"
     audio = "assets/golf/sound/avatars/f02.xas"
-    uid = 236
 }

@@ -82,6 +82,7 @@ private:
             CelTextured,
             CelTexturedSkinned,
             Course,
+            Hair,
             Wireframe,
             WireframeCulled,
 

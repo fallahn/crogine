@@ -1,6 +1,5 @@
 ball
 {
     model = "assets/golf/models/balls/ball02.cmt"
-    uid = 1
     tint = 1,0.364,0.015,1
 }
