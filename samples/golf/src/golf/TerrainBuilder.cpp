@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -125,6 +125,7 @@ namespace
 TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
     : m_holeData    (hd),
     m_currentHole   (0),
+    m_swapIndex     (0),
     m_terrainBuffer ((MapSize.x * MapSize.y) / QuadsPerMetre),
     m_threadRunning (false),
     m_wantsUpdate   (false)
@@ -398,39 +399,44 @@ void TerrainBuilder::update(std::size_t holeIndex)
 
     if (holeIndex == m_currentHole)
     {
-        auto first = (holeIndex + 1) % 2;
-        auto second = holeIndex % 2;
+        bool doAnim = holeIndex == 0 || (m_holeData[holeIndex - 1].modelPath != m_holeData[holeIndex].modelPath);
 
-        if (m_billboardEntities[first].isValid()
-            && m_billboardEntities[second].isValid())
+        if (doAnim)
         {
-            //update the billboard data
-            SwapData swapData;
-            swapData.start = m_billboardEntities[first].getComponent<cro::Transform>().getPosition().y;
-            swapData.destination = 0.f;
-            swapData.currentTime = 0.f;
-            m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
-            m_billboardEntities[first].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
+            auto first = (m_swapIndex + 1) % 2;
+            auto second = m_swapIndex % 2;
+            m_swapIndex++;
 
-            swapData.start = m_billboardEntities[second].getComponent<cro::Transform>().getPosition().y;
-            swapData.destination = -MaxShrubOffset;
-            swapData.otherEnt = m_billboardEntities[first];
-            swapData.currentTime = 0.f;
-            m_billboardEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
-            m_billboardEntities[second].getComponent<cro::Callback>().active = true;
+            if (m_billboardEntities[first].isValid()
+                && m_billboardEntities[second].isValid())
+            {
+                //update the billboard data
+                SwapData swapData;
+                swapData.start = m_billboardEntities[first].getComponent<cro::Transform>().getPosition().y;
+                swapData.destination = 0.f;
+                swapData.currentTime = 0.f;
+                m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
+                m_billboardEntities[first].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
+
+                swapData.start = m_billboardEntities[second].getComponent<cro::Transform>().getPosition().y;
+                swapData.destination = -MaxShrubOffset;
+                swapData.otherEnt = m_billboardEntities[first];
+                swapData.currentTime = 0.f;
+                m_billboardEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
+                m_billboardEntities[second].getComponent<cro::Callback>().active = true;
+            }
+
+            //upload terrain data
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_terrainProperties.vbo));
+            glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_STATIC_DRAW));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+            m_terrainProperties.morphTime = 0.f;
+            glCheck(glUseProgram(m_terrainProperties.shaderID));
+            glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
+            //terrain callback is set active when shrubbery callback switches
         }
-
-        //upload terrain data
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_terrainProperties.vbo));
-        glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_STATIC_DRAW));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-        
-        m_terrainProperties.morphTime = 0.f;
-        glCheck(glUseProgram(m_terrainProperties.shaderID));
-        glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
-        //terrain callback is set active when shrubbery callback switches
-
-        //upload the slope buffer data
+        //upload the slope buffer data - this might be different even if the hole model is the same
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_slopeProperties.meshData->vbo));
         glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(SlopeVertex) * m_slopeBuffer.size(), m_slopeBuffer.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -440,7 +446,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), m_slopeIndices.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
+        
         m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
 
         //signal to the thread we want to update the buffers

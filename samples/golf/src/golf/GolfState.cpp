@@ -1347,8 +1347,11 @@ void GolfState::loadAssets()
             }
             else if (name == "model")
             {
-                if (modelDef.loadFromFile(holeProp.getValue<std::string>()))
+                auto modelPath = holeProp.getValue<std::string>();
+                if (modelDef.loadFromFile(modelPath))
                 {
+                    holeData.modelPath = modelPath;
+
                     holeData.modelEntity = m_gameScene.createEntity();
                     holeData.modelEntity.addComponent<cro::Transform>().setPosition(OriginOffset);
                     holeData.modelEntity.getComponent<cro::Transform>().setOrigin(OriginOffset);
@@ -2485,18 +2488,22 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     m_collisionMesh.updateCollisionMesh(m_holeData[hole].modelEntity.getComponent<cro::Model>().getMeshData());
 
     //create hole model transition
+    bool rescale = (hole == 0) || (m_holeData[hole - 1].modelPath != m_holeData[hole].modelPath);
     auto* propModels = &m_holeData[m_currentHole].propEntities;
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().active = true;
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().setUserData<float>(0.f);
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().function =
-        [&, propModels](cro::Entity e, float dt)
+        [&, propModels, rescale](cro::Entity e, float dt)
     {
         auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
         progress = std::min(1.f, progress + (dt / 2.f));
 
-        float scale = 1.f - progress;
-        e.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
-        m_waterEnt.getComponent<cro::Transform>().setScale({ scale, scale, scale });
+        if (rescale)
+        {
+            float scale = 1.f - progress;
+            e.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
+            m_waterEnt.getComponent<cro::Transform>().setScale({ scale, scale, scale });
+        }
 
         if (progress == 1)
         {
@@ -2512,18 +2519,29 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             //so we're actually targetting the next hole entity
             auto entity = m_holeData[m_currentHole].modelEntity;
             entity.getComponent<cro::Model>().setHidden(false);
-            entity.getComponent<cro::Transform>().setScale({ 0.f, 1.f, 0.f });
+
+            if (rescale)
+            {
+                entity.getComponent<cro::Transform>().setScale({ 0.f, 1.f, 0.f });
+            }
+            else
+            {
+                entity.getComponent<cro::Transform>().setScale({ 1.f, 1.f, 1.f });
+            }
             entity.getComponent<cro::Callback>().setUserData<float>(0.f);
             entity.getComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
-                [&](cro::Entity ent, float dt)
+                [&, rescale](cro::Entity ent, float dt)
             {
                 auto& progress = ent.getComponent<cro::Callback>().getUserData<float>();
                 progress = std::min(1.f, progress + (dt / 2.f));
 
-                float scale = progress;
-                ent.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
-                m_waterEnt.getComponent<cro::Transform>().setScale({ scale, scale, scale });
+                if (rescale)
+                {
+                    float scale = progress;
+                    ent.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
+                    m_waterEnt.getComponent<cro::Transform>().setScale({ scale, scale, scale });
+                }
 
                 if (progress == 1)
                 {
