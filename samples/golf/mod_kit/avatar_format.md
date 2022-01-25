@@ -1,23 +1,30 @@
 # Custom Avatars
 
-Custom avatars can be added to VGA golf. First a sprite sheet must be created, which contains the images of the avatar used to display the idle and swing animations. Crogine sprite sheets contain the information such as sprite names, animation names, and rectangle definitions used to create frames within an image atlas. For an example of this see the files ending in `*.spt` in the `assets/sprites` or `assets/golf/sprites` directory, which can be opened in a text editor. (Eventually the crogine asset editor will allow GUI style manipulation of these files.)
+Custom avatars can be added to VGA golf. Firstly an animated model needs to be created and correctly configured using the crogine model editor. The animated model requires a skeleton with at least one bone, and one attachment point named `hands` to which to attach the golf club model. It is preferred to have animations named `putt`, `drive` and `idle` within the model, although omitting these will not prevent it from being loaded. Avatar models are textured, and support only a single material. For more details on creating and configuring the model see the VGA golf wiki page.
 
-Sprite sheets used for VGA Golf avatars need to follow a few rules:
- - A single image must contain all the animation frames for two sprites:
- - The two sprites must be defined as 'wood' and 'iron' depicting each of the two types of club
- - Each sprite must have two animations 'idle' and 'swing'
-
-Secondly, and optional audioscape can be created which defines the audio snippets played when the player performs a particuilar action. TBD
+Secondly, an optional audioscape can be created which defines the audio snippets played when the player performs a particuilar action.
 
 Once the resources have been created an avatar definition file needs to be added to the `assets/golf/avatars` directory. This file is a text file with the following layout:
 
     avatar
     {
-       sprite = "assets/golf/sprites/player01.spt" //path to the sprite sheet for the avatar
+       model = "assets/golf/models/avatars/player01.cmt" //path to the model for the avatar
        audio = "assets/golf/sound/avatars/player01.xas" //path to the audioscape file for the avatar
        uid = 10 //see below
     }
 
-The file must be saved with an `*.avt` extension for VGA Golf to find it. Each avatar file requires a unique ID associated with it - this is used to synchronise avatars across network games. The number should be between 0 and 255, and not have the same value as another avatar in the the current directory. If an exisiting UID is already loaded then the avatar file will be skipped when VGA Golf loads, printing a message to the console warning which uid was duplicated.
+The file must be saved with an `*.avt` extension for VGA Golf to find it. Each avatar file requires a unique ID associated with it - this is used to synchronise avatars across network games. If an existing UID is already loaded then the avatar file will be skipped when VGA Golf loads, printing a message to the console warning which UID was duplicated. To generate a UID for a new avatar omit this property from the file, and the first time the game is run it will create a UID based on the file name and automatically write it back to the file. This should be done once, before sharing any custom avatar files so that they properly sync across network games. Note that this will not work when running the game from a macOS bundle, you need to be using a command-line build with appropriate write permission. This does not affect the Windows and Linux versions, assuming the current user has the correct permissions to write files.
 
-To use an avatar in multiple clients each `*.avt`, sprite sheet, sprite image and optional audioscape must be copied to all player's assets directory.
+To use an avatar on multiple clients each `*.avt`, model definition, model file and (optional) audioscape must be copied to all player's assets directory.
+
+
+#### Custom Hair.
+It is also possible to add new hair models to VGA golf. These models will be attached to any avatar model that has an attachment point named `head` - although not all avatars will have this. Hair models also require a definition file with the extension `*.hct`, placed in the `assets/golf/avatars/hair` directory. The layout is almost identical to that of the avatar definition, with the omission of the audio property. The same rules apply for creating UIDs for hair models.
+
+    hair
+    {
+       model = "assets/golf/models/avatars/hair/hair01.cmt" //path to the model for the avatar
+       uid = 2563436 //see avatar note, above
+    }
+
+Hair models are untextured, and have their colour set by the avatar customisation menu in game. Any texture / vertex colour properties are ignored.
