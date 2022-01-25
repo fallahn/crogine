@@ -2791,8 +2791,11 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
         newPos -= holeDir;
     }*/
 
+    //lower height as we get closer to hole
+    heightMultiplier = std::min(1.f, std::max(0.f, holeDist / MinRadSqr));
+
     auto groundHeight = m_collisionMesh.getTerrain(newPos).height;
-    newPos.y = std::max(groundHeight + CameraPuttHeight, newPos.y);
+    newPos.y = std::max(groundHeight + (CameraPuttHeight * heightMultiplier), newPos.y);
 
     camEnt.getComponent<cro::Transform>().setPosition(newPos);
 
