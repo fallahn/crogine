@@ -29,6 +29,8 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ParticleDirector.cpp
   ${PROJECT_DIR}/golf/PlayerAvatar.cpp
   ${PROJECT_DIR}/golf/PracticeState.cpp
+  ${PROJECT_DIR}/golf/PuttingState.cpp
+  ${PROJECT_DIR}/golf/PuttingStateUI.cpp
   ${PROJECT_DIR}/golf/SharedStateData.cpp
   ${PROJECT_DIR}/golf/SoundEffectsDirector.cpp
   ${PROJECT_DIR}/golf/spooky2.cpp

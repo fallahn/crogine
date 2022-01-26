@@ -37,6 +37,7 @@ source distribution.
 #include "golf/KeyboardState.hpp"
 #include "golf/PracticeState.hpp"
 #include "golf/DrivingState.hpp"
+#include "golf/PuttingState.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
@@ -109,6 +110,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
+    m_stateStack.registerState<PuttingState>(StateID::PuttingRange, m_sharedData);
 
     //pv::RawVolume<std::uint8_t> volume(pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(10)));
     //volume.setVoxel(3, 5, 6, 10);

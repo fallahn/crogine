@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "DrivingState.hpp"
+#include "PuttingState.hpp"
 #include "PoissonDisk.hpp"
 #include "SharedStateData.hpp"
 #include "GameConsts.hpp"
@@ -150,7 +150,7 @@ namespace
     };
 }
 
-DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
+PuttingState::PuttingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
     m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
@@ -183,7 +183,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
 }
 
 //public
-bool DrivingState::handleEvent(const cro::Event& evt)
+bool PuttingState::handleEvent(const cro::Event& evt)
 {
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
@@ -285,7 +285,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     return true;
 }
 
-void DrivingState::handleMessage(const cro::Message& msg)
+void PuttingState::handleMessage(const cro::Message& msg)
 {
     //director must handle message first so score is
     //up to date by the time the switchblock below is
@@ -413,7 +413,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
     }
 }
 
-bool DrivingState::simulate(float dt)
+bool PuttingState::simulate(float dt)
 {
     updateWindDisplay(m_gameScene.getSystem<BallSystem>()->getWindDirection());
 
@@ -436,7 +436,7 @@ bool DrivingState::simulate(float dt)
     return true;
 }
 
-void DrivingState::render()
+void PuttingState::render()
 {
     m_backgroundTexture.clear();
     m_gameScene.render();
@@ -450,7 +450,7 @@ void DrivingState::render()
 }
 
 //private
-void DrivingState::toggleFreeCam()
+void PuttingState::toggleFreeCam()
 {
 #ifdef CRO_DEBUG_
     useFreeCam = !useFreeCam;
@@ -471,7 +471,7 @@ void DrivingState::toggleFreeCam()
 #endif
 }
 
-void DrivingState::addSystems()
+void PuttingState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
@@ -511,7 +511,7 @@ void DrivingState::addSystems()
     m_uiScene.addSystem<cro::AudioPlayerSystem>(mb);
 }
 
-void DrivingState::loadAssets()
+void PuttingState::loadAssets()
 {
     m_gameScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
 
@@ -629,7 +629,7 @@ void DrivingState::loadAssets()
     initAudio();
 }
 
-void DrivingState::initAudio()
+void PuttingState::initAudio()
 {
     //8 evenly spaced points with ambient audio
     cro::AudioScape as;
@@ -822,7 +822,7 @@ void DrivingState::initAudio()
     };
 }
 
-void DrivingState::createScene()
+void PuttingState::createScene()
 {
     cro::AudioScape as;
     as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
@@ -1218,7 +1218,7 @@ void DrivingState::createScene()
     startTransition();
 }
 
-void DrivingState::createFoliage(cro::Entity terrainEnt)
+void PuttingState::createFoliage(cro::Entity terrainEnt)
 {
     //render a heightmap from the hole mesh
     //TODO this is lifted from TerrainBuilder and can probably be shared between both with a refactor
@@ -1411,7 +1411,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     }
 }
 
-void DrivingState::createPlayer(cro::Entity courseEnt)
+void PuttingState::createPlayer(cro::Entity courseEnt)
 {
     //load sprites from avatar info
     const auto indexFromSkinID = [&](std::uint32_t skinID)->std::size_t
@@ -1601,7 +1601,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
 }
 
-void DrivingState::createBall()
+void PuttingState::createBall()
 {
     //ball is rendered as a single point
     //at a distance, and as a model when closer
@@ -1807,7 +1807,7 @@ void DrivingState::createBall()
 #endif
 }
 
-void DrivingState::createFlag()
+void PuttingState::createFlag()
 {
     cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/cup.cmt");
@@ -1908,7 +1908,7 @@ void DrivingState::createFlag()
     };
 }
 
-void DrivingState::startTransition()
+void PuttingState::startTransition()
 {
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
@@ -1969,7 +1969,7 @@ void DrivingState::startTransition()
     glCheck(glUniform2f(shader.getUniformID("u_resolution"), screenSize.x, screenSize.y));
 }
 
-void DrivingState::hitBall()
+void PuttingState::hitBall()
 {
     auto pitch = Clubs[m_inputParser.getClub()].angle;
 
@@ -2043,7 +2043,7 @@ void DrivingState::hitBall()
     }
 }
 
-void DrivingState::setHole(std::int32_t index)
+void PuttingState::setHole(std::int32_t index)
 {
     m_gameScene.getSystem<BallSystem>()->setHoleData(m_holeData[index], false);
     m_inputParser.resetPower();
@@ -2182,7 +2182,7 @@ void DrivingState::setHole(std::int32_t index)
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
 }
 
-void DrivingState::setActiveCamera(std::int32_t camID)
+void PuttingState::setActiveCamera(std::int32_t camID)
 {
 #ifdef CRO_DEBUG_
     if (useFreeCam)
@@ -2216,7 +2216,7 @@ void DrivingState::setActiveCamera(std::int32_t camID)
     }
 }
 
-void DrivingState::loadScores()
+void PuttingState::loadScores()
 {
     const std::string loadPath = cro::App::getInstance().getPreferencePath() + "driving.scores";
 
@@ -2242,7 +2242,7 @@ void DrivingState::loadScores()
     }
 }
 
-void DrivingState::saveScores()
+void PuttingState::saveScores()
 {
     const std::string savePath = cro::App::getInstance().getPreferencePath() + "driving.scores";
 
