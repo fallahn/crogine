@@ -83,6 +83,7 @@ namespace
         float start = -MaxShrubOffset;
         float destination = 0.f;
         cro::Entity otherEnt;
+        cro::Entity instancedEnt; //entity containing instanced geometry
     };
 
     //callback for swapping shrub ents
@@ -114,6 +115,11 @@ namespace
                     swapData.otherEnt.getComponent<cro::Model>().setHidden(false);
 
                     terrainEntity.getComponent<cro::Callback>().active = true; //starts terrain morph
+                }
+
+                if (swapData.instancedEnt.isValid())
+                {
+                    swapData.instancedEnt.getComponent<cro::Model>().setHidden(true);
                 }
             }
         }
@@ -259,8 +265,17 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //parent the shrubbery so they always stay the same relative height
     m_terrainEntity = entity;
 
+
+    //custom shader for instanced plants
+    resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
+    const auto& reedShader = resources.shaders.get(ShaderID::CelTexturedInstanced);
+    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    materialID = resources.materials.add(reedShader);
+
     //create billboard entities
     cro::ModelDefinition billboardDef(resources);
+    cro::ModelDefinition reedsDef(resources);
+    std::int32_t i = 0;
 
     for (auto& entity : m_billboardEntities)
     {
@@ -292,6 +307,27 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
                 m_terrainEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             }
+
+            //create a child entity for instanced geometry
+            if (reedsDef.loadFromFile("assets/golf/models/reeds_large.cmt", true))
+            {
+                auto material = resources.materials.get(materialID);
+
+                auto childEnt = scene.createEntity();
+                childEnt.addComponent<cro::Transform>();
+                reedsDef.createModel(childEnt);
+
+                for (auto j = 0u; j < reedsDef.getMaterialCount(); ++j)
+                {
+                    applyMaterialData(reedsDef, material, j);
+                    childEnt.getComponent<cro::Model>().setMaterial(j, material);
+                }
+                childEnt.getComponent<cro::Model>().setHidden(true);
+                childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+                entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
+                m_instancedEntities[i] = childEnt;
+            }
+            i++;
         }
     }
 
@@ -421,9 +457,17 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.start = m_billboardEntities[second].getComponent<cro::Transform>().getPosition().y;
                 swapData.destination = -MaxShrubOffset;
                 swapData.otherEnt = m_billboardEntities[first];
+                swapData.instancedEnt = m_instancedEntities[second];
                 swapData.currentTime = 0.f;
                 m_billboardEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
                 m_billboardEntities[second].getComponent<cro::Callback>().active = true;
+
+                //update any instanced geom
+                if (!m_instanceTransforms.empty())
+                {
+                    m_instancedEntities[first].getComponent<cro::Model>().setHidden(false);
+                    m_instancedEntities[first].getComponent<cro::Model>().setInstanceTransforms(m_instanceTransforms);
+                }
             }
 
             //upload terrain data
@@ -519,6 +563,8 @@ void TerrainBuilder::threadFunc()
     {
         if (m_wantsUpdate)
         {
+            m_instanceTransforms.clear();
+
             //we checked the file validity when the game starts.
             //if the map file is broken now something more drastic happened...
             cro::Image mapImage;
@@ -559,6 +605,22 @@ void TerrainBuilder::threadFunc()
                             auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                             bb.position = { x, height, -y };
                             bb.size *= scale;
+                        }
+                    }
+
+                    if (terrain == TerrainID::Rough
+                        || terrain == TerrainID::Scrub)
+                    {
+                        float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+
+                        if (height < 0.1f)
+                        {
+                            float scale = static_cast<float>(cro::Util::Random::value(9, 16)) / 10.f;
+
+                            glm::mat4 tx = glm::translate(glm::mat4(1.f), { x, height, -y });
+                            tx = glm::rotate(tx, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI), cro::Transform::Y_AXIS);
+                            tx = glm::scale(tx, glm::vec3(scale));
+                            m_instanceTransforms.push_back(tx);
                         }
                     }
                 }

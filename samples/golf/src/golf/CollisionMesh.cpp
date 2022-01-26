@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -85,7 +85,7 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
         terrain = std::floor(terrain / 10.f);
         if (terrain > TerrainID::Hole)
         {
-            terrain = TerrainID::Fairway;
+            terrain = TerrainID::Scrub;
         }
 
         m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh);

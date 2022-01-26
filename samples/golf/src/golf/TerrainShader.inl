@@ -127,6 +127,11 @@ static const std::string CelVertexShader = R"(
     ATTRIBUTE vec2 a_texCoord0;
 #endif
 
+#if defined(INSTANCING)
+    ATTRIBUTE mat4 a_instanceWorldMatrix;
+    ATTRIBUTE mat3 a_instanceNormalMatrix;
+#endif
+
 #if defined(SKINNED)
     #define MAX_BONES 64
     ATTRIBUTE vec4 a_boneIndices;
@@ -138,9 +143,14 @@ static const std::string CelVertexShader = R"(
     uniform mat4 u_lightViewProjectionMatrix;
 #endif
 
+#if defined(INSTANCING)
+    uniform mat4 u_viewMatrix;
+#else
+    uniform mat4 u_worldViewMatrix;
     uniform mat3 u_normalMatrix;
+#endif
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewProjectionMatrix;
+    uniform mat4 u_projectionMatrix;
 
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
@@ -163,6 +173,17 @@ static const std::string CelVertexShader = R"(
 
     void main()
     {
+    #if defined (INSTANCING)
+        mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
+        mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
+        mat3 normalMatrix = mat3(u_worldMatrix) * a_instanceNormalMatrix;            
+    #else
+        mat4 worldMatrix = u_worldMatrix;
+        mat4 worldViewMatrix = u_worldViewMatrix;
+        mat3 normalMatrix = u_normalMatrix;
+    #endif
+
+
         vec4 position = a_position;
 
     #if defined(SKINNED)
@@ -177,31 +198,31 @@ static const std::string CelVertexShader = R"(
         v_lightWorldPosition = u_lightViewProjectionMatrix * u_worldMatrix * position;
     #endif
 
-        position = u_worldMatrix * position;
-        gl_Position = u_viewProjectionMatrix * position;
+        vec4 worldPosition = worldMatrix * position;
+        gl_Position = u_projectionMatrix * worldViewMatrix * position;
 
         vec3 normal = a_normal;
     #if defined(SKINNED)
         normal = (skinMatrix * vec4(normal, 0.0)).xyz;
     #endif
-        v_normal = u_normalMatrix * normal;
+        v_normal = normalMatrix * normal;
 
         v_colour = a_colour;
 
 #if defined (TEXTURED)
-    v_texCoord = a_texCoord0;
+        v_texCoord = a_texCoord0;
 #endif
 
 #if defined (NORMAL_MAP)
-    v_normalTexCoord = vec2(position.x / MapSize.x, -position.z / MapSize.y);
+        v_normalTexCoord = vec2(worldPosition.x / MapSize.x, -worldPosition.z / MapSize.y);
 #endif
-        gl_ClipDistance[0] = dot(position, u_clipPlane);
+        gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
 
 #if defined(DITHERED)
         const float fadeDistance = 4.0;
         const float nearFadeDistance = 2.0;
         const float farFadeDistance = 360.f;
-        float distance = length(position.xyz - u_cameraWorldPosition);
+        float distance = length(worldPosition.xyz - u_cameraWorldPosition);
 
         v_ditherAmount = pow(clamp((distance - nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
         v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);

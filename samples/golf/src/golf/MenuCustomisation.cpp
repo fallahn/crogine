@@ -401,6 +401,9 @@ void MenuState::createAvatarScene()
 
     m_avatarScene.setActiveCamera(avatarCam);
 
+    auto sunEnt = m_avatarScene.getSunlight();
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -40.56f * cro::Util::Const::degToRad);
+
     //load the preview models
     cro::ModelDefinition clubDef(m_resources);
     clubDef.loadFromFile("assets/golf/models/club_iron.cmt");

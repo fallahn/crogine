@@ -104,6 +104,7 @@ struct ShaderID final
         Cel,
         CelSkinned,
         CelTextured,
+        CelTexturedInstanced,
         CelTexturedSkinned,
         Player,
         Hair,

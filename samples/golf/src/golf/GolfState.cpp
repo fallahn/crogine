@@ -659,7 +659,7 @@ bool GolfState::simulate(float dt)
     {
         move = glm::normalize(move);
     }
-    //m_waterEnt.getComponent<cro::Transform>().move(move * 10.f * dt);
+    m_waterEnt.getComponent<cro::Transform>().move(move * 10.f * dt);
 #endif
 
 

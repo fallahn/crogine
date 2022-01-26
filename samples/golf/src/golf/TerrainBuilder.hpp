@@ -90,6 +90,9 @@ private:
     std::array<cro::Entity, 2u> m_billboardEntities = {};
     std::size_t m_swapIndex; //might not swap every hole so we need to track this independently
 
+    std::vector<glm::mat4> m_instanceTransforms;
+    std::array<cro::Entity, 2u> m_instancedEntities = {};
+
     struct TerrainVertex final
     {
         glm::vec3 position = glm::vec3(0.f);

@@ -892,7 +892,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
 
         if (terrain > TerrainID::Hole)
         {
-            terrain = TerrainID::Fairway;
+            terrain = TerrainID::Scrub;
         }
 
         m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh);
