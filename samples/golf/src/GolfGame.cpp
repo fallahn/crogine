@@ -60,7 +60,7 @@ source distribution.
 //#include <polyvox/MarchingCubesSurfaceExtractor.h>
 //#include <polyvox/CubicSurfaceExtractor.h>
 
-namespace pv = PolyVox;
+//namespace pv = PolyVox;
 
 namespace
 {

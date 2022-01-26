@@ -5,8 +5,9 @@ course course_03
     billboard_sprites = "assets/golf/sprites/shrubbery.spt"
     audio = "assets/golf/sound/ambience.xas"
 
-    title = "Old Stemmer's Lane"
-    description = "A Putter's Delight"
+    title = "Old Stemmer's Lane, Furrowshire"
+    description = "Putter's Choice."
 
+    hole = "assets/golf/courses/course_03/01.hole"
     hole = "assets/golf/courses/course_03/01.hole"
 }
