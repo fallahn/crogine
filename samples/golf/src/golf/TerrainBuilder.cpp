@@ -463,7 +463,8 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 m_billboardEntities[second].getComponent<cro::Callback>().active = true;
 
                 //update any instanced geom
-                if (!m_instanceTransforms.empty())
+                if (!m_instanceTransforms.empty()
+                    && m_instancedEntities[first].isValid())
                 {
                     m_instancedEntities[first].getComponent<cro::Model>().setHidden(false);
                     m_instancedEntities[first].getComponent<cro::Model>().setInstanceTransforms(m_instanceTransforms);
