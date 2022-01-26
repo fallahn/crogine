@@ -56,6 +56,12 @@ source distribution.
 
 #include <crogine/util/Network.hpp>
 
+//#include <polyvox/RawVolume.h>
+//#include <polyvox/MarchingCubesSurfaceExtractor.h>
+//#include <polyvox/CubicSurfaceExtractor.h>
+
+namespace pv = PolyVox;
+
 namespace
 {
 #include "golf/TutorialShaders.inl"
@@ -103,6 +109,11 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
+
+    //pv::RawVolume<std::uint8_t> volume(pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(10)));
+    //volume.setVoxel(3, 5, 6, 10);
+
+    //auto meshData = pv::extractMarchingCubesMesh<pv::RawVolume<std::uint8_t>>(&volume, volume.getEnclosingRegion());
 
 #ifdef WIN32
 #ifdef CRO_DEBUG_

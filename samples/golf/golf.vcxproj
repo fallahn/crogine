@@ -156,7 +156,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>CRO_DEBUG_;_CRT_SECURE_NO_WARNINGS;_MBCS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\polyvox</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -266,7 +266,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\polyvox</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
