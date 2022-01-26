@@ -1054,7 +1054,8 @@ void GolfState::loadAssets()
 
                             //set material and colour
                             auto material = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
-                            material.setProperty("u_colour", cro::Colour(pc::Palette[m_sharedData.connectionData[i].playerData[j].avatarFlags[pc::ColourKey::Hair]].light));
+                            material.setProperty("u_hairColour", cro::Colour(pc::Palette[m_sharedData.connectionData[i].playerData[j].avatarFlags[pc::ColourKey::Hair]].light));
+                            //material.setProperty("u_darkColour", cro::Colour(pc::Palette[m_sharedData.connectionData[i].playerData[j].avatarFlags[pc::ColourKey::Hair]].dark));
                             hairEnt.getComponent<cro::Model>().setMaterial(0, material);
 
                             skel.getAttachments()[id].setModel(hairEnt);
@@ -1563,8 +1564,16 @@ void GolfState::buildScene()
     bool clearHoles = false;
     if (m_holeData.empty())
     {
-        //TODO fix crash caused by incomplete scene
-        return;
+        //use dummy data to get scene standing
+        //but make sure to push error state too
+        auto& holeDummy = m_holeData.emplace_back();
+        holeDummy.modelEntity = m_gameScene.createEntity();
+        holeDummy.modelEntity.addComponent<cro::Transform>();
+        holeDummy.modelEntity.addComponent<cro::Callback>();
+        createFallbackModel(holeDummy.modelEntity, m_resources);
+
+        m_sharedData.errorMessage = "No Hole Data Loaded.";
+        requestStackPush(StateID::Error);
     }
 
 

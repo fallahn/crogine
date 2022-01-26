@@ -615,7 +615,8 @@ void MenuState::setPreviewModel(std::size_t playerIndex)
                     {
                         m_playerAvatars[i].hairAttachment->getModel().getComponent<cro::Transform>().setScale(glm::vec3(1.f));
                         m_playerAvatars[i].hairModels[hairIndex].model.getComponent<cro::Model>().setHidden(false);
-                        m_playerAvatars[i].hairModels[hairIndex].model.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", m_playerAvatars[i].getColour(pc::ColourKey::Hair).first);
+                        m_playerAvatars[i].hairModels[hairIndex].model.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", m_playerAvatars[i].getColour(pc::ColourKey::Hair).first);
+                        //m_playerAvatars[i].hairModels[hairIndex].model.getComponent<cro::Model>().setMaterialProperty(0, "u_darkColour", m_playerAvatars[i].getColour(pc::ColourKey::Hair).second);
                     }
                 }
             }

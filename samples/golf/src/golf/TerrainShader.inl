@@ -217,7 +217,8 @@ static const std::string CelFragmentShader = R"(
 #endif
 
 #if defined (USER_COLOUR)
-    uniform vec4 u_colour = vec4(1.0);
+    uniform vec4 u_hairColour = vec4(1.0, 0.0, 0.0, 1.0);
+    uniform vec4 u_darkColour = vec4(0.5);
 #endif
 
 #if defined(TEXTURED)
@@ -335,12 +336,7 @@ static const std::string CelFragmentShader = R"(
 
     void main()
     {
-#if defined (USER_COLOUR)
-        vec4 colour = u_colour;
-#else
         vec4 colour = vec4(1.0);
-#endif
-
 #if defined (TEXTURED)
         vec4 c = TEXTURE(u_diffuseMap, v_texCoord);
 
@@ -363,6 +359,11 @@ static const std::string CelFragmentShader = R"(
 #endif
 
         float amount = dot(normal, normalize(-u_lightDirection));
+
+#if defined (USER_COLOUR)
+        //colour *= mix(u_darkColour, u_hairColour, step(0.5, amount));
+        colour *= u_hairColour;
+#endif
 
         float checkAmount = step(0.3, 1.0 - amount);
 

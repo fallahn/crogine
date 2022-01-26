@@ -2023,7 +2023,10 @@ void MenuState::createPlayerConfigMenu()
                 if (m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.isValid())
                 {
                     auto colour = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].getColour(pc::ColourKey::Hair).first;
-                    m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", colour);
+                    m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", colour);
+
+                    colour = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].getColour(pc::ColourKey::Hair).second;
+                    //m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.getComponent<cro::Model>().setMaterialProperty(0, "u_darkColour", colour);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2039,7 +2042,10 @@ void MenuState::createPlayerConfigMenu()
                 if (m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.isValid())
                 {
                     auto colour = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].getColour(pc::ColourKey::Hair).first;
-                    m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", colour);
+                    m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", colour);
+
+                    colour = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].getColour(pc::ColourKey::Hair).second;
+                    //m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.getComponent<cro::Model>().setMaterialProperty(0, "u_darkColour", colour);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
