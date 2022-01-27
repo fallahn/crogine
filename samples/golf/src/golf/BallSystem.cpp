@@ -324,24 +324,22 @@ void BallSystem::process(float dt)
 
             if (ball.delay < 0)
             {
-                //TODO hmmm we might be better moving back towards the
-                //player, but we don't have the player position here to target...
-
-                //move towards hole or target util we find non-water
+                //move towards player until we find non-water
                 std::uint8_t terrain = TerrainID::Water;
 
                 //make sure ball height is level with target
                 //else moving it may cause the collision test
                 //to miss if the terrain is much higher than
                 //the water level.
-                ballPos.y = m_holeData->pin.y;
+                /*ballPos.y = m_holeData->pin.y;
                 auto pinDir = m_holeData->pin - ballPos;
 
                 ballPos.y = m_holeData->target.y;
-                auto targetDir = m_holeData->target - ballPos;
+                auto targetDir = m_holeData->target - ballPos;*/
 
-                glm::vec3 dir(0.f);
-                if (glm::length2(pinDir) < glm::length2(targetDir))
+                glm::vec3 dir = ball.startPoint - ballPos;// (0.f);
+                ballPos.y = ball.startPoint.y;
+                /*if (glm::length2(pinDir) < glm::length2(targetDir))
                 {
                     dir = pinDir;
                     ballPos.y = m_holeData->pin.y;
@@ -350,7 +348,7 @@ void BallSystem::process(float dt)
                 {
                     dir = targetDir;
                     ballPos.y = m_holeData->target.y;
-                }
+                }*/
 
                 auto length = glm::length(dir);
                 dir /= length;

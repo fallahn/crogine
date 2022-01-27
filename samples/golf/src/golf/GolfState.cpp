@@ -1142,7 +1142,7 @@ void GolfState::loadAssets()
     meshData = &m_resources.meshes.getMesh(m_ballResources.shadowMeshID);
     verts =
     {
-        0.f, 0.f, 0.f,    0.5f, 0.5f, 0.5f, 1.f,
+        0.f, 0.f, 0.f,    0.f, 0.f, 0.f, 0.25f,
     };
     meshData->vertexCount = 1;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
@@ -2158,7 +2158,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     //ball shadow
     auto ballEnt = entity;
     material.setProperty("u_colour", cro::Colour::White);
-    material.blendMode = cro::Material::BlendMode::Multiply;
+    //material.blendMode = cro::Material::BlendMode::Multiply; //causes shadow to actually get darker as alpha reaches zero.. duh
 
     //point shadow seen from distance
     entity = m_gameScene.createEntity();
