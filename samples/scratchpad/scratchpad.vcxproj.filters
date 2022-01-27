@@ -87,6 +87,12 @@
     <ClCompile Include="src\voxels\VoxelState.cpp">
       <Filter>Source Files\voxels</Filter>
     </ClCompile>
+    <ClCompile Include="src\voxels\VoxelStateUI.cpp">
+      <Filter>Source Files\voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="src\voxels\VoxelFpsCameraSystem.cpp">
+      <Filter>Source Files\voxels</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -162,6 +168,12 @@
       <Filter>Header Files\mesh collision</Filter>
     </ClInclude>
     <ClInclude Include="src\voxels\VoxelState.hpp">
+      <Filter>Header Files\voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="src\voxels\Consts.hpp">
+      <Filter>Header Files\voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="src\voxels\FpsCameraSystem.hpp">
       <Filter>Header Files\voxels</Filter>
     </ClInclude>
   </ItemGroup>

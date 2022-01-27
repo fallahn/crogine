@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "Consts.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -37,7 +38,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 
-#include <memory>
+#include <array>
 
 class VoxelState final : public cro::State, public cro::GuiClient
 {
@@ -57,5 +58,26 @@ private:
     cro::ResourceCollection m_resources;
     cro::EnvironmentMap m_environmentMap;
 
+    std::array<std::size_t, Shader::Count> m_shaderIDs = {};
+    std::array<std::size_t, Material::Count> m_materialIDs = {};
+
+    struct Layer final
+    {
+        enum
+        {
+            Water, Terrain, Voxel,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, Layer::Count> m_layers;
+
     void buildScene();
+    void createLayers();
+
+    //---VoxelStateUI.cpp---//
+    bool m_showLayerWindow;
+    
+    void drawMenuBar();
+    void drawLayerWindow();
 };
