@@ -29,6 +29,7 @@ source distribution.
 
 #include "VoxelState.hpp"
 
+#include <crogine/ecs/components/Model.hpp>
 #include <crogine/gui/Gui.hpp>
 
 void VoxelState::drawMenuBar()
@@ -56,6 +57,7 @@ void VoxelState::drawMenuBar()
             {
                 requestStackClear();
                 requestStackPush(States::ScratchPad::MainMenu);
+                saveSettings();
             }
             ImGui::EndMenu();
         }
@@ -85,20 +87,17 @@ void VoxelState::drawLayerWindow()
     {
         if (ImGui::Begin("Layers", &m_showLayerWindow))
         {
-            static bool showWater = false;
-            if (ImGui::Checkbox("Show Water", &showWater))
+            if (ImGui::Checkbox("Show Water", &m_showLayer[Layer::Water]))
             {
-
+                m_layers[Layer::Water].getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Water]);
             }
 
-            static bool showTerrain = false;
-            if (ImGui::Checkbox("Show Terrain", &showTerrain))
+            if (ImGui::Checkbox("Show Terrain", &m_showLayer[Layer::Terrain]))
             {
-
+                m_layers[Layer::Terrain].getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Terrain]);
             }
 
-            static bool showVoxels = false;
-            if (ImGui::Checkbox("Show Voxels", &showVoxels))
+            if (ImGui::Checkbox("Show Voxels", &m_showLayer[Layer::Voxel]))
             {
 
             }

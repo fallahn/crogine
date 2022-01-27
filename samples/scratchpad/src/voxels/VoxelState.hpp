@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/graphics/Texture.hpp>
 
 #include <array>
 
@@ -58,8 +59,10 @@ private:
     cro::ResourceCollection m_resources;
     cro::EnvironmentMap m_environmentMap;
 
-    std::array<std::size_t, Shader::Count> m_shaderIDs = {};
-    std::array<std::size_t, Material::Count> m_materialIDs = {};
+    cro::Texture m_tempTexture;
+
+    std::array<std::int32_t, Shader::Count> m_shaderIDs = {};
+    std::array<std::int32_t, Material::Count> m_materialIDs = {};
 
     struct Layer final
     {
@@ -75,8 +78,12 @@ private:
     void buildScene();
     void createLayers();
 
+    void loadSettings();
+    void saveSettings();
+
     //---VoxelStateUI.cpp---//
     bool m_showLayerWindow;
+    std::array<bool, Layer::Count> m_showLayer = {};
     
     void drawMenuBar();
     void drawLayerWindow();

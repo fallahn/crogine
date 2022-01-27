@@ -34,6 +34,7 @@ source distribution.
 namespace Voxel
 {
     constexpr glm::vec2 MapSize(320.f, 200.f);
+    constexpr float WateLevel = -0.02f;
 }
 
 struct Shader

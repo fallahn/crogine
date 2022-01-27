@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/core/GameController.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 /*
 First/third person camera controller.
@@ -40,7 +41,7 @@ person view, or attach a Camera to a child entity of the camera controller
 and place it appropriately to create a third person view.
 */
 
-struct FpsCamera final
+struct VoxelFpsCamera final
 {
     float cameraPitch = 0.f; //used to clamp camera
     float cameraYaw = 0.f; //used to calc forward vector
@@ -64,7 +65,7 @@ struct FpsCamera final
 };
 
 
-class VoxelFpsCameraSystem final : public cro::System
+class VoxelFpsCameraSystem final : public cro::System, public cro::GuiClient
 {
 public:
     explicit VoxelFpsCameraSystem(cro::MessageBus&);

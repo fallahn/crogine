@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
 
+#include <crogine/gui/Gui.hpp>
+
 namespace
 {
     const float FlyMultiplier = 15.f;
@@ -42,8 +44,19 @@ namespace
 VoxelFpsCameraSystem::VoxelFpsCameraSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(VoxelFpsCameraSystem))
 {
-    requireComponent<FpsCamera>();
+    requireComponent<VoxelFpsCamera>();
     requireComponent<cro::Transform>();
+
+    /*registerWindow([&]() 
+        {
+            if (ImGui::Begin("FPS Cam"))
+            {
+                const auto& input = m_inputs[0];
+                ImGui::Text("Flags: %u", input.buttonFlags);
+
+            }
+            ImGui::End();
+        });*/
 }
 
 //public
@@ -107,10 +120,10 @@ void VoxelFpsCameraSystem::handleEvent(const cro::Event& evt)
         switch (evt.button.button)
         {
         default: break;
-        case 0:
+        case SDL_BUTTON_LEFT:
             m_inputs[0].buttonFlags |= Input::LeftMouse;
             break;
-        case 1:
+        case SDL_BUTTON_RIGHT:
             m_inputs[0].buttonFlags |= Input::RightMouse;
             break;
         }
@@ -119,10 +132,10 @@ void VoxelFpsCameraSystem::handleEvent(const cro::Event& evt)
         switch (evt.button.button)
         {
         default: break;
-        case 0:
+        case SDL_BUTTON_LEFT:
             m_inputs[0].buttonFlags &= ~Input::LeftMouse;
             break;
-        case 1:
+        case SDL_BUTTON_RIGHT:
             m_inputs[0].buttonFlags &= ~Input::RightMouse;
             break;
         }
@@ -276,7 +289,7 @@ void VoxelFpsCameraSystem::process(float dt)
     auto& entities = getEntities();
     for (auto entity : entities)
     {
-        auto& controller = entity.getComponent<FpsCamera>();
+        auto& controller = entity.getComponent<VoxelFpsCamera>();
         auto& input = m_inputs[controller.controllerIndex];
 
         static constexpr float MoveScale = 0.004f;
@@ -379,5 +392,5 @@ void VoxelFpsCameraSystem::process(float dt)
 //private
 void VoxelFpsCameraSystem::onEntityAdded(cro::Entity entity)
 {
-    entity.getComponent<FpsCamera>().resetOrientation(entity);
+    entity.getComponent<VoxelFpsCamera>().resetOrientation(entity);
 }

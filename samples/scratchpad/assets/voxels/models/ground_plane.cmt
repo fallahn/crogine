@@ -1,0 +1,12 @@
+model ground_plane
+{
+	mesh = quad
+	uv = 1,1
+	size = 320,200
+
+	material PBR
+	{
+		colour = 0,0.1,0.9,1
+        blendmode=none
+	}	
+}
