@@ -595,7 +595,7 @@ void TerrainBuilder::threadFunc()
                 m_billboardBuffer.clear();
                 for (auto [x, y] : grass)
                 {
-                    auto [terrain, _] = readMap(mapImage, x, y);
+                    auto [terrain, terrainHeight] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Rough)
                     {
                         float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
@@ -608,11 +608,12 @@ void TerrainBuilder::threadFunc()
                             bb.size *= scale;
                         }
                     }
-
+                    //reeds at water edge
                     if (terrain == TerrainID::Rough
                         || terrain == TerrainID::Scrub)
                     {
                         float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+                        height = std::max(height, terrainHeight);
 
                         if (height < 0.1f)
                         {
