@@ -811,7 +811,7 @@ void GolfState::loadAssets()
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n");
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n");
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
