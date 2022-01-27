@@ -43,13 +43,15 @@ source distribution.
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
-#include <crogine/graphics/GridMeshBuilder.hpp>
+#include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Image.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/gui/Gui.hpp>
+
+#include "../ErrorCheck.hpp"
 
 namespace
 {
@@ -140,7 +142,7 @@ void VoxelState::buildScene()
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
 
-    m_scene.setWaterLevel(Voxel::WateLevel);
+    m_scene.setWaterLevel(Voxel::WaterLevel);
 
     m_environmentMap.loadFromFile("assets/images/hills.hdr");
     //TODO set skybox if we move this project to golf
@@ -179,7 +181,7 @@ void VoxelState::createLayers()
 
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    entity.getComponent<cro::Transform>().setPosition({ Voxel::MapSize.x / 2.f, Voxel::WateLevel, -Voxel::MapSize.y / 2.f });
+    entity.getComponent<cro::Transform>().setPosition({ Voxel::MapSize.x / 2.f, Voxel::WaterLevel, -Voxel::MapSize.y / 2.f });
     md.createModel(entity);
     entity.getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Water]);
     m_layers[Layer::Water] = entity;
@@ -193,21 +195,71 @@ void VoxelState::createLayers()
     img.create(16, 16, cro::Colour::Magenta);
     m_tempTexture.loadFromImage(img);
 
-    m_shaderIDs[Shader::Terrain] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseMap);
+    m_shaderIDs[Shader::Terrain] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
     m_materialIDs[Material::Terrain] = m_resources.materials.add(m_resources.shaders.get(m_shaderIDs[Shader::Terrain]));
 
     auto material = m_resources.materials.get(m_materialIDs[Material::Terrain]);
-    material.setProperty("u_diffuseMap", m_tempTexture);
+    //material.setProperty("u_diffuseMap", m_tempTexture);
 
-    //TODO replace this with dynamic mesh builder and create a proper grid
-    cro::GridMeshBuilder gridBuilder(Voxel::MapSize, 4);
-    auto meshID = m_resources.meshes.loadMesh(gridBuilder);
+    auto flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal;
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_TRIANGLE_STRIP));
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, Voxel::TerrainLevel, 0.f });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     entity.getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Terrain]);
     m_layers[Layer::Terrain] = entity;
+
+
+    //terrain vertex data
+    std::vector<TerrainVertex> terrainBuffer(static_cast<std::size_t>(Voxel::MapSize.x * Voxel::MapSize.y));
+    for (auto i = 0u; i < terrainBuffer.size(); ++i)
+    {
+        std::size_t x = i % static_cast<std::int32_t>(Voxel::MapSize.x);
+        std::size_t y = i / static_cast<std::int32_t>(Voxel::MapSize.x);
+
+        terrainBuffer[i].position = { static_cast<float>(x), 0.f, -static_cast<float>(y)};
+        //terrainBuffer[i].colour = theme.grassColour.getVec4();
+    }
+
+    constexpr auto xCount = static_cast<std::uint32_t>(Voxel::MapSize.x);
+    constexpr auto yCount = static_cast<std::uint32_t>(Voxel::MapSize.y);
+    std::vector<std::uint32_t> indices;
+
+    for (auto y = 0u; y < yCount - 1; ++y)
+    {
+        if (y > 0)
+        {
+            indices.push_back((y + 1) * xCount);
+        }
+
+        for (auto x = 0u; x < xCount; x++)
+        {
+            indices.push_back(((y + 1) * xCount) + x);
+            indices.push_back((y * xCount) + x);
+        }
+
+        if (y < yCount - 2)
+        {
+            indices.push_back((y * xCount) + (xCount - 1));
+        }
+    }
+
+    auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
+    meshData->vertexCount = static_cast<std::uint32_t>(terrainBuffer.size());
+    meshData->boundingBox[0] = glm::vec3(0.f, -10.f, 0.f);
+    meshData->boundingBox[1] = glm::vec3(Voxel::MapSize.x, 10.f, -Voxel::MapSize.y);
+    meshData->boundingSphere = meshData->boundingBox;
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * terrainBuffer.size(), terrainBuffer.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
 
 void VoxelState::loadSettings()

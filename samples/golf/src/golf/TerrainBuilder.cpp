@@ -197,7 +197,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     constexpr auto xCount = static_cast<std::uint32_t>(MapSize.x / QuadsPerMetre);
     constexpr auto yCount = static_cast<std::uint32_t>(MapSize.y / QuadsPerMetre);
-    std::vector<std::uint32_t> indices(xCount * yCount * 6);
+    std::vector<std::uint32_t> indices;// (xCount * yCount * 6);
 
 
     for (auto y = 0u; y < yCount - 1; ++y)
