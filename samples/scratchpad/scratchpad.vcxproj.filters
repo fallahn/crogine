@@ -31,6 +31,12 @@
     <Filter Include="Source Files\mesh collision">
       <UniqueIdentifier>{90326cfc-31b0-4076-b523-a93cbdf858a0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\voxels">
+      <UniqueIdentifier>{5d995601-9f0a-4e68-be6e-a6eea62e00a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\voxels">
+      <UniqueIdentifier>{ab6c2b6c-ecba-408c-b910-50a94c3f0b16}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -77,6 +83,9 @@
     </ClCompile>
     <ClCompile Include="src\collision\BallSystem.cpp">
       <Filter>Source Files\mesh collision</Filter>
+    </ClCompile>
+    <ClCompile Include="src\voxels\VoxelState.cpp">
+      <Filter>Source Files\voxels</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -151,6 +160,9 @@
     </ClInclude>
     <ClInclude Include="src\collision\BallSystem.hpp">
       <Filter>Header Files\mesh collision</Filter>
+    </ClInclude>
+    <ClInclude Include="src\voxels\VoxelState.hpp">
+      <Filter>Header Files\voxels</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
