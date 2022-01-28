@@ -59,7 +59,8 @@ private:
     cro::ResourceCollection m_resources;
     cro::EnvironmentMap m_environmentMap;
 
-    cro::Texture m_tempTexture;
+    cro::Texture m_terrainTexture;
+    std::vector<glm::vec4> m_textureBuffer;
 
     std::array<std::int32_t, Shader::Count> m_shaderIDs = {};
     std::array<std::int32_t, Material::Count> m_materialIDs = {};
@@ -82,18 +83,27 @@ private:
     void loadSettings();
     void saveSettings();
 
-    struct EditMode final
+    struct Brush final
     {
-        enum
+        float feather = 1.f;
+        float strength = 1.f;
+
+        struct EditMode final
         {
-            Add = 1,
-            Subtract = -1
+            enum
+            {
+                Add = 1,
+                Subtract = -1
+            };
         };
-    };
-    std::int32_t m_editMode;
+        std::int32_t editMode = EditMode::Add;
+
+    }m_brush;
+    bool m_showBrushWindow;
 
     void applyEdit();
     void editTerrain();
+    void updateTerrainImage(cro::IntRect);
     void editVoxel();
 
     //---VoxelStateUI.cpp---//
@@ -102,4 +112,5 @@ private:
     
     void drawMenuBar();
     void drawLayerWindow();
+    void drawBrushWindow();
 };

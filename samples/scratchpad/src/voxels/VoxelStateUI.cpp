@@ -73,6 +73,7 @@ void VoxelState::drawMenuBar()
             {
 
             }
+            ImGui::MenuItem("Brush", nullptr, &m_showBrushWindow);
 
             ImGui::EndMenu();
         }
@@ -124,6 +125,35 @@ void VoxelState::drawLayerWindow()
                     }
                 }
                 ImGui::EndCombo();
+            }
+        }
+        ImGui::End();
+    }
+}
+
+void VoxelState::drawBrushWindow()
+{
+    if (m_showBrushWindow)
+    {
+        if (ImGui::Begin("Brush Settings", &m_showBrushWindow))
+        {
+            ImGui::SliderFloat("Strength", &m_brush.strength, Voxel::BrushMinStrength, Voxel::BrushMaxStrength);
+            ImGui::SliderFloat("Feather", &m_brush.feather, Voxel::BrushMinFeather, Voxel::BrushMaxFeather);
+            //ImGui::SliderFloat("Radius", ); //TODO move this here
+            
+            bool modeAdd = m_brush.editMode == Brush::EditMode::Add;
+            bool modeSubtract = !modeAdd;
+
+            if (ImGui::Checkbox("Add", &modeAdd))
+            {
+                modeSubtract = !modeAdd;
+                m_brush.editMode = modeAdd ? Brush::EditMode::Add : Brush::EditMode::Subtract;
+            }
+
+            if (ImGui::Checkbox("Subtract", &modeSubtract))
+            {
+                modeAdd = !modeSubtract;
+                m_brush.editMode = modeAdd ? Brush::EditMode::Add : Brush::EditMode::Subtract;
             }
         }
         ImGui::End();

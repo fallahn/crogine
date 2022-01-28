@@ -56,6 +56,11 @@ namespace Voxel
     constexpr float MaxCursorScale = 15.f;
     constexpr float CursorScaleStep = 0.5f;
 
+    constexpr float BrushMaxStrength = 1.f;
+    constexpr float BrushMinStrength = 0.05f;
+    constexpr float BrushMaxFeather = 2.f;
+    constexpr float BrushMinFeather = 0.f;
+
     //colour to set the cursor to depending on active layer
     const std::array<cro::Colour, Layer::Count> LayerColours =
     {

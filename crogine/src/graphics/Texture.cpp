@@ -220,7 +220,7 @@ bool Texture::update(const std::uint8_t* pixels, bool createMipMaps, URect area)
             format = GL_RED;
         }
 
-        glCheck(glActiveTexture(GL_TEXTURE0));
+        //glCheck(glActiveTexture(GL_TEXTURE0));
         glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
         glCheck(glTexSubImage2D(GL_TEXTURE_2D, 0, area.left, area.bottom, area.width, area.height, format, GL_UNSIGNED_BYTE, pixels));
         

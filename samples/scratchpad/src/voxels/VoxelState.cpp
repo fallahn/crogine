@@ -50,6 +50,7 @@ source distribution.
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Maths.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include "../ErrorCheck.hpp"
@@ -63,22 +64,26 @@ namespace
 VoxelState::VoxelState(cro::StateStack& ss, cro::State::Context ctx)
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus()),
+    m_textureBuffer     (static_cast<std::size_t>(Voxel::MapSize.x * Voxel::MapSize.y)),
     m_activeLayer       (Layer::Terrain),
-    m_editMode          (EditMode::Add),
+    m_showBrushWindow   (true),
     m_showLayerWindow   (false)
 {
     std::fill(m_showLayer.begin(), m_showLayer.end(), true);
+    std::fill(m_textureBuffer.begin(), m_textureBuffer.end(), glm::vec4(0.f, 0.f, 0.f, 1.f));
+
     loadSettings();    
-    
     buildScene();
 
     registerWindow([&]()
         {
             drawMenuBar();
             drawLayerWindow();
+            drawBrushWindow();
 #ifdef CRO_DEBUG_
             if (ImGui::Begin("Debug"))
             {
+                ImGui::Image(m_terrainTexture, { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 ImGui::Text("Cursor Pos: %3.3f, %3.3f, %3.3f", cursorWorldPos.x, cursorWorldPos.y, cursorWorldPos.z);
             }
             ImGui::End();
@@ -91,10 +96,10 @@ bool VoxelState::handleEvent(const cro::Event& evt)
 {
     m_scene.getSystem<VoxelFpsCameraSystem>()->handleEvent(evt);
 
-    if (cro::ui::wantsKeyboard() || cro::ui::wantsMouse())
+    /*if (cro::ui::wantsKeyboard() || cro::ui::wantsMouse())
     {
         return false;
-    }
+    }*/
 
     if (evt.type == SDL_KEYUP)
     {
@@ -203,6 +208,13 @@ void VoxelState::buildScene()
     m_environmentMap.loadFromFile("assets/images/hills.hdr");
     //TODO set skybox if we move this project to golf
 
+    m_terrainTexture.create(static_cast<std::uint32_t>(Voxel::MapSize.x), static_cast<std::uint32_t>(Voxel::MapSize.y));
+    //modify the texture to accept float data - be careful not to modify/recreate this texture anywhere!!
+    auto size = m_terrainTexture.getSize();
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_terrainTexture.getGLHandle()));
+    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_FLOAT, m_textureBuffer.data()));
+    glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+
 
     //camera
     auto updateView = [](cro::Camera& cam)
@@ -244,13 +256,6 @@ void VoxelState::createLayers()
 
 
     //terrain mesh
-
-    //TODO create a double buffered texture we can draw to
-    //or maybe manipulate an array of floats and upload those to the texture
-    cro::Image img;
-    img.create(16, 16, cro::Colour::Magenta);
-    m_tempTexture.loadFromImage(img);
-
     m_shaderIDs[Shader::Terrain] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
     m_materialIDs[Material::Terrain] = m_resources.materials.add(m_resources.shaders.get(m_shaderIDs[Shader::Terrain]));
 
@@ -424,6 +429,23 @@ void VoxelState::loadSettings()
                 layer = std::max(0, std::min(Layer::Count - 1, layer));
                 m_activeLayer = layer;
             }
+            
+            else if (name == "show_brush")
+            {
+                m_showBrushWindow = p.getValue<bool>();
+            }
+            else if (name == "brush_strength")
+            {
+                m_brush.strength = std::max(Voxel::BrushMinStrength, std::min(Voxel::BrushMaxStrength, p.getValue<float>()));
+            }
+            else if (name == "brush_feather")
+            {
+                m_brush.feather = std::max(Voxel::BrushMinFeather, std::min(Voxel::BrushMaxFeather, p.getValue<float>()));
+            }
+            else if (name == "brush_mode")
+            {
+                m_brush.editMode = cro::Util::Maths::sgn(p.getValue<std::int32_t>());
+            }
         }
     }
 }
@@ -434,9 +456,13 @@ void VoxelState::saveSettings()
     cfg.addProperty("show_water").setValue(m_showLayer[Layer::Water]);
     cfg.addProperty("show_terrain").setValue(m_showLayer[Layer::Terrain]);
     cfg.addProperty("show_voxel").setValue(m_showLayer[Layer::Voxel]);
-
     cfg.addProperty("show_layers").setValue(m_showLayerWindow);
     cfg.addProperty("active_layer").setValue(m_activeLayer);
+
+    cfg.addProperty("show_brush").setValue(m_showBrushWindow);
+    cfg.addProperty("brush_strength").setValue(m_brush.strength);
+    cfg.addProperty("brush_feather").setValue(m_brush.feather);
+    cfg.addProperty("brush_mode").setValue(m_brush.editMode);
 
     const auto cfgPath = cro::App::getPreferencePath() + "voxels.cfg";
     cfg.save(cfgPath);
@@ -458,7 +484,73 @@ void VoxelState::applyEdit()
 
 void VoxelState::editTerrain()
 {
+    if (!m_cursor.getComponent<cro::Model>().isHidden())
+    {
+        auto cursorPos = m_cursor.getComponent<cro::Transform>().getPosition();
+        auto imagePos = glm::vec2(cursorPos.x, -cursorPos.z);
 
+        const float cursorRadius = Voxel::CursorRadius * m_cursor.getComponent<cro::Transform>().getScale().x;
+        const float cursorRad2 = cursorRadius * cursorRadius;
+
+        const glm::ivec2 MapSize(Voxel::MapSize);
+
+        cro::IntRect region;
+        region.left = static_cast<std::int32_t>(imagePos.x - cursorRadius) - 1;
+        region.bottom = static_cast<std::int32_t>(imagePos.y - cursorRadius) - 1;
+        region.width = (static_cast<std::int32_t>(cursorRadius) * 2) + 2;
+        region.height = (static_cast<std::int32_t>(cursorRadius) * 2) + 2;
+
+        region.left = std::max(0, std::min(MapSize.x, region.left));
+        region.bottom = std::max(0, std::min(MapSize.y, region.bottom));
+        
+        auto right = region.left + region.width;
+        right = std::max(0, std::min(MapSize.x, right));
+        region.width = right - region.left;
+
+        auto top = region.bottom + region.height;
+        top = std::max(0, std::min(MapSize.y, top));
+        region.height = top - region.bottom;
+
+        for (auto y = region.bottom; y < region.bottom + region.height; ++y)
+        {
+            for (auto x = region.left; x < region.left + region.width; ++x)
+            {
+                auto len2 = glm::length2(glm::vec2(x,y) - imagePos);
+                if (len2 < cursorRad2)
+                {
+                    auto idx = y * MapSize.x + x;
+
+                    float amount = m_brush.strength;
+                    if (m_brush.feather > 0)
+                    {
+                        amount *= 1.f - std::sqrt(len2) / cursorRadius;
+                        amount = std::pow(amount, m_brush.feather);
+                    }
+
+                    amount *= m_brush.editMode;
+
+                    m_textureBuffer[idx].g = std::max(0.f, std::min(1.f, m_textureBuffer[idx].g + amount));
+                }
+            }
+        }
+
+        updateTerrainImage(region);
+
+        //TODO update terrain mesh
+    }
+}
+
+void VoxelState::updateTerrainImage(cro::IntRect area)
+{
+    CRO_ASSERT(m_terrainTexture.getGLHandle() != 0, "texture not created");
+    constexpr glm::uvec2 texSize(Voxel::MapSize);
+
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_terrainTexture.getGLHandle()));
+    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texSize.x, texSize.y, 0, GL_RGBA, GL_FLOAT, m_textureBuffer.data()));
+
+    //problem with this is the buffer must only contain sub image data
+    //glCheck(glTexSubImage2D(GL_TEXTURE_2D, 0, area.left, area.bottom, area.width, area.height, GL_RGBA, GL_FLOAT, m_textureBuffer.data()));
+    glCheck(glBindTexture(GL_TEXTURE_2D, 0));
 }
 
 void VoxelState::editVoxel()
