@@ -101,6 +101,30 @@ void VoxelState::drawLayerWindow()
             {
 
             }
+
+            const char* Labels[] =
+            {
+                "Water", "Terrain", "Course"
+            };
+
+            if (ImGui::BeginCombo("Active Layer", Labels[m_activeLayer]))
+            {
+                for (int n = 0; n < Layer::Count; n++)
+                {
+                    bool is_selected = (n == m_activeLayer);
+                    if (ImGui::Selectable(Labels[n], is_selected))
+                    {
+                        m_activeLayer = n;
+                        m_cursor.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", Voxel::LayerColours[n]);
+                        m_cursor.getComponent<cro::Model>().setHidden(n == Layer::Water);
+                    }
+                    if (is_selected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
         }
         ImGui::End();
     }

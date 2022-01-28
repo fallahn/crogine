@@ -61,9 +61,11 @@ namespace
 }
 
 VoxelState::VoxelState(cro::StateStack& ss, cro::State::Context ctx)
-    : cro::State(ss, ctx),
-    m_scene(ctx.appInstance.getMessageBus()),
-    m_showLayerWindow(false)
+    : cro::State        (ss, ctx),
+    m_scene             (ctx.appInstance.getMessageBus()),
+    m_activeLayer       (Layer::Terrain),
+    m_editMode          (EditMode::Add),
+    m_showLayerWindow   (false)
 {
     std::fill(m_showLayer.begin(), m_showLayer.end(), true);
     loadSettings();    
@@ -120,12 +122,21 @@ bool VoxelState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEMOTION)
     {
         updateCursorPosition();
+
+        if (evt.motion.state & SDL_BUTTON_LMASK)
+        {
+            applyEdit();
+        }
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             cro::App::getWindow().setMouseCaptured(true);
+        }
+        else if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            applyEdit();
         }
     }
     else if(evt.type == SDL_MOUSEBUTTONUP)
@@ -314,7 +325,7 @@ void VoxelState::createLayers()
 
     auto materialID = m_resources.materials.add(*shader);
     material = m_resources.materials.get(materialID);
-    material.setProperty("u_colour", cro::Colour::Magenta);
+    material.setProperty("u_colour", Voxel::LayerColours[m_activeLayer]);
 
     meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP));
 
@@ -370,13 +381,13 @@ void VoxelState::updateCursorPosition()
     //TODO do we really want to keep this? Used in debugging
     cursorWorldPos = cam.pixelToCoords(cursorPos);
 
-    //this kinda clamps the pos but mousing over
-    //far distances are going to send the cursor to min bounds.
     auto finalPos = cursorWorldPos + glm::vec3(0.f, 0.1f, 0.f);
-    finalPos.x = std::max(0.f, std::min(Voxel::MapSize.x, finalPos.x));
-    finalPos.y = std::max(Voxel::TerrainLevel, finalPos.y);
-    finalPos.z = std::min(0.f, std::max(-Voxel::MapSize.y, finalPos.z));
 
+    bool hidden = (m_activeLayer == Layer::Water)
+        || (finalPos.x < 0 || finalPos.x > Voxel::MapSize.x)
+        || (finalPos.z > 0 || finalPos.z < -Voxel::MapSize.y);
+
+    m_cursor.getComponent<cro::Model>().setHidden(hidden);
     m_cursor.getComponent<cro::Transform>().setPosition(finalPos);
 }
 
@@ -403,6 +414,16 @@ void VoxelState::loadSettings()
             {
                 m_showLayer[Layer::Voxel] = p.getValue<bool>();
             }
+            else if (name == "show_layers")
+            {
+                m_showLayerWindow = p.getValue<bool>();
+            }
+            else if (name == "active_layer")
+            {
+                auto layer = p.getValue<std::int32_t>();
+                layer = std::max(0, std::min(Layer::Count - 1, layer));
+                m_activeLayer = layer;
+            }
         }
     }
 }
@@ -414,6 +435,33 @@ void VoxelState::saveSettings()
     cfg.addProperty("show_terrain").setValue(m_showLayer[Layer::Terrain]);
     cfg.addProperty("show_voxel").setValue(m_showLayer[Layer::Voxel]);
 
+    cfg.addProperty("show_layers").setValue(m_showLayerWindow);
+    cfg.addProperty("active_layer").setValue(m_activeLayer);
+
     const auto cfgPath = cro::App::getPreferencePath() + "voxels.cfg";
     cfg.save(cfgPath);
+}
+
+void VoxelState::applyEdit()
+{
+    switch (m_activeLayer)
+    {
+    default: break;
+    case Layer::Terrain:
+        editTerrain();
+        break;
+    case Layer::Voxel:
+        editVoxel();
+        break;
+    }
+}
+
+void VoxelState::editTerrain()
+{
+
+}
+
+void VoxelState::editVoxel()
+{
+
 }

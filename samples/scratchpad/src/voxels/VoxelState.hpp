@@ -64,17 +64,9 @@ private:
     std::array<std::int32_t, Shader::Count> m_shaderIDs = {};
     std::array<std::int32_t, Material::Count> m_materialIDs = {};
 
-    struct Layer final
-    {
-        enum
-        {
-            Water, Terrain, Voxel,
-
-            Count
-        };
-    };
     std::array<cro::Entity, Layer::Count> m_layers;
     cro::Entity m_cursor;
+    std::int32_t m_activeLayer;
 
     struct TerrainVertex final
     {
@@ -89,6 +81,20 @@ private:
     void updateCursorPosition();
     void loadSettings();
     void saveSettings();
+
+    struct EditMode final
+    {
+        enum
+        {
+            Add = 1,
+            Subtract = -1
+        };
+    };
+    std::int32_t m_editMode;
+
+    void applyEdit();
+    void editTerrain();
+    void editVoxel();
 
     //---VoxelStateUI.cpp---//
     bool m_showLayerWindow;

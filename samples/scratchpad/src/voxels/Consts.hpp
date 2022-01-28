@@ -31,6 +31,20 @@ source distribution.
 
 #include <crogine/detail/glm/vec2.hpp>
 
+#include <crogine/graphics/Colour.hpp>
+
+#include <array>
+
+struct Layer final
+{
+    enum
+    {
+        Water, Terrain, Voxel,
+
+        Count
+    };
+};
+
 namespace Voxel
 {
     constexpr glm::vec2 MapSize(320.f, 200.f);
@@ -41,6 +55,14 @@ namespace Voxel
     constexpr float MinCursorScale = 1.f;
     constexpr float MaxCursorScale = 15.f;
     constexpr float CursorScaleStep = 0.5f;
+
+    //colour to set the cursor to depending on active layer
+    const std::array<cro::Colour, Layer::Count> LayerColours =
+    {
+        cro::Colour::Transparent,
+        cro::Colour::Magenta,
+        cro::Colour::Cyan
+    };
 }
 
 struct Shader
