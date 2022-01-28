@@ -389,6 +389,11 @@ void VoxelFpsCameraSystem::process(float dt)
     }
 }
 
+bool VoxelFpsCameraSystem::hasInput() const
+{
+    return m_inputs[0].buttonFlags != 0;
+}
+
 //private
 void VoxelFpsCameraSystem::onEntityAdded(cro::Entity entity)
 {

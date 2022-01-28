@@ -428,7 +428,7 @@ namespace cro
         \brief Returns the world coordinates currently projected onto
         the given screen coordinates.
         */
-        glm::vec3 pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize = cro::App::getWindow().getSize());
+        glm::vec3 pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize = cro::App::getWindow().getSize()) const;
 
         /*!
         \brief Returns the FrustumData needed to test AABBs against

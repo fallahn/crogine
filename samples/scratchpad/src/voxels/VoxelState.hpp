@@ -74,6 +74,7 @@ private:
         };
     };
     std::array<cro::Entity, Layer::Count> m_layers;
+    cro::Entity m_cursor;
 
     struct TerrainVertex final
     {
@@ -85,6 +86,7 @@ private:
     void buildScene();
     void createLayers();
 
+    void updateCursorPosition();
     void loadSettings();
     void saveSettings();
 

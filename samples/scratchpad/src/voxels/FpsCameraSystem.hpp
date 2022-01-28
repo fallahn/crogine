@@ -78,7 +78,7 @@ public:
 
     void process(float) override;
 
-    //TODO allow adding keybinds to controller index mapping
+    bool hasInput() const;
 
 private:
 

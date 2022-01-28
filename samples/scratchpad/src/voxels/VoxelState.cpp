@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/core/Mouse.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -55,7 +56,8 @@ source distribution.
 
 namespace
 {
-    bool showDebug = false;
+    glm::vec3 cursorWorldPos = glm::vec3(0.f);
+
 }
 
 VoxelState::VoxelState(cro::StateStack& ss, cro::State::Context ctx)
@@ -72,6 +74,13 @@ VoxelState::VoxelState(cro::StateStack& ss, cro::State::Context ctx)
         {
             drawMenuBar();
             drawLayerWindow();
+#ifdef CRO_DEBUG_
+            if (ImGui::Begin("Debug"))
+            {
+                ImGui::Text("Cursor Pos: %3.3f, %3.3f, %3.3f", cursorWorldPos.x, cursorWorldPos.y, cursorWorldPos.z);
+            }
+            ImGui::End();
+#endif
         });
 }
 
@@ -108,6 +117,37 @@ bool VoxelState::handleEvent(const cro::Event& evt)
     {
         saveSettings();
     }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        updateCursorPosition();
+    }
+    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    {
+        if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            cro::App::getWindow().setMouseCaptured(true);
+        }
+    }
+    else if(evt.type == SDL_MOUSEBUTTONUP)
+    {
+        if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            cro::App::getWindow().setMouseCaptured(false);
+        }
+    }
+    else if (evt.type == SDL_MOUSEWHEEL)
+    {
+        float scale = m_cursor.getComponent<cro::Transform>().getScale().x;
+        if (evt.wheel.y > 0)
+        {
+            scale = std::min(Voxel::MaxCursorScale, scale + (evt.wheel.y * Voxel::CursorScaleStep));
+        }
+        else if (evt.wheel.y < 0)
+        {
+            scale = std::max(Voxel::MinCursorScale, scale + (evt.wheel.y * Voxel::CursorScaleStep));
+        }
+        m_cursor.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+    }
 
     m_scene.forwardEvent(evt);
 
@@ -121,6 +161,11 @@ void VoxelState::handleMessage(const cro::Message& msg)
 
 bool VoxelState::simulate(float dt)
 {
+    if (m_scene.getSystem<VoxelFpsCameraSystem>()->hasInput())
+    {
+        updateCursorPosition();
+    }
+
     m_scene.simulate(dt);
 
     return false;
@@ -152,7 +197,7 @@ void VoxelState::buildScene()
     auto updateView = [](cro::Camera& cam)
     {
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective(75.f * cro::Util::Const::degToRad, winSize.x / winSize.y, 0.1f, Voxel::MapSize.x);
+        cam.setPerspective(70.f * cro::Util::Const::degToRad, winSize.x / winSize.y, 0.1f, Voxel::MapSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -258,8 +303,81 @@ void VoxelState::createLayers()
     auto* submesh = &meshData->indexData[0];
     submesh->indexCount = static_cast<std::uint32_t>(indices.size());
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
+
+    //cursor circle
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseColour);
+    auto* shader = &m_resources.shaders.get(shaderID);
+
+    auto materialID = m_resources.materials.add(*shader);
+    material = m_resources.materials.get(materialID);
+    material.setProperty("u_colour", cro::Colour::Magenta);
+
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP));
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    entity.getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Terrain]);
+    m_cursor = entity;
+
+    indices.clear();
+
+    std::vector<glm::vec3> circleVerts;
+    constexpr std::uint32_t PointCount = 36;
+    constexpr float SegmentSize = cro::Util::Const::TAU / PointCount;
+    for (auto i = 0u; i < PointCount; ++i)
+    {
+        const float angle = i * SegmentSize;
+        float x = std::sin(angle) * Voxel::CursorRadius;
+        float z = -std::cos(angle) * Voxel::CursorRadius;
+
+        circleVerts.emplace_back(x, 0.f, z);
+
+        indices.push_back(i);
+    }
+    indices.push_back(0);
+
+    meshData = &entity.getComponent<cro::Model>().getMeshData();
+    meshData->vertexCount = PointCount;
+    meshData->boundingBox[0] = glm::vec3(-1.f);
+    meshData->boundingBox[1] = glm::vec3(1.f);
+    meshData->boundingSphere = meshData->boundingBox;
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * circleVerts.size(), circleVerts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
+    glCheck(glLineWidth(1.6f));
+    glCheck(glEnable(GL_LINE_SMOOTH));
+}
+
+void VoxelState::updateCursorPosition()
+{
+    const auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+    auto cursorPos = cro::Mouse::getPosition();
+
+    //TODO do we really want to keep this? Used in debugging
+    cursorWorldPos = cam.pixelToCoords(cursorPos);
+
+    //this kinda clamps the pos but mousing over
+    //far distances are going to send the cursor to min bounds.
+    auto finalPos = cursorWorldPos + glm::vec3(0.f, 0.1f, 0.f);
+    finalPos.x = std::max(0.f, std::min(Voxel::MapSize.x, finalPos.x));
+    finalPos.y = std::max(Voxel::TerrainLevel, finalPos.y);
+    finalPos.z = std::min(0.f, std::max(-Voxel::MapSize.y, finalPos.z));
+
+    m_cursor.getComponent<cro::Transform>().setPosition(finalPos);
 }
 
 void VoxelState::loadSettings()

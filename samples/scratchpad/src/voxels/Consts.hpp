@@ -36,6 +36,11 @@ namespace Voxel
     constexpr glm::vec2 MapSize(320.f, 200.f);
     constexpr float WaterLevel = -0.02f;
     constexpr float TerrainLevel = WaterLevel - 0.03f;
+
+    constexpr float CursorRadius = 1.f;
+    constexpr float MinCursorScale = 1.f;
+    constexpr float MaxCursorScale = 15.f;
+    constexpr float CursorScaleStep = 0.5f;
 }
 
 struct Shader
