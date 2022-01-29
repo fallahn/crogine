@@ -120,6 +120,10 @@ bool VoxelState::handleEvent(const cro::Event& evt)
             break;
         }
     }
+    else if (evt.type == SDL_KEYDOWN)
+    {
+        handleKeyboardShortcut(evt.key);
+    }
     else if (evt.type == SDL_QUIT)
     {
         saveSettings();
@@ -520,7 +524,7 @@ void VoxelState::editTerrain()
                 {
                     auto idx = y * MapSize.x + x;
 
-                    float amount = m_brush.strength;
+                    float amount = m_brush.strength * 0.1f;
                     if (m_brush.feather > 0)
                     {
                         amount *= 1.f - std::sqrt(len2) / cursorRadius;

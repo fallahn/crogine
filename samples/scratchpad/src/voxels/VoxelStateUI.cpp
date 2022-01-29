@@ -30,7 +30,23 @@ source distribution.
 #include "VoxelState.hpp"
 
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/gui/Gui.hpp>
+
+namespace
+{
+    void showTip(const char* msg)
+    {
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::PushTextWrapPos(450.0f);
+            ImGui::TextUnformatted(msg);
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    }
+}
 
 void VoxelState::drawMenuBar()
 {
@@ -139,6 +155,7 @@ void VoxelState::drawBrushWindow()
         {
             ImGui::SliderFloat("Strength", &m_brush.strength, Voxel::BrushMinStrength, Voxel::BrushMaxStrength);
             ImGui::SliderFloat("Feather", &m_brush.feather, Voxel::BrushMinFeather, Voxel::BrushMaxFeather);
+            showTip("Alt+[ or Alt+]");
             //ImGui::SliderFloat("Radius", ); //TODO move this here
             
             bool modeAdd = m_brush.editMode == Brush::EditMode::Add;
@@ -149,13 +166,54 @@ void VoxelState::drawBrushWindow()
                 modeSubtract = !modeAdd;
                 m_brush.editMode = modeAdd ? Brush::EditMode::Add : Brush::EditMode::Subtract;
             }
+            showTip("Keypad Plus");
 
             if (ImGui::Checkbox("Subtract", &modeSubtract))
             {
                 modeAdd = !modeSubtract;
                 m_brush.editMode = modeAdd ? Brush::EditMode::Add : Brush::EditMode::Subtract;
             }
+            showTip("Keypad Minus");
         }
         ImGui::End();
+    }
+}
+
+void VoxelState::handleKeyboardShortcut(const SDL_KeyboardEvent& evt)
+{
+    switch (evt.keysym.sym)
+    {
+    default: break;
+    case SDLK_KP_PLUS:
+        m_brush.editMode = Brush::EditMode::Add;
+        break;
+    case SDLK_KP_MINUS:
+        m_brush.editMode = Brush::EditMode::Subtract;
+        break;
+    case SDLK_LEFTBRACKET:
+        if (evt.keysym.mod & KMOD_ALT)
+        {
+            m_brush.feather = std::max(0.f, m_brush.feather - 0.1f);
+        }
+        else
+        {
+            float scale = m_cursor.getComponent<cro::Transform>().getScale().x;
+            scale = std::max(Voxel::MinCursorScale, scale - Voxel::CursorScaleStep);
+            m_cursor.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+        }
+        break;
+    case SDLK_RIGHTBRACKET:
+        if (evt.keysym.mod & KMOD_ALT)
+        {
+            m_brush.feather = std::min(Voxel::BrushMaxFeather, m_brush.feather + 0.1f);
+        }
+        else
+        {
+            float scale = m_cursor.getComponent<cro::Transform>().getScale().x;
+            scale = std::min(Voxel::MaxCursorScale, scale + Voxel::CursorScaleStep);
+            m_cursor.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+
+        }
+        break;
     }
 }

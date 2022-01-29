@@ -357,8 +357,8 @@ void PracticeState::buildScene()
                 }
             });
 
-    //putting practice
-    entity = createItem(glm::vec2(0.f, -4.f), "Putting Practice", menuEntity);
+    //putting practice - we'll come back to this later
+    /*entity = createItem(glm::vec2(0.f, -4.f), "Putting Practice", menuEntity);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -367,7 +367,7 @@ void PracticeState::buildScene()
                     requestStackClear();
                     requestStackPush(StateID::PuttingRange);
                 }
-            });
+            });*/
 
     //back button
     entity = createItem(glm::vec2(0.f, -16.f), "Back", menuEntity);

@@ -113,4 +113,6 @@ private:
     void drawMenuBar();
     void drawLayerWindow();
     void drawBrushWindow();
+
+    void handleKeyboardShortcut(const SDL_KeyboardEvent&);
 };
