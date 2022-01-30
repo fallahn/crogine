@@ -1,12 +1,12 @@
-hole 01
+hole 02
 {
-    map="assets/golf/courses/course_03/01.png"
+    map="assets/golf/courses/course_03/02.png"
     model="assets/golf/models/course_03/01.cmt"
     par = 4
 
-    pin = 78.549721,1.200593,-41.379929
-    target = 62.609344,1.200001,-35.540688
-    tee = 24.593536,1.200001,-21.487156
+    pin = 175.448669,1.206082,-49.593739
+    target = 151.959473,1.200001,-35.881775
+    tee = 101.523300,1.200000,-32.781677
 
     prop
     {

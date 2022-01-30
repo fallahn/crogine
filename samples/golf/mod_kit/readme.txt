@@ -63,7 +63,7 @@ Different types of terrain a represented by different colour values. These colou
         Water   = 45,45,45
         Scrub   = 55,55,55
         Hole    = 65,65,65 - unused in modelling
-        Stonr   = 75,75,75
+        Stone   = 75,75,75
 
 Each section of mesh with a specific terrain type should also have its own material assigned - even if that is a duplicate of an existing material. This is so that the game will correctly divide the geometry by terrain type when it is loaded.
 

@@ -9,5 +9,5 @@ course course_03
     description = "Putter's Choice."
 
     hole = "assets/golf/courses/course_03/01.hole"
-    hole = "assets/golf/courses/course_03/01.hole"
+    hole = "assets/golf/courses/course_03/02.hole"
 }
