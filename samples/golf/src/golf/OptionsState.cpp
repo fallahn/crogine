@@ -805,7 +805,10 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
         if (bounds.contains(mousePos))
         {
+            mousePos.x = std::floor(mousePos.x);
+            mousePos.y = std::floor(mousePos.y);
             mousePos.z = 1.f;
+
             m_tooltips[ToolTipID::Pixel].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
             m_tooltips[ToolTipID::Pixel].getComponent<cro::Transform>().setScale(m_viewScale);
         }
@@ -845,7 +848,10 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
             if (bounds.contains(mousePos))
             {
+                mousePos.x = std::floor(mousePos.x);
+                mousePos.y = std::floor(mousePos.y);
                 mousePos.z = 1.f;
+
                 m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
                 m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setScale(m_viewScale);
 
