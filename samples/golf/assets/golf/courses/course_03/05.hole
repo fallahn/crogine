@@ -2,7 +2,7 @@ hole 05
 {
     map="assets/golf/courses/course_03/05.png"
     model="assets/golf/models/course_03/01.cmt"
-    par = 4
+    par = 5
 
     prop
     {

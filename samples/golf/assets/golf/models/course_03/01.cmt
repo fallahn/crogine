@@ -76,4 +76,16 @@ model 01
         diffuse = "assets/golf/images/water.png"
 
     }
+    material Unlit
+    {
+        name = "rough"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+        diffuse = "assets/golf/images/rough.png"
+
+    }
 }
