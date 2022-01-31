@@ -5,9 +5,16 @@ course course_03
     billboard_sprites = "assets/golf/sprites/shrubbery.spt"
     audio = "assets/golf/sound/ambience.xas"
 
-    title = "Old Stemmer's Lane, Furrowshire"
-    description = "Putter's Choice."
+    title = "Old Stemmer's Lane Pitch 'n' Putt"
+    description = "The Putter's Choice."
 
     hole = "assets/golf/courses/course_03/01.hole"
     hole = "assets/golf/courses/course_03/02.hole"
+    hole = "assets/golf/courses/course_03/03.hole"
+    hole = "assets/golf/courses/course_03/04.hole"
+    hole = "assets/golf/courses/course_03/05.hole"
+    hole = "assets/golf/courses/course_03/06.hole"
+    hole = "assets/golf/courses/course_03/07.hole"
+    hole = "assets/golf/courses/course_03/08.hole"
+    hole = "assets/golf/courses/course_03/09.hole"
 }

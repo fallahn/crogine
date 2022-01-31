@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2021, 12, 28),
+    "version": (2022, 1, 31),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -51,9 +51,19 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
     def execute(self, context):
         file = open(self.properties.filepath, 'w')
 
+        scene = bpy.context.scene
+
         file.write("hole %s\n{\n" % Path(self.properties.filepath).stem)
-        file.write("    map=\"assets/golf/courses/course_0/%s.png\"\n" % Path(self.properties.filepath).stem)
-        file.write("    model=\"assets/golf/models/course_0/%s.cmt\"\n" % Path(self.properties.filepath).stem)
+
+        if scene.get('map_path') is not None:
+            file.write("    map=\"%s/%s.png\"\n" % (scene['map_path'], Path(self.properties.filepath).stem))
+        else:
+            file.write("    map=\"assets/golf/courses/course_0/%s.png\"\n" % Path(self.properties.filepath).stem)
+
+        if scene.get('model_path') is not None:
+            file.write("    model=\"%s\"\n" % scene['model_path'])
+        else:
+            file.write("    model=\"assets/golf/models/course_0/%s.cmt\"\n" % Path(self.properties.filepath).stem)
         file.write("    par = 4\n\n")
 
         teeWritten = False

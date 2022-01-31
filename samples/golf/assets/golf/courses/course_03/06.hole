@@ -1,6 +1,6 @@
-hole 01
+hole 06
 {
-    map="assets/golf/courses/course_03/01.png"
+    map="assets/golf/courses/course_03/06.png"
     model="assets/golf/models/course_03/01.cmt"
     par = 4
 
@@ -424,8 +424,8 @@ hole 01
         scale = 0.870955,0.870955,0.870955
     }
 
-    tee = 26.903702,1.200000,-22.253664
-    target = 55.729744,1.200001,-30.710119
-    pin = 78.664833,1.206082,-42.020958
+    tee = 123.486107,1.200000,-75.328644
+    target = 93.569496,1.200000,-77.801094
+    pin = 61.180458,1.203645,-76.812119
 
 }
