@@ -6,6 +6,22 @@ hole 01
 
     prop
     {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 246.296219,1.280414,-162.134644
+        rotation = 44.074267
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 62.772057,1.289722,-21.990629
+        rotation = -158.668507
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
         model = "assets/golf/models/jetty.cmt"
         position = 223.280991,-0.146902,-41.426182
         rotation = 27.922132
