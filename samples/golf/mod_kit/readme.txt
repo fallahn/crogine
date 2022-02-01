@@ -54,7 +54,7 @@ Further models can be created in blender and used as props, for example vehicles
 
 Collision Colours
 -----------------
-Different types of terrain a represented by different colour values. These colours are stored in the Krita palette file, collision_colours.kpl, or Photoshop palette file collision_colours.ase. Either file can be imported to Blender with the palette import add-on enabled. This allows easily setting, for example, vertex colours of course geometry so that VGA golf can determine which part of a hole is which terrain. The colour values are (in RGB format):
+Different types of terrain are represented by different colour values. These colours are stored in the Krita palette file, collision_colours.kpl, or Photoshop palette file collision_colours.ase. Either file can be imported to Blender with the palette import add-on enabled. This allows easily setting, for example, vertex colours of course geometry so that VGA golf can determine which part of a hole is which terrain. The colour values are (in RGB format):
 
         Rough   = 05,05,05
         Fairway = 15,15,15
@@ -62,10 +62,10 @@ Different types of terrain a represented by different colour values. These colou
         Bunker  = 35,35,35
         Water   = 45,45,45
         Scrub   = 55,55,55
-        Hole    = 65,65,65 - unused in modelling
-        Stone   = 75,75,75
+        Stone   = 65,65,65
+        Hole    = 75,75,75 - unused in modelling
 
-Each section of mesh with a specific terrain type should also have its own material assigned - even if that is a duplicate of an existing material. This is so that the game will correctly divide the geometry by terrain type when it is loaded.
+Each section of mesh with a specific terrain type should also have its own material assigned - even if that is a duplicate of an existing material. This is so that the game will correctly divide the geometry by terrain type when it is loaded. When importing geometry using the model improter make sure to check 'convert vertex colours' so that the values are converted from sRGB back to linear space.
 
 
 Post Process Effects

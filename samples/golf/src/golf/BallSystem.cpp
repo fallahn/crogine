@@ -278,6 +278,11 @@ void BallSystem::process(float dt)
                     {
                         ball.state = Ball::State::Reset;
                     }
+                    else if (ball.terrain == TerrainID::Stone)
+                    {
+                        ball.state = Ball::State::Reset;
+                        ball.terrain = TerrainID::Scrub;
+                    }
                     else
                     {
                         ball.state = Ball::State::Paused;
@@ -331,24 +336,9 @@ void BallSystem::process(float dt)
                 //else moving it may cause the collision test
                 //to miss if the terrain is much higher than
                 //the water level.
-                /*ballPos.y = m_holeData->pin.y;
-                auto pinDir = m_holeData->pin - ballPos;
 
-                ballPos.y = m_holeData->target.y;
-                auto targetDir = m_holeData->target - ballPos;*/
-
-                glm::vec3 dir = ball.startPoint - ballPos;// (0.f);
+                glm::vec3 dir = ball.startPoint - ballPos;
                 ballPos.y = ball.startPoint.y;
-                /*if (glm::length2(pinDir) < glm::length2(targetDir))
-                {
-                    dir = pinDir;
-                    ballPos.y = m_holeData->pin.y;
-                }
-                else
-                {
-                    dir = targetDir;
-                    ballPos.y = m_holeData->target.y;
-                }*/
 
                 auto length = glm::length(dir);
                 dir /= length;
@@ -548,6 +538,8 @@ void BallSystem::doCollision(cro::Entity entity)
             break;
         case TerrainID::Fairway:
             ball.velocity *= 0.33f;
+            [[fallthrough]];
+        case TerrainID::Stone: //bouncy :)
             ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
             break;
         case TerrainID::Green:
@@ -591,6 +583,10 @@ void BallSystem::doCollision(cro::Entity entity)
                 || terrainResult.terrain == TerrainID::Scrub)
             {
                 resetBall(ball, Ball::State::Reset, terrainResult.terrain);
+            }
+            else if (terrainResult.terrain == TerrainID::Stone)
+            {
+                resetBall(ball, Ball::State::Reset, TerrainID::Scrub);
             }
             else
             {
@@ -888,7 +884,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
         float terrain = std::min(1.f, std::max(0.f, m_vertexData[(m_indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset])) * 255.f;
         terrain = std::floor(terrain / 10.f);
 
-        if (terrain > TerrainID::Hole)
+        if (terrain >= TerrainID::Hole)
         {
             terrain = TerrainID::Scrub;
         }

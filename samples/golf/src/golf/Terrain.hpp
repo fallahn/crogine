@@ -56,7 +56,9 @@ struct TerrainID final
         Green, Bunker,
         Water, Scrub,
 
-        Hole, Stone,
+        Stone,
+        
+        Hole, //keep this last as it doesn't have a vertex colour assigned to it
 
         Count
     };
@@ -64,7 +66,7 @@ struct TerrainID final
 
 static const std::array<std::string, TerrainID::Count> TerrainStrings =
 {
-    "Rough", "Fairway", "Green", "Bunker", "Water", "Scrub", "Hole", "Stone"
+    "Rough", "Fairway", "Green", "Bunker", "Water", "Scrub", "Stone", "Hole"
 };
 
 //how much the stroke is affected by the current terrain
