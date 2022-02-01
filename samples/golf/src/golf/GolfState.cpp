@@ -1279,6 +1279,10 @@ void GolfState::loadAssets()
 
     cro::ConfigFile holeCfg;
     cro::ModelDefinition modelDef(m_resources);
+    std::string prevHoleString;
+    cro::Entity prevHoleEntity;
+    std::vector<cro::Entity> prevProps;
+
     for (const auto& hole : holeStrings)
     {
         if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + hole))
@@ -1296,6 +1300,7 @@ void GolfState::loadAssets()
         static constexpr std::int32_t MaxProps = 6;
         std::int32_t propCount = 0;
         auto& holeData = m_holeData.emplace_back();
+        bool duplicate = false;
 
         const auto& holeProps = holeCfg.getProperties();
         for (const auto& holeProp : holeProps)
@@ -1349,28 +1354,44 @@ void GolfState::loadAssets()
             else if (name == "model")
             {
                 auto modelPath = holeProp.getValue<std::string>();
-                if (modelDef.loadFromFile(modelPath))
-                {
-                    holeData.modelPath = modelPath;
 
-                    holeData.modelEntity = m_gameScene.createEntity();
-                    holeData.modelEntity.addComponent<cro::Transform>().setPosition(OriginOffset);
-                    holeData.modelEntity.getComponent<cro::Transform>().setOrigin(OriginOffset);
-                    holeData.modelEntity.addComponent<cro::Callback>();
-                    modelDef.createModel(holeData.modelEntity);
-                    holeData.modelEntity.getComponent<cro::Model>().setHidden(true);
-                    for (auto m = 0u; m < holeData.modelEntity.getComponent<cro::Model>().getMeshData().submeshCount; ++m)
+                if (modelPath != prevHoleString)
+                {
+                    //attept to load model
+                    if (modelDef.loadFromFile(modelPath))
                     {
-                        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
-                        applyMaterialData(modelDef, material, m);
-                        holeData.modelEntity.getComponent<cro::Model>().setMaterial(m, material);
+                        holeData.modelPath = modelPath;
+
+                        holeData.modelEntity = m_gameScene.createEntity();
+                        holeData.modelEntity.addComponent<cro::Transform>().setPosition(OriginOffset);
+                        holeData.modelEntity.getComponent<cro::Transform>().setOrigin(OriginOffset);
+                        holeData.modelEntity.addComponent<cro::Callback>();
+                        modelDef.createModel(holeData.modelEntity);
+                        holeData.modelEntity.getComponent<cro::Model>().setHidden(true);
+                        for (auto m = 0u; m < holeData.modelEntity.getComponent<cro::Model>().getMeshData().submeshCount; ++m)
+                        {
+                            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
+                            applyMaterialData(modelDef, material, m);
+                            holeData.modelEntity.getComponent<cro::Model>().setMaterial(m, material);
+                        }
+                        propCount++;
+
+                        prevHoleString = modelPath;
+                        prevHoleEntity = holeData.modelEntity;
                     }
-                    propCount++;
+                    else
+                    {
+                        LOG("Failed loading model file", cro::Logger::Type::Error);
+                        error = true;
+                    }
                 }
                 else
                 {
-                    LOG("Failed loading model file", cro::Logger::Type::Error);
-                    error = true;
+                    //duplicate the hole by copying the previous model entitity
+                    holeData.modelPath = prevHoleString;
+                    holeData.modelEntity = prevHoleEntity;
+                    duplicate = true;
+                    propCount++;
                 }
             }
         }
@@ -1382,104 +1403,113 @@ void GolfState::loadAssets()
         }
         else
         {
-            //look for prop models (are optional and can fail to load no problem)
-            const auto& propObjs = holeCfg.getObjects();
-            for (const auto& obj : propObjs)
+            if (!duplicate) //this hole wasn't a duplicate of the previous
             {
-                const auto& name = obj.getName();
-                if (name == "prop")
+                //look for prop models (are optional and can fail to load no problem)
+                const auto& propObjs = holeCfg.getObjects();
+                for (const auto& obj : propObjs)
                 {
-                    const auto& modelProps = obj.getProperties();
-                    glm::vec3 position(0.f);
-                    float rotation = 0.f;
-                    glm::vec3 scale(1.f);
-                    std::string path;
-
-                    for (const auto& modelProp : modelProps)
+                    const auto& name = obj.getName();
+                    if (name == "prop")
                     {
-                        auto propName = modelProp.getName();
-                        if (propName == "position")
+                        const auto& modelProps = obj.getProperties();
+                        glm::vec3 position(0.f);
+                        float rotation = 0.f;
+                        glm::vec3 scale(1.f);
+                        std::string path;
+
+                        for (const auto& modelProp : modelProps)
                         {
-                            position = modelProp.getValue<glm::vec3>();
+                            auto propName = modelProp.getName();
+                            if (propName == "position")
+                            {
+                                position = modelProp.getValue<glm::vec3>();
+                            }
+                            else if (propName == "model")
+                            {
+                                path = modelProp.getValue<std::string>();
+                            }
+                            else if (propName == "rotation")
+                            {
+                                rotation = modelProp.getValue<float>();
+                            }
+                            else if (propName == "scale")
+                            {
+                                scale = modelProp.getValue<glm::vec3>();
+                            }
                         }
-                        else if (propName == "model")
+
+                        if (!path.empty()
+                            && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + path))
                         {
-                            path = modelProp.getValue<std::string>();
-                        }
-                        else if (propName == "rotation")
-                        {
-                            rotation = modelProp.getValue<float>();
-                        }
-                        else if (propName == "scale")
-                        {
-                            scale = modelProp.getValue<glm::vec3>();
+                            if (modelDef.loadFromFile(path))
+                            {
+                                auto ent = m_gameScene.createEntity();
+                                ent.addComponent<cro::Transform>().setPosition(position);
+                                ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
+                                ent.getComponent<cro::Transform>().setScale(scale);
+                                modelDef.createModel(ent);
+                                if (modelDef.hasSkeleton())
+                                {
+                                    for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
+                                    {
+                                        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+                                        applyMaterialData(modelDef, texturedMat, i);
+                                        ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+                                    }
+
+                                    auto& skel = ent.getComponent<cro::Skeleton>();
+                                    if (!skel.getAnimations().empty())
+                                    {
+                                        ent.getComponent<cro::Skeleton>().play(0);
+                                        skel.getAnimations()[0].looped = true;
+                                    }
+                                }
+                                else
+                                {
+                                    for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
+                                    {
+                                        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+                                        applyMaterialData(modelDef, texturedMat, i);
+                                        ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+                                    }
+                                }
+                                ent.getComponent<cro::Model>().setHidden(true);
+                                ent.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+
+                                holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+                                holeData.propEntities.push_back(ent);
+                            }
                         }
                     }
-
-                    if (!path.empty()
-                        && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + path))
+                    else if (name == "crowd")
                     {
-                        if (modelDef.loadFromFile(path))
-                        {
-                            auto ent = m_gameScene.createEntity();
-                            ent.addComponent<cro::Transform>().setPosition(position);
-                            ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
-                            ent.getComponent<cro::Transform>().setScale(scale);
-                            modelDef.createModel(ent);
-                            if (modelDef.hasSkeleton())
-                            {
-                                for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
-                                {
-                                    auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
-                                    applyMaterialData(modelDef, texturedMat, i);
-                                    ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
-                                }
-                                
-                                auto& skel = ent.getComponent<cro::Skeleton>();
-                                if (!skel.getAnimations().empty())
-                                {
-                                    ent.getComponent<cro::Skeleton>().play(0);
-                                    skel.getAnimations()[0].looped = true;
-                                }
-                            }
-                            else
-                            {
-                                for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
-                                {
-                                    auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-                                    applyMaterialData(modelDef, texturedMat, i);
-                                    ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
-                                }
-                            }
-                            ent.getComponent<cro::Model>().setHidden(true);
-                            ent.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+                        const auto& modelProps = obj.getProperties();
+                        glm::vec3 position(0.f);
+                        float rotation = 0.f;
 
-                            holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-                            holeData.propEntities.push_back(ent);
+                        for (const auto& modelProp : modelProps)
+                        {
+                            auto propName = modelProp.getName();
+                            if (propName == "position")
+                            {
+                                position = modelProp.getValue<glm::vec3>();
+                            }
+                            else if (propName == "rotation")
+                            {
+                                rotation = modelProp.getValue<float>();
+                            }
                         }
+
+                        addCrowd(holeData, position, rotation);
                     }
                 }
-                else if (name == "crowd")
-                {
-                    const auto& modelProps = obj.getProperties();
-                    glm::vec3 position(0.f);
-                    float rotation = 0.f;
 
-                    for (const auto& modelProp : modelProps)
-                    {
-                        auto propName = modelProp.getName();
-                        if (propName == "position")
-                        {
-                            position = modelProp.getValue<glm::vec3>();
-                        }
-                        else if (propName == "rotation")
-                        {
-                            rotation = modelProp.getValue<float>();
-                        }
-                    }
-
-                    addCrowd(holeData, position, rotation);
-                }
+                prevProps = holeData.propEntities;
+            }
+            else
+            {
+                holeData.propEntities = prevProps;
             }
         }
     }
@@ -2521,11 +2551,12 @@ void GolfState::setCurrentHole(std::uint32_t hole)
         if (progress == 1)
         {
             e.getComponent<cro::Callback>().active = false;
-            e.getComponent<cro::Model>().setHidden(true);
+            e.getComponent<cro::Model>().setHidden(rescale);
 
             for (auto i = 0u; i < propModels->size(); ++i)
             {
-                propModels->at(i).getComponent<cro::Model>().setHidden(true);
+                //if we're not rescaling we're recycling the model so don't hide its props
+                propModels->at(i).getComponent<cro::Model>().setHidden(rescale);
             }
 
             //index should be updated by now (as this is a callback)
@@ -2563,7 +2594,8 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                 }
             };
 
-            //unhide any prop models
+            //unhide any prop models - this will be empty on duplicated
+            //holes, so does nothing
             for (auto prop : m_holeData[m_currentHole].propEntities)
             {
                 prop.getComponent<cro::Model>().setHidden(false);
