@@ -373,21 +373,17 @@ void GolfState::buildUI()
             if (scale == 0)
             {
                 //orientation - sets tee to bottom of map
-                if (m_currentHole > 0
-                    && m_holeData[m_currentHole].modelEntity != m_holeData[m_currentHole - 1].modelEntity)
+                if (m_currentHole == 0
+                    || m_holeData[m_currentHole].modelEntity != m_holeData[m_currentHole - 1].modelEntity)
                 {
                     if (m_holeData[m_currentHole].tee.x > 160)
                     {
                         e.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
-                        //offset = glm::vec2(2.f);
-                        //m_flagQuad.setRotation(90.f);
                         rotation = -1.f;
                     }
                     else
                     {
                         e.getComponent<cro::Transform>().setRotation(90.f * cro::Util::Const::degToRad);
-                        //offset = glm::vec2(-2.f);
-                        //m_flagQuad.setRotation(-90.f);
                         rotation = 1.f;
                     }
                 }

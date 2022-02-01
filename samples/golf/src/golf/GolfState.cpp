@@ -3369,7 +3369,11 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
 void GolfState::startFlyBy()
 {
+    //static for lambda capture
     static constexpr float MoveSpeed = 50.f; //metres per sec
+    static constexpr float MaxHoleDistance = 275.f; //this scales the move speed based on the tee-pin distance
+    const float SpeedMultiplier = (0.25f + ((m_holeData[m_currentHole].distanceToPin / MaxHoleDistance) * 0.75f));
+
     struct FlyByTarget final
     {
         std::function<float(float)> ease = std::bind(&cro::Util::Easing::easeInOutQuad, std::placeholders::_1);
@@ -3394,7 +3398,10 @@ void GolfState::startFlyBy()
     //set initial transform to look at pin from offset position
     auto transform = glm::inverse(glm::lookAt(offset + holeData.pin, holeData.pin, cro::Transform::Y_AXIS));
     targetData.targets[1] = transform;
-    targetData.speeds[0] = glm::length(glm::vec3(targetData.targets[0][3]) - glm::vec3(targetData.targets[1][3])) / MoveSpeed;
+
+    float moveDist = glm::length(glm::vec3(targetData.targets[0][3]) - glm::vec3(targetData.targets[1][3]));
+    targetData.speeds[0] = moveDist / MoveSpeed;
+    targetData.speeds[0] *= 1.f / SpeedMultiplier;
 
     //translate the transform to look at target point or half way point if not set
     auto diff = holeData.target - holeData.pin;
@@ -3402,10 +3409,13 @@ void GolfState::startFlyBy()
     {
         diff = (holeData.tee - holeData.pin) / 2.f;
     }
-    diff.y = 10.f;
+    diff.y = 10.f * SpeedMultiplier;
     transform[3] += glm::vec4(diff, 0.f);
     targetData.targets[2] = transform;
-    targetData.speeds[1] = glm::length(glm::vec3(targetData.targets[1][3]) - glm::vec3(targetData.targets[2][3])) / MoveSpeed;
+
+    moveDist = glm::length(glm::vec3(targetData.targets[1][3]) - glm::vec3(targetData.targets[2][3]));
+    targetData.speeds[1] = moveDist / MoveSpeed;
+    targetData.speeds[1] *= 1.f / SpeedMultiplier;
 
     //the final transform is set to what should be the same as the initial player view
     //this is actually more complicated than it seems, so the callback interrogates the
@@ -3420,7 +3430,7 @@ void GolfState::startFlyBy()
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<FlyByTarget>(targetData);
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, SpeedMultiplier](cro::Entity e, float dt)
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<FlyByTarget>();
         data.progress = std::min(data.progress + (dt / data.speeds[data.currentTarget]), 1.f);
@@ -3455,9 +3465,12 @@ void GolfState::startFlyBy()
                 //tbh if this transition is replacing the existing one then
                 //we can remove the player cam transition completely. Problem is that it's
                 //created by setPlayer(), not setHole()
+            {
                 data.targets[3] = m_cameras[CameraID::Player].getComponent<cro::Transform>().getLocalTransform();
                 //data.ease = std::bind(&cro::Util::Easing::easeInSine, std::placeholders::_1);
-                data.speeds[2] = glm::length(glm::vec3(data.targets[2][3]) - glm::vec3(data.targets[3][3])) / MoveSpeed;
+                float moveDist = glm::length(glm::vec3(data.targets[2][3]) - glm::vec3(data.targets[3][3]));
+                data.speeds[2] = moveDist / MoveSpeed;
+                data.speeds[2] *= 1.f / SpeedMultiplier;
 
                 //play the transition music
                 if (m_sharedData.tutorial)
@@ -3465,6 +3478,7 @@ void GolfState::startFlyBy()
                     m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
                 }
                 //else we'll play it when the score board shows, below
+            }
                 break;
             case 3:
                 //we're done here
