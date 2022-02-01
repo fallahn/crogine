@@ -2197,7 +2197,7 @@ void MenuState::createPlayerConfigMenu()
                     flipped = !flipped;
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].flipped = flipped;
                     
-                    if (!flipped)
+                    if (flipped)
                     {
                         m_avatarIndices[m_activePlayerAvatar] = (m_avatarIndices[m_activePlayerAvatar] + (m_playerAvatars.size() - 1)) % m_playerAvatars.size();
                     }
