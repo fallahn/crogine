@@ -3561,9 +3561,12 @@ std::int32_t GolfState::getClub() const
 {
     switch (m_currentPlayer.terrain)
     {
-    default: return m_inputParser.getClub();
-    case TerrainID::Bunker: return ClubID::PitchWedge + (m_inputParser.getClub() % 2);
-    case TerrainID::Green: return ClubID::Putter;
+    default: 
+        return m_inputParser.getClub();
+    case TerrainID::Bunker: 
+        return ClubID::PitchWedge + (m_inputParser.getClub() % 3);
+    case TerrainID::Green: 
+        return ClubID::Putter;
     }
 }
 
