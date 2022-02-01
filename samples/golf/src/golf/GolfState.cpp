@@ -2741,7 +2741,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     //this is called by setCurrentPlayer, but doing it here ensures that
     //each player starts a new hole on a driver/3 wood
     m_inputParser.setHoleDirection(m_holeData[m_currentHole].target - m_currentPlayer.position, true);
-    //m_currentPlayer.terrain = TerrainID::Fairway;
+    m_currentPlayer.terrain = TerrainID::Fairway; //this will be overwritten from the server but setting this to non-green makes sure the mini cam stops updating in time
     m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin * 1.1f); //limits club selection based on hole size
 
     //hide the slope indicator
