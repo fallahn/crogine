@@ -344,16 +344,23 @@ void GolfState::buildUI()
 
 
     //minimap view
+    struct MinimapData final
+    {
+        std::int32_t state = 0;
+        float scale = 1.f;
+        float rotation = -1.f;
+    };
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f });
+    entity.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniMap;
-    entity.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(0, 1.f);
+    entity.addComponent<cro::Callback>().setUserData<MinimapData>();
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
-        auto& [state, scale] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+        auto& [state, scale, rotation] = e.getComponent<cro::Callback>().getUserData<MinimapData>();
         float speed = dt * 4.f;
         float newScale = 0.f;
         
@@ -365,21 +372,28 @@ void GolfState::buildUI()
 
             if (scale == 0)
             {
-                glm::vec2 offset = glm::vec2(0.f);
-
                 //orientation - sets tee to bottom of map
-                if (m_holeData[m_currentHole].tee.x > 160)
+                if (m_currentHole > 0
+                    && m_holeData[m_currentHole].modelEntity != m_holeData[m_currentHole - 1].modelEntity)
                 {
-                    e.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
-                    offset = glm::vec2(2.f);
-                    m_flagQuad.setRotation(90.f);
+                    if (m_holeData[m_currentHole].tee.x > 160)
+                    {
+                        e.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
+                        //offset = glm::vec2(2.f);
+                        //m_flagQuad.setRotation(90.f);
+                        rotation = -1.f;
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Transform>().setRotation(90.f * cro::Util::Const::degToRad);
+                        //offset = glm::vec2(-2.f);
+                        //m_flagQuad.setRotation(-90.f);
+                        rotation = 1.f;
+                    }
                 }
-                else
-                {
-                    e.getComponent<cro::Transform>().setRotation(90.f * cro::Util::Const::degToRad);
-                    offset = glm::vec2(-2.f);
-                    m_flagQuad.setRotation(-90.f);
-                }
+                glm::vec2 offset = glm::vec2(2.f * -rotation);
+                m_flagQuad.setRotation(-rotation * 90.f);
+
 
                 //update render
                 auto oldCam = m_gameScene.setActiveCamera(m_mapCam);

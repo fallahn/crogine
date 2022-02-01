@@ -2742,7 +2742,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     //each player starts a new hole on a driver/3 wood
     m_inputParser.setHoleDirection(m_holeData[m_currentHole].target - m_currentPlayer.position, true);
     //m_currentPlayer.terrain = TerrainID::Fairway;
-    m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin); //limits club selection based on hole size
+    m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin * 1.1f); //limits club selection based on hole size
 
     //hide the slope indicator
     cro::Command cmd;
