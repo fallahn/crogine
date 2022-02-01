@@ -2,7 +2,7 @@ hole 07
 {
     map="assets/golf/courses/course_03/07.png"
     model="assets/golf/models/course_03/01.cmt"
-    par = 6
+    par = 3
 
     prop
     {
@@ -432,18 +432,8 @@ hole 07
         scale = 0.924445,0.924445,0.924445
     }
 
-    prop
-    {
-        model = "assets/golf/models/bridge.cmt"
-        position = 195.732651,1.076415,-56.137985
-        rotation = 18.899408
-        scale = 0.870955,0.870955,0.870955
-    }
 
     tee = 16.676407,1.575747,-81.015274
-
     target = 61.180458,1.575747,-115.629524
-
     pin = 100.245094,1.575148,-141.837463
-
 }

@@ -2,7 +2,7 @@ hole 04
 {
     map="assets/golf/courses/course_03/04.png"
     model="assets/golf/models/course_03/01.cmt"
-    par = 5
+    par = 3
 
     prop
     {
@@ -432,13 +432,6 @@ hole 04
         scale = 0.924445,0.924445,0.924445
     }
 
-    prop
-    {
-        model = "assets/golf/models/bridge.cmt"
-        position = 195.732651,1.076415,-56.137985
-        rotation = 18.899408
-        scale = 0.870955,0.870955,0.870955
-    }
 
     tee = 297.051819,1.200000,-149.502045
     target = 251.558838,1.200000,-153.457962

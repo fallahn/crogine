@@ -2,7 +2,7 @@ hole 02
 {
     map="assets/golf/courses/course_03/02.png"
     model="assets/golf/models/course_03/01.cmt"
-    par = 4
+    par = 3
 
     pin = 175.448669,1.206082,-49.593739
     target = 151.959473,1.200001,-35.881775
@@ -435,13 +435,4 @@ hole 02
         rotation = 31.753157
         scale = 0.924445,0.924445,0.924445
     }
-
-    prop
-    {
-        model = "assets/golf/models/bridge.cmt"
-        position = 195.732651,1.076415,-56.137985
-        rotation = 18.899408
-        scale = 0.870955,0.870955,0.870955
-    }
-
 }

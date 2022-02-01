@@ -2,31 +2,8 @@ hole 15
 {
     map="assets/golf/courses/course_03/15.png"
     model="assets/golf/models/course_03/02.cmt"
-    par = 4
+    par = 3
 
-    prop
-    {
-        model = "assets/golf/models/bridge.cmt"
-        position = 173.138504,1.335488,-23.997763
-        rotation = -10.792003
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/bridge.cmt"
-        position = 178.774200,1.335488,-79.316551
-        rotation = -10.792003
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/bridge.cmt"
-        position = 166.612961,1.335488,-135.673492
-        rotation = -16.804894
-        scale = 1.000000,1.000000,1.000000
-    }
 
     prop
     {
