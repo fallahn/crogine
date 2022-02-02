@@ -351,7 +351,8 @@ void BallSystem::process(float dt)
                     terrain = res.terrain;
 
                     if (terrain != TerrainID::Water
-                        && terrain != TerrainID::Scrub)
+                        && terrain != TerrainID::Scrub
+                        && terrain != TerrainID::Stone)
                     {
                         //move the ball a bit closer so we're not balancing on the edge
                         ballPos += dir * 1.5f;
@@ -534,12 +535,12 @@ void BallSystem::doCollision(cro::Entity entity)
             [[fallthrough]];
         case TerrainID::Scrub:
         case TerrainID::Bunker:
-            ball.velocity = glm::vec3(0.f);
+            ball.velocity *= Restitution[terrainResult.terrain];
             break;
         case TerrainID::Fairway:
-            ball.velocity *= 0.33f;
-            [[fallthrough]];
         case TerrainID::Stone: //bouncy :)
+        case TerrainID::Rough:
+            ball.velocity *= Restitution[terrainResult.terrain];
             ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
             break;
         case TerrainID::Green:
@@ -567,11 +568,6 @@ void BallSystem::doCollision(cro::Entity entity)
                 ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
             }
-            break;
-        case TerrainID::Rough:
-            ball.velocity *= 0.23f;
-            ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
-            CRO_ASSERT(!std::isnan(ball.velocity.x), "");
             break;
         }
 
