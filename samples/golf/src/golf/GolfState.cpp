@@ -2751,6 +2751,9 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             targetInfo.startHeight = targetInfo.targetHeight;
             targetInfo.startOffset = targetInfo.targetOffset;
 
+            auto targetDir = m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee;
+            m_camRotation = std::atan2(-targetDir.z, targetDir.x);
+
             //we're there
             setCameraPosition(m_holeData[m_currentHole].tee, targetInfo.targetHeight, targetInfo.targetOffset);
 
@@ -2779,7 +2782,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             auto height = targetInfo.targetHeight - targetInfo.startHeight;
             auto offset = targetInfo.targetOffset - targetInfo.startOffset;
 
-            static constexpr float Speed = 4.f;
+            constexpr float Speed = 4.f;
             e.getComponent<cro::Transform>().move(travel * Speed * dt);
             setCameraPosition(e.getComponent<cro::Transform>().getPosition(),
                 targetInfo.startHeight + (height * percent),
@@ -3389,7 +3392,10 @@ void GolfState::createTransition(const ActivePlayer& playerData)
             targetInfo.startHeight = targetInfo.targetHeight;
             targetInfo.startOffset = targetInfo.targetOffset;
 
-            setCameraPosition(playerData.position, targetInfo.targetHeight, targetInfo.targetOffset);
+            //hmm the final result is not always the same as the flyby - so snapping this here
+            //can cause a jump in view
+
+            //setCameraPosition(playerData.position, targetInfo.targetHeight, targetInfo.targetOffset);
             requestNextPlayer(playerData);
 
             m_gameScene.getActiveListener().getComponent<cro::AudioListener>().setVelocity(glm::vec3(0.f));
@@ -3514,9 +3520,8 @@ void GolfState::startFlyBy()
             default: break;
             case 2:
                 //hope the player cam finished...
-                //tbh if this transition is replacing the existing one then
-                //we can remove the player cam transition completely. Problem is that it's
-                //created by setPlayer(), not setHole()
+                //which it hasn't on smaller holes, and annoying.
+                //not game-breaking. but annoying.
             {
                 data.targets[3] = m_cameras[CameraID::Player].getComponent<cro::Transform>().getLocalTransform();
                 //data.ease = std::bind(&cro::Util::Easing::easeInSine, std::placeholders::_1);
