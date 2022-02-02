@@ -132,6 +132,7 @@ private:
             CelSkinned,
             CelTextured,
             CelTexturedSkinned,
+            Leaderboard,
             Player,
             Hair,
             Course,

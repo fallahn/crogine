@@ -813,8 +813,12 @@ void GolfState::loadAssets()
 
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n");
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::Leaderboard, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define SUBRECT\n");
+    shader = &m_resources.shaders.get(ShaderID::Leaderboard);
+    m_materialIDs[MaterialID::Leaderboard] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n");
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
@@ -1282,6 +1286,7 @@ void GolfState::loadAssets()
     std::string prevHoleString;
     cro::Entity prevHoleEntity;
     std::vector<cro::Entity> prevProps;
+    std::vector<cro::Entity> leaderboardProps;
 
     for (const auto& hole : holeStrings)
     {
@@ -1479,6 +1484,12 @@ void GolfState::loadAssets()
 
                                 holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
                                 holeData.propEntities.push_back(ent);
+
+                                //special case for leaderboard model, cos, y'know
+                                if (cro::FileSystem::getFileName(path) == "leaderboard.cmt")
+                                {
+                                    leaderboardProps.push_back(ent);
+                                }
                             }
                         }
                     }
@@ -1520,7 +1531,48 @@ void GolfState::loadAssets()
         }
     }
 
-    //remove holes which failed to load
+    //add the dynamically updated model to any leaderboard props
+    if (!leaderboardProps.empty())
+    {
+        if (md.loadFromFile("assets/golf/models/leaderboard_panel.cmt"))
+        {
+            for (auto lb : leaderboardProps)
+            {
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Transform>();
+                md.createModel(entity);
+                
+                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Leaderboard]);
+                material.setProperty("u_subrect", glm::vec4(0.f, 0.5f, 1.f, 0.5f));
+                entity.getComponent<cro::Model>().setMaterial(0, material);
+                m_leaderboardTexture.addTarget(entity);
+
+                //updates the texture rect depending on hole number
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<std::size_t>(m_currentHole);
+                entity.getComponent<cro::Callback>().function =
+                    [&,lb](cro::Entity e, float)
+                {
+                    auto currentHole = e.getComponent<cro::Callback>().getUserData<std::size_t>();
+                    if (currentHole != m_currentHole)
+                    {
+                        if (m_currentHole > 8)
+                        {
+                            e.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", glm::vec4(0.f, 0.f, 1.f, 0.5f));
+                        }
+                    }
+                    currentHole = m_currentHole;
+                    e.getComponent<cro::Model>().setHidden(lb.getComponent<cro::Model>().isHidden());
+                };
+                entity.getComponent<cro::Model>().setHidden(true);
+
+                lb.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            }
+        }
+    }
+
+
+    //remove holes which failed to load - TODO should we delete partially loaded props here?
     m_holeData.erase(std::remove_if(m_holeData.begin(), m_holeData.end(), 
         [](const HoleData& hd)
         {

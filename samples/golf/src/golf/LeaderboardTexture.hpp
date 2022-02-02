@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include <crogine/ecs/Entity.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/SimpleText.hpp>
@@ -56,10 +57,16 @@ public:
     void update(std::vector<LeaderboardEntry>&);
 
     const cro::Texture& getTexture() const;
+    
+    //hack to get around the fact that these ents
+    //are created before the leaderboard is initialised
+    void addTarget(cro::Entity);
 
 private:
     cro::SimpleQuad m_backgroundSprite;
     cro::SimpleText m_text;
 
     cro::RenderTexture m_texture;
+
+    std::vector<cro::Entity> m_targetEnts;
 };

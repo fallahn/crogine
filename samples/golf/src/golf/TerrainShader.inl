@@ -242,10 +242,15 @@ static const std::string CelFragmentShader = R"(
     uniform vec4 u_darkColour = vec4(0.5);
 #endif
 
-#if defined(TEXTURED)
+#if defined (SUBRECT)
+    uniform vec4 u_subrect = vec4(0.0, 0.0, 1.0, 1.0);
+#endif
+
+#if defined (TEXTURED)
     uniform sampler2D u_diffuseMap;
     VARYING_IN vec2 v_texCoord;
 #endif
+
 
 #if defined (NORMAL_MAP)
     uniform sampler2D u_normalMap;
@@ -359,7 +364,14 @@ static const std::string CelFragmentShader = R"(
     {
         vec4 colour = vec4(1.0);
 #if defined (TEXTURED)
-        vec4 c = TEXTURE(u_diffuseMap, v_texCoord);
+        vec2 texCoord = v_texCoord;
+
+#if defined (SUBRECT)
+        texCoord *= u_subrect.ba;
+        texCoord += u_subrect.rg;
+#endif
+
+        vec4 c = TEXTURE(u_diffuseMap, texCoord);
 
         if(c. a < 0.2)
         {

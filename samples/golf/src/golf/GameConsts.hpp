@@ -106,6 +106,7 @@ struct ShaderID final
         CelTextured,
         CelTexturedInstanced,
         CelTexturedSkinned,
+        Leaderboard,
         Player,
         Hair,
         Course,
