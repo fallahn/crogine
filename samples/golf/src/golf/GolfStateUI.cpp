@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -78,10 +78,6 @@ namespace
 
 void GolfState::buildUI()
 {
-    //we'll manually add anything that needs to be reflected
-    //to this list
-    std::vector<cro::Entity> reflectionList;
-
     if (m_holeData.empty())
     {
         return;
@@ -111,86 +107,7 @@ void GolfState::buildUI()
     camera.updateMatrices(m_cameras[CameraID::Player].getComponent<cro::Transform>());
     auto pos = camera.coordsToPixel(m_holeData[0].tee, m_gameSceneTexture.getSize());
 
-    //player sprite
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(pos);
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f, 0.f));
-    entity.addComponent<cro::Callback>().setUserData<PlayerCallbackData>();
-    entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
-    {
-        auto& [direction, scale, _] = e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>();
-        const auto xScale = e.getComponent<cro::Transform>().getScale().x; //might be flipped
-
-        if (direction == 0)
-        {
-            scale = std::min(1.f, scale + (dt * 3.f));
-
-            if (scale == 1)
-            {
-                direction = 1;
-                e.getComponent<cro::Callback>().active = false;
-            }
-        }
-        else
-        {
-            scale = std::max(0.f, scale - (dt * 3.f));
-
-            if (scale == 0)
-            {
-                direction = 0;
-                e.getComponent<cro::Callback>().active = false;
-            }
-        }
-        e.getComponent<cro::Transform>().setScale(glm::vec2(xScale, cro::Util::Easing::easeOutBack(scale)));
-    };
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerSprite;
-    entity.addComponent<cro::Sprite>() = m_avatars[0][0].sprites[Avatar::Sprite::Wood].sprite;//actual sprite is selected with setCurrentPlayer() / set club callback
-    entity.addComponent<cro::SpriteAnimation>();
-    bounds = m_avatars[0][0].sprites[Avatar::Sprite::Wood].sprite.getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width * 0.78f, 0.f));
-    courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto playerEnt = entity;
-    m_currentPlayer.position = m_holeData[0].tee;
-
-    //player reflection
-    auto origin = playerEnt.getComponent<cro::Transform>().getOrigin();
-    origin.x -= (bounds.width - (bounds.width - origin.x));
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setOrigin(origin);
-    entity.addComponent<cro::Drawable2D>().setRenderFlags(RenderFlags::Reflection);
-    entity.addComponent<cro::Sprite>();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [playerEnt](cro::Entity e, float)
-    {
-        auto& sprite = e.getComponent<cro::Sprite>();
-        const auto* tx = playerEnt.getComponent<cro::Sprite>().getTexture();
-        if (tx != sprite.getTexture())
-        {
-            sprite.setTexture(*tx, false);
-        }
-
-        sprite.setTextureRect(playerEnt.getComponent<cro::Sprite>().getTextureRect());
-
-        auto scale = playerEnt.getComponent<cro::Transform>().getScale();
-        scale.x *= scale.x;
-        scale.y *= -1.f;
-        e.getComponent<cro::Transform>().setScale(scale);
-
-        auto facing = playerEnt.getComponent<cro::Drawable2D>().getFacing();
-        if (facing != e.getComponent<cro::Drawable2D>().getFacing())
-        {
-            e.getComponent<cro::Drawable2D>().setFacing(facing);
-        }
-
-        auto offset = playerEnt.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().reflectionOffset;
-        e.getComponent<cro::Transform>().setPosition({ 0.f, offset });
-    };
-    playerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    reflectionList.push_back(entity);
-
+    
     //info panel background - vertices are set in resize callback
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -427,16 +344,23 @@ void GolfState::buildUI()
 
 
     //minimap view
+    struct MinimapData final
+    {
+        std::int32_t state = 0;
+        float scale = 1.f;
+        float rotation = -1.f;
+    };
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f });
+    entity.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniMap;
-    entity.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(0, 1.f);
+    entity.addComponent<cro::Callback>().setUserData<MinimapData>();
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
-        auto& [state, scale] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+        auto& [state, scale, rotation] = e.getComponent<cro::Callback>().getUserData<MinimapData>();
         float speed = dt * 4.f;
         float newScale = 0.f;
         
@@ -448,21 +372,24 @@ void GolfState::buildUI()
 
             if (scale == 0)
             {
-                glm::vec2 offset = glm::vec2(0.f);
-
                 //orientation - sets tee to bottom of map
-                if (m_holeData[m_currentHole].tee.x > 160)
+                if (m_currentHole == 0
+                    || m_holeData[m_currentHole].modelEntity != m_holeData[m_currentHole - 1].modelEntity)
                 {
-                    e.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
-                    offset = glm::vec2(2.f);
-                    m_flagQuad.setRotation(90.f);
+                    if (m_holeData[m_currentHole].tee.x > 160)
+                    {
+                        e.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
+                        rotation = -1.f;
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Transform>().setRotation(90.f * cro::Util::Const::degToRad);
+                        rotation = 1.f;
+                    }
                 }
-                else
-                {
-                    e.getComponent<cro::Transform>().setRotation(90.f * cro::Util::Const::degToRad);
-                    offset = glm::vec2(-2.f);
-                    m_flagQuad.setRotation(-90.f);
-                }
+                glm::vec2 offset = glm::vec2(2.f * -rotation);
+                m_flagQuad.setRotation(-rotation * 90.f);
+
 
                 //update render
                 auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
@@ -545,6 +472,49 @@ void GolfState::buildUI()
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //stroke indicator
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    auto endColour = TextGoldColour;
+    endColour.setAlpha(0.f);
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(0.f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
+        cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
+        auto pos = m_currentPlayer.position;
+        pos.y = -pos.z;
+        pos.z = 1.f;
+        e.getComponent<cro::Transform>().setPosition(pos / 2.f);
+
+        if (!m_inputParser.getActive())
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+        else
+        {
+            auto club = getClub();
+            switch (club)
+            {
+            default: 
+                e.getComponent<cro::Transform>().setScale(glm::vec2(Clubs[club].target, 1.f));
+                break;
+            case ClubID::Putter:
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                break;
+            }
+            
+        }
+    };
+    mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //green close up view
     entity = m_uiScene.createEntity();
@@ -552,18 +522,18 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::Minimap));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniGreen;
     entity.addComponent<cro::Sprite>(); //updated by the camera callback with correct texture
-    entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
+    entity.addComponent<cro::Callback>().setUserData<GreenCallbackData>();
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt) mutable
     {
         static constexpr float Speed = 2.f;
-        auto& [currTime, state] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+        auto& [currTime, state, targetScale] = e.getComponent<cro::Callback>().getUserData<GreenCallbackData>();
         if (state == 0)
         {
             //expand
             currTime = std::min(1.f, currTime + (dt * Speed));
-            float scale = cro::Util::Easing::easeOutQuint(currTime);
-            e.getComponent<cro::Transform>().setScale({ scale,  1.f });
+            float scale = cro::Util::Easing::easeOutQuint(currTime) * targetScale;
+            e.getComponent<cro::Transform>().setScale({ scale,  targetScale });
 
             if (currTime == 1)
             {
@@ -578,8 +548,8 @@ void GolfState::buildUI()
         {
             //contract
             currTime = std::max(0.f, currTime - (dt * Speed));
-            float scale = cro::Util::Easing::easeOutQuint(currTime);
-            e.getComponent<cro::Transform>().setScale({ 1.f, scale });
+            float scale = cro::Util::Easing::easeOutQuint(currTime) * targetScale;
+            e.getComponent<cro::Transform>().setScale({ targetScale, scale });
 
             if (currTime == 0)
             {
@@ -659,10 +629,23 @@ void GolfState::buildUI()
     auto updateGreenView = [&, greenEnt](cro::Camera& greenCam) mutable
     {
         auto texSize = MapSize.y / 2u;
+
+        auto windowScale = std::floor(cro::App::getWindow().getSize().y / calcVPSize().y);
+        float scale = m_sharedData.pixelScale ? windowScale : 1.f;
+        scale = (windowScale + 1.f) - scale;
+        texSize *= static_cast<std::uint32_t>(scale);
+
         m_greenBuffer.create(texSize, texSize); //yes, it's square
         greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
 
-        greenEnt.getComponent<cro::Transform>().setOrigin({ texSize / 2, texSize / 2 }); //must divide to a whole pixel!
+        auto targetScale = glm::vec2(1.f / scale);
+        if (m_currentPlayer.terrain == TerrainID::Green)
+        {
+            greenEnt.getComponent<cro::Transform>().setScale(targetScale);
+        }
+        greenEnt.getComponent<cro::Transform>().setOrigin({ (texSize / 2), (texSize / 2) }); //must divide to a whole pixel!
+
+        greenEnt.getComponent<cro::Callback>().getUserData<GreenCallbackData>().targetScale = targetScale.x;
     };
 
     m_greenCam = m_gameScene.createEntity();
@@ -688,7 +671,7 @@ void GolfState::buildUI()
 
 
     //callback for the UI camera when window is resized
-    auto updateView = [&, playerEnt, courseEnt, infoEnt, windEnt, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
+    auto updateView = [&, /*playerEnt,*/ courseEnt, infoEnt, windEnt, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.5f, 20.f);
@@ -698,15 +681,17 @@ void GolfState::buildUI()
         m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
         auto texSize = glm::vec2(m_gameSceneTexture.getSize());
 
+        glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);
+
         courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -0.1f));
-        courseEnt.getComponent<cro::Transform>().setScale(m_viewScale);
+        courseEnt.getComponent<cro::Transform>().setScale(courseScale);
         courseEnt.getComponent<cro::Callback>().active = true; //makes sure to delay so updating the texture size is complete first
 
 
         //update avatar position
-        const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
+        /*const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
         auto pos = camera.coordsToPixel(m_currentPlayer.position, texSize);
-        playerEnt.getComponent<cro::Transform>().setPosition(pos);
+        playerEnt.getComponent<cro::Transform>().setPosition(pos);*/
 
         //update minimap
         const auto uiSize = size / m_viewScale;
@@ -714,8 +699,9 @@ void GolfState::buildUI()
         mapSize /= 2.f;
         mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y, uiSize.y - (mapSize.x) - (UIBarHeight * 1.5f) }); //map sprite is rotated 90
 
+
         greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - (MapSize.y / 2) - UIBarHeight - 2.f });
-        greenEnt.getComponent<cro::Transform>().move(greenEnt.getComponent<cro::Transform>().getOrigin());
+        greenEnt.getComponent<cro::Transform>().move(glm::vec2(static_cast<float>(MapSize.y) / 4.f));
 
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(uiSize.x + WindIndicatorPosition.x, WindIndicatorPosition.y));
 
@@ -769,30 +755,33 @@ void GolfState::buildUI()
 
 
     //camera for rendering player reflection
-    auto reflectionResize = [&](cro::Camera& cam)
-    {
-        auto s = glm::vec2(m_gameSceneTexture.getSize());
-        auto s2 = glm::vec2(GolfGame::getActiveTarget()->getSize());
-        auto diff = (s - s2) / 2.f;
-        auto diffScaled = ((s - (s2 / m_viewScale)) / 2.f) * m_viewScale.y;
+    //wow all this effort I went to now unused... >.<
+    //imma just leave it here as a tribute.
 
-        cam.setOrthographic(-diff.x, s.x - diff.x, -diffScaled.y, s.y - diffScaled.y, -2.f, 10.f);
+    //auto reflectionResize = [&](cro::Camera& cam)
+    //{
+    //    auto s = glm::vec2(m_gameSceneTexture.getSize());
+    //    auto s2 = glm::vec2(GolfGame::getActiveTarget()->getSize());
+    //    auto diff = (s - s2) / 2.f;
+    //    auto diffScaled = ((s - (s2 / m_viewScale)) / 2.f) * m_viewScale.y;
 
-        float vpW = 1.f / m_viewScale.x;
-        float vpH = 1.f / m_viewScale.y;
-        cam.viewport = { (1.f - vpW) / 2.f, 0.f, vpW, vpH };
-    };
-    //we'll manually set the drawlist for this cam to prevent unnecessary
-    //sorting at run-time.
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    auto& uiCam = entity.addComponent<cro::Camera>();
-    uiCam.resizeCallback = reflectionResize;
-    uiCam.renderFlags = RenderFlags::Reflection;
-    uiCam.active = false;
-    uiCam.getDrawList(cro::Camera::Pass::Final)[m_uiScene.getSystem<cro::RenderSystem2D>()->getType()] = std::make_any<std::vector<cro::Entity>>(reflectionList);
-    reflectionResize(uiCam);
-    m_uiReflectionCam = entity;
+    //    cam.setOrthographic(-diff.x, s.x - diff.x, -diffScaled.y, s.y - diffScaled.y, -2.f, 10.f);
+
+    //    float vpW = 1.f / m_viewScale.x;
+    //    float vpH = 1.f / m_viewScale.y;
+    //    cam.viewport = { (1.f - vpW) / 2.f, 0.f, vpW, vpH };
+    //};
+    ////we'll manually set the drawlist for this cam to prevent unnecessary
+    ////sorting at run-time.
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Transform>();
+    //auto& uiCam = entity.addComponent<cro::Camera>();
+    //uiCam.resizeCallback = reflectionResize;
+    //uiCam.renderFlags = RenderFlags::Reflection;
+    //uiCam.active = false;
+    //uiCam.getDrawList(cro::Camera::Pass::Final)[m_uiScene.getSystem<cro::RenderSystem2D>()->getType()] = std::make_any<std::vector<cro::Entity>>(reflectionList);
+    //reflectionResize(uiCam);
+    //m_uiReflectionCam = entity;
 }
 
 void GolfState::showCountdown(std::uint8_t seconds)

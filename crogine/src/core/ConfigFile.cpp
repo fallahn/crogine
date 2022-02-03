@@ -68,6 +68,12 @@ void ConfigProperty::setValue(std::int32_t value)
     m_isStringValue = false;
 }
 
+void ConfigProperty::setValue(std::uint32_t value)
+{
+    m_value = std::to_string(value);
+    m_isStringValue = false;
+}
+
 void ConfigProperty::setValue(float value)
 {
     m_value = std::to_string(value);

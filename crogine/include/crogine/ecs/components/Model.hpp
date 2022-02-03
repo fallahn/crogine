@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -129,6 +129,7 @@ namespace cro
         */
         bool isHidden() const { return m_hidden; }
 
+
         /*!
         \brief Sets the render flags for this model.
         If the render flags, when AND'd with the current render flags of the ModelRenderer,
@@ -141,6 +142,34 @@ namespace cro
         \brief Returns the current render flags of this model.
         */
         std::uint64_t getRenderFlags() const { return m_renderFlags; }
+
+        /*!
+        \brief Used to determine if this model should be rendered with faces front
+        facing or rear facing. By default models are rendered with front-facing
+        triangles, but in cases where a model is scaled negatively on 1 or 3
+        axes then the model will appear 'inside out'. Setting the model's facing
+        parameter to Facing::Back will then reverse the direction of the faces causing
+        the model to appear correctly again.
+        \see setFacing()
+        */
+        enum class Facing
+        {
+            Front, Back
+        };
+
+        /*!
+        \brief Sets the direction of the model's faces when rendering. Ultimately
+        a wrapper for glFrontFace(). The default value is Facing::Front (aka GL_CCW)
+        \param direction Facing::Front for default behaviour or Facing::Back for inverse
+        \see Facing
+        */
+        void setFacing(Facing direction);
+
+        /*!
+        \brief Returns the current Facing value.
+        \see Facing
+        */
+        Facing getFacing() const;
 
         /*!
         \brief Returns the joint count if this model has a skeleton
@@ -200,6 +229,7 @@ namespace cro
         bool m_visible;
         bool m_hidden;
         std::uint64_t m_renderFlags;
+        std::uint32_t m_facing;
         cro::Sphere m_boundingSphere;
         cro::Box m_boundingBox;
         cro::Box m_meshBox; //AABB received from mesh data

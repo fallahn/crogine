@@ -69,6 +69,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/ball/splash.wav",
         "assets/golf/sound/ball/drop.wav",
         "assets/golf/sound/ball/scrub.wav",
+        "assets/golf/sound/ball/stone.wav",
 
         "assets/golf/sound/holes/albatross.wav",
         "assets/golf/sound/holes/birdie.wav",
@@ -312,6 +313,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 break;
             case TerrainID::Scrub:
                 playSound(AudioID::Scrub, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                break;
+            case TerrainID::Stone:
+                playSound(AudioID::Stone, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                 break;
             }
         }

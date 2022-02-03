@@ -1,0 +1,18 @@
+model leaderboard_panel
+{
+    mesh = assets/golf/models/leaderboard_panel.cmb
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+        diffuse = "assets/golf/images/score_background.png"
+
+    }
+}

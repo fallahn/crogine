@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -37,6 +37,7 @@ source distribution.
 #include "golf/KeyboardState.hpp"
 #include "golf/PracticeState.hpp"
 #include "golf/DrivingState.hpp"
+#include "golf/PuttingState.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
@@ -55,6 +56,12 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 
 #include <crogine/util/Network.hpp>
+
+//#include <polyvox/RawVolume.h>
+//#include <polyvox/MarchingCubesSurfaceExtractor.h>
+//#include <polyvox/CubicSurfaceExtractor.h>
+
+//namespace pv = PolyVox;
 
 namespace
 {
@@ -91,7 +98,7 @@ GolfGame::GolfGame()
     m_activeIndex       (0)
 {
     //must be set before anything, else cfg is still loaded from default path
-    setApplicationStrings("trederia", "golf");
+    setApplicationStrings("Trederia", "golf");
 
     m_stateStack.registerState<SplashState>(StateID::SplashScreen);
     m_stateStack.registerState<KeyboardState>(StateID::Keyboard);
@@ -103,6 +110,12 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
+    m_stateStack.registerState<PuttingState>(StateID::PuttingRange, m_sharedData);
+
+    //pv::RawVolume<std::uint8_t> volume(pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(10)));
+    //volume.setVoxel(3, 5, 6, 10);
+
+    //auto meshData = pv::extractMarchingCubesMesh<pv::RawVolume<std::uint8_t>>(&volume, volume.getEnclosingRegion());
 
 #ifdef WIN32
 #ifdef CRO_DEBUG_
@@ -120,19 +133,25 @@ void GolfGame::handleEvent(const cro::Event& evt)
     {
         
     }
-#ifdef CRO_DEBUG_
     else if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
         {
         default: break;
+#ifdef CRO_DEBUG_
         case SDLK_ESCAPE:
         case SDLK_AC_BACK:
             App::quit();
             break;
+#endif
+        case SDLK_KP_MINUS:
+            togglePixelScale(m_sharedData, false);
+            break;
+        case SDLK_KP_PLUS:
+            togglePixelScale(m_sharedData, true);
+            break;
         }
     }
-#endif
     
     m_stateStack.handleEvent(evt);
 }
@@ -576,6 +595,10 @@ void GolfGame::loadPreferences()
                         m_sharedData.targetIP = "255.255.255.255";
                     }
                 }
+                else if (name == "pixel_scale")
+                {
+                    m_sharedData.pixelScale = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -612,6 +635,7 @@ void GolfGame::savePreferences()
         cfg.addProperty("custom_shader").setValue(m_sharedData.customShaderPath);
     }
     cfg.addProperty("last_ip").setValue(m_sharedData.targetIP.toAnsiString());
+    cfg.addProperty("pixel_scale").setValue(m_sharedData.pixelScale);
     cfg.save(path);
 
 

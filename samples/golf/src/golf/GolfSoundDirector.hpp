@@ -74,6 +74,7 @@ private:
             Water,
             Ground,
             Scrub,
+            Stone,
 
             ScoreAlbatross,
             ScoreBirdie,

@@ -200,11 +200,15 @@ glm::vec2 Camera::coordsToPixel(glm::vec3 worldPoint, glm::vec2 targetSize, std:
     return windowPos;
 }
 
-glm::vec3 Camera::pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize)
+glm::vec3 Camera::pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize) const
 {
     glm::uvec4 vp(targetSize.x * viewport.left, targetSize.y * viewport.bottom, targetSize.x * viewport.width, targetSize.y * viewport.height);
 
-    //mouse coords are inverse in Y direction.
-    screenPosition.y = targetSize.y - screenPosition.y;
-    return glm::unProject(glm::vec3(screenPosition, 0.f), m_passes[Pass::Final].viewMatrix, m_projectionMatrix, vp);
+    auto pixelCoords = screenPosition  * (targetSize / glm::vec2(cro::App::getWindow().getSize()));
+    pixelCoords += glm::vec2(0.5f);
+
+    glm::vec3 winCoords(pixelCoords.x, targetSize.y - pixelCoords.y, 0.f); //inverts mouse pos Y
+    glCheck(glReadPixels(static_cast<std::int32_t>(winCoords.x), static_cast<std::int32_t>(winCoords.y), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winCoords.z));
+
+    return glm::unProject(winCoords, m_passes[Pass::Final].viewMatrix, m_projectionMatrix, vp);
 }

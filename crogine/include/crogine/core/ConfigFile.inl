@@ -43,6 +43,15 @@ inline std::int32_t ConfigProperty::getValue<std::int32_t>() const
 }
 
 template <>
+inline std::uint32_t ConfigProperty::getValue<std::uint32_t>() const
+{
+    std::uint32_t retVal;
+    std::istringstream is(m_value);
+    if (is >> retVal) return retVal;
+    return 0;
+}
+
+template <>
 inline float ConfigProperty::getValue<float>() const
 {
     float retVal;

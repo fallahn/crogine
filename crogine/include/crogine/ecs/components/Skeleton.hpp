@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 
 #include <crogine/graphics/BoundingBox.hpp>
+#include <crogine/ecs/Entity.hpp>
 
 #include <vector>
 #include <string>
@@ -46,7 +47,6 @@ namespace cro
     {
         struct SkeletonHeader;
         struct SkeletonHeaderV2;
-        struct SerialAttachment;
     }
 
     /*!
@@ -100,41 +100,57 @@ namespace cro
     };
 
     /*!
-    \brief Represents and attachment point on a skeleton.
-    Attachment points are used for attaching other models,
+    \brief Represents and attachment on a skeleton.
+    Attachments are used for attaching other models,
     for example weapons or items, to a skinned mesh.
-    Attachment points contain the ID of the joint to which
+    Attachments contain the ID of the joint to which
     they are associated, as well as a relative translation
-    and rotation. Once an attachment is added its position
-    is fixed relative to its parent joint.
+    and rotation. The skeletal aniamtion system will automatically
+    update the transform of any attached model to match
+    that of its parent joint.
     */
-    struct AttachmentPoint final
+    struct CRO_EXPORT_API Attachment final
     {
     public:
-        AttachmentPoint(std::int32_t parent, glm::vec3 translation, glm::quat rotation)
-            : m_parent(parent), m_translation(translation), m_rotation(rotation)
-        {
-            CRO_ASSERT(parent > -1, "");
-            m_transform = glm::translate(glm::mat4(1.f), translation);
-            m_transform *= glm::toMat4(rotation);
-        }
-        glm::mat4 getLocalTransform() const { return m_transform; }
+        Attachment() {};
+        explicit Attachment(cro::Entity model)
+            : m_model(model) {}
+
+        void setParent(std::int32_t parentID);
+        void setModel(cro::Entity model);
+
+        void setPosition(glm::vec3 position);
+        void setRotation(glm::quat rotation);
+        void setScale(glm::vec3 scale);
+        void setName(const std::string&);
+
+        std::int32_t getParent() const { return m_parent; }
+        cro::Entity getModel() const { return m_model; }
+        glm::vec3 getPosition() const { return m_position; }
+        glm::quat getRotation() const { return m_rotation; }
+        glm::vec3 getScale() const { return m_scale; }
+        const glm::mat4& getLocalTransform() const { return m_transform; }
+        const std::string& getName() const { return m_name; }
+
+        static constexpr std::size_t MaxNameLength = 30;
 
     private:
-        std::int32_t m_parent;
-        glm::vec3 m_translation;
-        glm::quat m_rotation;
-        glm::mat4 m_transform;
+        cro::Entity m_model;
+        std::int32_t m_parent = 0;
+        glm::vec3 m_position = glm::vec3(0.f);
+        glm::quat m_rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
+        glm::vec3 m_scale = glm::vec3(1.f);
+        glm::mat4 m_transform = glm::mat4(1.f);
 
-        friend class Skeleton;
-        friend class SkeletalAnimator;
-        friend struct cro::Detail::ModelBinary::SerialAttachment;
+        std::string m_name = "Attachment";
+
+        void updateLocalTransform();
     };
 
     /*!
     \brief A hierarchy of bones stored as
     transforms, used to animate 3D models.
-    These are updated by the SkeletalAnimation system.
+    These are updated by the SkeletalAnimator system.
     */
     class CRO_EXPORT_API Skeleton final
     {
@@ -161,6 +177,13 @@ namespace cro
         \brief Steps the current animation to the next frame if it not playing
         */
         void nextFrame();
+
+        /*!
+        \brief Jumps to the given frame in the current animation
+        \param frame Index of the frame relative to the beginning of
+        the animation. Does nothing if the frame is out of range.
+        */
+        void gotoFrame(std::uint32_t frame);
 
         /*!
         \brief Stops any active animations
@@ -238,8 +261,9 @@ namespace cro
         */
         struct Notification final
         {
-            std::int32_t jointID = -1; //!< The joint which should raise this notification
+            std::uint32_t jointID = 0; //!< The joint which should raise this notification
             std::int32_t userID = -1; //!< The user defined ID to include in the notification message
+            std::string name; //!< Name as it appears in the editor
         };
 
         /*!
@@ -260,28 +284,37 @@ namespace cro
         \brief Returns a reference to the vector of notifications associated with the skeleton
         */
         const std::vector<std::vector<Notification>>& getNotifications() const { return m_notifications; }
+        std::vector<std::vector<Notification>>& getNotifications() { return m_notifications; }
 
         /*!
-        \brief Adds an attachment point to the skeleton.
-        The attachment point's translation should be relative to
+        \brief Adds an attachment to the skeleton.
+        The attachment's translation should be relative to
         the Skeleton's joint to which it is attached.
         \returns ID of the created attament point.
         */
-        std::int32_t addAttachmentPoint(const AttachmentPoint&);
+        std::int32_t addAttachment(const Attachment&);
 
         /*!
-        \brief Returns the requested attachment transform in object local space.
-        That is, the transform relative to the skinned mesh. Multiply it with
-        the parent entity's world transform to get the attachment point in world space.
+        \brief Returns the index of the attachment with the given
+        name, or -1 if the attachment does not exist. If more than
+        one attachment with the same name exists the first result is returned.
+        */
+        std::int32_t getAttachmentIndex(const std::string& name) const;
+
+        /*!
+        \brief Returns the requested attachment transform in world space.
+        This transform is automatically applied to the attached model by the
+        SkeletalAnimationSystem.
         \param id The id of the attachment point to retrieve. This is the ID returned
         by addAttachment()
         */
-        glm::mat4 getAttachmentPoint(std::int32_t id) const;
+        glm::mat4 getAttachmentTransform(std::int32_t id) const;
 
         /*!
         \brief Return a reference to the vector of attachments
         */
-        const std::vector<AttachmentPoint>& getAttachmentPoints() const { return m_attachmentPoints; }
+        const std::vector<Attachment>& getAttachments() const { return m_attachments; }
+        std::vector<Attachment>& getAttachments() { return m_attachments; }
 
         /*
         \brief Set the inverse bind pose for the skeleton.
@@ -290,7 +323,7 @@ namespace cro
         Size must match the frame size. That is there must be
         as many matrices as there are joints.
         */
-        void setInverseBindPose(const std::vector<glm::mat4>& invBindPose) { m_invBindPose = invBindPose; }
+        void setInverseBindPose(const std::vector<glm::mat4>& invBindPose);
 
         /*!
         \brief Returns a reference to the inverse bind pose
@@ -308,6 +341,13 @@ namespace cro
         */
         const glm::mat4& getRootTransform() const { return m_rootTransform; }
 
+        /*!
+        \brief Sets whether or not the animation frames are interpolated
+        Setting this to false can improve performance with a lot of models
+        (or during debugging) but animation will appear less smooth
+        */
+        void setInterpolationEnabled(bool enabled) { m_useInterpolation = enabled; }
+
     private:
 
         float m_playbackRate;
@@ -320,20 +360,21 @@ namespace cro
 
         float m_frameTime;
         float m_currentFrameTime;
-
+        bool m_useInterpolation;
 
         std::size_t m_frameSize; //joints in a frame
         std::size_t m_frameCount;
         std::vector<Joint> m_frames; //indexed by steps of frameSize
         std::vector<glm::mat4> m_currentFrame; //current interpolated output
         std::vector<glm::mat4> m_invBindPose;
+        std::vector<glm::mat4> m_bindPose;
         glm::mat4 m_rootTransform = glm::mat4(1.f);
 
         std::vector<SkeletalAnim> m_animations;
 
         std::vector<std::vector<Notification>> m_notifications; //for each frame a pair of jointID and message ID
 
-        std::vector<AttachmentPoint> m_attachmentPoints;
+        std::vector<Attachment> m_attachments;
 
         std::vector<cro::Box> m_keyFrameBounds; //calc'd on joining the System for each key frame
 

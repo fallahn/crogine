@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -83,6 +83,7 @@ namespace
         float start = -MaxShrubOffset;
         float destination = 0.f;
         cro::Entity otherEnt;
+        cro::Entity instancedEnt; //entity containing instanced geometry
     };
 
     //callback for swapping shrub ents
@@ -115,6 +116,11 @@ namespace
 
                     terrainEntity.getComponent<cro::Callback>().active = true; //starts terrain morph
                 }
+
+                if (swapData.instancedEnt.isValid())
+                {
+                    swapData.instancedEnt.getComponent<cro::Model>().setHidden(true);
+                }
             }
         }
 
@@ -125,6 +131,7 @@ namespace
 TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
     : m_holeData    (hd),
     m_currentHole   (0),
+    m_swapIndex     (0),
     m_terrainBuffer ((MapSize.x * MapSize.y) / QuadsPerMetre),
     m_threadRunning (false),
     m_wantsUpdate   (false)
@@ -190,7 +197,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     constexpr auto xCount = static_cast<std::uint32_t>(MapSize.x / QuadsPerMetre);
     constexpr auto yCount = static_cast<std::uint32_t>(MapSize.y / QuadsPerMetre);
-    std::vector<std::uint32_t> indices(xCount * yCount * 6);
+    std::vector<std::uint32_t> indices;// (xCount * yCount * 6);
 
 
     for (auto y = 0u; y < yCount - 1; ++y)
@@ -258,8 +265,17 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //parent the shrubbery so they always stay the same relative height
     m_terrainEntity = entity;
 
+
+    //custom shader for instanced plants
+    resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
+    const auto& reedShader = resources.shaders.get(ShaderID::CelTexturedInstanced);
+    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    materialID = resources.materials.add(reedShader);
+
     //create billboard entities
     cro::ModelDefinition billboardDef(resources);
+    cro::ModelDefinition reedsDef(resources);
+    std::int32_t i = 0;
 
     for (auto& entity : m_billboardEntities)
     {
@@ -291,6 +307,27 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
                 m_terrainEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             }
+
+            //create a child entity for instanced geometry
+            if (reedsDef.loadFromFile("assets/golf/models/reeds_large.cmt", true))
+            {
+                auto material = resources.materials.get(materialID);
+
+                auto childEnt = scene.createEntity();
+                childEnt.addComponent<cro::Transform>();
+                reedsDef.createModel(childEnt);
+
+                for (auto j = 0u; j < reedsDef.getMaterialCount(); ++j)
+                {
+                    applyMaterialData(reedsDef, material, j);
+                    childEnt.getComponent<cro::Model>().setMaterial(j, material);
+                }
+                childEnt.getComponent<cro::Model>().setHidden(true);
+                childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+                entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
+                m_instancedEntities[i] = childEnt;
+            }
+            i++;
         }
     }
 
@@ -398,39 +435,53 @@ void TerrainBuilder::update(std::size_t holeIndex)
 
     if (holeIndex == m_currentHole)
     {
-        auto first = (holeIndex + 1) % 2;
-        auto second = holeIndex % 2;
+        bool doAnim = holeIndex == 0 || (m_holeData[holeIndex - 1].modelPath != m_holeData[holeIndex].modelPath);
 
-        if (m_billboardEntities[first].isValid()
-            && m_billboardEntities[second].isValid())
+        if (doAnim)
         {
-            //update the billboard data
-            SwapData swapData;
-            swapData.start = m_billboardEntities[first].getComponent<cro::Transform>().getPosition().y;
-            swapData.destination = 0.f;
-            swapData.currentTime = 0.f;
-            m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
-            m_billboardEntities[first].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
+            auto first = (m_swapIndex + 1) % 2;
+            auto second = m_swapIndex % 2;
+            m_swapIndex++;
 
-            swapData.start = m_billboardEntities[second].getComponent<cro::Transform>().getPosition().y;
-            swapData.destination = -MaxShrubOffset;
-            swapData.otherEnt = m_billboardEntities[first];
-            swapData.currentTime = 0.f;
-            m_billboardEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
-            m_billboardEntities[second].getComponent<cro::Callback>().active = true;
+            if (m_billboardEntities[first].isValid()
+                && m_billboardEntities[second].isValid())
+            {
+                //update the billboard data
+                SwapData swapData;
+                swapData.start = m_billboardEntities[first].getComponent<cro::Transform>().getPosition().y;
+                swapData.destination = 0.f;
+                swapData.currentTime = 0.f;
+                m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
+                m_billboardEntities[first].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
+
+                swapData.start = m_billboardEntities[second].getComponent<cro::Transform>().getPosition().y;
+                swapData.destination = -MaxShrubOffset;
+                swapData.otherEnt = m_billboardEntities[first];
+                swapData.instancedEnt = m_instancedEntities[second];
+                swapData.currentTime = 0.f;
+                m_billboardEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
+                m_billboardEntities[second].getComponent<cro::Callback>().active = true;
+
+                //update any instanced geom
+                if (!m_instanceTransforms.empty()
+                    && m_instancedEntities[first].isValid())
+                {
+                    m_instancedEntities[first].getComponent<cro::Model>().setHidden(false);
+                    m_instancedEntities[first].getComponent<cro::Model>().setInstanceTransforms(m_instanceTransforms);
+                }
+            }
+
+            //upload terrain data
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_terrainProperties.vbo));
+            glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_STATIC_DRAW));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+            m_terrainProperties.morphTime = 0.f;
+            glCheck(glUseProgram(m_terrainProperties.shaderID));
+            glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
+            //terrain callback is set active when shrubbery callback switches
         }
-
-        //upload terrain data
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_terrainProperties.vbo));
-        glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_STATIC_DRAW));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-        
-        m_terrainProperties.morphTime = 0.f;
-        glCheck(glUseProgram(m_terrainProperties.shaderID));
-        glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
-        //terrain callback is set active when shrubbery callback switches
-
-        //upload the slope buffer data
+        //upload the slope buffer data - this might be different even if the hole model is the same
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_slopeProperties.meshData->vbo));
         glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(SlopeVertex) * m_slopeBuffer.size(), m_slopeBuffer.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -440,7 +491,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), m_slopeIndices.data(), GL_STATIC_DRAW));
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
+        
         m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
 
         //signal to the thread we want to update the buffers
@@ -513,6 +564,8 @@ void TerrainBuilder::threadFunc()
     {
         if (m_wantsUpdate)
         {
+            m_instanceTransforms.clear();
+
             //we checked the file validity when the game starts.
             //if the map file is broken now something more drastic happened...
             cro::Image mapImage;
@@ -542,7 +595,7 @@ void TerrainBuilder::threadFunc()
                 m_billboardBuffer.clear();
                 for (auto [x, y] : grass)
                 {
-                    auto [terrain, _] = readMap(mapImage, x, y);
+                    auto [terrain, terrainHeight] = readMap(mapImage, x, y);
                     if (terrain == TerrainID::Rough)
                     {
                         float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
@@ -553,6 +606,23 @@ void TerrainBuilder::threadFunc()
                             auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                             bb.position = { x, height, -y };
                             bb.size *= scale;
+                        }
+                    }
+                    //reeds at water edge
+                    if (terrain == TerrainID::Rough
+                        || terrain == TerrainID::Scrub)
+                    {
+                        float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+                        height = std::max(height, terrainHeight);
+
+                        if (height < 0.1f)
+                        {
+                            float scale = static_cast<float>(cro::Util::Random::value(9, 16)) / 10.f;
+
+                            glm::mat4 tx = glm::translate(glm::mat4(1.f), { x, height, -y });
+                            tx = glm::rotate(tx, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI), cro::Transform::Y_AXIS);
+                            tx = glm::scale(tx, glm::vec3(scale));
+                            m_instanceTransforms.push_back(tx);
                         }
                     }
                 }

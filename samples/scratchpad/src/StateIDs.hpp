@@ -39,6 +39,7 @@ namespace States
             BatCat,
             BSP,
             MeshCollision,
+            Voxels,
 
             Count
         };

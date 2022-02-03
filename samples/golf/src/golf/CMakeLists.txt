@@ -21,6 +21,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/KeyboardState.cpp
   ${PROJECT_DIR}/golf/LeaderboardTexture.cpp
   ${PROJECT_DIR}/golf/MenuCreation.cpp
+  ${PROJECT_DIR}/golf/MenuCustomisation.cpp
   ${PROJECT_DIR}/golf/MenuSoundDirector.cpp
   ${PROJECT_DIR}/golf/MenuState.cpp
   ${PROJECT_DIR}/golf/OptionsState.cpp
@@ -28,8 +29,11 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ParticleDirector.cpp
   ${PROJECT_DIR}/golf/PlayerAvatar.cpp
   ${PROJECT_DIR}/golf/PracticeState.cpp
+  ${PROJECT_DIR}/golf/PuttingState.cpp
+  ${PROJECT_DIR}/golf/PuttingStateUI.cpp
   ${PROJECT_DIR}/golf/SharedStateData.cpp
   ${PROJECT_DIR}/golf/SoundEffectsDirector.cpp
+  ${PROJECT_DIR}/golf/spooky2.cpp
   ${PROJECT_DIR}/golf/TerrainBuilder.cpp
   ${PROJECT_DIR}/golf/TutorialDirector.cpp
   ${PROJECT_DIR}/golf/TutorialState.cpp

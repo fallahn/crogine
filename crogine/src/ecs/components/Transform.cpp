@@ -39,27 +39,29 @@ source distribution.
 using namespace cro;
 
 Transform::Transform()
-    : m_origin          (0.f, 0.f, 0.f),
-    m_position          (0.f, 0.f, 0.f),
-    m_scale             (1.f, 1.f, 1.f),
-    m_rotation          (1.f, 0.f, 0.f, 0.f),
-    m_transform         (1.f),
-    m_parent            (nullptr),
-    m_depth             (0),
-    m_dirtyFlags        (0)
+    : m_origin              (0.f, 0.f, 0.f),
+    m_position              (0.f, 0.f, 0.f),
+    m_scale                 (1.f, 1.f, 1.f),
+    m_rotation              (1.f, 0.f, 0.f, 0.f),
+    m_transform             (1.f),
+    m_parent                (nullptr),
+    m_depth                 (0),
+    m_dirtyFlags            (0),
+    m_attachmentTransform   (1.f)
 {
 
 }
 
 Transform::Transform(Transform&& other) noexcept
-    : m_origin          (0.f, 0.f, 0.f),
-    m_position          (0.f, 0.f, 0.f),
-    m_scale             (1.f, 1.f, 1.f),
-    m_rotation          (1.f, 0.f, 0.f, 0.f),
-    m_transform         (1.f),
-    m_parent            (nullptr),
-    m_depth             (0),
-    m_dirtyFlags        (0)
+    : m_origin              (0.f, 0.f, 0.f),
+    m_position              (0.f, 0.f, 0.f),
+    m_scale                 (1.f, 1.f, 1.f),
+    m_rotation              (1.f, 0.f, 0.f, 0.f),
+    m_transform             (1.f),
+    m_parent                (nullptr),
+    m_depth                 (0),
+    m_dirtyFlags            (0),
+    m_attachmentTransform   (1.f)
 {
     CRO_ASSERT(other.m_parent != this, "Invalid assignment");
 
@@ -123,6 +125,7 @@ Transform::Transform(Transform&& other) noexcept
         setScale(other.getScale());
         setOrigin(other.getOrigin());
         m_dirtyFlags = Flags::Tx;
+        m_attachmentTransform = other.m_attachmentTransform;
 
         other.reset();
     }
@@ -189,6 +192,7 @@ Transform& Transform::operator=(Transform&& other) noexcept
         setScale(other.getScale());
         setOrigin(other.getOrigin());
         m_dirtyFlags = Flags::Tx;
+        m_attachmentTransform = other.m_attachmentTransform;
 
         other.reset();
     }
@@ -353,7 +357,7 @@ glm::vec3 Transform::getWorldScale() const
     return m_scale;
 }
 
-const glm::mat4& Transform::getLocalTransform() const
+glm::mat4 Transform::getLocalTransform() const
 {
     if (m_dirtyFlags & Tx)
     {
@@ -365,7 +369,7 @@ const glm::mat4& Transform::getLocalTransform() const
         m_dirtyFlags &= ~Tx;
     }
 
-    return m_transform;
+    return m_attachmentTransform * m_transform;
 }
 
 void Transform::setLocalTransform(glm::mat4 transform)
@@ -497,6 +501,7 @@ void Transform::reset()
     m_parent = nullptr;
     m_dirtyFlags = 0;
     m_depth = 0;
+    m_attachmentTransform = glm::mat4(1.f);
 
     m_children.clear();
 }

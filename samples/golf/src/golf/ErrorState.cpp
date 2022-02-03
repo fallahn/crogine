@@ -296,4 +296,9 @@ void ErrorState::quitState()
     m_sharedData.clientConnection.netClient.disconnect();
     m_sharedData.clientConnection.connectionID = 4;
     m_sharedData.clientConnection.ready = false;
+
+    for (auto& cd : m_sharedData.connectionData)
+    {
+        cd.playerCount = 0;
+    }
 }

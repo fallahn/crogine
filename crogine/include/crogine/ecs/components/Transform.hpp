@@ -42,6 +42,9 @@ source distribution.
 namespace cro
 {
     class Entity;
+    class SkeletalAnimator;
+    struct Attachment;
+
     /*!
     \brief A three dimensional transform component
     */
@@ -217,7 +220,7 @@ namespace cro
         \brief Returns a matrix representing the complete transform
         in local space.
         */
-        const glm::mat4& getLocalTransform() const;
+        glm::mat4 getLocalTransform() const;
         /*!
         \brief Sets the local transform from the given matrix
         */
@@ -294,5 +297,11 @@ namespace cro
         mutable std::uint8_t m_dirtyFlags;
 
         void reset();
+
+        //this is a fudge to allow transforms to read
+        //skeletal attachment points
+        glm::mat4 m_attachmentTransform;
+        friend class SkeletalAnimator;
+        friend struct Attachment;
     };
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -57,10 +57,12 @@ public:
     void setActive(bool);
     void setSuspended(bool);
     void setEnableFlags(std::uint16_t); //bits which are set are *enabled*
+    void setMaxClub(float);
     void resetPower();
     void update(float);
 
     bool inProgress() const;
+    bool getActive() const;
 
 private:
     const InputBinding& m_inputBinding;
@@ -96,6 +98,8 @@ private:
     }m_state;
 
     std::int32_t m_currentClub;
+    std::int32_t m_firstClub;
+    std::int32_t m_clubOffset; //offset ID from first club
 
     void setClub(float); //picks closest club to given distance
     void rotate(float);

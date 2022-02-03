@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -57,6 +57,14 @@ namespace cro
     struct NetEvent;
 }
 
+//sprite which carries green overhead view
+struct GreenCallbackData final
+{
+    float currTime = 0.f;
+    float state = 0;
+    float targetScale = 1.f;
+};
+
 //callback data for green overhead view
 struct MiniCamData final
 {
@@ -103,6 +111,7 @@ private:
     cro::Clock m_readyClock; //pings ready state until ack'd
 
     cro::RenderTexture m_gameSceneTexture;
+    std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
 
     cro::Image m_currentMap;
     std::vector<HoleData> m_holeData;
@@ -123,6 +132,9 @@ private:
             CelSkinned,
             CelTextured,
             CelTexturedSkinned,
+            Leaderboard,
+            Player,
+            Hair,
             Course,
             Ball,
 
@@ -212,22 +224,19 @@ private:
 
     struct Avatar final
     {
-        struct Sprite final
-        {
-            cro::Sprite sprite;
-            std::array<std::size_t, AnimationID::Count> animIDs = {};
-
-            enum
-            {
-                Wood, Iron, Count
-            };
-        };
-        std::int32_t clubType = Sprite::Wood;
-        std::array<Sprite, Sprite::Count> sprites = {};
         bool flipped = false;
+        cro::Entity model;
+        cro::Attachment* hands = nullptr;
+        std::array<std::size_t, AnimationID::Count> animationIDs = {};
     };
     std::array<std::array<Avatar, ConnectionData::MaxPlayers>, ConstVal::MaxClients> m_avatars;
+    Avatar* m_activeAvatar;
 
+    struct ClubModel final
+    {
+        enum { Wood, Iron, Count };
+    };
+    std::array<cro::Entity, ClubModel::Count> m_clubModels = {};
 
     float m_camRotation; //used to offset the rotation of the wind indicator
     bool m_roundEnded;

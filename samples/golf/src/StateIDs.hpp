@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -42,6 +42,7 @@ struct StateID final
         Tutorial,
         Keyboard,
         Practice,
-        DrivingRange
+        DrivingRange,
+        PuttingRange
     };
 };

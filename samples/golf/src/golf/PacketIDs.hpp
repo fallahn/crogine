@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -34,8 +34,9 @@ source distribution.
 
 //just to detect client/server version mismatch
 //(terrain data changed between 100 -> 110)
-static constexpr std::uint16_t CURRENT_VER = 120;
-static const std::string StringVer("1.2.0");
+//(model format changed betweem 120 -> 130)
+static constexpr std::uint16_t CURRENT_VER = 130;
+static const std::string StringVer("1.3.0");
 
 namespace MessageType
 {

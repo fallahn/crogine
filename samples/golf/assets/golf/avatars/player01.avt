@@ -1,6 +1,7 @@
-avatar
+avatar 
 {
-    sprite = "assets/golf/sprites/player01.spt"
-    audio = "assets/golf/sound/avatars/player01.xas"
-    uid = 10
+    model = assets/golf/models/avatars/player_zero.cmt
+    audio = assets/golf/sound/avatars/f01.xas
+    uid = 2533720330
+
 }

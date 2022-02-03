@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -34,6 +34,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "Utility.hpp"
 #include "CommandIDs.hpp"
+#include "spooky2.hpp"
 #include "../ErrorCheck.hpp"
 #include "server/ServerPacketData.hpp"
 
@@ -49,6 +50,7 @@ source distribution.
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 
@@ -257,161 +259,6 @@ void MenuState::parseCourseDirectory()
     }
 }
 
-void MenuState::parseAvatarDirectory()
-{
-    m_sharedData.avatarInfo.clear();
-
-    static const std::string AvatarPath = "assets/golf/avatars/";
-
-    auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + AvatarPath);
-    m_playerAvatars.reserve(files.size());
-
-    for (const auto& file : files)
-    {
-        if (cro::FileSystem::getFileExtension(file) == ".avt")
-        {
-            cro::ConfigFile cfg;
-            if (cfg.loadFromFile(AvatarPath + file))
-            {
-                SharedStateData::AvatarInfo info;
-                std::string texturePath;
-                cro::FloatRect previewRect;
-
-                const auto& props = cfg.getProperties();
-                for (const auto& prop : props)
-                {
-                    const auto& name = prop.getName();
-                    if (name == "sprite")
-                    {
-                        enum
-                        {
-                            WoodIdle = 0x1,
-                            IronIdle = 0x2,
-                            WoodSwing = 0x4,
-                            IronSwing = 0x8,
-
-                            AllFlags = 0xf
-                        };
-                        std::int32_t flags = 0;
-
-                        auto spritePath = prop.getValue<std::string>();
-                        cro::SpriteSheet spritesheet;
-                        if (spritesheet.loadFromFile(spritePath, m_resources.textures))
-                        {
-                            const auto& sprites = spritesheet.getSprites();
-                            for (const auto& [name, sprite] : sprites)
-                            {
-                                if (name == "wood")
-                                {
-                                    if (spritesheet.hasAnimation("idle", name))
-                                    {
-                                        flags |= WoodIdle;
-                                    }
-
-                                    if (spritesheet.hasAnimation("swing", name))
-                                    {
-                                        flags |= WoodSwing;
-                                    }
-                                    previewRect = sprite.getTextureRect();
-                                }
-                                else if (name == "iron")
-                                {
-                                    if (spritesheet.hasAnimation("idle", name))
-                                    {
-                                        flags |= IronIdle;
-                                    }
-
-                                    if (spritesheet.hasAnimation("swing", name))
-                                    {
-                                        flags |= IronSwing;
-                                    }
-                                }
-                            }
-                        }
-
-                        if (flags == AllFlags)
-                        {
-                            info.spritePath = spritePath;
-                            texturePath = spritesheet.getTexturePath();
-                        }
-                    }
-                    else if (name == "uid")
-                    {
-                        info.uid = prop.getValue<std::int32_t>();
-                    }
-                    else if (name == "audio")
-                    {
-                        info.audioscape = prop.getValue<std::string>();
-                    }
-                }
-
-                if (info.uid >= 0
-                    && !info.spritePath.empty())
-                {
-                    //check uid doesn't exist
-                    auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
-                        [&info](const SharedStateData::AvatarInfo& i) 
-                        {
-                            return info.uid == i.uid;
-                        });
-
-                    if (result == m_sharedData.avatarInfo.end())
-                    {
-                        m_sharedData.avatarInfo.push_back(info);
-                        m_playerAvatars.emplace_back(texturePath).previewRect = previewRect;
-                    }
-                    else
-                    {
-                        LogW << "Avatar with UID " << info.uid << " already exists. " << info.spritePath << " will be skipped." << std::endl;
-                    }
-                }
-                else
-                {
-                    LogW << "Skipping " << file << ": missing or corrupt data, or not an avatar." << std::endl;
-                }
-            }
-        }
-    }
-
-    if (!m_playerAvatars.empty())
-    {
-        for (auto i = 0u; i < ConnectionData::MaxPlayers; ++i)
-        {
-            m_avatarIndices[i] = indexFromAvatarID(m_sharedData.localConnectionData.playerData[i].skinID);
-        }
-    }
-}
-
-std::int32_t MenuState::indexFromAvatarID(std::uint8_t id)
-{
-    auto avatar = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
-        [id](const SharedStateData::AvatarInfo& info)
-        {
-            return info.uid == id;
-        });
-
-    if (avatar != m_sharedData.avatarInfo.end())
-    {
-        return static_cast<std::int32_t>(std::distance(m_sharedData.avatarInfo.begin(), avatar));
-    }
-
-    return 0;
-}
-
-void MenuState::applyAvatar(std::size_t playerIndex)
-{
-    auto avatarIndex = m_avatarIndices[playerIndex];
-
-    const auto& flags = m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags;
-    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Bottom, flags[0]);
-    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Top, flags[1]);
-    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Skin, flags[2]);
-    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Hair, flags[3]);
-
-    m_playerAvatars[avatarIndex].setTarget(m_sharedData.avatarTextures[0][playerIndex]);
-    m_playerAvatars[avatarIndex].apply();
-}
-
 void MenuState::createUI()
 {
     parseCourseDirectory();
@@ -431,7 +278,7 @@ void MenuState::createUI()
 
 
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, -0.5f});
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_backgroundTexture.getTexture());
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -488,7 +335,8 @@ void MenuState::createUI()
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(m_menuPositions[m_currentMenu] * m_viewScale);
 
-        courseEnt.getComponent<cro::Transform>().setScale(m_viewScale);
+        glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);
+        courseEnt.getComponent<cro::Transform>().setScale(courseScale);
         courseEnt.getComponent<cro::Callback>().active = true; //makes sure to delay so updating the texture size is complete first
         courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -1.f));
 
@@ -927,6 +775,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     m_sprites[SpriteID::ArrowRightHighlight] = spriteSheet.getSprite("arrow_r_h");
     m_sprites[SpriteID::Controller] = spriteSheet.getSprite("controller");
     m_sprites[SpriteID::Keyboard] = spriteSheet.getSprite("keyboard");
+    m_sprites[SpriteID::ThumbBackground] = spriteSheet.getSprite("thumb_bg");
 
     //this entity has the player edit text ents added to it by updateLocalAvatars
     auto avatarEnt = m_uiScene.createEntity();
@@ -2143,7 +1992,7 @@ void MenuState::createPlayerConfigMenu()
             paletteIdx = (paletteIdx + (pc::ColourID::Count - 1)) % pc::ColourID::Count;
             m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].avatarFlags[idx] = paletteIdx;
 
-            applyAvatar(m_activePlayerAvatar);
+            applyAvatarColours(m_activePlayerAvatar);
         }
     };
 
@@ -2158,7 +2007,7 @@ void MenuState::createPlayerConfigMenu()
             paletteIdx = (paletteIdx + 1) % pc::ColourID::Count;
             m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].avatarFlags[idx] = paletteIdx;
 
-            applyAvatar(m_activePlayerAvatar);
+            applyAvatarColours(m_activePlayerAvatar);
         }
     };
 
@@ -2168,6 +2017,17 @@ void MenuState::createPlayerConfigMenu()
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowLeftCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
                 arrowLeftCallback(evt, pc::ColourKey::Hair);
+
+                //update the hair model too, if it exists
+                auto hairID = m_hairIndices[m_activePlayerAvatar];
+                if (m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.isValid())
+                {
+                    auto colour = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].getColour(pc::ColourKey::Hair).first;
+                    m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", colour);
+
+                    colour = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].getColour(pc::ColourKey::Hair).second;
+                    //m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.getComponent<cro::Model>().setMaterialProperty(0, "u_darkColour", colour);
+                }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -2177,6 +2037,16 @@ void MenuState::createPlayerConfigMenu()
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&, arrowRightCallback](cro::Entity, const cro::ButtonEvent& evt)
             {
                 arrowRightCallback(evt, pc::ColourKey::Hair);
+
+                auto hairID = m_hairIndices[m_activePlayerAvatar];
+                if (m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.isValid())
+                {
+                    auto colour = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].getColour(pc::ColourKey::Hair).first;
+                    m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", colour);
+
+                    colour = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].getColour(pc::ColourKey::Hair).second;
+                    //m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.getComponent<cro::Model>().setMaterialProperty(0, "u_darkColour", colour);
+                }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -2273,8 +2143,48 @@ void MenuState::createPlayerConfigMenu()
     }
 
 
+    //hair left
+    entity = createButton({ 95.f, 77.f }, "arrow_left");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    applyTextEdit();
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                    m_hairIndices[m_activePlayerAvatar] = 
+                        (m_hairIndices[m_activePlayerAvatar] + (m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels.size() - 1)) % m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels.size();
+                    auto hairID = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[m_hairIndices[m_activePlayerAvatar]].uid;
+                    m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].hairID = hairID;
+
+                    setPreviewModel(m_activePlayerAvatar);
+                }
+            });
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //hair right
+    entity = createButton({ 177.f, 77.f }, "arrow_right");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    applyTextEdit();
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    m_hairIndices[m_activePlayerAvatar] = (m_hairIndices[m_activePlayerAvatar] + 1) % m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels.size();
+                    auto hairID = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[m_hairIndices[m_activePlayerAvatar]].uid;
+                    m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].hairID = hairID;
+
+                    setPreviewModel(m_activePlayerAvatar);
+                }
+            });
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     //skin left
-    entity = createButton({ 95.f, 92.f }, "arrow_left");
+    entity = createButton({ 95.f, 52.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2287,7 +2197,7 @@ void MenuState::createPlayerConfigMenu()
                     flipped = !flipped;
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].flipped = flipped;
                     
-                    if (!flipped)
+                    if (flipped)
                     {
                         m_avatarIndices[m_activePlayerAvatar] = (m_avatarIndices[m_activePlayerAvatar] + (m_playerAvatars.size() - 1)) % m_playerAvatars.size();
                     }
@@ -2295,33 +2205,22 @@ void MenuState::createPlayerConfigMenu()
                     auto skinID = m_sharedData.avatarInfo[m_avatarIndices[m_activePlayerAvatar]].uid;
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].skinID = skinID;
 
-                    applyAvatar(m_activePlayerAvatar);
 
-                    cro::Command cmd;
-                    cmd.targetFlags = CommandID::Menu::PlayerAvatar;
-                    cmd.action = [&, flipped](cro::Entity en, float)
+                    auto soundSize = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].previewSounds.size();
+                    if (soundSize != 0)
                     {
-                        auto index = m_avatarIndices[m_activePlayerAvatar];
-                        en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[index].previewRect);
+                        auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
+                        m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
+                    }
 
-                        if (flipped)
-                        {
-                            en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-                            en.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
-                        }
-                        else
-                        {
-                            en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-                            en.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
-                        }
-                    };
-                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                    applyAvatarColours(m_activePlayerAvatar);
+                    setPreviewModel(m_activePlayerAvatar);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //skin right
-    entity = createButton({ 177.f, 92.f }, "arrow_right");
+    entity = createButton({ 177.f, 52.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2342,27 +2241,15 @@ void MenuState::createPlayerConfigMenu()
                     auto skinID = m_sharedData.avatarInfo[m_avatarIndices[m_activePlayerAvatar]].uid;
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].skinID = skinID;
 
-                    applyAvatar(m_activePlayerAvatar);
 
-                    cro::Command cmd;
-                    cmd.targetFlags = CommandID::Menu::PlayerAvatar;
-                    cmd.action = [&, flipped](cro::Entity en, float)
+                    auto soundSize = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].previewSounds.size();
+                    if (soundSize != 0)
                     {
-                        auto index = m_avatarIndices[m_activePlayerAvatar];
-                        en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[index].previewRect);
-
-                        if (flipped)
-                        {
-                            en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-                            en.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
-                        }
-                        else
-                        {
-                            en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-                            en.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
-                        }
-                    };
-                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                        auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
+                        m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
+                    }
+                    applyAvatarColours(m_activePlayerAvatar);
+                    setPreviewModel(m_activePlayerAvatar);
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2410,28 +2297,16 @@ void MenuState::createPlayerConfigMenu()
 
                         prevIndex = paletteIdx;
                     }
-                    applyAvatar(m_activePlayerAvatar);
+                    applyAvatarColours(m_activePlayerAvatar);
+
+                    //random hair
+                    m_hairIndices[m_activePlayerAvatar] = cro::Util::Random::value(0u, m_playerAvatars[m_activePlayerAvatar].hairModels.size() - 1);
+                    auto hairID = m_sharedData.hairInfo[m_hairIndices[m_activePlayerAvatar]].uid;
+                    m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].hairID = hairID;
+
 
                     //update texture
-                    cro::Command cmd;
-                    cmd.targetFlags = CommandID::Menu::PlayerAvatar;
-                    cmd.action = [&, flipped](cro::Entity en, float)
-                    {
-                        en.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].previewRect);
-
-                        if (flipped)
-                        {
-                            en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-                            en.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
-                        }
-                        else
-                        {
-                            en.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-                            en.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
-                        }
-                    };
-                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
+                    setPreviewModel(m_activePlayerAvatar);
 
                     //random ball
                     idx = cro::Util::Random::value(0u, m_sharedData.ballModels.size() - 1);
@@ -2465,10 +2340,21 @@ void MenuState::createPlayerConfigMenu()
     entity.addComponent<cro::Transform>().setPosition({ 206.f, 70.f, ButtonDepth });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_ballTexture.getTexture());
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+    {
+        //hmm we only want to this in a resize callback really...
+        auto size = glm::vec2(e.getComponent<cro::Sprite>().getTexture()->getSize());
+        e.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, size.x, size.y });
+
+        float scale = static_cast<float>(BallPreviewSize) / size.y;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    };
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //ball select left
-    entity = createButton({ 213.f, 49.f }, "arrow_left");
+    entity = createButton({ 213.f, 52.f }, "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2488,7 +2374,7 @@ void MenuState::createPlayerConfigMenu()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //ball select right
-    entity = createButton({ 246.f, 49.f }, "arrow_right");
+    entity = createButton({ 246.f, 52.f }, "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -2509,28 +2395,34 @@ void MenuState::createPlayerConfigMenu()
 
 
     //player preview
-    if (!m_playerAvatars.empty())
-    {
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 113.f, 68.f, ButtonDepth });
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::PlayerAvatar;
-        entity.addComponent<cro::Sprite>(m_sharedData.avatarTextures[0][0]); //doesn't matter which texture we use but it has to be valid to create the correct shader.
-        bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 109.f, 54.f, ButtonDepth });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_avatarTexture.getTexture());
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-        auto centre = m_playerAvatars[0].previewRect.width / 2.f;
-        entity.getComponent<cro::Transform>().setOrigin({ centre, 0.f });
-        entity.getComponent<cro::Transform>().move({ centre, 0.f });
-    }
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+    {
+        //hmm we only want to this in a resize callback really...
+        auto size = glm::vec2(e.getComponent<cro::Sprite>().getTexture()->getSize());
+        e.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, size.x, size.y });
+
+        float scale = static_cast<float>(AvatarPreviewSize.y) / size.y;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    };
 }
 
 void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
     //these can have fixed positions as they are attached to a menuEntity[] which is UI scaled
-    static constexpr glm::vec3 EditButtonOffset(-47.f, -57.f, 0.f);
-    static constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-70.f, -10.f, 0.f);
-    static constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(115.f, 34.f, 0.f);
-    static constexpr float LineHeight = -8.f;
+    constexpr glm::vec3 EditButtonOffset(-47.f, -57.f, 0.f);
+    constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-68.f, -18.f, 0.f);
+    constexpr glm::vec3 BGOffset = AvatarOffset + glm::vec3(1.f, 7.f, -0.02f);
+    constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(115.f, 42.f, 0.f);
+    constexpr float LineHeight = 11.f; //-8.f
 
     for (auto e : m_avatarListEntities)
     {
@@ -2545,7 +2437,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
     {
         auto localPos = glm::vec3(
             173.f * static_cast<float>(i % 2),
-            -(LineHeight + m_playerAvatars[0].previewRect.height) * static_cast<float>(i / 2),
+            -(LineHeight + AvatarThumbSize.y) * static_cast<float>(i / 2),
             0.1f);
         localPos += RootPos;
 
@@ -2561,33 +2453,27 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
 
+        //add avatar background
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(localPos + BGOffset);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ThumbBackground];
+
+        m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_avatarListEntities.push_back(entity);
 
         //add avatar preview
-        applyAvatar(i);
+        applyAvatarColours(i);
+        updateThumb(i);
         auto id = m_avatarIndices[i];
                 
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(localPos + AvatarOffset);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>(m_sharedData.avatarTextures[0][i]);
-        entity.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[id].previewRect);
-        auto centre = std::ceil(entity.getComponent<cro::Sprite>().getTextureBounds().width / 2.f);
-        entity.getComponent<cro::Transform>().setOrigin({ centre, 0.f });
-        entity.getComponent<cro::Transform>().move({ centre, 0.f });
+        entity.addComponent<cro::Sprite>(m_avatarThumbs[i].getTexture());
+
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
-
-        //flip if left handed
-        if (m_sharedData.localConnectionData.playerData[i].flipped)
-        {
-            entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-            entity.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
-        }
-        else
-        {
-            entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-            entity.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
-        }
 
 
         //add edit button
@@ -2804,7 +2690,8 @@ void MenuState::updateLobbyAvatars()
             for (auto i = 0u; i < c.playerCount; ++i)
             {
                 str += c.playerData[i].name + "\n";
-                applyTexture(m_avatarIndices[i], m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
+                auto avatarIndex = indexFromAvatarID(c.playerData[i].skinID);
+                applyTexture(avatarIndex, m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
             }
 
             if (str.empty())
@@ -2879,31 +2766,10 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    cmd.targetFlags = CommandID::Menu::PlayerAvatar;
-    cmd.action = [&](cro::Entity e, float)
-    {
-        auto index = m_avatarIndices[m_activePlayerAvatar];
-        m_playerAvatars[index].setTarget(m_sharedData.avatarTextures[0][m_activePlayerAvatar]);
-        m_playerAvatars[index].apply();
-        e.getComponent<cro::Sprite>().setTexture(m_sharedData.avatarTextures[0][m_activePlayerAvatar]);
-        e.getComponent<cro::Sprite>().setTextureRect(m_playerAvatars[index].previewRect);
+    //make sure the preview is set to the current player's settings
+    applyAvatarColours(playerIndex);
+    setPreviewModel(playerIndex);
 
-        if (m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].flipped)
-        {
-            //flipped left handed
-            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-            e.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
-        }
-        else
-        {
-            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-            e.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
-        }
-    };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-    //apply all the current indices to the player avatar
-    //auto id = m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].skinID;
     auto index = m_avatarIndices[m_activePlayerAvatar];
 
     if (visible)
@@ -2915,7 +2781,7 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
 
         m_currentMenu = MenuID::PlayerConfig;
 
-        m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = static_cast<std::int32_t>(m_ballIndices[m_activePlayerAvatar]);// indexFromBallID(m_sharedData.localConnectionData.playerData[m_playerAvatar.activePlayer].ballID);
+        m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = static_cast<std::int32_t>(m_ballIndices[m_activePlayerAvatar]);
     }
     else
     {
@@ -2927,6 +2793,16 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
         //this is an assumption, but a fair one I feel.
         //I'm probably going to regret that.
         m_currentMenu = MenuID::Avatar;
+
+        //this is a fudge to get around the edge case where the window
+        //was resized while the avatar menu was open - the background menu,
+        //being inactive, will have now been misplaced... calling this should
+        //replace it again
+        auto size = cro::App::getWindow().getSize();
+        auto* msg = getContext().appInstance.getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+        msg->data0 = size.x;
+        msg->data1 = size.y;
+        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
     }
 }
 
@@ -2941,6 +2817,11 @@ void MenuState::quitLobby()
     {
         m_sharedData.serverInstance.stop();
         m_sharedData.hosting = false;
+
+        for (auto& cd : m_sharedData.connectionData)
+        {
+            cd.playerCount = 0;
+        }
     }
 
     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
@@ -3005,102 +2886,4 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
 
     m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
-}
-
-void MenuState::saveAvatars()
-{
-    cro::ConfigFile cfg("avatars");
-    for (const auto& player : m_sharedData.localConnectionData.playerData)
-    {
-        auto* avatar = cfg.addObject("avatar");
-        avatar->addProperty("name", player.name.empty() ? "Player" : player.name.toAnsiString()); //hmmm shame we can't save the encoding here
-        avatar->addProperty("skin_id").setValue(player.skinID);
-        avatar->addProperty("flipped").setValue(player.flipped);
-        avatar->addProperty("ball_id").setValue(player.ballID);
-        avatar->addProperty("flags0").setValue(player.avatarFlags[0]);
-        avatar->addProperty("flags1").setValue(player.avatarFlags[1]);
-        avatar->addProperty("flags2").setValue(player.avatarFlags[2]);
-        avatar->addProperty("flags3").setValue(player.avatarFlags[3]);
-    }
-
-    auto path = cro::App::getPreferencePath() + "avatars.cfg";
-    cfg.save(path);
-}
-
-void MenuState::loadAvatars()
-{
-    auto path = cro::App::getPreferencePath() + "avatars.cfg";
-    cro::ConfigFile cfg;
-    if (cfg.loadFromFile(path, false))
-    {
-        std::uint32_t i = 0;
-
-        const auto& objects = cfg.getObjects();
-        for (const auto& obj : objects)
-        {
-            if (obj.getName() == "avatar"
-                && i < m_sharedData.localConnectionData.MaxPlayers)
-            {
-                const auto& props = obj.getProperties();
-                for (const auto& prop : props)
-                {
-                    const auto& name = prop.getName();
-                    if (name == "name")
-                    {
-                        //TODO try running this through unicode parser
-                        m_sharedData.localConnectionData.playerData[i].name = prop.getValue<std::string>();
-                    }
-                    else if (name == "skin_id")
-                    {
-                        auto id = prop.getValue<std::int32_t>();
-                        id = std::min(255, std::max(0, id)); //can only store uint8
-                        m_sharedData.localConnectionData.playerData[i].skinID = id;
-                    }
-                    else if (name == "flipped")
-                    {
-                        m_sharedData.localConnectionData.playerData[i].flipped = prop.getValue<bool>();
-                    }
-                    else if (name == "ball_id")
-                    {
-                        auto id = prop.getValue<std::int32_t>();
-                        //id = std::min(BallID::Count - 1, std::max(0, id));
-                        //this is corrected if not found when loading the state
-                        //see the constructor.
-                        m_sharedData.localConnectionData.playerData[i].ballID = id;
-                    }
-                    else if (name == "flags0")
-                    {
-                        auto flag = prop.getValue<std::int32_t>();
-                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
-                        m_sharedData.localConnectionData.playerData[i].avatarFlags[0] = static_cast<std::uint8_t>(flag);
-                    }
-                    else if (name == "flags1")
-                    {
-                        auto flag = prop.getValue<std::int32_t>();
-                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
-                        m_sharedData.localConnectionData.playerData[i].avatarFlags[1] = static_cast<std::uint8_t>(flag);
-                    }
-                    else if (name == "flags2")
-                    {
-                        auto flag = prop.getValue<std::int32_t>();
-                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
-                        m_sharedData.localConnectionData.playerData[i].avatarFlags[2] = static_cast<std::uint8_t>(flag);
-                    }
-                    else if (name == "flags3")
-                    {
-                        auto flag = prop.getValue<std::int32_t>();
-                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
-                        m_sharedData.localConnectionData.playerData[i].avatarFlags[3] = static_cast<std::uint8_t>(flag);
-                    }
-                }
-
-                i++;
-            }
-        }
-    }
-
-    if (m_sharedData.localConnectionData.playerData[0].name.empty())
-    {
-        m_sharedData.localConnectionData.playerData[0].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
-    }
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -51,7 +51,9 @@ source distribution.
 using namespace cro;
 
 ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
-    : System(mb, typeid(ShadowMapRenderer))
+    : System(mb, typeid(ShadowMapRenderer)),
+    m_maxDistance (100.f),
+    m_cascadeCount(3)
 {
     requireComponent<cro::Model>();
     requireComponent<cro::Transform>();
@@ -60,6 +62,16 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
 
 
 //public
+void ShadowMapRenderer::setMaxDistance(float distance)
+{
+    m_maxDistance = std::max(distance, 0.1f);
+}
+
+void ShadowMapRenderer::setNumCascades(std::int32_t count)
+{
+    m_cascadeCount = std::max(1, count);
+}
+
 void ShadowMapRenderer::process(float)
 {
     //render here to ensure this only happens once per update
@@ -104,9 +116,9 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         float tanHalfFOVY = std::tan(camera.m_verticalFOV / 2.f);
         float tanHalfFOVX = std::tan((camera.m_verticalFOV * camera.m_aspectRatio) / 2.f);
 
-        //only covers the first 3rd of the frustum...
-        //we'd implement the rest as cascaded shadows
-        float farPlane = camera.m_farPlane / 3.f;
+        //only covers the first part of the frustum...
+        //TODO implement the rest as cascaded shadows
+        float farPlane = std::min(camera.m_farPlane, m_maxDistance) / m_cascadeCount;
         //float farPlane = camera.m_farPlane;
         float xNear = camera.m_nearPlane * tanHalfFOVX;
         float xFar = farPlane * tanHalfFOVX;
@@ -256,6 +268,8 @@ void ShadowMapRenderer::render()
                 continue;
             }
 
+            glCheck(glFrontFace(model.m_facing));
+
             //calc entity transform
             const auto& tx = e.getComponent<Transform>();
             glm::mat4 worldMat = tx.getWorldTransform();
@@ -351,6 +365,7 @@ void ShadowMapRenderer::render()
 
         glCheck(glUseProgram(0));
 
+        glCheck(glFrontFace(GL_CCW));
         glCheck(glDisable(GL_DEPTH_TEST));
         glCheck(glDisable(GL_CULL_FACE));
         glCheck(glCullFace(GL_BACK));

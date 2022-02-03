@@ -29,7 +29,6 @@ source distribution.
 
 #include "MenuState.hpp"
 #include "MenuSoundDirector.hpp"
-#include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
 #include "MenuConsts.hpp"
 #include "Utility.hpp"
@@ -39,6 +38,7 @@ source distribution.
 #include "PoissonDisk.hpp"
 #include "GolfCartSystem.hpp"
 #include "MessageIDs.hpp"
+#include "spooky2.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
@@ -66,6 +66,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
@@ -89,6 +90,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_sharedData        (sd),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_backgroundScene   (context.appInstance.getMessageBus()),
+    m_avatarScene       (context.appInstance.getMessageBus()),
     m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu       (MenuID::Main),
     m_prevMenu          (MenuID::Main),
@@ -98,6 +100,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     std::fill(m_ballIndices.begin(), m_ballIndices.end(), 0);
     std::fill(m_avatarIndices.begin(), m_avatarIndices.end(), 0);    
+    std::fill(m_hairIndices.begin(), m_hairIndices.end(), 0);    
 
     
     //launches a loading screen (registered in MyApp.cpp)
@@ -133,7 +136,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             m_sharedData.localConnectionData.playerData[i].ballID = 0;
         }
-        applyAvatar(i);
+        applyAvatarColours(i);
     }
 
     //reset the state if we came from the tutorial (this is
@@ -253,7 +256,17 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //            ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
     //            ImGui::SameLine();
     //            ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
-    //            ImGui::Image(m_ballTexture.getTexture(), { 64, 64 }, { 0,1 }, { 1,0 });
+    //            /*float x = static_cast<float>(AvatarThumbSize.x);
+    //            float y = static_cast<float>(AvatarThumbSize.y);
+    //            ImGui::Image(m_avatarThumbs[0].getTexture(), {x,y}, {0,1}, {1,0});
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_avatarThumbs[1].getTexture(), { x,y }, { 0,1 }, { 1,0 });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_avatarThumbs[2].getTexture(), { x,y }, { 0,1 }, { 1,0 });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
+    //            //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
+    //            //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
     //        }
     //        ImGui::End();
     //    });
@@ -295,6 +308,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
     {
         return true;
     }
+
 
     if (evt.type == SDL_KEYUP)
     {
@@ -376,6 +390,15 @@ bool MenuState::handleEvent(const cro::Event& evt)
         {
             quitMenu();
         }
+        else if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            if (applyTextEdit())
+            {
+                //we applied a text edit so don't update the
+                //UISystem
+                return true;
+            }
+        }
     }
 
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -397,6 +420,7 @@ void MenuState::handleMessage(const cro::Message& msg)
     }
 
     m_backgroundScene.forwardMessage(msg);
+    m_avatarScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
 
@@ -413,6 +437,7 @@ bool MenuState::simulate(float dt)
     }
 
     m_backgroundScene.simulate(dt);
+    m_avatarScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
 }
@@ -425,6 +450,13 @@ void MenuState::render()
     m_backgroundScene.render();
     m_ballTexture.display();
 
+    //and avatar preview
+    m_avatarTexture.clear(cro::Colour::Transparent);
+    //m_avatarTexture.clear(cro::Colour::Magenta);
+    m_avatarScene.render();
+    m_avatarTexture.display();
+
+    //then background scene
     m_backgroundScene.setActiveCamera(oldCam);
     m_backgroundTexture.clear();
     m_backgroundScene.render();
@@ -447,6 +479,11 @@ void MenuState::addSystems()
 
     m_backgroundScene.addDirector<MenuSoundDirector>(m_resources.audio, m_currentMenu);
 
+    m_avatarScene.addSystem<cro::CallbackSystem>(mb);
+    m_avatarScene.addSystem<cro::SkeletalAnimator>(mb);
+    m_avatarScene.addSystem<cro::CameraSystem>(mb);
+    m_avatarScene.addSystem<cro::ModelRenderer>(mb);
+
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::UISystem>(mb);
@@ -464,9 +501,25 @@ void MenuState::loadAssets()
 
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
+    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX");
 
-    m_materialIDs[MaterialID::Cel] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Cel));
-    m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(m_resources.shaders.get(ShaderID::CelTextured));
+    auto* shader = &m_resources.shaders.get(ShaderID::Cel);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::CelTextured);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
+    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::Hair);
+    m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
+    //fudge this for the previews
+    m_resources.materials.get(m_materialIDs[MaterialID::Hair]).doubleSided = true;
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
@@ -485,6 +538,11 @@ void MenuState::loadAssets()
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+
+    for (auto& thumb : m_avatarThumbs)
+    {
+        thumb.create(AvatarThumbSize.x, AvatarThumbSize.y);
+    }
 }
 
 void MenuState::createScene()
@@ -519,7 +577,7 @@ void MenuState::createScene()
 
     cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/menu_pavilion.cmt");
-    setTexture(md, texturedMat);
+    applyMaterialData(md, texturedMat);
 
     auto entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -531,7 +589,7 @@ void MenuState::createScene()
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
     texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-    setTexture(md, texturedMat);
+    applyMaterialData(md, texturedMat);
     entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
     md.loadFromFile("assets/golf/models/phone_box.cmt");
@@ -540,7 +598,7 @@ void MenuState::createScene()
     md.createModel(entity);
 
     texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-    setTexture(md, texturedMat);
+    applyMaterialData(md, texturedMat);
     entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
 
@@ -557,10 +615,10 @@ void MenuState::createScene()
 
         auto& collection = entity.getComponent<cro::BillboardCollection>();
 
-        auto trees = pd::PoissonDiskSampling(4.8f, minBounds, maxBounds);
+        auto trees = pd::PoissonDiskSampling(2.8f, minBounds, maxBounds);
         for (auto [x, y] : trees)
         {
-            float scale = static_cast<float>(cro::Util::Random::value(8, 12)) / 10.f;
+            float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
 
             auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)];
             bb.position = { x, 0.f, -y };
@@ -595,7 +653,7 @@ void MenuState::createScene()
     md.createModel(entity);
 
     texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-    setTexture(md, texturedMat);
+    applyMaterialData(md, texturedMat);
     entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
     //these ones move :)
@@ -622,18 +680,20 @@ void MenuState::createScene()
         auto vpSize = calcVPSize();
 
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float scale = std::floor(winSize.y / vpSize.y);
-        auto texSize = vpSize;
-        if (texSize.x * scale <= winSize.x)
+        float maxScale = std::floor(winSize.y / vpSize.y);
+        float scale = m_sharedData.pixelScale ? maxScale : 1.f;
+        auto texSize = winSize / scale;
+
+        auto invScale = (maxScale + 1) - scale;
+        for (auto [shader, uniform] : m_scaleUniforms)
         {
-            texSize *= 1.6f;
+            glCheck(glUseProgram(shader));
+            glCheck(glUniform1f(uniform, invScale));
         }
 
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
-        //the resize actually extends the target vertically so we need to maintain a
-        //horizontal FOV, not the vertical one expected by default.
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -642,10 +702,9 @@ void MenuState::createScene()
     cam.resizeCallback = updateView;
     updateView(cam);
 
-    //camEnt.getComponent<cro::Transform>().setPosition(CameraBasePosition);
-    camEnt.getComponent<cro::Transform>().setPosition({ -17.8273, 4.9, 25.0144 });
-    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -34.f * cro::Util::Const::degToRad);
-    //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -0.84f * cro::Util::Const::degToRad);
+    //camEnt.getComponent<cro::Transform>().setPosition({ -17.8273, 4.9, 25.0144 });
+    camEnt.getComponent<cro::Transform>().setPosition({ -18.3, 4.9, 23.3144 });
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -31.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
 
     //add the ambience to the cam cos why not
@@ -661,138 +720,6 @@ void MenuState::createScene()
     createBallScene();    
 
     createUI();
-}
-
-void MenuState::createBallScene()
-{
-    static constexpr float RootPoint = 100.f;
-    static constexpr float BallSpacing = 0.09f;
-
-    m_ballCam = m_backgroundScene.createEntity();
-    m_ballCam.addComponent<cro::Transform>().setPosition({ RootPoint, 0.045f, 0.095f });
-    m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
-    m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, 1.f, 0.001f, 2.f);
-    m_ballCam.addComponent<cro::Callback>().active = true;
-    m_ballCam.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
-    m_ballCam.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
-    {
-        auto id = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
-        float target = RootPoint + (BallSpacing * id);
-
-        auto pos = e.getComponent<cro::Transform>().getPosition();
-        auto diff = target - pos.x;
-        pos.x += diff * (dt * 10.f);
-
-        e.getComponent<cro::Transform>().setPosition(pos);
-    };
-
-    m_ballTexture.create(64, 64);
-
-    auto ballFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + "assets/golf/balls");
-    if (ballFiles.empty())
-    {
-        LogE << "No ball files were found" << std::endl;
-    }
-
-    m_sharedData.ballModels.clear();
-    
-    for (const auto& file : ballFiles)
-    {
-        cro::ConfigFile cfg;
-        if (cro::FileSystem::getFileExtension(file) == ".ball"
-            && cfg.loadFromFile("assets/golf/balls/" + file))
-        {
-            std::int32_t uid = -1;
-            std::string modelPath;
-            cro::Colour colour = cro::Colour::White;
-
-            const auto& props = cfg.getProperties();
-            for (const auto& p : props)
-            {
-                const auto& name = p.getName();
-                if (name == "model")
-                {
-                    modelPath = p.getValue<std::string>();
-                }
-                else if (name == "uid")
-                {
-                    uid = p.getValue<std::int32_t>();
-                }
-                else if (name == "tint")
-                {
-                    colour = p.getValue<cro::Colour>();
-                }
-            }
-
-            if (uid > -1
-                && (!modelPath.empty() && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + modelPath)))
-            {
-                auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
-                    [uid](const SharedStateData::BallInfo& ballPair)
-                    {
-                        return ballPair.uid == uid;
-                    });
-
-                if (ball == m_sharedData.ballModels.end())
-                {
-                    m_sharedData.ballModels.emplace_back(colour, uid, modelPath);
-                }
-                else
-                {
-                    LogE << file << ": a ball already exists with UID " << uid << std::endl;
-                }
-            }
-        }
-    }
-
-    cro::ModelDefinition ballDef(m_resources);
-
-    cro::ModelDefinition shadowDef(m_resources);
-    auto shadow = shadowDef.loadFromFile("assets/golf/models/ball_shadow.cmt");
-
-    for (auto i = 0u; i < m_sharedData.ballModels.size(); ++i)
-    {
-        if (ballDef.loadFromFile(m_sharedData.ballModels[i].modelPath))
-        {
-            auto entity = m_backgroundScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition({ (i * BallSpacing) + RootPoint, 0.f, 0.f });
-            ballDef.createModel(entity);
-            entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
-
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().function =
-                [](cro::Entity e, float dt)
-            {
-                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, /*0.3f **/ dt);
-            };
-
-            if (shadow)
-            {
-                auto ballEnt = entity;
-                entity = m_backgroundScene.createEntity();
-                entity.addComponent<cro::Transform>();
-                shadowDef.createModel(entity);
-                ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-            }
-        }
-    }
-}
-
-std::int32_t MenuState::indexFromBallID(std::uint8_t ballID)
-{
-    auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
-        [ballID](const SharedStateData::BallInfo& ballPair)
-        {
-            return ballPair.uid == ballID;
-        });
-
-    if (ball != m_sharedData.ballModels.end())
-    {
-        return static_cast<std::int32_t>(std::distance(m_sharedData.ballModels.begin(), ball));
-    }
-
-    return -1;
 }
 
 void MenuState::handleNetEvent(const cro::NetEvent& evt)
@@ -1060,7 +987,7 @@ void MenuState::handleTextEdit(const cro::Event& evt)
     //}
 }
 
-void MenuState::applyTextEdit()
+bool MenuState::applyTextEdit()
 {
     if (m_textEdit.string && m_textEdit.entity.isValid())
     {
@@ -1090,6 +1017,9 @@ void MenuState::applyTextEdit()
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         SDL_StopTextInput();
+        m_textEdit = {};
+        return true;
     }
     m_textEdit = {};
+    return false;
 }

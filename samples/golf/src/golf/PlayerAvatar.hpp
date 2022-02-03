@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -31,6 +31,9 @@ source distribution.
 
 #include "PlayerColours.hpp"
 
+#include <crogine/ecs/Entity.hpp>
+#include <crogine/ecs/components/Skeleton.hpp>
+
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/Colour.hpp>
@@ -44,9 +47,20 @@ public:
 
     void setTarget(cro::Texture&);
     void setColour(pc::ColourKey::Index, std::int8_t);
+    std::pair<cro::Colour, cro::Colour> getColour(pc::ColourKey::Index) const;
     void apply();
 
-    cro::FloatRect previewRect;
+    cro::Entity previewModel;
+
+    struct HairInfo final
+    {
+        std::uint32_t uid = 0;
+        cro::Entity model;
+    };
+    std::vector<HairInfo> hairModels;
+    cro::Attachment* hairAttachment = nullptr;
+
+    std::vector<cro::Entity> previewSounds;
 
 private:
     cro::Texture* m_target;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -127,6 +127,11 @@ static const std::string CelVertexShader = R"(
     ATTRIBUTE vec2 a_texCoord0;
 #endif
 
+#if defined(INSTANCING)
+    ATTRIBUTE mat4 a_instanceWorldMatrix;
+    ATTRIBUTE mat3 a_instanceNormalMatrix;
+#endif
+
 #if defined(SKINNED)
     #define MAX_BONES 64
     ATTRIBUTE vec4 a_boneIndices;
@@ -134,9 +139,18 @@ static const std::string CelVertexShader = R"(
     uniform mat4 u_boneMatrices[MAX_BONES];
 #endif
 
+#if defined(RX_SHADOWS)
+    uniform mat4 u_lightViewProjectionMatrix;
+#endif
+
+#if defined(INSTANCING)
+    uniform mat4 u_viewMatrix;
+#else
+    uniform mat4 u_worldViewMatrix;
     uniform mat3 u_normalMatrix;
+#endif
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewProjectionMatrix;
+    uniform mat4 u_projectionMatrix;
 
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
@@ -148,6 +162,10 @@ static const std::string CelVertexShader = R"(
     VARYING_OUT vec2 v_texCoord;
 #endif
 
+#if defined(RX_SHADOWS)
+    VARYING_OUT LOW vec4 v_lightWorldPosition;
+#endif
+
 #if defined (NORMAL_MAP)
     VARYING_OUT vec2 v_normalTexCoord;
     const vec2 MapSize = vec2(320.0, 200.0);
@@ -155,6 +173,17 @@ static const std::string CelVertexShader = R"(
 
     void main()
     {
+    #if defined (INSTANCING)
+        mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
+        mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
+        mat3 normalMatrix = mat3(u_worldMatrix) * a_instanceNormalMatrix;            
+    #else
+        mat4 worldMatrix = u_worldMatrix;
+        mat4 worldViewMatrix = u_worldViewMatrix;
+        mat3 normalMatrix = u_normalMatrix;
+    #endif
+
+
         vec4 position = a_position;
 
     #if defined(SKINNED)
@@ -165,31 +194,35 @@ static const std::string CelVertexShader = R"(
         position = skinMatrix * position;
     #endif
 
-        position = u_worldMatrix * position;
-        gl_Position = u_viewProjectionMatrix * position;
+    #if defined (RX_SHADOWS)
+        v_lightWorldPosition = u_lightViewProjectionMatrix * u_worldMatrix * position;
+    #endif
+
+        vec4 worldPosition = worldMatrix * position;
+        gl_Position = u_projectionMatrix * worldViewMatrix * position;
 
         vec3 normal = a_normal;
     #if defined(SKINNED)
         normal = (skinMatrix * vec4(normal, 0.0)).xyz;
     #endif
-        v_normal = u_normalMatrix * normal;
+        v_normal = normalMatrix * normal;
 
         v_colour = a_colour;
 
 #if defined (TEXTURED)
-    v_texCoord = a_texCoord0;
+        v_texCoord = a_texCoord0;
 #endif
 
 #if defined (NORMAL_MAP)
-    v_normalTexCoord = vec2(position.x / MapSize.x, -position.z / MapSize.y);
+        v_normalTexCoord = vec2(worldPosition.x / MapSize.x, -worldPosition.z / MapSize.y);
 #endif
-        gl_ClipDistance[0] = dot(position, u_clipPlane);
+        gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
 
 #if defined(DITHERED)
         const float fadeDistance = 4.0;
         const float nearFadeDistance = 2.0;
         const float farFadeDistance = 360.f;
-        float distance = length(position.xyz - u_cameraWorldPosition);
+        float distance = length(worldPosition.xyz - u_cameraWorldPosition);
 
         v_ditherAmount = pow(clamp((distance - nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
         v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
@@ -198,11 +231,26 @@ static const std::string CelVertexShader = R"(
 
 static const std::string CelFragmentShader = R"(
     uniform vec3 u_lightDirection;
+    uniform float u_pixelScale = 1.0;
 
-#if defined(TEXTURED)
+#if defined (RX_SHADOWS)
+    uniform sampler2D u_shadowMap;
+#endif
+
+#if defined (USER_COLOUR)
+    uniform vec4 u_hairColour = vec4(1.0, 0.0, 0.0, 1.0);
+    uniform vec4 u_darkColour = vec4(0.5);
+#endif
+
+#if defined (SUBRECT)
+    uniform vec4 u_subrect = vec4(0.0, 0.0, 1.0, 1.0);
+#endif
+
+#if defined (TEXTURED)
     uniform sampler2D u_diffuseMap;
     VARYING_IN vec2 v_texCoord;
 #endif
+
 
 #if defined (NORMAL_MAP)
     uniform sampler2D u_normalMap;
@@ -214,6 +262,67 @@ static const std::string CelFragmentShader = R"(
     VARYING_IN float v_ditherAmount;
 
     OUTPUT
+
+#if defined(RX_SHADOWS)
+    VARYING_IN LOW vec4 v_lightWorldPosition;
+
+    float shadowAmount(LOW vec4 lightWorldPos)
+    {
+        vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
+        projectionCoords = projectionCoords * 0.5 + 0.5;
+        float depthSample = TEXTURE(u_shadowMap, projectionCoords.xy).r;
+        float currDepth = projectionCoords.z - 0.005;
+
+        if (currDepth > 1.0)
+        {
+            return 1.0;
+        }
+
+        return (currDepth < depthSample) ? 1.0 : 0.7;
+    }
+
+    const vec2 kernel[16] = vec2[](
+        vec2(-0.94201624, -0.39906216),
+        vec2(0.94558609, -0.76890725),
+        vec2(-0.094184101, -0.92938870),
+        vec2(0.34495938, 0.29387760),
+        vec2(-0.91588581, 0.45771432),
+        vec2(-0.81544232, -0.87912464),
+        vec2(-0.38277543, 0.27676845),
+        vec2(0.97484398, 0.75648379),
+        vec2(0.44323325, -0.97511554),
+        vec2(0.53742981, -0.47373420),
+        vec2(-0.26496911, -0.41893023),
+        vec2(0.79197514, 0.19090188),
+        vec2(-0.24188840, 0.99706507),
+        vec2(-0.81409955, 0.91437590),
+        vec2(0.19984126, 0.78641367),
+        vec2(0.14383161, -0.14100790)
+    );
+    const int filterSize = 3;
+    float shadowAmountSoft(vec4 lightWorldPos)
+    {
+        vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
+        projectionCoords = projectionCoords * 0.5 + 0.5;
+
+        if(projectionCoords.z > 1.0) return 1.0;
+
+        float shadow = 0.0;
+        vec2 texelSize = 1.0 / textureSize(u_shadowMap, 0).xy;
+        for(int x = 0; x < filterSize; ++x)
+        {
+            for(int y = 0; y < filterSize; ++y)
+            {
+                float pcfDepth = TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize).r;
+                shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
+            }
+        }
+
+        float amount = shadow / 9.0;
+        return 1.0 - amount;
+    }
+#endif
+
 
     //function based on example by martinsh.blogspot.com
     const int MatrixSize = 8;
@@ -254,19 +363,21 @@ static const std::string CelFragmentShader = R"(
     void main()
     {
         vec4 colour = vec4(1.0);
-
 #if defined (TEXTURED)
-        vec4 c = TEXTURE(u_diffuseMap, v_texCoord);
+        vec2 texCoord = v_texCoord;
+
+#if defined (SUBRECT)
+        texCoord *= u_subrect.ba;
+        texCoord += u_subrect.rg;
+#endif
+
+        vec4 c = TEXTURE(u_diffuseMap, texCoord);
 
         if(c. a < 0.2)
         {
             discard;
         }
         colour *= c;
-
-        /*colour.rgb *= Quantise;
-        colour.rgb = round(colour.rgb);
-        colour.rgb /= Quantise;*/
 #endif
 #if defined (VERTEX_COLOURED)
         colour *= v_colour;
@@ -282,6 +393,11 @@ static const std::string CelFragmentShader = R"(
 
         float amount = dot(normal, normalize(-u_lightDirection));
 
+#if defined (USER_COLOUR)
+        //colour *= mix(u_darkColour, u_hairColour, step(0.5, amount));
+        colour *= u_hairColour;
+#endif
+
         float checkAmount = step(0.3, 1.0 - amount);
 
         amount *= 2.0;
@@ -290,16 +406,28 @@ static const std::string CelFragmentShader = R"(
         amount = 0.8 + (amount * 0.2);
 
         colour.rgb *= amount;
-        
-        //float check = mod(floor(gl_FragCoord.x / 3.0) + floor(gl_FragCoord.y / 3.0), 2.0) * checkAmount;
-        float check = mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) * checkAmount;
+
+#if !defined(NOCHEX)        
+        float check = mod(floor(gl_FragCoord.x / u_pixelScale) + floor(gl_FragCoord.y / u_pixelScale), 2.0) * checkAmount;
+        //float check = mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) * checkAmount;
         amount = (1.0 - check) + (check * amount);
         colour.rgb *= amount;
+#endif
 
         FRAG_OUT = vec4(colour.rgb, 1.0);
 
+#if defined (RX_SHADOWS)
+        FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition);
+        /*if(v_lightWorldPosition.w > 0.0)
+        {
+            vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
+            if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
+            FRAG_OUT.rgb += vec3(0.0,0.0,0.5);
+        }*/
+#endif
+
 #if defined(DITHERED)
-        vec2 xy = gl_FragCoord.xy;
+        vec2 xy = gl_FragCoord.xy / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));

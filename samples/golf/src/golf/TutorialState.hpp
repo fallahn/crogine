@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 
+#include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
@@ -65,6 +66,11 @@ private:
     cro::Entity m_messageEnt;
     glm::vec2 m_viewScale;
 
+    cro::AudioScape m_audioScape;
+
+    bool m_mouseVisible;
+    cro::Clock m_mouseClock;
+
     std::vector<std::function<void()>> m_actionCallbacks;
     std::size_t m_currentAction;
     bool m_actionActive;
@@ -78,6 +84,8 @@ private:
 
     void showContinue();
     void doCurrentAction();
+
+    void playSound(const std::string&);
 
     void quitState();
 };

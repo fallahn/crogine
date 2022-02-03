@@ -71,6 +71,7 @@ struct Ball final
     float spin = 0.f;
 
     glm::vec3 startPoint = glm::vec3(0.f);
+    float lastStrokeDistance = 0.f;
     bool hadAir = false; //toggled when passing over hole
 };
 

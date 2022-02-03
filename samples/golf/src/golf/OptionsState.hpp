@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -88,6 +88,19 @@ private:
 
     std::int32_t m_bindingIndex;
     void updateKeybind(SDL_Keycode);
+
+    std::array<std::function<void()>, 2u> m_tabFunctions = {};
+    std::size_t m_currentTabFunction;
+
+    struct ToolTipID final
+    {
+        enum
+        {
+            Volume, Pixel,
+            Count
+        };
+    };
+    std::array<cro::Entity, ToolTipID::Count> m_tooltips = {};
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;

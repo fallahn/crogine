@@ -43,6 +43,10 @@ source distribution.
 #include <crogine/graphics/MeshBuilder.hpp>
 
 #include <crogine/util/String.hpp>
+#include <crogine/util/Matrix.hpp>
+
+#include <sstream>
+#include <iomanip>
 
 namespace
 {
@@ -196,15 +200,17 @@ namespace
         return retVal;
     }
 
-    void drawAnimationData(std::array<cro::Entity, EntityID::Count>& entities)
+    void drawAnimationData(std::array<cro::Entity, EntityID::Count>& entities, bool skelCheck = true)
     {
-        bool showSkel = !entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().isHidden();
-        if (ImGui::Checkbox("Show Skeleton##234897", &showSkel))
+        if (skelCheck)
         {
-            entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().setHidden(!showSkel);
+            bool showSkel = !entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().isHidden();
+            if (ImGui::Checkbox("Show Skeleton##234897", &showSkel))
+            {
+                entities[EntityID::ActiveSkeleton].getComponent<cro::Model>().setHidden(!showSkel);
+            }
+            ImGui::NewLine();
         }
-        ImGui::NewLine();
-
         auto& skel = entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
         auto& animations = skel.getAnimations();
 
@@ -222,16 +228,19 @@ namespace
         if (ImGui::ListBox("##43345", &selectedAnim, items.data(), static_cast<std::int32_t>(items.size()), 4))
         {
             //play new anim if playing
-            if (animations[skel.getCurrentAnimation()].playbackRate != 0)
+            auto rate = animations[skel.getCurrentAnimation()].playbackRate;
             {
                 skel.stop();
-                skel.play(selectedAnim);
+                skel.play(selectedAnim, rate);
             }
         }
         auto& anim = animations[selectedAnim];
         auto name = anim.name.substr(0, 16);
         ImGui::Text("Frames: %lu", anim.frameCount);
         toolTip(anim.name.c_str());
+
+        ImGui::SameLine();
+        ImGui::Text(" - Current Frame: %lu", animations[skel.getCurrentAnimation()].currentFrame - animations[skel.getCurrentAnimation()].startFrame);
 
         if (ImGui::Button("<")
             && animations[skel.getCurrentAnimation()].playbackRate == 0)
@@ -255,6 +264,7 @@ namespace
             if (ImGui::Button("Play", ImVec2(50.f, 22.f)))
             {
                 skel.play(selectedAnim);
+                entities[EntityID::JointNode].getComponent<cro::Model>().setHidden(true);
             }
         }
 
@@ -268,15 +278,21 @@ namespace
 
         ImGui::SameLine();
         ImGui::Checkbox("Loop", &anim.looped);
-
-        ImGui::Text("Current Frame: %lu", animations[skel.getCurrentAnimation()].currentFrame - animations[skel.getCurrentAnimation()].startFrame);
-
+        
         ImGui::NewLine();
         ImGui::Separator();
     }
 
     bool setInspectorTab = false;
     std::int32_t inspectorTabIndex = 0;
+
+    std::string uniqueID()
+    {
+        static std::size_t uid = 0;
+        std::stringstream ss;
+        ss << "." << std::setfill('0') << std::setw(4) << uid++;
+        return ss.str();
+    }
 }
 
 float updateView(cro::Entity entity, float farPlane, float fov)
@@ -1514,7 +1530,7 @@ void ModelState::drawInspector()
 void ModelState::drawBrowser()
 {
     auto [pos, size] = WindowLayouts[WindowID::Browser];
-
+    //ImGui::ShowDemoWindow();
     ImGui::SetNextWindowPos({ pos.x, pos.y });
     ImGui::SetNextWindowSize({ size.x, size.y });
     if (ImGui::Begin("Browser", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
@@ -1868,13 +1884,655 @@ void ModelState::drawBrowser()
         }
 
         if (m_entities[EntityID::ActiveModel].isValid()
+            && m_importedVBO.empty()
             && m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
         {
-            if (ImGui::BeginTabItem("Animation"))
+            if (ImGui::BeginTabItem("Attachments"))
             {
-                ImGui::Text("Select an animation to edit from the Model tab of the Inspector pane");
+                auto& skel = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+                auto& attachments = skel.getAttachments();
+                if (attachments.empty())
+                {
+                    m_attachmentIndex = 0;
+                }
+
+                ImGui::BeginChild("##attachments", {200.f, 0.f}, true);
+                if (ImGui::Button("Add##attachment"))
+                {
+                    attachments.emplace_back().setName("attachment" + uniqueID());
+                    m_attachmentAngles.emplace_back(0.f, 0.f, 0.f);
+                    
+                    if (attachments[m_attachmentIndex].getModel().isValid())
+                    {
+                        attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(true);
+                    }
+                    attachments[m_attachmentIndex].setModel(cro::Entity());
+                    m_attachmentIndex = static_cast<std::int32_t>(attachments.size()) - 1;
+
+                    attachments[m_attachmentIndex].setModel(m_attachmentModels[0]);
+                    m_attachmentModels[0].getComponent<cro::Model>().setHidden(false);
+                }
+                if (!attachments.empty())
+                {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Remove##attachment"))
+                    {
+                        auto removeIndex = m_attachmentIndex;
+                        if (m_attachmentIndex > 0)
+                        {
+                            if (attachments[m_attachmentIndex].getModel().isValid())
+                            {
+                                attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(true);
+                            }
+                            m_attachmentIndex--;
+                        }                        
+                        
+                        attachments.erase(attachments.begin() + removeIndex);
+                        m_attachmentAngles.erase(m_attachmentAngles.begin() + removeIndex);
+
+                        if (!attachments.empty())
+                        {
+                            //TODO set to selected preview
+                            attachments[m_attachmentIndex].setModel(m_attachmentModels[0]);
+                            m_attachmentModels[0].getComponent<cro::Model>().setHidden(false);
+                        }
+                        else
+                        {
+                            m_attachmentModels[0].getComponent<cro::Model>().setHidden(true);
+                        }
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::Button("Clear##attachments")
+                        && cro::FileSystem::showMessageBox("Warning", "Are You Sure?", cro::FileSystem::YesNo, cro::FileSystem::Warning))
+                    {
+                        attachments.clear();
+                        m_attachmentAngles.clear();
+                        m_attachmentIndex = 0;
+                        m_attachmentModels[0].getComponent<cro::Model>().setHidden(true);
+                    }
+                }
+                //I'll be buggered if I can figure this out
+                /*ImGui::ListBoxHeader("##attachments_list");
+                for (auto i = 0u; i < attachments.size(); ++i)
+                {
+                    bool isSelected = (m_attachmentIndex == i);
+                    if (ImGui::Selectable(attachments[i].getName().c_str(), isSelected))
+                    {
+                        m_attachmentIndex = i;
+                    }
+                }
+                ImGui::ListBoxFooter();*/
+
+                std::vector<const char*> names;
+                for (const auto& a : attachments)
+                {
+                    names.push_back(a.getName().c_str());
+                }
+
+                auto lastIndex = m_attachmentIndex;
+                ImGui::PushItemWidth(200.f);
+                if (ImGui::ListBox("##attachment_list", &m_attachmentIndex, names.data(), static_cast<std::int32_t>(names.size()), 6))
+                {
+                    if (!m_attachmentModels.empty())
+                    {
+                        auto oldModel = attachments[lastIndex].getModel();
+                        //if (oldModel.isValid())
+                        if (oldModel == m_attachmentModels[0])
+                        {
+                            oldModel.getComponent<cro::Model>().setHidden(true);
+                            attachments[lastIndex].setModel(cro::Entity());
+                        }
+
+                        if (!attachments[m_attachmentIndex].getModel().isValid())
+                        {
+                            //show default model
+                            attachments[m_attachmentIndex].setModel(m_attachmentModels[0]);
+                            m_attachmentModels[0].getComponent<cro::Model>().setHidden(false);
+                        }
+                    }
+                }
+                ImGui::PopItemWidth();
+
+                if (ImGui::Button("Export##attachments"))
+                {
+                    auto path = cro::FileSystem::saveFileDialogue("", "atc");
+                    if (!path.empty())
+                    {
+                        cro::ConfigFile cfg("attachments");
+                        for (auto i = 0u; i < attachments.size(); ++i)
+                        {
+                            const auto& attachment = attachments[i];
+                            auto* a = cfg.addObject("attachment", attachment.getName());
+                            a->addProperty("position").setValue(attachment.getPosition());
+                            a->addProperty("rotation").setValue(m_attachmentAngles[i]);
+                            a->addProperty("scale").setValue(attachment.getScale());
+                            a->addProperty("parent").setValue(attachment.getParent());
+                        }
+                        if (!cfg.save(path))
+                        {
+                            cro::FileSystem::showMessageBox("Error", "Failed to export attachements\nSee console for details");
+                        }
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Import##attachments")
+                    && cro::FileSystem::showMessageBox("Warning", "This will replace all existing attachement data", cro::FileSystem::OKCancel, cro::FileSystem::Warning))
+                {
+                    auto path = cro::FileSystem::openFileDialogue("", "atc");
+                    if (!path.empty())
+                    {
+                        cro::ConfigFile cfg;
+                        if (!cfg.loadFromFile(path))
+                        {
+                            cro::FileSystem::showMessageBox("Error", "Failed to open attachment file\nSee console for details");
+                        }
+                        else
+                        {
+                            attachments.clear();
+                            m_attachmentAngles.clear();
+                            m_attachmentIndex = 0;
+
+                            const auto& objs = cfg.getObjects();
+                            for (const auto& obj : objs)
+                            {
+                                const auto& name = obj.getName();
+                                if (name == "attachment")
+                                {
+                                    auto aName = obj.getId();
+                                    if (!aName.empty())
+                                    {
+                                        if (aName.length() >= cro::Attachment::MaxNameLength)
+                                        {
+                                            aName = aName.substr(0, cro::Attachment::MaxNameLength - 1);
+                                        }
+
+                                        auto& attachment = attachments.emplace_back();
+                                        auto& rotation = m_attachmentAngles.emplace_back();
+
+                                        attachment.setName(aName);
+
+                                        const auto& props = obj.getProperties();
+                                        for (const auto& prop : props)
+                                        {
+                                            auto pName = prop.getName();
+                                            if (pName == "position")
+                                            {
+                                                attachment.setPosition(prop.getValue<glm::vec3>());
+                                            }
+                                            else if (pName == "rotation")
+                                            {
+                                                rotation = prop.getValue<glm::vec3>();
+                                                glm::quat r = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rotation.z * cro::Util::Const::degToRad, cro::Transform::Z_AXIS);
+                                                r = glm::rotate(r, rotation.y * cro::Util::Const::degToRad, cro::Transform::Y_AXIS);
+                                                r = glm::rotate(r, rotation.x * cro::Util::Const::degToRad, cro::Transform::X_AXIS);
+                                                attachment.setRotation(r);                                                
+                                            }
+                                            else if (pName == "scale")
+                                            {
+                                                attachment.setScale(prop.getValue<glm::vec3>());
+                                            }
+                                            else if (pName == "parent")
+                                            {
+                                                attachment.setParent(prop.getValue<std::int32_t>());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            //TODO we want to make sure to remove duplicate names
+                            //at some point...
+                        }
+                    }
+                }
+
+
+                ImGui::EndChild();
+
+                ImGui::SameLine();
+
+                ImGui::BeginChild("##attachment_options", {240.f, 0.f}, true);
+                if (attachments.empty())
+                {
+                    ImGui::Text("No attachments added");
+                }
+                else
+                {
+                    ImGui::Text("Attachment Properties");
+
+                    auto& ap = attachments[m_attachmentIndex];
+                    auto name = ap.getName();
+                    if (ImGui::InputText("Name##attachment", &name, ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue))
+                    {
+                        if (!name.empty())
+                        {
+                            if (name.length() >= cro::Attachment::MaxNameLength)
+                            {
+                                name = name.substr(0, cro::Attachment::MaxNameLength - 1);
+                            }
+
+                            //this works as long as we don't have too many attachments...
+                            auto result = std::find_if(attachments.begin(), attachments.end(), 
+                                [&name](const cro::Attachment& a) 
+                                {
+                                    return a.getName() == name;
+                                });
+
+                            if (result != attachments.end())
+                            {
+                                name = name.substr(0, std::min(name.length(), cro::Attachment::MaxNameLength - 6)) += uniqueID();
+                            }
+                            ap.setName(name);
+                        }
+                    }
+                    
+                    if (ImGui::Button("R##pos"))
+                    {
+                        ap.setPosition(glm::vec3(0.f));
+                    }
+                    toolTip("Reset Transform");
+                    ImGui::SameLine();                    
+                    auto pos = ap.getPosition();
+                    if (ImGui::DragFloat3("Position##attachment", &pos[0], 1.f, 0.f, 0.f, "%3.2f"))
+                    {
+                        ap.setPosition(pos);
+                    }
+
+                    if (ImGui::Button("R##rot"))
+                    {
+                        ap.setRotation(glm::quat(1.f, 0.f, 0.f, 0.f));
+                        m_attachmentAngles[m_attachmentIndex] = glm::vec3(0.f);
+                    }
+                    toolTip("Reset Rotation");
+                    ImGui::SameLine();
+                    glm::vec3& rot = m_attachmentAngles[m_attachmentIndex];
+                    if (ImGui::DragFloat3("Rotation##attachment", &rot[0], 1.f, -180.f, 180.f, "%3.2f"))
+                    {
+                        auto q = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rot[2] * cro::Util::Const::degToRad, cro::Transform::Z_AXIS);
+                        q = glm::rotate(q, rot[1] * cro::Util::Const::degToRad, cro::Transform::Y_AXIS);
+                        q = glm::rotate(q, rot[0] * cro::Util::Const::degToRad, cro::Transform::X_AXIS);
+                        ap.setRotation(q);
+                    }
+
+                    if (ImGui::Button("R##scale"))
+                    {
+                        ap.setScale(glm::vec3(1.f));
+                    }
+                    toolTip("Reset Scale");
+                    ImGui::SameLine();
+                    auto scale = ap.getScale();
+                    if (ImGui::DragFloat3("Scale##attachment", &scale[0], 1.f, 0.f, 0.f, "%3.2f"))
+                    {
+                        ap.setScale(scale);
+                    }
+
+
+                    auto parent = ap.getParent();
+                    if (ImGui::InputInt("Parent##attachment", &parent))
+                    {
+                        parent = std::max(0, std::min(static_cast<std::int32_t>(skel.getFrameSize()) - 1, parent));
+                        ap.setParent(parent);
+                    }
+                }
+                ImGui::EndChild();
+
+                ImGui::SameLine();
+
+                ImGui::BeginChild("##attachment_details", { 240.f, 0.f }, true);
+                if (ImGui::Button("Quick Scale"))
+                {
+                    glm::vec3 aPos, aScale;
+                    glm::quat aRot;
+                    cro::Util::Matrix::decompose(skel.getAttachmentTransform(m_attachmentIndex), aPos, aRot, aScale);
+                    attachments[m_attachmentIndex].setScale(glm::vec3(1.f) / aScale);
+                }
+                ImGui::SameLine();
+                helpMarker("Resizes the attachment to a world scale of 1.0, to compensate any scale applied by the skeleton");
+
+                std::vector<const char*> labels;
+                for (auto e : m_attachmentModels)
+                {
+                    labels.push_back(e.getLabel().c_str());
+                }
+                static std::int32_t selectedModel = 0;
+                if (ImGui::ListBox("##preview_model", &selectedModel, labels.data(), static_cast<std::int32_t>(labels.size()), 4))
+                {
+                    if (!attachments.empty())
+                    {
+                        if (attachments[m_attachmentIndex].getModel().isValid())
+                        {
+                            attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(true);
+                        }
+                        attachments[m_attachmentIndex].setModel(m_attachmentModels[selectedModel]);
+                        attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(false);
+                    }
+                }
+                if (ImGui::Button("Add##preview_model"))
+                {
+                    auto path = cro::FileSystem::openFileDialogue("", "cmt");
+                    if (!path.empty())
+                    {
+                        std::replace(path.begin(), path.end(), '\\', '/');
+                        /*if (auto found = path.find(m_sharedData.workingDirectory); found != std::string::npos)
+                        {
+                            path = path.substr(found);
+                        }*/
+
+                        cro::ModelDefinition md(m_resources, &m_environmentMap, m_sharedData.workingDirectory);
+                        if (md.loadFromFile(path))
+                        {
+                            auto entity = m_scene.createEntity();
+                            entity.addComponent<cro::Transform>();
+                            md.createModel(entity);
+                            entity.setLabel(cro::FileSystem::getFileName(path));
+                            entity.getComponent<cro::Model>().setHidden(true);
+                            m_attachmentModels.push_back(entity);
+                        }
+                    }
+                }
+
+                if (selectedModel != 0)
+                {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Remove##preview_model"))
+                    {
+                        m_scene.destroyEntity(m_attachmentModels[selectedModel]);
+                        m_attachmentModels.erase(m_attachmentModels.begin() + selectedModel);
+
+                        if (selectedModel > 0)
+                        {
+                            selectedModel--;
+                            if (!attachments.empty())
+                            {
+                                attachments[m_attachmentIndex].setModel(m_attachmentModels[selectedModel]);
+                                attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(false);
+                            }
+                        }
+                    }
+                }
+
+                if (m_attachmentModels.size() > 1)
+                {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Clear##preview_models"))
+                    {
+                        for (auto i = 1u; i < m_attachmentModels.size(); ++i)
+                        {
+                            m_scene.destroyEntity(m_attachmentModels[i]);
+                        }
+                        m_attachmentModels.resize(1);
+
+                        selectedModel = 0;
+                        if (!attachments.empty())
+                        {
+                            attachments[m_attachmentIndex].setModel(m_attachmentModels[selectedModel]);
+                            attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(false);
+                        }
+                    }
+                }
+
+                ImGui::EndChild();
 
                 ImGui::EndTabItem();
+            }
+            else
+            {
+                m_attachmentModels[0].getComponent<cro::Model>().setHidden(true);
+            }
+
+            if (ImGui::BeginTabItem("Animation"))
+            {
+                auto& skeleton = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+                const auto& animations = skeleton.getAnimations();
+
+                ImGui::BeginChild("##anim_controls", { 300.f, -44.f }, true);
+                drawAnimationData(m_entities, false);
+
+
+                if (animations[skeleton.getCurrentAnimation()].playbackRate == 0)
+                {
+                    if (ImGui::Button("Export##notif"))
+                    {
+                        auto path = cro::FileSystem::saveFileDialogue("", "ntf");
+                        if (!path.empty())
+                        {
+                            cro::ConfigFile cfg("animation_data");
+                            const auto& notifications = skeleton.getNotifications();
+                            for (auto i = 0u; i < notifications.size(); ++i)
+                            {
+                                const auto& nFrame = notifications[i];
+                                auto* nObj = cfg.addObject("frame");
+                                for (const auto& notif : nFrame)
+                                {
+                                    auto* nfObj = nObj->addObject("event", notif.name);
+                                    nfObj->addProperty("joint").setValue(static_cast<std::int32_t>(notif.jointID));
+                                    nfObj->addProperty("user_data").setValue(notif.userID);
+                                }
+                            }
+
+                            if (!cfg.save(path))
+                            {
+                                cro::FileSystem::showMessageBox("Error", "Failed to export animation data.\nSee console for information");
+                            }
+                        }
+                    }
+                    toolTip("Export all frame notifications to a file");
+                    ImGui::SameLine();
+                    if (ImGui::Button("Import##notif")
+                        && cro::FileSystem::showMessageBox("Warning", "This will overwrite all existing animation data", cro::FileSystem::OKCancel, cro::FileSystem::Warning))
+                    {
+                        auto path = cro::FileSystem::openFileDialogue("", "ntf");
+                        if (!path.empty())
+                        {
+                            cro::ConfigFile cfg;
+                            if (!cfg.loadFromFile(path))
+                            {
+                                cro::FileSystem::showMessageBox("Error", "Failed to open animation data.\nSeeconsole for details", cro::FileSystem::OK, cro::FileSystem::Error);
+                            }
+                            else
+                            {
+                                auto& notifications = skeleton.getNotifications();
+                                auto size = notifications.size();
+                                notifications.clear();
+
+                                const auto objs = cfg.getObjects();
+                                auto i = 0u;
+
+                                for (const auto& obj : objs)
+                                {
+                                    //don't load too many frames
+                                    if (i == size)
+                                    {
+                                        break;
+                                    }
+
+                                    if (obj.getName() == "frame")
+                                    {
+                                        auto& frame = notifications.emplace_back();
+
+                                        const auto& fObjs = obj.getObjects();
+                                        for (const auto& fObj : fObjs)
+                                        {
+                                            if (fObj.getName() == "event")
+                                            {
+                                                auto name = fObj.getId();
+                                                if (!name.empty())
+                                                {
+                                                    if (name.length() >= cro::Attachment::MaxNameLength)
+                                                    {
+                                                        name = name.substr(0, cro::Attachment::MaxNameLength - 1);
+                                                    }
+                                                    auto& n = frame.emplace_back();
+                                                    n.name = name;
+                                                    
+                                                    for (const auto& prop : fObj.getProperties())
+                                                    {
+                                                        if (prop.getName() == "joint")
+                                                        {
+                                                            n.jointID = prop.getValue<std::int32_t>();
+                                                        }
+                                                        else if (prop.getName() == "user_data")
+                                                        {
+                                                            n.userID = prop.getValue<std::int32_t>();
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        i++;
+                                    }
+                                }
+
+                                //pad out to correct size if too small
+                                while (notifications.size() < size)
+                                {
+                                    notifications.emplace_back();
+                                }
+                            }
+                        }
+                    }
+                }
+                ImGui::EndChild();
+
+
+
+                if (animations[skeleton.getCurrentAnimation()].playbackRate == 0)
+                {
+                    ImGui::SameLine();
+                    ImGui::BeginChild("##anim_notifications", { 200.f, -44.f }, true);
+                    auto& notifications = skeleton.getNotifications()[skeleton.getCurrentFrame()];
+                    static std::int32_t notIndex = 0;
+
+                    if (ImGui::Button("Add##notification"))
+                    {
+                        auto& n = notifications.emplace_back();
+                        n.name = "Notif" + uniqueID();
+                        notIndex = static_cast<std::int32_t>(notifications.size()) - 1;
+                    }
+                    if (!notifications.empty())
+                    {
+                        ImGui::SameLine();
+                        if (ImGui::Button("Remove##notification"))
+                        {
+                            notifications.erase(notifications.begin() + notIndex);
+                            if (notIndex > 0)
+                            {
+                                notIndex--;
+                            }
+                        }
+
+                        if (!notifications.empty())
+                        {
+                            m_entities[EntityID::JointNode].getComponent<cro::Model>().setHidden(false);
+                            auto pos = glm::vec3(
+                                skeleton.getRootTransform() *
+                                skeleton.getFrames()[(skeleton.getCurrentFrame() * skeleton.getFrameSize()) + notifications[notIndex].jointID].worldMatrix[3]);
+                            m_entities[EntityID::JointNode].getComponent<cro::Transform>().setPosition(pos);
+                        }
+                    }
+                    else
+                    {
+                        m_entities[EntityID::JointNode].getComponent<cro::Model>().setHidden(true);
+                    }
+                    std::vector<const char*> names;
+                    for (const auto& n : notifications)
+                    {
+                        names.push_back(n.name.c_str());
+                    }
+
+                    ImGui::SetNextItemWidth(200.f);
+                    if (ImGui::ListBox("##notifs", &notIndex, names.data(), static_cast<std::int32_t>(names.size()), 6))
+                    {
+
+                    }
+                    ImGui::EndChild();
+                    ImGui::SameLine();
+                    ImGui::BeginChild("##anim_notif_details", { 400.f, -44.f }, true);
+
+                    if (!notifications.empty())
+                    {
+                        auto name = notifications[notIndex].name;
+                        if (ImGui::InputText("Name##notif", &name, ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue))
+                        {
+                            if (!name.empty())
+                            {
+                                //we need to clamp this to the character limit
+                                if (name.length() >= cro::Attachment::MaxNameLength)
+                                {
+                                    name = name.substr(0, cro::Attachment::MaxNameLength - 1);
+                                }
+                                //and make duplicates unique
+                                auto result = std::find_if(notifications.begin(), notifications.end(),
+                                    [&name](const cro::Skeleton::Notification& a)
+                                    {
+                                        return a.name == name;
+                                    });
+                                
+                                if (result != notifications.end())
+                                {
+                                    name = name.substr(0, std::min(name.length(), cro::Attachment::MaxNameLength - 6)) += uniqueID();
+                                }
+                                notifications[notIndex].name = name;
+                            }
+                        }
+
+                        auto jointID = static_cast<std::int32_t>(notifications[notIndex].jointID);
+                        if (ImGui::InputInt("JointID##notif", &jointID))
+                        {
+                            jointID = std::max(0, std::min(jointID, static_cast<std::int32_t>(skeleton.getFrameSize()) - 1));
+                            notifications[notIndex].jointID = jointID;
+                        }
+
+                        ImGui::InputInt("User Data##notif", &notifications[notIndex].userID);
+                    }
+                    else
+                    {
+                        ImGui::Text("No Events This Frame");
+                    }
+
+                    ImGui::EndChild();
+
+                    //creates a button per frame and highlights those with events
+                    const auto& anim = animations[skeleton.getCurrentAnimation()];
+                    ImGui::BeginChild("##frame_buttons", { 0.f, 0.f }, true, ImGuiWindowFlags_::ImGuiWindowFlags_HorizontalScrollbar);
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 1.0f));
+                    for (auto i = anim.startFrame; i < anim.startFrame + anim.frameCount; ++i)
+                    {
+                        auto notifCount = skeleton.getNotifications()[i].size();
+                        if (notifCount)
+                        {
+                            ImGui::PushStyleColor(ImGuiCol_Button, { 1.f, 0.f, 0.f, 1.f });
+                        }
+                        else
+                        {
+                            ImGui::PushStyleColor(ImGuiCol_Button, { 1.f, 1.f, 0.f, 1.f });
+                        }
+
+                        std::string label = /*std::to_string(i - anim.startFrame) + */"##" + std::to_string(i);
+                        if (ImGui::Button(label.c_str(), { 10.f, 14.f }))
+                        {
+                            skeleton.gotoFrame(i - anim.startFrame);
+                        }
+                        ImGui::PopStyleColor();
+                        std::string tip = "Frame " + std::to_string(i - anim.startFrame) + ": " + std::to_string(notifCount) + " notification(s)";
+                        toolTip(tip.c_str());
+                        ImGui::SameLine();
+                    }
+                    ImGui::PopStyleVar();
+                    ImGui::EndChild();
+                }
+                /*else
+                {
+                    m_entities[EntityID::JointNode].getComponent<cro::Model>().setHidden(true);
+                }*/
+
+                ImGui::EndTabItem();
+            }
+            else
+            {
+                m_entities[EntityID::JointNode].getComponent<cro::Model>().setHidden(true);
             }
         }
 

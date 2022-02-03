@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -33,6 +33,7 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "PlayerAvatar.hpp"
 #include "Billboard.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/State.hpp>
@@ -45,7 +46,6 @@ source distribution.
 
 #include <array>
 
-struct SharedStateData;
 namespace cro
 {
     struct NetEvent;
@@ -84,6 +84,7 @@ private:
 
     cro::Scene m_uiScene;
     cro::Scene m_backgroundScene;
+    cro::Scene m_avatarScene;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final
@@ -104,13 +105,16 @@ private:
         {
             Cel,
             CelTextured,
+            CelTexturedSkinned,
+            Hair,
 
             Count
         };
     };
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
-
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
+
+    std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
 
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
@@ -127,6 +131,7 @@ private:
         {
             Controller,
             Keyboard,
+            ThumbBackground,
             ArrowLeft,
             ArrowRight,
             ArrowLeftHighlight,
@@ -197,21 +202,33 @@ private:
         cro::String holeCount = "0";
     };
     std::vector<CourseData> m_courseData;
-    std::array<std::size_t, 4u> m_ballIndices = {}; //index into the model list, not ballID
     void parseCourseDirectory();
 
+    //----ball, avatar and hair funcs are in MenuCustomisation.cpp----//
+    std::array<std::size_t, ConnectionData::MaxPlayers> m_ballIndices = {}; //index into the model list, not ballID
     cro::Entity m_ballCam;
     cro::RenderTexture m_ballTexture;
     void createBallScene();
-    std::int32_t indexFromBallID(std::uint8_t);
+    std::int32_t indexFromBallID(std::uint32_t);
 
     std::vector<PlayerAvatar> m_playerAvatars;
     //this is the index for each player into m_playerAvatars - skinID is read from PlayerAvatar struct
-    std::array<std::size_t, 4u> m_avatarIndices = {};
+    std::array<std::size_t, ConnectionData::MaxPlayers> m_avatarIndices = {};
+    std::array<cro::RenderTexture, ConnectionData::MaxPlayers> m_avatarThumbs = {};
     std::uint8_t m_activePlayerAvatar; //which player is current editing their avatar
+    cro::RenderTexture m_avatarTexture;
     void parseAvatarDirectory();
-    std::int32_t indexFromAvatarID(std::uint8_t);
-    void applyAvatar(std::size_t);
+    void createAvatarScene();
+    std::int32_t indexFromAvatarID(std::uint32_t);
+    void applyAvatarColours(std::size_t);
+    void setPreviewModel(std::size_t);
+    void updateThumb(std::size_t);
+
+    
+    //index into hair model vector - converted from hairID with indexFromHairID
+    std::array<std::size_t, ConnectionData::MaxPlayers> m_hairIndices = {};
+    std::int32_t indexFromHairID(std::uint32_t);
+
 
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
@@ -222,7 +239,7 @@ private:
 
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);
-    void applyTextEdit();
+    bool applyTextEdit(); //returns true if this consumed event
     void updateLocalAvatars(std::uint32_t, std::uint32_t);
     void updateLobbyData(const cro::NetEvent&);
     void updateLobbyAvatars();

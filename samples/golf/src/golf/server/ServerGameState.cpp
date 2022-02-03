@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -359,9 +359,10 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
             ball.velocity = input.impulse;
             ball.state = ball.terrain == TerrainID::Green ? Ball::State::Putt : Ball::State::Flight;
             //this is a kludge to wait for the anim before hitting the ball
-            //Ideally we want to read the frame data from the sprite sheet
+            //Ideally we want to read the frame data from the avatar
             //as well as account for a frame of interp delay on the client
-            ball.delay = 0.32f;
+            ball.delay = ball.terrain == TerrainID::Green ? 0.15f : 1.32f;
+            //ball.delay = 0.32f;
             ball.startPoint = m_playerInfo[0].ballEntity.getComponent<cro::Transform>().getPosition();
 
             //calc the amount of spin based on if we're going towards the hole
@@ -376,7 +377,8 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
 
             m_playerInfo[0].holeScore[m_currentHole]++;
 
-            m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(AnimationID::Swing), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            auto animID = ball.terrain == TerrainID::Green ? AnimationID::Putt : AnimationID::Swing;
+            m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
             m_turnTimer.restart(); //don't time out mid-shot...
         }
@@ -387,6 +389,7 @@ void GameState::setNextPlayer()
 {
     //broadcast current player's score first
     ScoreUpdate su;
+    su.strokeDistance = m_playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance;
     su.client = m_playerInfo[0].client;
     su.player = m_playerInfo[0].player;
     su.score = m_playerInfo[0].totalScore;
@@ -446,15 +449,23 @@ void GameState::setNextHole()
     m_currentHole++;
     if (m_currentHole < m_holeData.size())
     {
+        //tell the local ball system which hole we're on
+        auto ballSystem = m_scene.getSystem<BallSystem>();
+        if (!ballSystem->setHoleData(m_holeData[m_currentHole]))
+        {
+            m_sharedData.host.broadcastPacket(PacketID::ServerError, static_cast<std::uint8_t>(MessageType::MapNotFound), cro::NetFlag::Reliable);
+            return;
+        }
+
         //reset player positions/strokes
         for (auto& player : m_playerInfo)
         {
             player.position = m_holeData[m_currentHole].tee;
             player.distanceToHole = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin);
-            player.terrain = TerrainID::Fairway;
+            player.terrain = ballSystem->getTerrain(player.position).terrain;
 
             auto ball = player.ballEntity;
-            ball.getComponent<Ball>().terrain = TerrainID::Fairway;
+            ball.getComponent<Ball>().terrain = player.terrain;
             ball.getComponent<Ball>().velocity = glm::vec3(0.f);
             ball.getComponent<cro::Transform>().setPosition(player.position);
 
@@ -468,13 +479,6 @@ void GameState::setNextHole()
             info.playerID = player.player;
             info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
             m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        }
-
-        //tell the local ball system which hole we're on
-        if (!m_scene.getSystem<BallSystem>()->setHoleData(m_holeData[m_currentHole]))
-        {
-            m_sharedData.host.broadcastPacket(PacketID::ServerError, static_cast<std::uint8_t>(MessageType::MapNotFound), cro::NetFlag::Reliable);
-            return;
         }
 
         //tell clients to set up next hole
@@ -645,6 +649,10 @@ bool GameState::validateMap()
 
 void GameState::initScene()
 {
+    auto& mb = m_sharedData.messageBus;
+    m_scene.addSystem<cro::CallbackSystem>(mb);
+    m_mapDataValid = m_scene.addSystem<BallSystem>(mb)->setHoleData(m_holeData[0]);    
+    
     for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
     {
         if (m_sharedData.clients[i].connected)
@@ -659,10 +667,6 @@ void GameState::initScene()
             }
         }
     }
-
-    auto& mb = m_sharedData.messageBus;
-    m_scene.addSystem<cro::CallbackSystem>(mb);
-    m_mapDataValid = m_scene.addSystem<BallSystem>(mb)->setHoleData(m_holeData[0]);
 }
 
 void GameState::buildWorld()
@@ -670,9 +674,11 @@ void GameState::buildWorld()
     //create a ball entity for each player
     for (auto& player : m_playerInfo)
     {
+        player.terrain = m_scene.getSystem<BallSystem>()->getTerrain(player.position).terrain;
+
         player.ballEntity = m_scene.createEntity();
         player.ballEntity.addComponent<cro::Transform>().setPosition(player.position);
-        player.ballEntity.addComponent<Ball>();
+        player.ballEntity.addComponent<Ball>().terrain = player.terrain;
 
         player.holeScore.resize(m_holeData.size());
         std::fill(player.holeScore.begin(), player.holeScore.end(), 0);

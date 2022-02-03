@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -32,6 +32,7 @@ source distribution.
 #include "batcat/BatcatState.hpp"
 #include "bsp/BspState.hpp"
 #include "collision/CollisionState.hpp"
+#include "voxels/VoxelState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -91,10 +92,11 @@ bool MyApp::initialise()
     m_stateStack.registerState<BatcatState>(States::ScratchPad::BatCat);
     m_stateStack.registerState<BspState>(States::ScratchPad::BSP);
     m_stateStack.registerState<CollisionState>(States::ScratchPad::MeshCollision);
+    m_stateStack.registerState<VoxelState>(States::ScratchPad::Voxels);
 
 #ifdef CRO_DEBUG_
-    //m_stateStack.pushState(States::ScratchPad::MeshCollision);
-    m_stateStack.pushState(States::ScratchPad::MainMenu);
+    m_stateStack.pushState(States::ScratchPad::Voxels);
+    //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
 #endif

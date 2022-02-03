@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -220,7 +220,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         if ((model.m_renderFlags & camComponent.renderFlags) == 0)
         {
             continue;
-        }        
+        }   
+        glCheck(glFrontFace(model.m_facing));
         
         //calc entity transform
         const auto& tx = entity.getComponent<Transform>();
@@ -296,6 +297,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
     glCheck(glUseProgram(0));
     
+    glCheck(glFrontFace(GL_CCW));
     glCheck(glDisable(GL_BLEND));
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_DEPTH_TEST));

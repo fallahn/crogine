@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -171,17 +171,26 @@ void MenuState::createScene()
             e.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
         });
 
+
+    auto createButton = [&](const std::string label, glm::vec2 position)
+    {
+        auto e = m_scene.createEntity();
+        e.addComponent<cro::Transform>().setPosition(position);
+        e.addComponent<cro::Drawable2D>();
+        e.addComponent<cro::Text>(m_font).setString(label);
+        e.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
+        e.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
+        e.getComponent<cro::Text>().setOutlineThickness(1.f);
+        e.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
+        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+
+        return e;
+    };
+
+    //batcat button
     glm::vec2 textPos(200.f, 800.f);
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(textPos);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Batcat");
-    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
-    entity.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
-    entity.getComponent<cro::Text>().setOutlineThickness(1.f);
-    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+    entity = createButton("Batcat", textPos);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -191,18 +200,10 @@ void MenuState::createScene()
                     requestStackPush(States::ScratchPad::BatCat);
                 }
             });
-    textPos.y -= MenuSpacing;
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(textPos);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Mesh Collision");
-    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
-    entity.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
-    entity.getComponent<cro::Text>().setOutlineThickness(1.f);
-    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+    //mesh collision button
+    textPos.y -= MenuSpacing;
+    entity = createButton("Mesh Collision", textPos);    
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -212,18 +213,10 @@ void MenuState::createScene()
                     requestStackPush(States::ScratchPad::MeshCollision);
                 }
             });
-    textPos.y -= MenuSpacing;
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(textPos);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("BSP");
-    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
-    entity.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
-    entity.getComponent<cro::Text>().setOutlineThickness(1.f);
-    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+    //BSP button
+    textPos.y -= MenuSpacing;
+    entity = createButton("BSP", textPos);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -234,20 +227,24 @@ void MenuState::createScene()
                 }
             });
 
+    //voxels button
+    textPos.y -= MenuSpacing;
+    entity = createButton("Voxels", textPos);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(States::ScratchPad::Voxels);
+                }
+            });
+
+
+
+    //quit button
     textPos.y -= MenuSpacing * 2.f;
-
-
-
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(textPos);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_font).setString("Quit");
-    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
-    entity.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
-    entity.getComponent<cro::Text>().setOutlineThickness(1.f);
-    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+    entity = createButton("Quit", textPos);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem->addCallback([](cro::Entity e, const cro::ButtonEvent& evt)
             {

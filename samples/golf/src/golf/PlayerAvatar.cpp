@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -87,6 +87,7 @@ PlayerAvatar::PlayerAvatar(const std::string& path)
     }
     else
     {
+        LogE << path << ": file not loaded or not RGBA" << std::endl;
         m_image.create(48, 52, cro::Colour::Magenta);
     }
 }
@@ -129,6 +130,11 @@ void PlayerAvatar::setColour(pc::ColourKey::Index idx, std::int8_t pairIdx)
         }
         m_darkColours[idx] = colour;
     }
+}
+
+std::pair<cro::Colour, cro::Colour> PlayerAvatar::getColour(pc::ColourKey::Index idx) const
+{
+    return { m_lightColours[idx], m_darkColours[idx] };
 }
 
 void PlayerAvatar::apply()

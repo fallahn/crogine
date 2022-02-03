@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -278,6 +278,11 @@ void BallSystem::process(float dt)
                     {
                         ball.state = Ball::State::Reset;
                     }
+                    else if (ball.terrain == TerrainID::Stone)
+                    {
+                        ball.state = Ball::State::Reset;
+                        ball.terrain = TerrainID::Scrub;
+                    }
                     else
                     {
                         ball.state = Ball::State::Paused;
@@ -324,33 +329,16 @@ void BallSystem::process(float dt)
 
             if (ball.delay < 0)
             {
-                //TODO hmmm we might be better moving back towards the
-                //player, but we don't have the player position here to target...
-
-                //move towards hole or target util we find non-water
+                //move towards player until we find non-water
                 std::uint8_t terrain = TerrainID::Water;
 
                 //make sure ball height is level with target
                 //else moving it may cause the collision test
                 //to miss if the terrain is much higher than
                 //the water level.
-                ballPos.y = m_holeData->pin.y;
-                auto pinDir = m_holeData->pin - ballPos;
 
-                ballPos.y = m_holeData->target.y;
-                auto targetDir = m_holeData->target - ballPos;
-
-                glm::vec3 dir(0.f);
-                if (glm::length2(pinDir) < glm::length2(targetDir))
-                {
-                    dir = pinDir;
-                    ballPos.y = m_holeData->pin.y;
-                }
-                else
-                {
-                    dir = targetDir;
-                    ballPos.y = m_holeData->target.y;
-                }
+                glm::vec3 dir = ball.startPoint - ballPos;
+                ballPos.y = ball.startPoint.y;
 
                 auto length = glm::length(dir);
                 dir /= length;
@@ -363,7 +351,8 @@ void BallSystem::process(float dt)
                     terrain = res.terrain;
 
                     if (terrain != TerrainID::Water
-                        && terrain != TerrainID::Scrub)
+                        && terrain != TerrainID::Scrub
+                        && terrain != TerrainID::Stone)
                     {
                         //move the ball a bit closer so we're not balancing on the edge
                         ballPos += dir * 1.5f;
@@ -424,6 +413,8 @@ void BallSystem::process(float dt)
                 }
                 //LogI << "Distance: " << len2 << ", terrain: " << TerrainStrings[ball.terrain] << std::endl;
 
+                ball.lastStrokeDistance = glm::length(ball.startPoint - position);
+                msg->distance = ball.lastStrokeDistance;
                 ball.state = Ball::State::Idle;
                 updateWind(); //is a bit less random but at least stops the wind
                 //changing direction mid-stroke which is just annoying.
@@ -544,10 +535,12 @@ void BallSystem::doCollision(cro::Entity entity)
             [[fallthrough]];
         case TerrainID::Scrub:
         case TerrainID::Bunker:
-            ball.velocity = glm::vec3(0.f);
+            ball.velocity *= Restitution[terrainResult.terrain];
             break;
         case TerrainID::Fairway:
-            ball.velocity *= 0.33f;
+        case TerrainID::Stone: //bouncy :)
+        case TerrainID::Rough:
+            ball.velocity *= Restitution[terrainResult.terrain];
             ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
             break;
         case TerrainID::Green:
@@ -576,11 +569,6 @@ void BallSystem::doCollision(cro::Entity entity)
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
             }
             break;
-        case TerrainID::Rough:
-            ball.velocity *= 0.23f;
-            ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
-            CRO_ASSERT(!std::isnan(ball.velocity.x), "");
-            break;
         }
 
         //stop the ball if velocity low enough
@@ -591,6 +579,10 @@ void BallSystem::doCollision(cro::Entity entity)
                 || terrainResult.terrain == TerrainID::Scrub)
             {
                 resetBall(ball, Ball::State::Reset, terrainResult.terrain);
+            }
+            else if (terrainResult.terrain == TerrainID::Stone)
+            {
+                resetBall(ball, Ball::State::Reset, TerrainID::Scrub);
             }
             else
             {
@@ -888,9 +880,9 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
         float terrain = std::min(1.f, std::max(0.f, m_vertexData[(m_indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset])) * 255.f;
         terrain = std::floor(terrain / 10.f);
 
-        if (terrain > TerrainID::Hole)
+        if (terrain >= TerrainID::Hole)
         {
-            terrain = TerrainID::Fairway;
+            terrain = TerrainID::Scrub;
         }
 
         m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh);

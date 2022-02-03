@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -30,20 +30,23 @@ source distribution.
 #pragma once
 
 #include "Terrain.hpp"
+#include "SharedStateData.hpp"
 #include "../GolfGame.hpp"
 
+#include <crogine/ecs/components/Model.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Matrix.hpp>
 
 #include <cstdint>
 
-static constexpr float CameraStrokeHeight = 3.2f;// 2.6f;
+static constexpr float CameraStrokeHeight = 2.f;// 3.2f;// 2.6f;
 static constexpr float CameraPuttHeight = 0.3f;
-static constexpr float CameraStrokeOffset = 7.5f;// 5.1f;
+static constexpr float CameraStrokeOffset = 5.f;// 7.5f;// 5.1f;
 static constexpr float CameraPuttOffset = 0.8f;
 static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
 
@@ -62,6 +65,9 @@ static constexpr float MaxTerrainHeight = 4.5f;
 
 static constexpr float FlagRaiseDistance = 2.5f * 2.5f;
 static constexpr float PlayerShadowOffset = 0.04f;
+
+static constexpr float MinPixelScale = 1.f;
+static constexpr float MaxPixelScale = 3.f;
 
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
@@ -83,7 +89,9 @@ struct MixerChannel final
 {
     enum
     {
-        Music, Effects, Menu, Voice
+        Music, Effects, Menu, Voice,
+
+        Count
     };
 };
 
@@ -96,7 +104,11 @@ struct ShaderID final
         Cel,
         CelSkinned,
         CelTextured,
+        CelTexturedInstanced,
         CelTexturedSkinned,
+        Leaderboard,
+        Player,
+        Hair,
         Course,
         Ball,
         Slope,
@@ -113,7 +125,7 @@ struct AnimationID final
 {
     enum
     {
-        Idle, Swing,
+        Idle, Swing, Chip, Putt,
         Count
     };
 };
@@ -173,12 +185,28 @@ static inline glm::vec2 calcVPSize()
     return glm::vec2(ViewportWidth, ratio < Widescreen ? ViewportHeightWide : ViewportHeight);
 }
 
-static inline void setTexture(const cro::ModelDefinition& modelDef, cro::Material::Data& dest, std::size_t matID = 0)
+static inline void togglePixelScale(SharedStateData& sharedData, bool on)
+{
+    if (on != sharedData.pixelScale)
+    {
+        sharedData.pixelScale = on;
+
+        //raise a window resize message to trigger callbacks
+        auto size = cro::App::getWindow().getSize();
+        auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+        msg->data0 = size.x;
+        msg->data1 = size.y;
+        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+    }
+}
+
+//applies material data loaded in a model definition such as texture info to custom materials
+static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::Material::Data& dest, std::size_t matID = 0)
 {
     if (auto* m = modelDef.getMaterial(matID); m != nullptr)
     {
         //skip over materials with alpha blend as they are
-        //probably glass or  shadow materials
+        //probably glass or shadow materials
         if (m->blendMode == cro::Material::BlendMode::Alpha)
         {
             dest = *m;
@@ -304,6 +332,22 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
     loadNormalMap(dst, img);
 
     return img;
+}
+
+static inline void createFallbackModel(cro::Entity target, cro::ResourceCollection& resources)
+{
+    CRO_ASSERT(target.isValid(), "");
+    static auto shaderID = resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::BuiltInFlags::DiffuseColour);
+    auto& shader = resources.shaders.get(shaderID);
+
+    static auto materialID = resources.materials.add(shader);
+    auto material = resources.materials.get(materialID);
+    material.setProperty("u_colour", cro::Colour::Magenta);
+
+    static auto meshID = resources.meshes.loadMesh(cro::CubeBuilder(glm::vec3(0.25f)));
+    auto meshData = resources.meshes.getMesh(meshID);
+
+    target.addComponent<cro::Model>(meshData, material);
 }
 
 //TODO use this for interpolating slope height on a height map

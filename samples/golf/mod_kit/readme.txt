@@ -7,6 +7,7 @@ See http://fallahn.itch.io/vga-golf for more details.
 
 
 avatar_format.md - description of the *.avt files used for creating in-game avatars
+avatar_keys.ase - a photoshop palette containing the key colours used by avatars
 ball_format.md - description of the *.ball files used to load custom balls. Written in markdown format.
 ball_template.blend - ball template file for Blender
 collision_colours.ase - A Photoshop palette which contains colours for terrain collision. Not an Aseprite file.
@@ -48,12 +49,12 @@ The surrounding terrain can be created by sculpting a sub-divided plane and baki
 
 Tee, hole and initial player target positions can be placed by creating a new Empty for each, and naming them tee, hole and target respectively. A 'single arrow' empty is often a good choice. These empties can be placed in the blender scene to represent where each of the entities will appear in game.
 
-Further models can be created in blender and used as props, for example vehicles or buildings. These should be exported and converted in the same way as other models first, then in Blender add a custom property named 'model_path' with the relative path of the model in the assets directory as its value - eg 'assets/golf/models/cart.cmt'. This is used with the prop-export.py script (enabled in Blender with Edit->Prefernces->Add Ons->Install...) to export the positions of prop models about the hole to a text file. This appears as File->Export->Golf Hole Data in Blender. Selected props, crowds and empties (used for tee and hole positions) will be exported to a *.hole file. See course_format.md for more information on this file.
+Further models can be created in blender and used as props, for example vehicles or buildings. These should be exported and converted in the same way as other models first, then in Blender add a custom property named 'model_path' with the relative path of the model in the assets directory as its value - eg 'assets/golf/models/cart.cmt'. This is used with the prop-export.py script (enabled in Blender with Edit->Preferences->Add Ons->Install...) to export the positions of prop models about the hole to a text file. This appears as File->Export->Golf Hole Data in Blender. Selected props, crowds and empties (used for tee and hole positions) will be exported to a *.hole file. See course_format.md for more information on this file.
 
 
 Collision Colours
 -----------------
-Different types of terrain a represented by different colour values. These colours are stored in the Krita palette file, collision_colours.kpl, or Photoshop palette file collision_colours.ase. Either file can be imported to Blender with the palette import add-on enabled. This allows easily setting, for example, vertex colours of course geometry so that VGA golf can determine which part of a hole is which terrain. The colour values are (in RGB format):
+Different types of terrain are represented by different colour values. These colours are stored in the Krita palette file, collision_colours.kpl, or Photoshop palette file collision_colours.ase. Either file can be imported to Blender with the palette import add-on enabled. This allows easily setting, for example, vertex colours of course geometry so that VGA golf can determine which part of a hole is which terrain. The colour values are (in RGB format):
 
         Rough   = 05,05,05
         Fairway = 15,15,15
@@ -61,8 +62,10 @@ Different types of terrain a represented by different colour values. These colou
         Bunker  = 35,35,35
         Water   = 45,45,45
         Scrub   = 55,55,55
+        Stone   = 65,65,65
+        Hole    = 75,75,75 - unused in modelling
 
-Each section of mesh with a specific terrain type should also have its own material assigned - even if that is a duplicate of an existing material. This is so that the game will correctly divide the geometry by terrain type when it is loaded.
+Each section of mesh with a specific terrain type should also have its own material assigned - even if that is a duplicate of an existing material. This is so that the game will correctly divide the geometry by terrain type when it is loaded. When importing geometry using the model improter make sure to check 'convert vertex colours' so that the values are converted from sRGB back to linear space.
 
 
 Post Process Effects

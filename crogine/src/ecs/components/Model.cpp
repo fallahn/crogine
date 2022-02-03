@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -42,6 +42,7 @@ Model::Model()
     : m_visible     (true),
     m_hidden        (false),
     m_renderFlags   (std::numeric_limits<std::uint64_t>::max()),
+    m_facing        (GL_CCW),
     m_skeleton      (nullptr),
     m_jointCount    (0)
 {
@@ -55,6 +56,7 @@ Model::Model(Mesh::Data data, Material::Data material)
     : m_visible     (true),
     m_hidden        (false),
     m_renderFlags   (std::numeric_limits<std::uint64_t>::max()),
+    m_facing        (GL_CCW),
     m_boundingSphere(data.boundingSphere),
     m_boundingBox   (data.boundingBox),
     m_meshData      (data),
@@ -113,6 +115,7 @@ Model::Model(Model&& other) noexcept
     std::swap(m_visible, other.m_visible);
     std::swap(m_hidden, other.m_hidden);
     std::swap(m_renderFlags, other.m_renderFlags);
+    std::swap(m_facing, other.m_facing);
     std::swap(m_boundingSphere, other.m_boundingSphere);
 
     std::swap(m_meshData, other.m_meshData);
@@ -144,6 +147,8 @@ Model& Model::operator=(Model&& other) noexcept
         m_visible = other.m_visible;
         m_hidden = other.m_hidden;
         m_renderFlags = other.m_renderFlags;
+        m_facing = other.m_facing;
+        other.m_facing = GL_CCW;
         m_boundingSphere = other.m_boundingSphere;
         other.m_boundingSphere = Sphere();
 
@@ -235,6 +240,16 @@ void Model::setShadowMaterial(std::size_t idx, Material::Data material)
 #ifdef PLATFORM_DESKTOP
     updateVAO(idx, Mesh::IndexData::Shadow);
 #endif //DESKTOP
+}
+
+void Model::setFacing(Facing facing)
+{
+    m_facing = facing == Facing::Front ? GL_CCW : GL_CW;
+}
+
+Model::Facing Model::getFacing() const
+{
+    return m_facing == GL_CCW ? Facing::Front : Facing::Back;
 }
 
 const Material::Data& Model::getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh) const

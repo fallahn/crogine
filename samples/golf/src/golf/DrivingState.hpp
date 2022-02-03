@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -69,6 +69,8 @@ private:
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_backgroundTexture;
 
+    std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
+
     bool m_mouseVisible;
     cro::Clock m_mouseClock;
 
@@ -78,6 +80,9 @@ private:
         {
             Cel,
             CelTextured,
+            CelTexturedSkinned,
+            Course,
+            Hair,
             Wireframe,
             WireframeCulled,
 
@@ -109,19 +114,16 @@ private:
 
     struct Avatar final
     {
-        struct Sprite final
-        {
-            cro::Sprite sprite;
-            std::array<std::size_t, AnimationID::Count> animIDs = {};
-
-            enum
-            {
-                Wood, Iron, Count
-            };
-        };
-        std::array<Sprite, Sprite::Count> sprites = {};
-        std::int32_t spriteIndex = Sprite::Wood;
+        std::array<std::size_t, AnimationID::Count> animationIDs = {};
+        cro::Attachment* handsAttachment = nullptr;
     }m_avatar;
+
+
+    struct ClubModel final
+    {
+        enum {Wood, Iron, Count};
+    };
+    std::array<cro::Entity, ClubModel::Count> m_clubModels = {};
 
     std::array<std::int32_t, 3u> m_strokeCounts = { 5,9,18 };
     std::size_t m_strokeCountIndex;

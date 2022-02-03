@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -88,6 +88,10 @@ private:
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
     std::vector<cro::Billboard> m_billboardBuffer;
     std::array<cro::Entity, 2u> m_billboardEntities = {};
+    std::size_t m_swapIndex; //might not swap every hole so we need to track this independently
+
+    std::vector<glm::mat4> m_instanceTransforms;
+    std::array<cro::Entity, 2u> m_instancedEntities = {};
 
     struct TerrainVertex final
     {

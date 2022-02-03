@@ -135,7 +135,7 @@ namespace cro::Detail::ModelBinary
             frameSize = skel.m_frameSize;
             frameCount = skel.m_frameCount;
             animationCount = static_cast<std::uint32_t>(skel.m_animations.size());
-            attachmentCount = static_cast<std::uint32_t>(skel.m_attachmentPoints.size());
+            attachmentCount = static_cast<std::uint32_t>(skel.m_attachments.size());
 
             for (const auto& nFrame : skel.m_notifications)
             {
@@ -221,34 +221,52 @@ namespace cro::Detail::ModelBinary
     struct CRO_EXPORT_API SerialNotification final
     {
         std::uint32_t frameID = 0;
-        std::int32_t jointID = -1;
+        std::uint32_t jointID = 0;
         std::int32_t userID = -1;
+        char name[Attachment::MaxNameLength + 1];
 
-        SerialNotification() = default;
-        SerialNotification(std::uint32_t f, std::int32_t j, std::int32_t u)
+        SerialNotification() 
+            : frameID(0), jointID(-1), userID(-1)
+        {
+            name[0] = 0;
+        };
+        SerialNotification(std::uint32_t f, std::uint32_t j, std::int32_t u)
             : frameID(f), jointID(j), userID(u)
-        {}
+        {
+            name[0] = 0;
+        }
     };
 
     struct CRO_EXPORT_API SerialAttachment final
     {
         glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
         glm::vec3 translation = glm::vec3(0.f);
+        glm::vec3 scale = glm::vec3(1.f);
         std::int32_t parent = -1;
+        char name[Attachment::MaxNameLength + 1];
 
         SerialAttachment() = default;
-        explicit SerialAttachment(const cro::AttachmentPoint& ap)
-            : rotation  (ap.m_rotation),
-            translation (ap.m_translation),
-            parent      (ap.m_parent)
+        explicit SerialAttachment(const cro::Attachment& ap)
+            : rotation  (ap.getRotation()),
+            translation (ap.getPosition()),
+            scale       (ap.getScale()),
+            parent      (ap.getParent())
         {
-
+            auto len = std::min(Attachment::MaxNameLength, ap.getName().size());
+            std::memcpy(name, ap.getName().c_str(), len);
+            name[len] = 0;
         }
-        SerialAttachment& operator = (const cro::AttachmentPoint& ap)
+        SerialAttachment& operator = (const cro::Attachment& ap)
         {
-            rotation = ap.m_rotation;
-            translation = ap.m_translation;
-            parent = ap.m_parent;
+            rotation = ap.getRotation();
+            translation = ap.getPosition();
+            scale = ap.getScale();
+            parent = ap.getParent();
+
+            auto len = std::min(Attachment::MaxNameLength, ap.getName().size());
+            std::memcpy(name, ap.getName().c_str(), len);
+            name[len] = 0;
+
             return *this;
         }
     };

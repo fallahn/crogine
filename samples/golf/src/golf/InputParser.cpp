@@ -66,7 +66,9 @@ InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)
     m_active            (false),
     m_suspended         (false),
     m_state             (State::Aim),
-    m_currentClub       (ClubID::Driver)
+    m_currentClub       (ClubID::Driver),
+    m_firstClub         (ClubID::Driver),
+    m_clubOffset        (0)
 {
 
 }
@@ -313,6 +315,22 @@ void InputParser::setEnableFlags(std::uint16_t flags)
     m_enableFlags = flags;
 }
 
+void InputParser::setMaxClub(float dist)
+{
+    m_firstClub = ClubID::Driver;
+    while (Clubs[m_firstClub].target > dist
+        && m_firstClub < ClubID::SandWedge)
+    {
+        m_firstClub++;
+    }
+
+    m_currentClub = m_firstClub;
+    m_clubOffset = 0;
+
+    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+    msg->type = GolfEvent::ClubChanged;
+}
+
 void InputParser::resetPower()
 {
     m_power = 0.f;
@@ -331,7 +349,6 @@ void InputParser::update(float dt)
 
     if (m_active)
     {
-
         m_inputFlags &= m_enableFlags;
 
         switch (m_state)
@@ -359,7 +376,11 @@ void InputParser::update(float dt)
             if ((m_prevFlags & InputFlag::PrevClub) == 0
                 && (m_inputFlags & InputFlag::PrevClub))
             {
-                m_currentClub = (m_currentClub + 1) % ClubID::Putter;
+                //m_currentClub = (m_currentClub + 1) % ClubID::Putter;
+
+                auto clubCount = ClubID::Putter - m_firstClub;
+                m_clubOffset = (m_clubOffset + 1) % clubCount;
+                m_currentClub = m_firstClub + m_clubOffset;
 
                 auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
@@ -369,7 +390,11 @@ void InputParser::update(float dt)
             if ((m_prevFlags & InputFlag::NextClub) == 0
                 && (m_inputFlags & InputFlag::NextClub))
             {
-                m_currentClub = (m_currentClub + ClubID::SandWedge) % ClubID::Putter;
+                //m_currentClub = (m_currentClub + ClubID::SandWedge) % ClubID::Putter;
+
+                auto clubCount = ClubID::Putter - m_firstClub;
+                m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
+                m_currentClub = m_firstClub + m_clubOffset;
 
                 auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
@@ -445,14 +470,22 @@ bool InputParser::inProgress() const
     return (m_state == State::Power || m_state == State::Stroke);
 }
 
+bool InputParser::getActive() const
+{
+    return m_active;
+}
+
 //private
 void InputParser::setClub(float dist)
 {
     m_currentClub = ClubID::NineIron;
     while (Clubs[m_currentClub].target < dist
-        && m_currentClub != ClubID::Driver)
+        && m_currentClub != /*ClubID::Driver*/m_firstClub)
     {
-        m_currentClub = (m_currentClub + ClubID::SandWedge) % ClubID::Putter;
+        //m_currentClub = (m_currentClub + ClubID::SandWedge) % ClubID::Putter;
+        auto clubCount = ClubID::Putter - m_firstClub;
+        m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
+        m_currentClub = m_firstClub + m_clubOffset;
     }
 
     auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);

@@ -31,6 +31,7 @@ source distribution.
 #include "MenuConsts.hpp"
 
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Model.hpp>
 #include <crogine/detail/Assert.hpp>
 
 LeaderboardTexture::LeaderboardTexture()
@@ -53,6 +54,11 @@ void LeaderboardTexture::init(const cro::Sprite& backgroundSprite, cro::Font& fo
 
     m_texture.create(static_cast<std::uint32_t>(textureRect.width),
                     static_cast<std::uint32_t>(textureRect.height) * 2, false);
+
+    for (auto target : m_targetEnts)
+    {
+        target.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", cro::TextureID(m_texture.getTexture().getGLHandle()));
+    }
 }
 
 void LeaderboardTexture::update(std::vector<LeaderboardEntry>& entries)
@@ -84,6 +90,11 @@ void LeaderboardTexture::update(std::vector<LeaderboardEntry>& entries)
     }
 
     m_texture.display();
+}
+
+void LeaderboardTexture::addTarget(cro::Entity e)
+{
+    m_targetEnts.push_back(e);
 }
 
 const cro::Texture& LeaderboardTexture::getTexture() const

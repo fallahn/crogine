@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 #include <crogine/detail/glm/gtx/matrix_interpolation.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 
 using namespace cro;
 
@@ -41,6 +42,7 @@ Skeleton::Skeleton()
     m_currentBlendTime  (0.f),
     m_frameTime         (1.f),
     m_currentFrameTime  (0.f),
+    m_useInterpolation  (true),
     m_frameSize         (0),
     m_frameCount        (0)
 {
@@ -50,7 +52,7 @@ Skeleton::Skeleton()
 void Skeleton::play(std::size_t idx, float rate, float blendingTime)
 {
     CRO_ASSERT(idx < m_animations.size(), "Index out of range");
-    CRO_ASSERT(rate > 0, "");
+    CRO_ASSERT(rate >= 0, "");
     m_playbackRate = rate;
     if (idx != m_currentAnimation)
     {
@@ -69,17 +71,13 @@ void Skeleton::prevFrame()
 
 {
     CRO_ASSERT(!m_animations.empty(), "No animations loaded");
-    if (m_currentFrameTime > 0)
-    {
-        m_currentFrameTime = 0.f;
-    }
-    else
-    {
-        auto& anim = m_animations[m_currentAnimation];
-        auto frame = anim.currentFrame - anim.startFrame;
-        frame = (frame + (anim.frameCount - 1)) % anim.frameCount;
-        anim.currentFrame = frame + anim.startFrame;
-    }
+
+    auto& anim = m_animations[m_currentAnimation];
+    auto frame = anim.currentFrame - anim.startFrame;
+    frame = (frame + (anim.frameCount - 1)) % anim.frameCount;
+    anim.currentFrame = frame + anim.startFrame;
+    m_currentFrameTime = 0.f;
+    buildKeyframe(anim.currentFrame);
 }
 
 void Skeleton::nextFrame()
@@ -90,6 +88,19 @@ void Skeleton::nextFrame()
     frame = (frame + 1) % anim.frameCount;
     anim.currentFrame = frame + anim.startFrame;
     m_currentFrameTime = 0.f;
+    buildKeyframe(anim.currentFrame);
+}
+
+void Skeleton::gotoFrame(std::uint32_t frame)
+{
+    CRO_ASSERT(!m_animations.empty(), "No animations loaded");
+    auto& anim = m_animations[m_currentAnimation];
+    if (frame < anim.frameCount)
+    {
+        anim.currentFrame = frame + anim.startFrame;
+        m_currentFrameTime = 0.f;
+        buildKeyframe(anim.currentFrame);
+    }
 }
 
 void Skeleton::stop()
@@ -97,7 +108,6 @@ void Skeleton::stop()
     CRO_ASSERT(!m_animations.empty(), "");
     m_animations[m_currentAnimation].playbackRate = 0.f;
 }
-
 
 Skeleton::State Skeleton::getState() const
 {
@@ -134,35 +144,47 @@ std::size_t Skeleton::getCurrentFrame() const
 void Skeleton::addNotification(std::size_t frameID, Notification n)
 {
     CRO_ASSERT(frameID < m_frameCount, "Out of range");
-    CRO_ASSERT(n.jointID > -1 && n.jointID < m_frameSize, "Out of range");
+    CRO_ASSERT(n.jointID < m_frameSize, "Out of range");
     m_notifications[frameID].push_back(n);
 }
 
-std::int32_t Skeleton::addAttachmentPoint(const AttachmentPoint& ap)
+std::int32_t Skeleton::addAttachment(const Attachment& ap)
 {
-    CRO_ASSERT(ap.m_parent < m_frameSize, "");
-    m_attachmentPoints.push_back(ap);
-    return static_cast<std::int32_t>(m_attachmentPoints.size() - 1);
+    m_attachments.push_back(ap);
+    return static_cast<std::int32_t>(m_attachments.size() - 1);
 }
 
-glm::mat4 Skeleton::getAttachmentPoint(std::int32_t id) const
+std::int32_t Skeleton::getAttachmentIndex(const std::string& name) const
 {
-    CRO_ASSERT(id > -1 && id < m_attachmentPoints.size(), "");
+    if (auto result = std::find_if(m_attachments.begin(), m_attachments.end(),
+        [&name](const Attachment& a)
+        {
+            return name == a.getName();
+        }); result != m_attachments.end())
+    {
+        return static_cast<std::int32_t>(std::distance(m_attachments.begin(), result));
+    }
 
-    const auto& currentAnim = m_animations[m_currentAnimation];
-    auto nextFrame = ((currentAnim.currentFrame - currentAnim.startFrame) + 1) % currentAnim.frameCount;
-    nextFrame += currentAnim.startFrame;
+    return -1;
+}
 
-    auto frameOffsetA = m_frameSize * currentAnim.currentFrame;
-    auto frameOffsetB = m_frameSize * nextFrame;
+glm::mat4 Skeleton::getAttachmentTransform(std::int32_t id) const
+{
+    CRO_ASSERT(id > -1 && id < m_attachments.size(), "");
 
-    const auto& ap = m_attachmentPoints[id];
+    const auto& ap = m_attachments[id];
+    return  m_currentFrame[ap.getParent()] * m_bindPose[ap.getParent()] * ap.getLocalTransform();
+}
 
-    const auto& jointA = m_frames[frameOffsetA + ap.m_parent];
-    const auto& jointB = m_frames[frameOffsetB + ap.m_parent];
+void Skeleton::setInverseBindPose(const std::vector<glm::mat4>& invBindPose)
+{
+    m_invBindPose = invBindPose; 
+    m_bindPose.resize(invBindPose.size());
 
-    //TODO replace this with correct per-component interpolation
-    return glm::interpolate(jointA.worldMatrix, jointB.worldMatrix, m_currentFrameTime / m_frameTime) * ap.m_transform;
+    for (auto i = 0u; i < invBindPose.size(); ++i)
+    {
+        m_bindPose[i] = glm::inverse(invBindPose[i]);
+    }
 }
 
 void Skeleton::setRootTransform(const glm::mat4& transform)
@@ -191,4 +213,58 @@ void Skeleton::buildKeyframe(std::size_t frame)
     {
        m_currentFrame[i] = m_rootTransform * m_frames[offset + i].worldMatrix * m_invBindPose[i];
     }
+}
+
+
+//----attachment struct-----//
+void Attachment::setParent(std::int32_t parent)
+{
+    m_parent = parent;
+}
+
+void Attachment::setModel(cro::Entity model)
+{
+    //reset any existing transform
+    if (m_model != model &&
+        m_model.isValid() &&
+        m_model.hasComponent<cro::Transform>())
+    {
+        m_model.getComponent<cro::Transform>().m_attachmentTransform = glm::mat4(1.f);
+    }
+
+    m_model = model;
+}
+
+void Attachment::setPosition(glm::vec3 position)
+{
+    m_position = position;
+    updateLocalTransform();
+}
+
+void Attachment::setRotation(glm::quat rotation)
+{
+    m_rotation = rotation;
+    updateLocalTransform();
+}
+
+void Attachment::setScale(glm::vec3 scale)
+{
+    m_scale = scale;
+    updateLocalTransform();
+}
+
+void Attachment::setName(const std::string& name)
+{
+    m_name = name;
+    if (name.size() > MaxNameLength)
+    {
+        LogW << name << ": max character length is " << MaxNameLength << ", this name will be truncated when the model is saved." << std::endl;
+    }
+}
+
+void Attachment::updateLocalTransform()
+{
+    m_transform = glm::translate(glm::mat4(1.f), m_position);
+    m_transform *= glm::toMat4(m_rotation);
+    m_transform = glm::scale(m_transform, m_scale);
 }

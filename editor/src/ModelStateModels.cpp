@@ -244,6 +244,16 @@ void ModelState::openModelAtPath(const std::string& path)
         if (def.hasSkeleton())
         {
             buildSkeleton();
+
+            m_modelProperties.type = ModelProperties::Skinned; //this might be a *.cmb which will have been skipped above
+            const auto& skel = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>();
+            m_attachmentAngles.clear();
+            for (const auto& attachment : skel.getAttachments())
+            {
+                auto rot = glm::eulerAngles(attachment.getRotation());
+                rot *= cro::Util::Const::radToDeg;
+                m_attachmentAngles.push_back(rot);
+            }
         }
 
         updateNormalVis();
@@ -268,6 +278,8 @@ void ModelState::openModelAtPath(const std::string& path)
 
 void ModelState::saveModel(const std::string& path)
 {
+    std::string meshPath;
+    
     cro::ConfigFile newCfg("model", m_modelProperties.name);
     switch (m_modelProperties.type)
     {
@@ -280,6 +292,7 @@ void ModelState::saveModel(const std::string& path)
             if (prop.getName() == "mesh")
             {
                 newCfg.addProperty(prop);
+                meshPath = m_sharedData.workingDirectory + "/" + prop.getValue<std::string>();
             }
         }
     }
@@ -420,6 +433,13 @@ void ModelState::saveModel(const std::string& path)
     {
         m_currentFilePath = path;
         m_currentModelConfig = newCfg;
+
+        if (m_modelProperties.type == ModelProperties::Skinned)
+        {
+            //write the binary in case attachments or notifications
+            //were updated.
+            cro::Detail::ModelBinary::write(m_entities[EntityID::ActiveModel], meshPath, true);
+        }
     }
     else
     {
@@ -442,6 +462,18 @@ void ModelState::closeModel()
             m_scene.destroyEntity(m_entities[EntityID::ActiveSkeleton]);
             m_entities[EntityID::ActiveSkeleton] = {};
         }
+
+        m_attachmentAngles.clear();
+
+        if (m_attachmentModels.size() > 1)
+        {
+            for (auto i = 1u; i < m_attachmentModels.size(); ++i)
+            {
+                m_scene.destroyEntity(m_attachmentModels[i]);
+            }
+            m_attachmentModels.resize(1);
+        }
+        m_attachmentModels[0].getComponent<cro::Model>().setHidden(true);
     }
 
     if (m_entities[EntityID::NormalVis].isValid())

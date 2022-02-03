@@ -1,0 +1,30 @@
+audioscape tutorial
+{
+
+    emitter accept
+    {
+        path = "assets/golf/sound/menu/accept.wav"
+        streaming = false
+        volume = 1
+        mixer_channel = 2
+        looped = false
+    }
+
+    emitter wipe
+    {
+        path = "assets/golf/sound/menu/back.wav"
+        streaming = false
+        volume = 1
+        mixer_channel = 2
+        looped = false
+    }
+
+    emitter appear
+    {
+        path = "assets/golf/sound/tutorial_appear.wav"
+        streaming = false
+        volume = 1
+        mixer_channel = 2
+        looped = false
+    }    
+}

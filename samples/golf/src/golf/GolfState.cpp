@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -60,6 +60,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
@@ -134,6 +135,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_terrainBuilder    (m_holeData),
     m_audioPath         ("assets/golf/sound/ambience.xas"),
     m_currentCamera     (CameraID::Player),
+    m_activeAvatar      (nullptr),
     m_camRotation       (0.f),
     m_roundEnded        (false),
     m_viewScale         (1.f),
@@ -192,7 +194,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
     {
         return true;
     }
-
 
     const auto scrollScores = [&](std::int32_t step)
     {
@@ -435,9 +436,9 @@ void GolfState::handleMessage(const cro::Message& msg)
         }
     }
         break;
-    case cro::Message::SpriteAnimationMessage:
+    case cro::Message::SkeletalAnimationMessage:
     {
-        const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
+        const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
         if (data.userType == SpriteAnimID::Swing)
         {
             //relay this message with the info needed for particle/sound effects
@@ -534,26 +535,20 @@ void GolfState::handleMessage(const cro::Message& msg)
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-            //update the sprite with correct club
-            cmd.targetFlags = CommandID::UI::PlayerSprite;
-            cmd.action = [&](cro::Entity e, float)
+            //update the player with correct club
+            if (m_activeAvatar
+                && m_activeAvatar->hands)
             {
-                auto colour = e.getComponent<cro::Sprite>().getColour();
                 if (getClub() < ClubID::FiveIron)
                 {
-                    auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
-                    avatar.clubType = Avatar::Sprite::Wood;
-                    e.getComponent<cro::Sprite>() = avatar.sprites[Avatar::Sprite::Wood].sprite;
+                    m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Wood]);
                 }
                 else
                 {
-                    auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
-                    avatar.clubType = Avatar::Sprite::Iron;
-                    e.getComponent<cro::Sprite>() = avatar.sprites[Avatar::Sprite::Iron].sprite;
+                    m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Iron]);
                 }
-                e.getComponent<cro::Sprite>().setColour(colour);
-            };
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
+            }
 
             //update club text colour based on distance
             cmd.targetFlags = CommandID::UI::ClubName;
@@ -753,24 +748,18 @@ bool GolfState::simulate(float dt)
 void GolfState::render()
 {
     //render reflections first
-    auto uiCam = m_uiScene.setActiveCamera(m_uiReflectionCam);
+    //auto uiCam = m_uiScene.setActiveCamera(m_uiReflectionCam);
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     auto oldVP = cam.viewport;
 
     cam.viewport = { 0.f,0.f,1.f,1.f };
 
-    //cam.setActivePass(cro::Camera::Pass::Refraction);
-    //cam.renderFlags = RenderFlags::Refraction;
-    //cam.refractionBuffer.clear(cro::Colour::White);
-    //m_gameScene.render(cam.refractionBuffer);
-    //cam.refractionBuffer.display();
-
     cam.setActivePass(cro::Camera::Pass::Reflection);
     cam.renderFlags = RenderFlags::Reflection;
     cam.reflectionBuffer.clear(cro::Colour::Red);
     m_gameScene.render();
-    m_uiScene.render();
+    //m_uiScene.render();
     cam.reflectionBuffer.display();
 
     cam.setActivePass(cro::Camera::Pass::Final);
@@ -778,7 +767,7 @@ void GolfState::render()
     cam.viewport = oldVP;
 
     //then render scene
-    glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for... snow maybe?
+    //glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for... snow maybe?
     m_gameSceneTexture.clear();
     m_gameScene.render();
 #ifdef CRO_DEBUG_
@@ -796,7 +785,7 @@ void GolfState::render()
         m_gameScene.setActiveCamera(oldCam);
     }
 
-    m_uiScene.setActiveCamera(uiCam);
+    //m_uiScene.setActiveCamera(uiCam);
     m_uiScene.render();
 }
 
@@ -809,26 +798,47 @@ void GolfState::loadAssets()
     //cel shaded material
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n");
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define SKINNED\n");
     shader = &m_resources.shaders.get(ShaderID::CelSkinned);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelSkinned] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
     shader = &m_resources.shaders.get(ShaderID::Ball);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n");
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n");
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
+    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::Leaderboard, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define SUBRECT\n");
+    shader = &m_resources.shaders.get(ShaderID::Leaderboard);
+    m_materialIDs[MaterialID::Leaderboard] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n");
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
+    m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n#define RX_SHADOWS\n");
+    shader = &m_resources.shaders.get(ShaderID::Player);
+    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_materialIDs[MaterialID::Player] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n");
+    shader = &m_resources.shaders.get(ShaderID::Hair);
+    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
+
+
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
     shader = &m_resources.shaders.get(ShaderID::Course);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
     //scanline transition
@@ -890,11 +900,9 @@ void GolfState::loadAssets()
     m_flagQuad.setTexture(*flagSprite.getTexture());
     m_flagQuad.setTextureRect(flagSprite.getTextureRect());
 
-    //load sprites from avatar info
-    std::vector<cro::SpriteSheet> spriteSheets;
+    //load audio from avatar info
     for (const auto& avatar : m_sharedData.avatarInfo)
     {
-        spriteSheets.emplace_back().loadFromFile(avatar.spritePath, m_resources.textures);
         m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape(avatar.audioscape, m_resources.audio);
     }
 
@@ -903,7 +911,7 @@ void GolfState::loadAssets()
     //however: while it may load unnecessary audioscapes, it does ensure they are loaded in the correct order :S
 
     //copy into active player slots
-    auto indexFromSkinID = [&](std::uint8_t skinID)->std::size_t
+    const auto indexFromSkinID = [&](std::uint32_t skinID)->std::size_t
     {
         auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
             [skinID](const SharedStateData::AvatarInfo& ai) 
@@ -918,32 +926,197 @@ void GolfState::loadAssets()
         return 0;
     };
 
+    const auto indexFromHairID = [&](std::uint32_t hairID)
+    {
+        if (auto hair = std::find_if(m_sharedData.hairInfo.begin(), m_sharedData.hairInfo.end(),
+            [hairID](const SharedStateData::HairInfo& h) {return h.uid == hairID;});
+            hair != m_sharedData.hairInfo.end())
+        {
+            return static_cast<std::int32_t>(std::distance(m_sharedData.hairInfo.begin(), hair));
+        }
+
+        return 0;
+    };
+
+    cro::ModelDefinition md(m_resources);
     for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
     {
         for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
         {
             auto skinID = m_sharedData.connectionData[i].playerData[j].skinID;
-            auto spriteIndex = indexFromSkinID(skinID);
+            auto avatarIndex = indexFromSkinID(skinID);
 
-            m_avatars[i][j].sprites[Avatar::Sprite::Iron].sprite = spriteSheets[spriteIndex].getSprite("iron");
-            m_avatars[i][j].sprites[Avatar::Sprite::Iron].animIDs[AnimationID::Idle] = spriteSheets[spriteIndex].getAnimationIndex("idle", "iron");
-            m_avatars[i][j].sprites[Avatar::Sprite::Iron].animIDs[AnimationID::Swing] = spriteSheets[spriteIndex].getAnimationIndex("swing", "iron");
-
-            m_avatars[i][j].sprites[Avatar::Sprite::Wood].sprite = spriteSheets[spriteIndex].getSprite("wood");
-            m_avatars[i][j].sprites[Avatar::Sprite::Wood].animIDs[AnimationID::Idle] = spriteSheets[spriteIndex].getAnimationIndex("idle", "wood");
-            m_avatars[i][j].sprites[Avatar::Sprite::Wood].animIDs[AnimationID::Swing] = spriteSheets[spriteIndex].getAnimationIndex("swing", "wood");
+            m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, static_cast<std::int32_t>(avatarIndex));
             m_avatars[i][j].flipped = m_sharedData.connectionData[i].playerData[j].flipped;
 
-            m_avatars[i][j].sprites[Avatar::Sprite::Iron].sprite.setTexture(m_sharedData.avatarTextures[i][j], false);
-            m_avatars[i][j].sprites[Avatar::Sprite::Wood].sprite.setTexture(m_sharedData.avatarTextures[i][j], false);
+            //player avatar model
+            //TODO we might want error checking here, but the model files
+            //should have been validated by the menu state.
+            if (md.loadFromFile(m_sharedData.avatarInfo[avatarIndex].modelPath))
+            {
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Transform>();
+                entity.addComponent<cro::Callback>().setUserData<PlayerCallbackData>();
+                entity.getComponent<cro::Callback>().function =
+                    [&](cro::Entity e, float dt)
+                {
+                    auto& [direction, scale, _] = e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>();
+                    const auto xScale = e.getComponent<cro::Transform>().getScale().x; //might be flipped
 
-            m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, static_cast<std::int32_t>(spriteIndex));
+                    if (direction == 0)
+                    {
+                        scale = std::min(1.f, scale + (dt * 3.f));
+
+                        if (scale == 1)
+                        {
+                            direction = 1;
+                            e.getComponent<cro::Callback>().active = false;
+                        }
+                    }
+                    else
+                    {
+                        scale = std::max(0.f, scale - (dt * 3.f));
+
+                        if (scale == 0)
+                        {
+                            direction = 0;
+                            e.getComponent<cro::Callback>().active = false;
+                            e.getComponent<cro::Model>().setHidden(true);
+
+                            //seems counter-intuitive to search the avatar here
+                            //but we have a, uh.. 'handy' handle (to the hands)
+                            if (m_activeAvatar->hands)
+                            {
+                                //we have to free this up alse the model might
+                                //become attached to two avatars...
+                                m_activeAvatar->hands->setModel({});
+                            }
+                        }
+                    }
+                    auto yScale = cro::Util::Easing::easeOutBack(scale);
+                    e.getComponent<cro::Transform>().setScale(glm::vec3(xScale, yScale, yScale));
+                };
+                md.createModel(entity);
+
+                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Player]);
+                material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[i][j]);
+                entity.getComponent<cro::Model>().setMaterial(0, material);
+
+                if (m_avatars[i][j].flipped)
+                {
+                    entity.getComponent<cro::Transform>().setScale({ -1.f, 0.f, 0.f });
+                    entity.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+                }
+                else
+                {
+                    entity.getComponent<cro::Transform>().setScale({ 1.f, 0.f, 0.f });
+                }
+
+                if (entity.hasComponent<cro::Skeleton>())
+                {
+                    auto& skel = entity.getComponent<cro::Skeleton>();
+                    //skel.setInterpolationEnabled(false);
+                    const auto& anims = skel.getAnimations();
+                    for (auto k = 0u; k < anims.size(); ++k)
+                    {
+                        if (anims[k].name == "idle")
+                        {
+                            m_avatars[i][j].animationIDs[AnimationID::Idle] = k;
+                        }
+                        else if (anims[k].name == "drive")
+                        {
+                            m_avatars[i][j].animationIDs[AnimationID::Swing] = k;
+                        }
+                        else if (anims[k].name == "chip")
+                        {
+                            m_avatars[i][j].animationIDs[AnimationID::Chip] = k;
+                        }
+                        else if (anims[k].name == "putt")
+                        {
+                            m_avatars[i][j].animationIDs[AnimationID::Putt] = k;
+                        }
+                    }
+
+                    //find attachment points for club model
+                    auto id = skel.getAttachmentIndex("hands");
+                    if (id > -1)
+                    {
+                        m_avatars[i][j].hands = &skel.getAttachments()[id];
+                    }
+
+                    id = skel.getAttachmentIndex("head");
+                    if (id > -1)
+                    {
+                        //look to see if we have a hair model to attach
+                        auto hairID = indexFromHairID(m_sharedData.connectionData[i].playerData[j].hairID);
+                        if (hairID != 0
+                            && md.loadFromFile(m_sharedData.hairInfo[hairID].modelPath))
+                        {
+                            auto hairEnt = m_gameScene.createEntity();
+                            hairEnt.addComponent<cro::Transform>();
+                            md.createModel(hairEnt);
+
+                            //set material and colour
+                            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
+                            material.setProperty("u_hairColour", cro::Colour(pc::Palette[m_sharedData.connectionData[i].playerData[j].avatarFlags[pc::ColourKey::Hair]].light));
+                            //material.setProperty("u_darkColour", cro::Colour(pc::Palette[m_sharedData.connectionData[i].playerData[j].avatarFlags[pc::ColourKey::Hair]].dark));
+                            hairEnt.getComponent<cro::Model>().setMaterial(0, material);
+
+                            skel.getAttachments()[id].setModel(hairEnt);
+
+                            if (m_avatars[i][j].flipped)
+                            {
+                                hairEnt.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+                            }
+                        }
+                    }
+                }
+
+                entity.getComponent<cro::Model>().setHidden(true);
+                m_avatars[i][j].model = entity;
+            }
         }
     }
 
+
+    //club models
+    m_clubModels[ClubModel::Wood] = m_gameScene.createEntity();
+    m_clubModels[ClubModel::Wood].addComponent<cro::Transform>();
+    if (md.loadFromFile("assets/golf/models/club_wood.cmt"))
+    {
+        md.createModel(m_clubModels[ClubModel::Wood]);
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+        applyMaterialData(md, material, 0);
+        m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setMaterial(0, material);
+    }
+    else
+    {
+        createFallbackModel(m_clubModels[ClubModel::Wood], m_resources);
+    }
+
+
+    m_clubModels[ClubModel::Iron] = m_gameScene.createEntity();
+    m_clubModels[ClubModel::Iron].addComponent<cro::Transform>();
+    if (md.loadFromFile("assets/golf/models/club_iron.cmt"))
+    {
+        md.createModel(m_clubModels[ClubModel::Iron]);
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+        applyMaterialData(md, material, 0);
+        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterial(0, material);
+    }
+    else
+    {
+        createFallbackModel(m_clubModels[ClubModel::Iron], m_resources);
+        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Cyan);
+    }
+
+
+
     //ball resources - ball is rendered as a single point
     //at a distance, and as a model when closer
-    glCheck(glPointSize(BallPointSize));
+    //glCheck(glPointSize(BallPointSize)); - this is set in resize callback based on the buffer resolution/pixel scale
 
     m_ballResources.materialID = m_materialIDs[MaterialID::WireFrameCulled];
     m_ballResources.ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
@@ -973,7 +1146,7 @@ void GolfState::loadAssets()
     meshData = &m_resources.meshes.getMesh(m_ballResources.shadowMeshID);
     verts =
     {
-        0.f, 0.f, 0.f,    0.5f, 0.5f, 0.5f, 1.f,
+        0.f, 0.f, 0.f,    0.f, 0.f, 0.f, 0.25f,
     };
     meshData->vertexCount = 1;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
@@ -1110,6 +1283,11 @@ void GolfState::loadAssets()
 
     cro::ConfigFile holeCfg;
     cro::ModelDefinition modelDef(m_resources);
+    std::string prevHoleString;
+    cro::Entity prevHoleEntity;
+    std::vector<cro::Entity> prevProps;
+    std::vector<cro::Entity> leaderboardProps;
+
     for (const auto& hole : holeStrings)
     {
         if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + hole))
@@ -1127,6 +1305,7 @@ void GolfState::loadAssets()
         static constexpr std::int32_t MaxProps = 6;
         std::int32_t propCount = 0;
         auto& holeData = m_holeData.emplace_back();
+        bool duplicate = false;
 
         const auto& holeProps = holeCfg.getProperties();
         for (const auto& holeProp : holeProps)
@@ -1179,26 +1358,45 @@ void GolfState::loadAssets()
             }
             else if (name == "model")
             {
-                if (modelDef.loadFromFile(holeProp.getValue<std::string>()))
+                auto modelPath = holeProp.getValue<std::string>();
+
+                if (modelPath != prevHoleString)
                 {
-                    holeData.modelEntity = m_gameScene.createEntity();
-                    holeData.modelEntity.addComponent<cro::Transform>().setPosition(OriginOffset);
-                    holeData.modelEntity.getComponent<cro::Transform>().setOrigin(OriginOffset);
-                    holeData.modelEntity.addComponent<cro::Callback>();
-                    modelDef.createModel(holeData.modelEntity);
-                    holeData.modelEntity.getComponent<cro::Model>().setHidden(true);
-                    for (auto m = 0u; m < holeData.modelEntity.getComponent<cro::Model>().getMeshData().submeshCount; ++m)
+                    //attept to load model
+                    if (modelDef.loadFromFile(modelPath))
                     {
-                        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
-                        setTexture(modelDef, material, m);
-                        holeData.modelEntity.getComponent<cro::Model>().setMaterial(m, material);
+                        holeData.modelPath = modelPath;
+
+                        holeData.modelEntity = m_gameScene.createEntity();
+                        holeData.modelEntity.addComponent<cro::Transform>().setPosition(OriginOffset);
+                        holeData.modelEntity.getComponent<cro::Transform>().setOrigin(OriginOffset);
+                        holeData.modelEntity.addComponent<cro::Callback>();
+                        modelDef.createModel(holeData.modelEntity);
+                        holeData.modelEntity.getComponent<cro::Model>().setHidden(true);
+                        for (auto m = 0u; m < holeData.modelEntity.getComponent<cro::Model>().getMeshData().submeshCount; ++m)
+                        {
+                            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
+                            applyMaterialData(modelDef, material, m);
+                            holeData.modelEntity.getComponent<cro::Model>().setMaterial(m, material);
+                        }
+                        propCount++;
+
+                        prevHoleString = modelPath;
+                        prevHoleEntity = holeData.modelEntity;
                     }
-                    propCount++;
+                    else
+                    {
+                        LOG("Failed loading model file", cro::Logger::Type::Error);
+                        error = true;
+                    }
                 }
                 else
                 {
-                    LOG("Failed loading model file", cro::Logger::Type::Error);
-                    error = true;
+                    //duplicate the hole by copying the previous model entitity
+                    holeData.modelPath = prevHoleString;
+                    holeData.modelEntity = prevHoleEntity;
+                    duplicate = true;
+                    propCount++;
                 }
             }
         }
@@ -1210,109 +1408,171 @@ void GolfState::loadAssets()
         }
         else
         {
-            //look for prop models (are optional and can fail to load no problem)
-            const auto& propObjs = holeCfg.getObjects();
-            for (const auto& obj : propObjs)
+            if (!duplicate) //this hole wasn't a duplicate of the previous
             {
-                const auto& name = obj.getName();
-                if (name == "prop")
+                //look for prop models (are optional and can fail to load no problem)
+                const auto& propObjs = holeCfg.getObjects();
+                for (const auto& obj : propObjs)
                 {
-                    const auto& modelProps = obj.getProperties();
-                    glm::vec3 position(0.f);
-                    float rotation = 0.f;
-                    glm::vec3 scale(1.f);
-                    std::string path;
-
-                    for (const auto& modelProp : modelProps)
+                    const auto& name = obj.getName();
+                    if (name == "prop")
                     {
-                        auto propName = modelProp.getName();
-                        if (propName == "position")
-                        {
-                            position = modelProp.getValue<glm::vec3>();
-                        }
-                        else if (propName == "model")
-                        {
-                            path = modelProp.getValue<std::string>();
-                        }
-                        else if (propName == "rotation")
-                        {
-                            rotation = modelProp.getValue<float>();
-                        }
-                        else if (propName == "scale")
-                        {
-                            scale = modelProp.getValue<glm::vec3>();
-                        }
-                    }
+                        const auto& modelProps = obj.getProperties();
+                        glm::vec3 position(0.f);
+                        float rotation = 0.f;
+                        glm::vec3 scale(1.f);
+                        std::string path;
 
-                    if (!path.empty()
-                        && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + path))
-                    {
-                        if (modelDef.loadFromFile(path))
+                        for (const auto& modelProp : modelProps)
                         {
-                            auto ent = m_gameScene.createEntity();
-                            ent.addComponent<cro::Transform>().setPosition(position);
-                            ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
-                            ent.getComponent<cro::Transform>().setScale(scale);
-                            modelDef.createModel(ent);
-                            if (modelDef.hasSkeleton())
+                            auto propName = modelProp.getName();
+                            if (propName == "position")
                             {
-                                for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
+                                position = modelProp.getValue<glm::vec3>();
+                            }
+                            else if (propName == "model")
+                            {
+                                path = modelProp.getValue<std::string>();
+                            }
+                            else if (propName == "rotation")
+                            {
+                                rotation = modelProp.getValue<float>();
+                            }
+                            else if (propName == "scale")
+                            {
+                                scale = modelProp.getValue<glm::vec3>();
+                            }
+                        }
+
+                        if (!path.empty()
+                            && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + path))
+                        {
+                            if (modelDef.loadFromFile(path))
+                            {
+                                auto ent = m_gameScene.createEntity();
+                                ent.addComponent<cro::Transform>().setPosition(position);
+                                ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
+                                ent.getComponent<cro::Transform>().setScale(scale);
+                                modelDef.createModel(ent);
+                                if (modelDef.hasSkeleton())
                                 {
-                                    auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
-                                    setTexture(modelDef, texturedMat, i);
-                                    ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+                                    for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
+                                    {
+                                        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+                                        applyMaterialData(modelDef, texturedMat, i);
+                                        ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+                                    }
+
+                                    auto& skel = ent.getComponent<cro::Skeleton>();
+                                    if (!skel.getAnimations().empty())
+                                    {
+                                        ent.getComponent<cro::Skeleton>().play(0);
+                                        skel.getAnimations()[0].looped = true;
+                                    }
                                 }
-                                
-                                auto& skel = ent.getComponent<cro::Skeleton>();
-                                if (!skel.getAnimations().empty())
+                                else
                                 {
-                                    ent.getComponent<cro::Skeleton>().play(0);
-                                    skel.getAnimations()[0].looped = true;
+                                    for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
+                                    {
+                                        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+                                        applyMaterialData(modelDef, texturedMat, i);
+                                        ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+                                    }
+                                }
+                                ent.getComponent<cro::Model>().setHidden(true);
+                                ent.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+
+                                holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+                                holeData.propEntities.push_back(ent);
+
+                                //special case for leaderboard model, cos, y'know
+                                if (cro::FileSystem::getFileName(path) == "leaderboard.cmt")
+                                {
+                                    leaderboardProps.push_back(ent);
                                 }
                             }
-                            else
-                            {
-                                for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
-                                {
-                                    auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-                                    setTexture(modelDef, texturedMat, i);
-                                    ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
-                                }
-                            }
-                            ent.getComponent<cro::Model>().setHidden(true);
-                            ent.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
-
-                            holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-                            holeData.propEntities.push_back(ent);
                         }
                     }
-                }
-                else if (name == "crowd")
-                {
-                    const auto& modelProps = obj.getProperties();
-                    glm::vec3 position(0.f);
-                    float rotation = 0.f;
-
-                    for (const auto& modelProp : modelProps)
+                    else if (name == "crowd")
                     {
-                        auto propName = modelProp.getName();
-                        if (propName == "position")
-                        {
-                            position = modelProp.getValue<glm::vec3>();
-                        }
-                        else if (propName == "rotation")
-                        {
-                            rotation = modelProp.getValue<float>();
-                        }
-                    }
+                        const auto& modelProps = obj.getProperties();
+                        glm::vec3 position(0.f);
+                        float rotation = 0.f;
 
-                    addCrowd(holeData, position, rotation);
+                        for (const auto& modelProp : modelProps)
+                        {
+                            auto propName = modelProp.getName();
+                            if (propName == "position")
+                            {
+                                position = modelProp.getValue<glm::vec3>();
+                            }
+                            else if (propName == "rotation")
+                            {
+                                rotation = modelProp.getValue<float>();
+                            }
+                        }
+
+                        addCrowd(holeData, position, rotation);
+                    }
                 }
+
+                prevProps = holeData.propEntities;
+            }
+            else
+            {
+                holeData.propEntities = prevProps;
+            }
+
+            //cos you know someone is dying to try and break the game :P
+            if (holeData.pin != holeData.tee)
+            {
+                holeData.distanceToPin = glm::length(holeData.pin - holeData.tee);
             }
         }
     }
 
-    //remove holes which failed to load
+    //add the dynamically updated model to any leaderboard props
+    if (!leaderboardProps.empty())
+    {
+        if (md.loadFromFile("assets/golf/models/leaderboard_panel.cmt"))
+        {
+            for (auto lb : leaderboardProps)
+            {
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Transform>();
+                md.createModel(entity);
+                
+                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Leaderboard]);
+                material.setProperty("u_subrect", glm::vec4(0.f, 0.5f, 1.f, 0.5f));
+                entity.getComponent<cro::Model>().setMaterial(0, material);
+                m_leaderboardTexture.addTarget(entity);
+
+                //updates the texture rect depending on hole number
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<std::size_t>(m_currentHole);
+                entity.getComponent<cro::Callback>().function =
+                    [&,lb](cro::Entity e, float)
+                {
+                    auto currentHole = e.getComponent<cro::Callback>().getUserData<std::size_t>();
+                    if (currentHole != m_currentHole)
+                    {
+                        if (m_currentHole > 8)
+                        {
+                            e.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", glm::vec4(0.f, 0.f, 1.f, 0.5f));
+                        }
+                    }
+                    currentHole = m_currentHole;
+                    e.getComponent<cro::Model>().setHidden(lb.getComponent<cro::Model>().isHidden());
+                };
+                entity.getComponent<cro::Model>().setHidden(true);
+
+                lb.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            }
+        }
+    }
+
+
+    //remove holes which failed to load - TODO should we delete partially loaded props here?
     m_holeData.erase(std::remove_if(m_holeData.begin(), m_holeData.end(), 
         [](const HoleData& hd)
         {
@@ -1353,10 +1613,11 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
-    m_gameScene.addSystem<cro::SpriteSystem3D>(mb, 10.f);
+    m_gameScene.addSystem<cro::SpriteSystem3D>(mb, 10.f); //for name labels
     m_gameScene.addSystem<cro::SpriteAnimator>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(50.f);
 #ifdef CRO_DEBUG_
     m_gameScene.addSystem<FpsCameraSystem>(mb);
 #endif
@@ -1388,9 +1649,19 @@ void GolfState::addSystems()
 
 void GolfState::buildScene()
 {
+    bool clearHoles = false;
     if (m_holeData.empty())
     {
-        return;
+        //use dummy data to get scene standing
+        //but make sure to push error state too
+        auto& holeDummy = m_holeData.emplace_back();
+        holeDummy.modelEntity = m_gameScene.createEntity();
+        holeDummy.modelEntity.addComponent<cro::Transform>();
+        holeDummy.modelEntity.addComponent<cro::Callback>();
+        createFallbackModel(holeDummy.modelEntity, m_resources);
+
+        m_sharedData.errorMessage = "No Hole Data Loaded.";
+        requestStackPush(StateID::Error);
     }
 
 
@@ -1412,9 +1683,6 @@ void GolfState::buildScene()
     if (md.hasSkeleton())
     {
         entity.getComponent<cro::Skeleton>().play(0);
-
-        /*auto mat = m_resources.materials.get(m_materialIDs[MaterialID::CelSkinned]);
-        entity.getComponent<cro::Model>().setMaterial(0, mat);*/
     }
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<FlagCallbackData>();
@@ -1460,7 +1728,7 @@ void GolfState::buildScene()
 
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
-    material.enableDepthTest = false;
+    //material.enableDepthTest = false;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
 
@@ -1557,7 +1825,7 @@ void GolfState::buildScene()
     entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Tee;
     md.createModel(entity);
-    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Ball]));
     
     auto targetDir = m_holeData[m_currentHole].target - m_holeData[0].tee;
     m_camRotation = std::atan2(-targetDir.z, targetDir.x);
@@ -1566,51 +1834,10 @@ void GolfState::buildScene()
     auto teeEnt = entity;
 
 
-    //player shadow
-    static constexpr float ShadowScale = 20.f;
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
-    entity.getComponent<cro::Transform>().setOrigin({0.f, 0.f, PlayerShadowOffset});
-    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f, 1.f, ShadowScale));
-    entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::PlayerShadow;
-    entity.addComponent<cro::Callback>().setUserData<PlayerCallbackData>();
-    entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
-    {
-        auto& [direction, currTime, _] = e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>();
-        
-        if (direction == 0)
-        {
-            currTime = std::min(1.f, currTime + (dt * 2.f));
-
-            e.getComponent<cro::Transform>().setScale({ ShadowScale * cro::Util::Easing::easeOutBounce(currTime), 1.f, ShadowScale });
-        
-            if (currTime == 1)
-            {
-                direction = 1;
-                e.getComponent<cro::Callback>().active = false;
-            }
-        }
-        else
-        {
-            currTime = std::max(0.f, currTime - (dt * 3.f));
-            e.getComponent<cro::Transform>().setScale({ ShadowScale * cro::Util::Easing::easeOutBack(currTime), 1.f, ShadowScale });
-
-            if (currTime == 0)
-            {
-                direction = 0;
-                e.getComponent<cro::Callback>().active = false;
-            }
-        }
-    };
-    m_modelDefs[ModelID::PlayerShadow]->createModel(entity);
-    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::Reflection);
-
     //carts
     md.loadFromFile("assets/golf/models/cart.cmt");
     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-    setTexture(md, texturedMat);
+    applyMaterialData(md, texturedMat);
     std::array cartPositions =
     {
         glm::vec3(-0.4f, 0.f, -5.9f),
@@ -1644,31 +1871,23 @@ void GolfState::buildScene()
         auto vpSize = calcVPSize();
 
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float scale = std::floor(winSize.y / vpSize.y);
-        auto texSize = vpSize;
-        if (texSize.x * scale <= winSize.x)
-        {
-            //for odd res like 720x480 expand out to the sides
-            texSize *= 1.6f;
-        }
-
+        float maxScale = std::floor(winSize.y / vpSize.y);
+        float scale = m_sharedData.pixelScale ? maxScale : 1.f;
+        auto texSize = winSize / scale;
         m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
+        auto invScale = (maxScale + 1.f) - scale;
+        glCheck(glPointSize(invScale * BallPointSize));
+        glCheck(glLineWidth(invScale));
 
-        //the resize actually extends the target vertically so we need to maintain a
-        //horizontal FOV, not the vertical one expected by default.
-        cam.setPerspective(FOV * (texSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, /*vpSize.x*/static_cast<float>(MapSize.x) * 1.5f);
-        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-
-        //because we don't know in which order the cam callbacks are raised
-        //we need to send the player repos command from here when we know the view is correct
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::UI::PlayerSprite;
-        cmd.action = [&](cro::Entity e, float)
+        for (auto [shader, uniform] : m_scaleUniforms)
         {
-            setPlayerPosition(e, m_currentPlayer.position);
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            glCheck(glUseProgram(shader));
+            glCheck(glUniform1f(uniform, invScale));
+        }
+
+        cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
@@ -1678,25 +1897,23 @@ void GolfState::buildScene()
     cam.resizeCallback = updateView;
     updateView(cam);
 
-    static const std::uint32_t ReflectionMapSize = 1024u;
+    constexpr std::uint32_t ReflectionMapSize = 1024u;
+    constexpr std::uint32_t ShadowMapSize = 2048u;
 
     //used by transition callback to interp camera
     camEnt.addComponent<TargetInfo>().waterPlane = waterEnt;
     camEnt.getComponent<TargetInfo>().targetLookAt = m_holeData[0].target;
     cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     cam.reflectionBuffer.setSmooth(true);
-
-    cam.refractionBuffer.create(ReflectionMapSize, ReflectionMapSize);
-    cam.refractionBuffer.setSmooth(true);
+    cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+;
 
     //create an overhead camera
     auto setPerspective = [](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize();
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
 
-        //the resize actually extends the target vertically so we need to maintain a
-        //horizontal FOV, not the vertical one expected by default.
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(FOV, vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
@@ -1704,12 +1921,13 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = 
         [camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
-        auto vpSize = calcVPSize();
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
+        cam.setPerspective(FOV * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(16, 16); //not really rendering shadows as such, but without this we get artifcating
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 80.f * 80.f;
@@ -1727,12 +1945,13 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [camEnt](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize();
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
+        cam.setPerspective(FOV * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(16, 16);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 30.f * 30.f;
@@ -1749,6 +1968,7 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = updateView;
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
@@ -1761,8 +1981,8 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [camEnt](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize();
-        cam.setPerspective(FOV * (vpSize.y / ViewportHeight), vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
+        cam.setPerspective(FOV, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
@@ -1772,7 +1992,6 @@ void GolfState::buildScene()
     camEnt.addComponent<FpsCamera>();
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_freeCam = camEnt;
-
 #endif
 
 
@@ -1790,7 +2009,9 @@ void GolfState::buildScene()
 
 #ifdef CRO_DEBUG_
     //createWeather();
-#endif 
+#endif
+
+
 }
 
 void GolfState::initAudio()
@@ -1893,7 +2114,7 @@ void GolfState::initAudio()
                 };
 
                 auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-                setTexture(md, material);
+                applyMaterialData(md, material);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
 
                 //engine
@@ -2007,6 +2228,11 @@ void GolfState::spawnBall(const ActorInfo& info)
     {
         material.setProperty("u_colour", ball->tint);
     }
+    else
+    {
+        //this should at least line up with the fallback model
+        material.setProperty("u_colour", m_sharedData.ballModels.begin()->tint);
+    }
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(info.position);
@@ -2020,7 +2246,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     //ball shadow
     auto ballEnt = entity;
     material.setProperty("u_colour", cro::Colour::White);
-    material.blendMode = cro::Material::BlendMode::Multiply;
+    //material.blendMode = cro::Material::BlendMode::Multiply; //causes shadow to actually get darker as alpha reaches zero.. duh
 
     //point shadow seen from distance
     entity = m_gameScene.createEntity();
@@ -2174,6 +2400,9 @@ void GolfState::spawnBall(const ActorInfo& info)
             colour.setAlpha(std::max(0.f, colour.getAlpha() - dt));
             e.getComponent<cro::Sprite>().setColour(colour);
         }
+
+        float scale = m_sharedData.pixelScale ? 1.f : m_viewScale.x;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
     m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -2250,15 +2479,11 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             break;
         case PacketID::ActorAnimation:
         {
-            auto animID = evt.packet.as<std::uint8_t>();
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::UI::PlayerSprite;
-            cmd.action = [&,animID](cro::Entity e, float)
+            if (m_activeAvatar)
             {
-                const auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
-                e.getComponent<cro::SpriteAnimation>().play(avatar.sprites[avatar.clubType].animIDs[animID]);
-            };
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                auto animID = evt.packet.as<std::uint8_t>();
+                m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID]);
+            }
         }
             break;
         case PacketID::WindDirection:
@@ -2276,6 +2501,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             {
                 player.score = su.score;
                 player.holeScores[su.hole] = su.stroke;
+                LogI << "Last stroke distance: " << su.strokeDistance << std::endl;
             }
         }
             break;
@@ -2363,45 +2589,61 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     m_collisionMesh.updateCollisionMesh(m_holeData[hole].modelEntity.getComponent<cro::Model>().getMeshData());
 
     //create hole model transition
+    bool rescale = (hole == 0) || (m_holeData[hole - 1].modelPath != m_holeData[hole].modelPath);
     auto* propModels = &m_holeData[m_currentHole].propEntities;
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().active = true;
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().setUserData<float>(0.f);
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().function =
-        [&, propModels](cro::Entity e, float dt)
+        [&, propModels, rescale](cro::Entity e, float dt)
     {
         auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
         progress = std::min(1.f, progress + (dt / 2.f));
 
-        float scale = 1.f - progress;
-        e.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
-        m_waterEnt.getComponent<cro::Transform>().setScale({ scale, scale, scale });
+        if (rescale)
+        {
+            float scale = 1.f - progress;
+            e.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
+            m_waterEnt.getComponent<cro::Transform>().setScale({ scale, scale, scale });
+        }
 
         if (progress == 1)
         {
             e.getComponent<cro::Callback>().active = false;
-            e.getComponent<cro::Model>().setHidden(true);
+            e.getComponent<cro::Model>().setHidden(rescale);
 
             for (auto i = 0u; i < propModels->size(); ++i)
             {
-                propModels->at(i).getComponent<cro::Model>().setHidden(true);
+                //if we're not rescaling we're recycling the model so don't hide its props
+                propModels->at(i).getComponent<cro::Model>().setHidden(rescale);
             }
 
             //index should be updated by now (as this is a callback)
             //so we're actually targetting the next hole entity
             auto entity = m_holeData[m_currentHole].modelEntity;
             entity.getComponent<cro::Model>().setHidden(false);
-            entity.getComponent<cro::Transform>().setScale({ 0.f, 1.f, 0.f });
+
+            if (rescale)
+            {
+                entity.getComponent<cro::Transform>().setScale({ 0.f, 1.f, 0.f });
+            }
+            else
+            {
+                entity.getComponent<cro::Transform>().setScale({ 1.f, 1.f, 1.f });
+            }
             entity.getComponent<cro::Callback>().setUserData<float>(0.f);
             entity.getComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
-                [&](cro::Entity ent, float dt)
+                [&, rescale](cro::Entity ent, float dt)
             {
                 auto& progress = ent.getComponent<cro::Callback>().getUserData<float>();
                 progress = std::min(1.f, progress + (dt / 2.f));
 
-                float scale = progress;
-                ent.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
-                m_waterEnt.getComponent<cro::Transform>().setScale({ scale, scale, scale });
+                if (rescale)
+                {
+                    float scale = progress;
+                    ent.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
+                    m_waterEnt.getComponent<cro::Transform>().setScale({ scale, scale, scale });
+                }
 
                 if (progress == 1)
                 {
@@ -2410,7 +2652,8 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                 }
             };
 
-            //unhide any prop models
+            //unhide any prop models - this will be empty on duplicated
+            //holes, so does nothing
             for (auto prop : m_holeData[m_currentHole].propEntities)
             {
                 prop.getComponent<cro::Model>().setHidden(false);
@@ -2508,6 +2751,9 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             targetInfo.startHeight = targetInfo.targetHeight;
             targetInfo.startOffset = targetInfo.targetOffset;
 
+            auto targetDir = m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee;
+            m_camRotation = std::atan2(-targetDir.z, targetDir.x);
+
             //we're there
             setCameraPosition(m_holeData[m_currentHole].tee, targetInfo.targetHeight, targetInfo.targetOffset);
 
@@ -2536,7 +2782,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             auto height = targetInfo.targetHeight - targetInfo.startHeight;
             auto offset = targetInfo.targetOffset - targetInfo.startOffset;
 
-            static constexpr float Speed = 4.f;
+            constexpr float Speed = 4.f;
             e.getComponent<cro::Transform>().move(travel * Speed * dt);
             setCameraPosition(e.getComponent<cro::Transform>().getPosition(),
                 targetInfo.startHeight + (height * percent),
@@ -2550,7 +2796,8 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     //this is called by setCurrentPlayer, but doing it here ensures that
     //each player starts a new hole on a driver/3 wood
     m_inputParser.setHoleDirection(m_holeData[m_currentHole].target - m_currentPlayer.position, true);
-    m_currentPlayer.terrain = TerrainID::Fairway;
+    m_currentPlayer.terrain = TerrainID::Fairway; //this will be overwritten from the server but setting this to non-green makes sure the mini cam stops updating in time
+    m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin * 1.1f); //limits club selection based on hole size
 
     //hide the slope indicator
     cro::Command cmd;
@@ -2580,7 +2827,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     cmd.targetFlags = CommandID::UI::MiniGreen;
     cmd.action = [](cro::Entity e, float)
     {
-        e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
+        e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 1;
         e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -2653,10 +2900,29 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
     camEnt.getComponent<cro::Transform>().move(offset * viewOffset);
 
-    //clamp above ground height
+    //clamp above ground height and hole radius
     auto newPos = camEnt.getComponent<cro::Transform>().getPosition();
+
+    constexpr float MinRad = 0.3f + CameraPuttOffset;
+    constexpr float MinRadSqr = MinRad * MinRad;
+
+    auto holeDir = m_holeData[m_currentHole].pin - newPos;
+    auto holeDist = glm::length2(holeDir);
+    /*if (holeDist < MinRadSqr)
+    {
+        auto len = std::sqrt(holeDist);
+        auto move = MinRad - len;
+        holeDir /= len;
+        holeDir *= move;
+        newPos -= holeDir;
+    }*/
+
+    //lower height as we get closer to hole
+    heightMultiplier = std::min(1.f, std::max(0.f, holeDist / MinRadSqr));
+
     auto groundHeight = m_collisionMesh.getTerrain(newPos).height;
-    newPos.y = std::max(groundHeight + CameraPuttHeight, newPos.y);
+    newPos.y = std::max(groundHeight + (CameraPuttHeight * heightMultiplier), newPos.y);
+
     camEnt.getComponent<cro::Transform>().setPosition(newPos);
 
     //also updated by camera follower...
@@ -2769,7 +3035,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         position.y += 0.014f; //z-fighting
         e.getComponent<cro::Transform>().setPosition(position);
         e.getComponent<cro::Model>().setHidden(!localPlayer);
-        e.getComponent<cro::Model>().setDepthTestEnabled(0, player.terrain == TerrainID::Green);
+        //e.getComponent<cro::Model>().setDepthTestEnabled(0, player.terrain == TerrainID::Green);
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -2792,47 +3058,32 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 
-    //apply the correct sprite to the player entity
-    cmd.targetFlags = CommandID::UI::PlayerSprite;
-    cmd.action = [&,player](cro::Entity e, float)
+
+    //show the new player model
+    m_activeAvatar = &m_avatars[m_currentPlayer.client][m_currentPlayer.player];
+    m_activeAvatar->model.getComponent<cro::Transform>().setPosition(player.position);
+    if (player.terrain != TerrainID::Green)
     {
-        if (player.terrain != TerrainID::Green)
+        m_activeAvatar->model.getComponent<cro::Model>().setHidden(false);
+        m_activeAvatar->model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation - (cro::Util::Const::PI / 2.f));
+        m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;
+        m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().scale = 0.f;
+        m_activeAvatar->model.getComponent<cro::Callback>().active = true;
+
+        if (m_activeAvatar->hands)
         {
             if (getClub() < ClubID::FiveIron)
             {
-                auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
-                avatar.clubType = Avatar::Sprite::Wood;
-                e.getComponent<cro::Sprite>() = avatar.sprites[Avatar::Sprite::Wood].sprite;
+                m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Wood]);
             }
             else
             {
-                auto& avatar = m_avatars[m_currentPlayer.client][m_currentPlayer.player];
-                avatar.clubType = Avatar::Sprite::Iron;
-                e.getComponent<cro::Sprite>() = avatar.sprites[Avatar::Sprite::Iron].sprite;
+                m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Iron]);
             }
-            e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;
-            e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().scale = 0.f;
-            e.getComponent<cro::Callback>().active = true;
-
-            if (m_avatars[m_currentPlayer.client][m_currentPlayer.player].flipped)
-            {
-                e.getComponent<cro::Transform>().setScale({ -1.f, 0.f });
-                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-            }
-            else
-            {
-                e.getComponent<cro::Transform>().setScale({ 1.f, 0.f });
-                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-            }
-
-            //update sprite position
-            setPlayerPosition(e, player.position);
-
-            //make sure we reset to player camera just in case
-            setActiveCamera(CameraID::Player);
+            m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
         }
-    };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
+    setActiveCamera(CameraID::Player);
 
     //show or hide the slope indicator depending if we're on the green
     cmd.targetFlags = CommandID::SlopeIndicator;
@@ -2854,30 +3105,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    //update player shadow position
-    cmd.targetFlags = CommandID::PlayerShadow;
-    cmd.action = [&,player](cro::Entity e, float)
-    {
-        float rotation = m_camRotation;
-        if (m_avatars[m_currentPlayer.client][m_currentPlayer.player].flipped)
-        {
-            rotation += cro::Util::Const::PI;
-        }
-
-        e.getComponent<cro::Transform>().setPosition(player.position + glm::vec3(0.f, 0.01f, 0.f));
-        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
-
-        /*auto result = m_collisionMesh.getTerrain(player.position);
-        auto rot = rotationFromNormal(result.normal);
-        e.getComponent<cro::Transform>().rotate(rot);*/
-
-        e.getComponent<cro::Model>().setHidden(player.terrain == TerrainID::Green);
-        
-        e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;
-        e.getComponent<cro::Callback>().active = true;
-    };
-    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
     //also check if we need to display mini map for green
     cmd.targetFlags = CommandID::UI::MiniGreen;
     cmd.action = [player](cro::Entity e, float)
@@ -2886,12 +3113,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
         if (!hidden)
         {
-            e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 0;
+            e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 0;
             e.getComponent<cro::Callback>().active = true;
         }
         else
         {
-            e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
+            e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 1;
             e.getComponent<cro::Callback>().active = true;
         }
     };
@@ -3042,34 +3269,36 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 {
     float targetDistance = glm::length2(playerData.position - m_currentPlayer.position);
 
-    //hide player sprite
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::UI::PlayerSprite;
-    cmd.action = [targetDistance, playerData](cro::Entity e, float)
+    //hide player avatar
+    if (m_activeAvatar)
     {
+        //check distance and animate 
         if (targetDistance > 0.01
             || playerData.terrain == TerrainID::Green)
         {
-            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, 0.f));
+            auto scale = m_activeAvatar->model.getComponent<cro::Transform>().getScale();
+            scale.y = 0.f;
+            scale.z = 0.f;
+            m_activeAvatar->model.getComponent<cro::Transform>().setScale(scale);
+            m_activeAvatar->model.getComponent<cro::Model>().setHidden(true);
+
+            if (m_activeAvatar->hands)
+            {
+                //we have to free this up alse the model might
+                //become attached to two avatars...
+                m_activeAvatar->hands->setModel({});
+            }
         }
         else
         {
-            e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 1;
-            e.getComponent<cro::Callback>().active = true;
+            m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 1;
+            m_activeAvatar->model.getComponent<cro::Callback>().active = true;
         }
-    };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
 
-    //hide player shadow
-    cmd.targetFlags = CommandID::PlayerShadow;
-    cmd.action = [](cro::Entity e, float)
-    {
-        e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 1;
-        e.getComponent<cro::Callback>().active = true;
-    };
-    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
+    
     //hide hud
+    cro::Command cmd;
     cmd.targetFlags = CommandID::UI::Root;
     cmd.action = [](cro::Entity e, float) 
     {
@@ -3163,7 +3392,10 @@ void GolfState::createTransition(const ActivePlayer& playerData)
             targetInfo.startHeight = targetInfo.targetHeight;
             targetInfo.startOffset = targetInfo.targetOffset;
 
-            setCameraPosition(playerData.position, targetInfo.targetHeight, targetInfo.targetOffset);
+            //hmm the final result is not always the same as the flyby - so snapping this here
+            //can cause a jump in view
+
+            //setCameraPosition(playerData.position, targetInfo.targetHeight, targetInfo.targetOffset);
             requestNextPlayer(playerData);
 
             m_gameScene.getActiveListener().getComponent<cro::AudioListener>().setVelocity(glm::vec3(0.f));
@@ -3195,7 +3427,11 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
 void GolfState::startFlyBy()
 {
+    //static for lambda capture
     static constexpr float MoveSpeed = 50.f; //metres per sec
+    static constexpr float MaxHoleDistance = 275.f; //this scales the move speed based on the tee-pin distance
+    const float SpeedMultiplier = (0.25f + ((m_holeData[m_currentHole].distanceToPin / MaxHoleDistance) * 0.75f));
+
     struct FlyByTarget final
     {
         std::function<float(float)> ease = std::bind(&cro::Util::Easing::easeInOutQuad, std::placeholders::_1);
@@ -3220,7 +3456,10 @@ void GolfState::startFlyBy()
     //set initial transform to look at pin from offset position
     auto transform = glm::inverse(glm::lookAt(offset + holeData.pin, holeData.pin, cro::Transform::Y_AXIS));
     targetData.targets[1] = transform;
-    targetData.speeds[0] = glm::length(glm::vec3(targetData.targets[0][3]) - glm::vec3(targetData.targets[1][3])) / MoveSpeed;
+
+    float moveDist = glm::length(glm::vec3(targetData.targets[0][3]) - glm::vec3(targetData.targets[1][3]));
+    targetData.speeds[0] = moveDist / MoveSpeed;
+    targetData.speeds[0] *= 1.f / SpeedMultiplier;
 
     //translate the transform to look at target point or half way point if not set
     auto diff = holeData.target - holeData.pin;
@@ -3228,10 +3467,13 @@ void GolfState::startFlyBy()
     {
         diff = (holeData.tee - holeData.pin) / 2.f;
     }
-    diff.y = 10.f;
+    diff.y = 10.f * SpeedMultiplier;
     transform[3] += glm::vec4(diff, 0.f);
     targetData.targets[2] = transform;
-    targetData.speeds[1] = glm::length(glm::vec3(targetData.targets[1][3]) - glm::vec3(targetData.targets[2][3])) / MoveSpeed;
+
+    moveDist = glm::length(glm::vec3(targetData.targets[1][3]) - glm::vec3(targetData.targets[2][3]));
+    targetData.speeds[1] = moveDist / MoveSpeed;
+    targetData.speeds[1] *= 1.f / SpeedMultiplier;
 
     //the final transform is set to what should be the same as the initial player view
     //this is actually more complicated than it seems, so the callback interrogates the
@@ -3246,7 +3488,7 @@ void GolfState::startFlyBy()
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<FlyByTarget>(targetData);
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, SpeedMultiplier](cro::Entity e, float dt)
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<FlyByTarget>();
         data.progress = std::min(data.progress + (dt / data.speeds[data.currentTarget]), 1.f);
@@ -3278,12 +3520,14 @@ void GolfState::startFlyBy()
             default: break;
             case 2:
                 //hope the player cam finished...
-                //tbh if this transition is replacing the existing one then
-                //we can remove the player cam transition completely. Problem is that it's
-                //created by setPlayer(), not setHole()
+                //which it hasn't on smaller holes, and annoying.
+                //not game-breaking. but annoying.
+            {
                 data.targets[3] = m_cameras[CameraID::Player].getComponent<cro::Transform>().getLocalTransform();
                 //data.ease = std::bind(&cro::Util::Easing::easeInSine, std::placeholders::_1);
-                data.speeds[2] = glm::length(glm::vec3(data.targets[2][3]) - glm::vec3(data.targets[3][3])) / MoveSpeed;
+                float moveDist = glm::length(glm::vec3(data.targets[2][3]) - glm::vec3(data.targets[3][3]));
+                data.speeds[2] = moveDist / MoveSpeed;
+                data.speeds[2] *= 1.f / SpeedMultiplier;
 
                 //play the transition music
                 if (m_sharedData.tutorial)
@@ -3291,6 +3535,7 @@ void GolfState::startFlyBy()
                     m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
                 }
                 //else we'll play it when the score board shows, below
+            }
                 break;
             case 3:
                 //we're done here
@@ -3357,12 +3602,21 @@ void GolfState::startFlyBy()
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //hide player
-    cmd.targetFlags = CommandID::UI::PlayerSprite;
-    cmd.action = [](cro::Entity e, float)
+    if (m_activeAvatar)
     {
-        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        auto scale = m_activeAvatar->model.getComponent<cro::Transform>().getScale();
+        scale.y = 0.f;
+        scale.z = 0.f;
+        m_activeAvatar->model.getComponent<cro::Transform>().setScale(scale);
+        m_activeAvatar->model.getComponent<cro::Model>().setHidden(true);
+
+        if (m_activeAvatar->hands)
+        {
+            //we have to free this up alse the model might
+            //become attached to two avatars...
+            m_activeAvatar->hands->setModel({});
+        }
+    }
 
     //hide stroke indicator
     cmd.targetFlags = CommandID::StrokeIndicator;
@@ -3378,9 +3632,12 @@ std::int32_t GolfState::getClub() const
 {
     switch (m_currentPlayer.terrain)
     {
-    default: return m_inputParser.getClub();
-    case TerrainID::Bunker: return ClubID::PitchWedge + (m_inputParser.getClub() % 2);
-    case TerrainID::Green: return ClubID::Putter;
+    default: 
+        return m_inputParser.getClub();
+    case TerrainID::Bunker: 
+        return ClubID::PitchWedge + (m_inputParser.getClub() % 3);
+    case TerrainID::Green: 
+        return ClubID::Putter;
     }
 }
 
@@ -3429,39 +3686,6 @@ void GolfState::setActiveCamera(std::int32_t camID)
 
         m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = waterEnt;
         m_cameras[m_currentCamera].getComponent<cro::Camera>().active = true;
-        
-
-        //hide player based on cam id
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::UI::PlayerSprite;
-        cmd.action = [&,camID](cro::Entity e, float)
-        {
-            //show/hide player based on camera
-            //flipping the sprite render dir will stop it drawing
-            if (m_avatars[m_currentPlayer.client][m_currentPlayer.player].flipped)
-            {
-                if (camID == CameraID::Player)
-                {
-                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-                }
-                else
-                {
-                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-                }
-            }
-            else
-            {
-                if (camID == CameraID::Player)
-                {
-                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-                }
-                else
-                {
-                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-                }
-            }
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
 }
 
@@ -3508,13 +3732,4 @@ void GolfState::toggleFreeCam()
     m_waterEnt.getComponent<cro::Callback>().active = !useFreeCam;
     m_inputParser.setActive(!useFreeCam);
     cro::App::getWindow().setMouseCaptured(useFreeCam);
-
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::UI::PlayerSprite;
-    cmd.action = [&](cro::Entity e, float)
-    {
-        cro::Colour c = useFreeCam ? cro::Colour::Transparent : cro::Colour::White;
-        e.getComponent<cro::Sprite>().setColour(c);
-    };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

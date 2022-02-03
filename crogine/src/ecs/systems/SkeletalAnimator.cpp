@@ -73,6 +73,7 @@ void SkeletalAnimator::process(float dt)
     {      
         //get skeleton
         auto& skel = entity.getComponent<Skeleton>();
+        const auto& worldTransform = entity.getComponent<cro::Transform>().getWorldTransform();
 
         //update current frame if running
         if (skel.m_nextAnimation < 0)
@@ -87,7 +88,6 @@ void SkeletalAnimator::process(float dt)
             if (skel.m_currentFrameTime > skel.m_frameTime)
             {
                 //frame is done, move to next
-
                 skel.m_currentFrameTime -= skel.m_frameTime;
                 anim.currentFrame = nextFrame;
 
@@ -112,10 +112,13 @@ void SkeletalAnimator::process(float dt)
 
 
                 //raise notification events
-                for (auto [joint, uid] : skel.m_notifications[anim.currentFrame])
+                for (auto [joint, uid, _] : skel.m_notifications[anim.currentFrame])
                 {
-                    glm::vec4 position = skel.m_frames[(anim.currentFrame * skel.m_frameSize) + joint].worldMatrix * glm::vec4(0.f, 0.f, 0.f, 1.f);
-                    auto* msg = postMessage<cro::Message::SkeletalAnimEvent>(cro::Message::SkeletalAnimationMessage);
+                    glm::vec4 position = 
+                        (worldTransform * skel.m_rootTransform *
+                        skel.m_frames[(anim.currentFrame * skel.m_frameSize) + joint].worldMatrix)[3];// *glm::vec4(0.f, 0.f, 0.f, 1.f);
+
+                    auto* msg = postMessage<cro::Message::SkeletalAnimationEvent>(cro::Message::SkeletalAnimationMessage);
                     msg->position = position;
                     msg->userType = uid;
                     msg->entity = entity;
@@ -124,7 +127,8 @@ void SkeletalAnimator::process(float dt)
                    
             //only interpolate if model is visible and close to the active camera
             if (!entity.getComponent<Model>().isHidden()
-                && anim.playbackRate != 0)
+                && anim.playbackRate != 0
+                && skel.m_useInterpolation)
             {
                 //check distance to camera and check if actually in front
                 auto direction = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
@@ -143,14 +147,15 @@ void SkeletalAnimator::process(float dt)
             //first frame of the next anim. Really we should interpolate the current
             //position of both animations, and then blend the results according to
             //the current blend time.
-            /*skel.m_currentBlendTime += dt;
+            skel.m_currentBlendTime += dt;
             if (entity.getComponent<Model>().isVisible())
             {
                 float interpTime = std::min(1.f, skel.m_currentBlendTime / skel.m_blendTime);
                 interpolate(skel.m_animations[skel.m_currentAnimation].currentFrame, skel.m_animations[skel.m_nextAnimation].startFrame, interpTime, skel);
             }
 
-            if (skel.m_currentBlendTime > skel.m_blendTime)*/
+            if (skel.m_currentBlendTime > skel.m_blendTime
+                || !skel.m_useInterpolation)
             {
                 skel.m_animations[skel.m_currentAnimation].playbackRate = 0.f;
                 skel.m_currentAnimation = skel.m_nextAnimation;
@@ -163,6 +168,17 @@ void SkeletalAnimator::process(float dt)
                 skel.buildKeyframe(skel.m_animations[skel.m_currentAnimation].currentFrame);
             }
         }
+
+        //update the position of attachments.
+        //TODO only do this if the frame was updated (? won't account for entity transform changing though)
+        for (auto i = 0u; i < skel.m_attachments.size(); ++i)
+        {
+            auto& ap = skel.m_attachments[i];
+            if (ap.getModel().isValid())
+            {
+                ap.getModel().getComponent<cro::Transform>().m_attachmentTransform = worldTransform * skel.getAttachmentTransform(i);
+            }
+        }
     }
 }
 
@@ -170,6 +186,8 @@ void SkeletalAnimator::process(float dt)
 void SkeletalAnimator::onEntityAdded(Entity entity)
 {
     auto& skeleton = entity.getComponent<Skeleton>();
+
+    //TODO reject this if it has no animations (or at least prevent div0)
 
     entity.getComponent<Model>().setSkeleton(&skeleton.m_currentFrame[0], skeleton.m_frameSize);
     skeleton.m_frameTime = 1.f / skeleton.m_animations[0].frameRate;

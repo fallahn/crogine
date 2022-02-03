@@ -353,14 +353,21 @@ Mesh::Data BinaryMeshBuilder::build() const
                     m_skeleton.addAnimation(anim);
                 }
 
-                for (auto [frameID, jointID, userID] : inNotifications)
+                for (auto [frameID, jointID, userID, name] : inNotifications)
                 {
-                    m_skeleton.addNotification(frameID, { jointID, userID });
+                    m_skeleton.addNotification(frameID, { jointID, userID, name });
                 }
 
-                for (const auto& [rotation, translation, parent] : inAttachments)
+                for (const auto& [rotation, translation, scale, parent, name] : inAttachments)
                 {
-                    m_skeleton.addAttachmentPoint({ parent, translation, rotation });
+                    Attachment ap;
+                    ap.setParent(parent);
+                    ap.setPosition(translation);
+                    ap.setRotation(rotation);
+                    ap.setScale(scale);
+                    ap.setName(name);
+
+                    m_skeleton.addAttachment(ap);
                 }
 
                 std::vector<glm::mat4> invBindMatrices(skelHeader.frameSize);

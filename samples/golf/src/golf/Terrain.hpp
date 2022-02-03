@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -56,7 +56,9 @@ struct TerrainID final
         Green, Bunker,
         Water, Scrub,
 
-        Hole,
+        Stone,
+        
+        Hole, //keep this last as it doesn't have a vertex colour assigned to it
 
         Count
     };
@@ -64,11 +66,17 @@ struct TerrainID final
 
 static const std::array<std::string, TerrainID::Count> TerrainStrings =
 {
-    "Rough", "Fairway", "Green", "Bunker", "Water", "Scrub", "Hole"
+    "Rough", "Fairway", "Green", "Bunker", "Water", "Scrub", "Stone", "Hole"
 };
 
 //how much the stroke is affected by the current terrain
 static constexpr std::array<float, TerrainID::Count> Dampening =
 {
-    0.9f, 1.f, 1.f, 0.85f, 1.f, 1.f, 0.f
+    0.9f, 1.f, 1.f, 0.85f, 1.f, 1.f, 0.f, 0.f
+};
+
+//how much the velocity of the ball is reduced when colliding
+static constexpr std::array<float, TerrainID::Count> Restitution =
+{
+    0.23f, 0.33f, 0.26f, 0.f, 0.f, 0.f, 0.8f, 0.f
 };

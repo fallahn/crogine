@@ -99,7 +99,8 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
     m_showAABB              (false),
     m_showSphere            (false),
     m_selectedTexture       (std::numeric_limits<std::uint32_t>::max()),
-    m_selectedMaterial      (std::numeric_limits<std::uint32_t>::max())
+    m_selectedMaterial      (std::numeric_limits<std::uint32_t>::max()),
+    m_attachmentIndex       (0)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -185,11 +186,6 @@ void ModelState::handleMessage(const cro::Message& msg)
                 break;
             }
         }
-    }
-    else if (msg.id == cro::Message::SkeletalAnimationMessage)
-    {
-        const auto& data = msg.getData<cro::Message::SkeletalAnimEvent>();
-        LogI << data.userType << " - " << data.position << std::endl;
     }
 
     m_previewScene.forwardMessage(msg);
@@ -409,21 +405,21 @@ void ModelState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::GroundPlane]));
-    auto& mesh = entity.getComponent<cro::Model>().getMeshData();
+    auto* mesh = &entity.getComponent<cro::Model>().getMeshData();
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo));
     glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexData[0].ibo));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexData[0].ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-    mesh.boundingBox[0] = { -1.5f, 0.25f, -1.5f };
-    mesh.boundingBox[1] = { 1.5f, -0.25f, 1.5f };
-    mesh.boundingSphere.radius = 1.5f;
-    mesh.vertexCount = 4;
-    mesh.indexData[0].indexCount = 4;
+    mesh->boundingBox[0] = { -1.5f, 0.25f, -1.5f };
+    mesh->boundingBox[1] = { 1.5f, -0.25f, 1.5f };
+    mesh->boundingSphere.radius = 1.5f;
+    mesh->vertexCount = 4;
+    mesh->indexData[0].indexCount = 4;
 
     m_entities[EntityID::GroundPlane] = entity;
     m_entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -440,10 +436,38 @@ void ModelState::createScene()
     def.createModel(m_scene.getSunlight());
     //m_scene.getSunlight().getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", cro::Colour(1.f, 1.f, 0.f, 1.f));
 
-
     m_entities[EntityID::ArcBall] = m_scene.createEntity();
     m_entities[EntityID::ArcBall].addComponent<cro::Transform>().setPosition(DefaultArcballPosition);
     m_entities[EntityID::ArcBall].getComponent<cro::Transform>().addChild(m_scene.getActiveCamera().getComponent<cro::Transform>());
+
+
+    //highlights the selected joint when editing animation events
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+
+    mesh = &entity.getComponent<cro::Model>().getMeshData();
+    verts = { 0.f,0.f,0.f, 0.f,1.f,1.f,1.f };
+    indices = { 0 };
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indexData[0].ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    mesh->boundingBox[0] = { -0.5f, 0.25f, -0.5f };
+    mesh->boundingBox[1] = { 0.5f, -0.25f, 0.5f };
+    mesh->boundingSphere.radius = 0.5f;
+    mesh->vertexCount = 1;
+    mesh->indexData[0].indexCount = 1;
+
+    entity.getComponent<cro::Model>().setHidden(true);
+    m_entities[EntityID::JointNode] = entity;
+    m_entities[EntityID::RootNode].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     if (m_useDeferred)
     {
@@ -485,6 +509,22 @@ void ModelState::createScene()
 
     m_cameras[CameraID::FreeLook].FarPlane = DefaultFarPlane * 3.f;
     m_cameras[CameraID::FreeLook].camera = entity;
+
+
+    //default model for previewing attachment points
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    if (modelDef.loadFromFile("assets/models/gizmoo.cmt"))
+    {
+        modelDef.createModel(entity);
+        m_attachmentModels.push_back(entity);
+        entity.getComponent<cro::Model>().setHidden(true);
+        entity.setLabel("Default");
+    }
+    else
+    {
+        m_scene.destroyEntity(entity);
+    }
 }
 
 void ModelState::toggleFreecam()

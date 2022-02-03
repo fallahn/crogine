@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -356,6 +356,18 @@ void PracticeState::buildScene()
                     requestStackPush(StateID::DrivingRange);
                 }
             });
+
+    //putting practice - we'll come back to this later
+    /*entity = createItem(glm::vec2(0.f, -4.f), "Putting Practice", menuEntity);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(StateID::PuttingRange);
+                }
+            });*/
 
     //back button
     entity = createItem(glm::vec2(0.f, -16.f), "Back", menuEntity);
