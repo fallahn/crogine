@@ -511,7 +511,7 @@ void MenuState::createAvatarScene()
         if (!m_sharedData.avatarInfo[i].audioscape.empty() &&
             as.loadFromFile(m_sharedData.avatarInfo[i].audioscape, m_resources.audio))
         {
-            for (const auto name : emitterNames)
+            for (const auto& name : emitterNames)
             {
                 if (as.hasEmitter(name))
                 {

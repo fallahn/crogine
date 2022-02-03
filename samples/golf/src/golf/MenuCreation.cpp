@@ -2465,7 +2465,6 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         //add avatar preview
         applyAvatarColours(i);
         updateThumb(i);
-        auto id = m_avatarIndices[i];
                 
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(localPos + AvatarOffset);
