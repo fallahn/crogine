@@ -268,6 +268,8 @@ void App::run()
 
         ImGui::CreateContext();
         setImguiStyle(&ImGui::GetStyle());
+        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+        
         ImGui_ImplSDL2_InitForOpenGL(m_window.m_window, m_window.m_mainContext);
 #ifdef PLATFORM_DESKTOP
         ImGui_ImplOpenGL3_Init("#version 410 core");
