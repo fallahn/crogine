@@ -24,7 +24,7 @@ spritesheet options
 
     sprite slider
     {
-        bounds = 192,207,11,9
+        bounds = 193,208,10,7
     }
 
     sprite square_highlight
