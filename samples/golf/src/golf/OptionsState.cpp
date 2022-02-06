@@ -506,7 +506,7 @@ void OptionsState::buildScene()
 
     //options background
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.3f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.4f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -727,6 +727,7 @@ void OptionsState::buildScene()
         return entity;
     };
     m_tooltips[ToolTipID::Volume] = createToolTip("Vol: 100");
+    m_tooltips[ToolTipID::FOV] = createToolTip("FOV: 60");
     m_tooltips[ToolTipID::Pixel] = createToolTip("Scale up pixels to match\nthe current resolution.");
 
 
@@ -788,7 +789,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     centreText(audioLabel);
 
     //FOV label
-    createLabel(glm::vec2(6.f, 59.f), "FOV");
+    auto fovLabel = createLabel(glm::vec2(6.f, 59.f), "FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
 
     //resolution label
     auto resLabel = createLabel(glm::vec2(6.f, 45.f), "Resolution");
@@ -891,11 +892,64 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     auto fovPos = glm::vec2(93.f, 56.f);
     auto fovSlider = createSlider(fovPos);
     auto userData = SliderData(fovPos, 76.f);
-    userData.onActivate = [](float distance) {};
+    userData.onActivate = 
+        [&, fovLabel](float distance) mutable
+    {
+        float fov = MinFOV + ((MaxFOV - MinFOV) * distance);
+
+        m_sharedData.fov = fov;
+
+        //raise a window resize message to trigger callbacks
+        auto size = cro::App::getWindow().getSize();
+        auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+        msg->data0 = size.x;
+        msg->data1 = size.y;
+        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+
+        fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
+    };
 
     fovSlider.getComponent<cro::Callback>().setUserData<SliderData>(userData);
     fovSlider.getComponent<cro::Callback>().function =
-        [](cro::Entity, float) {};
+        [&](cro::Entity e, float)
+    {
+        const auto& [pos, width, _] = e.getComponent<cro::Callback>().getUserData<SliderData>();
+        float amount = (m_sharedData.fov - MinFOV) / (MaxFOV - MinFOV);
+
+        e.getComponent<cro::Transform>().setPosition({ pos.x + (width * amount), pos.y });
+    };
+
+    tipEnt = m_scene.createEntity();
+    tipEnt.addComponent<cro::Transform>();
+    tipEnt.addComponent<cro::Callback>().active = true;
+    tipEnt.getComponent<cro::Callback>().function =
+        [&, fovSlider](cro::Entity, float)
+    {
+        auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+        auto bounds = fovSlider.getComponent<cro::Drawable2D>().getLocalBounds();
+        bounds = fovSlider.getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+        if (bounds.contains(mousePos))
+        {
+            mousePos.x = std::floor(mousePos.x);
+            mousePos.y = std::floor(mousePos.y);
+            mousePos.z = 1.f;
+
+            m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
+            m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setScale(m_viewScale);
+
+            float fov = m_sharedData.fov;
+            m_tooltips[ToolTipID::FOV].getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(fov)));
+        }
+        else
+        {
+            m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+    };
+    fovSlider.getComponent<cro::Transform>().addChild(tipEnt.getComponent<cro::Transform>());
+
+
+
 
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
     auto selectedID = uiSystem.addCallback([](cro::Entity e) 
@@ -969,9 +1023,60 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //FOV down
     entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 21.f, 50.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback(
+            [&, fovLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                auto fov = m_sharedData.fov;
+                fov = std::max(MinFOV, fov - 5.f);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                if (fov < m_sharedData.fov)
+                {
+                    m_sharedData.fov = fov;
+
+                    //raise a window resize message to trigger callbacks
+                    auto size = cro::App::getWindow().getSize();
+                    auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+                    msg->data0 = size.x;
+                    msg->data1 = size.y;
+                    msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+
+                    fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
+                }
+            }
+        });
 
     //FOV up
     entity = createHighlight(glm::vec2((bgBounds.width / 2.f) + 80.f, 50.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback(
+            [&, fovLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                auto fov = m_sharedData.fov;
+                fov = std::min(MaxFOV, fov + 5.f);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                if (fov > m_sharedData.fov)
+                {
+                    m_sharedData.fov = fov;
+
+                    //raise a window resize message to trigger callbacks
+                    auto size = cro::App::getWindow().getSize();
+                    auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+                    msg->data0 = size.x;
+                    msg->data1 = size.y;
+                    msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+
+                    fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
+                }
+            }
+        });
+
 
     //res down
     entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 21.f, 36.f));

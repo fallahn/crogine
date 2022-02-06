@@ -1886,7 +1886,7 @@ void GolfState::buildScene()
             glCheck(glUniform1f(uniform, invScale));
         }
 
-        cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -1909,20 +1909,20 @@ void GolfState::buildScene()
 ;
 
     //create an overhead camera
-    auto setPerspective = [](cro::Camera& cam)
+    auto setPerspective = [&](cro::Camera& cam)
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
 
-        cam.setPerspective(FOV, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, SkyCamHeight, -static_cast<float>(MapSize.y) / 2.f });
     camEnt.addComponent<cro::Camera>().resizeCallback = 
-        [camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
+        [&,camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective(FOV * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
@@ -1943,10 +1943,10 @@ void GolfState::buildScene()
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback =
-        [camEnt](cro::Camera& cam)
+        [&,camEnt](cro::Camera& cam)
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective(FOV * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
@@ -1979,10 +1979,10 @@ void GolfState::buildScene()
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback =
-        [camEnt](cro::Camera& cam)
+        [&,camEnt](cro::Camera& cam)
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective(FOV, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);

@@ -693,7 +693,7 @@ void MenuState::createScene()
 
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
-        cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 

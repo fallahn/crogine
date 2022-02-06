@@ -96,7 +96,7 @@ private:
     {
         enum
         {
-            Volume, Pixel,
+            Volume, FOV, Pixel,
             Count
         };
     };

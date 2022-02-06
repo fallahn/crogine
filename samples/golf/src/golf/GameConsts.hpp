@@ -48,7 +48,6 @@ static constexpr float CameraStrokeHeight = 2.f;// 3.2f;// 2.6f;
 static constexpr float CameraPuttHeight = 0.3f;
 static constexpr float CameraStrokeOffset = 5.f;// 7.5f;// 5.1f;
 static constexpr float CameraPuttOffset = 0.8f;
-static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
 
 static constexpr float GreenCamHeight = 3.f;
 static constexpr float SkyCamHeight = 16.f;

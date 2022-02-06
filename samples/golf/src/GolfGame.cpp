@@ -599,6 +599,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.pixelScale = prop.getValue<bool>();
                 }
+                else if (name == "fov")
+                {
+                    m_sharedData.fov = std::max(MinFOV, std::min(MaxFOV, prop.getValue<float>()));
+                }
             }
         }
     }
@@ -636,6 +640,7 @@ void GolfGame::savePreferences()
     }
     cfg.addProperty("last_ip").setValue(m_sharedData.targetIP.toAnsiString());
     cfg.addProperty("pixel_scale").setValue(m_sharedData.pixelScale);
+    cfg.addProperty("fov").setValue(m_sharedData.fov);
     cfg.save(path);
 
 

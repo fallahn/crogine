@@ -70,6 +70,9 @@ struct ConnectionData final
     bool deserialise(const cro::NetEvent::Packet&);
 };
 
+static constexpr float MinFOV = 60.f;
+static constexpr float MaxFOV = 90.f;
+
 struct SharedStateData final
 {
     Server serverInstance;
@@ -141,6 +144,7 @@ struct SharedStateData final
     std::string customShaderPath;
     InputBinding inputBinding;
     bool pixelScale = true;
+    float fov = MinFOV;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;
