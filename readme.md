@@ -10,9 +10,9 @@ SDL2 Based game engine which runs on Windows, linux, macOS and Android. Compatib
 
 
 #### Building
-Using the CMake file included in the root directory first generate project files for your compiler/environment of choice, then build and install the crogine library. To build the samples set the cmake variables BUILD_BATCAT or BUILD_TL to true. Samples each have their own cmake file if you prefer to build them independently. The included findCROGINE.cmake file should find the installed library if it was installed in the default location - else you need to manually point CMake to the crogine lib.
+Using the CMake file included in the root directory first generate project files for your compiler/environment of choice, then build and install the crogine library. Samples each have their own cmake file to build them independently. The included findCROGINE.cmake file should find the installed library if it was installed in the default location - else you need to manually point CMake to the crogine lib.
 
-On windows you can use the included Visual Studio 2019 solution to build crogine and the demo projects for both Windows, and Android if the cross platform tools for Visual Studio are installed. To get started with building Android projects with Visual Studio see [this repository](https://github.com/fallahn/sdl2vs) which includes a sample SDL2 application for Android.
+On windows you can use the included Visual Studio 2022 solution to build crogine and the demo projects for both Windows, and Android if the cross platform tools for Visual Studio are installed. To get started with building Android projects with Visual Studio see [this repository](https://github.com/fallahn/sdl2vs) which includes a sample SDL2 application for Android.
 
 Android make files can also be created with the included cmake file, but the toolchain will first need configuring in cmake/toolchains/android-arm.cmake
 
@@ -31,7 +31,7 @@ Portions of this software are copyright (c) 2019 SFML (www.sfml-dev.org). All ri
 
 -----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021  
+Matt Marchant 2017 - 2022  
 http://trederia.blogspot.com  
 
 crogine - Zlib license.  

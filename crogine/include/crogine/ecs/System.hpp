@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,8 @@ source distribution.
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/Component.hpp>
 #include <crogine/core/MessageBus.hpp>
+#include <crogine/core/HiResTimer.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 #include <vector>
 #include <typeindex>
@@ -163,17 +165,16 @@ namespace cro
 
         friend class SystemManager;
 
-
         //list of types populated by requireComponent then processed by SystemManager
         //when the system is created
         std::vector<std::type_index> m_pendingTypes;
         void processTypes(ComponentManager&);
     };
 
-    class CRO_EXPORT_API SystemManager final
+    class CRO_EXPORT_API SystemManager final : public cro::GuiClient
     {
     public:
-        SystemManager(Scene&, ComponentManager&);
+        SystemManager(Scene&, ComponentManager&, std::uint32_t infoFlags);
 
         ~SystemManager() = default;
         SystemManager(const SystemManager&) = delete;
@@ -243,6 +244,18 @@ namespace cro
         std::vector<System*> m_activeSystems;
 
         ComponentManager& m_componentManager;
+
+        const std::uint32_t m_infoFlags;
+        HiResTimer m_systemTimer;
+        float m_systemUpdateAccumulator;
+        struct SystemSample final
+        {
+            const System* system = nullptr;
+            float elapsed = 0.f;
+            SystemSample(const System* s, float e)
+                : system(s), elapsed(e) {}
+        };
+        std::vector<SystemSample> m_systemSamples;
 
         template <typename T>
         void removeFromActive();

@@ -94,6 +94,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\components\UIInput.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Director.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Entity.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\InfoFlags.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Renderable.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Scene.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Sunlight.hpp" />

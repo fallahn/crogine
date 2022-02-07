@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -27,12 +27,95 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/ecs/System.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/SysTime.hpp>
+#include <crogine/ecs/InfoFlags.hpp>
+#include <crogine/ecs/System.hpp>
+#include <crogine/gui/Gui.hpp>
+
+#include <sstream>
 
 using namespace cro;
 
-SystemManager::SystemManager(Scene& scene, ComponentManager& cm) : m_scene(scene), m_componentManager(cm) {}
+namespace
+{
+    constexpr float SystemTimeUpdateRate = 0.5f;
+}
+
+SystemManager::SystemManager(Scene& scene, ComponentManager& cm, std::uint32_t infoFlags) 
+    : m_scene                   (scene),
+    m_componentManager          (cm),
+    m_infoFlags                 (infoFlags),
+    m_systemUpdateAccumulator   (0.f)
+{
+    //TODO refactor this into a single window with panes for each flag
+    if (infoFlags & INFO_FLAG_SYSTEMS_ACTIVE)
+    {
+        registerWindow(
+            [&]()
+        {
+            ImGui::SetNextWindowSize({ 220.f, 300.f }, ImGuiCond_FirstUseEver);
+            ImGui::SetNextWindowSizeConstraints({ 220.f, 300.f }, { 1920.f, 1080.f });
+
+            if (ImGui::Begin("Active Systems"))
+            {
+                if (ImGui::Button("Save To File"))
+                {
+                    std::string filename = SysTime::timeString() + "-" + SysTime::dateString() + ".txt";
+                    std::replace(filename.begin(), filename.end(), '/', '-');
+                    std::replace(filename.begin(), filename.end(), ':', '-');
+
+                    RaiiRWops file;
+                    file.file = SDL_RWFromFile(filename.c_str(), "w");
+
+                    if (file.file)
+                    {
+                        std::stringstream ss;
+                        for (const auto* s : m_activeSystems)
+                        {
+                            ss << s->getType().name() << "Entities: " << s->getEntities().size() << "\n";
+                        }
+
+                        SDL_RWwrite(file.file, ss.str().c_str(), ss.str().size(), 1);
+                    }
+                }
+
+                ImGui::BeginChild("inner");
+                for (const auto* s : m_activeSystems)
+                {
+                    ImGui::Text("%s\n\tEntities: %lu\n", s->getType().name(), s->getEntities().size());
+                }
+                ImGui::EndChild();
+            }
+            ImGui::End();
+        });
+    }
+
+    if ((infoFlags & INFO_FLAG_SYSTEM_TIME) != 0)
+    {
+        registerWindow(
+            [&]()
+        {
+            ImGui::SetNextWindowSize({ 220.f, 300.f }, ImGuiCond_FirstUseEver);
+            ImGui::SetNextWindowSizeConstraints({ 220.f, 300.f }, { 1920.f, 1080.f });
+
+            if (ImGui::Begin("System Time"))
+            {
+                std::sort(m_systemSamples.begin(), m_systemSamples.end(), 
+                    [](const SystemSample& a, const SystemSample& b)
+                {
+                        return a.elapsed > b.elapsed;
+                });
+
+                for (const auto& [system, elapsed] : m_systemSamples)
+                {
+                    ImGui::Text("%s: %2.4fms", system->getType().name(), elapsed);
+                }
+            }
+            ImGui::End();
+        });
+    }
+}
 
 void SystemManager::addToSystems(Entity entity)
 {
@@ -65,8 +148,35 @@ void SystemManager::forwardMessage(const Message& msg)
 
 void SystemManager::process(float dt)
 {
-    for (auto& system : m_activeSystems)
+    //hmm I wish this could be conditionally compiled...
+    if (m_infoFlags)
+    {        
+        m_systemUpdateAccumulator += m_systemTimer.restart();
+
+        if (m_systemUpdateAccumulator > SystemTimeUpdateRate)
+        {
+            m_systemUpdateAccumulator -= SystemTimeUpdateRate;
+            m_systemSamples.clear();
+        
+            for (auto& system : m_activeSystems)
+            {
+                system->process(dt);
+                m_systemSamples.emplace_back(system, m_systemTimer.restart() * 1000.f);
+            }
+        }
+        else
+        {
+            for (auto& system : m_activeSystems)
+            {
+                system->process(dt);
+            }
+        }
+    }
+    else
     {
-        system->process(dt);
+        for (auto& system : m_activeSystems)
+        {
+            system->process(dt);
+        }
     }
 }

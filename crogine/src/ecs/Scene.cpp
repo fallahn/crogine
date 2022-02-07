@@ -131,10 +131,10 @@ namespace
     }
 }
 
-Scene::Scene(MessageBus& mb, std::size_t initialPoolSize)
+Scene::Scene(MessageBus& mb, std::size_t initialPoolSize, std::uint32_t infoFlags)
     : m_messageBus          (mb),
     m_entityManager         (mb, m_componentManager, initialPoolSize),
-    m_systemManager         (*this, m_componentManager),
+    m_systemManager         (*this, m_componentManager, infoFlags),
     m_projectionMapCount    (0),
     m_waterLevel            (0.f),
     m_activeSkyboxTexture   (0),
@@ -183,7 +183,7 @@ void Scene::simulate(float dt)
     m_pendingEntities.clear();
 
     /*
-    Destroyed ents are double buffered to any calls
+    Destroyed ents are double buffered so any calls
     to destroyEntity which further destroy more entities
     don't affect the entity vector mid iteration
     */

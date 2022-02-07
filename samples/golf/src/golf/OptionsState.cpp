@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/gui/Gui.hpp>
 
+#include <crogine/ecs/InfoFlags.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
@@ -152,7 +153,7 @@ namespace
 
 OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State        (ss, ctx),
-    m_scene             (ctx.appInstance.getMessageBus()),
+    m_scene             (ctx.appInstance.getMessageBus(), 128, cro::INFO_FLAG_SYSTEMS_ACTIVE | cro::INFO_FLAG_SYSTEM_TIME),
     m_sharedData        (sd),
     m_updatingKeybind   (false),
     m_lastMousePos      (0.f),
