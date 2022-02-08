@@ -77,7 +77,8 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     auto& camComponent = cameraEnt.getComponent<Camera>();
     auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
 
-    DPRINT("Visible 3D ents", std::to_string(m_visibleEnts[0].size()));
+    DPRINT("Visible 3D ents in Scene " + std::to_string(getScene()->getInstanceID()) 
+        + ", Camera " + std::to_string(cameraEnt.getIndex()), std::to_string(m_visibleEnts[0].size()));
     //DPRINT("Total ents", std::to_string(entities.size()));
 
     //sort lists by depth

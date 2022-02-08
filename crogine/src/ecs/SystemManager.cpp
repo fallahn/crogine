@@ -149,7 +149,7 @@ void SystemManager::forwardMessage(const Message& msg)
 void SystemManager::process(float dt)
 {
     //hmm I wish this could be conditionally compiled...
-    /*if (m_infoFlags)
+    if (m_infoFlags)
     {        
         m_systemUpdateAccumulator += m_systemTimer.restart();
 
@@ -172,7 +172,7 @@ void SystemManager::process(float dt)
             }
         }
     }
-    else*/
+    else
     {
         for (auto& system : m_activeSystems)
         {

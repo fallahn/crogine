@@ -361,8 +361,14 @@ namespace cro
         MessageBus& getMessageBus() { return m_messageBus; }
         const MessageBus& getMessageBus() const { return m_messageBus; }
 
+        /*!
+        \brief Returns a unique ID for the current Scene instance
+        */
+        std::size_t getInstanceID() const { return m_uid; }
+
     private:
         MessageBus& m_messageBus;
+        std::size_t m_uid;
 
         Entity m_defaultCamera;
         Entity m_activeCamera;

@@ -212,6 +212,13 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             auto scale = tx.getScale();
             sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
+            float distance = glm::dot(lightDir, sphere.centre - lightPos);
+            if (distance < -sphere.radius)
+            {
+                //we're behind the frustum
+                continue;
+            }
+
             model.m_visible = true;
             std::size_t i = 0;
             while (model.m_visible&& i < frustum.size())
@@ -224,8 +231,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
             if (model.m_visible)
             {
-                float depth = glm::dot(lightPos - tx.getWorldPosition(), lightDir);
-                drawList.push_back(std::make_pair(entity, depth));
+                drawList.push_back(std::make_pair(entity, distance));
             }
         }
 
