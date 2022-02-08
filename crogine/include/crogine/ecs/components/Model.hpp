@@ -273,6 +273,10 @@ namespace cro
         glm::mat4* m_skeleton = nullptr;
         std::size_t m_jointCount = 0;
 
+        //used with BalancedTree if active in frustum culling
+        std::int32_t m_treeID = -1;
+        glm::vec3 m_lastWorldPosition = glm::vec3(0.f);
+
         friend class ModelRenderer;
         friend class ShadowMapRenderer;
         friend class DeferredRenderSystem;

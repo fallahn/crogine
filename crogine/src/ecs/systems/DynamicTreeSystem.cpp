@@ -67,7 +67,7 @@ void DynamicTreeSystem::process(float)
 
 void DynamicTreeSystem::onEntityAdded(Entity entity)
 {
-    entity.getComponent<DynamicTreeComponent>().m_treeID = m_tree.addToTree(entity);
+    entity.getComponent<DynamicTreeComponent>().m_treeID = m_tree.addToTree(entity, entity.getComponent<DynamicTreeComponent>().m_bounds);
 }
 
 void DynamicTreeSystem::onEntityRemoved(Entity entity)

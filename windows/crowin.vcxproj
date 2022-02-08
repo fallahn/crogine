@@ -64,6 +64,7 @@
     <ClInclude Include="..\crogine\include\crogine\core\Wavetable.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Window.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Assert.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\detail\BalancedTree.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\GlobalConsts.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\HashCombine.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\ModelBinary.hpp" />
@@ -195,7 +196,6 @@
     <ClInclude Include="..\crogine\src\audio\VorbisLoader.hpp" />
     <ClInclude Include="..\crogine\src\audio\WavLoader.hpp" />
     <ClInclude Include="..\crogine\src\core\DefaultLoadingScreen.hpp" />
-    <ClInclude Include="..\crogine\src\detail\BalancedTree.hpp" />
     <ClInclude Include="..\crogine\src\detail\DistanceField.hpp" />
     <ClInclude Include="..\crogine\src\detail\glad.hpp" />
     <ClInclude Include="..\crogine\src\detail\GLCheck.hpp" />

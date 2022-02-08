@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/graphics/MaterialData.hpp>
+#include <crogine/detail/BalancedTree.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
 #include <vector>
@@ -82,12 +83,20 @@ namespace cro
         */
         void render(Entity, const RenderTarget&) override;
 
+        void onEntityAdded(Entity) override;
+
+        void onEntityRemoved(Entity) override;
+
     private:
         std::array<MaterialList, 2u> m_visibleEnts;
         Mesh::IndexData::Pass m_pass;
 
+        Detail::BalancedTree m_tree;
+        bool m_useTreeQueries;
+
         void updateDrawListDefault(Entity);
         void updateDrawListBalancedTree(Entity);
+        std::vector<Entity> queryTree(Box) const;
 
         friend class DeferredRenderSystem;
         //these funcs are shared with above system - should probably be free funcs somewhere?

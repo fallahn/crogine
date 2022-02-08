@@ -31,7 +31,6 @@ source distribution.
 #include <crogine/detail/BalancedTree.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/DynamicTreeComponent.hpp>
 
 using namespace cro;
 using namespace cro::Detail;
@@ -62,12 +61,11 @@ BalancedTree::BalancedTree(float fattenAmount)
 }
 
 //public
-std::int32_t BalancedTree::addToTree(Entity entity)
+std::int32_t BalancedTree::addToTree(Entity entity, Box bounds)
 {
     auto treeID = allocateNode();
 
     const auto& tx = entity.getComponent<Transform>();
-    auto bounds = entity.getComponent<DynamicTreeComponent>().getArea();
 
     bounds += tx.getOrigin();
     bounds = tx.getWorldTransform() * bounds;

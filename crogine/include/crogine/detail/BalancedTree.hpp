@@ -78,7 +78,7 @@ namespace cro::Detail
     public:
         explicit BalancedTree(float unitsPerMetre);
 
-        std::int32_t addToTree(Entity);
+        std::int32_t addToTree(Entity, Box bounds);
         void removeFromTree(std::int32_t);
 
         //moves a proxy with the specified treeID. If the entity
