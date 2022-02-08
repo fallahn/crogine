@@ -195,6 +195,7 @@
     <ClInclude Include="..\crogine\src\audio\VorbisLoader.hpp" />
     <ClInclude Include="..\crogine\src\audio\WavLoader.hpp" />
     <ClInclude Include="..\crogine\src\core\DefaultLoadingScreen.hpp" />
+    <ClInclude Include="..\crogine\src\detail\BalancedTree.hpp" />
     <ClInclude Include="..\crogine\src\detail\DistanceField.hpp" />
     <ClInclude Include="..\crogine\src\detail\glad.hpp" />
     <ClInclude Include="..\crogine\src\detail\GLCheck.hpp" />
@@ -252,6 +253,7 @@
     <ClCompile Include="..\crogine\src\core\tinyfiledialogs.c" />
     <ClCompile Include="..\crogine\src\core\Wavetable.cpp" />
     <ClCompile Include="..\crogine\src\core\Window.cpp" />
+    <ClCompile Include="..\crogine\src\detail\BalancedTree.cpp" />
     <ClCompile Include="..\crogine\src\detail\DistanceField.cpp" />
     <ClCompile Include="..\crogine\src\detail\enet\callbacks.c" />
     <ClCompile Include="..\crogine\src\detail\enet\compress.c" />

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -29,60 +29,23 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/BalancedTree.hpp>
 #include <crogine/ecs/System.hpp>
-#include <crogine/graphics/BoundingBox.hpp>
 
-#include <vector>
-#include <limits>
-#include <cstdint>
-#include <array>
+#include <memory>
 
 namespace cro
 {
-    //node struct used by the tree
-    struct TreeNode final
-    {
-        static constexpr std::int32_t Null = -1;
-        bool isLeaf() const
-        {
-            return childA == Null;
-        }
-
-        //this is in world coordinates
-        Box fatBounds;
-        Entity entity;
-
-        union
-        {
-            std::int32_t parent;
-            std::int32_t next;
-        };
-
-        std::int32_t childA = Null;
-        std::int32_t childB = Null;
-
-        //leaf == 0, else Null if free
-        std::int32_t height = Null;
-    };
-
-    /*!
-    \brief Dynamic AABB tree for broadphase queries. Ported from
-    xygine https://github.com/fallahn/xygine which is, in turn, based on
-    Erin Catto's dynamic tree in Box2D (http://www.box2d.org)
-    which is in turn inspired by Nathanael Presson's btDbvt.
-    (https://pybullet.org/wordpress/)
-    */
-
     class CRO_EXPORT_API DynamicTreeSystem final : public System
     {
     public:
         /*!
         \brief Constructor
-        \param mb Areference to the active MessageBus
+        \param mb A reference to the active MessageBus
         \param unitsPerMetre This should be set to reflect the world scale in which
         this system is used. It affects the 'fatten' amount of the partitions, so
         too large a value will return many unnecessary results, too small will
-        return too few. The default value sshould be fine for 3D scenes, but should
+        return too few. The default value should be fine for 3D scenes, but should
         be adjusted accordingly for 2D scenes where the units are often in pixels.
         */
         explicit DynamicTreeSystem(MessageBus& mb, float unitsPerMetre = 1.f);
@@ -101,73 +64,6 @@ namespace cro
         std::vector<Entity> query(Box area, std::uint64_t filter = std::numeric_limits<std::uint64_t>::max()) const;
 
     private:
-        std::int32_t m_root;
-
-        std::size_t m_nodeCount;
-        std::size_t m_nodeCapacity;
-        std::vector<TreeNode> m_nodes;
-
-        std::int32_t m_freeList; //must be signed!
-
-        std::size_t m_insertionCount;
-
-        glm::vec3 m_fattenAmount;
-
-        std::int32_t addToTree(Entity);
-        void removeFromTree(std::int32_t);
-        //moves a proxy with the specified treeID. If the entity
-        //has moved outside of the node's fattened AABB then it
-        //is removed from the tree and reinsterted.
-        bool moveNode(std::int32_t, Box, glm::vec3);
-        Box getFatAABB(std::int32_t) const;
-        std::int32_t getMaxBalance() const;
-        float getAreaRatio() const;
-
-        std::int32_t allocateNode();
-        void freeNode(std::int32_t);
-
-        void insertLeaf(std::int32_t);
-        void removeLeaf(std::int32_t);
-
-        std::int32_t balance(std::int32_t);
-
-        std::int32_t computeHeight() const;
-        std::int32_t computeHeight(std::int32_t) const;
-
-        void validateStructure(std::int32_t) const;
-        void validateMetrics(std::int32_t) const;
+        Detail::BalancedTree m_tree;
     };
-
-    //growable stack using preallocated memory
-    namespace Detail
-    {
-        template <typename T, std::size_t SIZE>
-        class FixedStack final
-        {
-        public:
-
-            T pop()
-            {
-                CRO_ASSERT(m_size != 0, "Stack is empty!");
-                m_size--;
-                return m_data[m_size];
-            }
-
-            void push(T data)
-            {
-                CRO_ASSERT(m_size < m_data.size(), "Stack is full!");
-
-                m_data[m_size++] = data;
-            }
-
-            std::size_t size() const
-            {
-                return m_size;
-            }
-
-        private:
-            std::array<T, SIZE> m_data = {};
-            std::size_t m_size = 0; //current size / next free index
-        };
-    }
 }

@@ -63,107 +63,11 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 //public
 void ModelRenderer::updateDrawList(Entity cameraEnt)
 {
+    updateDrawListDefault(cameraEnt);
+
     auto& camComponent = cameraEnt.getComponent<Camera>();
-    auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
-    //assume if there's no reflection buffer there's no need to sort the
-    //entities for the second pass...
     auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
 
-    auto& entities = getEntities();    
-
-    //cull entities by viewable into draw lists by pass
-    for (auto& list : m_visibleEnts)
-    {
-        list.clear();
-    }
-
-    //TODO add an option to cull this list based on AABB tree
-    for (auto& entity : entities)
-    {
-        auto& model = entity.getComponent<Model>();
-        if (model.isHidden())
-        {
-            continue;
-        }
-
-        //render flags are tested when drawing as the flags may have changed
-        //between draw calls but without updating the visiblity list.
-
-        //use the bounding sphere for depth testing
-        auto sphere = model.getBoundingSphere();
-        const auto& tx = entity.getComponent<Transform>();
-
-        sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
-        auto scale = tx.getScale();
-        sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
-
-        //for each pass in the list (different passes may use different projections, eg reflections)
-        for (auto p = 0; p < passCount; ++p)
-        {
-            //this is a good approximation of distance based on the centre
-            //of the model (large models might suffer without face sorting...)
-            //assuming the forward vector is normalised - though WHY would you
-            //scale the view matrix???
-            auto direction = (sphere.centre - cameraPos);
-            float distance = glm::dot(camComponent.getPass(p).forwardVector, direction);
-
-            if (distance < -sphere.radius)
-            {
-                //model is behind the camera
-                continue;
-            }
-
-            //TODO we need to fix cam component's frustum data for OBB testing
-            if (camComponent.isOrthographic())
-            {
-                const auto& frustum = camComponent.getPass(p).getFrustum();
-
-                model.m_visible = true;
-                std::size_t j = 0;
-                while (model.m_visible && j < frustum.size())
-                {
-                    model.m_visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
-                }
-            }
-            else
-            {
-                model.m_visible = cro::Util::Frustum::visible(camComponent.getFrustumData(), camComponent.getPass(p).viewMatrix * tx.getWorldTransform(), model.getAABB());
-            }
-
-            if (model.m_visible)
-            {
-                auto opaque = std::make_pair(entity, SortData());
-                auto transparent = std::make_pair(entity, SortData());
-
-                //foreach material
-                //add ent/index pair to alpha or opaque list
-                for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
-                {
-                    if (model.m_materials[Mesh::IndexData::Final][i].blendMode != Material::BlendMode::None)
-                    {
-                        transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
-                        transparent.second.flags = static_cast<std::int64_t>(-distance * 1000000.f); //suitably large number to shift decimal point
-                        transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
-                    }
-                    else
-                    {
-                        opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
-                        opaque.second.flags = static_cast<std::int64_t>(distance * 1000000.f);
-                    }
-                }
-
-                if (!opaque.second.matIDs.empty())
-                {
-                    m_visibleEnts[p].push_back(opaque);
-                }
-
-                if (!transparent.second.matIDs.empty())
-                {
-                    m_visibleEnts[p].push_back(transparent);
-                }
-            }
-        }
-    }
     DPRINT("Visible 3D ents", std::to_string(m_visibleEnts[0].size()));
     //DPRINT("Total ents", std::to_string(entities.size()));
 
@@ -186,15 +90,15 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
 void ModelRenderer::process(float)
 {
     //TODO this might be worth just doing on the current drawlist (or even in the draw list calc??)
-    auto& entities = getEntities();
-    for (auto entity : entities)
-    {
-        auto& model = entity.getComponent<Model>();
-        if (model.m_meshBox != model.m_meshData.boundingBox)
-        {
-            model.updateBounds();
-        }
-    }
+    //auto& entities = getEntities();
+    //for (auto entity : entities)
+    //{
+    //    auto& model = entity.getComponent<Model>();
+    //    if (model.m_meshBox != model.m_meshData.boundingBox)
+    //    {
+    //        model.updateBounds();
+    //    }
+    //}
 }
 
 void ModelRenderer::render(Entity camera, const RenderTarget& rt)
@@ -307,6 +211,117 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
+}
+
+//private
+void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
+{
+    const auto& camComponent = cameraEnt.getComponent<Camera>();
+    auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
+    //assume if there's no reflection buffer there's no need to sort the
+    //entities for the second pass...
+    auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
+
+    auto& entities = getEntities();
+
+    //cull entities by viewable into draw lists by pass
+    for (auto& list : m_visibleEnts)
+    {
+        list.clear();
+    }
+
+    //TODO add an option to cull this list based on AABB tree
+    for (auto& entity : entities)
+    {
+        auto& model = entity.getComponent<Model>();
+        if (model.isHidden())
+        {
+            continue;
+        }
+
+        if (model.m_meshBox != model.m_meshData.boundingBox)
+        {
+            model.updateBounds();
+        }
+
+        //render flags are tested when drawing as the flags may have changed
+        //between draw calls but without updating the visiblity list.
+
+        //use the bounding sphere for depth testing
+        auto sphere = model.getBoundingSphere();
+        const auto& tx = entity.getComponent<Transform>();
+
+        sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
+        auto scale = tx.getScale();
+        sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
+
+        //for each pass in the list (different passes may use different projections, eg reflections)
+        for (auto p = 0; p < passCount; ++p)
+        {
+            //this is a good approximation of distance based on the centre
+            //of the model (large models might suffer without face sorting...)
+            //assuming the forward vector is normalised - though WHY would you
+            //scale the view matrix???
+            auto direction = (sphere.centre - cameraPos);
+            float distance = glm::dot(camComponent.getPass(p).forwardVector, direction);
+
+            if (distance < -sphere.radius)
+            {
+                //model is behind the camera
+                continue;
+            }
+
+            //TODO we need to fix cam component's frustum data for OBB testing
+            if (camComponent.isOrthographic())
+            {
+                const auto& frustum = camComponent.getPass(p).getFrustum();
+
+                model.m_visible = true;
+                std::size_t j = 0;
+                while (model.m_visible && j < frustum.size())
+                {
+                    model.m_visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
+                }
+            }
+            else
+            {
+                model.m_visible = cro::Util::Frustum::visible(camComponent.getFrustumData(), camComponent.getPass(p).viewMatrix * tx.getWorldTransform(), model.getAABB());
+            }
+
+            if (model.m_visible)
+            {
+                auto opaque = std::make_pair(entity, SortData());
+                auto transparent = std::make_pair(entity, SortData());
+
+                //foreach material
+                //add ent/index pair to alpha or opaque list
+                for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
+                {
+                    if (model.m_materials[Mesh::IndexData::Final][i].blendMode != Material::BlendMode::None)
+                    {
+                        transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
+                        transparent.second.flags = static_cast<std::int64_t>(-distance * 1000000.f); //suitably large number to shift decimal point
+                        transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
+                    }
+                    else
+                    {
+                        opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
+                        opaque.second.flags = static_cast<std::int64_t>(distance * 1000000.f);
+                    }
+                }
+
+                if (!opaque.second.matIDs.empty())
+                {
+                    m_visibleEnts[p].push_back(opaque);
+                }
+
+                if (!transparent.second.matIDs.empty())
+                {
+                    m_visibleEnts[p].push_back(transparent);
+                }
+            }
+        }
+    }
 }
 
 void ModelRenderer::applyProperties(const Material::Data& material, const Model& model, const Scene& scene, const Camera& camera)
