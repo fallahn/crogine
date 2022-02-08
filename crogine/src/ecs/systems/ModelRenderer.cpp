@@ -305,8 +305,8 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
                 continue;
             }
 
-            //TODO we need to fix cam component's frustum data for OBB testing
-            if (camComponent.isOrthographic())
+
+            //if (camComponent.isOrthographic())
             {
                 const auto& frustum = camComponent.getPass(p).getFrustum();
 
@@ -317,10 +317,11 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
                     model.m_visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
                 }
             }
-            else
+            /*else
             {
+                //well measuring this says it's nearly twice as slow...
                 model.m_visible = cro::Util::Frustum::visible(camComponent.getFrustumData(), camComponent.getPass(p).viewMatrix * tx.getWorldTransform(), model.getAABB());
-            }
+            }*/
 
             if (model.m_visible)
             {
@@ -406,7 +407,7 @@ void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)
             }
 
             //frustum test
-            if (camComponent.isOrthographic())
+            //if (camComponent.isOrthographic())
             {
                 const auto& frustum = camComponent.getPass(p).getFrustum();
 
@@ -417,10 +418,10 @@ void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)
                     model.m_visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
                 }
             }
-            else
+            /*else
             {
                 model.m_visible = cro::Util::Frustum::visible(camComponent.getFrustumData(), camComponent.getPass(p).viewMatrix * tx.getWorldTransform(), model.getAABB());
-            }
+            }*/
 
             //add visible ents to lists for depth sorting
             if (model.m_visible)

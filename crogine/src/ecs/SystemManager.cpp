@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/ecs/InfoFlags.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/gui/Gui.hpp>
 
@@ -57,7 +58,9 @@ SystemManager::SystemManager(Scene& scene, ComponentManager& cm, std::uint32_t i
             ImGui::SetNextWindowSize({ 220.f, 300.f }, ImGuiCond_FirstUseEver);
             ImGui::SetNextWindowSizeConstraints({ 220.f, 300.f }, { 1920.f, 1080.f });
 
-            if (ImGui::Begin("Active Systems"))
+            std::string label = "Active Systems in Scene " + std::to_string(m_scene.getInstanceID());
+
+            if (ImGui::Begin(label.c_str()))
             {
                 if (ImGui::Button("Save To File"))
                 {

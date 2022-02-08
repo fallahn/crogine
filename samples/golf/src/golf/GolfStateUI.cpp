@@ -414,6 +414,9 @@ void GolfState::buildUI()
 
                 //and set to grow
                 state = 1;
+
+                //disable the cam again
+                m_mapCam.getComponent<cro::Camera>().active = false;
             }
         }
         else
@@ -557,6 +560,7 @@ void GolfState::buildUI()
                 e.getComponent<cro::Callback>().active = false;
 
                 m_greenCam.getComponent<cro::Callback>().active = false;
+                m_greenCam.getComponent<cro::Camera>().active = false;
             }
         }
     };
@@ -620,6 +624,7 @@ void GolfState::buildUI()
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
     miniCam.renderFlags = RenderFlags::MiniMap;
+    miniCam.active = false;
     //miniCam.resizeCallback = updateMiniView; //don't do this on resize as recreating the buffer clears it..
     updateMiniView(miniCam);
 
@@ -653,6 +658,7 @@ void GolfState::buildUI()
     auto& greenCam = m_greenCam.addComponent<cro::Camera>();
     greenCam.renderFlags = RenderFlags::MiniGreen;
     greenCam.resizeCallback = updateGreenView;
+    greenCam.active = false;
     updateGreenView(greenCam);
 
     m_greenCam.addComponent<cro::Callback>().active = true;
@@ -1566,6 +1572,7 @@ void GolfState::updateMiniMap()
     {
         //trigger animation
         en.getComponent<cro::Callback>().active = true;
+        m_mapCam.getComponent<cro::Camera>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

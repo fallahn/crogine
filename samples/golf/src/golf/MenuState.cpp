@@ -52,6 +52,7 @@ source distribution.
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Wavetable.hpp>
 
+#include <crogine/ecs/InfoFlags.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -89,8 +90,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     : cro::State        (stack, context),
     m_sharedData        (sd),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
-    m_backgroundScene   (context.appInstance.getMessageBus()),
-    m_avatarScene       (context.appInstance.getMessageBus()),
+    m_backgroundScene   (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_avatarScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu       (MenuID::Main),
     m_prevMenu          (MenuID::Main),
