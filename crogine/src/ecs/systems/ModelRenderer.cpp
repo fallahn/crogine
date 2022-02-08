@@ -77,6 +77,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         list.clear();
     }
 
+    //TODO add an option to cull this list based on AABB tree
     for (auto& entity : entities)
     {
         auto& model = entity.getComponent<Model>();
@@ -99,6 +100,19 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         //for each pass in the list (different passes may use different projections, eg reflections)
         for (auto p = 0; p < passCount; ++p)
         {
+            //this is a good approximation of distance based on the centre
+            //of the model (large models might suffer without face sorting...)
+            //assuming the forward vector is normalised - though WHY would you
+            //scale the view matrix???
+            auto direction = (sphere.centre - cameraPos);
+            float distance = glm::dot(camComponent.getPass(p).forwardVector, direction);
+
+            if (distance < -sphere.radius)
+            {
+                //model is behind the camera
+                continue;
+            }
+
             //TODO we need to fix cam component's frustum data for OBB testing
             if (camComponent.isOrthographic())
             {
@@ -120,15 +134,6 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
             {
                 auto opaque = std::make_pair(entity, SortData());
                 auto transparent = std::make_pair(entity, SortData());
-
-                //this is a good approximation of distance based on the centre
-                //of the model (large models might suffer without face sorting...)
-                //assuming the forward vector is normalised - though WHY would you
-                //scale the view matrix???
-                auto direction = (sphere.centre - cameraPos);
-                auto forwardVector = cro::Util::Matrix::getForwardVector(camComponent.getPass(p).viewMatrix);
-                float distance = glm::dot(forwardVector, direction);
-
 
                 //foreach material
                 //add ent/index pair to alpha or opaque list

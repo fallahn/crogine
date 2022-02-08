@@ -86,6 +86,11 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
     auto& camera = camEnt.getComponent<Camera>();
     const auto& frustum = camera.getPass(Camera::Pass::Final).getFrustum();
 
+    //TODO a better approach might be to test 2D bounds against the
+    //current viewport rather than do a full frustum test as we know
+    //that this is a 2D renderer. Optionally using a balanced tree
+    //might also help on more propulated scenes.
+
     auto& entities = getEntities();
     for (auto entity : entities)
     {

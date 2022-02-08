@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,6 +30,7 @@ source distribution.
 #include "../../detail/GLCheck.hpp"
 
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/util/Matrix.hpp>
 
 using namespace cro;
 
@@ -160,15 +161,18 @@ void Camera::updateMatrices(const Transform& tx, float level)
     auto& finalPass = m_passes[Camera::Pass::Final];
     auto& reflectionPass = m_passes[Camera::Pass::Reflection];
 
-    finalPass.viewMatrix = glm::inverse(tx.getWorldTransform());
+    const auto worldTx = tx.getWorldTransform();
+    finalPass.viewMatrix = glm::inverse(worldTx);
     finalPass.viewProjectionMatrix = m_projectionMatrix * finalPass.viewMatrix;
     finalPass.m_aabb = Spatial::updateFrustum(finalPass.m_frustum, finalPass.viewProjectionMatrix);
+    finalPass.forwardVector = Util::Matrix::getForwardVector(worldTx);
 
     //TODO - disable this pass if the reflection buffer isn't created?
     reflectionPass.viewMatrix = glm::scale(finalPass.viewMatrix, glm::vec3(1.f, -1.f, 1.f));
     reflectionPass.viewMatrix = glm::translate(reflectionPass.viewMatrix, glm::vec3(0.f, level, 0.f));
     reflectionPass.viewProjectionMatrix = m_projectionMatrix * reflectionPass.viewMatrix;
     reflectionPass.m_aabb = Spatial::updateFrustum(reflectionPass.m_frustum, reflectionPass.viewProjectionMatrix);
+    reflectionPass.forwardVector = glm::reflect(finalPass.forwardVector, Transform::Y_AXIS);
 }
 
 glm::vec2 Camera::coordsToPixel(glm::vec3 worldPoint, glm::vec2 targetSize, std::int32_t passIdx) const

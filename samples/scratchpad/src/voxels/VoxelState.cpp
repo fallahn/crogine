@@ -83,6 +83,8 @@ VoxelState::VoxelState(cro::StateStack& ss, cro::State::Context ctx)
 #ifdef CRO_DEBUG_
             if (ImGui::Begin("Debug"))
             {
+                auto camVec = m_scene.getActiveCamera().getComponent<cro::Transform>().getForwardVector();
+
                 ImGui::Image(m_terrainTexture, { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
                 ImGui::Text("Cursor Pos: %3.3f, %3.3f, %3.3f", cursorWorldPos.x, cursorWorldPos.y, cursorWorldPos.z);
             }

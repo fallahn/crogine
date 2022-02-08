@@ -172,6 +172,11 @@ namespace cro
             glm::mat4 viewMatrix = glm::mat4(1.f);
 
             /*!
+            \brief The forward vector (the direction in which the pass looks)
+            */
+            glm::vec3 forwardVector = glm::vec3(0.f, 0.f, -1.f);
+
+            /*!
             \brief ViewProjection matrix.
             \see viewMatrix
             */
