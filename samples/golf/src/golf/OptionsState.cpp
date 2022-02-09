@@ -153,7 +153,7 @@ namespace
 
 OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State        (ss, ctx),
-    m_scene             (ctx.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE | cro::INFO_FLAG_SYSTEM_TIME*/),
+    m_scene             (ctx.appInstance.getMessageBus(), 128, cro::INFO_FLAG_SYSTEMS_ACTIVE | cro::INFO_FLAG_SYSTEM_TIME),
     m_sharedData        (sd),
     m_updatingKeybind   (false),
     m_lastMousePos      (0.f),

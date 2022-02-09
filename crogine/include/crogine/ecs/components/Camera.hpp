@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -441,6 +441,11 @@ namespace cro
         */
         FrustumData getFrustumData() const { return m_frustumData; }
 
+        /*!
+        \brief Returns the view size if this is an orthographic camera
+        else returns an empty FloatRect
+        */
+        FloatRect getViewSize() const { return m_orthographicView; }
 
 #ifdef CRO_DEBUG_
         //l,r,b,t,n,f
@@ -462,6 +467,7 @@ namespace cro
         float m_farPlane;
 
         bool m_orthographic;
+        FloatRect m_orthographicView;
         FrustumData m_frustumData;
 
         friend class ShadowMapRenderer;

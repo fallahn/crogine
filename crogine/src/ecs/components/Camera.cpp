@@ -133,6 +133,8 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
     m_farPlane = farPlane;
     m_orthographic = false;
 
+    m_orthographicView = { 0.f,0.f,0.f,0.f };
+
     auto fovTan = std::tan(fov / 2.f);
     m_frustumData.farPlane = -farPlane;
     m_frustumData.nearPlane = -nearPlane;
@@ -148,6 +150,8 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
     m_orthographic = true;
+
+    m_orthographicView = { left, bottom, right - left, top - bottom };
 
     //TODO fix this
     m_frustumData.farPlane = -farPlane;

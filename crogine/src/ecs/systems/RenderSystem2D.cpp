@@ -84,12 +84,11 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
 {
     m_drawList.clear();
     auto& camera = camEnt.getComponent<Camera>();
-    const auto& frustum = camera.getPass(Camera::Pass::Final).getFrustum();
+    CRO_ASSERT(camera.isOrthographic(), "");
+    auto viewRect = camEnt.getComponent<cro::Transform>().getWorldTransform() * camera.getViewSize();
 
-    //TODO a better approach might be to test 2D bounds against the
-    //current viewport rather than do a full frustum test as we know
-    //that this is a 2D renderer. Optionally using a balanced tree
-    //might also help on more propulated scenes.
+    //TODO Optionally using a balanced/quad tree
+    //might also help on more populated scenes.
 
     auto& entities = getEntities();
     for (auto entity : entities)
@@ -102,16 +101,7 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
 
             //check local bounds for visibility and draw if visible
             auto bounds = drawable.m_localBounds.transform(worldMat);
-            cro::Box aabb(glm::vec3(bounds.left, bounds.bottom, -0.1f), glm::vec3(bounds.left + bounds.width, bounds.bottom + bounds.height, 0.1f));
-
-            bool visible = true;
-            std::size_t i = 0;
-            while (visible && i < frustum.size())
-            {
-                visible = (Spatial::intersects(frustum[i++], aabb) != Planar::Back);
-            }
-
-            if (visible)
+            if (bounds.intersects(viewRect))
             {
                 m_drawList.push_back(entity);
             }
@@ -130,7 +120,17 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
             return a.getComponent<Drawable2D>().m_sortCriteria < b.getComponent<Drawable2D>().m_sortCriteria;
         });
 
-    camera.getDrawList(Camera::Pass::Final)[getType()] = std::make_any<std::vector<Entity>>(m_drawList);
+    auto& drawList = camera.getDrawList(Camera::Pass::Final)[getType()];
+    
+    //hmm this is faster... when it works. More investigation needed
+    /*if (drawList.has_value())
+    {
+        std::any_cast<std::vector<Entity>>(drawList).swap(m_drawList);
+    }
+    else*/
+    {
+        drawList = std::make_any<std::vector<Entity>>(m_drawList);
+    }
 }
 
 void RenderSystem2D::process(float)
