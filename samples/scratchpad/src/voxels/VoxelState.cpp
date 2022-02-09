@@ -27,6 +27,10 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#define MC_IMPLEM_ENABLE
+#include "MarchingCube.hpp"
+#include "noise.h"
+
 #include "VoxelState.hpp"
 #include "FpsCameraSystem.hpp"
 #include "../StateIDs.hpp"
@@ -330,6 +334,24 @@ void VoxelState::createLayers()
 
 
 
+    //voxel mesh
+    const int n = 50;
+    //float* field = new float[n * n * n];
+    std::vector<float> field(n * n * n);
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            for (int k = 0; k < n; k++)
+                field[(k * n + j) * n + i] = PerlinNoise::GetValue(i * 0.0201f, j * 0.0201f, k * 0.0201f);
+        }
+    }
+
+    //compute isosurface using marching cube
+    MC::mcMesh mesh;
+    MC::marching_cube(field.data(), n, n, n, mesh);
+
+
     //cursor circle
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseColour);
     auto* shader = &m_resources.shaders.get(shaderID);
@@ -476,6 +498,11 @@ void VoxelState::saveSettings()
 
 void VoxelState::applyEdit()
 {
+    if (cro::ui::wantsKeyboard() || cro::ui::wantsMouse())
+    {
+        return;
+    }
+
     switch (m_activeLayer)
     {
     default: break;
@@ -526,7 +553,7 @@ void VoxelState::editTerrain()
                 {
                     auto idx = y * MapSize.x + x;
 
-                    float amount = m_brush.strength * 0.1f;
+                    float amount = m_brush.strength * 0.01f;
                     if (m_brush.feather > 0)
                     {
                         amount *= 1.f - std::sqrt(len2) / cursorRadius;
