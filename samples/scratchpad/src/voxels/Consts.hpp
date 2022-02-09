@@ -50,6 +50,7 @@ namespace Voxel
     constexpr glm::vec2 MapSize(320.f, 200.f);
     constexpr float WaterLevel = -0.02f;
     constexpr float TerrainLevel = WaterLevel - 0.03f;
+    constexpr float MaxTerrainHeight = 4.5f; //must match value in golf terrain generator
 
     constexpr float CursorRadius = 1.f;
     constexpr float MinCursorScale = 1.f;

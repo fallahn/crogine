@@ -58,7 +58,6 @@ source distribution.
 namespace
 {
     glm::vec3 cursorWorldPos = glm::vec3(0.f);
-
 }
 
 VoxelState::VoxelState(cro::StateStack& ss, cro::State::Context ctx)
@@ -66,6 +65,7 @@ VoxelState::VoxelState(cro::StateStack& ss, cro::State::Context ctx)
     m_scene             (ctx.appInstance.getMessageBus()),
     m_textureBuffer     (static_cast<std::size_t>(Voxel::MapSize.x * Voxel::MapSize.y)),
     m_activeLayer       (Layer::Terrain),
+    m_terrainBuffer     (static_cast<std::size_t>(Voxel::MapSize.x * Voxel::MapSize.y)),
     m_showBrushWindow   (true),
     m_showLayerWindow   (false)
 {
@@ -262,11 +262,12 @@ void VoxelState::createLayers()
 
 
     //terrain mesh
-    m_shaderIDs[Shader::Terrain] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    m_shaderIDs[Shader::Terrain] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::VertexColour);
     m_materialIDs[Material::Terrain] = m_resources.materials.add(m_resources.shaders.get(m_shaderIDs[Shader::Terrain]));
 
     auto material = m_resources.materials.get(m_materialIDs[Material::Terrain]);
     //material.setProperty("u_diffuseMap", m_tempTexture);
+    material.setProperty("u_maskColour", cro::Colour::Red);
 
     auto flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal;
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_TRIANGLE_STRIP));
@@ -279,13 +280,12 @@ void VoxelState::createLayers()
 
 
     //terrain vertex data
-    std::vector<TerrainVertex> terrainBuffer(static_cast<std::size_t>(Voxel::MapSize.x * Voxel::MapSize.y));
-    for (auto i = 0u; i < terrainBuffer.size(); ++i)
+    for (auto i = 0u; i < m_terrainBuffer.size(); ++i)
     {
         std::size_t x = i % static_cast<std::int32_t>(Voxel::MapSize.x);
         std::size_t y = i / static_cast<std::int32_t>(Voxel::MapSize.x);
 
-        terrainBuffer[i].position = { static_cast<float>(x), 0.f, -static_cast<float>(y)};
+        m_terrainBuffer[i].position = { static_cast<float>(x), 0.f, -static_cast<float>(y)};
         //terrainBuffer[i].colour = theme.grassColour.getVec4();
     }
 
@@ -313,13 +313,13 @@ void VoxelState::createLayers()
     }
 
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
-    meshData->vertexCount = static_cast<std::uint32_t>(terrainBuffer.size());
+    meshData->vertexCount = static_cast<std::uint32_t>(m_terrainBuffer.size());
     meshData->boundingBox[0] = glm::vec3(0.f, -10.f, 0.f);
     meshData->boundingBox[1] = glm::vec3(Voxel::MapSize.x, 10.f, -Voxel::MapSize.y);
     meshData->boundingSphere = meshData->boundingBox;
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * terrainBuffer.size(), terrainBuffer.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     auto* submesh = &meshData->indexData[0];
@@ -536,13 +536,15 @@ void VoxelState::editTerrain()
                     amount *= m_brush.editMode;
 
                     m_textureBuffer[idx].g = std::max(0.f, std::min(1.f, m_textureBuffer[idx].g + amount));
+
+                    m_terrainBuffer[idx].position.y = m_textureBuffer[idx].g * Voxel::MaxTerrainHeight;
                 }
             }
         }
 
         updateTerrainImage(region);
 
-        //TODO update terrain mesh
+        updateTerrainMesh(region);
     }
 }
 
@@ -557,6 +559,49 @@ void VoxelState::updateTerrainImage(cro::IntRect area)
     //problem with this is the buffer must only contain sub image data
     //glCheck(glTexSubImage2D(GL_TEXTURE_2D, 0, area.left, area.bottom, area.width, area.height, GL_RGBA, GL_FLOAT, m_textureBuffer.data()));
     glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+}
+
+void VoxelState::updateTerrainMesh(cro::IntRect region)
+{
+    //TODO what's faster - sending the whole buffer
+    //or calling subBufferData for each row of the area?
+
+    //recalc normals first
+    auto heightAt = 
+        [&](std::int32_t x, std::int32_t y)
+    {
+        x = std::max(0, std::min(static_cast<std::int32_t>(Voxel::MapSize.x) - 1, x));
+        y = std::max(0, std::min(static_cast<std::int32_t>(Voxel::MapSize.y) - 1, y));
+
+        return m_terrainBuffer[y * static_cast<std::int32_t>(Voxel::MapSize.x) + x].position.y;
+    };
+
+    //expand the region by 1 so surrounding normals are updated too
+    region.left = std::max(0, region.left - 1);
+    region.width = std::min(static_cast<std::int32_t>(Voxel::MapSize.x) - region.left, region.width + 1);
+    region.bottom = std::max(0, region.bottom - 1);
+    region.height = std::min(static_cast<std::int32_t>(Voxel::MapSize.y) - region.bottom, region.height + 1);
+
+    for (auto y = region.bottom; y < region.bottom + region.height; ++y)
+    {
+        for (auto x = region.left; x < region.left + region.width; ++x)
+        {
+            auto l = heightAt(x - 1, y);
+            auto r = heightAt(x + 1, y);
+            auto u = heightAt(x, y + 1);
+            auto d = heightAt(x, y - 1);
+
+            glm::vec3 normal = { l - r, 2.f, -(d - u) };
+            normal = glm::normalize(normal);
+
+            m_terrainBuffer[y * static_cast<std::int32_t>(Voxel::MapSize.x) + x].normal = normal;
+        }
+    }
+
+    auto* meshData = &m_layers[Layer::Terrain].getComponent<cro::Model>().getMeshData();
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(TerrainVertex) * m_terrainBuffer.size(), m_terrainBuffer.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
 void VoxelState::editVoxel()

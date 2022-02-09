@@ -122,15 +122,8 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
 
     auto& drawList = camera.getDrawList(Camera::Pass::Final)[getType()];
     
-    //hmm this is faster... when it works. More investigation needed
-    /*if (drawList.has_value())
-    {
-        std::any_cast<std::vector<Entity>>(drawList).swap(m_drawList);
-    }
-    else*/
-    {
-        drawList = std::make_any<std::vector<Entity>>(m_drawList);
-    }
+    //you'd think swapping vectors ought to be faster, but it doesn't appear so...
+    drawList = std::make_any<std::vector<Entity>>(m_drawList);
 }
 
 void RenderSystem2D::process(float)

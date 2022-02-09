@@ -730,7 +730,7 @@ void TerrainBuilder::threadFunc()
                     auto u = heightAt(x, y + 1);
                     auto d = heightAt(x, y - 1);
 
-                    glm::vec3 normal = { l - r, d - u, 2.f };
+                    glm::vec3 normal = { l - r, 2.f, -(d - u) };
                     normal = glm::normalize(normal);
 
                     m_terrainBuffer[i].position = m_terrainBuffer[i].targetPosition;
