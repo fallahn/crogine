@@ -27,10 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#define MC_IMPLEM_ENABLE
-#include "MarchingCube.hpp"
-#include "noise.h"
-
+#include "MarchingCubes.hpp"
 #include "VoxelState.hpp"
 #include "FpsCameraSystem.hpp"
 #include "../StateIDs.hpp"
@@ -335,21 +332,79 @@ void VoxelState::createLayers()
 
 
     //voxel mesh
-    const int n = 50;
-    //float* field = new float[n * n * n];
-    std::vector<float> field(n * n * n);
-    for (int i = 0; i < n; i++)
+    m_shaderIDs[Shader::Voxel] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseColour);
+    m_materialIDs[Material::Voxel] = m_resources.materials.add(m_resources.shaders.get(m_shaderIDs[Shader::Voxel]));
+
+    material = m_resources.materials.get(m_materialIDs[Material::Voxel]);
+    material.setProperty("u_colour", cro::Colour::DarkGrey);
+    material.setProperty("u_maskColour", cro::Colour::Red);
+    //material.doubleSided = true;
+
+    flags = cro::VertexProperty::Position | cro::VertexProperty::Normal;
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_TRIANGLES));
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 160.f, Voxel::TerrainLevel, -100.f });
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    entity.getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
+    m_layers[Layer::Voxel] = entity;
+
+    glm::ivec3 dimension(100);
+    std::vector<float> volume(dimension.x * dimension.y * dimension.z);
+    std::fill(volume.begin(), volume.end(), 0.f);
+
+    for (auto z = 0; z < dimension[2]; z++)
     {
-        for (int j = 0; j < n; j++)
+        for (auto y = 0; y < dimension[1]; y++)
         {
-            for (int k = 0; k < n; k++)
-                field[(k * n + j) * n + i] = PerlinNoise::GetValue(i * 0.0201f, j * 0.0201f, k * 0.0201f);
+            for (auto x = 0; x < dimension[0]; x++)
+            {
+                //if (std::pow(x - dimension[0] / 2, 2) + std::pow(y - dimension[1] / 2, 2) + std::pow(z - dimension[2] / 2, 2) < 10 * 5)
+                if(glm::length(glm::vec3(x,y,z) - glm::vec3(50.f)) < 49.f)
+                {
+                    volume[z * dimension[1] * dimension[0] + y * dimension[0] + x] = 1.f;
+                }
+            }
         }
     }
 
-    //compute isosurface using marching cube
-    MC::mcMesh mesh;
-    MC::marching_cube(field.data(), n, n, n, mesh);
+    Mesh mesh = MarchingCubes::calculate(volume, dimension);
+
+    std::vector<float> verts;
+    for (auto i = 0u; i < mesh.vertices.size(); ++i)
+    {
+        verts.push_back(mesh.vertices[i].x);
+        verts.push_back(mesh.vertices[i].y);
+        verts.push_back(mesh.vertices[i].z);
+
+        //TODO calc normals...
+        verts.push_back(0.f);
+        verts.push_back(1.f);
+        verts.push_back(0.f);
+
+        /*verts.push_back(mesh.normals[i].x);
+        verts.push_back(mesh.normals[i].y);
+        verts.push_back(mesh.normals[i].z);*/
+    }
+
+    meshData = &entity.getComponent<cro::Model>().getMeshData();
+    meshData->vertexCount = mesh.vertices.size();
+    meshData->boundingBox[0] = glm::vec3(0.f);
+    meshData->boundingBox[1] = glm::vec3(100.f);
+    meshData->boundingSphere = meshData->boundingBox;
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * verts.size(), verts.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(mesh.indices.size() * 3);
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), mesh.indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
+
 
 
     //cursor circle

@@ -78,6 +78,7 @@ struct Shader
     {
         Water,
         Terrain,
+        Voxel,
 
         Count
     };

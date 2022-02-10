@@ -93,6 +93,12 @@
     <ClCompile Include="src\voxels\VoxelFpsCameraSystem.cpp">
       <Filter>Source Files\voxels</Filter>
     </ClCompile>
+    <ClCompile Include="src\voxels\SurfaceNet.cpp">
+      <Filter>Source Files\voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="src\voxels\MarchingCubes.cpp">
+      <Filter>Source Files\voxels</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -176,5 +182,19 @@
     <ClInclude Include="src\voxels\FpsCameraSystem.hpp">
       <Filter>Header Files\voxels</Filter>
     </ClInclude>
+    <ClInclude Include="src\voxels\SurfaceNet.hpp">
+      <Filter>Header Files\voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="src\voxels\MarchingCubes.hpp">
+      <Filter>Header Files\voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="src\voxels\Mesh.hpp">
+      <Filter>Header Files\voxels</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\voxels\Tables.inl">
+      <Filter>Header Files\voxels</Filter>
+    </None>
   </ItemGroup>
 </Project>
