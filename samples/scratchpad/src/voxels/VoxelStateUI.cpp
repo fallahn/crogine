@@ -116,7 +116,7 @@ void VoxelState::drawLayerWindow()
 
             if (ImGui::Checkbox("Show Voxels", &m_showLayer[Layer::Voxel]))
             {
-
+                m_layers[Layer::Voxel].getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
             }
 
             const char* Labels[] =

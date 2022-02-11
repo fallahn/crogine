@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "Consts.hpp"
+#include "VoxelData.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -39,7 +40,11 @@ source distribution.
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/graphics/Texture.hpp>
 
+#include <polyvox/RawVolume.h>
+
 #include <array>
+
+namespace pv = PolyVox;
 
 class VoxelState final : public cro::State, public cro::GuiClient
 {
@@ -76,6 +81,8 @@ private:
         glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
     };
     std::vector<TerrainVertex> m_terrainBuffer;
+
+    pv::RawVolume<Voxel::Data> m_voxelVolume;
 
     void buildScene();
     void createLayers();

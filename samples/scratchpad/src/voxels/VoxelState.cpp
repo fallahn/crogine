@@ -27,7 +27,6 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "IsoSurface.hpp"
 #include "VoxelState.hpp"
 #include "FpsCameraSystem.hpp"
 #include "../StateIDs.hpp"
@@ -54,12 +53,10 @@ source distribution.
 #include <crogine/util/Maths.hpp>
 #include <crogine/gui/Gui.hpp>
 
-#include <polyvox/RawVolume.h>
 #include <polyvox/MarchingCubesSurfaceExtractor.h>
 
 #include "../ErrorCheck.hpp"
 
-namespace pv = PolyVox;
 namespace
 {
     glm::vec3 cursorWorldPos = glm::vec3(0.f);
@@ -70,6 +67,7 @@ VoxelState::VoxelState(cro::StateStack& ss, cro::State::Context ctx)
     m_scene             (ctx.appInstance.getMessageBus()),
     m_textureBuffer     (static_cast<std::size_t>(Voxel::MapSize.x * Voxel::MapSize.y)),
     m_activeLayer       (Layer::Terrain),
+    m_voxelVolume       (pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(Voxel::IslandSize.x, Voxel::IslandSize.y, Voxel::IslandSize.z))),
     m_terrainBuffer     (static_cast<std::size_t>(Voxel::MapSize.x * Voxel::MapSize.y)),
     m_showBrushWindow   (true),
     m_showLayerWindow   (false)
@@ -336,55 +334,38 @@ void VoxelState::createLayers()
 
 
     //voxel mesh
-    m_shaderIDs[Shader::Voxel] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseColour);
+    m_shaderIDs[Shader::Voxel] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::VertexColour);
     m_materialIDs[Material::Voxel] = m_resources.materials.add(m_resources.shaders.get(m_shaderIDs[Shader::Voxel]));
 
     material = m_resources.materials.get(m_materialIDs[Material::Voxel]);
-    material.setProperty("u_colour", cro::Colour::DarkGrey);
+    //material.setProperty("u_colour", cro::Colour::DarkGrey);
     material.setProperty("u_maskColour", cro::Colour::Red);
     //material.doubleSided = true;
 
-    flags = cro::VertexProperty::Position | cro::VertexProperty::Normal;
+    flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal;
     meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_TRIANGLES));
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 160.f, Voxel::TerrainLevel, -100.f });
+    entity.addComponent<cro::Transform>().setPosition({ 20.f, -0.5f, -190.f });
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     entity.getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
     m_layers[Layer::Voxel] = entity;
 
-    glm::ivec3 dimension(100);
 
-    pv::RawVolume<std::uint8_t> volData(pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(100)));
-
-    for (auto z = 0; z < dimension.z; z++)
+    for (auto z = 0; z < Voxel::IslandSize.z; ++z)
     {
-        for (auto y = 0; y < dimension.y; y++)
+        for (auto y = 0; y < Voxel::IslandSize.y; ++y)
         {
-            for (auto x = 0; x < dimension.x; x++)
+            for (auto x = 0; x < Voxel::IslandSize.x; ++x)
             {
-                /*if(glm::length(glm::vec3(x,y,z) - glm::vec3(50.f)) < 49.f)
-                {
-                    volData.setVoxel(x, y, z, 255);
-                }
-                else
-                {
-                    volData.setVoxel(x, y, z, 0);
-                }*/
-
-                float val = 49.f - glm::length(glm::vec3(x, y, z) - glm::vec3(50.f)); // val is positive when inside sphere
-                val = pv::clamp(val, -1.0f, 1.0f);
-                val += 1.0f;
-                val *= 127.5f;
-
-                volData.setVoxel(x, y, z, static_cast<uint8_t>(val));
+                //TODO soften density near edges
+                m_voxelVolume.setVoxel(x, y, z, { 1.f, y < 2 ? TerrainID::Water : TerrainID::Rough });
             }
         }
     }
 
-
-    //pv::DefaultMarchingCubesController
-    auto meshEncoded = pv::extractMarchingCubesMesh(&volData, volData.getEnclosingRegion());
+    Voxel::ExtractionController controller;
+    auto meshEncoded = pv::extractMarchingCubesMesh(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), controller);
     auto mesh = pv::decodeMesh(meshEncoded);
     
 
@@ -397,6 +378,11 @@ void VoxelState::createLayers()
         verts.push_back(v.position.getY());
         verts.push_back(v.position.getZ());
 
+        verts.push_back(TerrainColours[v.data.terrain].r);
+        verts.push_back(TerrainColours[v.data.terrain].g);
+        verts.push_back(TerrainColours[v.data.terrain].b);
+        verts.push_back(1.f);
+
         verts.push_back(v.normal.getX());
         verts.push_back(v.normal.getY());
         verts.push_back(v.normal.getZ());
@@ -405,7 +391,7 @@ void VoxelState::createLayers()
     meshData = &entity.getComponent<cro::Model>().getMeshData();
     meshData->vertexCount = mesh.getNoOfVertices();
     meshData->boundingBox[0] = glm::vec3(0.f);
-    meshData->boundingBox[1] = glm::vec3(100.f);
+    meshData->boundingBox[1] = glm::vec3(Voxel::IslandSize);
     meshData->boundingSphere = meshData->boundingBox;
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));

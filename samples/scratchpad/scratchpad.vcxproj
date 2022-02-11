@@ -346,6 +346,7 @@
     <ClInclude Include="src\voxels\Consts.hpp" />
     <ClInclude Include="src\voxels\FpsCameraSystem.hpp" />
     <ClInclude Include="src\voxels\IsoSurface.hpp" />
+    <ClInclude Include="src\voxels\VoxelData.hpp" />
     <ClInclude Include="src\voxels\VoxelState.hpp" />
   </ItemGroup>
   <ItemGroup>

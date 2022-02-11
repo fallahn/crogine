@@ -185,6 +185,9 @@
     <ClInclude Include="src\voxels\IsoSurface.hpp">
       <Filter>Header Files\voxels</Filter>
     </ClInclude>
+    <ClInclude Include="src\voxels\VoxelData.hpp">
+      <Filter>Header Files\voxels</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\voxels\Tables.inl">

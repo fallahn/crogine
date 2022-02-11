@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/detail/glm/vec2.hpp>
+#include <crogine/detail/glm/vec4.hpp>
 
 #include <crogine/graphics/Colour.hpp>
 
@@ -48,7 +49,7 @@ struct Layer final
 namespace Voxel
 {
     constexpr glm::vec2 MapSize(320.f, 200.f);
-    constexpr glm::ivec3 IslandSize(310, 4, 190);
+    constexpr glm::ivec3 IslandSize(300, 4, 180);
     constexpr float WaterLevel = -0.02f;
     constexpr float TerrainLevel = WaterLevel - 0.03f;
     constexpr float MaxTerrainHeight = 4.5f; //must match value in golf terrain generator
@@ -71,6 +72,28 @@ namespace Voxel
         cro::Colour::Cyan
     };
 }
+
+struct TerrainID final
+{
+    enum
+    {
+        Rough, Fairway, Green, Bunker, Water, Scrub, Stone,
+
+        Unused,
+        Count
+    };
+};
+
+static const std::array TerrainColours =
+{
+    glm::vec4(0.157f,0.306f,0.263f,1.f),
+    glm::vec4(0.275f,0.494f,0.243f,1.f),
+    glm::vec4(0.576f,0.671f,0.322f,1.f),
+    glm::vec4(0.949f,0.812f,0.361f,1.f),
+    glm::vec4(0.f,0.f,1.f,1.f),
+    glm::vec4(0.102f,0.115f,0.176f,1.f),
+    glm::vec4(0.5f,0.5f,0.5f,1.f)
+};
 
 struct Shader
 {
