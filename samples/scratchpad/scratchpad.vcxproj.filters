@@ -99,6 +99,9 @@
     <ClCompile Include="src\voxels\MarchingCubes.cpp">
       <Filter>Source Files\voxels</Filter>
     </ClCompile>
+    <ClCompile Include="src\voxels\VoxelMesh.cpp">
+      <Filter>Source Files\voxels</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">

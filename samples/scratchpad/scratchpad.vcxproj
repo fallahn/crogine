@@ -315,6 +315,7 @@
     <ClCompile Include="src\voxels\MarchingCubes.cpp" />
     <ClCompile Include="src\voxels\SurfaceNet.cpp" />
     <ClCompile Include="src\voxels\VoxelFpsCameraSystem.cpp" />
+    <ClCompile Include="src\voxels\VoxelMesh.cpp" />
     <ClCompile Include="src\voxels\VoxelState.cpp" />
     <ClCompile Include="src\voxels\VoxelStateUI.cpp" />
   </ItemGroup>

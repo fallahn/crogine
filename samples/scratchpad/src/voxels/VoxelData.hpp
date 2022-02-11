@@ -29,10 +29,24 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/glm/vec4.hpp>
+
+#include <polyvox/MarchingCubesSurfaceExtractor.h>
+
 #include <cstdint>
+#include <vector>
+
+namespace pv = PolyVox;
 
 namespace Voxel
 {
+    struct GLVertex final
+    {
+        pv::Vector3DFloat position;
+        glm::vec4 colour = glm::vec4(1.f);
+        pv::Vector3DFloat normal;
+    };
+
     struct Data final
     {
         float density = 0.f; //normalised - > 0.5 is solid
@@ -41,6 +55,25 @@ namespace Voxel
         Data() = default;
         Data(float d, std::int32_t t = 0)
             : density(d), terrain(t) {}
+    };
+
+    class Mesh final
+    {
+    public:
+
+        std::uint32_t addVertex(const pv::MarchingCubesVertex<Data>&);
+        void addTriangle(std::uint32_t, std::uint32_t, std::uint32_t);
+        void setOffset(const pv::Vector3DInt32& offset) {};
+
+        const std::vector<GLVertex>& getVertexData() const { return m_vertices; }
+        const std::vector<std::uint32_t>& getIndexData() const { return m_indices; }
+
+        void clear();
+
+    private:
+        std::vector<GLVertex> m_vertices;
+        std::vector<std::uint32_t> m_indices;
+        std::vector<Data> m_data;
     };
 
     class ExtractionController final

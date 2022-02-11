@@ -359,49 +359,32 @@ void VoxelState::createLayers()
             for (auto x = 0; x < Voxel::IslandSize.x; ++x)
             {
                 //TODO soften density near edges
-                m_voxelVolume.setVoxel(x, y, z, { 1.f, y < 2 ? TerrainID::Water : TerrainID::Rough });
+                auto id = y < 2 ? TerrainID::Water : x < 120 ? TerrainID::Bunker : TerrainID::Rough;
+
+                m_voxelVolume.setVoxel(x, y, z, { 0.6f, id });
             }
         }
     }
 
+    Voxel::Mesh mesh;
     Voxel::ExtractionController controller;
-    auto meshEncoded = pv::extractMarchingCubesMesh(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), controller);
-    auto mesh = pv::decodeMesh(meshEncoded);
-    
+    pv::extractMarchingCubesMeshCustom(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), &mesh, controller);
 
-    std::vector<float> verts;
-    for (auto i = 0u; i < mesh.getNoOfVertices(); ++i)
-    {
-        const auto& v = mesh.getRawVertexData()[i];
-
-        verts.push_back(v.position.getX());
-        verts.push_back(v.position.getY());
-        verts.push_back(v.position.getZ());
-
-        verts.push_back(TerrainColours[v.data.terrain].r);
-        verts.push_back(TerrainColours[v.data.terrain].g);
-        verts.push_back(TerrainColours[v.data.terrain].b);
-        verts.push_back(1.f);
-
-        verts.push_back(v.normal.getX());
-        verts.push_back(v.normal.getY());
-        verts.push_back(v.normal.getZ());
-    }
 
     meshData = &entity.getComponent<cro::Model>().getMeshData();
-    meshData->vertexCount = mesh.getNoOfVertices();
+    meshData->vertexCount = mesh.getVertexData().size();
     meshData->boundingBox[0] = glm::vec3(0.f);
     meshData->boundingBox[1] = glm::vec3(Voxel::IslandSize);
     meshData->boundingSphere = meshData->boundingBox;
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * verts.size(), verts.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::GLVertex) * meshData->vertexCount, mesh.getVertexData().data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     submesh = &meshData->indexData[0];
-    submesh->indexCount = static_cast<std::uint32_t>(mesh.getNoOfIndices());
+    submesh->indexCount = static_cast<std::uint32_t>(mesh.getIndexData().size());
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), mesh.getRawIndexData(), GL_STATIC_DRAW));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), mesh.getIndexData().data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
 
