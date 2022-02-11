@@ -54,8 +54,12 @@ source distribution.
 #include <crogine/util/Maths.hpp>
 #include <crogine/gui/Gui.hpp>
 
+#include <polyvox/RawVolume.h>
+#include <polyvox/MarchingCubesSurfaceExtractor.h>
+
 #include "../ErrorCheck.hpp"
 
+namespace pv = PolyVox;
 namespace
 {
     glm::vec3 cursorWorldPos = glm::vec3(0.f);
@@ -350,46 +354,56 @@ void VoxelState::createLayers()
     m_layers[Layer::Voxel] = entity;
 
     glm::ivec3 dimension(100);
-    std::vector<float> volume(dimension.x * dimension.y * dimension.z);
-    std::fill(volume.begin(), volume.end(), 0.f);
 
-    for (auto z = 0; z < dimension[2]; z++)
+    pv::RawVolume<std::uint8_t> volData(pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(100)));
+
+    for (auto z = 0; z < dimension.z; z++)
     {
-        for (auto y = 0; y < dimension[1]; y++)
+        for (auto y = 0; y < dimension.y; y++)
         {
-            for (auto x = 0; x < dimension[0]; x++)
+            for (auto x = 0; x < dimension.x; x++)
             {
-                //if (std::pow(x - dimension[0] / 2, 2) + std::pow(y - dimension[1] / 2, 2) + std::pow(z - dimension[2] / 2, 2) < 10 * 5)
-                if(glm::length(glm::vec3(x,y,z) - glm::vec3(50.f)) < 49.f)
+                /*if(glm::length(glm::vec3(x,y,z) - glm::vec3(50.f)) < 49.f)
                 {
-                    volume[z * dimension[1] * dimension[0] + y * dimension[0] + x] = 1.f;
+                    volData.setVoxel(x, y, z, 255);
                 }
+                else
+                {
+                    volData.setVoxel(x, y, z, 0);
+                }*/
+
+                float val = 49.f - glm::length(glm::vec3(x, y, z) - glm::vec3(50.f)); // val is positive when inside sphere
+                val = pv::clamp(val, -1.0f, 1.0f);
+                val += 1.0f;
+                val *= 127.5f;
+
+                volData.setVoxel(x, y, z, static_cast<uint8_t>(val));
             }
         }
     }
 
-    Mesh mesh = MarchingCubes::calculate(volume, dimension);
-    //Mesh mesh = SurfaceNet::calculate(volume, dimension);
+
+    //pv::DefaultMarchingCubesController
+    auto meshEncoded = pv::extractMarchingCubesMesh(&volData, volData.getEnclosingRegion());
+    auto mesh = pv::decodeMesh(meshEncoded);
+    
 
     std::vector<float> verts;
-    for (auto i = 0u; i < mesh.vertices.size(); ++i)
+    for (auto i = 0u; i < mesh.getNoOfVertices(); ++i)
     {
-        verts.push_back(mesh.vertices[i].x);
-        verts.push_back(mesh.vertices[i].y);
-        verts.push_back(mesh.vertices[i].z);
+        const auto& v = mesh.getRawVertexData()[i];
 
-        //TODO calc normals...
-        verts.push_back(0.f);
-        verts.push_back(1.f);
-        verts.push_back(0.f);
+        verts.push_back(v.position.getX());
+        verts.push_back(v.position.getY());
+        verts.push_back(v.position.getZ());
 
-        /*verts.push_back(mesh.normals[i].x);
-        verts.push_back(mesh.normals[i].y);
-        verts.push_back(mesh.normals[i].z);*/
+        verts.push_back(v.normal.getX());
+        verts.push_back(v.normal.getY());
+        verts.push_back(v.normal.getZ());
     }
 
     meshData = &entity.getComponent<cro::Model>().getMeshData();
-    meshData->vertexCount = mesh.vertices.size();
+    meshData->vertexCount = mesh.getNoOfVertices();
     meshData->boundingBox[0] = glm::vec3(0.f);
     meshData->boundingBox[1] = glm::vec3(100.f);
     meshData->boundingSphere = meshData->boundingBox;
@@ -399,9 +413,9 @@ void VoxelState::createLayers()
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     submesh = &meshData->indexData[0];
-    submesh->indexCount = static_cast<std::uint32_t>(mesh.indices.size() * 3);
+    submesh->indexCount = static_cast<std::uint32_t>(mesh.getNoOfIndices());
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), mesh.indices.data(), GL_STATIC_DRAW));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), mesh.getRawIndexData(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
 
