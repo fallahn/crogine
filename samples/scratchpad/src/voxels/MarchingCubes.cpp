@@ -1,4 +1,4 @@
-#include "MarchingCubes.hpp"
+#include "IsoSurface.hpp"
 
 #include <array>
 

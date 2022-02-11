@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "MarchingCubes.hpp"
+#include "IsoSurface.hpp"
 #include "VoxelState.hpp"
 #include "FpsCameraSystem.hpp"
 #include "../StateIDs.hpp"
@@ -369,6 +369,7 @@ void VoxelState::createLayers()
     }
 
     Mesh mesh = MarchingCubes::calculate(volume, dimension);
+    //Mesh mesh = SurfaceNet::calculate(volume, dimension);
 
     std::vector<float> verts;
     for (auto i = 0u; i < mesh.vertices.size(); ++i)

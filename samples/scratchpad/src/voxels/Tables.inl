@@ -4,6 +4,11 @@
 #include <array>
 #include <cstdint>
 
+/*
+ * Based on Paul Bourke's classic implementation:
+ *    http://local.wasp.uwa.edu.au/~pbourke/geometry/polygonise/
+*/
+
 static const std::vector<std::uint32_t> EdgeTable =
 {
     0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,

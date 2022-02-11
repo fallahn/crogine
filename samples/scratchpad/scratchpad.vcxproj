@@ -345,9 +345,7 @@
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\voxels\Consts.hpp" />
     <ClInclude Include="src\voxels\FpsCameraSystem.hpp" />
-    <ClInclude Include="src\voxels\MarchingCubes.hpp" />
-    <ClInclude Include="src\voxels\Mesh.hpp" />
-    <ClInclude Include="src\voxels\SurfaceNet.hpp" />
+    <ClInclude Include="src\voxels\IsoSurface.hpp" />
     <ClInclude Include="src\voxels\VoxelState.hpp" />
   </ItemGroup>
   <ItemGroup>

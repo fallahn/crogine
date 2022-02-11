@@ -1,41 +1,44 @@
-#include "SurfaceNet.hpp"
+#include "IsoSurface.hpp"
 
 #include <array>
 
-SurfaceNet::SurfaceNet()
-    : m_cubeEdges   (24),
-    m_edgeTable     (256)
+std::vector<std::int32_t> SurfaceNet::m_cubeEdges;
+std::vector<std::int32_t> SurfaceNet::m_edgeTable;
+
+Mesh SurfaceNet::calculate(const std::vector<float>& volume, glm::ivec3 dimensions)
 {
-    auto edgeIndex = 0;
-    for (auto i = 0; i < 8; ++i)
+    if (m_cubeEdges.empty() || m_edgeTable.empty())
     {
-        for (auto j = 1; j < 4; j = (j << 1))
+        m_cubeEdges.resize(24);
+        m_edgeTable.resize(256);
+
+        auto edgeIndex = 0;
+        for (auto i = 0; i < 8; ++i)
         {
-            auto p = i ^ j;
-            if (i <= p)
+            for (auto j = 1; j < 4; j = (j << 1))
             {
-                m_cubeEdges[edgeIndex++] = i;
-                m_cubeEdges[edgeIndex++] = p;
+                auto p = i ^ j;
+                if (i <= p)
+                {
+                    m_cubeEdges[edgeIndex++] = i;
+                    m_cubeEdges[edgeIndex++] = p;
+                }
             }
         }
-    }
 
-    for (auto i = 0u; i < m_edgeTable.size(); ++i)
-    {
-        auto em = 0;
-        for (auto j = 0u; j < m_cubeEdges.size(); j += 2)
+        for (auto i = 0u; i < m_edgeTable.size(); ++i)
         {
-            std::int32_t a = !(i & (1 << m_cubeEdges[j]));
-            std::int32_t b = !(i & (1 << m_cubeEdges[j + 1]));
-            em |= a != b ? (1 << (j >> 1)) : 0;
+            auto em = 0;
+            for (auto j = 0u; j < m_cubeEdges.size(); j += 2)
+            {
+                std::int32_t a = !(i & (1 << m_cubeEdges[j]));
+                std::int32_t b = !(i & (1 << m_cubeEdges[j + 1]));
+                em |= a != b ? (1 << (j >> 1)) : 0;
+            }
+            m_edgeTable[i] = em;
         }
-        m_edgeTable[i] = em;
     }
-}
 
-//public
-Mesh SurfaceNet::calculate(const std::vector<float>& volume, glm::ivec3 dimensions) const
-{
     std::array<std::int32_t, 3u> R = 
     {
         1,
@@ -151,14 +154,10 @@ Mesh SurfaceNet::calculate(const std::vector<float>& volume, glm::ivec3 dimensio
                                 if (mask & 1)
                                 {
                                     output.indices.emplace_back(buffer[m], buffer[m - du - dv], buffer[m - dv]);
-                                    //output.indices.emplace_back(buffer[m], buffer[m - du - dv], buffer[m - du]);
-                                    //output.indices.emplace_back(buffer[m], buffer[m - dv], buffer[m - du - dv]);
                                 }
                                 else
                                 {
                                     output.indices.emplace_back(buffer[m], buffer[m - du - dv], buffer[m - du]);
-                                    //output.indices.emplace_back(buffer[m], buffer[m - du - dv], buffer[m - dv]);
-                                    //output.indices.emplace_back(buffer[m], buffer[m - du], buffer[m - du - dv]);
                                 }
                             }
                         }

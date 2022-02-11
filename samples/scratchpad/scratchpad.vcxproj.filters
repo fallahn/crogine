@@ -182,13 +182,7 @@
     <ClInclude Include="src\voxels\FpsCameraSystem.hpp">
       <Filter>Header Files\voxels</Filter>
     </ClInclude>
-    <ClInclude Include="src\voxels\SurfaceNet.hpp">
-      <Filter>Header Files\voxels</Filter>
-    </ClInclude>
-    <ClInclude Include="src\voxels\MarchingCubes.hpp">
-      <Filter>Header Files\voxels</Filter>
-    </ClInclude>
-    <ClInclude Include="src\voxels\Mesh.hpp">
+    <ClInclude Include="src\voxels\IsoSurface.hpp">
       <Filter>Header Files\voxels</Filter>
     </ClInclude>
   </ItemGroup>
