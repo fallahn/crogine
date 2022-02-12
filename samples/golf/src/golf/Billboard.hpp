@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/Texture.hpp>
 
-constexpr float PixelPerMetre = 32.f; //64.f; //used for scaling billboards
+constexpr float PixelPerMetre = 32.f;// 64.f; //used for scaling billboards
 
 struct BillboardID final
 {

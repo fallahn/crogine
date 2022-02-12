@@ -5,57 +5,57 @@ spritesheet shrubbery
 
     sprite grass01
     {
-        bounds = 0,352,96,32
+        bounds = 224,352,64,48
     }
 
     sprite grass02
     {
-        bounds = 0,416,96,32
+        bounds = 288,352,64,48
     }
 
 
     sprite tree01
     {
-        bounds = 0,0,176,348
+        bounds = 192,0,256,344
     }
 
     sprite tree02
     {
-        bounds = 176,0,200,464
+        bounds = 48,0,160,272
     }
 
     sprite tree03
     {
-        bounds = 376,0,336,508
+        bounds = 0,0,192,368
     }
 
     sprite tree04
     {
-        bounds = 736,0,320,480
+        bounds = 608,0,268,384
     }
 
     sprite flowers01
     {
-        bounds = 0,640,160,60
+        bounds = 224,400,32,16
     }
 
     sprite flowers02
     {
-        bounds = 178,640,204,80
+        bounds = 288,400,32,16
     }
 
     sprite flowers03
     {
-        bounds = 384,6400,160,64
+        bounds = 352,400,32,16
     }
 
     sprite hedge01
     {
-        bounds = 576,672,96,64
+        bounds = 0,400,140,64
     }
 
     sprite hedge02
     {
-        bounds = 0, 704, 160, 64
+        bounds = 416, 400, 192, 64
     }
 }
