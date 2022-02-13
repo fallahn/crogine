@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -57,6 +57,13 @@ namespace cro
         bool loadFromFile(const std::string& path, TextureResource& rx, const std::string& workingDirectory = "");
 
         /*!
+        \brief Writes the contents of the SpriteSheet to a sprite sheet configuration file
+        \param path A string containing the path to which to attempt to write the file
+        \returns true on success, else false. Error messages are printed to the console
+        */
+        bool saveToFile(const std::string& path);
+
+        /*!
         \brief Returns a sprite component with the given name as it
         appears in the sprite sheet. If the sprite does not exist an
         empty sprite is returned.
@@ -78,15 +85,22 @@ namespace cro
         \brief Returns the Sprite components defined in the spritesheet, mapped to their name
         */
         const std::unordered_map<std::string, Sprite>& getSprites() const { return m_sprites; }
+        std::unordered_map<std::string, Sprite>& getSprites() { return m_sprites; }
 
         /*!
         \brief Returns the path to the image loaded for the sprite sheet's texture
         */
         const std::string getTexturePath() const { return m_texturePath; }
 
+        /*!
+        \brief Returns a pointer to the texture used by this Sprite Sheet if it is loaded
+        */
+        const cro::Texture* getTexture() const { return m_texture; }
+
     private:
         mutable std::unordered_map<std::string, Sprite> m_sprites;
         mutable std::unordered_map<std::string, std::vector<std::string>> m_animations;
         std::string m_texturePath;
+        const cro::Texture* m_texture;
     };
 }

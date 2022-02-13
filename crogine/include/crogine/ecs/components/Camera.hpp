@@ -432,6 +432,8 @@ namespace cro
         /*
         \brief Returns the world coordinates currently projected onto
         the given screen coordinates.
+        If this gives unusual results, particularly with orthographic projections,
+        makes sure that the camer'a viewport is set correctly.
         */
         glm::vec3 pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize = cro::App::getWindow().getSize()) const;
 

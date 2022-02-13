@@ -82,7 +82,7 @@ void LayoutState::drawMenuBar()
     if (ImGui::BeginMainMenuBar())
     {
         //file menu
-        if (ImGui::BeginMenu("File##Particle"))
+        if (ImGui::BeginMenu("File##Layout"))
         {
             if (ImGui::MenuItem("Open##Layout", nullptr, nullptr))
             {

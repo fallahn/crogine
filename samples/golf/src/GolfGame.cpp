@@ -116,14 +116,6 @@ GolfGame::GolfGame()
     //volume.setVoxel(3, 5, 6, 10);
 
     //auto meshData = pv::extractMarchingCubesMesh<pv::RawVolume<std::uint8_t>>(&volume, volume.getEnclosingRegion());
-
-#ifdef WIN32
-#ifdef CRO_DEBUG_
-    //places the console window in the to right so it's a bit more visible when debugging
-    HWND consoleWindow = GetConsoleWindow();
-    SetWindowPos(consoleWindow, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-#endif
-#endif
 }
 
 //public
