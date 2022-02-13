@@ -87,6 +87,8 @@ private:
     void initScene();
 
     void openSprite(const std::string&);
+    void save();
+    void saveAs();
     void updateBoundsEntity();
 
     void createUI();

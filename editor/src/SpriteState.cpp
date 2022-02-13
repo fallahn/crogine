@@ -98,6 +98,13 @@ bool SpriteState::handleEvent(const cro::Event& evt)
 		relPos *= scale;
 		m_entities[EntityID::Root].getComponent<cro::Transform>().setPosition(mousePos - relPos);
 	}
+	else if (evt.type == SDL_QUIT)
+	{
+		if (cro::FileSystem::showMessageBox("Question", "Save Sprite Sheet?", cro::FileSystem::YesNo))
+		{
+			save();
+		}
+	}
 
 	m_scene.forwardEvent(evt);
 	return false;

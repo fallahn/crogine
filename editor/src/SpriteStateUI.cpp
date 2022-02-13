@@ -70,6 +70,28 @@ void SpriteState::openSprite(const std::string& path)
     }
 }
 
+void SpriteState::save()
+{
+    if (!m_currentFilePath.empty())
+    {
+        m_spriteSheet.saveToFile(m_currentFilePath);
+    }
+    else
+    {
+        saveAs();
+    }
+}
+
+void SpriteState::saveAs()
+{
+    auto path = cro::FileSystem::saveFileDialogue(m_currentFilePath, "spt");
+    if (!path.empty())
+    {
+        m_spriteSheet.saveToFile(path);
+        m_currentFilePath = path;
+    }
+}
+
 void SpriteState::updateBoundsEntity()
 {
     if (m_activeSprite)
@@ -134,20 +156,12 @@ void SpriteState::drawMenuBar()
             }
             if (ImGui::MenuItem("Save##sprite", nullptr, nullptr))
             {
-                if (!m_currentFilePath.empty())
-                {
-                    m_spriteSheet.saveToFile(m_currentFilePath);
-                }
+                save();
             }
 
             if (ImGui::MenuItem("Save As...##sprite", nullptr, nullptr))
             {
-                auto path = cro::FileSystem::saveFileDialogue(m_currentFilePath, "spt");
-                if (!path.empty())
-                {
-                    m_spriteSheet.saveToFile(path);
-                    m_currentFilePath = path;
-                }
+                saveAs();
             }
 
             if (getStateCount() > 1)
@@ -161,6 +175,10 @@ void SpriteState::drawMenuBar()
 
             if (ImGui::MenuItem("Quit##sprite", nullptr, nullptr))
             {
+                if (cro::FileSystem::showMessageBox("Question", "Save Sprite Sheet?", cro::FileSystem::YesNo))
+                {
+                    save();
+                }
                 cro::App::quit();
             }
             ImGui::EndMenu();
@@ -214,13 +232,11 @@ void SpriteState::drawInspector()
         ImGui::NewLine();
     }
 
-
-    auto i = 0;
     for (auto& spritePair : m_spriteSheet.getSprites())
     {
         auto& [name, sprite] = spritePair;
 
-        std::string label = "Sprite - " + name + "##" + std::to_string(i);
+        /*std::string label = "Sprite - " + name + "##" + std::to_string(i);
         if (ImGui::TreeNode(label.c_str()))
         {
             if (ImGui::IsItemClicked())
@@ -282,12 +298,23 @@ void SpriteState::drawInspector()
         {
             m_activeSprite = &spritePair;
             updateBoundsEntity();
-        }
-
-
-        i++;
+        }*/
     }
 
+    
+    if (!m_spriteSheet.getSprites().empty())
+    {
+        ImGui::ListBoxHeader("", std::min(20, static_cast<std::int32_t>(m_spriteSheet.getSprites().size() + 1)));
+        for (auto& spritePair : m_spriteSheet.getSprites())
+        {
+            if (ImGui::Selectable(spritePair.first.c_str(), &spritePair == m_activeSprite))
+            {
+                m_activeSprite = &spritePair;
+                updateBoundsEntity();
+            }
+        }
+        ImGui::ListBoxFooter();
+    }
     ImGui::End();
 }
 
@@ -295,31 +322,118 @@ void SpriteState::drawSpriteWindow()
 {
     if (m_activeSprite)
     {
-        ImGui::SetNextWindowSize({ 480.f, 480.f });
-        ImGui::Begin("Edit Sprite");
         auto& [name, sprite] = *m_activeSprite;
-        ImGui::Text("%s", name.c_str());
+
+        ImGui::SetNextWindowSize({ 480.f, 600.f });
+        std::string title("Edit Sprite - ");
+        title += name;
+
+        ImGui::Begin(title.c_str());
 
         auto* texture = sprite.getTexture();
-        glm::vec2 size(texture->getSize());
+        glm::vec2 texSize(texture->getSize());
 
         if (texture)
         {
             auto bounds = sprite.getTextureRect();
-            if (ImGui::SliderFloat4("Bounds", reinterpret_cast<float*>(&bounds), 0.f, size.x > size.y ? size.x : size.y, "%.2f"))
+
+            ImGui::Text("Bounds");
+            auto intBounds = cro::IntRect(bounds);
+            if (ImGui::InputInt("Left##bounds", &intBounds.left))
             {
-                bounds.left = std::max(0.f, bounds.left);
-                bounds.bottom = std::max(0.f, bounds.bottom);
-                bounds.width = std::max(1.f, bounds.width);
-                bounds.height = std::max(1.f, bounds.height);
-
-                bounds.left = std::min(bounds.left, size.x - bounds.width);
-                bounds.bottom = std::min(bounds.bottom, size.y - bounds.height);
-
-                sprite.setTextureRect(bounds);
-
+                intBounds.left = std::max(0, std::min(intBounds.left, static_cast<std::int32_t>(texSize.x - (intBounds.width - 1))));
+                sprite.setTextureRect(cro::FloatRect(intBounds));
                 updateBoundsEntity();
             }
+
+            if (ImGui::InputInt("Bottom##bounds", &intBounds.bottom))
+            {
+                intBounds.bottom = std::max(0, std::min(intBounds.bottom, static_cast<std::int32_t>(texSize.y -(intBounds.height - 1))));
+                sprite.setTextureRect(cro::FloatRect(intBounds));
+                updateBoundsEntity();
+            }
+
+            if (ImGui::InputInt("Width##bounds", &intBounds.width))
+            {
+                intBounds.width = std::max(1, std::min(intBounds.width, static_cast<std::int32_t>(texSize.x)));
+                if (intBounds.left + intBounds.width > texSize.x)
+                {
+                    intBounds.left -= (intBounds.left + intBounds.width) - static_cast<std::int32_t>(texSize.x);
+                }
+
+                sprite.setTextureRect(cro::FloatRect(intBounds));
+                updateBoundsEntity();
+            }
+
+            if (ImGui::InputInt("Height##bounds", &intBounds.height))
+            {
+                intBounds.height = std::max(1, std::min(intBounds.height, static_cast<std::int32_t>(texSize.y)));
+                if (intBounds.bottom + intBounds.height > texSize.y)
+                {
+                    intBounds.bottom -= (intBounds.bottom + intBounds.height) - static_cast<std::int32_t>(texSize.y);
+                }
+
+                sprite.setTextureRect(cro::FloatRect(intBounds));
+                updateBoundsEntity();
+            }
+
+            const auto& anims = sprite.getAnimations();
+            if (!anims.empty())
+            {
+                //TODO make this a member so we can properly reset it
+                static const cro::Sprite::Animation* currentAnim = &anims[0];
+
+                ImGui::Text("Animations");
+
+                auto i = 0;
+                ImGui::ListBoxHeader("", std::min(20, static_cast<std::int32_t>(anims.size() + 1)));
+                for (const auto& anim : anims)
+                {
+                    std::string label = "Add Name Here##" + std::to_string(i);
+                    if (ImGui::Selectable(label.c_str(), &anim == currentAnim))
+                    {
+                        currentAnim = &anim;
+                    }
+
+                    i++;
+                }
+                ImGui::ListBoxFooter();
+
+                if (currentAnim)
+                {
+                    std::string label = "Frame Rate: " + std::to_string(currentAnim->framerate);
+                    ImGui::Text("%s", label.c_str());
+
+                    if (currentAnim->looped)
+                    {
+                        label = "Looped: true";
+                    }
+                    else
+                    {
+                        label = "Looped: false";
+                    }
+                    ImGui::Text("%s", label.c_str());
+
+                    label = "Loop Start: " + std::to_string(currentAnim->loopStart);
+                    ImGui::Text("%s", label.c_str());
+
+                    label = "Frame Count: " + std::to_string(currentAnim->frames.size());
+                    ImGui::Text("%s", label.c_str());
+                    ImGui::NewLine();
+                }
+            }
+
+            //preview
+            ImVec2 uv0(bounds.left / texSize.x, ((bounds.bottom + bounds.height) / texSize.y));
+            ImVec2 uv1((bounds.left + bounds.width) / texSize.x, (bounds.bottom / texSize.y));
+
+            float ratio = bounds.height / bounds.width;
+            ImVec2 size(std::min(bounds.width, 440.f), 0.f);
+            size.y = size.x * ratio;
+
+            ImGui::BeginChild("##tex", ImVec2(460.f, 200.f));
+            ImGui::ImageButton(*texture, size, uv0, uv1);
+            ImGui::EndChild();
         }
 
         ImGui::End();
