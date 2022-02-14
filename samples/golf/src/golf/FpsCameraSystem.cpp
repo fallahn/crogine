@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -335,6 +335,8 @@ void FpsCameraSystem::process(float dt)
         if (controller.flyMode)
         {
             moveSpeed *= FlyMultiplier;
+            forwardVector = tx.getForwardVector();
+            rightVector = tx.getRightVector();
         }
 
         if (input.buttonFlags & Input::Forward)

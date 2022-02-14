@@ -137,14 +137,14 @@ bool VoxelState::handleEvent(const cro::Event& evt)
     {
         updateCursorPosition();
 
-        if (evt.motion.state & SDL_BUTTON_LMASK)
+        if (evt.motion.state & (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK))
         {
             applyEdit();
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
-        if (evt.button.button == SDL_BUTTON_RIGHT)
+        if (evt.button.button == SDL_BUTTON_MIDDLE)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
@@ -152,26 +152,38 @@ bool VoxelState::handleEvent(const cro::Event& evt)
         {
             applyEdit();
         }
+        else if(evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            m_brush.editMode *= -1;
+            applyEdit();
+        }
     }
     else if(evt.type == SDL_MOUSEBUTTONUP)
     {
-        if (evt.button.button == SDL_BUTTON_RIGHT)
+        if (evt.button.button == SDL_BUTTON_MIDDLE)
         {
             cro::App::getWindow().setMouseCaptured(false);
+        }
+        else if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            m_brush.editMode *= -1;
         }
     }
     else if (evt.type == SDL_MOUSEWHEEL)
     {
-        float scale = m_cursor.getComponent<cro::Transform>().getScale().x;
-        if (evt.wheel.y > 0)
+        if (cro::Keyboard::isKeyPressed(SDLK_LSHIFT))
         {
-            scale = std::min(Voxel::MaxCursorScale, scale + (evt.wheel.y * Voxel::CursorScaleStep));
+            float scale = m_cursor.getComponent<cro::Transform>().getScale().x;
+            if (evt.wheel.y > 0)
+            {
+                scale = std::min(Voxel::MaxCursorScale, scale + (evt.wheel.y * Voxel::CursorScaleStep));
+            }
+            else if (evt.wheel.y < 0)
+            {
+                scale = std::max(Voxel::MinCursorScale, scale + (evt.wheel.y * Voxel::CursorScaleStep));
+            }
+            m_cursor.getComponent<cro::Transform>().setScale(glm::vec3(scale));
         }
-        else if (evt.wheel.y < 0)
-        {
-            scale = std::max(Voxel::MinCursorScale, scale + (evt.wheel.y * Voxel::CursorScaleStep));
-        }
-        m_cursor.getComponent<cro::Transform>().setScale(glm::vec3(scale));
     }
 
     m_scene.forwardEvent(evt);
@@ -365,30 +377,7 @@ void VoxelState::createLayers()
             }
         }
     }
-
-    Voxel::Mesh mesh;
-    Voxel::ExtractionController controller;
-    pv::extractMarchingCubesMeshCustom(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), &mesh, controller);
-
-
-    meshData = &entity.getComponent<cro::Model>().getMeshData();
-    meshData->vertexCount = mesh.getVertexData().size();
-    meshData->boundingBox[0] = glm::vec3(0.f);
-    meshData->boundingBox[1] = glm::vec3(Voxel::IslandSize);
-    meshData->boundingSphere = meshData->boundingBox;
-
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::GLVertex) * meshData->vertexCount, mesh.getVertexData().data(), GL_DYNAMIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-    submesh = &meshData->indexData[0];
-    submesh->indexCount = static_cast<std::uint32_t>(mesh.getIndexData().size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), mesh.getIndexData().data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-
-
+    updateVoxelMesh(m_voxelVolume.getEnclosingRegion());
 
 
     //cursor circle
@@ -423,6 +412,19 @@ void VoxelState::createLayers()
         indices.push_back(i);
     }
     indices.push_back(0);
+
+    auto circleStart = static_cast<std::uint32_t>(circleVerts.size());
+    for (auto i = 0u; i < PointCount; ++i)
+    {
+        const float angle = i * SegmentSize;
+        float y = std::sin(angle) * Voxel::CursorRadius;
+        float z = -std::cos(angle) * Voxel::CursorRadius;
+
+        circleVerts.emplace_back(0.f, y, z);
+
+        indices.push_back(i + circleStart);
+    }
+    indices.push_back(circleStart);
 
     meshData = &entity.getComponent<cro::Model>().getMeshData();
     meshData->vertexCount = PointCount;
@@ -513,6 +515,14 @@ void VoxelState::loadSettings()
             {
                 m_brush.editMode = cro::Util::Maths::sgn(p.getValue<std::int32_t>());
             }
+            else if (name == "brush_terrain")
+            {
+                m_brush.terrain = std::max(0, std::min(static_cast<std::int32_t>(TerrainID::Stone), p.getValue<std::int32_t>()));
+            }
+            else if (name == "brush_carve")
+            {
+                m_brush.paintMode = std::min(static_cast<std::int32_t>(Brush::PaintMode::Carve), std::max(static_cast<std::int32_t>(Brush::PaintMode::Paint), p.getValue<std::int32_t>()));
+            }
         }
     }
 }
@@ -530,6 +540,8 @@ void VoxelState::saveSettings()
     cfg.addProperty("brush_strength").setValue(m_brush.strength);
     cfg.addProperty("brush_feather").setValue(m_brush.feather);
     cfg.addProperty("brush_mode").setValue(m_brush.editMode);
+    cfg.addProperty("brush_terrain").setValue(m_brush.terrain);
+    cfg.addProperty("brush_carve").setValue(m_brush.paintMode);
 
     const auto cfgPath = cro::App::getPreferencePath() + "voxels.cfg";
     cfg.save(cfgPath);
@@ -556,7 +568,8 @@ void VoxelState::applyEdit()
 
 void VoxelState::editTerrain()
 {
-    if (!m_cursor.getComponent<cro::Model>().isHidden())
+    if (!m_cursor.getComponent<cro::Model>().isHidden()
+        && m_showLayer[Layer::Terrain])
     {
         auto cursorPos = m_cursor.getComponent<cro::Transform>().getPosition();
         auto imagePos = glm::vec2(cursorPos.x, -cursorPos.z);
@@ -609,7 +622,6 @@ void VoxelState::editTerrain()
         }
 
         updateTerrainImage(region);
-
         updateTerrainMesh(region);
     }
 }
@@ -672,5 +684,84 @@ void VoxelState::updateTerrainMesh(cro::IntRect region)
 
 void VoxelState::editVoxel()
 {
+    auto pos = m_cursor.getComponent<cro::Transform>().getPosition();
+    pos -= m_layers[Layer::Voxel].getComponent<cro::Transform>().getPosition();
 
+    const float radius = m_cursor.getComponent<cro::Transform>().getScale().x;
+
+    pv::Vector3DInt32 minB(
+        static_cast<std::int32_t>(std::floor(pos.x - radius)),
+        static_cast<std::int32_t>(std::floor(pos.y - radius)),
+        static_cast<std::int32_t>(std::floor(pos.z - radius)));
+    pv::Vector3DInt32 maxB(
+        static_cast<std::int32_t>(std::ceil(pos.x + radius)),
+        static_cast<std::int32_t>(std::ceil(pos.y + radius)),
+        static_cast<std::int32_t>(std::ceil(pos.z + radius)));
+
+    minB.setX(std::max(0, minB.getX()));
+    minB.setY(std::max(0, minB.getY()));
+    minB.setZ(std::max(0, minB.getZ()));
+
+    maxB.setX(std::min(Voxel::IslandSize.x, maxB.getX()));
+    maxB.setY(std::min(Voxel::IslandSize.y, maxB.getY()));
+    maxB.setZ(std::min(Voxel::IslandSize.z, maxB.getZ()));
+    
+    pv::Region editRegion(minB, maxB);
+    const float Rad2 = radius * radius;
+
+    for (auto z = minB.getZ(); z < maxB.getZ(); ++z)
+    {
+        for (auto y = minB.getY(); y < maxB.getY(); ++y)
+        {
+            for (auto x = minB.getX(); x < maxB.getX(); ++x)
+            {
+                auto len2 = glm::length2(pos - glm::vec3(x,y,z));
+                if (len2 < Rad2)
+                {
+                    auto vx = m_voxelVolume.getVoxel(x, y, z);
+
+                    if (m_brush.paintMode == Brush::PaintMode::Carve)
+                    {
+                        float amount = m_brush.strength * 0.1f;
+                        if (m_brush.feather > 0)
+                        {
+                            amount *= 1.f - std::sqrt(len2) / radius;
+                            amount = std::pow(amount, m_brush.feather);
+                        }
+                        amount *= m_brush.editMode;
+                        vx.density = std::min(1.f, std::max(0.f, vx.density + amount));
+                    }
+
+                    vx.terrain = m_brush.terrain;
+                    m_voxelVolume.setVoxel(x, y, z, vx);
+                }
+            }
+        }
+    }
+
+    updateVoxelMesh(editRegion);
+}
+
+void VoxelState::updateVoxelMesh(const pv::Region& region)
+{
+    Voxel::Mesh mesh;
+    Voxel::ExtractionController controller;
+    pv::extractMarchingCubesMeshCustom(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), &mesh, controller);
+
+
+    auto* meshData = &m_layers[Layer::Voxel].getComponent<cro::Model>().getMeshData();
+    meshData->vertexCount = mesh.getVertexData().size();
+    meshData->boundingBox[0] = glm::vec3(0.f);
+    meshData->boundingBox[1] = glm::vec3(Voxel::IslandSize);
+    meshData->boundingSphere = meshData->boundingBox;
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::GLVertex) * meshData->vertexCount, mesh.getVertexData().data(), GL_DYNAMIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(mesh.getIndexData().size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), mesh.getIndexData().data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }

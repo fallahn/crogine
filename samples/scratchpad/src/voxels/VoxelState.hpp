@@ -106,6 +106,17 @@ private:
         };
         std::int32_t editMode = EditMode::Add;
 
+        struct PaintMode final
+        {
+            enum
+            {
+                Paint, Carve
+            };
+        };
+        std::int32_t paintMode = PaintMode::Paint;
+
+        std::int32_t terrain = TerrainID::Rough;
+
     }m_brush;
     bool m_showBrushWindow;
 
@@ -114,6 +125,7 @@ private:
     void updateTerrainImage(cro::IntRect);
     void updateTerrainMesh(cro::IntRect);
     void editVoxel();
+    void updateVoxelMesh(const pv::Region&);
 
     //---VoxelStateUI.cpp---//
     bool m_showLayerWindow;

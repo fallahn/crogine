@@ -528,9 +528,6 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteSystem3D.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\gui\imgui.h">
-      <Filter>Header Files\imgui</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\src\graphics\shaders\PBR.hpp">
       <Filter>Header Files\graphics\shaders</Filter>
     </ClInclude>
@@ -656,6 +653,9 @@
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\detail\BalancedTree.hpp">
       <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\imgui.h">
+      <Filter>Header Files\imgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

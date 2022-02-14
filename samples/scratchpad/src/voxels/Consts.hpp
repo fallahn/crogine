@@ -84,6 +84,11 @@ struct TerrainID final
     };
 };
 
+static const std::array<std::string, TerrainID::Count - 1> TerrainStrings =
+{
+    "Rough", "Fairway", "Green", "Bunker", "Water", "Scrub", "Stone"
+};
+
 static const std::array TerrainColours =
 {
     glm::vec4(0.157f,0.306f,0.263f,1.f),

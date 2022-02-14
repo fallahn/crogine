@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -100,6 +100,9 @@ private:
         std::uint16_t buttonFlags = 0;
         std::int8_t xMove = 0;
         std::int8_t yMove = 0;
+
+        //used when scrolling
+        std::int32_t forwardMotion = 0;
     };
     std::array<Input, cro::GameController::MaxControllers> m_inputs;
 

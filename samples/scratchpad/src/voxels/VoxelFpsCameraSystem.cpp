@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -30,6 +30,7 @@ source distribution.
 #include "FpsCameraSystem.hpp"
 
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/Keyboard.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
@@ -123,7 +124,7 @@ void VoxelFpsCameraSystem::handleEvent(const cro::Event& evt)
         case SDL_BUTTON_LEFT:
             m_inputs[0].buttonFlags |= Input::LeftMouse;
             break;
-        case SDL_BUTTON_RIGHT:
+        case SDL_BUTTON_MIDDLE:
             m_inputs[0].buttonFlags |= Input::RightMouse;
             break;
         }
@@ -135,7 +136,7 @@ void VoxelFpsCameraSystem::handleEvent(const cro::Event& evt)
         case SDL_BUTTON_LEFT:
             m_inputs[0].buttonFlags &= ~Input::LeftMouse;
             break;
-        case SDL_BUTTON_RIGHT:
+        case SDL_BUTTON_MIDDLE:
             m_inputs[0].buttonFlags &= ~Input::RightMouse;
             break;
         }
@@ -147,6 +148,12 @@ void VoxelFpsCameraSystem::handleEvent(const cro::Event& evt)
             m_inputs[0].yMove += evt.motion.yrel;
         }
     break;
+    case SDL_MOUSEWHEEL:
+        if (!cro::Keyboard::isKeyPressed(SDLK_LSHIFT))
+        {
+            m_inputs[0].forwardMotion = evt.wheel.y;
+        }
+        break;
 
 
     //parse controller presses into corresponding inputs
@@ -225,67 +232,10 @@ void VoxelFpsCameraSystem::handleEvent(const cro::Event& evt)
     }
         break;
     }
-
-    
 }
 
 void VoxelFpsCameraSystem::process(float dt)
 {
-    //read the game controller axis if connected
-    static constexpr float MaxLookAxis = 50.f;
-    //for (auto i = 0; i < 4; ++i)
-    //{
-    //    if (cro::GameController::isConnected(i))
-    //    {
-    //        //look around
-    //        float xPos = static_cast<float>(cro::GameController::getAxisPosition(i, cro::GameController::AxisRightX));
-    //        xPos /= cro::GameController::AxisMax;
-    //        m_inputs[i].xMove = static_cast<std::int8_t>(xPos * MaxLookAxis);
-
-    //        float yPos = static_cast<float>(cro::GameController::getAxisPosition(i, cro::GameController::AxisRightY));
-    //        yPos /= cro::GameController::AxisMax;
-    //        m_inputs[i].yMove = static_cast<std::int8_t>(yPos * MaxLookAxis);
-
-
-    //        //move
-    //        auto xMove = cro::GameController::getAxisPosition(i, cro::GameController::AxisLeftX);
-    //        if (xMove == 0)
-    //        {
-    //            //hmmm how do we stop this unsetting state set by the DPad event (above)?
-    //            //m_inputs[i].buttonFlags &= ~Input::Flags::Right;
-    //            //m_inputs[i].buttonFlags &= ~Input::Flags::Left;
-    //        }
-    //        else if (xMove > 0)
-    //        {
-    //            m_inputs[i].buttonFlags |= Input::Flags::Right;
-    //        }
-    //        else
-    //        {
-    //            m_inputs[i].buttonFlags |= Input::Flags::Left;
-    //        }
-
-    //        auto yMove = cro::GameController::getAxisPosition(i, cro::GameController::AxisLeftY);
-    //        if (yMove == 0)
-    //        {
-    //            //hmmm how do we stop this unsetting state set by the DPad event (above)?
-    //            //m_inputs[i].buttonFlags &= ~Input::Flags::Forward;
-    //            //m_inputs[i].buttonFlags &= ~Input::Flags::Backward;
-    //        }
-    //        else if (yMove > 0)
-    //        {
-    //            m_inputs[i].buttonFlags |= Input::Flags::Forward;
-    //        }
-    //        else
-    //        {
-    //            m_inputs[i].buttonFlags |= Input::Flags::Backward;
-    //        }
-
-    //        //TODO create a normalised vector from left stick
-    //        //and use the length to calculate moement speed...
-    //    }
-    //}
-
-
     auto& entities = getEntities();
     for (auto entity : entities)
     {
@@ -340,9 +290,9 @@ void VoxelFpsCameraSystem::process(float dt)
 
 
         //we only want to rotate around the yaw when walking
-        rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), controller.cameraYaw, glm::vec3(0.f, 1.f, 0.f));
-        glm::vec3 forwardVector = rotation * glm::vec3(0.f, 0.f, -1.f);
-        glm::vec3 rightVector = rotation * glm::vec3(1.f, 0.f, 0.f);
+        //rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), controller.cameraYaw, glm::vec3(0.f, 1.f, 0.f));
+        glm::vec3 forwardVector = tx.getForwardVector();// rotation* glm::vec3(0.f, 0.f, -1.f);
+        glm::vec3 rightVector = tx.getRightVector();// rotation* glm::vec3(1.f, 0.f, 0.f);
 
 
         //walking speed in metres per second
@@ -361,6 +311,10 @@ void VoxelFpsCameraSystem::process(float dt)
         {
             tx.move(-forwardVector * moveSpeed);
         }
+
+        tx.move(forwardVector * moveSpeed * static_cast<float>(input.forwardMotion));
+        input.forwardMotion = 0;
+
 
         if (input.buttonFlags & Input::Left)
         {
