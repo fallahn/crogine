@@ -49,7 +49,7 @@ namespace Voxel
 
     struct Data final
     {
-        float density = 0.f; //normalised - > 0.5 is solid
+        float density = 0.f; //normalised > 0.5 is solid
         std::int32_t terrain = 0; //TerrainID in golf.
 
         Data() = default;

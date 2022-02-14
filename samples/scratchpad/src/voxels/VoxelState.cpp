@@ -64,7 +64,7 @@ namespace
 
 VoxelState::VoxelState(cro::StateStack& ss, cro::State::Context ctx)
     : cro::State        (ss, ctx),
-    m_scene             (ctx.appInstance.getMessageBus()),
+    m_scene             (ctx.appInstance.getMessageBus(), 512),
     m_textureBuffer     (static_cast<std::size_t>(Voxel::MapSize.x * Voxel::MapSize.y)),
     m_activeLayer       (Layer::Terrain),
     m_voxelVolume       (pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(Voxel::IslandSize.x, Voxel::IslandSize.y, Voxel::IslandSize.z))),
@@ -354,19 +354,31 @@ void VoxelState::createLayers()
     material.setProperty("u_maskColour", cro::Colour::Red);
     //material.doubleSided = true;
 
-    flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal;
-    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_TRIANGLES));
-
+    //root node for layer
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 20.f, -0.5f, -190.f });
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    entity.getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
     m_layers[Layer::Voxel] = entity;
 
+    flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal;
+
+    //then for each chunk
+    for (auto z = 0; z < Voxel::ChunkCount.z; ++z)
+    {
+        for (auto x = 0; x < Voxel::ChunkCount.x; ++x)
+        {
+            meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_TRIANGLES));
+            entity = m_scene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec3(x * Voxel::ChunkSize.x, 0, z * Voxel::ChunkSize.z));
+            entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+            entity.getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
+            m_layers[Layer::Voxel].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            m_chunks.push_back(entity);
+        }
+    }
 
     for (auto z = 0; z < Voxel::IslandSize.z; ++z)
     {
-        for (auto y = 0; y < Voxel::IslandSize.y; ++y)
+        for (auto y = 0; y < Voxel::IslandSize.y  / 2; ++y)
         {
             for (auto x = 0; x < Voxel::IslandSize.x; ++x)
             {
@@ -377,8 +389,8 @@ void VoxelState::createLayers()
             }
         }
     }
-    updateVoxelMesh(m_voxelVolume.getEnclosingRegion());
 
+    updateVoxelMesh(m_voxelVolume.getEnclosingRegion());
 
     //cursor circle
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::DiffuseColour);
@@ -698,13 +710,13 @@ void VoxelState::editVoxel()
         static_cast<std::int32_t>(std::ceil(pos.y + radius)),
         static_cast<std::int32_t>(std::ceil(pos.z + radius)));
 
-    minB.setX(std::max(0, minB.getX()));
-    minB.setY(std::max(0, minB.getY()));
-    minB.setZ(std::max(0, minB.getZ()));
+    minB.setX(std::max(0, std::min(Voxel::IslandSize.x - 2, minB.getX())));
+    minB.setY(std::max(0, std::min(Voxel::IslandSize.y - 5, minB.getY())));
+    minB.setZ(std::max(0, std::min(Voxel::IslandSize.z - 2, minB.getZ())));
 
-    maxB.setX(std::min(Voxel::IslandSize.x, maxB.getX()));
-    maxB.setY(std::min(Voxel::IslandSize.y, maxB.getY()));
-    maxB.setZ(std::min(Voxel::IslandSize.z, maxB.getZ()));
+    maxB.setX(std::max(minB.getX() + 1, std::min(Voxel::IslandSize.x - 1, maxB.getX())));
+    maxB.setY(std::max(minB.getY() + 1, std::min(Voxel::IslandSize.y - 4, maxB.getY())));
+    maxB.setZ(std::max(minB.getZ() + 1, std::min(Voxel::IslandSize.z - 1, maxB.getZ())));
     
     pv::Region editRegion(minB, maxB);
     const float Rad2 = radius * radius;
@@ -744,24 +756,46 @@ void VoxelState::editVoxel()
 
 void VoxelState::updateVoxelMesh(const pv::Region& region)
 {
-    Voxel::Mesh mesh;
-    Voxel::ExtractionController controller;
-    pv::extractMarchingCubesMeshCustom(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), &mesh, controller);
+    auto chunkStartX = region.getLowerX() / Voxel::ChunkSize.x;
+    auto chunkEndX = region.getUpperX() / Voxel::ChunkSize.x;
 
+    auto chunkStartZ = region.getLowerZ() / Voxel::ChunkSize.z;
+    auto chunkEndZ = region.getUpperZ() / Voxel::ChunkSize.z;
 
-    auto* meshData = &m_layers[Layer::Voxel].getComponent<cro::Model>().getMeshData();
-    meshData->vertexCount = mesh.getVertexData().size();
-    meshData->boundingBox[0] = glm::vec3(0.f);
-    meshData->boundingBox[1] = glm::vec3(Voxel::IslandSize);
-    meshData->boundingSphere = meshData->boundingBox;
+    const pv::Vector3DInt32 chunkSize(Voxel::ChunkSize.x, Voxel::ChunkSize.y, Voxel::ChunkSize.z);
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::GLVertex) * meshData->vertexCount, mesh.getVertexData().data(), GL_DYNAMIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    auto z = chunkStartZ;
+    do
+    {
+        auto x = chunkStartX;
+        do
+        {
+            pv::Vector3DInt32 chunkCorner(x * Voxel::ChunkSize.x, 0, z * Voxel::ChunkSize.z);
 
-    auto* submesh = &meshData->indexData[0];
-    submesh->indexCount = static_cast<std::uint32_t>(mesh.getIndexData().size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), mesh.getIndexData().data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+            Voxel::Mesh mesh;
+            Voxel::ExtractionController controller;
+            pv::extractMarchingCubesMeshCustom(&m_voxelVolume, pv::Region(chunkCorner, chunkCorner + chunkSize), &mesh, controller);
+
+            auto idx = z * Voxel::ChunkCount.x + x;
+
+            auto* meshData = &m_chunks[idx].getComponent<cro::Model>().getMeshData();
+            meshData->vertexCount = mesh.getVertexData().size();
+            meshData->boundingBox[0] = glm::vec3(0.f);
+            meshData->boundingBox[1] = glm::vec3(Voxel::ChunkSize);
+            meshData->boundingSphere = meshData->boundingBox;
+
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+            glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::GLVertex) * meshData->vertexCount, mesh.getVertexData().data(), GL_DYNAMIC_DRAW));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+            auto* submesh = &meshData->indexData[0];
+            submesh->indexCount = static_cast<std::uint32_t>(mesh.getIndexData().size());
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), mesh.getIndexData().data(), GL_STATIC_DRAW));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+            x++;
+        } while (x < chunkEndX);
+        z++;
+    } while (z < chunkEndZ);
 }

@@ -49,7 +49,9 @@ struct Layer final
 namespace Voxel
 {
     constexpr glm::vec2 MapSize(320.f, 200.f);
-    constexpr glm::ivec3 IslandSize(300, 4, 180);
+    constexpr glm::ivec3 ChunkSize(16, 8, 16);
+    constexpr glm::ivec3 ChunkCount(19, 1, 11);
+    constexpr glm::ivec3 IslandSize = glm::ivec3(ChunkSize * ChunkCount);
     constexpr float WaterLevel = -0.02f;
     constexpr float TerrainLevel = WaterLevel - 0.03f;
     constexpr float MaxTerrainHeight = 4.5f; //must match value in golf terrain generator

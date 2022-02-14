@@ -71,6 +71,7 @@ private:
     std::array<std::int32_t, Material::Count> m_materialIDs = {};
 
     std::array<cro::Entity, Layer::Count> m_layers;
+    std::vector<cro::Entity> m_chunks;
     cro::Entity m_cursor;
     std::int32_t m_activeLayer;
 

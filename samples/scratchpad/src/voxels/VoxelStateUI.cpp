@@ -118,7 +118,11 @@ void VoxelState::drawLayerWindow()
 
             if (ImGui::Checkbox("Show Course", &m_showLayer[Layer::Voxel]))
             {
-                m_layers[Layer::Voxel].getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
+                //m_layers[Layer::Voxel].getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
+                for (auto e : m_chunks)
+                {
+                    e.getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
+                }
             }
             showTip("Keypad 3");
 
@@ -275,7 +279,11 @@ void VoxelState::handleKeyboardShortcut(const SDL_KeyboardEvent& evt)
         break;
     case SDLK_KP_3:
         m_showLayer[Layer::Voxel] = !m_showLayer[Layer::Voxel];
-        m_layers[Layer::Voxel].getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
+        //m_layers[Layer::Voxel].getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
+        for (auto e : m_chunks)
+        {
+            e.getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
+        }
         break;
     }
 }
