@@ -260,7 +260,10 @@ void VoxelState::buildScene()
     };
 
     auto camEnt = m_scene.createEntity();
-    camEnt.addComponent<cro::Transform>().setPosition({ Voxel::MapSize.x / 2.f, 10.f, 10.f });
+    camEnt.addComponent<cro::Transform>().setPosition({ Voxel::MapSize.x, 80.f, -Voxel::MapSize.y / 2.f });
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
+
     camEnt.addComponent<cro::Camera>().resizeCallback = updateView;
     //camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
     //camEnt.addComponent<cro::AudioListener>();
@@ -281,6 +284,7 @@ void VoxelState::buildScene()
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     camEnt.addComponent<cro::Camera>().resizeCallback = updateTopView;
+    camEnt.getComponent<cro::Camera>().isStatic = true;
     updateTopView(camEnt.getComponent<cro::Camera>());
     m_overviewCam = camEnt;
 

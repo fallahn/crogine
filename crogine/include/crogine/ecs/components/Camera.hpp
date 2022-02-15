@@ -321,6 +321,18 @@ namespace cro
         bool active = true;
 
         /*!
+        \brief If this camera is in a static Scene then this can be set to true.
+        Static cameras will only update their draw list once, before automatically
+        setting the active flag to false. Manually setting the active flag to true
+        again will cause a single draw list update before returning the active flag
+        to false. This can provide a performance increase on Scenes where the camera
+        moves little to none at all between frames and saves on the cost of culling
+        and sorting. Setting this back to false will cause draw list updates every
+        frame when the camera is set to active.
+        */
+        bool isStatic = false;
+
+        /*!
         \brief Target to use as this camera's reflection buffer.
         This is up to the user to initiate and draw to - by default
         the buffer remains uninitialised. Note that the visibility

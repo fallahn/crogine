@@ -87,6 +87,11 @@ void CameraSystem::process(float)
             //finalPass.drawList.clear();
             //reflectionPass.drawList.clear();
             getScene()->updateDrawLists(entity);
+
+            if (camera.isStatic)
+            {
+                camera.active = false;
+            }
         }
     }
 }
