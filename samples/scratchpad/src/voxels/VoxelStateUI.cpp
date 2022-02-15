@@ -78,6 +78,27 @@ void VoxelState::drawMenuBar()
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Edit"))
+        {
+            if (ImGui::MenuItem("Reset Terrain"))
+            {
+                if (cro::FileSystem::showMessageBox("Warning", "This will reset unsaved changes. Continue?", cro::FileSystem::YesNo))
+                {
+                    resetTerrain();
+                }
+            }
+
+            if (ImGui::MenuItem("Reset Course"))
+            {
+                if (cro::FileSystem::showMessageBox("Warning", "This will reset unsaved changes. Continue?", cro::FileSystem::YesNo))
+                {
+                    resetVolume();
+                }
+            }
+
+            ImGui::EndMenu();
+        }
+
         //view menu
         if (ImGui::BeginMenu("View"))
         {
@@ -85,11 +106,9 @@ void VoxelState::drawMenuBar()
             {
 
             }
-            if (ImGui::MenuItem("Layers", nullptr, &m_showLayerWindow))
-            {
-
-            }
+            ImGui::MenuItem("Layers", nullptr, &m_showLayerWindow);
             ImGui::MenuItem("Brush", nullptr, &m_showBrushWindow);
+            ImGui::MenuItem("Overview", nullptr, &m_drawTopView);
 
             ImGui::EndMenu();
         }
@@ -128,7 +147,7 @@ void VoxelState::drawLayerWindow()
 
             const char* Labels[] =
             {
-                "Water", "Terrain", "Course"
+                "None", "Terrain", "Course"
             };
 
             if (ImGui::BeginCombo("Active Layer", Labels[m_activeLayer]))
@@ -149,6 +168,7 @@ void VoxelState::drawLayerWindow()
                 }
                 ImGui::EndCombo();
             }
+            showTip("Num 1-3");
         }
         ImGui::End();
     }
@@ -233,6 +253,16 @@ void VoxelState::drawBrushWindow()
     }
 }
 
+void VoxelState::drawTopView()
+{
+    if (m_drawTopView)
+    {
+        ImGui::Begin("Overview", &m_drawTopView, ImGuiWindowFlags_::ImGuiWindowFlags_NoCollapse);
+        ImGui::Image(m_overviewImage.getTexture(), {Voxel::MapSize.y, Voxel::MapSize.x}, {0.f, 1.f}, {1.f, 0.f});
+        ImGui::End();
+    }
+}
+
 void VoxelState::handleKeyboardShortcut(const SDL_KeyboardEvent& evt)
 {
     switch (evt.keysym.sym)
@@ -284,6 +314,15 @@ void VoxelState::handleKeyboardShortcut(const SDL_KeyboardEvent& evt)
         {
             e.getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
         }
+        break;
+    case SDLK_1:
+        m_activeLayer = 0;
+        break;
+    case SDLK_2:
+        m_activeLayer = 1;
+        break;
+    case SDLK_3:
+        m_activeLayer = 2;
         break;
     }
 }

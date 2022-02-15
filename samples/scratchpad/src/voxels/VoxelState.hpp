@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 
 #include <polyvox/RawVolume.h>
 
@@ -120,22 +121,29 @@ private:
         std::int32_t terrain = TerrainID::Rough;
 
     }m_brush;
-    bool m_showBrushWindow;
+    
 
     void applyEdit();
     void editTerrain();
     void updateTerrainImage(cro::IntRect);
     void updateTerrainMesh(cro::IntRect);
+    void resetTerrain();
     void editVoxel();
     void updateVoxelMesh(const pv::Region&);
+    void resetVolume();
 
     //---VoxelStateUI.cpp---//
+    bool m_showBrushWindow;
     bool m_showLayerWindow;
+    bool m_drawTopView;
+    cro::RenderTexture m_overviewImage;
+    cro::Entity m_overviewCam;
     std::array<bool, Layer::Count> m_showLayer = {};
     
     void drawMenuBar();
     void drawLayerWindow();
     void drawBrushWindow();
+    void drawTopView();
 
     void handleKeyboardShortcut(const SDL_KeyboardEvent&);
 };
