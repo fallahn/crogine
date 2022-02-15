@@ -315,7 +315,6 @@ void VoxelState::createLayers()
     m_materialIDs[Material::Terrain] = m_resources.materials.add(m_resources.shaders.get(m_shaderIDs[Shader::Terrain]));
 
     auto material = m_resources.materials.get(m_materialIDs[Material::Terrain]);
-    //material.setProperty("u_diffuseMap", m_tempTexture);
     material.setProperty("u_maskColour", cro::Colour::Red);
 
     auto flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal;
@@ -384,9 +383,7 @@ void VoxelState::createLayers()
     m_materialIDs[Material::Voxel] = m_resources.materials.add(m_resources.shaders.get(m_shaderIDs[Shader::Voxel]));
 
     material = m_resources.materials.get(m_materialIDs[Material::Voxel]);
-    //material.setProperty("u_colour", cro::Colour::DarkGrey);
     material.setProperty("u_maskColour", cro::Colour::Red);
-    //material.doubleSided = true;
 
     //root node for layer
     entity = m_scene.createEntity();
@@ -477,6 +474,18 @@ void VoxelState::createLayers()
 
     glCheck(glLineWidth(1.6f));
     glCheck(glEnable(GL_LINE_SMOOTH));
+
+
+    //node for export preview
+    flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal;
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, TerrainID::Unused, GL_TRIANGLES));
+    material = m_resources.materials.get(m_materialIDs[Material::Voxel]);
+    material.setProperty("u_maskColour", cro::Colour::Red);
+
+    m_exportPreview = m_scene.createEntity();
+    m_exportPreview.addComponent<cro::Transform>();
+    m_exportPreview.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+
 }
 
 void VoxelState::updateCursorPosition()
@@ -882,4 +891,39 @@ void VoxelState::resetVolume()
     }
 
     updateVoxelMesh(m_voxelVolume.getEnclosingRegion());
+}
+
+void VoxelState::createExportMesh()
+{
+    //for each material type extract a mesh
+    //TODO could do some fancy template recursion, but eh
+    Voxel::ExtractionController<TerrainID::Rough> controllerRough;
+    Voxel::Mesh meshRough;
+    pv::extractMarchingCubesMeshCustom(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), &meshRough, controllerRough);
+    
+
+    //for each mesh examine face normal and remove any
+    //with at dot product < 0 with a vertical normal.
+
+    //for each mesh create UV coords based on world position
+
+    //for each mesh set the correct collision colour
+
+    //for each mesh apply the correct position offset
+
+    //concatinate vertex data
+
+    //create a submesh/index array for each material
+
+    //remember to set bounds to size of map
+
+    //TODO if this (above) is viable look at mesh decimation
+    //or perhaps creating a lower density voxel field and
+    //extracting/scaling that
+
+    //TODO arrange submesh in such a way that we don't create
+    //empty ones on the preview model
+
+    //TODO cache the result somewhere in order that it can
+    //be exported to gltf or similar for modification in blender
 }

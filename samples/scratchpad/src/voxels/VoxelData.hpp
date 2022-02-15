@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "Consts.hpp"
+
 #include <crogine/detail/glm/vec4.hpp>
 
 #include <polyvox/MarchingCubesSurfaceExtractor.h>
@@ -76,6 +78,7 @@ namespace Voxel
         std::vector<Data> m_data;
     };
 
+    template <std::int32_t TerrainType = TerrainID::Unused>
     class ExtractionController final
     {
     public:
@@ -84,7 +87,13 @@ namespace Voxel
 
         DensityType convertToDensity(Data voxel) const
         {
-            return voxel.density;
+            if (terrainType == TerrainID::Unused
+                || terrainType == voxel.terrain)
+            {
+                return voxel.density;
+            }
+
+            return 0.f;
         }
 
         MaterialType convertToMaterial(Data voxel) const
@@ -104,5 +113,6 @@ namespace Voxel
 
     private:
         float m_threshold = 0.5f;
+        const std::int32_t terrainType = TerrainType;
     };
 }

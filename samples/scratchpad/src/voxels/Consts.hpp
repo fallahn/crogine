@@ -77,7 +77,7 @@ namespace Voxel
 
 struct TerrainID final
 {
-    enum
+    enum Enum
     {
         Rough, Fairway, Green, Bunker, Water, Scrub, Stone,
 
@@ -99,7 +99,9 @@ static const std::array TerrainColours =
     glm::vec4(0.949f,0.812f,0.361f,1.f),
     glm::vec4(0.f,0.f,1.f,1.f),
     glm::vec4(0.102f,0.115f,0.176f,1.f),
-    glm::vec4(0.5f,0.5f,0.5f,1.f)
+    glm::vec4(0.5f,0.5f,0.5f,1.f),
+
+    glm::vec4(1.f,0.f,0.f,1.f)
 };
 
 struct Shader

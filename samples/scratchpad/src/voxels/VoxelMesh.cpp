@@ -33,9 +33,9 @@ source distribution.
 std::uint32_t Voxel::Mesh::addVertex(const pv::MarchingCubesVertex<Voxel::Data>& vertex)
 {
     auto& vert = m_vertices.emplace_back();
-    vert.position = pv::decodePosition(vertex.encodedPosition);
+    vert.position = vertex.position;// pv::decodePosition(vertex.encodedPosition);
     vert.colour = TerrainColours[vertex.data.terrain];
-    vert.normal = pv::decodeNormal(vertex.encodedNormal);
+    vert.normal = vertex.normal;// pv::decodeNormal(vertex.encodedNormal);
 
     m_data.emplace_back(vertex.data);
 

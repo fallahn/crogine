@@ -416,9 +416,17 @@ namespace PolyVox
 							const typename VolumeType::VoxelType uMaterial = controller.blendMaterials(v011, v111, fInterp);
 
 							MarchingCubesVertex<typename VolumeType::VoxelType> surfaceVertex;
-							const Vector3DUint16 v3dScaledPosition(static_cast<uint16_t>(v3dPosition.getX() * 256.0f), static_cast<uint16_t>(v3dPosition.getY() * 256.0f), static_cast<uint16_t>(v3dPosition.getZ() * 256.0f));
-							surfaceVertex.encodedPosition = v3dScaledPosition;
-							surfaceVertex.encodedNormal = encodeNormal(v3dNormal);
+							if constexpr (std::is_same<MeshType, Mesh<MarchingCubesVertex<typename VolumeType::VoxelType>>>::value)
+							{
+								const Vector3DUint16 v3dScaledPosition(static_cast<uint16_t>(v3dPosition.getX() * 256.0f), static_cast<uint16_t>(v3dPosition.getY() * 256.0f), static_cast<uint16_t>(v3dPosition.getZ() * 256.0f));
+								surfaceVertex.encodedPosition = v3dScaledPosition;
+								surfaceVertex.encodedNormal = encodeNormal(v3dNormal);
+							}
+							else
+							{
+								surfaceVertex.position = v3dPosition;
+								surfaceVertex.normal = v3dNormal;
+							}
 							surfaceVertex.data = uMaterial;
 
 							const uint32_t uLastVertexIndex = result->addVertex(surfaceVertex);
@@ -451,9 +459,17 @@ namespace PolyVox
 							const typename VolumeType::VoxelType uMaterial = controller.blendMaterials(v101, v111, fInterp);
 
 							MarchingCubesVertex<typename VolumeType::VoxelType> surfaceVertex;
-							const Vector3DUint16 v3dScaledPosition(static_cast<uint16_t>(v3dPosition.getX() * 256.0f), static_cast<uint16_t>(v3dPosition.getY() * 256.0f), static_cast<uint16_t>(v3dPosition.getZ() * 256.0f));
-							surfaceVertex.encodedPosition = v3dScaledPosition;
-							surfaceVertex.encodedNormal = encodeNormal(v3dNormal);
+							if constexpr (std::is_same<MeshType, Mesh<MarchingCubesVertex<typename VolumeType::VoxelType>>>::value)
+							{
+								const Vector3DUint16 v3dScaledPosition(static_cast<uint16_t>(v3dPosition.getX() * 256.0f), static_cast<uint16_t>(v3dPosition.getY() * 256.0f), static_cast<uint16_t>(v3dPosition.getZ() * 256.0f));
+								surfaceVertex.encodedPosition = v3dScaledPosition;
+								surfaceVertex.encodedNormal = encodeNormal(v3dNormal);
+							}
+							else
+							{
+								surfaceVertex.position = v3dPosition;
+								surfaceVertex.normal = v3dNormal;
+							}
 							surfaceVertex.data = uMaterial;
 
 							uint32_t uLastVertexIndex = result->addVertex(surfaceVertex);
@@ -486,9 +502,17 @@ namespace PolyVox
 							const typename VolumeType::VoxelType uMaterial = controller.blendMaterials(v110, v111, fInterp);
 
 							MarchingCubesVertex<typename VolumeType::VoxelType> surfaceVertex;
-							const Vector3DUint16 v3dScaledPosition(static_cast<uint16_t>(v3dPosition.getX() * 256.0f), static_cast<uint16_t>(v3dPosition.getY() * 256.0f), static_cast<uint16_t>(v3dPosition.getZ() * 256.0f));
-							surfaceVertex.encodedPosition = v3dScaledPosition;
-							surfaceVertex.encodedNormal = encodeNormal(v3dNormal);
+							if constexpr (std::is_same<MeshType, Mesh<MarchingCubesVertex<typename VolumeType::VoxelType>>>::value)
+							{
+								const Vector3DUint16 v3dScaledPosition(static_cast<uint16_t>(v3dPosition.getX() * 256.0f), static_cast<uint16_t>(v3dPosition.getY() * 256.0f), static_cast<uint16_t>(v3dPosition.getZ() * 256.0f));
+								surfaceVertex.encodedPosition = v3dScaledPosition;
+								surfaceVertex.encodedNormal = encodeNormal(v3dNormal);
+							}
+							else
+							{
+								surfaceVertex.position = v3dPosition;
+								surfaceVertex.normal = v3dNormal;
+							}
 							surfaceVertex.data = uMaterial;
 
 							const uint32_t uLastVertexIndex = result->addVertex(surfaceVertex);
@@ -501,7 +525,6 @@ namespace PolyVox
 						// any (the region size in cells is one less than the region size in voxels)
 						if ((uXRegSpace != 0) && (uYRegSpace != 0) && (uZRegSpace != 0))
 						{
-
 							int32_t indlist[12];
 
 							/* Find the vertices where the surface intersects the cube */

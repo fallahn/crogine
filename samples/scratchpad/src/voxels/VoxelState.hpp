@@ -76,6 +76,7 @@ private:
     cro::Entity m_cursor;
     std::int32_t m_activeLayer;
 
+    cro::Entity m_exportPreview;
 
     struct TerrainVertex final
     {
@@ -131,6 +132,8 @@ private:
     void editVoxel();
     void updateVoxelMesh(const pv::Region&);
     void resetVolume();
+
+    void createExportMesh();
 
     //---VoxelStateUI.cpp---//
     bool m_showBrushWindow;
