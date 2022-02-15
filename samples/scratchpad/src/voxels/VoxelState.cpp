@@ -457,80 +457,6 @@ void VoxelState::createLayers()
 
     glCheck(glLineWidth(1.6f));
     glCheck(glEnable(GL_LINE_SMOOTH));
-
-
-
-
-    material.setProperty("u_colour", cro::Colour::Red);
-    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP));
-
-    m_debugBox = m_scene.createEntity();
-    m_debugBox.addComponent<cro::Transform>().setPosition({ 0.f, 4.5f, 0.f });
-    m_debugBox.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-
-    std::vector<float> verts =
-    {
-        0.f,0.f,0.f,
-        1.f,0.f,0.f,
-        1.f,0.f,1.f,
-        0.f,0.f,1.f
-    };
-    indices = { 0,1,2,3,0 };
-
-    meshData = &m_debugBox.getComponent<cro::Model>().getMeshData();
-    meshData->vertexCount = 4;
-    meshData->boundingBox[0] = glm::vec3(-1.f);
-    meshData->boundingBox[1] = glm::vec3(1.f);
-    meshData->boundingSphere = meshData->boundingBox;
-
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(float)* verts.size(), verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-    submesh = &meshData->indexData[0];
-    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-    m_layers[Layer::Voxel].getComponent<cro::Transform>().addChild(m_debugBox.getComponent<cro::Transform>());
-
-    verts =
-    {
-        0.f,0.f,0.f,
-        16.f,0.f,0.f,
-        16.f,0.f,16.f,
-        0.f,0.f,16.f
-    };
-
-    material.setProperty("u_colour", cro::Colour::Yellow);
-    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP));
-
-    for (auto i = 0u; i < m_chunkDebugs.size(); ++i)
-    {
-        //I know these all have the same VBO so it only needs uploading once - but this is for debugging :3
-        entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-
-        meshData = &entity.getComponent<cro::Model>().getMeshData();
-        meshData->vertexCount = 4;
-        meshData->boundingBox[0] = glm::vec3(-1.f);
-        meshData->boundingBox[1] = glm::vec3(1.f);
-        meshData->boundingSphere = meshData->boundingBox;
-
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-        glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * verts.size(), verts.data(), GL_STATIC_DRAW));
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-        submesh = &meshData->indexData[0];
-        submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-        m_layers[Layer::Voxel].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        m_chunkDebugs[i] = entity;
-    }
 }
 
 void VoxelState::updateCursorPosition()
@@ -792,8 +718,6 @@ void VoxelState::editVoxel()
     maxB.setY(std::max(minB.getY() + 1, std::min(Voxel::IslandSize.y - 4, maxB.getY())));
     maxB.setZ(std::max(minB.getZ() + 1, std::min(Voxel::IslandSize.z - 1, maxB.getZ())));
 
-    m_debugBox.getComponent<cro::Transform>().setPosition({ minB.getX(), 4.5f, minB.getZ() });
-    m_debugBox.getComponent<cro::Transform>().setScale({ maxB.getX() - minB.getX(), 1.f, maxB.getZ() - minB.getZ()});
 
     pv::Region editRegion(minB, maxB);
     const float Rad2 = radius * radius;
@@ -834,20 +758,12 @@ void VoxelState::editVoxel()
 void VoxelState::updateVoxelMesh(const pv::Region& region)
 {
     auto chunkStartX = region.getLowerX() / Voxel::ChunkSize.x;
-    auto chunkEndX = region.getUpperX() / Voxel::ChunkSize.x;
+    auto chunkEndX = std::min((region.getUpperX() / Voxel::ChunkSize.x) +1, Voxel::ChunkCount.x);
 
     auto chunkStartZ = region.getLowerZ() / Voxel::ChunkSize.z;
-    auto chunkEndZ = region.getUpperZ() / Voxel::ChunkSize.z;
+    auto chunkEndZ = std::min((region.getUpperZ() / Voxel::ChunkSize.z) + 1, Voxel::ChunkCount.z);
 
     const pv::Vector3DInt32 chunkSize(Voxel::ChunkSize.x, Voxel::ChunkSize.y, Voxel::ChunkSize.z);
-
-
-    for (auto e : m_chunkDebugs)
-    {
-        if(e.isValid())
-        e.getComponent<cro::Model>().setHidden(true);
-    }
-    std::size_t i = 0;
 
     auto z = chunkStartZ;
     do
@@ -880,13 +796,6 @@ void VoxelState::updateVoxelMesh(const pv::Region& region)
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
             x++;
-
-            if (m_chunkDebugs[i].isValid())
-            {
-                m_chunkDebugs[i].getComponent<cro::Transform>().setPosition({ chunkCorner.getX(), 4.2f, chunkCorner.getZ() });
-                m_chunkDebugs[i].getComponent<cro::Model>().setHidden(false);
-            }
-
         } while (x < chunkEndX);
         z++;
     } while (z < chunkEndZ);

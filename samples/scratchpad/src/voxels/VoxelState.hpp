@@ -75,8 +75,6 @@ private:
     cro::Entity m_cursor;
     std::int32_t m_activeLayer;
 
-    cro::Entity m_debugBox;
-    std::array<cro::Entity, 4u> m_chunkDebugs = {};
 
     struct TerrainVertex final
     {
