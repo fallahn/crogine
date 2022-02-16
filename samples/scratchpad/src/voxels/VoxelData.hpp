@@ -135,11 +135,19 @@ namespace Voxel
         std::vector<TerrainData> m_terrainData;
     };
 
+    enum UseSobel
+    {
+        False, True
+    };
+
+    template <UseSobel sobel = UseSobel::False>
     class ExtractionController final
     {
     public:
         using DensityType = float;
         using MaterialType = std::int32_t;
+
+        static constexpr std::int32_t Sobel = sobel;
 
         DensityType convertToDensity(Data voxel) const
         {
@@ -163,6 +171,5 @@ namespace Voxel
 
     private:
         float m_threshold = 0.5f;
-        //const std::int32_t terrainType = TerrainType;
     };
 }

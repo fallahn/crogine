@@ -59,7 +59,7 @@ namespace PolyVox
 	 * \sa extractMarchingCubesMesh
 	 *
 	 */
-	template<typename VoxelType>
+	template<typename VoxelType, std::int32_t UseSobel = 0>
 	class DefaultMarchingCubesController
 	{
 	public:
@@ -67,6 +67,11 @@ namespace PolyVox
 		typedef VoxelType DensityType;
 		/// Used to inform the MarchingCubesSurfaceExtractor about which type it should use for representing materials.
 		typedef VoxelType MaterialType;
+
+
+		//if this is non-zero the normal calculation is done with a Sobel calculation
+		//slower, but subjectively nicer results.
+		static constexpr std::int32_t Sobel = UseSobel;
 
 		/**
 		 * Constructor

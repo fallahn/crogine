@@ -926,7 +926,7 @@ void VoxelState::createExportMesh()
 
     //custom mesh extractor - splits faces into submeshes by material
     //updates vertex colour, and discards downward facing triangles
-    Voxel::ExtractionController controller;
+    Voxel::ExtractionController<Voxel::UseSobel::True> controller;
     Voxel::ExportMesh mesh(m_layers[Layer::Voxel].getComponent<cro::Transform>().getPosition(), ReScale);
 
     //resample the volume to a lower density - the mesh will be rescaled to the given param
