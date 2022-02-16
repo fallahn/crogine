@@ -54,6 +54,7 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 
 #include <polyvox/MarchingCubesSurfaceExtractor.h>
+#include <polyvox/VolumeResampler.h>
 
 #include "../ErrorCheck.hpp"
 
@@ -217,7 +218,7 @@ void VoxelState::render()
     if (m_drawTopView)
     {
         auto oldCam = m_scene.setActiveCamera(m_overviewCam);
-        m_overviewImage.clear(cro::Colour::Magenta);
+        m_overviewImage.clear(cro::Colour::CornflowerBlue);
         m_scene.render();
         m_overviewImage.display();
         m_scene.setActiveCamera(oldCam);
@@ -894,11 +895,19 @@ void VoxelState::resetVolume()
 
 void VoxelState::createExportMesh()
 {
+    const std::int32_t ReScale = 2;
+
     //custom mesh extractor - splits faces into submeshes by material
     //updates vertex colour, and discards downward facing triangles
     Voxel::ExtractionController controller;
-    Voxel::ExportMesh mesh(/*m_layers[Layer::Voxel].getComponent<cro::Transform>().getPosition()*/glm::vec3(0.f));
-    pv::extractMarchingCubesMeshCustom(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), &mesh, controller);
+    Voxel::ExportMesh mesh(/*m_layers[Layer::Voxel].getComponent<cro::Transform>().getPosition()*/glm::vec3(0.f), ReScale);
+
+    //resample the volume to a lower density - the mesh will be rescaled to the given param
+    pv::RawVolume<Voxel::Data> newVolume(pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(Voxel::IslandSize.x / ReScale, Voxel::IslandSize.y / ReScale, Voxel::IslandSize.z / ReScale)));
+    pv::VolumeResampler resampler(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), &newVolume, newVolume.getEnclosingRegion());
+    resampler.execute();
+
+    pv::extractMarchingCubesMeshCustom(&newVolume, newVolume.getEnclosingRegion(), &mesh, controller);
 
     auto* meshData = &m_exportPreview.getComponent<cro::Model>().getMeshData();
     meshData->vertexCount = mesh.getVertexData().size();

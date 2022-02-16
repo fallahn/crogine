@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/gui/Gui.hpp>
 
 namespace
@@ -128,6 +129,7 @@ void VoxelState::drawMenuBar()
                     createExportMesh();
                 }
                 m_exportPreview.getComponent<cro::Model>().setHidden(m_showLayer[Layer::Voxel]);
+                m_overviewCam.getComponent<cro::Camera>().active = true; //refresh draw list
             }
 
             ImGui::EndMenu();
@@ -146,12 +148,14 @@ void VoxelState::drawLayerWindow()
             if (ImGui::Checkbox("Show Water", &m_showLayer[Layer::Water]))
             {
                 m_layers[Layer::Water].getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Water]);
+                m_overviewCam.getComponent<cro::Camera>().active = true;
             }
             showTip("Keypad 1");
 
             if (ImGui::Checkbox("Show Terrain", &m_showLayer[Layer::Terrain]))
             {
                 m_layers[Layer::Terrain].getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Terrain]);
+                m_overviewCam.getComponent<cro::Camera>().active = true;
             }
             showTip("Keypad 2");
 
@@ -165,6 +169,7 @@ void VoxelState::drawLayerWindow()
                 {
                     m_exportPreview.getComponent<cro::Model>().setHidden(true);
                 }
+                m_overviewCam.getComponent<cro::Camera>().active = true;
             }
             showTip("Keypad 3");
 
@@ -325,10 +330,12 @@ void VoxelState::handleKeyboardShortcut(const SDL_KeyboardEvent& evt)
     case SDLK_KP_1:
         m_showLayer[Layer::Water] = !m_showLayer[Layer::Water];
         m_layers[Layer::Water].getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Water]);
+        m_overviewCam.getComponent<cro::Camera>().active = true;
         break;
     case SDLK_KP_2:
         m_showLayer[Layer::Terrain] = !m_showLayer[Layer::Terrain];
         m_layers[Layer::Terrain].getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Terrain]);
+        m_overviewCam.getComponent<cro::Camera>().active = true;
         break;
     case SDLK_KP_3:
         m_showLayer[Layer::Voxel] = !m_showLayer[Layer::Voxel];
@@ -340,6 +347,7 @@ void VoxelState::handleKeyboardShortcut(const SDL_KeyboardEvent& evt)
         {
             m_exportPreview.getComponent<cro::Model>().setHidden(true);
         }
+        m_overviewCam.getComponent<cro::Camera>().active = true;
         break;
     case SDLK_1:
         m_activeLayer = 0;

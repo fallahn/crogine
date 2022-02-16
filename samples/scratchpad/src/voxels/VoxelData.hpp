@@ -57,6 +57,26 @@ namespace Voxel
         Data() = default;
         Data(float d, std::int32_t t = 0)
             : density(d), terrain(t) {}
+
+        //these operators are needed for interpolation
+        //when resampling volumes to a different size
+        friend Data operator + (Data lhs, const Data& rhs)
+        {
+            lhs.density += rhs.density;
+            return lhs;
+        }
+
+        friend Data operator - (Data lhs, const Data& rhs)
+        {
+            lhs.density -= rhs.density;
+            return lhs;
+        }
+
+        friend Data operator * (Data lhs, const Data rhs)
+        {
+            lhs.density *= rhs.density;
+            return lhs;
+        }
     };
 
     //used for extracting meshes in the preview model
@@ -83,7 +103,7 @@ namespace Voxel
     class ExportMesh final
     {
     public:
-        explicit ExportMesh(glm::vec3 positionOffset);
+        explicit ExportMesh(glm::vec3 positionOffset, float scale = 1.f);
 
         std::uint32_t addVertex(const pv::MarchingCubesVertex<Data>&);
         void addTriangle(std::uint32_t, std::uint32_t, std::uint32_t);
@@ -96,9 +116,18 @@ namespace Voxel
 
     private:
         pv::Vector3DFloat m_positionOffset;
+        float m_scale;
         std::vector<GLVertex> m_vertices;
         std::array<std::vector<std::uint32_t>, TerrainID::Count - 1> m_indices;
-        std::vector<std::int32_t> m_terrainData;
+
+        struct TerrainData final
+        {
+            TerrainData(glm::vec3 p, std::int32_t t)
+                : position(p), terrain(t) {}
+            glm::vec3 position = glm::vec3(0.f);
+            std::int32_t terrain = TerrainID::Unused;
+        };
+        std::vector<TerrainData> m_terrainData;
     };
 
     //template <std::int32_t TerrainType = TerrainID::Unused>

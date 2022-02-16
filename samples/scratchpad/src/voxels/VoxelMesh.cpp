@@ -54,52 +54,62 @@ void Voxel::PreviewMesh::clear()
 }
 
 //export mesh
-Voxel::ExportMesh::ExportMesh(glm::vec3 positionOffset)
-    : m_positionOffset(positionOffset.x, positionOffset.y, positionOffset.z)
+Voxel::ExportMesh::ExportMesh(glm::vec3 positionOffset, float  scale)
+    : m_positionOffset  (positionOffset.x, positionOffset.y, positionOffset.z),
+    m_scale             (scale)
 {
 
 }
 
 std::uint32_t Voxel::ExportMesh::addVertex(const pv::MarchingCubesVertex<Voxel::Data>& vertex)
 {
-    //TODO offset the world position of the vertex
     //TODO apply UV based on x/z coords
 
     auto& vert = m_vertices.emplace_back();
-    vert.position = vertex.position + m_positionOffset;
+    vert.position = (vertex.position * m_scale) + m_positionOffset;
     vert.colour = CollisionColours[vertex.data.terrain];
     vert.normal = vertex.normal;
 
     //stash this so we can look up which terrain a face belongs to
-    m_terrainData.push_back(vertex.data.terrain);
+    m_terrainData.emplace_back(glm::vec3(vert.position.getX(), vert.position.getY(), vert.position.getZ()), vertex.data.terrain);
 
     return static_cast<std::uint32_t>(m_vertices.size() - 1);
 }
 
 void Voxel::ExportMesh::addTriangle(std::uint32_t a, std::uint32_t b, std::uint32_t c)
 {
-    //TODO calculate face normal and discard if downward facing
     //TODO can we safely erase the unused vertices too? Would require re-indexing :S
+
+    //calculate face normal and discard if downward facing
+
+    //auto faceNormal = m_terrainData[a].normal + m_terrainData[b].normal + m_terrainData[c].normal;
+    //faceNormal /= 3.f;
+
+    auto faceNormal = glm::normalize(glm::cross(m_terrainData[b].position - m_terrainData[a].position, m_terrainData[c].position - m_terrainData[a].position));
+    if (glm::dot(glm::vec3(0.f, 1.f, 0.f), faceNormal) < -0.35f)
+    {
+        return;
+    }
 
     //if all three belong to the same material, that's easy
     //else we use the material with the fewest verts
-    std::int32_t terrainA = m_terrainData[a];
+    std::int32_t terrainA = m_terrainData[a].terrain;
     std::int32_t terrainCountA = 1;
 
     std::int32_t terrainB = TerrainID::Unused;
     std::int32_t terrainCountB = 0;
 
-    if (m_terrainData[b] == terrainA)
+    if (m_terrainData[b].terrain == terrainA)
     {
         terrainCountA++;
     }
     else
     {
-        terrainB = m_terrainData[b];
+        terrainB = m_terrainData[b].terrain;
         terrainCountB++;
     }
 
-    if (m_terrainData[c] == terrainA)
+    if (m_terrainData[c].terrain == terrainA)
     {
         terrainCountA++;
     }
@@ -107,7 +117,7 @@ void Voxel::ExportMesh::addTriangle(std::uint32_t a, std::uint32_t b, std::uint3
     {
         if (terrainB == TerrainID::Unused)
         {
-            terrainB = m_terrainData[c];
+            terrainB = m_terrainData[c].terrain;
         }
         terrainCountB++;
     }
