@@ -59,7 +59,8 @@ namespace Voxel
             : density(d), terrain(t) {}
     };
 
-    class Mesh final
+    //used for extracting meshes in the preview model
+    class PreviewMesh final
     {
     public:
 
@@ -75,10 +76,32 @@ namespace Voxel
     private:
         std::vector<GLVertex> m_vertices;
         std::vector<std::uint32_t> m_indices;
-        std::vector<Data> m_data;
     };
 
-    template <std::int32_t TerrainType = TerrainID::Unused>
+    //used for extracting meshes for export. Slower so not used
+    //for the real time preview (actually... test if this is true)
+    class ExportMesh final
+    {
+    public:
+        explicit ExportMesh(glm::vec3 positionOffset);
+
+        std::uint32_t addVertex(const pv::MarchingCubesVertex<Data>&);
+        void addTriangle(std::uint32_t, std::uint32_t, std::uint32_t);
+        void setOffset(const pv::Vector3DInt32& offset) {};
+
+        const std::vector<GLVertex>& getVertexData() const { return m_vertices; }
+        const std::array<std::vector<std::uint32_t>, TerrainID::Count - 1>& getIndexData() const { return m_indices; }
+
+        void clear();
+
+    private:
+        pv::Vector3DFloat m_positionOffset;
+        std::vector<GLVertex> m_vertices;
+        std::array<std::vector<std::uint32_t>, TerrainID::Count - 1> m_indices;
+        std::vector<std::int32_t> m_terrainData;
+    };
+
+    //template <std::int32_t TerrainType = TerrainID::Unused>
     class ExtractionController final
     {
     public:
@@ -87,13 +110,14 @@ namespace Voxel
 
         DensityType convertToDensity(Data voxel) const
         {
-            if (terrainType == TerrainID::Unused
+            /*if (terrainType == TerrainID::Unused
                 || terrainType == voxel.terrain)
             {
                 return voxel.density;
             }
 
-            return 0.f;
+            return 0.f;*/
+            return voxel.density;
         }
 
         MaterialType convertToMaterial(Data voxel) const
@@ -113,6 +137,6 @@ namespace Voxel
 
     private:
         float m_threshold = 0.5f;
-        const std::int32_t terrainType = TerrainType;
+        //const std::int32_t terrainType = TerrainType;
     };
 }

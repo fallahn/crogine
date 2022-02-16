@@ -104,6 +104,17 @@ static const std::array TerrainColours =
     glm::vec4(1.f,0.f,0.f,1.f)
 };
 
+static const std::array CollisionColours =
+{
+    glm::vec4(glm::vec3(0.02f), 1.f),
+    glm::vec4(glm::vec3(0.059f), 1.f),
+    glm::vec4(glm::vec3(0.098f), 1.f),
+    glm::vec4(glm::vec3(0.137f), 1.f),
+    glm::vec4(glm::vec3(0.176f), 1.f),
+    glm::vec4(glm::vec3(0.216f), 1.f),
+    glm::vec4(glm::vec3(0.255f), 1.f)
+};
+
 struct Shader
 {
     enum

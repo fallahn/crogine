@@ -110,6 +110,26 @@ void VoxelState::drawMenuBar()
             ImGui::MenuItem("Brush", nullptr, &m_showBrushWindow);
             ImGui::MenuItem("Overview", nullptr, &m_drawTopView);
 
+            //hack just to invert the tick visibility
+            static bool invTick = false;
+            invTick = !m_showLayer[Layer::Voxel];
+
+            if (ImGui::MenuItem("Export Preview", nullptr, &invTick))
+            {
+                m_showLayer[Layer::Voxel] = !m_showLayer[Layer::Voxel];
+
+                for (auto e : m_chunks)
+                {
+                    e.getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
+                }
+                
+                if (!m_showLayer[Layer::Voxel])
+                {
+                    createExportMesh();
+                }
+                m_exportPreview.getComponent<cro::Model>().setHidden(m_showLayer[Layer::Voxel]);
+            }
+
             ImGui::EndMenu();
         }
 
@@ -137,10 +157,13 @@ void VoxelState::drawLayerWindow()
 
             if (ImGui::Checkbox("Show Course", &m_showLayer[Layer::Voxel]))
             {
-                //m_layers[Layer::Voxel].getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
                 for (auto e : m_chunks)
                 {
                     e.getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
+                }
+                if (m_showLayer[Layer::Voxel])
+                {
+                    m_exportPreview.getComponent<cro::Model>().setHidden(true);
                 }
             }
             showTip("Keypad 3");
@@ -309,10 +332,13 @@ void VoxelState::handleKeyboardShortcut(const SDL_KeyboardEvent& evt)
         break;
     case SDLK_KP_3:
         m_showLayer[Layer::Voxel] = !m_showLayer[Layer::Voxel];
-        //m_layers[Layer::Voxel].getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
         for (auto e : m_chunks)
         {
             e.getComponent<cro::Model>().setHidden(!m_showLayer[Layer::Voxel]);
+        }
+        if (m_showLayer[Layer::Voxel])
+        {
+            m_exportPreview.getComponent<cro::Model>().setHidden(true);
         }
         break;
     case SDLK_1:

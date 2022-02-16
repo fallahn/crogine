@@ -485,7 +485,6 @@ void VoxelState::createLayers()
     m_exportPreview = m_scene.createEntity();
     m_exportPreview.addComponent<cro::Transform>();
     m_exportPreview.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-
 }
 
 void VoxelState::updateCursorPosition()
@@ -827,7 +826,7 @@ void VoxelState::updateVoxelMesh(const pv::Region& region)
         {
             pv::Vector3DInt32 chunkCorner(x * Voxel::ChunkSize.x, 0, z * Voxel::ChunkSize.z);
 
-            Voxel::Mesh mesh;
+            Voxel::PreviewMesh mesh;
             Voxel::ExtractionController controller;
             pv::extractMarchingCubesMeshCustom(&m_voxelVolume, pv::Region(chunkCorner, chunkCorner + chunkSize), &mesh, controller);
 
@@ -895,27 +894,33 @@ void VoxelState::resetVolume()
 
 void VoxelState::createExportMesh()
 {
-    //for each material type extract a mesh
-    //TODO could do some fancy template recursion, but eh
-    Voxel::ExtractionController<TerrainID::Rough> controllerRough;
-    Voxel::Mesh meshRough;
-    pv::extractMarchingCubesMeshCustom(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), &meshRough, controllerRough);
-    
+    //custom mesh extractor - splits faces into submeshes by material
+    //updates vertex colour, and discards downward facing triangles
+    Voxel::ExtractionController controller;
+    Voxel::ExportMesh mesh(/*m_layers[Layer::Voxel].getComponent<cro::Transform>().getPosition()*/glm::vec3(0.f));
+    pv::extractMarchingCubesMeshCustom(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), &mesh, controller);
 
-    //for each mesh examine face normal and remove any
-    //with at dot product < 0 with a vertical normal.
+    auto* meshData = &m_exportPreview.getComponent<cro::Model>().getMeshData();
+    meshData->vertexCount = mesh.getVertexData().size();
+    meshData->boundingBox[0] = glm::vec3(0.f);
+    meshData->boundingBox[1] = glm::vec3(Voxel::IslandSize);
+    meshData->boundingSphere = meshData->boundingBox;
 
-    //for each mesh create UV coords based on world position
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::GLVertex) * meshData->vertexCount, mesh.getVertexData().data(), GL_DYNAMIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    //for each mesh set the correct collision colour
+    const auto& indices = mesh.getIndexData();
 
-    //for each mesh apply the correct position offset
+    for (auto i = 0u; i < indices.size(); ++i)
+    {
+        auto* submesh = &meshData->indexData[i];
+        submesh->indexCount = static_cast<std::uint32_t>(indices[i].size());
+        glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+        glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices[i].data(), GL_STATIC_DRAW));
+    }
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-    //concatinate vertex data
-
-    //create a submesh/index array for each material
-
-    //remember to set bounds to size of map
 
     //TODO if this (above) is viable look at mesh decimation
     //or perhaps creating a lower density voxel field and
