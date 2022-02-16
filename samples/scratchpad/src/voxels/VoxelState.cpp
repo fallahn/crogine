@@ -925,25 +925,27 @@ void VoxelState::createExportMesh()
     const std::int32_t ReScale = 2;
 
     //resample the volume to a lower density - the mesh will be rescaled to the given param
-    /*pv::RawVolume<Voxel::Data> newVolume(pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(Voxel::IslandSize.x / ReScale, Voxel::IslandSize.y / ReScale, Voxel::IslandSize.z / ReScale)));
+    pv::RawVolume<Voxel::Data> newVolume(pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(Voxel::IslandSize.x / ReScale, Voxel::IslandSize.y / ReScale, Voxel::IslandSize.z / ReScale)));
     pv::VolumeResampler resampler(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), &newVolume, newVolume.getEnclosingRegion());
-    resampler.execute();*/
+    resampler.execute();
 
+    Voxel::ExtractionController<Voxel::UseSobel::True> controller;
+    Voxel::ExportMesh mesh(m_layers[Layer::Voxel].getComponent<cro::Transform>().getPosition(), ReScale);
+    pv::extractMarchingCubesMeshCustom(&newVolume, newVolume.getEnclosingRegion(), &mesh, controller);
 
     //custom mesh extractor - splits faces into submeshes by material
     //updates vertex colour, and discards downward facing triangles
-    Voxel::ExtractionController<Voxel::UseSobel::True, TerrainID::Rough> c0;
-    Voxel::ExtractionController<Voxel::UseSobel::True, TerrainID::Fairway> c1;
-    Voxel::ExtractionController<Voxel::UseSobel::True, TerrainID::Green> c2;
-    Voxel::ExtractionController<Voxel::UseSobel::True, TerrainID::Bunker> c3;
-    Voxel::ExtractionController<Voxel::UseSobel::True, TerrainID::Water> c4;
-    Voxel::ExtractionController<Voxel::UseSobel::True, TerrainID::Scrub> c5;
-    Voxel::ExtractionController<Voxel::UseSobel::True, TerrainID::Stone> c6;
-    Voxel::ExportMesh mesh(m_layers[Layer::Voxel].getComponent<cro::Transform>().getPosition()/*, ReScale*/);
+    //Voxel::ExtractionController<Voxel::UseSobel::True, TerrainID::Rough> c0;
+    //Voxel::ExtractionController<Voxel::UseSobel::True, TerrainID::Fairway> c1;
+    //Voxel::ExtractionController<Voxel::UseSobel::True, TerrainID::Green> c2;
+    //Voxel::ExtractionController<Voxel::UseSobel::True, TerrainID::Bunker> c3;
+    //Voxel::ExtractionController<Voxel::UseSobel::True, TerrainID::Water> c4;
+    //Voxel::ExtractionController<Voxel::UseSobel::True, TerrainID::Scrub> c5;
+    //Voxel::ExtractionController<Voxel::UseSobel::True, TerrainID::Stone> c6;
+    //Voxel::ExportMesh mesh(m_layers[Layer::Voxel].getComponent<cro::Transform>().getPosition()/*, ReScale*/);
 
-    //pv::extractMarchingCubesMeshCustom(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), &mesh, controller);
-
-    std::vector<Voxel::ExportVertex> vertices;
+    
+    /*std::vector<Voxel::ExportVertex> vertices;
     std::array<std::vector<std::uint32_t>, TerrainID::Count - 1> indices;
 
     pv::extractMarchingCubesMeshCustom(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), &mesh, c0);
@@ -958,22 +960,24 @@ void VoxelState::createExportMesh()
         i += static_cast<std::uint32_t>(increment);
     }
     vertices.insert(vertices.end(), mesh.getVertexData().begin(), mesh.getVertexData().end());
-    increment = vertices.size();
+    increment = vertices.size();*/
 
 
 
 
     auto* meshData = &m_exportPreview.getComponent<cro::Model>().getMeshData();
-    meshData->vertexCount = vertices.size();// mesh.getVertexData().size();
+    //meshData->vertexCount = vertices.size();// mesh.getVertexData().size();
+    meshData->vertexCount = mesh.getVertexData().size();
     meshData->boundingBox[0] = glm::vec3(0.f);
     meshData->boundingBox[1] = glm::vec3(Voxel::IslandSize);
     meshData->boundingSphere = meshData->boundingBox;
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::ExportVertex) * meshData->vertexCount, vertices.data()/*mesh.getVertexData().data()*/, GL_STATIC_DRAW));
+    //glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::ExportVertex) * meshData->vertexCount, vertices.data()/*mesh.getVertexData().data()*/, GL_STATIC_DRAW));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::ExportVertex) * meshData->vertexCount, mesh.getVertexData().data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    //const auto& indices = mesh.getIndexData();
+    const auto& indices = mesh.getIndexData();
 
     for (auto i = 0u; i < indices.size(); ++i)
     {
