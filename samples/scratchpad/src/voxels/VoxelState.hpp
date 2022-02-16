@@ -122,7 +122,6 @@ private:
         std::int32_t terrain = TerrainID::Rough;
 
     }m_brush;
-    
 
     void applyEdit();
     void editTerrain();

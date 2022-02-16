@@ -42,11 +42,16 @@ namespace pv = PolyVox;
 
 namespace Voxel
 {
-    struct GLVertex final
+    struct PreviewVertex
     {
         pv::Vector3DFloat position;
         glm::vec4 colour = glm::vec4(1.f);
         pv::Vector3DFloat normal;
+    };
+
+    struct ExportVertex final : public PreviewVertex
+    {
+        glm::vec2 uv = glm::vec2(0.f);
     };
 
     struct Data final
@@ -88,13 +93,13 @@ namespace Voxel
         void addTriangle(std::uint32_t, std::uint32_t, std::uint32_t);
         void setOffset(const pv::Vector3DInt32& offset) {};
 
-        const std::vector<GLVertex>& getVertexData() const { return m_vertices; }
+        const std::vector<PreviewVertex>& getVertexData() const { return m_vertices; }
         const std::vector<std::uint32_t>& getIndexData() const { return m_indices; }
 
         void clear();
 
     private:
-        std::vector<GLVertex> m_vertices;
+        std::vector<PreviewVertex> m_vertices;
         std::vector<std::uint32_t> m_indices;
     };
 
@@ -109,7 +114,7 @@ namespace Voxel
         void addTriangle(std::uint32_t, std::uint32_t, std::uint32_t);
         void setOffset(const pv::Vector3DInt32& offset) {};
 
-        const std::vector<GLVertex>& getVertexData() const { return m_vertices; }
+        const std::vector<ExportVertex>& getVertexData() const { return m_vertices; }
         const std::array<std::vector<std::uint32_t>, TerrainID::Count - 1>& getIndexData() const { return m_indices; }
 
         void clear();
@@ -117,8 +122,8 @@ namespace Voxel
     private:
         pv::Vector3DFloat m_positionOffset;
         float m_scale;
-        std::vector<GLVertex> m_vertices;
-        std::array<std::vector<std::uint32_t>, TerrainID::Count - 1> m_indices;
+        std::vector<ExportVertex> m_vertices;
+        std::array<std::vector<std::uint32_t>, TerrainID::Count - 1> m_indices = {};
 
         struct TerrainData final
         {
@@ -130,7 +135,6 @@ namespace Voxel
         std::vector<TerrainData> m_terrainData;
     };
 
-    //template <std::int32_t TerrainType = TerrainID::Unused>
     class ExtractionController final
     {
     public:
@@ -139,13 +143,6 @@ namespace Voxel
 
         DensityType convertToDensity(Data voxel) const
         {
-            /*if (terrainType == TerrainID::Unused
-                || terrainType == voxel.terrain)
-            {
-                return voxel.density;
-            }
-
-            return 0.f;*/
             return voxel.density;
         }
 

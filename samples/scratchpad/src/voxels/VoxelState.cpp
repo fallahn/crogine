@@ -380,10 +380,10 @@ void VoxelState::createLayers()
 
 
     //voxel mesh
-    m_shaderIDs[Shader::Voxel] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::VertexColour);
-    m_materialIDs[Material::Voxel] = m_resources.materials.add(m_resources.shaders.get(m_shaderIDs[Shader::Voxel]));
+    m_shaderIDs[Shader::VoxelPreview] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::VertexColour);
+    m_materialIDs[Material::VoxelPreview] = m_resources.materials.add(m_resources.shaders.get(m_shaderIDs[Shader::VoxelPreview]));
 
-    material = m_resources.materials.get(m_materialIDs[Material::Voxel]);
+    material = m_resources.materials.get(m_materialIDs[Material::VoxelPreview]);
     material.setProperty("u_maskColour", cro::Colour::Red);
 
     //root node for layer
@@ -477,15 +477,42 @@ void VoxelState::createLayers()
     glCheck(glEnable(GL_LINE_SMOOTH));
 
 
+
     //node for export preview
-    flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal;
+    flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0;
     meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, TerrainID::Unused, GL_TRIANGLES));
-    material = m_resources.materials.get(m_materialIDs[Material::Voxel]);
+    material = m_resources.materials.get(m_materialIDs[Material::VoxelPreview]);
     material.setProperty("u_maskColour", cro::Colour::Red);
 
     m_exportPreview = m_scene.createEntity();
     m_exportPreview.addComponent<cro::Transform>();
     m_exportPreview.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+
+    //materials for export preview
+    std::array<std::string, TerrainID::Count - 1> TexturePaths =
+    {
+        "assets/voxels/images/rough.png",
+        "assets/voxels/images/fairway.png",
+        "assets/voxels/images/green.png",
+        "assets/voxels/images/bunker.png",
+        "assets/voxels/images/water.png",
+        "assets/voxels/images/scrub.png",
+        "assets/voxels/images/stone.png"
+    };
+    m_shaderIDs[Shader::VoxelTextured] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::VertexLit, cro::ShaderResource::DiffuseMap);
+    shader = &m_resources.shaders.get(m_shaderIDs[Shader::VoxelTextured]);
+    m_materialIDs[Material::VoxelTextured] = m_resources.materials.add(*shader);
+
+    for (auto i = 0u; i < TexturePaths.size(); ++i)
+    {
+        auto material = m_resources.materials.get(m_materialIDs[Material::VoxelTextured]);
+        auto& texture = m_resources.textures.get(TexturePaths[i]);
+        texture.setRepeated(true);
+        material.setProperty("u_diffuseMap", texture);
+        material.setProperty("u_maskColour", cro::Colour::Red);
+
+        m_exportPreview.getComponent<cro::Model>().setMaterial(i, material);
+    }
 }
 
 void VoxelState::updateCursorPosition()
@@ -840,13 +867,13 @@ void VoxelState::updateVoxelMesh(const pv::Region& region)
             meshData->boundingSphere = meshData->boundingBox;
 
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-            glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::GLVertex) * meshData->vertexCount, mesh.getVertexData().data(), GL_DYNAMIC_DRAW));
+            glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::PreviewVertex) * meshData->vertexCount, mesh.getVertexData().data(), GL_DYNAMIC_DRAW));
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
             auto* submesh = &meshData->indexData[0];
             submesh->indexCount = static_cast<std::uint32_t>(mesh.getIndexData().size());
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), mesh.getIndexData().data(), GL_STATIC_DRAW));
+            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), mesh.getIndexData().data(), GL_DYNAMIC_DRAW));
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
             x++;
@@ -900,7 +927,7 @@ void VoxelState::createExportMesh()
     //custom mesh extractor - splits faces into submeshes by material
     //updates vertex colour, and discards downward facing triangles
     Voxel::ExtractionController controller;
-    Voxel::ExportMesh mesh(/*m_layers[Layer::Voxel].getComponent<cro::Transform>().getPosition()*/glm::vec3(0.f), ReScale);
+    Voxel::ExportMesh mesh(m_layers[Layer::Voxel].getComponent<cro::Transform>().getPosition(), ReScale);
 
     //resample the volume to a lower density - the mesh will be rescaled to the given param
     pv::RawVolume<Voxel::Data> newVolume(pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(Voxel::IslandSize.x / ReScale, Voxel::IslandSize.y / ReScale, Voxel::IslandSize.z / ReScale)));
@@ -916,7 +943,7 @@ void VoxelState::createExportMesh()
     meshData->boundingSphere = meshData->boundingBox;
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::GLVertex) * meshData->vertexCount, mesh.getVertexData().data(), GL_DYNAMIC_DRAW));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::ExportVertex) * meshData->vertexCount, mesh.getVertexData().data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     const auto& indices = mesh.getIndexData();
@@ -931,9 +958,7 @@ void VoxelState::createExportMesh()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
 
-    //TODO if this (above) is viable look at mesh decimation
-    //or perhaps creating a lower density voxel field and
-    //extracting/scaling that
+    //TODO look at mesh decimation instead of resampling
 
     //TODO arrange submesh in such a way that we don't create
     //empty ones on the preview model

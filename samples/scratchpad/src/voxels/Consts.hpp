@@ -121,7 +121,8 @@ struct Shader
     {
         Water,
         Terrain,
-        Voxel,
+        VoxelPreview,
+        VoxelTextured,
 
         Count
     };

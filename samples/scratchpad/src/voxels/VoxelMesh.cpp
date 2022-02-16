@@ -54,6 +54,22 @@ void Voxel::PreviewMesh::clear()
 }
 
 //export mesh
+namespace
+{
+    constexpr float TextureRepeatY = 4.f;
+    constexpr float RepeatRatio = static_cast<float>(Voxel::IslandSize.x) / Voxel::IslandSize.z;
+    constexpr glm::vec2 UVMultiplier =
+    {
+        TextureRepeatY * RepeatRatio,
+        TextureRepeatY
+    };
+    constexpr glm::vec2 MaxUVSize =
+    {
+        Voxel::IslandSize.x,
+        Voxel::IslandSize.z
+    };
+}
+
 Voxel::ExportMesh::ExportMesh(glm::vec3 positionOffset, float  scale)
     : m_positionOffset  (positionOffset.x, positionOffset.y, positionOffset.z),
     m_scale             (scale)
@@ -69,6 +85,7 @@ std::uint32_t Voxel::ExportMesh::addVertex(const pv::MarchingCubesVertex<Voxel::
     vert.position = (vertex.position * m_scale) + m_positionOffset;
     vert.colour = CollisionColours[vertex.data.terrain];
     vert.normal = vertex.normal;
+    vert.uv = (glm::vec2(vertex.position.getX(), vertex.position.getZ()) / MaxUVSize) * UVMultiplier;
 
     //stash this so we can look up which terrain a face belongs to
     m_terrainData.emplace_back(glm::vec3(vert.position.getX(), vert.position.getY(), vert.position.getZ()), vertex.data.terrain);
@@ -92,7 +109,7 @@ void Voxel::ExportMesh::addTriangle(std::uint32_t a, std::uint32_t b, std::uint3
     }
 
     //if all three belong to the same material, that's easy
-    //else we use the material with the fewest verts
+    //else we use the material with the most verts
     std::int32_t terrainA = m_terrainData[a].terrain;
     std::int32_t terrainCountA = 1;
 
@@ -130,7 +147,7 @@ void Voxel::ExportMesh::addTriangle(std::uint32_t a, std::uint32_t b, std::uint3
     }
     else
     {
-        if (terrainCountA > terrainCountB)
+        if (terrainCountA < terrainCountB)
         {
             //terrain B
             m_indices[terrainB].push_back(a);
