@@ -140,7 +140,7 @@ namespace Voxel
         False, True
     };
 
-    template <UseSobel sobel = UseSobel::False>
+    template <UseSobel sobel = UseSobel::False, std::int32_t terrain = TerrainID::Unused>
     class ExtractionController final
     {
     public:
@@ -148,9 +148,18 @@ namespace Voxel
         using MaterialType = std::int32_t;
 
         static constexpr std::int32_t Sobel = sobel;
+        static constexpr std::int32_t Terrain = terrain;
 
         DensityType convertToDensity(Data voxel) const
         {
+            if constexpr (Terrain != TerrainID::Unused)
+            {
+                if (voxel.terrain == Terrain)
+                {
+                    return voxel.density;
+                }
+                return 0.f;
+            }
             return voxel.density;
         }
 
