@@ -90,7 +90,7 @@ private:
         void update(float);
         bool complete() const { return m_complete; }
 
-        void draw();
+        void draw(const glm::mat4&);
 
     private:
         bool m_complete;

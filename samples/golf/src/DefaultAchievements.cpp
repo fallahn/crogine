@@ -77,7 +77,7 @@ void DefaultAchievements::init()
 
 void DefaultAchievements::update()
 {
-    static const float dt = 1.f / 60.f; //haaaaxaxxxxx
+    const float dt = 1.f / 60.f; //haaaaxaxxxxx
 
     for (auto& icon : m_icons)
     {
@@ -113,7 +113,7 @@ void DefaultAchievements::awardAchievement(const std::string& name)
     if (m_achievements.count(name) != 0 && !m_achievements[name].achieved)
     {
         LOG("Awarded achievement " + name, cro::Logger::Type::Info);
-        //m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[name], *this));
+        m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[name], *this));
         m_achievements[name].achieved = true;
 
         writeBit(m_achievements[name].id);
@@ -162,15 +162,25 @@ float DefaultAchievements::incrementStat(const std::string& name, std::int32_t v
 #ifdef CRO_DEBUG_
 void DefaultAchievements::showTest()
 {
+    m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[1]], *this));
     m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[2]], *this));
+    m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[3]], *this));
 }
 #endif
 
 void DefaultAchievements::drawOverlay()
 {
-    for (const auto& icon : m_icons)
+    //if we reverse iterate this we
+    //can assemble the cumulative transform
+    //at the same time to stack icons :D
+    //shame about the verbose syntax
+    
+    //for (const auto& icon : m_icons)
+    glm::mat4 tx(1.f);
+    for(auto i = m_icons.crbegin(); i != m_icons.crend(); ++i)
     {
-        icon->draw();
+        i->get()->draw(tx);
+        tx = i->get()->getTransform() * tx;
     }
 }
 
@@ -306,27 +316,27 @@ DefaultAchievements::AchievementIcon::AchievementIcon(const AchievementData& dat
         cro::Vertex2D(glm::vec2(IconSize.x, 1.f), BackgroundColour),
 
         //gradient
-        cro::Vertex2D(glm::vec2(2.f, IconSize.y - 2.f), cro::Colour()),
-        cro::Vertex2D(glm::vec2(2.f, 2.f), cro::Colour::Transparent),
-        cro::Vertex2D(glm::vec2(IconSize.x - 2.f, IconSize.y - 2.f), cro::Colour()),
-        cro::Vertex2D(glm::vec2(IconSize.x - 2.f, 2.f), cro::Colour::Transparent)
+        cro::Vertex2D(glm::vec2(2.f, IconSize.y - 2.f), cro::Colour::Transparent),
+        cro::Vertex2D(glm::vec2(2.f, 2.f), cro::Colour()),
+        cro::Vertex2D(glm::vec2(IconSize.x - 2.f, IconSize.y - 2.f), cro::Colour::Transparent),
+        cro::Vertex2D(glm::vec2(IconSize.x - 2.f, 2.f), cro::Colour())
     });
 
     m_text.setFont(da.m_font);
     m_text.setCharacterSize(16);
     m_text.setString(data.name);
-    m_text.setPosition({ 86.f, 48.f });
+    m_text.setPosition({ 86.f, 34.f });
 
     m_titleText.setFont(da.m_font);
     m_titleText.setCharacterSize(16);
     m_titleText.setString("ACHIEVEMENT UNLOCKED!");
-    m_titleText.setPosition({ 86.f, 68.f });
+    m_titleText.setPosition({ 86.f, 54.f });
 
     const std::int32_t width = 5; //number of icons per row
     auto x = data.id % width;
     auto y = data.id / width;
 
-    m_sprite.setPosition({ 12.f, 14.f });
+    m_sprite.setPosition({ 12.f, 16.f });
     m_sprite.setTexture(da.m_texture);
     m_sprite.setTextureRect({ x * 64.f, y * 64.f, 64.f, 64.f });
 
@@ -368,10 +378,12 @@ void DefaultAchievements::AchievementIcon::update(float dt)
 }
 
 //private
-void DefaultAchievements::AchievementIcon::draw()
+void DefaultAchievements::AchievementIcon::draw(const glm::mat4& parentTx)
 {
-    m_background.draw(getTransform());
-    m_sprite.draw(getTransform());
-    m_text.draw(getTransform());
-    m_titleText.draw(getTransform());
+    auto tx = getTransform() * parentTx;
+
+    m_background.draw(tx);
+    m_sprite.draw(tx);
+    m_text.draw(tx);
+    m_titleText.draw(tx);
 }
