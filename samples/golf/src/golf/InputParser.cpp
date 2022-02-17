@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -34,6 +34,7 @@ source distribution.
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
+#include <crogine/util/Easings.hpp>
 
 namespace
 {
@@ -271,7 +272,7 @@ float InputParser::getYaw() const
 
 float InputParser::getPower() const
 {
-    return MinPower + (MaxPower * m_power);
+    return MinPower + (MaxPower * cro::Util::Easing::easeInSine(m_power));
 }
 
 float InputParser::getHook() const
@@ -404,7 +405,7 @@ void InputParser::update(float dt)
         break;
         case State::Power:
             //move level to 1 and back (returning to 0 is a fluff)
-            m_power = std::min(1.f, std::max(0.f, m_power + (dt * m_powerbarDirection)));
+            m_power = std::min(1.f, std::max(0.f, m_power + (dt * 0.8f * m_powerbarDirection)));
 
             if (m_power == 1)
             {

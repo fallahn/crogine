@@ -3234,7 +3234,7 @@ void GolfState::updateActor(const ActorInfo& update)
             //if we're on the green convert to cm
             std::int32_t distance = 0;
 
-            if (ballDist > 5)
+            if (ballDist > 7)
             {
                 distance = static_cast<std::int32_t>(ballDist);
                 e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
