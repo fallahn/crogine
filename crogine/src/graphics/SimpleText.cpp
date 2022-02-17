@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -158,7 +158,7 @@ FloatRect SimpleText::getGlobalBounds()
     return getLocalBounds().transform(getTransform());
 }
 
-void SimpleText::draw()
+void SimpleText::draw(const glm::mat4& parentTransform)
 {
     if (m_dirtyFlags
         || (m_fontTexture && m_fontTexture->getSize() != m_lastTextureSize))
@@ -166,7 +166,7 @@ void SimpleText::draw()
         m_dirtyFlags = 0;
         updateVertices();
     }
-    drawGeometry(getTransform());
+    drawGeometry(getTransform() * parentTransform);
 }
 
 //private

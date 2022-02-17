@@ -136,6 +136,9 @@ void GolfGame::handleEvent(const cro::Event& evt)
         case SDLK_AC_BACK:
             App::quit();
             break;
+        case SDLK_t:
+            m_achievements->showTest();
+            break;
 #endif
         case SDLK_KP_MINUS:
             togglePixelScale(m_sharedData, false);
@@ -255,7 +258,7 @@ void GolfGame::render()
         m_stateStack.render();
     }
 
-    //TODO draw achievments
+    m_achievements->drawOverlay();
 }
 
 bool GolfGame::initialise()
@@ -526,7 +529,8 @@ bool GolfGame::initialise()
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
 
-    Achievements::init(m_achievements);
+    m_achievements = std::make_unique<DefaultAchievements>();
+    Achievements::init(*m_achievements);
 
     return true;
 }
@@ -555,6 +559,7 @@ void GolfGame::finalise()
     m_postQuad.reset();
     m_postShader.reset();
     m_postBuffer.reset();
+    m_achievements.reset();
 }
 
 void GolfGame::loadPreferences()

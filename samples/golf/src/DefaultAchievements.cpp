@@ -39,9 +39,6 @@ namespace
 {
     const std::string FileName = "progress.stats";
     const cro::Time UpdateTime = cro::seconds(5.f);
-
-    //hack to pass window size from achievement class to the achievement icon
-    glm::vec2 windowSize;
 }
 
 void DefaultAchievements::init()
@@ -51,6 +48,7 @@ void DefaultAchievements::init()
     readFile();
 
     m_texture.loadFromFile(cro::FileSystem::getResourcePath() + "assets/images/achievements.png");
+    m_texture.setRepeated(true);
     m_font.loadFromFile(cro::FileSystem::getResourcePath() + "assets/golf/fonts/ProggyClean.ttf");
 
     for (auto i = 1; i < AchievementID::Count; ++i)
@@ -81,7 +79,7 @@ void DefaultAchievements::update()
 {
     static const float dt = 1.f / 60.f; //haaaaxaxxxxx
 
-    /*for (auto& icon : m_icons)
+    for (auto& icon : m_icons)
     {
         icon->update(dt);
     }
@@ -90,7 +88,7 @@ void DefaultAchievements::update()
         [](const std::unique_ptr<AchievementIcon>& icon)
     {
         return icon->complete();
-    }), m_icons.end());*/
+    }), m_icons.end());
 
 
     //write this periodically to prevent fast stat updates
@@ -161,17 +159,20 @@ float DefaultAchievements::incrementStat(const std::string& name, std::int32_t v
     return 0.f;
 }
 
-void DefaultAchievements::setWindowSize(glm::vec2 size)
-{
-    windowSize = size;
-}
-
 #ifdef CRO_DEBUG_
 void DefaultAchievements::showTest()
 {
-    //m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[1]], *this));
+    m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[2]], *this));
 }
 #endif
+
+void DefaultAchievements::drawOverlay()
+{
+    for (const auto& icon : m_icons)
+    {
+        icon->draw();
+    }
+}
 
 //private
 void DefaultAchievements::syncStat(const StatData& stat)
@@ -277,100 +278,100 @@ void DefaultAchievements::writeBit(std::int32_t index)
     m_bitArray[offset] |= (1 << bit);
 }
 
-//void DefaultAchievements::draw(sf::RenderTarget& rt, sf::RenderStates states) const
-//{
-//    for (const auto& icon : m_icons)
-//    {
-//        rt.draw(*icon, states);
-//    }
-//}
-
 //----------------------------------
 namespace
 {
     constexpr glm::vec2 IconSize(242.f, 92.f);
 }
 
-//DefaultAchievements::AchievementIcon::AchievementIcon(const AchievementData& data, DefaultAchievements& da)
-//    : m_complete    (false),
-//    m_state         (ScrollIn),
-//    m_pauseTime     (5.f)
-//{
-//    XY_ASSERT(windowSize.x > 0 && windowSize.y > 0, "");
-//
-//    //assemble parts
-//    m_background.setSize(IconSize);
-//    m_background.setFillColor({ 37,36,34 });
-//    m_background.setOutlineColor(sf::Color::Black);
-//    m_background.setOutlineThickness(-1.f);
-//
-//    m_gradient =
-//    {
-//        sf::Vertex(sf::Vector2f(2.f, 2.f), sf::Color::Transparent),
-//        sf::Vertex(sf::Vector2f(2.f, IconSize.y - 2.f), sf::Color()),
-//        sf::Vertex(sf::Vector2f(IconSize.x - 2.f, IconSize.y - 2.f), sf::Color()),
-//        sf::Vertex(sf::Vector2f(IconSize.x - 2.f, 2.f), sf::Color::Transparent)
-//    };
-//
-//    m_text.setFont(da.m_font);
-//    m_text.setCharacterSize(16);
-//    m_text.setString(data.name);
-//    m_text.setPosition(86.f, 40.f);
-//
-//    m_titleText.setFont(da.m_font);
-//    m_titleText.setCharacterSize(16);
-//    m_titleText.setString("ACHIEVEMENT UNLOCKED!");
-//    m_titleText.setPosition(86.f, 22.f);
-//
-//    const std::int32_t width = 5; //number of icons per row
-//    auto x = data.id % width;
-//    auto y = data.id / width;
-//
-//    m_sprite.setPosition(12.f, 12.f);
-//    m_sprite.setTexture(da.m_texture);
-//    m_sprite.setTextureRect({ x * 64,y * 64,64,64 });
-//
-//    setPosition(windowSize.x - IconSize.x, windowSize.y);
-//}
-//
-////public
-//void DefaultAchievements::AchievementIcon::update(float dt)
-//{
-//    static const float Speed = 120.f;
-//    if (m_state == ScrollIn)
-//    {
-//        move(0.f, -Speed * dt);
-//        if (getPosition().y < windowSize.y - IconSize.y)
-//        {
-//            setPosition(windowSize - IconSize);
-//            m_state = Paused;
-//        }
-//    }
-//    else if(m_state == Paused)
-//    {
-//        m_pauseTime -= dt;
-//        if (m_pauseTime < 0)
-//        {
-//            m_state = ScrollOut;
-//        }
-//    }
-//    else
-//    {
-//        move(0.f, Speed * dt);
-//        if (getPosition().y > windowSize.y)
-//        {
-//            m_complete = true;
-//        }
-//    }
-//}
-//
-////private
-//void DefaultAchievements::AchievementIcon::draw(sf::RenderTarget& rt, sf::RenderStates states) const
-//{
-//    states.transform *= getTransform();
-//    rt.draw(m_background ,states);
-//    rt.draw(m_gradient.data(), m_gradient.size(), sf::Quads, states);
-//    rt.draw(m_sprite, states);
-//    rt.draw(m_text, states);
-//    rt.draw(m_titleText, states);
-//}
+DefaultAchievements::AchievementIcon::AchievementIcon(const AchievementData& data, DefaultAchievements& da)
+    : m_complete    (false),
+    m_state         (ScrollIn),
+    m_pauseTime     (5.f)
+{
+    //assemble parts
+    const cro::Colour BackgroundColour(std::uint8_t(37), 36, 34);
+    m_background.setVertexData(
+    {
+        //border
+        cro::Vertex2D(glm::vec2(0.f, IconSize.y), cro::Colour::Black),
+        cro::Vertex2D(glm::vec2(0.f), cro::Colour::Black),
+        cro::Vertex2D(IconSize, cro::Colour::Black),
+        cro::Vertex2D(glm::vec2(IconSize.x, 0.f), cro::Colour::Black),
+
+        //background
+        cro::Vertex2D(glm::vec2(1.f, IconSize.y - 1.f), BackgroundColour),
+        cro::Vertex2D(glm::vec2(1.f), BackgroundColour),
+        cro::Vertex2D(IconSize - glm::vec2(1.f), BackgroundColour),
+        cro::Vertex2D(glm::vec2(IconSize.x, 1.f), BackgroundColour),
+
+        //gradient
+        cro::Vertex2D(glm::vec2(2.f, IconSize.y - 2.f), cro::Colour()),
+        cro::Vertex2D(glm::vec2(2.f, 2.f), cro::Colour::Transparent),
+        cro::Vertex2D(glm::vec2(IconSize.x - 2.f, IconSize.y - 2.f), cro::Colour()),
+        cro::Vertex2D(glm::vec2(IconSize.x - 2.f, 2.f), cro::Colour::Transparent)
+    });
+
+    m_text.setFont(da.m_font);
+    m_text.setCharacterSize(16);
+    m_text.setString(data.name);
+    m_text.setPosition({ 86.f, 48.f });
+
+    m_titleText.setFont(da.m_font);
+    m_titleText.setCharacterSize(16);
+    m_titleText.setString("ACHIEVEMENT UNLOCKED!");
+    m_titleText.setPosition({ 86.f, 68.f });
+
+    const std::int32_t width = 5; //number of icons per row
+    auto x = data.id % width;
+    auto y = data.id / width;
+
+    m_sprite.setPosition({ 12.f, 14.f });
+    m_sprite.setTexture(da.m_texture);
+    m_sprite.setTextureRect({ x * 64.f, y * 64.f, 64.f, 64.f });
+
+    glm::vec2 windowSize = cro::App::getWindow().getSize();
+    setPosition({ windowSize.x - IconSize.x, windowSize.y });
+}
+
+//public
+void DefaultAchievements::AchievementIcon::update(float dt)
+{
+    glm::vec2 windowSize = cro::App::getWindow().getSize();
+
+    static const float Speed = 120.f;
+    if (m_state == ScrollIn)
+    {
+        move({ 0.f, -Speed * dt });
+        if (getPosition().y < windowSize.y - IconSize.y)
+        {
+            setPosition(windowSize - IconSize);
+            m_state = Paused;
+        }
+    }
+    else if(m_state == Paused)
+    {
+        m_pauseTime -= dt;
+        if (m_pauseTime < 0)
+        {
+            m_state = ScrollOut;
+        }
+    }
+    else
+    {
+        move({ 0.f, Speed * dt });
+        if (getPosition().y > windowSize.y)
+        {
+            m_complete = true;
+        }
+    }
+}
+
+//private
+void DefaultAchievements::AchievementIcon::draw()
+{
+    m_background.draw(getTransform());
+    m_sprite.draw(getTransform());
+    m_text.draw(getTransform());
+    m_titleText.draw(getTransform());
+}

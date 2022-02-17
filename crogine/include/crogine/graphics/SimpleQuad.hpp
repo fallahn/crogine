@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -93,8 +93,11 @@ namespace cro
 
         /*!
         \brief Draws the quad to the active target
+        \param parentTransform An option transform with
+        which the Quad's transform is multiplied, to create
+        scene-graph like hierachies
         */
-        void draw() override;
+        void draw(const glm::mat4& parentTransform = glm::mat4(1.f)) override;
 
     private:
         cro::Colour m_colour;

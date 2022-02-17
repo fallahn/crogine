@@ -74,7 +74,9 @@ private:
     std::array<std::int32_t, UniformID::Count> m_uniformIDs = {};
 
     static cro::RenderTarget* m_renderTarget;
-    DefaultAchievements m_achievements;
+
+    //this contains GL resources so we need to control its lifetime with initialise / finialise
+    std::unique_ptr<DefaultAchievements> m_achievements; 
 
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;

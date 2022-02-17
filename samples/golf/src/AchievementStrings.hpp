@@ -67,7 +67,7 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
 //description and whether or not the achievement is hidden until it is unlocked
 static const std::array<std::pair<std::string, bool>, AchievementID::Count> AchievementDesc =
 {
-    std::make_pair("", true),
+    std::make_pair("Unknown.", true),
     std::make_pair("Get a hole in one", false),
     std::make_pair("Complete 10 rounds of Golf", false),
     std::make_pair("Putt a total distance of 1km", false),

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -86,9 +86,9 @@ void SimpleQuad::setColour(const cro::Colour& colour)
     updateVertexData();
 }
 
-void SimpleQuad::draw()
+void SimpleQuad::draw(const glm::mat4& parentTransform)
 {
-    drawGeometry(getTransform());
+    drawGeometry(getTransform() * parentTransform);
 }
 
 //private

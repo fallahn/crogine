@@ -35,6 +35,9 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/SimpleText.hpp>
+#include <crogine/graphics/SimpleVertexArray.hpp>
 
 #include <vector>
 #include <unordered_map>
@@ -53,12 +56,11 @@ public:
     void setStat(const std::string&, std::int32_t) override;
     float incrementStat(const std::string&, std::int32_t) override;
 
-    void setWindowSize(glm::vec2);
-
 #ifdef CRO_DEBUG_
     void showTest();
 #endif
 
+    void drawOverlay();
 
 private:
     std::unordered_map<std::string, AchievementData> m_achievements;
@@ -80,7 +82,7 @@ private:
     cro::Clock m_updateClock;
     bool m_statsUpdated = false;
 
-    /*class AchievementIcon final : public sf::Drawable, public sf::Transformable
+    class AchievementIcon final : public cro::Transformable2D
     {
     public:
         AchievementIcon(const AchievementData&, DefaultAchievements&);
@@ -88,24 +90,22 @@ private:
         void update(float);
         bool complete() const { return m_complete; }
 
+        void draw();
+
     private:
         bool m_complete;
-        sf::RectangleShape m_background;
-        std::array<sf::Vertex, 4u> m_gradient = {};
-        sf::Sprite m_sprite;
-        sf::Text m_text;
-        sf::Text m_titleText;
+        cro::SimpleVertexArray m_background;
+        cro::SimpleQuad m_sprite;
+        cro::SimpleText m_text;
+        cro::SimpleText m_titleText;
 
         enum
         {
             ScrollIn, Paused, ScrollOut
         }m_state;
         float m_pauseTime;
-
-        void draw(sf::RenderTarget&, sf::RenderStates) const override;
     };
     friend class AchievementIcon;
 
     std::vector<std::unique_ptr<AchievementIcon>> m_icons;
-    void draw(sf::RenderTarget&, sf::RenderStates) const override;*/
 };

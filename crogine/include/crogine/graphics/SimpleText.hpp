@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -160,8 +160,11 @@ namespace cro
 
         /*!
         \brief Draw the text to the active buffer
+        \param parentTransform An optional transform with which
+        the Text's transform is multiplied to create a scene-graph
+        like hierachy
         */
-        void draw() override;
+        void draw(const glm::mat4& parentTransform = glm::mat4(1.f)) override;
 
     private:
         TextContext m_context;

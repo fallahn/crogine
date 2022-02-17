@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -88,12 +88,14 @@ namespace cro
 
         /*!
         \brief Draws the geometry to the active target
-        This must be overridden and proves an opportunity
+        This must be overridden and provides an opportunity
         to update any vertex data as well as to submit a
         deriving class's transform to the protected
         drawGeometry() function
+        \param parentTransform An optional transform for creating
+        parented scene-graph like hierachies
         */
-        virtual void draw() = 0;
+        virtual void draw(const glm::mat4&) = 0;
 
     protected:
         /*!
