@@ -46,6 +46,7 @@ source distribution.
 #include "SplashScreenState.hpp"
 #include "ErrorCheck.hpp"
 #include "icon.hpp"
+#include "Achievements.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/Clock.hpp>
@@ -235,6 +236,8 @@ void GolfGame::simulate(float dt)
     }
 
     m_stateStack.simulate(dt);
+
+    Achievements::update();
 }
 
 void GolfGame::render()
@@ -251,6 +254,8 @@ void GolfGame::render()
     {
         m_stateStack.render();
     }
+
+    //TODO draw achievments
 }
 
 bool GolfGame::initialise()
@@ -520,6 +525,8 @@ bool GolfGame::initialise()
 #else
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
+
+    Achievements::init(m_achievements);
 
     return true;
 }

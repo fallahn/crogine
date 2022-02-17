@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include "DefaultAchievements.hpp"
 #include "golf/SharedStateData.hpp"
 
 #include <crogine/core/App.hpp>
@@ -73,6 +74,7 @@ private:
     std::array<std::int32_t, UniformID::Count> m_uniformIDs = {};
 
     static cro::RenderTarget* m_renderTarget;
+    DefaultAchievements m_achievements;
 
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
