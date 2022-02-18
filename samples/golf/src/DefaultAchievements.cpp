@@ -31,6 +31,8 @@ source distribution.
 #include "AchievementStrings.hpp"
 
 #include <crogine/core/App.hpp>
+#include <crogine/detail/glm/gtc/matrix_transform.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <stdio.h>
 #include <sys/stat.h>
@@ -39,6 +41,8 @@ namespace
 {
     const std::string FileName = "progress.stats";
     const cro::Time UpdateTime = cro::seconds(5.f);
+
+    constexpr glm::vec2 IconSize(242.f, 92.f);
 }
 
 void DefaultAchievements::init()
@@ -162,25 +166,30 @@ float DefaultAchievements::incrementStat(const std::string& name, std::int32_t v
 #ifdef CRO_DEBUG_
 void DefaultAchievements::showTest()
 {
-    m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[1]], *this));
-    m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[2]], *this));
-    m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[3]], *this));
+    //m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[1]], *this));
+    //m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[2]], *this));
+    m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[cro::Util::Random::value(1,3)]], *this));
 }
 #endif
 
 void DefaultAchievements::drawOverlay()
 {
-    //if we reverse iterate this we
-    //can assemble the cumulative transform
-    //at the same time to stack icons :D
-    //shame about the verbose syntax
-    
-    //for (const auto& icon : m_icons)
-    glm::mat4 tx(1.f);
-    for(auto i = m_icons.crbegin(); i != m_icons.crend(); ++i)
+    glm::vec2 windowSize = cro::App::getWindow().getSize();
+
+    glm::mat4 tx = glm::translate(glm::mat4(1.f), glm::vec3(windowSize.x - IconSize.x, 0.f, 0.f));
+    std::vector<glm::mat4> transforms(m_icons.size());
+
+    std::size_t j = transforms.size() - 1;
+    for (auto i = m_icons.crbegin(); i != m_icons.crend(); ++i, --j)
     {
-        i->get()->draw(tx);
-        tx = i->get()->getTransform() * tx;
+        transforms[j] = tx;
+        tx = glm::translate(tx, glm::vec3(0.f, i->get()->getPosition().y + IconSize.y, 0.f));
+    }
+
+    //unfortunately we need to draw in the opposite order
+    for (auto i = 0u; i < transforms.size(); ++i)
+    {
+        m_icons[i]->draw(transforms[i]);
     }
 }
 
@@ -289,10 +298,6 @@ void DefaultAchievements::writeBit(std::int32_t index)
 }
 
 //----------------------------------
-namespace
-{
-    constexpr glm::vec2 IconSize(242.f, 92.f);
-}
 
 DefaultAchievements::AchievementIcon::AchievementIcon(const AchievementData& data, DefaultAchievements& da)
     : m_complete    (false),
@@ -341,21 +346,19 @@ DefaultAchievements::AchievementIcon::AchievementIcon(const AchievementData& dat
     m_sprite.setTextureRect({ x * 64.f, y * 64.f, 64.f, 64.f });
 
     glm::vec2 windowSize = cro::App::getWindow().getSize();
-    setPosition({ windowSize.x - IconSize.x, windowSize.y });
+    setPosition({ 0.f, -IconSize.y });
 }
 
 //public
 void DefaultAchievements::AchievementIcon::update(float dt)
 {
-    glm::vec2 windowSize = cro::App::getWindow().getSize();
-
     static const float Speed = 120.f;
     if (m_state == ScrollIn)
     {
-        move({ 0.f, -Speed * dt });
-        if (getPosition().y < windowSize.y - IconSize.y)
+        move({ 0.f, Speed * dt });
+        if (getPosition().y > 0.f)
         {
-            setPosition(windowSize - IconSize);
+            setPosition({ 0.f, 0.f });
             m_state = Paused;
         }
     }
@@ -369,8 +372,8 @@ void DefaultAchievements::AchievementIcon::update(float dt)
     }
     else
     {
-        move({ 0.f, Speed * dt });
-        if (getPosition().y > windowSize.y)
+        move({ 0.f, -Speed * dt });
+        if (getPosition().y < -IconSize.y)
         {
             m_complete = true;
         }
