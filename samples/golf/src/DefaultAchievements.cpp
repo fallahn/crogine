@@ -68,7 +68,7 @@ void DefaultAchievements::init()
     //set achievements to be triggered by stats
     auto* trigger = &StatTriggers[StatID::HolesPlayed].emplace_back();
     trigger->achID = AchievementID::BullsEye;
-    trigger->threshold = 180;
+    trigger->threshold = 10;
 
     trigger = &StatTriggers[StatID::PuttDistance].emplace_back();
     trigger->achID = AchievementID::LongDistanceClara;
@@ -163,12 +163,27 @@ float DefaultAchievements::incrementStat(const std::string& name, std::int32_t v
     return 0.f;
 }
 
+float DefaultAchievements::incrementStat(const std::string& name, float value)
+{
+    if (m_stats.count(name) != 0)
+    {
+        CRO_ASSERT(m_stats[name].id > -1, "");
+
+        LOG("Incremented stat " + name + " by " + std::to_string(value), cro::Logger::Type::Info);
+
+        auto& stat = m_stats[name];
+        stat.floatValue += value;
+        syncStat(stat);
+    }
+    return 0.f;
+}
+
 #ifdef CRO_DEBUG_
 void DefaultAchievements::showTest()
 {
     //m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[1]], *this));
     //m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[2]], *this));
-    m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[cro::Util::Random::value(1,3)]], *this));
+    m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[cro::Util::Random::value(1, AchievementID::Count - 1)]], *this));
 }
 #endif
 

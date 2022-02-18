@@ -34,6 +34,8 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "TextAnimCallback.hpp"
 #include "DrivingRangeDirector.hpp"
+#include "../Achievements.hpp"
+#include "../AchievementStrings.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 
@@ -1427,12 +1429,14 @@ void DrivingState::showMessage(float range)
                     {
                         s << "Could Do Better...";
                         m_summaryScreen.stars[0].getComponent<cro::Callback>().active = true;
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::BronzeStar]);
                     }
                     else if (totalScore < ExcellentScore)
                     {
                         s << "Great Job!";
                         m_summaryScreen.stars[0].getComponent<cro::Callback>().active = true;
                         m_summaryScreen.stars[1].getComponent<cro::Callback>().active = true;
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::SilverStar]);
                     }
                     else
                     {
@@ -1440,6 +1444,7 @@ void DrivingState::showMessage(float range)
                         m_summaryScreen.stars[0].getComponent<cro::Callback>().active = true;
                         m_summaryScreen.stars[1].getComponent<cro::Callback>().active = true;
                         m_summaryScreen.stars[2].getComponent<cro::Callback>().active = true;
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::GoldStar]);
                     }
 
                     m_summaryScreen.summary.getComponent<cro::Text>().setString(s.str());

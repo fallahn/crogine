@@ -47,6 +47,7 @@ source distribution.
 #include "server/ServerMessages.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
+#include "../Achievements.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -169,6 +170,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
         loadAssets();
         createScene();
     });
+
+    Achievements::setActive(true);
 
 #ifdef CRO_DEBUG_
     /*registerWindow([&]()

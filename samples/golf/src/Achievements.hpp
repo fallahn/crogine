@@ -77,6 +77,7 @@ public:
     virtual void setStat(const std::string&, float) {}
     virtual void setStat(const std::string&, std::int32_t) {}
     virtual float incrementStat(const std::string&, std::int32_t = 1) { return 0.f; }
+    virtual float incrementStat(const std::string&, float) { return 0.f; }
 
     virtual const StatData* getStat(const std::string&) const { return nullptr; }
 };
@@ -102,8 +103,13 @@ public:
 
     static float incrementStat(const std::string&, std::int32_t = 1);
 
+    static float incrementStat(const std::string&, float);
+
     static const StatData* getStat(const std::string&);
+
+    static void setActive(bool);
 
 private:
     static AchievementImpl* m_impl;
+    static bool m_active;
 };

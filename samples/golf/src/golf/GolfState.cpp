@@ -45,6 +45,8 @@ source distribution.
 #include "TutorialDirector.hpp"
 #include "BallSystem.hpp"
 #include "FpsCameraSystem.hpp"
+#include "../Achievements.hpp"
+#include "../AchievementStrings.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/audio/AudioMixer.hpp>
@@ -152,6 +154,20 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     createTransition();
 
     sd.baseState = StateID::Game;
+    Achievements::setActive(sd.localConnectionData.playerCount == 1);
+    
+    std::int32_t clientCount = 0;
+    for (const auto& c : sd.connectionData)
+    {
+        if (c.playerCount != 0)
+        {
+            clientCount++;
+        }
+    }
+    if (clientCount == 4)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::BetterWithFriends]);
+    }
 
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
@@ -2437,6 +2453,41 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                 break;
             case TerrainID::Hole:
                 showMessageBoard(MessageBoardID::HoleScore);
+
+                if (m_sharedData.tutorial)
+                {
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::CluedUp]);
+                }
+
+                //check if this is our own score
+                if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+                {
+                    std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
+                    if (score == 1)
+                    {
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOne]);
+                    }
+
+                    if (m_currentHole == 17)
+                    {
+                        //just completed the course
+                        Achievements::incrementStat(AchievementStrings[AchievementID::BullsEye]);
+                    }
+
+                    //check putt distance / if this was in fact a putt
+                    if (getClub() == ClubID::Putter)
+                    {
+                        if (glm::length(update.position - m_currentPlayer.position) > 5)
+                        {
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::PuttStar]);
+                        }
+                    }
+                    else
+                    {
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::TopChip]);
+                    }
+                }
+
                 break;
             }
 
@@ -2502,7 +2553,18 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             {
                 player.score = su.score;
                 player.holeScores[su.hole] = su.stroke;
-                LogI << "Last stroke distance: " << su.strokeDistance << std::endl;
+                
+                if (su.client == m_sharedData.localConnectionData.connectionID)
+                {
+                    if (getClub() == ClubID::Putter)
+                    {
+                        Achievements::incrementStat(AchievementStrings[AchievementID::LongDistanceClara], su.strokeDistance);
+                    }
+                    else
+                    {
+                        Achievements::incrementStat(AchievementStrings[AchievementID::StrokeOfMidnight], su.strokeDistance);
+                    }
+                }
             }
         }
             break;

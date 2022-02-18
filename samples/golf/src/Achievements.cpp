@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 
 AchievementImpl* Achievements::m_impl = nullptr;
+bool Achievements::m_active = true;
 
 void Achievements::init(AchievementImpl& impl)
 {
@@ -54,7 +55,10 @@ void Achievements::registerAchievement(const std::string& name)
 void Achievements::awardAchievement(const std::string& name)
 {
     CRO_ASSERT(m_impl, "Achievements have not been initialised!");
-    m_impl->awardAchievement(name);
+    if (m_active)
+    {
+        m_impl->awardAchievement(name);
+    }
 }
 
 const AchievementData* Achievements::getAchievement(const std::string& name)
@@ -66,23 +70,48 @@ const AchievementData* Achievements::getAchievement(const std::string& name)
 void Achievements::setStat(const std::string& name, float value)
 {
     CRO_ASSERT(m_impl, "Achievements have not been initialised!");
-    m_impl->setStat(name, value);
+    if (m_active)
+    {
+        m_impl->setStat(name, value);
+    }
 }
 
 void Achievements::setStat(const std::string& name, std::int32_t value)
 {
     CRO_ASSERT(m_impl, "Achievements have not been initialised!");
-    m_impl->setStat(name, value);
+    if (m_active)
+    {
+        m_impl->setStat(name, value);
+    }
 }
 
 float Achievements::incrementStat(const std::string& name, std::int32_t value)
 {
     CRO_ASSERT(m_impl, "Achievements have not been initialised!");
-    return m_impl->incrementStat(name, value);
+    if (m_active)
+    {
+        return m_impl->incrementStat(name, value);
+    }
+    return 0.f;
+}
+
+float Achievements::incrementStat(const std::string& name, float value)
+{
+    CRO_ASSERT(m_impl, "Achievements have not been initialised!");
+    if (m_active)
+    {
+        return m_impl->incrementStat(name, value);
+    }
+    return 0.f;
 }
 
 const StatData* Achievements::getStat(const std::string& name)
 {
     CRO_ASSERT(m_impl, "Achievements have not been initialised!");
     return m_impl->getStat(name);
+}
+
+void Achievements::setActive(bool active)
+{
+    m_active = active;
 }

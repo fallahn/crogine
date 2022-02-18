@@ -55,6 +55,7 @@ public:
     const AchievementData* getAchievement(const std::string&) const override;
     void setStat(const std::string&, std::int32_t) override;
     float incrementStat(const std::string&, std::int32_t) override;
+    float incrementStat(const std::string&, float) override;
 
 #ifdef CRO_DEBUG_
     void showTest();
