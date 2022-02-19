@@ -38,6 +38,8 @@ source distribution.
 #include "ScoreStrings.hpp"
 #include "MessageIDs.hpp"
 #include "../ErrorCheck.hpp"
+#include "../Achievements.hpp"
+#include "../AchievementStrings.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -808,6 +810,13 @@ void GolfState::showCountdown(std::uint8_t seconds)
     updateScoreboard();
     showScoreboard(true);
 
+    //check if we're the winner
+    if (m_statBoardScores.size() > 1 &&
+        m_statBoardScores[0].client == m_sharedData.clientConnection.connectionID)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::LeaderOfThePack]);
+    }
+
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     auto entity = m_uiScene.createEntity();
@@ -992,9 +1001,11 @@ void GolfState::updateScoreboard()
         };
 
         std::vector<ScoreEntry> scores;
+        m_statBoardScores.clear();
 
         std::uint32_t playerCount = 0;
         auto holeCount = m_holeData.size();
+        std::int32_t clientID = 0;
         for (const auto& client : m_sharedData.connectionData)
         {
             playerCount += client.playerCount;
@@ -1016,9 +1027,21 @@ void GolfState::updateScoreboard()
                     }
                 }
                 entry.total = entry.frontNine + entry.backNine;
+
+                //for stat/achievment tracking
+                auto& leaderboardEntry = m_statBoardScores.emplace_back();
+                leaderboardEntry.client = clientID;
+                leaderboardEntry.player = i;
+                leaderboardEntry.score = entry.total;
             }
+            clientID++;
         }
 
+        std::sort(m_statBoardScores.begin(), m_statBoardScores.end(),
+            [](const StatBoardEntry& a, const StatBoardEntry& b)
+            {
+                return a.score < b.score;
+            });
 
 
         //auto playerCount = 16u;
@@ -1344,6 +1367,14 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
         if (m_currentPlayer.client != m_sharedData.clientConnection.connectionID)
         {
             score++;
+        }
+        else
+        {
+            //if this is a local player check to see if they got the boomerang achievement
+            if (m_hadFoul && overPar < 1)
+            {
+                Achievements::awardAchievement(AchievementStrings[AchievementID::Boomerang]);
+            }
         }
 
         auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);

@@ -142,7 +142,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_camRotation       (0.f),
     m_roundEnded        (false),
     m_viewScale         (1.f),
-    m_scoreColumnCount  (2)
+    m_scoreColumnCount  (2),
+    m_hadFoul           (false)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -2447,9 +2448,11 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                 break;
             case TerrainID::Scrub:
                 showMessageBoard(MessageBoardID::Scrub);
+                m_hadFoul = (m_currentPlayer.client == m_sharedData.clientConnection.connectionID);
                 break;
             case TerrainID::Water:
                 showMessageBoard(MessageBoardID::Water);
+                m_hadFoul = (m_currentPlayer.client == m_sharedData.clientConnection.connectionID);
                 break;
             case TerrainID::Hole:
                 showMessageBoard(MessageBoardID::HoleScore);
@@ -2638,6 +2641,7 @@ void GolfState::removeClient(std::uint8_t clientID)
 void GolfState::setCurrentHole(std::uint32_t hole)
 {
     updateScoreboard();
+    m_hadFoul = false;
 
     //CRO_ASSERT(hole < m_holeData.size(), "");
     if (hole >= m_holeData.size())

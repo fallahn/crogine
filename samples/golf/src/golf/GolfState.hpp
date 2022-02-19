@@ -275,4 +275,17 @@ private:
 
     cro::Entity m_greenCam;
     cro::RenderTexture m_greenBuffer;
+
+    //------------
+
+    bool m_hadFoul; //tracks 'boomerang' stat
+
+    //for tracking scoreboard based stats
+    struct StatBoardEntry final
+    {
+        std::uint8_t client = 0;
+        std::uint8_t player = 0;
+        std::int32_t score = 0;
+    };
+    std::vector<StatBoardEntry> m_statBoardScores;
 };
