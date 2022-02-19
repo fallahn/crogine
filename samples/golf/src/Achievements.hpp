@@ -33,21 +33,13 @@ source distribution.
 
 struct StatData final
 {
-    StatData() : id(-1), intValue(0) {};
-    StatData(const std::string& str, std::int32_t i, std::int32_t v) : name(str), id(i), intValue(v) {}
+    StatData() : id(-1), value(0.f) {};
+    StatData(const std::string& str, std::int32_t i, float v) : name(str), id(i), value(v) {}
 
-    enum Type
-    {
-        Integer, Float
-    }type = Integer;
     std::string name;
     std::int32_t id;
 
-    union
-    {
-        float floatValue;
-        std::int32_t intValue;
-    };
+    float value = 0.f;
 };
 
 struct AchievementData final

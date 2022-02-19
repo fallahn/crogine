@@ -74,7 +74,7 @@ private:
 
     //8 * 32 achievements = 256, should be plenty :)
     std::array<std::uint32_t, 8> m_bitArray = {};
-    std::array<std::int32_t, 64> m_statArray = {};
+    std::array<float, 64> m_statArray = {};
     void readFile();
     void writeFile();
     bool readBit(std::int32_t);

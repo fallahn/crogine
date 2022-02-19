@@ -143,7 +143,7 @@ void DefaultAchievements::setStat(const std::string& name, std::int32_t value)
         LOG("Set stat " + name + " to " + std::to_string(value), cro::Logger::Type::Info);
 
         auto& stat = m_stats[name];
-        stat.intValue = value;
+        stat.value = static_cast<float>(value);
         syncStat(stat);
     }
 }
@@ -157,7 +157,7 @@ float DefaultAchievements::incrementStat(const std::string& name, std::int32_t v
         LOG("Incremented stat " + name + " by " + std::to_string(value), cro::Logger::Type::Info);
 
         auto& stat = m_stats[name];
-        stat.intValue += value;
+        stat.value += static_cast<float>(value);
         syncStat(stat);
     }
     return 0.f;
@@ -172,7 +172,7 @@ float DefaultAchievements::incrementStat(const std::string& name, float value)
         LOG("Incremented stat " + name + " by " + std::to_string(value), cro::Logger::Type::Info);
 
         auto& stat = m_stats[name];
-        stat.floatValue += value;
+        stat.value += value;
         syncStat(stat);
     }
     return 0.f;
@@ -181,6 +181,10 @@ float DefaultAchievements::incrementStat(const std::string& name, float value)
 #ifdef CRO_DEBUG_
 void DefaultAchievements::showTest()
 {
+    /*static std::size_t idx = 1;
+    m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[idx]], *this));
+    idx = (idx + 1) % AchievementID::Count;*/
+
     //m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[1]], *this));
     //m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[2]], *this));
     m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[AchievementStrings[cro::Util::Random::value(1, AchievementID::Count - 1)]], *this));
@@ -211,15 +215,16 @@ void DefaultAchievements::drawOverlay()
 //private
 void DefaultAchievements::syncStat(const StatData& stat)
 {
-    m_statArray[stat.id] = stat.intValue;
+    m_statArray[stat.id] = stat.value;
 
     m_statsUpdated = true;
 
     //check if this should trigger an achievement
     auto& triggers = StatTriggers[stat.id];
+
     for (const auto& t : triggers)
     {
-        if (stat.intValue >= t.threshold)
+        if (stat.value >= t.threshold)
         {
             awardAchievement(AchievementStrings[t.achID]);
         }
@@ -229,14 +234,14 @@ void DefaultAchievements::syncStat(const StatData& stat)
     triggers.erase(std::remove_if(triggers.begin(), triggers.end(),
         [&stat](const StatTrigger& t)
         {
-            return stat.intValue >= t.threshold;
+            return stat.value >= t.threshold;
         }), triggers.end());
 }
 
 void DefaultAchievements::readFile()
 {
     std::fill(m_bitArray.begin(), m_bitArray.end(), 0);
-    std::fill(m_statArray.begin(), m_statArray.end(), 0);
+    std::fill(m_statArray.begin(), m_statArray.end(), 0.f);
 
     std::size_t bitsize = sizeof(std::uint32_t) * m_bitArray.size();
     std::size_t statsize = sizeof(std::int32_t) * m_statArray.size();
@@ -367,7 +372,7 @@ DefaultAchievements::AchievementIcon::AchievementIcon(const AchievementData& dat
 //public
 void DefaultAchievements::AchievementIcon::update(float dt)
 {
-    static const float Speed = 120.f;
+    static const float Speed = 240.f;
     if (m_state == ScrollIn)
     {
         move({ 0.f, Speed * dt });

@@ -2471,7 +2471,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                     if (m_currentHole == 17)
                     {
                         //just completed the course
-                        Achievements::incrementStat(AchievementStrings[AchievementID::BullsEye]);
+                        Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
                     }
 
                     //check putt distance / if this was in fact a putt
@@ -2558,11 +2558,11 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                 {
                     if (getClub() == ClubID::Putter)
                     {
-                        Achievements::incrementStat(AchievementStrings[AchievementID::LongDistanceClara], su.strokeDistance);
+                        Achievements::incrementStat(StatStrings[StatID::PuttDistance], su.strokeDistance);
                     }
                     else
                     {
-                        Achievements::incrementStat(AchievementStrings[AchievementID::StrokeOfMidnight], su.strokeDistance);
+                        Achievements::incrementStat(StatStrings[StatID::StrokeDistance], su.strokeDistance);
                     }
                 }
             }

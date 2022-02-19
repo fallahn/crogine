@@ -125,17 +125,18 @@ namespace StatID
     };
 }
 
+//these are indexed by the above, so do try to get them in the correct order ;)
 static const std::array<std::string, StatID::Count> StatStrings =
 {
+    "holes_played",
     "putt_distance",
-    "stroke_distance",
-    "holes_played"
+    "stroke_distance"
 };
 
 struct StatTrigger final
 {
     std::int32_t achID = -1;
-    std::int32_t threshold = 0;
+    float threshold = 0.f;
 };
 
 static std::array<std::vector<StatTrigger>, StatID::Count> StatTriggers = {};

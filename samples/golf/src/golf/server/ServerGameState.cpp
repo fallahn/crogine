@@ -397,6 +397,8 @@ void GameState::setNextPlayer()
     su.hole = m_currentHole;
     m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
+    m_playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance = 0.f;
+
     //sort players by distance
     std::sort(m_playerInfo.begin(), m_playerInfo.end(),
         [](const PlayerStatus& a, const PlayerStatus& b)
