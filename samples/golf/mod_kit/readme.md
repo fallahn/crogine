@@ -3,7 +3,7 @@ VGA Golf Mod Kit
 
 This folder contains Blender files and tools for creating custom balls and golf courses for VGA Golf.
 
-See http://fallahn.itch.io/vga-golf for more details.
+See http://fallahn.itch.io/vga-golf for more details, or the [Wiki Page](https://github.com/fallahn/crogine/wiki) for guides on how to use this mod kit.
 
 
 avatar_format.md - description of the *.avt files used for creating in-game avatars

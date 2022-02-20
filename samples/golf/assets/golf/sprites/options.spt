@@ -1,44 +1,61 @@
-spritesheet options
+ 
 {
-    src="assets/golf/images/options.png"
+    src = "assets/golf/images/options.png"
+    smooth = false
+    repeat = false
 
     sprite tab_bar
     {
-        bounds = 0,367,200,19
-    }
+        bounds = 0.000000,367.000000,200.000000,19.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
+    }
     sprite background
     {
-        bounds=0,216,200,150
-    }
+        bounds = 0.000000,216.000000,200.000000,150.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
-    sprite audio_video
-    {
-        bounds=0,108,192,108
     }
-
-    sprite input
-    {
-        bounds=0,0,192,108
-    }
-
-    sprite slider
-    {
-        bounds = 193,208,10,7
-    }
-
     sprite square_highlight
     {
-        bounds = 192,178,11,11
-    }
+        bounds = 192.000000,178.000000,11.000000,11.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
-    sprite round_highlight
+    }
+    sprite audio_video
     {
-        bounds = 193,194,10,9
-    }
+        bounds = 0.000000,108.000000,192.000000,108.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
+    }
     sprite tab_highlight
     {
-        bounds = 0,386, 100, 20
+        bounds = 0.000000,386.000000,100.000000,20.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite input
+    {
+        bounds = 0.000000,0.000000,192.000000,108.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite round_highlight
+    {
+        bounds = 193.000000,194.000000,10.000000,9.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite slider
+    {
+        bounds = 193.000000,208.000000,10.000000,7.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite ach_button
+    {
+        bounds = 128.000000,390.000000,16.000000,16.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
     }
 }
