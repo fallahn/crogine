@@ -91,6 +91,7 @@ private:
 
     std::array<std::function<void()>, 2u> m_tabFunctions = {};
     std::size_t m_currentTabFunction;
+    std::size_t m_previousMenuID;
 
     struct ToolTipID final
     {
@@ -104,12 +105,14 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
+    cro::Entity m_achivementsNode;
     void buildScene();
 
     void buildAVMenu(cro::Entity, const cro::SpriteSheet&);
     void buildControlMenu(cro::Entity, const cro::SpriteSheet&);
+    void buildAchievementsMenu(cro::Entity);
 
-    void createButtons(cro::Entity, std::int32_t, std::uint32_t, std::uint32_t);
+    void createButtons(cro::Entity, std::int32_t, std::uint32_t, std::uint32_t, cro::SpriteSheet&);
 
     void quitState();
 };

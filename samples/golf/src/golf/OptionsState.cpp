@@ -33,6 +33,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
+#include "../AchievementStrings.hpp"
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/Mouse.hpp>
@@ -72,7 +73,7 @@ namespace
     {
         enum
         {
-            Video, Controls, Dummy
+            Video, Controls, Dummy, Achievements
         };
     };
 
@@ -159,6 +160,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_lastMousePos      (0.f),
     m_bindingIndex      (-1),
     m_currentTabFunction(1),
+    m_previousMenuID    (MenuID::Controls),
     m_viewScale         (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -539,7 +541,7 @@ void OptionsState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    createButtons(entity, MenuID::Video, selectedID, unselectedID);
+    createButtons(entity, MenuID::Video, selectedID, unselectedID, spriteSheet);
     auto videoButtonEnt = entity;
 
     //control options
@@ -553,8 +555,9 @@ void OptionsState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    createButtons(entity, MenuID::Controls, selectedID, unselectedID);
+    createButtons(entity, MenuID::Controls, selectedID, unselectedID, spriteSheet);
     auto controlButtonEnt = entity;
+
 
     //tab bar header
     entity = m_scene.createEntity();
@@ -615,8 +618,8 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Dummy);
 
-    selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); e.getComponent<cro::AudioEmitter>().play(); });
-    unselectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
+    auto spriteSelectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); e.getComponent<cro::AudioEmitter>().play(); });
+    auto spriteUnselectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
 
     //tab button to switch to video
     m_tabFunctions[0] = [&, tabEnt, videoButtonEnt, controlButtonEnt]() mutable
@@ -641,8 +644,8 @@ void OptionsState::buildScene()
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = spriteSelectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = spriteUnselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
     {
@@ -677,8 +680,8 @@ void OptionsState::buildScene()
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Video);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = spriteSelectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = spriteUnselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)  mutable
         {
@@ -692,7 +695,8 @@ void OptionsState::buildScene()
 
     buildAVMenu(videoEnt, spriteSheet);
     buildControlMenu(controlEnt, spriteSheet);
-
+    buildAchievementsMenu(bgEnt);
+    createButtons(m_achivementsNode, MenuID::Achievements, selectedID, unselectedID, spriteSheet);
 
     //tool tips for options
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
@@ -1351,10 +1355,45 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     createLabel(glm::vec2(20.f, 35.f), InputBinding::Right);
 }
 
-void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::uint32_t selectedID, std::uint32_t unselectedID)
+void OptionsState::buildAchievementsMenu(cro::Entity parent)
+{
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+
+
+    entity.addComponent<cro::Callback>().setUserData<std::int32_t>(0);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        auto& mode = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+        if (mode == 0)
+        {
+            m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Achievements);
+            mode = 1;
+        }
+        else
+        {
+            m_scene.getSystem<cro::UISystem>()->setActiveGroup(m_previousMenuID);
+            mode = 0;
+        }
+        e.getComponent<cro::Callback>().active = false;
+    };
+
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_achivementsNode = entity;
+}
+
+void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::uint32_t selectedID, std::uint32_t unselectedID, cro::SpriteSheet& spriteSheet)
 {
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
+
+    auto textHideCallback = [&, menuID](cro::Entity e, float)
+    {
+        auto current = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
+        float scale = (current == menuID || current == MenuID::Dummy) ? 1 : 0.f;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    };
 
     //advanced
     auto entity = m_scene.createEntity();
@@ -1378,6 +1417,74 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
+
+    //hack to stop multiple instances covering each other when not active
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = textHideCallback;
+        
+
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //toggle highlight
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 79.f, 2.f, 1.5f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ach_button_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto highlightEnt = entity;
+
+    //trophy toggle
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 79.f, 2.f, 1.f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ach_button");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().setGroup(menuID);
+    entity.getComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
+        [highlightEnt](cro::Entity e) mutable
+        {
+            highlightEnt.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = uiSystem.addCallback(
+        [highlightEnt](cro::Entity e) mutable
+        {
+            highlightEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                auto currentID = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
+                if (currentID != MenuID::Achievements)
+                {
+                    m_previousMenuID = currentID;
+                }
+
+                m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+                m_achivementsNode.getComponent<cro::Callback>().active = true;
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        if (m_scene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Achievements)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+        }
+        else
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        }
+    };
 
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -1404,7 +1511,8 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
-
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = textHideCallback;
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //close
@@ -1429,7 +1537,8 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
-
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = textHideCallback;
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
