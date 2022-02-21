@@ -105,14 +105,14 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
-    cro::Entity m_achivementsNode;
+    cro::Entity m_achievementsNode;
     void buildScene();
 
     void buildAVMenu(cro::Entity, const cro::SpriteSheet&);
     void buildControlMenu(cro::Entity, const cro::SpriteSheet&);
-    void buildAchievementsMenu(cro::Entity);
+    void buildAchievementsMenu(cro::Entity, const cro::SpriteSheet&);
 
-    void createButtons(cro::Entity, std::int32_t, std::uint32_t, std::uint32_t, cro::SpriteSheet&);
+    void createButtons(cro::Entity, std::int32_t, std::uint32_t, std::uint32_t, const cro::SpriteSheet&);
 
     void quitState();
 };
