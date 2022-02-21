@@ -1537,7 +1537,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(
-        [scrollNode, Spacing, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+        [&, scrollNode, Spacing, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
@@ -1546,6 +1546,8 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
                 scrollNode.getComponent<cro::Transform>().setPosition(pos);
 
                 updateCropping();
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
 
@@ -1564,7 +1566,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(
-        [scrollNode, Spacing, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+        [&, scrollNode, Spacing, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
@@ -1574,6 +1576,8 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
                 scrollNode.getComponent<cro::Transform>().setPosition(pos);
 
                 updateCropping();
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
 

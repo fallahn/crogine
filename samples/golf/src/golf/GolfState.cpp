@@ -256,6 +256,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //updateMiniMap();
             //removeClient(1);
             //floatingMessage("Hooked!");
+            //Achievements::awardAchievement(AchievementStrings[AchievementID::Boomerang]);
             break;
         case SDLK_KP_0:
             setActiveCamera(0);
