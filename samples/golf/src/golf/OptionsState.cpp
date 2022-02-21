@@ -558,6 +558,10 @@ void OptionsState::buildScene()
     createButtons(entity, MenuID::Controls, selectedID, unselectedID, spriteSheet);
     auto controlButtonEnt = entity;
 
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    createButtons(entity, MenuID::Achievements, selectedID, unselectedID, spriteSheet);
 
     //tab bar header
     entity = m_scene.createEntity();
@@ -696,7 +700,6 @@ void OptionsState::buildScene()
     buildAVMenu(videoEnt, spriteSheet);
     buildControlMenu(controlEnt, spriteSheet);
     buildAchievementsMenu(bgEnt);
-    createButtons(m_achivementsNode, MenuID::Achievements, selectedID, unselectedID, spriteSheet);
 
     //tool tips for options
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
@@ -1357,26 +1360,53 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
 void OptionsState::buildAchievementsMenu(cro::Entity parent)
 {
+    constexpr glm::vec2 BackgroundSize(192.f, 108.f);
+    const cro::Colour BackgroundColour = cro::Colour::White;
+
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-
-
-    entity.addComponent<cro::Callback>().setUserData<std::int32_t>(0);
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        auto& mode = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
-        if (mode == 0)
+    entity.addComponent<cro::Transform>().setPosition({4.f, 20.f, 0.9f});
+    entity.getComponent<cro::Transform>().setScale({ 0.f, 1.f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
         {
-            m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Achievements);
-            mode = 1;
+            cro::Vertex2D(glm::vec2(0.f, BackgroundSize.y), BackgroundColour),
+            cro::Vertex2D(glm::vec2(0.f), BackgroundColour),
+            cro::Vertex2D(BackgroundSize, BackgroundColour),
+            cro::Vertex2D(glm::vec2(BackgroundSize.x, 0.f), BackgroundColour)
+        });
+
+    struct CallbackData final
+    {
+        float scale = 0.f;
+        std::int32_t direction = 0;
+    };
+    entity.addComponent<cro::Callback>().setUserData<CallbackData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<CallbackData>();
+        if (data.direction == 0)
+        {
+            data.scale = std::min(1.f, data.scale + dt);
+
+            if (data.scale == 1)
+            {
+                m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Achievements);
+                data.direction = 1;
+                e.getComponent<cro::Callback>().active = false;
+            }
         }
         else
         {
-            m_scene.getSystem<cro::UISystem>()->setActiveGroup(m_previousMenuID);
-            mode = 0;
+            data.scale = std::max(0.f, data.scale - dt);
+
+            if (data.scale == 0)
+            {
+                m_scene.getSystem<cro::UISystem>()->setActiveGroup(m_previousMenuID);
+                data.direction = 0;
+                e.getComponent<cro::Callback>().active = false;
+            }
         }
-        e.getComponent<cro::Callback>().active = false;
+        e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeInBack(data.scale), 1.f });
     };
 
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
