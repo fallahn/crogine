@@ -529,7 +529,7 @@ bool GolfGame::initialise()
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
 
-    m_achievements = std::make_unique<DefaultAchievements>();
+    m_achievements = std::make_unique<DefaultAchievements>(getMessageBus());
     Achievements::init(*m_achievements);
 
     return true;

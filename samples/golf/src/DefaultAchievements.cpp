@@ -29,6 +29,8 @@ source distribution.
 
 #include "DefaultAchievements.hpp"
 #include "AchievementStrings.hpp"
+#include "golf/SharedStateData.hpp"
+#include "golf/MessageIDs.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -43,6 +45,12 @@ namespace
     const cro::Time UpdateTime = cro::seconds(5.f);
 
     constexpr glm::vec2 IconSize(242.f, 92.f);
+}
+
+DefaultAchievements::DefaultAchievements(cro::MessageBus& mb)
+    : m_messageBus(mb)
+{
+
 }
 
 void DefaultAchievements::init()
@@ -122,6 +130,9 @@ void DefaultAchievements::awardAchievement(const std::string& name)
 
         writeBit(m_achievements[name].id);
         writeFile();
+
+        auto* msg = m_messageBus.post<AchievementEvent>(MessageID::AchievementMessage);
+        msg->id = static_cast<std::uint8_t>(m_achievements[name].id);
     }
 }
 

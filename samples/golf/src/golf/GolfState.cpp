@@ -646,6 +646,17 @@ void GolfState::handleMessage(const cro::Message& msg)
         }
     }
         break;
+    case MessageID::AchievementMessage:
+    {
+        const auto& data = msg.getData<AchievementEvent>();
+        std::array<std::uint8_t, 2u> packet =
+        {
+            m_sharedData.localConnectionData.connectionID,
+            data.id
+        };
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::AchievementGet, packet, cro::NetFlag::Reliable);
+    }
+    break;
     }
 
     m_gameScene.forwardMessage(msg);
@@ -2437,6 +2448,9 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::AchievementGet:
+            notifyAchievement(evt.packet.as<std::array<std::uint8_t, 2u>>());
+            break;
         case PacketID::BallLanded:
         {
             auto update = evt.packet.as<BallUpdate>();

@@ -263,6 +263,7 @@ private:
     void showMessageBoard(MessageBoardID);
     void floatingMessage(const std::string&);
     void createTransition();
+    void notifyAchievement(const std::array<std::uint8_t, 2u>&);
 
     //-----------
 

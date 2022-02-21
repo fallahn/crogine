@@ -1595,6 +1595,42 @@ void GolfState::createTransition()
     glCheck(glUniform2f(shader.getUniformID("u_resolution"), screenSize.x, screenSize.y));
 }
 
+void GolfState::notifyAchievement(const std::array<std::uint8_t, 2u>& data)
+{
+    //only notify if someone else
+    if (m_sharedData.localConnectionData.connectionID != data[0])
+    {
+        //this came off the network so better validate it a bit...
+        if (data[0] < 4
+            && m_sharedData.connectionData[data[0]].playerCount != 0
+            && data[1] < AchievementID::Count - 1)
+        {
+            auto name = m_sharedData.connectionData[data[0]].playerData[0].name;
+            auto achievement = AchievementLabels[data[1]];
+
+            auto entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({ 4.f, UIBarHeight * m_viewScale.y * 2.f });
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI)).setString(name + " achieved " + achievement);
+            entity.getComponent<cro::Text>().setCharacterSize(8u * static_cast<std::uint32_t>(m_viewScale.y));
+            entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<float>(5.f);
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+            {
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime -= dt;
+                if (currTime < 0)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
+            };
+        }
+    }
+}
+
 void GolfState::updateMiniMap()
 {
     cro::Command cmd;

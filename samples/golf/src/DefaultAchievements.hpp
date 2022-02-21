@@ -44,10 +44,17 @@ source distribution.
 #include <memory>
 #include <array>
 
-//default implementation for testing
+namespace cro
+{
+    class MessageBus;
+}
+
+//default implementation
 class DefaultAchievements final : public AchievementImpl
 {
 public:
+    explicit DefaultAchievements(cro::MessageBus&);
+
     void init() override;
     void update() override;
     void registerAchievement(const std::string&) override;
@@ -64,6 +71,8 @@ public:
     void drawOverlay();
 
 private:
+    cro::MessageBus& m_messageBus;
+
     std::unordered_map<std::string, AchievementData> m_achievements;
     std::unordered_map<std::string, StatData> m_stats;
 

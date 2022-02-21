@@ -87,6 +87,7 @@ namespace PacketID
         //both directions
         MapInfo, //< serialised cro::String containing course directory
         LobbyReady, //< uint8 playerID uint8 0 false 1 true
+        AchievementGet //< uint8 client uint8 achievement id (always assume first player on client, as achievements are disabled other wise)
     };
 }
 
