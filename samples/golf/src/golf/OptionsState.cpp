@@ -706,7 +706,7 @@ void OptionsState::buildScene()
     auto createToolTip = [&](const cro::String& tip)
     {
         auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, 0.2f});
+        entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, 2.2f});
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(font).setString(tip);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -721,7 +721,7 @@ void OptionsState::buildScene()
 
         auto colour = cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha);
         auto bgEnt = m_scene.createEntity();
-        bgEnt.addComponent<cro::Transform>().setPosition({0.f, 0.f, - 0.5f});
+        bgEnt.addComponent<cro::Transform>().setPosition({0.f, 0.f, -0.5f});
         bgEnt.addComponent<cro::Drawable2D>().setVertexData(
             {
                 cro::Vertex2D(glm::vec2(bounds.left, bounds.bottom + bounds.height), colour),
@@ -737,7 +737,7 @@ void OptionsState::buildScene()
     m_tooltips[ToolTipID::Volume] = createToolTip("Vol: 100");
     m_tooltips[ToolTipID::FOV] = createToolTip("FOV: 60");
     m_tooltips[ToolTipID::Pixel] = createToolTip("Scale up pixels to match\nthe current resolution.");
-
+    m_tooltips[ToolTipID::Achievements] = createToolTip("Show or Hide Achievements");
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
@@ -1431,6 +1431,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     auto& titleFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& descFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
+    std::vector<cro::Entity> croppedEnts;
     for (auto i = 1; i < AchievementID::Count; ++i)
     {
         //image
@@ -1450,7 +1451,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
         entity.addComponent<cro::Sprite>(tex);
         entity.getComponent<cro::Sprite>().setTextureRect(bounds);
         scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+        croppedEnts.push_back(entity);
 
         //title
         entity = m_scene.createEntity();
@@ -1460,6 +1461,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
         entity.getComponent<cro::Text>().setString(AchievementLabels[i]);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        croppedEnts.push_back(entity);
 
         //description
         constexpr std::size_t MaxStrLen = 20;
@@ -1480,9 +1482,31 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
         entity.getComponent<cro::Text>().setString(str);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        croppedEnts.push_back(entity);
 
         entryPos.y -= Spacing;
     }
+
+    auto updateCropping = [croppedEnts, BackgroundSize, scrollNode]()
+    {
+        for (auto ent : croppedEnts)
+        {
+            cro::FloatRect crop
+            (
+                -glm::vec2(ent.getComponent<cro::Transform>().getPosition()) - glm::vec2(scrollNode.getComponent<cro::Transform>().getPosition()),
+                BackgroundSize
+            );
+
+            auto scale = glm::vec2(1.f) / glm::vec2(ent.getComponent<cro::Transform>().getScale());
+            crop.left *= scale.x;
+            crop.bottom *= scale.y;
+            crop.width *= scale.x;
+            crop.height *= scale.y;
+
+            ent.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+        }
+    };
+    updateCropping();
 
     //highlight
     entity = m_scene.createEntity();
@@ -1513,13 +1537,15 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(
-        [scrollNode, Spacing](cro::Entity, const cro::ButtonEvent evt) mutable
+        [scrollNode, Spacing, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
                 auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
                 pos.y = std::max(0.f, pos.y - Spacing);
                 scrollNode.getComponent<cro::Transform>().setPosition(pos);
+
+                updateCropping();
             }
         });
 
@@ -1538,7 +1564,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(
-        [scrollNode, Spacing](cro::Entity, const cro::ButtonEvent evt) mutable
+        [scrollNode, Spacing, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
@@ -1546,6 +1572,8 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
                 auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
                 pos.y = std::min(MaxScroll, pos.y + Spacing);
                 scrollNode.getComponent<cro::Transform>().setPosition(pos);
+
+                updateCropping();
             }
         });
 
@@ -1652,6 +1680,25 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         else
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        }
+
+        //update the tool tip
+        auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+        auto bounds = e.getComponent<cro::Drawable2D>().getLocalBounds();
+        bounds = e.getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+        if (bounds.contains(mousePos))
+        {
+            mousePos.x = std::floor(mousePos.x);
+            mousePos.y = std::floor(mousePos.y);
+            mousePos.z = 2.f;
+
+            m_tooltips[ToolTipID::Achievements].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
+            m_tooltips[ToolTipID::Achievements].getComponent<cro::Transform>().setScale(m_viewScale);
+        }
+        else
+        {
+            m_tooltips[ToolTipID::Achievements].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         }
     };
 

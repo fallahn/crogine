@@ -98,6 +98,7 @@ private:
         enum
         {
             Volume, FOV, Pixel,
+            Achievements,
             Count
         };
     };
