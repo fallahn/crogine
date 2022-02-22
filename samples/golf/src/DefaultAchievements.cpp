@@ -44,7 +44,7 @@ namespace
     const std::string FileName = "progress.stats";
     const cro::Time UpdateTime = cro::seconds(5.f);
 
-    constexpr glm::vec2 IconSize(242.f, 92.f);
+    static constexpr glm::vec2 IconSize(242.f, 92.f);
 }
 
 DefaultAchievements::DefaultAchievements(cro::MessageBus& mb)

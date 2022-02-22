@@ -52,12 +52,12 @@ source distribution.
 
 namespace
 {
-    constexpr float SummaryOffset = 54.f;
-    constexpr float SummaryHeight = 254.f;
+    static constexpr float SummaryOffset = 54.f;
+    static constexpr float SummaryHeight = 254.f;
 
-    constexpr float BadScore = 50.f;
-    constexpr float GoodScore = 75.f;
-    constexpr float ExcellentScore = 95.f;
+    static constexpr float BadScore = 50.f;
+    static constexpr float GoodScore = 75.f;
+    static constexpr float ExcellentScore = 95.f;
 
     struct MenuID final
     {

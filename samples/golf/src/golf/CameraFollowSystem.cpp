@@ -45,7 +45,7 @@ source distribution.
 
 namespace
 {
-    constexpr float MaxTargetDiff = 25.f; //dist sqr
+    static constexpr float MaxTargetDiff = 25.f; //dist sqr
 }
 
 CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)

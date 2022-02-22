@@ -38,12 +38,12 @@ source distribution.
 
 namespace
 {
-    constexpr float RotationSpeed = 1.2f;
-    constexpr float MaxRotation = 0.34f;
-    constexpr std::int16_t DeadZone = 8000;
+    static constexpr float RotationSpeed = 1.2f;
+    static constexpr float MaxRotation = 0.34f;
+    static constexpr std::int16_t DeadZone = 8000;
 
-    constexpr float MinPower = 0.01f;
-    constexpr float MaxPower = 1.f - MinPower;
+    static constexpr float MinPower = 0.01f;
+    static constexpr float MaxPower = 1.f - MinPower;
 }
 
 InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)

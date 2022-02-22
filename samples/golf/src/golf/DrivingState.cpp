@@ -106,10 +106,10 @@ namespace
 #define DEBUG_DRAW false
 #endif
 
-    constexpr glm::vec3 CameraPosition = PlayerPosition + glm::vec3(0.f, CameraStrokeHeight, CameraStrokeOffset);
+    static constexpr glm::vec3 CameraPosition = PlayerPosition + glm::vec3(0.f, CameraStrokeHeight, CameraStrokeOffset);
 
-    constexpr glm::vec2 BillboardChunk(40.f, 50.f);
-    constexpr std::size_t ChunkCount = 5;
+    static constexpr glm::vec2 BillboardChunk(40.f, 50.f);
+    static constexpr std::size_t ChunkCount = 5;
 
     struct FoliageCallback final
     {
@@ -1071,7 +1071,7 @@ void DrivingState::createScene()
     
     m_cameras[CameraID::Player] = camEnt;
 
-    constexpr auto halfSize = RangeSize / 2.f;
+    static constexpr auto halfSize = RangeSize / 2.f;
 
     struct TransitionPath final
     {
@@ -1306,7 +1306,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
         std::vector<cro::Billboard> billboards;
 
         glm::vec3 offsetPos = dst.getComponent<cro::Transform>().getPosition();
-        constexpr glm::vec2 centreOffset(140.f, 125.f);
+        static constexpr glm::vec2 centreOffset(140.f, 125.f);
 
         const float radSqr = radius * radius;
 

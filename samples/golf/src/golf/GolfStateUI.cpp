@@ -60,9 +60,9 @@ source distribution.
 
 namespace
 {
-    constexpr float ColumnWidth = 20.f;
-    constexpr float ColumnHeight = 276.f;
-    constexpr std::array ColumnPositions =
+    static constexpr float ColumnWidth = 20.f;
+    static constexpr float ColumnHeight = 276.f;
+    static constexpr std::array ColumnPositions =
     {
         glm::vec2(10.f, ColumnHeight),
         glm::vec2(ColumnWidth * 6.f, ColumnHeight),

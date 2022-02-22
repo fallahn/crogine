@@ -392,8 +392,8 @@ void MenuState::createAvatarScene()
     avatarCam.addComponent<cro::Transform>().setPosition({ 0.f, 0.649f, 1.3f });
     //avatarCam.addComponent<cro::Camera>().setPerspective(75.f * cro::Util::Const::degToRad, static_cast<float>(AvatarPreviewSize.x) / AvatarPreviewSize.y, 0.001f, 10.f);
 
-    constexpr float ratio = static_cast<float>(AvatarPreviewSize.y) / AvatarPreviewSize.x;
-    constexpr float orthoWidth = 0.7f;
+    static constexpr float ratio = static_cast<float>(AvatarPreviewSize.y) / AvatarPreviewSize.x;
+    static constexpr float orthoWidth = 0.7f;
     auto orthoSize = glm::vec2(orthoWidth, orthoWidth * ratio);
     avatarCam.addComponent<cro::Camera>().setOrthographic(-orthoSize.x, orthoSize.x, -orthoSize.y, orthoSize.y, 0.001f, 10.f);
     avatarCam.getComponent<cro::Camera>().resizeCallback = avatarTexCallback;

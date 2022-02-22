@@ -1927,8 +1927,8 @@ void GolfState::buildScene()
     cam.resizeCallback = updateView;
     updateView(cam);
 
-    constexpr std::uint32_t ReflectionMapSize = 1024u;
-    constexpr std::uint32_t ShadowMapSize = 2048u;
+    static constexpr std::uint32_t ReflectionMapSize = 1024u;
+    static constexpr std::uint32_t ShadowMapSize = 2048u;
 
     //used by transition callback to interp camera
     camEnt.addComponent<TargetInfo>().waterPlane = waterEnt;
@@ -2864,7 +2864,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             auto height = targetInfo.targetHeight - targetInfo.startHeight;
             auto offset = targetInfo.targetOffset - targetInfo.startOffset;
 
-            constexpr float Speed = 4.f;
+            static constexpr float Speed = 4.f;
             e.getComponent<cro::Transform>().move(travel * Speed * dt);
             setCameraPosition(e.getComponent<cro::Transform>().getPosition(),
                 targetInfo.startHeight + (height * percent),
@@ -2985,8 +2985,8 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     //clamp above ground height and hole radius
     auto newPos = camEnt.getComponent<cro::Transform>().getPosition();
 
-    constexpr float MinRad = 0.3f + CameraPuttOffset;
-    constexpr float MinRadSqr = MinRad * MinRad;
+    static constexpr float MinRad = 0.3f + CameraPuttOffset;
+    static constexpr float MinRadSqr = MinRad * MinRad;
 
     auto holeDir = m_holeData[m_currentHole].pin - newPos;
     auto holeDist = glm::length2(holeDir);

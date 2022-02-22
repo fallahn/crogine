@@ -60,8 +60,8 @@ namespace
             FRAG_OUT = v_colour;
         })";
 
-    constexpr std::size_t MaxVertices = 5000;
-    constexpr std::uint32_t VertSize = (3 * sizeof(float)) + (3 * sizeof(float));
+    static constexpr std::size_t MaxVertices = 5000;
+    static constexpr std::uint32_t VertSize = (3 * sizeof(float)) + (3 * sizeof(float));
 }
 
 BulletDebug::BulletDebug()

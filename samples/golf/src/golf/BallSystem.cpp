@@ -49,7 +49,7 @@ source distribution.
 
 namespace
 {
-    constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
+    static constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
 
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
     static constexpr float FallRadius = Ball::Radius * 0.25f;

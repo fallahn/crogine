@@ -34,7 +34,7 @@ source distribution.
 
 namespace
 {
-    constexpr float MaxDistSqr = 4.f * 4.f; //if we're bigger than this go straight to dest to hide flickering
+    static constexpr float MaxDistSqr = 4.f * 4.f; //if we're bigger than this go straight to dest to hide flickering
 }
 
 InterpolationSystem::InterpolationSystem(cro::MessageBus& mb)

@@ -61,19 +61,19 @@ namespace
 #include "TerrainShader.inl"
 
     //params for poisson disk samples
-    constexpr float GrassDensity = 1.7f; //radius for PD sampler
-    constexpr float TreeDensity = 4.f;
+    static constexpr float GrassDensity = 1.7f; //radius for PD sampler
+    static constexpr float TreeDensity = 4.f;
 
     //TODO for grass billboard we could shrink the area slightly as we prefer trees further away
-    constexpr std::array MinBounds = { 0.f, 0.f };
-    constexpr std::array MaxBounds = { static_cast<float>(MapSize.x), static_cast<float>(MapSize.y) };
+    static constexpr std::array MinBounds = { 0.f, 0.f };
+    static constexpr std::array MaxBounds = { static_cast<float>(MapSize.x), static_cast<float>(MapSize.y) };
 
-    constexpr std::uint32_t QuadsPerMetre = 1;
+    static constexpr std::uint32_t QuadsPerMetre = 1;
 
-    constexpr float MaxShrubOffset = MaxTerrainHeight + 13.f;
-    constexpr std::int32_t SlopeGridSize = 20;
-    constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
-    constexpr std::int32_t NormalMapMultiplier = 4; //number of times the resolution of the map to increase normal map resolution by
+    static constexpr float MaxShrubOffset = MaxTerrainHeight + 13.f;
+    static constexpr std::int32_t SlopeGridSize = 20;
+    static constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
+    static constexpr std::int32_t NormalMapMultiplier = 4; //number of times the resolution of the map to increase normal map resolution by
 
     //callback data
     struct SwapData final
@@ -195,8 +195,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         m_terrainBuffer[i].colour = theme.grassColour.getVec4();
     }
 
-    constexpr auto xCount = static_cast<std::uint32_t>(MapSize.x / QuadsPerMetre);
-    constexpr auto yCount = static_cast<std::uint32_t>(MapSize.y / QuadsPerMetre);
+    static constexpr auto xCount = static_cast<std::uint32_t>(MapSize.x / QuadsPerMetre);
+    static constexpr auto yCount = static_cast<std::uint32_t>(MapSize.y / QuadsPerMetre);
     std::vector<std::uint32_t> indices;// (xCount * yCount * 6);
 
 
@@ -752,9 +752,9 @@ void TerrainBuilder::threadFunc()
                 auto pinPos = m_holeData[m_currentHole].pin;
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
-                constexpr float DashCount = 40.f; //actual div by TAU cos its sin but eh.
-                constexpr float SlopeSpeed = -50.f;
-                constexpr std::int32_t AvgDistance = 5;
+                static constexpr float DashCount = 40.f; //actual div by TAU cos its sin but eh.
+                static constexpr float SlopeSpeed = -50.f;
+                static constexpr std::int32_t AvgDistance = 5;
 
                 for (auto y = startY; y < startY + SlopeGridSize; ++y)
                 {

@@ -90,8 +90,8 @@ namespace
     //the slider callbacks :3
     std::uint8_t mixerChannelIndex = MixerChannel::Music;
 
-    constexpr float SliderWidth = 142.f;
-    constexpr glm::vec3 ToolTipOffset(10.f, 10.f, 0.f);
+    static constexpr float SliderWidth = 142.f;
+    static constexpr glm::vec3 ToolTipOffset(10.f, 10.f, 0.f);
 
     struct SliderData final
     {
@@ -712,7 +712,7 @@ void OptionsState::buildScene()
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         
-        constexpr float Padding = 10.f;
+        static constexpr float Padding = 10.f;
         auto bounds = cro::Text::getLocalBounds(entity);
         bounds.width += Padding;
         bounds.height += Padding;
@@ -1360,7 +1360,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
 void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
 {
-    constexpr glm::vec2 BackgroundSize(192.f, 108.f);
+    static constexpr glm::vec2 BackgroundSize(192.f, 108.f);
     const cro::Colour BackgroundColour = cro::Colour(std::uint8_t(26), 30, 45);
 
     auto entity = m_scene.createEntity();
@@ -1416,12 +1416,12 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
 
     //create entries
     glm::vec3 entryPos(2.f, 74.f, 0.1f);
-    constexpr glm::vec3 TitleOffset(36.f, 30.f, 0.f);
-    constexpr glm::vec3 DescOffset(36.f, 20.f, 0.f);
+    static constexpr glm::vec3 TitleOffset(36.f, 30.f, 0.f);
+    static constexpr glm::vec3 DescOffset(36.f, 20.f, 0.f);
 
-    constexpr float Spacing = 36.f;
-    constexpr std::int32_t ItemsPerRow = 5;
-    constexpr float ItemSize = 64.f;
+    static constexpr float Spacing = 36.f;
+    static constexpr std::int32_t ItemsPerRow = 5;
+    static constexpr float ItemSize = 64.f;
 
     auto scrollNode = m_scene.createEntity();
     scrollNode.addComponent<cro::Transform>();
@@ -1464,7 +1464,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
         croppedEnts.push_back(entity);
 
         //description
-        constexpr std::size_t MaxStrLen = 20;
+        static constexpr std::size_t MaxStrLen = 20;
         auto str = AchievementDesc[i].first;
 
         if (str.size() > MaxStrLen)
@@ -1487,7 +1487,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
         entryPos.y -= Spacing;
     }
 
-    auto updateCropping = [croppedEnts, BackgroundSize, scrollNode]()
+    auto updateCropping = [croppedEnts, scrollNode]()
     {
         for (auto ent : croppedEnts)
         {
@@ -1537,7 +1537,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(
-        [&, scrollNode, Spacing, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+        [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
@@ -1566,11 +1566,11 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(
-        [&, scrollNode, Spacing, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+        [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
-                const float MaxScroll = Spacing * (AchievementID::Count - 4);
+                static constexpr float MaxScroll = Spacing * (AchievementID::Count - 4);
                 auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
                 pos.y = std::min(MaxScroll, pos.y + Spacing);
                 scrollNode.getComponent<cro::Transform>().setPosition(pos);

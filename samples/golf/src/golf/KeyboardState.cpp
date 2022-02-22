@@ -100,12 +100,12 @@ namespace
         }
     };
 
-    constexpr glm::vec2 GridOffset(19.f, 108.f);
-    constexpr glm::vec2 GridSpacing(77.f, 88.f);
+    static constexpr glm::vec2 GridOffset(19.f, 108.f);
+    static constexpr glm::vec2 GridSpacing(77.f, 88.f);
 
-    constexpr std::int32_t GridX = 10;
-    constexpr std::int32_t GridY = 3;
-    constexpr std::int32_t GridSize = GridX * GridY;
+    static constexpr std::int32_t GridX = 10;
+    static constexpr std::int32_t GridY = 3;
+    static constexpr std::int32_t GridSize = GridX * GridY;
 }
 
 KeyboardState::KeyboardState(cro::StateStack& ss, cro::State::Context ctx)
