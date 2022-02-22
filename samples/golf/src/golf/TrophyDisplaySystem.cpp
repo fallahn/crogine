@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 TrophyDisplaySystem::TrophyDisplaySystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(TrophyDisplaySystem))
@@ -43,6 +44,9 @@ TrophyDisplaySystem::TrophyDisplaySystem(cro::MessageBus& mb)
     requireComponent<TrophyDisplay>();
     requireComponent<cro::Transform>();
     requireComponent<cro::ParticleEmitter>();
+
+    auto wave = cro::Util::Wavetable::sine(0.5f, 0.25f);
+    m_wavetable.insert(m_wavetable.end(), wave.begin(), wave.begin() + (wave.size() / 2));
 }
 
 //public
@@ -52,6 +56,7 @@ void TrophyDisplaySystem::process(float dt)
     for (auto entity : entities)
     {
         auto& trophy = entity.getComponent<TrophyDisplay>();
+        auto& tx = entity.getComponent<cro::Transform>();
         switch (trophy.state)
         {
         default:
@@ -64,7 +69,7 @@ void TrophyDisplaySystem::process(float dt)
                 trophy.scale = std::min(1.f, trophy.scale + (dt * 4.f));
 
                 float scale = cro::Util::Easing::easeOutBack(trophy.scale);
-                entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+                tx.setScale(glm::vec3(scale));
 
                 if (trophy.scale == 1)
                 {
@@ -78,8 +83,22 @@ void TrophyDisplaySystem::process(float dt)
             }
             [[fallthrough]];
         case TrophyDisplay::Active:
-            entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+            if (trophy.delay < 0)
+            {
+                trophy.tableIndex = std::min(m_wavetable.size() - 1, trophy.tableIndex + 1);
+                {
+                    auto position = tx.getPosition();
+                    position.y = trophy.startHeight + m_wavetable[trophy.tableIndex];
+                    tx.setPosition(position);
+                }
+            }
+            tx.rotate(cro::Transform::Y_AXIS, dt);
             break;
         }
     }
+}
+
+void TrophyDisplaySystem::onEntityAdded(cro::Entity entity)
+{
+    entity.getComponent<TrophyDisplay>().startHeight = entity.getComponent<cro::Transform>().getPosition().y;
 }

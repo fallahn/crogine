@@ -1694,6 +1694,33 @@ void GolfState::buildTrophyScene()
             entity.addComponent<cro::ParticleEmitter>().settings = emitterSettings;
 
             m_trophies[i] = entity;
+            auto trophyEnt = entity;
+
+            //name label
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            entity.addComponent<cro::Drawable2D>().setVertexData(
+                {
+                    cro::Vertex2D(glm::vec2(-10.f, 10.f), cro::Colour::Magenta),
+                    cro::Vertex2D(glm::vec2(-10.f), cro::Colour::Magenta),
+                    cro::Vertex2D(glm::vec2(10.f), cro::Colour::Magenta),
+                    cro::Vertex2D(glm::vec2(10.f, -10.f), cro::Colour::Magenta)
+                });
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&,trophyEnt](cro::Entity e, float)
+            {
+                auto pos = m_trophyScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel
+                            (trophyEnt.getComponent<cro::Transform>().getPosition(), m_trophySceneTexture.getSize());
+
+                pos.y -= 40.f;
+
+                float scale = m_sharedData.pixelScale ? m_viewScale.x : 1.f;
+                e.getComponent<cro::Transform>().setPosition(pos * scale);
+
+                //scale = m_sharedData.pixelScale ? 1.f : m_viewScale.x;
+                e.getComponent<cro::Transform>().setScale(trophyEnt.getComponent<cro::Transform>().getScale());
+            };
         }
         ++i;
     }

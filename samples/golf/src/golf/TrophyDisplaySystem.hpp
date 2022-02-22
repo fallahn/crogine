@@ -33,6 +33,9 @@ source distribution.
 
 struct TrophyDisplay final
 {
+    std::size_t tableIndex = 0;
+    float startHeight = 0.f;
+
     float delay = 0.f;
     float scale = 0.f;
 
@@ -48,4 +51,9 @@ public:
     explicit TrophyDisplaySystem(cro::MessageBus&);
 
     void process(float) override;
+
+private:
+    std::vector<float> m_wavetable;
+
+    void onEntityAdded(cro::Entity) override;
 };
