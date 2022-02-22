@@ -51,6 +51,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
@@ -87,15 +88,7 @@ void GolfState::buildUI()
         return;
     }
 
-    //draws the background using the render texture
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_gameSceneTexture.getTexture());
-    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, 0.5f));
-    entity.addComponent<cro::Callback>().function =
-        [](cro::Entity e, float)
+    auto resizeCallback = [](cro::Entity e, float)
     {
         //this is activated once to make sure the
         //sprite is up to date with any texture buffer resize
@@ -104,14 +97,30 @@ void GolfState::buildUI()
         e.getComponent<cro::Transform>().setOrigin(texSize / 2.f);
         e.getComponent<cro::Callback>().active = false;
     };
+
+    //draws the background using the render texture
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_gameSceneTexture.getTexture());
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, 0.5f));
+    entity.addComponent<cro::Callback>().function = resizeCallback;
+
     auto courseEnt = entity;
     m_courseEnt = courseEnt;
 
-    auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
-    camera.updateMatrices(m_cameras[CameraID::Player].getComponent<cro::Transform>());
-    auto pos = camera.coordsToPixel(m_holeData[0].tee, m_gameSceneTexture.getSize());
+    //displays the trophies on round end - has to be displayed over top of scoreboard
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_trophySceneTexture.getTexture());
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, 0.f));
+    entity.addComponent<cro::Callback>().function = resizeCallback;
 
-    
+    auto trophyEnt = entity;
+
     //info panel background - vertices are set in resize callback
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -681,7 +690,7 @@ void GolfState::buildUI()
 
 
     //callback for the UI camera when window is resized
-    auto updateView = [&, /*playerEnt,*/ courseEnt, infoEnt, windEnt, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
+    auto updateView = [&, trophyEnt, courseEnt, infoEnt, windEnt, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.5f, 20.f);
@@ -697,11 +706,9 @@ void GolfState::buildUI()
         courseEnt.getComponent<cro::Transform>().setScale(courseScale);
         courseEnt.getComponent<cro::Callback>().active = true; //makes sure to delay so updating the texture size is complete first
 
-
-        //update avatar position
-        /*const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
-        auto pos = camera.coordsToPixel(m_currentPlayer.position, texSize);
-        playerEnt.getComponent<cro::Transform>().setPosition(pos);*/
+        trophyEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, 2.1f));
+        trophyEnt.getComponent<cro::Transform>().setScale(courseScale);
+        trophyEnt.getComponent<cro::Callback>().active = true;
 
         //update minimap
         const auto uiSize = size / m_viewScale;
@@ -1636,8 +1643,14 @@ void GolfState::buildTrophyScene()
 {
     auto updateCam = [&](cro::Camera& cam)
     {
+        auto vpSize = calcVPSize();
+
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-    
+        float maxScale = std::floor(winSize.y / vpSize.y);
+        float scale = m_sharedData.pixelScale ? maxScale : 1.f;
+        auto texSize = winSize / scale;
+        m_trophySceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, winSize.x / winSize.y, 0.1f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
@@ -1649,10 +1662,18 @@ void GolfState::buildTrophyScene()
 
     const std::array<std::pair<std::string, glm::vec3>, 3u> Paths =
     {
-        std::make_pair("assets/golf/models/trophy01.cmt", glm::vec3(0.f, -0.2f, -1.f)),
-        std::make_pair("assets/golf/models/trophy02.cmt", glm::vec3(-0.5f, -0.3f, -1.f)),
-        std::make_pair("assets/golf/models/trophy03.cmt", glm::vec3(0.5f, -0.35f, -1.f))        
+        std::make_pair("assets/golf/models/trophy01.cmt", glm::vec3(0.f, -0.3f, -1.f)),
+        std::make_pair("assets/golf/models/trophy02.cmt", glm::vec3(-0.5f, -0.35f, -1.f)),
+        std::make_pair("assets/golf/models/trophy03.cmt", glm::vec3(0.5f, -0.4f, -1.f))        
     };
+
+    cro::EmitterSettings emitterSettings;
+    emitterSettings.loadFromFile("assets/golf/particles/firework.cps", m_resources.textures);
+
+    if (emitterSettings.releaseCount == 0)
+    {
+        emitterSettings.releaseCount = 10;
+    }
 
     std::int32_t i = 0;
     cro::ModelDefinition md(m_resources);
@@ -1670,6 +1691,7 @@ void GolfState::buildTrophyScene()
             entity.getComponent<cro::Model>().setMaterial(0, material);
 
             entity.addComponent<TrophyDisplay>().delay = static_cast<float>(i) / 2.f;
+            entity.addComponent<cro::ParticleEmitter>().settings = emitterSettings;
 
             m_trophies[i] = entity;
         }

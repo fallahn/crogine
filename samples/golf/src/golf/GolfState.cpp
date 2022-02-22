@@ -736,7 +736,9 @@ bool GolfState::simulate(float dt)
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 
-    //if (m_roundEnded)
+#ifndef CRO_DEBUG_
+    if (m_roundEnded)
+#endif
     {
         m_trophyScene.simulate(dt);
     }
@@ -821,13 +823,17 @@ void GolfState::render()
         m_gameScene.setActiveCamera(oldCam);
     }
 
+#ifndef CRO_DEBUG_
+    if (m_roundEnded && !m_sharedData.tutorial)
+#endif
+    {
+        m_trophySceneTexture.clear(cro::Colour::Transparent);
+        m_trophyScene.render();
+        m_trophySceneTexture.display();
+    }
+
     //m_uiScene.setActiveCamera(uiCam);
     m_uiScene.render();
-
-    //if (m_roundEnded && !m_sharedData.tutorial)
-    {
-        m_trophyScene.render();
-    }
 }
 
 //private
@@ -1689,6 +1695,7 @@ void GolfState::addSystems()
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 
     m_trophyScene.addSystem<TrophyDisplaySystem>(mb);
+    m_trophyScene.addSystem<cro::ParticleSystem>(mb);
     m_trophyScene.addSystem<cro::CameraSystem>(mb);
     m_trophyScene.addSystem<cro::ModelRenderer>(mb);
 }

@@ -29,7 +29,11 @@ source distribution.
 
 #include "TrophyDisplaySystem.hpp"
 
+#include <crogine/ecs/Scene.hpp>
+
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 
 #include <crogine/util/Easings.hpp>
 
@@ -38,6 +42,7 @@ TrophyDisplaySystem::TrophyDisplaySystem(cro::MessageBus& mb)
 {
     requireComponent<TrophyDisplay>();
     requireComponent<cro::Transform>();
+    requireComponent<cro::ParticleEmitter>();
 }
 
 //public
@@ -64,6 +69,11 @@ void TrophyDisplaySystem::process(float dt)
                 if (trophy.scale == 1)
                 {
                     trophy.state = TrophyDisplay::Active;
+                    entity.getComponent<cro::ParticleEmitter>().start();
+
+                    //have to make sure the camera is active to add the system
+                    //to its draw list...
+                    getScene()->getActiveCamera().getComponent<cro::Camera>().active = true;
                 }
             }
             [[fallthrough]];

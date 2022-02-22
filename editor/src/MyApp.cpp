@@ -116,9 +116,9 @@ bool MyApp::initialise()
 
     //m_stateStack.pushState(States::WorldEditor);
     //m_stateStack.pushState(States::ModelViewer);
-    //m_stateStack.pushState(States::ParticleEditor);
+    m_stateStack.pushState(States::ParticleEditor);
     //m_stateStack.pushState(States::LayoutEditor);
-    m_stateStack.pushState(States::SpriteEditor);
+    //m_stateStack.pushState(States::SpriteEditor);
 
     return true;
 }

@@ -112,6 +112,7 @@ private:
     cro::Clock m_readyClock; //pings ready state until ack'd
 
     cro::RenderTexture m_gameSceneTexture;
+    cro::RenderTexture m_trophySceneTexture;
     std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
 
     cro::Image m_currentMap;
