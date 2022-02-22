@@ -204,6 +204,9 @@
     <ClCompile Include="src\DefaultAchievements.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\NotificationSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -400,6 +403,9 @@
     </ClInclude>
     <ClInclude Include="src\DefaultAchievements.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\NotificationSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

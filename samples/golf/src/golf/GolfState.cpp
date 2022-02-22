@@ -45,6 +45,7 @@ source distribution.
 #include "TutorialDirector.hpp"
 #include "BallSystem.hpp"
 #include "FpsCameraSystem.hpp"
+#include "NotificationSystem.hpp"
 #include "../Achievements.hpp"
 #include "../AchievementStrings.hpp"
 
@@ -252,11 +253,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::Tutorial);
             break;
         case SDLK_F8:
-            //showMessageBoard(MessageBoardID::Bunker);
-            //updateMiniMap();
-            //removeClient(1);
-            //floatingMessage("Hooked!");
-            //Achievements::awardAchievement(AchievementStrings[AchievementID::Boomerang]);
+
             break;
         case SDLK_KP_0:
             setActiveCamera(0);
@@ -1670,6 +1667,7 @@ void GolfState::addSystems()
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
+    m_uiScene.addSystem<NotificationSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::SpriteAnimator>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
@@ -2630,25 +2628,7 @@ void GolfState::removeClient(std::uint8_t clientID)
     }
     str += " left the game";
 
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, UIBarHeight * m_viewScale.y * 2.f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI)).setString(str);
-    entity.getComponent<cro::Text>().setCharacterSize(8u * static_cast<std::uint32_t>(m_viewScale.y));
-    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(5.f);
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-        currTime -= dt;
-        if (currTime < 0)
-        {
-            e.getComponent<cro::Callback>().active = false;
-            m_uiScene.destroyEntity(e);
-        }
-    };
+    showNotification(str);
 
     m_sharedData.connectionData[clientID].playerCount = 0;
 }

@@ -37,6 +37,7 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "ScoreStrings.hpp"
 #include "MessageIDs.hpp"
+#include "NotificationSystem.hpp"
 #include "../ErrorCheck.hpp"
 #include "../Achievements.hpp"
 #include "../AchievementStrings.hpp"
@@ -1608,27 +1609,20 @@ void GolfState::notifyAchievement(const std::array<std::uint8_t, 2u>& data)
             auto name = m_sharedData.connectionData[data[0]].playerData[0].name;
             auto achievement = AchievementLabels[data[1]];
 
-            auto entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition({ 4.f, UIBarHeight * m_viewScale.y * 2.f });
-            entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI)).setString(name + " achieved " + achievement);
-            entity.getComponent<cro::Text>().setCharacterSize(8u * static_cast<std::uint32_t>(m_viewScale.y));
-            entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().setUserData<float>(5.f);
-            entity.getComponent<cro::Callback>().function =
-                [&](cro::Entity e, float dt)
-            {
-                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-                currTime -= dt;
-                if (currTime < 0)
-                {
-                    e.getComponent<cro::Callback>().active = false;
-                    m_uiScene.destroyEntity(e);
-                }
-            };
+            showNotification(name + " achieved " + achievement);
         }
     }
+}
+
+void GolfState::showNotification(const std::string& msg)
+{
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 4.f, UIBarHeight * m_viewScale.y * 2.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI));
+    entity.getComponent<cro::Text>().setCharacterSize(8u * static_cast<std::uint32_t>(m_viewScale.y));
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+    entity.addComponent<Notification>().message = msg;
 }
 
 void GolfState::updateMiniMap()
