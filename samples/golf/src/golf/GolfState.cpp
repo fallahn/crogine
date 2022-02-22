@@ -71,6 +71,7 @@ source distribution.
 #include <crogine/ecs/systems/BillboardSystem.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
+#include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -1698,6 +1699,7 @@ void GolfState::addSystems()
     m_trophyScene.addSystem<cro::ParticleSystem>(mb);
     m_trophyScene.addSystem<cro::CameraSystem>(mb);
     m_trophyScene.addSystem<cro::ModelRenderer>(mb);
+    m_trophyScene.addSystem<cro::AudioPlayerSystem>(mb);
 }
 
 void GolfState::buildScene()

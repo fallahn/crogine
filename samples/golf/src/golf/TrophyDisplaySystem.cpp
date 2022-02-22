@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Wavetable.hpp>
@@ -44,6 +45,7 @@ TrophyDisplaySystem::TrophyDisplaySystem(cro::MessageBus& mb)
     requireComponent<TrophyDisplay>();
     requireComponent<cro::Transform>();
     requireComponent<cro::ParticleEmitter>();
+    requireComponent<cro::AudioEmitter>();
 
     auto wave = cro::Util::Wavetable::sine(0.5f, 0.25f);
     m_wavetable.insert(m_wavetable.end(), wave.begin(), wave.begin() + (wave.size() / 2));
@@ -75,6 +77,7 @@ void TrophyDisplaySystem::process(float dt)
                 {
                     trophy.state = TrophyDisplay::Active;
                     entity.getComponent<cro::ParticleEmitter>().start();
+                    entity.getComponent<cro::AudioEmitter>().play();
 
                     //have to make sure the camera is active to add the system
                     //to its draw list...

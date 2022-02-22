@@ -43,6 +43,8 @@ source distribution.
 #include "../Achievements.hpp"
 #include "../AchievementStrings.hpp"
 
+#include <crogine/audio/AudioScape.hpp>
+
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/SpriteAnimation.hpp>
@@ -1675,6 +1677,9 @@ void GolfState::buildTrophyScene()
         emitterSettings.releaseCount = 10;
     }
 
+    cro::AudioScape as;
+    as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
+
     std::int32_t i = 0;
     cro::ModelDefinition md(m_resources);
     for (const auto& [path, position] : Paths)
@@ -1692,6 +1697,10 @@ void GolfState::buildTrophyScene()
 
             entity.addComponent<TrophyDisplay>().delay = static_cast<float>(i) / 2.f;
             entity.addComponent<cro::ParticleEmitter>().settings = emitterSettings;
+
+            entity.addComponent<cro::AudioEmitter>() = as.getEmitter("firework");
+            entity.getComponent<cro::AudioEmitter>().setPitch(static_cast<float>(cro::Util::Random::value(8, 11)) / 10.f);
+            entity.getComponent<cro::AudioEmitter>().setLooped(false);
 
             m_trophies[i] = entity;
             auto trophyEnt = entity;
