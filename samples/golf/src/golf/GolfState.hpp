@@ -101,6 +101,7 @@ private:
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
+    cro::Scene m_trophyScene;
 
     cro::Clock m_mouseClock;
     bool m_mouseVisible;
@@ -265,6 +266,9 @@ private:
     void createTransition();
     void notifyAchievement(const std::array<std::uint8_t, 2u>&);
     void showNotification(const std::string&);
+
+    void buildTrophyScene();
+    std::array<cro::Entity, 3u> m_trophies = {};
 
     //-----------
 

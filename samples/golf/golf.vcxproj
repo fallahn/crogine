@@ -341,6 +341,7 @@
     <ClCompile Include="src\golf\SoundEffectsDirector.cpp" />
     <ClCompile Include="src\golf\spooky2.cpp" />
     <ClCompile Include="src\golf\TerrainBuilder.cpp" />
+    <ClCompile Include="src\golf\TrophyDisplaySystem.cpp" />
     <ClCompile Include="src\golf\TutorialDirector.cpp" />
     <ClCompile Include="src\golf\TutorialState.cpp" />
     <ClCompile Include="src\golf\Weather.cpp" />
@@ -409,6 +410,7 @@
     <ClInclude Include="src\golf\Terrain.hpp" />
     <ClInclude Include="src\golf\TerrainBuilder.hpp" />
     <ClInclude Include="src\golf\TextAnimCallback.hpp" />
+    <ClInclude Include="src\golf\TrophyDisplaySystem.hpp" />
     <ClInclude Include="src\golf\TutorialDirector.hpp" />
     <ClInclude Include="src\golf\TutorialState.hpp" />
     <ClInclude Include="src\golf\Utility.hpp" />

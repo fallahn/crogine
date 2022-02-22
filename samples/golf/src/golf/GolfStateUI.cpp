@@ -38,6 +38,7 @@ source distribution.
 #include "ScoreStrings.hpp"
 #include "MessageIDs.hpp"
 #include "NotificationSystem.hpp"
+#include "TrophyDisplaySystem.hpp"
 #include "../ErrorCheck.hpp"
 #include "../Achievements.hpp"
 #include "../AchievementStrings.hpp"
@@ -816,6 +817,12 @@ void GolfState::showCountdown(std::uint8_t seconds)
         m_statBoardScores[0].client == m_sharedData.clientConnection.connectionID)
     {
         Achievements::awardAchievement(AchievementStrings[AchievementID::LeaderOfThePack]);
+    }
+
+    auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());
+    for (auto i = 0u; i < trophyCount; ++i)
+    {
+        m_trophies[i].getComponent<TrophyDisplay>().state = TrophyDisplay::In;
     }
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -1623,6 +1630,51 @@ void GolfState::showNotification(const std::string& msg)
     entity.getComponent<cro::Text>().setCharacterSize(8u * static_cast<std::uint32_t>(m_viewScale.y));
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<Notification>().message = msg;
+}
+
+void GolfState::buildTrophyScene()
+{
+    auto updateCam = [&](cro::Camera& cam)
+    {
+        auto winSize = glm::vec2(cro::App::getWindow().getSize());
+    
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, winSize.x / winSize.y, 0.1f, 10.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+
+    auto& cam = m_trophyScene.getActiveCamera().getComponent<cro::Camera>();
+    cam.resizeCallback = updateCam;
+    cam.isStatic = true;
+    updateCam(cam);
+
+    const std::array<std::pair<std::string, glm::vec3>, 3u> Paths =
+    {
+        std::make_pair("assets/golf/models/trophy01.cmt", glm::vec3(0.f, -0.2f, -1.f)),
+        std::make_pair("assets/golf/models/trophy02.cmt", glm::vec3(-0.5f, -0.3f, -1.f)),
+        std::make_pair("assets/golf/models/trophy03.cmt", glm::vec3(0.5f, -0.35f, -1.f))        
+    };
+
+    std::int32_t i = 0;
+    cro::ModelDefinition md(m_resources);
+    for (const auto& [path, position] : Paths)
+    {
+        if (md.loadFromFile(path))
+        {
+            auto entity = m_trophyScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(position);
+            entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+            md.createModel(entity);
+
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]); //doesn't pixel fade like Cel does.
+            applyMaterialData(md, material);
+            entity.getComponent<cro::Model>().setMaterial(0, material);
+
+            entity.addComponent<TrophyDisplay>().delay = static_cast<float>(i) / 2.f;
+
+            m_trophies[i] = entity;
+        }
+        ++i;
+    }
 }
 
 void GolfState::updateMiniMap()

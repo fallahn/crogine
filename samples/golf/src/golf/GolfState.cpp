@@ -46,6 +46,7 @@ source distribution.
 #include "BallSystem.hpp"
 #include "FpsCameraSystem.hpp"
 #include "NotificationSystem.hpp"
+#include "TrophyDisplaySystem.hpp"
 #include "../Achievements.hpp"
 #include "../AchievementStrings.hpp"
 
@@ -132,6 +133,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_sharedData        (sd),
     m_gameScene         (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEM_TIME | cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_uiScene           (context.appInstance.getMessageBus(), 1024),
+    m_trophyScene       (context.appInstance.getMessageBus()),
     m_mouseVisible      (true),
     m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
     m_wantsGameState    (true),
@@ -151,6 +153,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         loadAssets();
         initAudio();
         buildScene();
+        buildTrophyScene();
         });
 
     createTransition();
@@ -253,7 +256,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::Tutorial);
             break;
         case SDLK_F8:
-
+            for (auto e : m_trophies) e.getComponent<TrophyDisplay>().state = TrophyDisplay::In;
             break;
         case SDLK_KP_0:
             setActiveCamera(0);
@@ -434,6 +437,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
+    m_trophyScene.forwardEvent(evt);
 
     return true;
 }
@@ -659,6 +663,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
+    m_trophyScene.forwardMessage(msg);
 }
 
 bool GolfState::simulate(float dt)
@@ -731,6 +736,10 @@ bool GolfState::simulate(float dt)
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 
+    //if (m_roundEnded)
+    {
+        m_trophyScene.simulate(dt);
+    }
 
     //tell the flag to raise or lower
     if (m_currentPlayer.terrain == TerrainID::Green)
@@ -814,6 +823,11 @@ void GolfState::render()
 
     //m_uiScene.setActiveCamera(uiCam);
     m_uiScene.render();
+
+    //if (m_roundEnded && !m_sharedData.tutorial)
+    {
+        m_trophyScene.render();
+    }
 }
 
 //private
@@ -1673,6 +1687,10 @@ void GolfState::addSystems()
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
+
+    m_trophyScene.addSystem<TrophyDisplaySystem>(mb);
+    m_trophyScene.addSystem<cro::CameraSystem>(mb);
+    m_trophyScene.addSystem<cro::ModelRenderer>(mb);
 }
 
 void GolfState::buildScene()
