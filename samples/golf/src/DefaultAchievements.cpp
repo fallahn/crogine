@@ -189,6 +189,15 @@ float DefaultAchievements::incrementStat(const std::string& name, float value)
     return 0.f;
 }
 
+const StatData* DefaultAchievements::getStat(const std::string& name) const
+{
+    if (m_stats.count(name) != 0)
+    {
+        return &m_stats.at(name);
+    }
+    return nullptr;
+}
+
 #ifdef CRO_DEBUG_
 void DefaultAchievements::showTest()
 {

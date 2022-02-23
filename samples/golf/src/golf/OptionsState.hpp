@@ -98,7 +98,7 @@ private:
         enum
         {
             Volume, FOV, Pixel,
-            Achievements,
+            Achievements, Stats,
             Count
         };
     };
@@ -112,8 +112,11 @@ private:
     void buildAVMenu(cro::Entity, const cro::SpriteSheet&);
     void buildControlMenu(cro::Entity, const cro::SpriteSheet&);
     void buildAchievementsMenu(cro::Entity, const cro::SpriteSheet&);
+    cro::Entity buildStatsMenu(const cro::SpriteSheet&);
 
     void createButtons(cro::Entity, std::int32_t, std::uint32_t, std::uint32_t, const cro::SpriteSheet&);
+
+    void updateToolTip(cro::Entity, std::int32_t);
 
     void quitState();
 };

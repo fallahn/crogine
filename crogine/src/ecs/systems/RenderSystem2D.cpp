@@ -94,7 +94,6 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
     for (auto entity : entities)
     {
         auto& drawable = entity.getComponent<Drawable2D>();
-
         if (drawable.m_autoCrop)
         {
             const auto worldMat = entity.getComponent<cro::Transform>().getWorldTransform();
