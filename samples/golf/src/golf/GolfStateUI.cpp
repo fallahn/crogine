@@ -820,15 +820,27 @@ void GolfState::showCountdown(std::uint8_t seconds)
     showScoreboard(true);
 
     //check if we're the winner
-    if (m_statBoardScores.size() > 1 &&
-        m_statBoardScores[0].client == m_sharedData.clientConnection.connectionID)
+    if (m_statBoardScores.size() > 1) //not the only player
     {
-        Achievements::awardAchievement(AchievementStrings[AchievementID::LeaderOfThePack]);
+        if (m_statBoardScores[0].client == m_sharedData.clientConnection.connectionID)
+        {
+            //remember this is auto-disabled if the player is not the only one on the client
+            Achievements::awardAchievement(AchievementStrings[AchievementID::LeaderOfThePack]);
+        }
     }
+    Achievements::incrementStat(StatStrings[StatID::TotalRounds]);
 
     auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());
+    float trophyStat = 1.f - (1.f / m_statBoardScores.size()); //in other words, 0 if we're the only player
+
     for (auto i = 0u; i < trophyCount; ++i)
     {
+        if (m_statBoardScores.size() > 1 &&
+            m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID)
+        {
+            Achievements::incrementStat(StatStrings[StatID::GoldAverage + i], trophyStat);
+        }
+
         m_trophies[i].getComponent<TrophyDisplay>().state = TrophyDisplay::In;
         m_trophyLabels[i].getComponent<cro::Callback>().active = true;
 

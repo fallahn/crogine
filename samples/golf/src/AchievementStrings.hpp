@@ -32,6 +32,14 @@ source distribution.
 #include <string>
 #include <array>
 
+/*
+Note that the default achievement system only reserves space
+for 256 achivements and 64 stats. Any more than this will not
+be read/written to the stat file or will potentially corrupt
+the data (and we don't want to upset people by ruining their
+achievements!!)
+*/
+
 namespace AchievementID
 {
     enum
@@ -55,6 +63,7 @@ namespace AchievementID
 
         Count
     };
+    static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
 }
 
 static const std::array<std::string, AchievementID::Count> AchievementStrings = 
@@ -121,8 +130,14 @@ namespace StatID
         PuttDistance,
         StrokeDistance,
 
+        GoldAverage,
+        SilverAverage,
+        BronzeAverage,
+        TotalRounds,
+
         Count
     };
+    static_assert(Count <= 64, "Count exceeds maximum number of stats");
 }
 
 //these are indexed by the above, so do try to get them in the correct order ;)
@@ -130,13 +145,29 @@ static const std::array<std::string, StatID::Count> StatStrings =
 {
     "holes_played",
     "putt_distance",
-    "stroke_distance"
+    "stroke_distance",
+
+    "gold_average",
+    "silver_average",
+    "bronze_average",
+    "total_rounds"
+};
+
+static const std::array<std::string, StatID::Count> StatLabels =
+{
+    "Full Rounds Completed (18 holes)",
+    "Total Putt Distance (metres)",
+    "Total Stroke Distance (metres)",
+    "Percentage of Gold Wins",
+    "Percentage of Silver Wins",
+    "Percentage of Bronze Wins",
+    "Total Rounds Played"
 };
 
 struct StatTrigger final
 {
     std::int32_t achID = -1;
-    float threshold = 0.f;
+    float threshold = std::numeric_limits<float>::max();
 };
 
 static std::array<std::vector<StatTrigger>, StatID::Count> StatTriggers = {};
