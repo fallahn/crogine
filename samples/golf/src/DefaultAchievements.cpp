@@ -189,6 +189,15 @@ float DefaultAchievements::incrementStat(const std::string& name, float value)
     return 0.f;
 }
 
+const StatData* DefaultAchievements::getStat(const std::string& name) const
+{
+    if (m_stats.count(name) != 0)
+    {
+        return &m_stats.at(name);
+    }
+    return nullptr;
+}
+
 #ifdef CRO_DEBUG_
 void DefaultAchievements::showTest()
 {
@@ -231,22 +240,25 @@ void DefaultAchievements::syncStat(const StatData& stat)
     m_statsUpdated = true;
 
     //check if this should trigger an achievement
-    auto& triggers = StatTriggers[stat.id];
-
-    for (const auto& t : triggers)
+    if (stat.id < StatTriggers.size())
     {
-        if (stat.value >= t.threshold)
-        {
-            awardAchievement(AchievementStrings[t.achID]);
-        }
-    }
+        auto& triggers = StatTriggers[stat.id];
 
-    //and remove completed
-    triggers.erase(std::remove_if(triggers.begin(), triggers.end(),
-        [&stat](const StatTrigger& t)
+        for (const auto& t : triggers)
         {
-            return stat.value >= t.threshold;
-        }), triggers.end());
+            if (stat.value >= t.threshold)
+            {
+                awardAchievement(AchievementStrings[t.achID]);
+            }
+        }
+
+        //and remove completed
+        triggers.erase(std::remove_if(triggers.begin(), triggers.end(),
+            [&stat](const StatTrigger& t)
+            {
+                return stat.value >= t.threshold;
+            }), triggers.end());
+    }
 }
 
 void DefaultAchievements::readFile()

@@ -257,7 +257,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::Tutorial);
             break;
         case SDLK_F8:
-            for (auto e : m_trophies) e.getComponent<TrophyDisplay>().state = TrophyDisplay::In;
+            for (auto i = 0u; i < m_trophies.size(); ++i)
+            {
+                m_trophies[i].getComponent<TrophyDisplay>().state = TrophyDisplay::In;
+                m_trophyLabels[i].getComponent<cro::Callback>().active = true;
+            }
             break;
         case SDLK_KP_0:
             setActiveCamera(0);
