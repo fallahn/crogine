@@ -153,8 +153,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         addSystems();
         loadAssets();
         initAudio();
-        buildScene();
         buildTrophyScene();
+        buildScene();
         });
 
     createTransition();

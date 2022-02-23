@@ -1741,10 +1741,10 @@ void GolfState::buildTrophyScene()
                 trophyPos.y -= 0.06f;
 
                 auto pos = m_trophyScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel
-                            (trophyPos, m_trophySceneTexture.getSize());
+                            (trophyPos/*, m_trophySceneTexture.getSize()*/);
 
                 float scale = m_sharedData.pixelScale ? m_viewScale.x : 1.f;
-                e.getComponent<cro::Transform>().setPosition(pos * scale);
+                e.getComponent<cro::Transform>().setPosition(pos /** scale*/);
                 e.getComponent<cro::Transform>().setScale(trophyEnt.getComponent<cro::Transform>().getScale() * m_viewScale.x);
             };
 
