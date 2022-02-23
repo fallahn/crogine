@@ -830,6 +830,12 @@ void GolfState::showCountdown(std::uint8_t seconds)
     for (auto i = 0u; i < trophyCount; ++i)
     {
         m_trophies[i].getComponent<TrophyDisplay>().state = TrophyDisplay::In;
+        m_trophyLabels[i].getComponent<cro::Callback>().active = true;
+
+        m_trophyLabels[i].getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[i].client].getTexture(), false);
+        auto bounds = m_trophyLabels[i].getComponent<cro::Sprite>().getTextureBounds();
+        bounds.bottom = bounds.height * m_statBoardScores[i].player;
+        m_trophyLabels[i].getComponent<cro::Sprite>().setTextureRect(bounds);
     }
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -1699,28 +1705,29 @@ void GolfState::buildTrophyScene()
             //name label
             entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
-            entity.addComponent<cro::Drawable2D>().setVertexData(
-                {
-                    cro::Vertex2D(glm::vec2(-10.f, 10.f), cro::Colour::Magenta),
-                    cro::Vertex2D(glm::vec2(-10.f), cro::Colour::Magenta),
-                    cro::Vertex2D(glm::vec2(10.f), cro::Colour::Magenta),
-                    cro::Vertex2D(glm::vec2(10.f, -10.f), cro::Colour::Magenta)
-                });
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().function =
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
+            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+            bounds.height /= 4.f;
+            bounds.bottom = bounds.height * i;
+            entity.getComponent<cro::Sprite>().setTextureRect(bounds);
+            entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -1.2f });
+
+            entity.addComponent<cro::Callback>().function =
                 [&,trophyEnt](cro::Entity e, float)
             {
-                auto pos = m_trophyScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel
-                            (trophyEnt.getComponent<cro::Transform>().getPosition(), m_trophySceneTexture.getSize());
+                auto trophyPos = trophyEnt.getComponent<cro::Transform>().getPosition();
+                trophyPos.y -= 0.06f;
 
-                pos.y -= 40.f;
+                auto pos = m_trophyScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel
+                            (trophyPos, m_trophySceneTexture.getSize());
 
                 float scale = m_sharedData.pixelScale ? m_viewScale.x : 1.f;
                 e.getComponent<cro::Transform>().setPosition(pos * scale);
-
-                //scale = m_sharedData.pixelScale ? 1.f : m_viewScale.x;
-                e.getComponent<cro::Transform>().setScale(trophyEnt.getComponent<cro::Transform>().getScale());
+                e.getComponent<cro::Transform>().setScale(trophyEnt.getComponent<cro::Transform>().getScale() * m_viewScale.x);
             };
+
+            m_trophyLabels[i] = entity;
         }
         ++i;
     }
