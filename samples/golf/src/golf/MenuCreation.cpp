@@ -2664,7 +2664,7 @@ void MenuState::updateLobbyAvatars()
         {
             if (c.connectionID < m_sharedData.nameTextures.size())
             {
-                m_sharedData.nameTextures[c.connectionID].clear(cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha / 2.f));
+                m_sharedData.nameTextures[c.connectionID].clear(cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha / 3.f));
                 
                 for (auto i = 0u; i < c.playerCount; ++i)
                 {

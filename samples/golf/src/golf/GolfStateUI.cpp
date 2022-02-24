@@ -771,7 +771,7 @@ void GolfState::buildUI()
     cam.renderFlags = ~RenderFlags::Reflection;
     cam.resizeCallback = updateView;
     updateView(cam);
-
+    m_uiScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 5.f });
 
     //camera for rendering player reflection
     //wow all this effort I went to now unused... >.<
@@ -1740,11 +1740,10 @@ void GolfState::buildTrophyScene()
                 auto trophyPos = trophyEnt.getComponent<cro::Transform>().getPosition();
                 trophyPos.y -= 0.06f;
 
-                auto pos = m_trophyScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel
-                            (trophyPos/*, m_trophySceneTexture.getSize()*/);
+                auto pos = m_trophyScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(trophyPos, m_trophySceneTexture.getSize());
 
                 float scale = m_sharedData.pixelScale ? m_viewScale.x : 1.f;
-                e.getComponent<cro::Transform>().setPosition(pos /** scale*/);
+                e.getComponent<cro::Transform>().setPosition(pos * scale);
                 e.getComponent<cro::Transform>().setScale(trophyEnt.getComponent<cro::Transform>().getScale() * m_viewScale.x);
             };
 

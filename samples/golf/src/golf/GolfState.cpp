@@ -178,6 +178,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
     ballEntity = {};
+
     //registerWindow([&]() 
     //    {
     //        if (ImGui::Begin("buns"))
