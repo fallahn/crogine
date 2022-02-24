@@ -106,6 +106,9 @@ void GameState::handleMessage(const cro::Message& msg)
                 {
                     setNextPlayer();
                 }
+
+                //client may have quit on summary screen so update statuses
+                checkReadyQuit(10); //doesn't matter which client number, just update status...
             }
             else
             {
@@ -196,6 +199,9 @@ void GameState::netEvent(const cro::NetEvent& evt)
             auto clientID = evt.packet.as<std::uint8_t>();
             m_sharedData.clients[clientID].mapLoaded = true;
         }
+            break;
+        case PacketID::ReadyQuit:
+            checkReadyQuit(evt.packet.as<std::uint8_t>());
             break;
         }
     }
@@ -385,6 +391,46 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
     }
 }
 
+void GameState::checkReadyQuit(std::uint8_t clientID)
+{
+    if (m_gameStarted)
+    {
+        return;
+    }
+
+    std::uint8_t broadcastFlags = 0;
+
+    for (auto& p : m_playerInfo)
+    {
+        if (p.client == clientID)
+        {
+            p.readyQuit = !p.readyQuit;
+        }
+
+        if (p.readyQuit)
+        {
+            broadcastFlags |= (1 << p.client);
+        }
+        else
+        {
+            broadcastFlags &= ~(1 << p.client);
+        }
+    }
+    //let clients know to update their display
+    m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::ReadyQuitStatus, broadcastFlags, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    for (const auto& p : m_playerInfo)
+    {
+        if (!p.readyQuit)
+        {
+            //not everyone is ready
+            return;
+        }
+    }
+    //if we made it here it's time to quit!
+    m_returnValue = StateID::Lobby;
+}
+
 void GameState::setNextPlayer()
 {
     //broadcast current player's score first
@@ -508,14 +554,16 @@ void GameState::setNextHole()
     }
     else
     {
+        static constexpr std::uint8_t Timeout = 30; //seconds
+
         //end of game baby!
-        m_sharedData.host.broadcastPacket(PacketID::GameEnd, std::uint8_t(10), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::GameEnd, Timeout, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         //create a timer ent which returns to lobby on time out
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<float>(10.f);
+        entity.getComponent<cro::Callback>().setUserData<float>(Timeout);
         entity.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
         {

@@ -39,6 +39,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "NotificationSystem.hpp"
 #include "TrophyDisplaySystem.hpp"
+#include "PacketIDs.hpp"
 #include "../ErrorCheck.hpp"
 #include "../Achievements.hpp"
 #include "../AchievementStrings.hpp"
@@ -894,6 +895,9 @@ void GolfState::showCountdown(std::uint8_t seconds)
         e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //TODO create status icons for each connected client
+    //to show vote to skip
 }
 
 void GolfState::createScoreboard()
@@ -1657,6 +1661,14 @@ void GolfState::showNotification(const std::string& msg)
     entity.getComponent<cro::Text>().setCharacterSize(8u * static_cast<std::uint32_t>(m_viewScale.y));
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<Notification>().message = msg;
+}
+
+void GolfState::toggleQuitReady()
+{
+    if (m_roundEnded)
+    {
+        m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::ReadyQuit, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
 }
 
 void GolfState::buildTrophyScene()

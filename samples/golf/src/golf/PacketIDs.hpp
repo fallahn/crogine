@@ -74,6 +74,7 @@ namespace PacketID
         BallLanded, //< BallUpdate struct
 
         EntityRemoved, //< uint32 entity ID
+        ReadyQuitStatus, //< uint8 flags containing status of ready/quit at round end
 
         //from client
         ClientVersion, //uint32 CURRENT_VER of client. Clients are kicked if this does not match the server
@@ -83,6 +84,7 @@ namespace PacketID
         PlayerInfo, //< ConnectionData array
         ServerCommand, //< uint8_t command type
         TransitionComplete, //< uint8 clientID, signal hole transition completed
+        ReadyQuit, //< uint8 clientID - client wants to toggle skip viewing scores
 
         //both directions
         MapInfo, //< serialised cro::String containing course directory

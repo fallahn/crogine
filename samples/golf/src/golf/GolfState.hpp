@@ -267,6 +267,7 @@ private:
     void createTransition();
     void notifyAchievement(const std::array<std::uint8_t, 2u>&);
     void showNotification(const std::string&);
+    void toggleQuitReady();
 
     void buildTrophyScene();
     std::array<cro::Entity, 3u> m_trophies = {};

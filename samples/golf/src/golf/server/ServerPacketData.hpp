@@ -59,6 +59,8 @@ struct PlayerStatus final : public ActivePlayer
     float distanceToHole = 0.f; //used for sorting
     std::vector<std::uint8_t> holeScore;
     std::uint8_t totalScore = 0;
+
+    bool readyQuit = false; //used at round end to see if all players want to skip scores
 };
 
 struct ActorInfo final

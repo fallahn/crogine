@@ -335,6 +335,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_PAUSE:
             requestStackPush(StateID::Pause);
             break;
+        case SDLK_SPACE:
+            toggleQuitReady();
+            break;
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN
@@ -356,6 +359,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case cro::GameController::DPadDown:
         case cro::GameController::DPadRight:
             scrollScores(19);
+            break;
+        case cro::GameController::ButtonA:
+            toggleQuitReady();
             break;
         }
     }
@@ -2479,6 +2485,10 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::ReadyQuitStatus:
+            LogI << "Ready status " << (int)evt.packet.as<std::uint8_t>() << std::endl;
+            //TODO update UI
+            break;
         case PacketID::AchievementGet:
             notifyAchievement(evt.packet.as<std::array<std::uint8_t, 2u>>());
             break;
