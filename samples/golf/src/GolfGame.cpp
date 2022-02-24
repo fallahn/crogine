@@ -58,12 +58,6 @@ source distribution.
 
 #include <crogine/util/Network.hpp>
 
-//#include <polyvox/RawVolume.h>
-//#include <polyvox/MarchingCubesSurfaceExtractor.h>
-//#include <polyvox/CubicSurfaceExtractor.h>
-
-//namespace pv = PolyVox;
-
 namespace
 {
 #include "golf/TutorialShaders.inl"
@@ -95,6 +89,7 @@ cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
 
 GolfGame::GolfGame()
     : m_stateStack      ({*this, getWindow()}),
+    m_cursor            ("assets/images/cursor.png", 0, 0),
     m_postProcessIndex  (0),
     m_activeIndex       (0)
 {
@@ -112,22 +107,15 @@ GolfGame::GolfGame()
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
     m_stateStack.registerState<PuttingState>(StateID::PuttingRange, m_sharedData);
-
-    //pv::RawVolume<std::uint8_t> volume(pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(10)));
-    //volume.setVoxel(3, 5, 6, 10);
-
-    //auto meshData = pv::extractMarchingCubesMesh<pv::RawVolume<std::uint8_t>>(&volume, volume.getEnclosingRegion());
 }
 
 //public
 void GolfGame::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_WINDOWEVENT_SIZE_CHANGED)
+    switch (evt.type)
     {
-        
-    }
-    else if (evt.type == SDL_KEYUP)
-    {
+    default: break;
+    case SDL_KEYUP:
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -147,6 +135,14 @@ void GolfGame::handleEvent(const cro::Event& evt)
             togglePixelScale(m_sharedData, true);
             break;
         }
+        break;
+    case SDL_WINDOWEVENT:
+    case SDL_WINDOWEVENT_ENTER:
+        //hmm appears to be a SDL2 'feature' which resets
+        //the mouse cursor to the system cursor when handling
+        //events. So no custom cursor for you.
+        getWindow().setCursor(&m_cursor);
+        break;
     }
     
     m_stateStack.handleEvent(evt);
@@ -531,6 +527,8 @@ bool GolfGame::initialise()
 
     m_achievements = std::make_unique<DefaultAchievements>(getMessageBus());
     Achievements::init(*m_achievements);
+
+    getWindow().setCursor(&m_cursor);
 
     return true;
 }
