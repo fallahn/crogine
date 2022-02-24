@@ -309,6 +309,9 @@ void ParticleState::drawInspector()
             //lifetime
             ImGui::SliderFloat("Lifetime", &m_particleSettings->lifetime, 0.1f, 10.f);
 
+            //lifetime variance
+            ImGui::SliderFloat("Variance", &m_particleSettings->lifetimeVariance, 0.f, m_particleSettings->lifetime - 0.1f);
+
             //spread
             ImGui::SliderFloat("Spread", &m_particleSettings->spread, 0.f, 360.f);
 

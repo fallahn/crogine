@@ -1,13 +1,13 @@
 particle_system firework
 {
     src = assets/golf/images/firework.png
-    blendmode = "alpha"
+    blendmode = alpha
     acceleration = 1.000000
     gravity = 0.000000,-0.938000,0.000000
     velocity = 0.000000,1.250000,0.000000
     spread = 720.000000
     lifetime = 2.035000
-    lifetime_variance = 0.000000
+    lifetime_variance = 1.484000
     colour = 255.000000,255.000000,255.000000,255.000000
     random_initial_rotation = true
     rotation_speed = 28.421000
