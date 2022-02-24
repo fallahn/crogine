@@ -67,6 +67,8 @@ source distribution.
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
+#include <sstream>
+
 namespace
 {
     static constexpr glm::vec2 BackgroundSize(192.f, 108.f);
@@ -1407,8 +1409,8 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
 
     //create entries
     glm::vec3 entryPos(2.f, 74.f, 0.1f);
-    static constexpr glm::vec3 TitleOffset(36.f, 30.f, 0.f);
-    static constexpr glm::vec3 DescOffset(36.f, 20.f, 0.f);
+    static constexpr glm::vec3 TitleOffset(36.f, 30.f, 0.1f);
+    static constexpr glm::vec3 DescOffset(36.f, 20.f, 0.1f);
 
     static constexpr float Spacing = 36.f;
     static constexpr std::int32_t ItemsPerRow = 5;
@@ -1419,10 +1421,26 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     m_achievementsNode.getComponent<cro::Transform>().addChild(scrollNode.getComponent<cro::Transform>());
 
     auto& tex = m_sharedData.sharedResources->textures.get("assets/images/achievements.png");
+    const auto texSize = glm::vec2(tex.getSize());
     auto& titleFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& descFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
-    std::vector<cro::Entity> croppedEnts;
+    auto iconEnt = m_scene.createEntity();
+    iconEnt.addComponent<cro::Transform>();
+    iconEnt.addComponent<cro::Drawable2D>().setTexture(&tex);
+    scrollNode.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
+    std::vector<cro::Vertex2D> iconVertices;
+
+    auto titleEnt = m_scene.createEntity();
+    titleEnt.addComponent<cro::Transform>().setPosition(entryPos + TitleOffset);
+    titleEnt.addComponent<cro::Drawable2D>();
+    titleEnt.addComponent<cro::Text>(titleFont).setCharacterSize(UITextSize);
+    titleEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    titleEnt.getComponent<cro::Text>().setVerticalSpacing(Spacing - UITextSize);
+    scrollNode.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
+    std::string titleString;
+
+    std::vector<cro::Entity> croppedEnts = { iconEnt, titleEnt };
     for (auto i = 1; i < AchievementID::Count; ++i)
     {
         //image
@@ -1435,26 +1453,27 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
         }
 
         cro::FloatRect bounds(x * ItemSize, y * ItemSize, ItemSize, ItemSize);
-        entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(entryPos);
-        entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f) / 2.f);
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>(tex);
-        entity.getComponent<cro::Sprite>().setTextureRect(bounds);
-        scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        croppedEnts.push_back(entity);
+        bounds.left /= texSize.x;
+        bounds.width /= texSize.x;
+        bounds.bottom /= texSize.y;
+        bounds.height /= texSize.y;
+
+
+        iconVertices.emplace_back(glm::vec2(entryPos.x, entryPos.y), glm::vec2(bounds.left, bounds.bottom));
+        iconVertices.emplace_back(glm::vec2(entryPos.x, entryPos.y), glm::vec2(bounds.left, bounds.bottom));
+
+        iconVertices.emplace_back(glm::vec2(entryPos.x, entryPos.y + (ItemSize / 2.f)), glm::vec2(bounds.left, bounds.bottom + bounds.height));
+        iconVertices.emplace_back(glm::vec2(entryPos.x + (ItemSize / 2.f), entryPos.y), glm::vec2(bounds.left + bounds.width, bounds.bottom));
+
+        iconVertices.emplace_back(glm::vec2(entryPos.x + (ItemSize / 2.f), entryPos.y + (ItemSize / 2.f)), glm::vec2(bounds.left + bounds.width, bounds.bottom + bounds.height));
+        iconVertices.emplace_back(glm::vec2(entryPos.x + (ItemSize / 2.f), entryPos.y + (ItemSize / 2.f)), glm::vec2(bounds.left + bounds.width, bounds.bottom + bounds.height));
+
 
         //title
-        entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(entryPos + TitleOffset);
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(titleFont).setCharacterSize(UITextSize);
-        entity.getComponent<cro::Text>().setString(AchievementLabels[i]);
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        croppedEnts.push_back(entity);
+        titleString += AchievementLabels[i] + "\n";
 
-        //description
+        //description - hmmm... whats a good way to batch these? We can set the line spacing
+        //as some of these cover two lines...
         static constexpr std::size_t MaxStrLen = 20;
         auto str = AchievementDesc[i].first;
 
@@ -1477,6 +1496,9 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
 
         entryPos.y -= Spacing;
     }
+
+    iconEnt.getComponent<cro::Drawable2D>().setVertexData(iconVertices);
+    titleEnt.getComponent<cro::Text>().setString(titleString);
 
     auto updateCropping = [croppedEnts, scrollNode]()
     {
@@ -1681,7 +1703,7 @@ cro::Entity OptionsState::buildStatsMenu(const cro::SpriteSheet& spriteSheet)
     scrollNode.addComponent<cro::Transform>();
     rootEnt.getComponent<cro::Transform>().addChild(scrollNode.getComponent<cro::Transform>());
 
-    glm::vec3 entryPos(-194.f, 74.f, 0.1f);
+    static constexpr glm::vec3 EntryPos(-194.f, 74.f, 0.1f);
     static constexpr glm::vec3 TitleOffset(10.f, 30.f, 0.f);
     static constexpr glm::vec3 DescOffset(10.f, 20.f, 0.f);
     static constexpr float Spacing = 26.f;
@@ -1689,30 +1711,61 @@ cro::Entity OptionsState::buildStatsMenu(const cro::SpriteSheet& spriteSheet)
     //auto& titleFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& descFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
-    std::vector<cro::Entity> croppedEnts;
+    auto titleEnt = m_scene.createEntity();
+    titleEnt.addComponent<cro::Transform>().setPosition(EntryPos + TitleOffset);
+    titleEnt.addComponent<cro::Drawable2D>();
+    titleEnt.addComponent<cro::Text>(descFont).setCharacterSize(InfoTextSize);
+    titleEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    titleEnt.getComponent<cro::Text>().setVerticalSpacing(Spacing - InfoTextSize);
+    scrollNode.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
+    std::string titleString;
+
+    auto descEnt = m_scene.createEntity();
+    descEnt.addComponent<cro::Transform>().setPosition(EntryPos + DescOffset);
+    descEnt.addComponent<cro::Drawable2D>();
+    descEnt.addComponent<cro::Text>(descFont).setCharacterSize(InfoTextSize);
+    descEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    descEnt.getComponent<cro::Text>().setVerticalSpacing(Spacing - InfoTextSize);
+    scrollNode.getComponent<cro::Transform>().addChild(descEnt.getComponent<cro::Transform>());
+    std::string descString;
+
+    std::vector<cro::Entity> croppedEnts = { titleEnt, descEnt };
     for (auto i = 0u; i < StatID::Count; ++i)
     {
         //title
-        auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(entryPos + TitleOffset);
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(descFont).setCharacterSize(InfoTextSize);
-        entity.getComponent<cro::Text>().setString(StatLabels[i]);
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        croppedEnts.push_back(entity);
+        titleString += StatLabels[i] + "\n";
 
-        entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(entryPos + DescOffset);
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(descFont).setCharacterSize(InfoTextSize);
-        entity.getComponent<cro::Text>().setString(std::to_string(static_cast<std::int32_t>(Achievements::getStat(StatStrings[i])->value)));
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        croppedEnts.push_back(entity);
+        //value
+        std::string value;
+        switch (StatTypes[i])
+        {
+        default:
+        case StatType::Float:
+        {
+            std::stringstream ss;
+            ss.precision(2);
+            ss << Achievements::getStat(StatStrings[i])->value;
+            value = ss.str();
+        }
+            break;
+        case StatType::Integer:
+            value = std::to_string(static_cast<std::int32_t>(Achievements::getStat(StatStrings[i])->value));
+            break;
+        case StatType::Percent:
+        {
+            float v = Achievements::getStat(StatStrings[i])->value * 100.f;
+            std::stringstream ss;
+            ss.precision(2);
+            ss << v << "%";
+            value = ss.str();
+        }
+            break;
+        }
 
-        entryPos.y -= Spacing;
+        descString += value + "\n";
     }
+    titleEnt.getComponent<cro::Text>().setString(titleString);
+    descEnt.getComponent<cro::Text>().setString(descString);
 
     auto updateCropping = [croppedEnts, scrollNode]()
     {
@@ -1754,6 +1807,8 @@ cro::Entity OptionsState::buildStatsMenu(const cro::SpriteSheet& spriteSheet)
         });
     auto unselected = uiSystem->addCallback([entity](cro::Entity)mutable {entity.getComponent<cro::Transform>().setPosition(glm::vec3(10000.f)); });
 
+    static constexpr float ScrollOffset = (Spacing + 2.f);
+
     //scroll up
     entity = m_scene.createEntity();
     entity = m_scene.createEntity();
@@ -1772,7 +1827,7 @@ cro::Entity OptionsState::buildStatsMenu(const cro::SpriteSheet& spriteSheet)
             if (activated(evt))
             {
                 auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
-                pos.y = std::max(0.f, pos.y - Spacing);
+                pos.y = std::max(0.f, pos.y - ScrollOffset);
                 scrollNode.getComponent<cro::Transform>().setPosition(pos);
 
                 updateCropping();
@@ -1840,9 +1895,9 @@ cro::Entity OptionsState::buildStatsMenu(const cro::SpriteSheet& spriteSheet)
         {
             if (activated(evt))
             {
-                static constexpr float MaxScroll = Spacing * (StatID::Count - 4);
+                static constexpr float MaxScroll = ScrollOffset * (StatID::Count - 4);
                 auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
-                pos.y = std::min(MaxScroll, pos.y + Spacing);
+                pos.y = std::min(MaxScroll, pos.y + ScrollOffset);
                 scrollNode.getComponent<cro::Transform>().setPosition(pos);
 
                 updateCropping();

@@ -164,6 +164,25 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Total Rounds Played"
 };
 
+struct StatType final
+{
+    enum
+    {
+        Float, Integer, Percent
+    };
+};
+
+static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
+{
+    StatType::Integer,
+    StatType::Float,
+    StatType::Float,
+    StatType::Percent,
+    StatType::Percent,
+    StatType::Percent,
+    StatType::Integer
+};
+
 struct StatTrigger final
 {
     std::int32_t achID = -1;
