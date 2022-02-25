@@ -1745,7 +1745,7 @@ cro::Entity OptionsState::buildStatsMenu(const cro::SpriteSheet& spriteSheet)
         {
             std::stringstream ss;
             ss.precision(2);
-            ss << Achievements::getStat(StatStrings[i])->value;
+            ss << std::fixed << Achievements::getStat(StatStrings[i])->value;
             value = ss.str();
         }
             break;
@@ -1757,7 +1757,7 @@ cro::Entity OptionsState::buildStatsMenu(const cro::SpriteSheet& spriteSheet)
             float v = Achievements::getStat(StatStrings[i])->value * 100.f;
             std::stringstream ss;
             ss.precision(2);
-            ss << v << "%";
+            ss << std::fixed << v << "%";
             value = ss.str();
         }
             break;

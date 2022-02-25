@@ -558,6 +558,8 @@ void GolfGame::finalise()
     m_postShader.reset();
     m_postBuffer.reset();
     m_achievements.reset();
+
+    getWindow().setCursor(nullptr);
 }
 
 void GolfGame::loadPreferences()
