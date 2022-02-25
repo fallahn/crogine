@@ -1453,11 +1453,13 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
         }
 
         cro::FloatRect bounds(x * ItemSize, y * ItemSize, ItemSize, ItemSize);
-        bounds.left /= texSize.x;
-        bounds.width /= texSize.x;
-        bounds.bottom /= texSize.y;
-        bounds.height /= texSize.y;
-
+        //if (texSize.x != 0 && texSize.y != 0) //should at least have a fall back texture.
+        {
+            bounds.left /= texSize.x;
+            bounds.width /= texSize.x;
+            bounds.bottom /= texSize.y;
+            bounds.height /= texSize.y;
+        }
 
         iconVertices.emplace_back(glm::vec2(entryPos.x, entryPos.y), glm::vec2(bounds.left, bounds.bottom));
         iconVertices.emplace_back(glm::vec2(entryPos.x, entryPos.y), glm::vec2(bounds.left, bounds.bottom));

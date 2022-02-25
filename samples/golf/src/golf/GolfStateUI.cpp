@@ -896,14 +896,72 @@ void GolfState::showCountdown(std::uint8_t seconds)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    //TODO create status icons for each connected client
+    //create status icons for each connected client
     //to show vote to skip
+    auto unreadyRect = m_sprites[SpriteID::QuitNotReady].getTextureRect();
+    auto readyRect = m_sprites[SpriteID::QuitReady].getTextureRect();
+    const glm::vec2 texSize(m_sprites[SpriteID::QuitNotReady].getTexture()->getSize());
+    if (texSize.x != 0 && texSize.y != 0)
+    {
+        float posOffset = unreadyRect.width;
+
+        unreadyRect.left /= texSize.x;
+        unreadyRect.width /= texSize.x;
+        unreadyRect.bottom /= texSize.y;
+        unreadyRect.height /= texSize.y;
+
+        readyRect.left /= texSize.x;
+        readyRect.width /= texSize.x;
+        readyRect.bottom /= texSize.y;
+        readyRect.height /= texSize.y;
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Drawable2D>().setTexture(m_sprites[SpriteID::QuitNotReady].getTexture());
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, readyRect, unreadyRect, posOffset](cro::Entity e, float)
+        {
+            auto& tx = e.getComponent<cro::Transform>();
+            tx.setPosition({ 13.f, UIBarHeight + 10.f, 2.f });
+            tx.setScale(m_viewScale);
+
+            float basePos = 0.f;
+            std::vector<cro::Vertex2D> vertices;
+            for (auto i = 0u; i < 4u; ++i)
+            {
+                if (m_sharedData.connectionData[i].playerCount)
+                {
+                    //check status flags to choose rectangle
+                    auto rect = (m_readyQuitFlags & (1 << i)) ? readyRect : unreadyRect;
+
+                    
+                    vertices.emplace_back(glm::vec2(basePos, posOffset), glm::vec2(rect.left, rect.bottom + rect.height));
+                    vertices.emplace_back(glm::vec2(basePos, 0.f), glm::vec2(rect.left, rect.bottom));
+                    vertices.emplace_back(glm::vec2(basePos + posOffset, posOffset), glm::vec2(rect.left + rect.width, rect.bottom + rect.height));
+                    vertices.emplace_back(glm::vec2(basePos + posOffset, 0.f), glm::vec2(rect.left + rect.width, rect.bottom));                    
+
+                    vertices.emplace_back(glm::vec2(basePos + posOffset, posOffset), glm::vec2(rect.left + rect.width, rect.bottom + rect.height), cro::Colour::Transparent);
+                    vertices.emplace_back(glm::vec2(basePos + posOffset, 0.f), glm::vec2(rect.left + rect.width, rect.bottom), cro::Colour::Transparent);
+
+                    basePos += posOffset + 2.f;
+
+                    vertices.emplace_back(glm::vec2(basePos, posOffset), glm::vec2(rect.left, rect.bottom + rect.height), cro::Colour::Transparent);
+                    vertices.emplace_back(glm::vec2(basePos, 0.f), glm::vec2(rect.left, rect.bottom), cro::Colour::Transparent);
+                }
+            }
+            e.getComponent<cro::Drawable2D>().setVertexData(vertices);
+        };
+    }
 }
 
 void GolfState::createScoreboard()
 {
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
+
+    m_sprites[SpriteID::QuitReady] = spriteSheet.getSprite("quit_ready");
+    m_sprites[SpriteID::QuitNotReady] = spriteSheet.getSprite("quit_not_ready");
 
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     size.x /= 2.f;

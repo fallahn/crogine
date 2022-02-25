@@ -573,7 +573,7 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
         if (!p.m_isStringValue
             || (str.front() == '\"' && str.back() == '\"'))
         {
-            stream <<std::fixed << str;
+            stream << std::fixed << str;
         }
         else
         {

@@ -218,6 +218,8 @@ private:
             MessageBoard,
             Bunker,
             Foul,
+            QuitReady,
+            QuitNotReady,
 
             Count
         };
@@ -249,6 +251,7 @@ private:
     cro::Entity m_courseEnt;
     cro::Entity m_waterEnt;
     cro::Entity m_uiReflectionCam;
+    std::uint8_t m_readyQuitFlags;
 
     void buildUI();
     void showCountdown(std::uint8_t);

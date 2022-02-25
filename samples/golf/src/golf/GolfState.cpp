@@ -147,6 +147,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_roundEnded        (false),
     m_viewScale         (1.f),
     m_scoreColumnCount  (2),
+    m_readyQuitFlags    (0),
     m_hadFoul           (false)
 {
     context.mainWindow.loadResources([this]() {
@@ -258,11 +259,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::Tutorial);
             break;
         case SDLK_F8:
-            for (auto i = 0u; i < m_trophies.size(); ++i)
-            {
-                m_trophies[i].getComponent<TrophyDisplay>().state = TrophyDisplay::In;
-                m_trophyLabels[i].getComponent<cro::Callback>().active = true;
-            }
+            showCountdown(20);
             break;
         case SDLK_KP_0:
             setActiveCamera(0);
@@ -2486,8 +2483,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
         {
         default: break;
         case PacketID::ReadyQuitStatus:
-            LogI << "Ready status " << (int)evt.packet.as<std::uint8_t>() << std::endl;
-            //TODO update UI
+            m_readyQuitFlags = evt.packet.as<std::uint8_t>();
             break;
         case PacketID::AchievementGet:
             notifyAchievement(evt.packet.as<std::array<std::uint8_t, 2u>>());
