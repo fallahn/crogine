@@ -563,6 +563,7 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
     }
 
     std::stringstream stream;
+    stream.precision(3);
     stream << indent << getName() << " " << getId() << std::endl;
     stream << indent << "{" << std::endl;
     for (const auto& p : m_properties)
