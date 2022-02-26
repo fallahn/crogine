@@ -1669,7 +1669,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
-    //m_gameScene.addSystem<cro::SpriteSystem3D>(mb, 10.f);
+    m_gameScene.addSystem<cro::SpriteSystem3D>(mb, 10.f); //water rings sprite :D
     m_gameScene.addSystem<cro::SpriteAnimator>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
