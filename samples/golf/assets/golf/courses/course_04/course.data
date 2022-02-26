@@ -1,30 +1,13 @@
 course course_04
 {
     skybox = "assets/golf/images/skybox/summer/sky.ccm"
-    billboard_model = "assets/golf/models/shrubbery.cmt"
-    billboard_sprites = "assets/golf/sprites/shrubbery.spt"
-    audio = "assets/golf/sound/ambience.xas"
-    grass = 1,0,1,1
+    billboard_model = "assets/golf/models/shrubbery02.cmt"
+    billboard_sprites = "assets/golf/sprites/shrubbery02.spt"
+    audio = "assets/golf/sound/ambience_beach.xas"
+    grass = 1,0.973,0.882,1
 
-    title = "Roving Sands"
+    title = "Roving Sands, East Nerringham"
     description = "Cup Your Balls at the Beach"
 
-    hole = "assets/golf/courses/course_01/01.hole"
-    hole = "assets/golf/courses/course_01/02.hole"
-    hole = "assets/golf/courses/course_01/03.hole"
-    hole = "assets/golf/courses/course_01/04.hole"
-    hole = "assets/golf/courses/course_01/05.hole"
-    hole = "assets/golf/courses/course_01/06.hole"
-    hole = "assets/golf/courses/course_01/07.hole"
-    hole = "assets/golf/courses/course_01/08.hole"
-    hole = "assets/golf/courses/course_01/09.hole"
-    hole = "assets/golf/courses/course_01/10.hole"
-    hole = "assets/golf/courses/course_01/11.hole"
-    hole = "assets/golf/courses/course_01/12.hole"
-    hole = "assets/golf/courses/course_01/13.hole"
-    hole = "assets/golf/courses/course_01/14.hole"
-    hole = "assets/golf/courses/course_01/15.hole"
-    hole = "assets/golf/courses/course_01/16.hole"
-    hole = "assets/golf/courses/course_01/17.hole"
-    hole = "assets/golf/courses/course_01/18.hole"
+    hole = "assets/golf/courses/course_04/01.hole"
 }

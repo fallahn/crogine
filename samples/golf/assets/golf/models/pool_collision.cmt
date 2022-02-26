@@ -1,18 +1,17 @@
-model palm01
+model pool_collision
 {
-    mesh = assets/golf/models/palm01.cmb
-    cast_shadows = true
+    mesh = assets/golf/models/pool_collision.cmb
+    cast_shadows = false
 
     material Unlit
     {
         name = "Untitled"
-        colour = 1.000000,1.000000,1.000000,1.000000
+        colour = 1.000000,0.999990,1.000000,1.000000
         smooth = true
         repeat = true
         depth_test = true
         double_sided = false
         blendmode = none
-        diffuse = "assets/golf/images/palm_tree01.png"
 
     }
 }

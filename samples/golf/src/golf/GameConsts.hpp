@@ -264,7 +264,7 @@ static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, floa
     auto index = (y * static_cast<std::uint32_t>(size.x) + x) * stride;
 
     std::uint8_t terrain = img.getPixelData()[index] / 10;
-    terrain = std::min(static_cast<std::uint8_t>(TerrainID::Scrub), terrain);
+    terrain = std::min(static_cast<std::uint8_t>(TerrainID::Stone), terrain);
 
     auto height = static_cast<float>(img.getPixelData()[index + 1]) / 255.f;
     height *= MaxTerrainHeight;
