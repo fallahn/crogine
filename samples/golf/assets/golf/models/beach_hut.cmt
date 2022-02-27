@@ -1,0 +1,20 @@
+model beach_hut
+{
+    mesh = assets/golf/models/beach_hut.cmb
+    cast_shadows = true
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        rx_shadows = true
+        blendmode = none
+        diffuse = "assets/golf/images/beachhut.png"
+        alpha_clip = 1.000000
+
+    }
+}
