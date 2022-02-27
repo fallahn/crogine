@@ -1,6 +1,6 @@
-model palm01
+model rock_large
 {
-    mesh = assets/golf/models/palm01.cmb
+    mesh = assets/golf/models/rock_large.cmb
     cast_shadows = true
 
     material Unlit
@@ -12,7 +12,7 @@ model palm01
         depth_test = true
         double_sided = false
         blendmode = none
-        diffuse = "assets/golf/images/palm_tree01.png"
+        diffuse = "assets/golf/images/rock.png"
 
     }
 }

@@ -34,7 +34,7 @@ audioscape ambience
     {
         path = "assets/golf/sound/ambience/beach04.ogg"
         streaming = true
-        volume = 1.15
+        volume = 0.9
         mixer_channel = 1
         attenuation = 0.06
         looped = true
@@ -44,7 +44,7 @@ audioscape ambience
     {
         path = "assets/golf/sound/ambience/beach05.ogg"
         streaming = true
-        volume = 2
+        volume = 0.9
         mixer_channel = 1
         attenuation = 0.06
         looped = true
@@ -54,7 +54,7 @@ audioscape ambience
     {
         path = "assets/golf/sound/ambience/beach06.ogg"
         streaming = true
-        volume = 2
+        volume = 0.9
         mixer_channel = 1
         attenuation = 0.06
         looped = true
