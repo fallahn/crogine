@@ -1751,6 +1751,10 @@ void GolfState::buildTrophyScene()
     cam.isStatic = true;
     updateCam(cam);
 
+    auto sunEnt = m_trophyScene.getSunlight();
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -15.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -10.f * cro::Util::Const::degToRad);
+
     const std::array<std::pair<std::string, glm::vec3>, 3u> Paths =
     {
         std::make_pair("assets/golf/models/trophy01.cmt", glm::vec3(0.f, -0.3f, -1.f)),
