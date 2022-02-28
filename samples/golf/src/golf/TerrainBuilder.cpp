@@ -664,6 +664,14 @@ void TerrainBuilder::threadFunc()
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)]);
                                 bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards
                                 bb.size *= scale;
+                                
+                                if (cro::Util::Random::value(0, 1) == 0)
+                                {
+                                    //flip billboard
+                                    auto rect = bb.textureRect;
+                                    bb.textureRect.left = rect.left + rect.width;
+                                    bb.textureRect.width = -rect.width;
+                                }
                             }
                         }
                     }
