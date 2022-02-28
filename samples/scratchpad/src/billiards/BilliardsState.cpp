@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -27,22 +27,47 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "BilliardsState.hpp"
 
-namespace States
+BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx)
+    : cro::State(ss, ctx),
+    m_scene(ctx.appInstance.getMessageBus())
 {
-    struct ScratchPad final
-    {
-        enum
-        {
-            MainMenu,
-            BatCat,
-            Billiards,
-            BSP,
-            MeshCollision,
-            Voxels,
+    addSystems();
+    buildScene();
+}
 
-            Count
-        };
-    };
+//public
+bool BilliardsState::handleEvent(const cro::Event& evt)
+{
+    m_scene.forwardEvent(evt);
+    return false;
+}
+
+void BilliardsState::handleMessage(const cro::Message& msg)
+{
+    m_scene.forwardMessage(msg);
+}
+
+bool BilliardsState::simulate(float dt)
+{
+    m_scene.simulate(dt);
+    return false;
+}
+
+void BilliardsState::render()
+{
+    m_scene.render();
+}
+
+//private
+void BilliardsState::addSystems()
+{
+    auto& mb = getContext().appInstance.getMessageBus();
+
+}
+
+void BilliardsState::buildScene()
+{
+
 }

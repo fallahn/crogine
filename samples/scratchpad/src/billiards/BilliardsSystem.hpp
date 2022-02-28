@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,20 +29,15 @@ source distribution.
 
 #pragma once
 
-namespace States
-{
-    struct ScratchPad final
-    {
-        enum
-        {
-            MainMenu,
-            BatCat,
-            Billiards,
-            BSP,
-            MeshCollision,
-            Voxels,
+#include <crogine/ecs/System.hpp>
 
-            Count
-        };
-    };
-}
+class BilliardsSystem final : public cro::System
+{
+public:
+    explicit BilliardsSystem(cro::MessageBus&);
+
+    void process(float) override;
+
+private:
+
+};

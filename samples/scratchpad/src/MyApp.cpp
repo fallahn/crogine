@@ -30,6 +30,7 @@ source distribution.
 #include "MyApp.hpp"
 #include "MenuState.hpp"
 #include "batcat/BatcatState.hpp"
+#include "billiards/BilliardsState.hpp"
 #include "bsp/BspState.hpp"
 #include "collision/CollisionState.hpp"
 #include "voxels/VoxelState.hpp"
@@ -90,13 +91,14 @@ bool MyApp::initialise()
 
     m_stateStack.registerState<sp::MenuState>(States::ScratchPad::MainMenu);
     m_stateStack.registerState<BatcatState>(States::ScratchPad::BatCat);
+    m_stateStack.registerState<BilliardsState>(States::ScratchPad::Billiards);
     m_stateStack.registerState<BspState>(States::ScratchPad::BSP);
     m_stateStack.registerState<CollisionState>(States::ScratchPad::MeshCollision);
     m_stateStack.registerState<VoxelState>(States::ScratchPad::Voxels);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::Voxels);
-    //m_stateStack.pushState(States::ScratchPad::MainMenu);
+    //m_stateStack.pushState(States::ScratchPad::Voxels);
+    m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
 #endif
