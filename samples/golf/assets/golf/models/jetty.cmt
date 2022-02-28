@@ -10,7 +10,7 @@ model jetty
         smooth = false
         repeat = true
         depth_test = true
-        double_sided = false
+        double_sided = true
         blendmode = none
         diffuse = "assets/golf/images/jetty.png"
 
