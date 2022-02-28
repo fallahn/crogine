@@ -89,8 +89,10 @@ void BilliardsState::handleMessage(const cro::Message& msg)
 
 bool BilliardsState::simulate(float dt)
 {
-    m_scene.simulate(dt);
+    m_collisionWorld->stepSimulation(dt, 10);
     m_collisionWorld->debugDrawWorld();
+
+    m_scene.simulate(dt);
     return false;
 }
 
@@ -155,12 +157,18 @@ void BilliardsState::initCollision(const cro::Mesh::Data& meshData)
 {
     m_collisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
     m_collisionDispatcher = std::make_unique<btCollisionDispatcher>(m_collisionConfiguration.get());
-
     m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
-    m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionConfiguration.get());
+    m_constraintSolver = std::make_unique<btSequentialImpulseConstraintSolver>();
+    m_collisionWorld = std::make_unique<btDiscreteDynamicsWorld>(
+        m_collisionDispatcher.get(),
+        m_broadphaseInterface.get(),
+        m_constraintSolver.get(),
+        m_collisionConfiguration.get());
+
+    //m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionConfiguration.get());
 
     m_collisionWorld->setDebugDrawer(&m_debugDrawer);
-
+    m_collisionWorld->setGravity({ 0.f, -10.f, 0.f });
 
     cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
 
@@ -197,9 +205,17 @@ void BilliardsState::initCollision(const cro::Mesh::Data& meshData)
 
         m_tableVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(tableMesh);
         m_tableShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_tableVertices.back().get(), false));
-        m_tableObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_tableShapes.back().get());
-        m_tableObjects.back()->setWorldTransform(transform);
-        //m_tableObjects.back()->setUserIndex(static_cast<std::int32_t>(terrain)); // set the terrain type
-        m_collisionWorld->addCollisionObject(m_tableObjects.back().get());
+
+        
+        //auto& body = m_tableObjects.emplace_back(std::make_unique<btPairCachingGhostObject>());
+        //body->setCollisionShape(m_tableShapes.back().get());
+
+        btRigidBody::btRigidBodyConstructionInfo info(0.f, nullptr, m_tableShapes.back().get());
+        auto& body = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(info));
+        body->setWorldTransform(transform);
+        body->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT);
+
+        //body->setUserIndex(static_cast<std::int32_t>(terrain)); // set the terrain type
+        m_collisionWorld->addCollisionObject(body.get());
     }
 }

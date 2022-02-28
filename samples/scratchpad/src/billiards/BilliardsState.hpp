@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 
 #include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <memory>
@@ -67,7 +68,9 @@ private:
     std::unique_ptr<btCollisionConfiguration> m_collisionConfiguration;
     std::unique_ptr<btCollisionDispatcher> m_collisionDispatcher;
     std::unique_ptr<btBroadphaseInterface> m_broadphaseInterface;
-    std::unique_ptr<btCollisionWorld> m_collisionWorld;
+    std::unique_ptr<btSequentialImpulseConstraintSolver> m_constraintSolver;
+    std::unique_ptr<btDiscreteDynamicsWorld> m_collisionWorld;
+    //std::unique_ptr<btCollisionWorld> m_collisionWorld;
 
     //we have to keep a local copy of the table verts as the
     //collision world only maintains pointers to it
@@ -75,7 +78,8 @@ private:
     std::vector<std::vector<std::uint32_t>> m_indexData;
 
     //these are what do the pointing.
-    std::vector<std::unique_ptr<btPairCachingGhostObject>> m_tableObjects;
+    //std::vector<std::unique_ptr<btPairCachingGhostObject>> m_tableObjects;
+    std::vector<std::unique_ptr<btRigidBody>> m_tableObjects;
     std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_tableVertices;
     std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_tableShapes;
 
