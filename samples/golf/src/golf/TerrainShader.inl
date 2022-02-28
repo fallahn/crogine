@@ -42,11 +42,20 @@ static const std::string TerrainVertexShader = R"(
     uniform mat4 u_worldMatrix;
     uniform mat4 u_viewProjectionMatrix;
 
+#if defined(RX_SHADOWS)
+    uniform mat4 u_lightViewProjectionMatrix;
+#endif
+
     uniform vec4 u_clipPlane;
     uniform float u_morphTime;
 
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec4 v_colour;
+    VARYING_OUT vec3 v_worldPosition;
+
+#if defined(RX_SHADOWS)
+    VARYING_OUT LOW vec4 v_lightWorldPosition;
+#endif
 
     vec3 lerp(vec3 a, vec3 b, float t)
     {
@@ -58,9 +67,14 @@ static const std::string TerrainVertexShader = R"(
         vec4 position = u_worldMatrix * vec4(lerp(a_position.xyz, a_tangent, u_morphTime), 1.0);
         gl_Position = u_viewProjectionMatrix * position;
 
+    #if defined (RX_SHADOWS)
+        v_lightWorldPosition = u_lightViewProjectionMatrix * position;
+    #endif
+
         //this should be a slerp really but lerp is good enough for low spec shenanigans
         v_normal = u_normalMatrix * lerp(a_normal, a_bitangent, u_morphTime);
         v_colour = a_colour;
+        v_worldPosition = position.xyz;
 
         gl_ClipDistance[0] = dot(position, u_clipPlane);
     })";
@@ -323,6 +337,19 @@ static const std::string CelFragmentShader = R"(
     }
 #endif
 
+#if defined (ADD_NOISE)
+    uniform vec4 u_noiseColour = vec4(0.0,0.0,0.0,1.0);
+    VARYING_IN vec3 v_worldPosition;
+
+    const float NoisePerMetre = 10.0;
+    float rand(float n){return fract(sin(n) * 43758.5453123);}
+
+    float noise(vec2 pos)
+    {
+        return fract(sin(dot(pos, vec2(12.9898, 4.1414))) * 43758.5453);
+    }
+#endif
+
 
     //function based on example by martinsh.blogspot.com
     const int MatrixSize = 8;
@@ -424,6 +451,13 @@ static const std::string CelFragmentShader = R"(
             if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
             FRAG_OUT.rgb += vec3(0.0,0.0,0.5);
         }*/
+#endif
+
+#if defined (ADD_NOISE)
+        float noiseVal = noise(floor(v_worldPosition.xz * NoisePerMetre)) * 0.4;
+        //noiseVal *= (noise(floor(v_worldPosition.xz / 6.0)) * 0.3);
+        //FRAG_OUT.rgb *= (1.0 - noiseVal);
+        FRAG_OUT.rgb = mix(FRAG_OUT.rgb, u_noiseColour.rgb, noiseVal);
 #endif
 
 #if defined(DITHERED)

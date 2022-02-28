@@ -147,7 +147,7 @@ namespace cro::Shaders::ShadowMap
 
         void main()
         {
-            if(texture(u_diffuseMap, v_texCoord0).a < u_alphaClip) discard;   
+            if(texture(u_diffuseMap, v_texCoord0).a < u_alphaClip) discard;
         }
         #else
 

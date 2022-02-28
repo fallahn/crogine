@@ -221,7 +221,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
 
     //use a custom material for morphage
-    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
+    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define RX_SHADOWS\n#define ADD_NOISE\n");
     const auto& shader = resources.shaders.get(ShaderID::Terrain);
     m_terrainProperties.morphUniform = shader.getUniformID("u_morphTime");
     m_terrainProperties.shaderID = shader.getGLHandle();
@@ -229,6 +229,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal |
         cro::VertexProperty::Tangent | cro::VertexProperty::Bitangent; //use tan/bitan slots to store target position/normal
     auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_TRIANGLE_STRIP));
+    auto terrainMat = resources.materials.get(materialID);
+    terrainMat.setProperty("u_noiseColour", theme.grassTint);
 
     auto entity = scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, TerrainLevel, 0.f });
@@ -244,7 +246,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             e.getComponent<cro::Callback>().active = false;
         }
     };
-    entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
+    entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), terrainMat);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
 
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();

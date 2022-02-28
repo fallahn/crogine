@@ -216,6 +216,7 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
         {
             dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
         }
+
         dest.doubleSided = m->doubleSided;
     }
 }

@@ -58,6 +58,7 @@ struct ThemeSettings final
     std::string billboardSprites;
     //cro::Colour grassColour = cro::Colour(0.1568f, 0.305f, 0.2627f, 1.f);
     cro::Colour grassColour = cro::Colour(0.137f, 0.274f, 0.231f, 1.f);
+    cro::Colour grassTint = cro::Colour(0.123f, 0.246f, 0.207f, 1.f);
     std::string instancePath;
 };
 

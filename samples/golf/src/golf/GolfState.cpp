@@ -1309,6 +1309,10 @@ void GolfState::loadAssets()
         {
             theme.grassColour = prop.getValue<cro::Colour>();
         }
+        else if (name == "grass_tint") 
+        {
+            theme.grassTint = prop.getValue<cro::Colour>();
+        }
         else if (name == "audio")
         {
             auto audioPath = prop.getValue<std::string>();
@@ -1994,7 +1998,7 @@ void GolfState::buildScene()
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
-    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(16, 16); //not really rendering shadows as such, but without this we get artifcating
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(16, 16); //not really rendering shadows as such, but without this we get artifacting
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 80.f * 80.f;
@@ -2054,6 +2058,7 @@ void GolfState::buildScene()
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<FpsCamera>();

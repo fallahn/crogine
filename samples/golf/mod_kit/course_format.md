@@ -11,6 +11,7 @@ A course folder should contain one file with the name `course.data`. It has the 
         billboard_sprites = "assets/golf/sprites/shrubbery.spt" //path to the spritesheet containing the sprite definitions for each billboard in the billboard model
         instnace_model = "assets/golf/models/reeds+large.cmt" //optional path to a model which is instanced around the water's edge. Defaults to reeds if this is omitted
         grass = 1,0.5,0,1 //surrounding grass colour. This is optional and will default to dark green from the colordome-32 palette
+        grass_tint = 1.0, 1.0, 0.5, 1 //affects the colour of the noise applied to the grass colour. This is optional, by default just darkens the grass colour
         audio = "assets/golf/sound/ambience.xas" //optional path to a crogine audioscape file for environment sounds (see below)
 
         title = "St. Billybob's links, Isle of Wibble" //course title, shown in the game lobby
