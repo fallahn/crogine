@@ -158,9 +158,9 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Full Rounds Completed (18 holes)",
     "Total Putt Distance (metres)",
     "Total Stroke Distance (metres)",
-    "Percentage of Gold Wins",
-    "Percentage of Silver Wins",
-    "Percentage of Bronze Wins",
+    "Average Gold Wins (multiplayer)",
+    "Average Silver Wins (multiplayer)",
+    "Average Bronze Wins (multiplayer)",
     "Total Rounds Played"
 };
 
