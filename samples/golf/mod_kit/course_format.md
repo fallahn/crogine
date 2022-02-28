@@ -9,6 +9,7 @@ A course folder should contain one file with the name `course.data`. It has the 
         skybox = "assets/golf/images/skybox/sky.ccm" //a path to the skybox to use when the course is loaded
         billboard_model = "assets/golf/models/shrubbery.cmt" //path to the model definition for the billboard file containing the trees/shrubs
         billboard_sprites = "assets/golf/sprites/shrubbery.spt" //path to the spritesheet containing the sprite definitions for each billboard in the billboard model
+        instnace_model = "assets/golf/models/reeds+large.cmt" //optional path to a model which is instanced around the water's edge. Defaults to reeds if this is omitted
         grass = 1,0.5,0,1 //surrounding grass colour. This is optional and will default to dark green from the colordome-32 palette
         audio = "assets/golf/sound/ambience.xas" //optional path to a crogine audioscape file for environment sounds (see below)
 

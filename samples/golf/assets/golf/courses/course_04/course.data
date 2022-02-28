@@ -5,6 +5,7 @@ course course_04
     billboard_sprites = "assets/golf/sprites/shrubbery02.spt"
     audio = "assets/golf/sound/ambience_beach.xas"
     grass = 1,0.973,0.882,1
+    instance_model = "assets/golf/models/rock.cmt"
 
     title = "Roving Sands, East Nerringham"
     description = "Cup Your Balls at the Beach"

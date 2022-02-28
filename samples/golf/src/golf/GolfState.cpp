@@ -1317,6 +1317,10 @@ void GolfState::loadAssets()
                 m_audioPath = audioPath;
             }
         }
+        else if (name == "instance_model")
+        {
+            theme.instancePath = prop.getValue<std::string>();
+        }
     }
     
     if (theme.billboardModel.empty()

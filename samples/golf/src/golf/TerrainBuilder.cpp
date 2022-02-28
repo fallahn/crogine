@@ -309,7 +309,9 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             }
 
             //create a child entity for instanced geometry
-            if (reedsDef.loadFromFile("assets/golf/models/reeds_large.cmt", true))
+            std::string instancePath = theme.instancePath.empty() ? "assets/golf/models/reeds_large.cmt" : theme.instancePath;
+
+            if (reedsDef.loadFromFile(instancePath, true))
             {
                 auto material = resources.materials.get(materialID);
 
