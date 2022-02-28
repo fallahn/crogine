@@ -30,15 +30,23 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "../collision/DebugDraw.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
+#include <btBulletCollisionCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+
+#include <memory>
+#include <vector>
+
 class BilliardsState final : public cro::State
 {
 public:
     BilliardsState(cro::StateStack&, cro::State::Context);
+    ~BilliardsState();
 
     bool handleEvent(const cro::Event&) override;
 
@@ -55,7 +63,24 @@ private:
     cro::Scene m_scene;
     cro::ResourceCollection m_resources;
 
+    BulletDebug m_debugDrawer;
+    std::unique_ptr<btCollisionConfiguration> m_collisionConfiguration;
+    std::unique_ptr<btCollisionDispatcher> m_collisionDispatcher;
+    std::unique_ptr<btBroadphaseInterface> m_broadphaseInterface;
+    std::unique_ptr<btCollisionWorld> m_collisionWorld;
+
+    //we have to keep a local copy of the table verts as the
+    //collision world only maintains pointers to it
+    std::vector<float> m_vertexData;
+    std::vector<std::vector<std::uint32_t>> m_indexData;
+
+    //these are what do the pointing.
+    std::vector<std::unique_ptr<btPairCachingGhostObject>> m_tableObjects;
+    std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_tableVertices;
+    std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_tableShapes;
 
     void addSystems();
     void buildScene();
+
+    void initCollision(const cro::Mesh::Data&);
 };
