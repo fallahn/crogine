@@ -29,6 +29,15 @@ source distribution.
 
 #include "BilliardsState.hpp"
 
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/Camera.hpp>
+
+#include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/CameraSystem.hpp>
+
+#include <crogine/util/Constants.hpp>
+
 BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx)
     : cro::State(ss, ctx),
     m_scene(ctx.appInstance.getMessageBus())
@@ -64,10 +73,44 @@ void BilliardsState::render()
 void BilliardsState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-
+    m_scene.addSystem<cro::CameraSystem>(mb);
+    m_scene.addSystem<cro::ModelRenderer>(mb);
 }
 
 void BilliardsState::buildScene()
 {
+    cro::ModelDefinition md(m_resources);
+    md.loadFromFile("assets/billiards/pool_collision.cmt");
 
+    //table
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    md.createModel(entity);
+
+
+    //ball
+    md.loadFromFile("assets/billiards/ball.cmt");
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 0.f });
+    md.createModel(entity);
+
+
+
+    //camera / sunlight
+    auto callback = [](cro::Camera& cam)
+    {
+        glm::vec2 winSize(cro::App::getWindow().getSize());
+        cam.setPerspective(60.f * cro::Util::Const::degToRad, winSize.x / winSize.y, 0.1f, 80.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+    auto& camera = m_scene.getActiveCamera().getComponent<cro::Camera>();
+    camera.resizeCallback = callback;
+    //camera.shadowMapBuffer.create(2048, 2048);
+    callback(camera);
+
+    m_scene.getActiveCamera().getComponent<cro::Transform>().move({ 0.f, 1.f, 2.f });
+    m_scene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -28.f * cro::Util::Const::degToRad);
+
+    m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -25.f * cro::Util::Const::degToRad);
+    m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -25.f * cro::Util::Const::degToRad);
 }

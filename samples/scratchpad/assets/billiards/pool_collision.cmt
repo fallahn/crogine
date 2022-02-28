@@ -1,0 +1,17 @@
+model pool_collision
+{
+    mesh = assets/billiards/pool_collision.cmb
+    cast_shadows = false
+
+    material VertexLit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.0,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+
+    }
+}

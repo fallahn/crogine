@@ -33,6 +33,7 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 
 class BilliardsState final : public cro::State
 {
@@ -52,6 +53,7 @@ public:
 private:
 
     cro::Scene m_scene;
+    cro::ResourceCollection m_resources;
 
 
     void addSystems();
