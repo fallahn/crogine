@@ -30,14 +30,64 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/graphics/MeshData.hpp>
 
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+
+#include <memory>
+#include <vector>
+
+struct BilliardBall final
+{
+    //hmmm do we want to hide the physics pointer
+    //as an implementation detail, or do we not care?
+    btRigidBody* physicsBody = nullptr;
+};
+
+class BulletDebug;
 class BilliardsSystem final : public cro::System
 {
 public:
-    explicit BilliardsSystem(cro::MessageBus&);
+    BilliardsSystem(cro::MessageBus&, BulletDebug&);
+    ~BilliardsSystem();
+
+    BilliardsSystem(const BilliardsSystem&) = delete;
+    BilliardsSystem(BilliardsSystem&&) = delete;
+
+    BilliardsSystem& operator = (const BilliardsSystem&) = delete;
+    BilliardsSystem& operator = (BilliardsSystem&&) = delete;
 
     void process(float) override;
+    void initTable(const cro::Mesh::Data&);
+
+    void applyImpulse(/*vec3 dir, vec3 offset*/);
 
 private:
+    BulletDebug& m_debugDrawer;
 
+    std::unique_ptr<btCollisionConfiguration> m_collisionConfiguration;
+    std::unique_ptr<btCollisionDispatcher> m_collisionDispatcher;
+    std::unique_ptr<btBroadphaseInterface> m_broadphaseInterface;
+    std::unique_ptr<btSequentialImpulseConstraintSolver> m_constraintSolver;
+    std::unique_ptr<btDiscreteDynamicsWorld> m_collisionWorld;
+
+    //we have to keep a local copy of the table verts as the
+    //collision world only maintains pointers to it
+    std::vector<float> m_vertexData;
+    std::vector<std::vector<std::uint32_t>> m_indexData;
+
+    //these are what do the pointing.
+    std::vector<std::unique_ptr<btRigidBody>> m_tableObjects;
+    std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_tableVertices;
+    std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_tableShapes;
+
+
+    //tracks ball objects
+    std::vector<std::unique_ptr<btRigidBody>> m_ballObjects;
+    std::unique_ptr<btSphereShape> m_ballShape; //balls can all share this.
+
+    void onEntityAdded(cro::Entity) override;
+    void onEntityRemoved(cro::Entity) override;
 };

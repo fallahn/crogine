@@ -28,15 +28,19 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "BilliardsState.hpp"
+#include "BilliardsSystem.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Random.hpp>
 
 namespace
 {
@@ -45,18 +49,11 @@ namespace
 
 BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx)
     : cro::State(ss, ctx),
-    m_scene(ctx.appInstance.getMessageBus())
+    m_scene     (ctx.appInstance.getMessageBus()),
+    m_ballDef   (m_resources)
 {
     addSystems();
     buildScene();
-}
-
-BilliardsState::~BilliardsState()
-{
-    for (auto& o : m_tableObjects)
-    {
-        m_collisionWorld->removeCollisionObject(o.get());
-    }
 }
 
 //public
@@ -67,6 +64,12 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
+        case SDLK_i:
+            m_scene.getSystem<BilliardsSystem>()->applyImpulse();
+            break;
+        case SDLK_o:
+            addBall();
+            break;
         case SDLK_p:
             showDebug = !showDebug;
             m_debugDrawer.setDebugMode(showDebug ? /*std::numeric_limits<std::int32_t>::max()*/3 : 0);
@@ -89,9 +92,6 @@ void BilliardsState::handleMessage(const cro::Message& msg)
 
 bool BilliardsState::simulate(float dt)
 {
-    m_collisionWorld->stepSimulation(dt, 10);
-    m_collisionWorld->debugDrawWorld();
-
     m_scene.simulate(dt);
     return false;
 }
@@ -108,6 +108,8 @@ void BilliardsState::render()
 void BilliardsState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_scene.addSystem<BilliardsSystem>(mb, m_debugDrawer);
+    m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
 }
@@ -122,15 +124,13 @@ void BilliardsState::buildScene()
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
 
-        initCollision(entity.getComponent<cro::Model>().getMeshData());
+        m_scene.getSystem<BilliardsSystem>()->initTable(entity.getComponent<cro::Model>().getMeshData());
     }
 
     //ball
-    if (md.loadFromFile("assets/billiards/ball.cmt"))
+    if (m_ballDef.loadFromFile("assets/billiards/ball.cmt"))
     {
-        auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 0.f });
-        md.createModel(entity);
+        addBall();
     }
 
 
@@ -153,69 +153,19 @@ void BilliardsState::buildScene()
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -25.f * cro::Util::Const::degToRad);
 }
 
-void BilliardsState::initCollision(const cro::Mesh::Data& meshData)
+void BilliardsState::addBall()
 {
-    m_collisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
-    m_collisionDispatcher = std::make_unique<btCollisionDispatcher>(m_collisionConfiguration.get());
-    m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
-    m_constraintSolver = std::make_unique<btSequentialImpulseConstraintSolver>();
-    m_collisionWorld = std::make_unique<btDiscreteDynamicsWorld>(
-        m_collisionDispatcher.get(),
-        m_broadphaseInterface.get(),
-        m_constraintSolver.get(),
-        m_collisionConfiguration.get());
-
-    //m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionConfiguration.get());
-
-    m_collisionWorld->setDebugDrawer(&m_debugDrawer);
-    m_collisionWorld->setGravity({ 0.f, -10.f, 0.f });
-
-    cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
-
-    //TODO split the collision type by sub-mesh
-    /*if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ cro::Util::Random::value(-0.1f, 0.1f), 0.5f, 0.1f});
+    m_ballDef.createModel(entity);
+    entity.addComponent<BilliardBall>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
     {
-        LogE << "Mesh has no colour property in vertices. Ground will not be created." << std::endl;
-        return;
-    }
-
-    std::int32_t colourOffset = 0;
-    for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
-    {
-        colourOffset += meshData.attributes[i];
-    }*/
-
-    btTransform transform;
-    transform.setIdentity();
-
-    for (auto i = 0u; i < m_indexData.size(); ++i)
-    {
-        btIndexedMesh tableMesh;
-        tableMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
-        tableMesh.m_numVertices = static_cast<std::int32_t>(meshData.vertexCount);
-        tableMesh.m_vertexStride = static_cast<std::int32_t>(meshData.vertexSize);
-
-        tableMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
-        tableMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
-        tableMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
-
-
-        //float terrain = m_vertexData[(m_indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset] * 255.f;
-        //terrain = std::floor(terrain / 10.f);
-
-        m_tableVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(tableMesh);
-        m_tableShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_tableVertices.back().get(), false));
-
-        
-        //auto& body = m_tableObjects.emplace_back(std::make_unique<btPairCachingGhostObject>());
-        //body->setCollisionShape(m_tableShapes.back().get());
-
-        btRigidBody::btRigidBodyConstructionInfo info(0.f, nullptr, m_tableShapes.back().get());
-        auto& body = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(info));
-        body->setWorldTransform(transform);
-        body->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT);
-
-        //body->setUserIndex(static_cast<std::int32_t>(terrain)); // set the terrain type
-        m_collisionWorld->addCollisionObject(body.get());
-    }
+        if (e.getComponent<cro::Transform>().getPosition().y < -1.f)
+        {
+            m_scene.destroyEntity(e);
+        }
+    };
 }
