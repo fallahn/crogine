@@ -48,9 +48,9 @@ namespace
 }
 
 BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx)
-    : cro::State(ss, ctx),
-    m_scene     (ctx.appInstance.getMessageBus()),
-    m_ballDef   (m_resources)
+    : cro::State    (ss, ctx),
+    m_scene         (ctx.appInstance.getMessageBus()),
+    m_ballDef       (m_resources)
 {
     addSystems();
     buildScene();
@@ -77,6 +77,12 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         case SDLK_BACKSPACE:
             requestStackPop();
             requestStackPush(States::ScratchPad::MainMenu);
+            break;
+        case SDLK_KP_1:
+            m_scene.setActiveCamera(m_cameras[0]);
+            break;
+        case SDLK_KP_2:
+            m_scene.setActiveCamera(m_cameras[1]);
             break;
         }
     }
@@ -146,8 +152,18 @@ void BilliardsState::buildScene()
     //camera.shadowMapBuffer.create(2048, 2048);
     callback(camera);
 
-    m_scene.getActiveCamera().getComponent<cro::Transform>().move({ 0.f, 1.f, 2.f });
-    m_scene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -28.f * cro::Util::Const::degToRad);
+    m_scene.getActiveCamera().getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
+    m_scene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+    m_scene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -90.f * cro::Util::Const::degToRad);
+    m_cameras[0] = m_scene.getActiveCamera();
+
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -1.2f, 1.f, 1.2f });
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -45.f * cro::Util::Const::degToRad);
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -25.f * cro::Util::Const::degToRad);
+    callback(entity.addComponent<cro::Camera>());
+    entity.getComponent<cro::Camera>().resizeCallback = callback;
+    m_cameras[1] = entity;
 
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -25.f * cro::Util::Const::degToRad);
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -25.f * cro::Util::Const::degToRad);
@@ -156,7 +172,7 @@ void BilliardsState::buildScene()
 void BilliardsState::addBall()
 {
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ cro::Util::Random::value(-0.1f, 0.1f), 0.5f, 0.1f});
+    entity.addComponent<cro::Transform>().setPosition({ cro::Util::Random::value(-0.1f, 0.1f), 0.5f, cro::Util::Random::value(-0.1f, 0.1f) });
     m_ballDef.createModel(entity);
     entity.addComponent<BilliardBall>();
     entity.addComponent<cro::Callback>().active = true;

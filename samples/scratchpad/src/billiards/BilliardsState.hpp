@@ -59,6 +59,17 @@ private:
     BulletDebug m_debugDrawer;
     cro::ModelDefinition m_ballDef;
 
+    struct Camera final
+    {
+        enum
+        {
+            Overhead, Angle,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, Camera::Count> m_cameras = {};
+
     void addSystems();
     void buildScene();
 

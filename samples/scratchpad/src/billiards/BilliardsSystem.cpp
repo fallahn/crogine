@@ -41,6 +41,26 @@ namespace
     }
 }
 
+void BilliardBall::getWorldTransform(btTransform& dest) const
+{
+    const auto& tx = m_parent.getComponent<cro::Transform>();
+    dest.setFromOpenGLMatrix(&tx.getWorldTransform()[0][0]);
+}
+
+void BilliardBall::setWorldTransform(const btTransform& src)
+{
+    static std::array<float, 16> matrixBuffer = {};
+
+    src.getOpenGLMatrix(matrixBuffer.data());
+    auto mat = glm::make_mat4(matrixBuffer.data());
+
+    auto& tx = m_parent.getComponent<cro::Transform>();
+    tx.setPosition(glm::vec3(mat[3]));
+    tx.setRotation(glm::quat_cast(mat));
+}
+
+
+
 BilliardsSystem::BilliardsSystem(cro::MessageBus& mb, BulletDebug& dd)
     : cro::System(mb, typeid(BilliardsSystem)),
     m_debugDrawer(dd)
@@ -70,22 +90,12 @@ void BilliardsSystem::process(float dt)
     m_collisionWorld->stepSimulation(dt, 10);
     m_collisionWorld->debugDrawWorld();
 
-    //update all ball positions
-    static std::array<float, 16> matrixBuffer = {};
 
-    auto& entities = getEntities();
+    /*auto& entities = getEntities();
     for (auto entity : entities)
     {
-        const auto& ball = entity.getComponent<BilliardBall>();
-        auto& tx = entity.getComponent<cro::Transform>();
 
-        const auto& btx = ball.physicsBody->getWorldTransform();
-        btx.getOpenGLMatrix(matrixBuffer.data());
-        auto mat = glm::make_mat4(matrixBuffer.data());
-
-        tx.setPosition(glm::vec3(mat[3]));
-        tx.setRotation(glm::quat_cast(mat));
-    }
+    }*/
 }
 
 void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
@@ -110,10 +120,10 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
     cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
 
     //TODO split the collision type by sub-mesh
-    //TODO make sure cusion has nicreased restitution
+    //TODO make sure cusion has increased restitution
     /*if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
     {
-        LogE << "Mesh has no colour property in vertices. Ground will not be created." << std::endl;
+        LogE << "Mesh has no colour property in vertices. Will not be created." << std::endl;
         return;
     }
 
@@ -149,8 +159,8 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
         //body->setCollisionShape(m_tableShapes.back().get());
 
         btRigidBody::btRigidBodyConstructionInfo info(0.f, nullptr, m_tableShapes.back().get());
-        info.m_friction = 0.1f;
-        info.m_restitution = 1.f;
+        //info.m_friction = 0.1f;
+        info.m_restitution = 0.5f; //good for cusion, probably don't want on table
 
         auto& body = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(info));
         body->setWorldTransform(transform);
@@ -168,20 +178,23 @@ void BilliardsSystem::applyImpulse()
     if (m_ballObjects.size() > 1)
     {
         auto& obj = m_ballObjects[cro::Util::Random::value(0u, m_ballObjects.size() - 1)];
-        obj->applyCentralImpulse({ 0.f, 0.f, -0.5f });
+        obj->applyCentralImpulse({ 0.2f * ((cro::Util::Random::value(0,1) * 2) - 1), 0.f, -0.2f * ((cro::Util::Random::value(0,1) * 2) - 1) });
     }
 }
 
 //private
 void BilliardsSystem::onEntityAdded(cro::Entity entity)
 {
+    auto& ball = entity.getComponent<BilliardBall>();
+    ball.m_parent = entity;
+
     btTransform transform;
     transform.setFromOpenGLMatrix(&entity.getComponent<cro::Transform>().getWorldTransform()[0][0]);
     
-    btRigidBody::btRigidBodyConstructionInfo info(0.156f, nullptr, m_ballShape.get());
-    info.m_restitution = 0.01f;
-    info.m_rollingFriction = 0.01f;
-    info.m_spinningFriction = 0.01f;
+    btRigidBody::btRigidBodyConstructionInfo info(0.156f, &ball, m_ballShape.get());
+    info.m_restitution = 0.5f;
+    //info.m_rollingFriction = 0.01f;
+    //info.m_spinningFriction = 0.01f;
     info.m_friction = 0.01f;
     info.m_linearSleepingThreshold = 0.f;
     info.m_angularSleepingThreshold = 0.f;
@@ -191,12 +204,12 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
     
     m_collisionWorld->addRigidBody(body.get());
 
-    entity.getComponent<BilliardBall>().physicsBody = body.get();
+    ball.m_physicsBody = body.get();
 }
 
 void BilliardsSystem::onEntityRemoved(cro::Entity entity)
 {
-    auto* body = entity.getComponent<BilliardBall>().physicsBody;
+    auto* body = entity.getComponent<BilliardBall>().m_physicsBody;
 
     m_collisionWorld->removeRigidBody(body);
 

@@ -34,16 +34,20 @@ source distribution.
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <memory>
 #include <vector>
 
-struct BilliardBall final
+struct BilliardBall final : public btMotionState
 {
-    //hmmm do we want to hide the physics pointer
-    //as an implementation detail, or do we not care?
-    btRigidBody* physicsBody = nullptr;
+    void getWorldTransform(btTransform& worldTrans) const override;
+    void setWorldTransform(const btTransform& worldTrans) override;
+
+private:
+    cro::Entity m_parent;
+    btRigidBody* m_physicsBody = nullptr;
+
+    friend class BilliardsSystem;
 };
 
 class BulletDebug;
