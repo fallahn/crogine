@@ -75,7 +75,7 @@ static const std::string BillboardVertexShader = R"(
         v_colour = a_colour;
 
         const float minDistance = 2.0;
-        const float nearFadeDistance = 12.0; //TODO make this a uniform
+        const float nearFadeDistance = 10.0; //TODO make this a uniform
         const float farFadeDistance = 300.f;
         float distance = length(position - u_cameraWorldPosition);
 
@@ -115,14 +115,14 @@ static const std::string BillboardFragmentShader = R"(
         /* to determine the action. */
 
         const int dither[64] = int[64](
-            0, 32, 8, 40, 2, 34, 10, 42, 
-        48, 16, 56, 24, 50, 18, 58, 26, 
-        12, 44, 4, 36, 14, 46, 6, 38, 
-        60, 28, 52, 20, 62, 30, 54, 22, 
-            3, 35, 11, 43, 1, 33, 9, 41, 
-        51, 19, 59, 27, 49, 17, 57, 25,
-        15, 47, 7, 39, 13, 45, 5, 37,
-        63, 31, 55, 23, 61, 29, 53, 21 );
+            0,  32, 8,  40, 2,  34, 10, 42, 
+            48, 16, 56, 24, 50, 18, 58, 26, 
+            12, 44, 4,  36, 14, 46, 6,  38, 
+            60, 28, 52, 20, 62, 30, 54, 22, 
+            3,  35, 11, 43, 1,  33, 9,  41, 
+            51, 19, 59, 27, 49, 17, 57, 25,
+            15, 47, 7,  39, 13, 45, 5,  37,
+            63, 31, 55, 23, 61, 29, 53, 21 );
 
         float limit = 0.0;
         if (x < MatrixSize)
@@ -146,7 +146,7 @@ static const std::string BillboardFragmentShader = R"(
         vec2 xy = gl_FragCoord.xy / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
-        float alpha = findClosest(x, y, v_ditherAmount);
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.999, v_ditherAmount));
         FRAG_OUT.a *= alpha;
 
         if(FRAG_OUT.a < 0.2) discard;

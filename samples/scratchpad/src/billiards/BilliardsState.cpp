@@ -84,6 +84,12 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         case SDLK_KP_2:
             m_scene.setActiveCamera(m_cameras[1]);
             break;
+        case SDLK_KP_3:
+            m_scene.setActiveCamera(m_cameras[2]);
+            break;
+        case SDLK_KP_4:
+            m_scene.setActiveCamera(m_cameras[3]);
+            break;
         }
     }
 
@@ -144,7 +150,7 @@ void BilliardsState::buildScene()
     auto callback = [](cro::Camera& cam)
     {
         glm::vec2 winSize(cro::App::getWindow().getSize());
-        cam.setPerspective(60.f * cro::Util::Const::degToRad, winSize.x / winSize.y, 0.1f, 80.f);
+        cam.setPerspective(60.f * cro::Util::Const::degToRad, winSize.x / winSize.y, 0.1f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     auto& camera = m_scene.getActiveCamera().getComponent<cro::Camera>();
@@ -157,13 +163,40 @@ void BilliardsState::buildScene()
     m_scene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -90.f * cro::Util::Const::degToRad);
     m_cameras[0] = m_scene.getActiveCamera();
 
+
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -1.2f, 1.f, 1.2f });
+    entity.addComponent<cro::Transform>().setPosition({ -1.2f, 0.8f, 1.4f });
     entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -45.f * cro::Util::Const::degToRad);
     entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -25.f * cro::Util::Const::degToRad);
     callback(entity.addComponent<cro::Camera>());
     entity.getComponent<cro::Camera>().resizeCallback = callback;
     m_cameras[1] = entity;
+
+    auto orthoCallback = [](cro::Camera& cam)
+    {
+        glm::vec2 winSize(cro::App::getWindow().getSize());
+        float ratio = winSize.x / winSize.y;
+
+        winSize.y = 1.f;
+        winSize.x = winSize.y * ratio;
+
+        cam.setOrthographic(-winSize.x, winSize.x, -winSize.y, winSize.y, 0.f, 10.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+
+    for (auto i = 2u; i < m_cameras.size(); ++i)
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        orthoCallback(entity.addComponent < cro::Camera>());
+        entity.getComponent<cro::Camera>().resizeCallback = orthoCallback;
+        m_cameras[i] = entity;
+    }
+
+    m_cameras[2].getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.4f });
+
+    m_cameras[3].getComponent<cro::Transform>().setPosition({ -1.4f, 0.f, 0.f });
+    m_cameras[3].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
 
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -25.f * cro::Util::Const::degToRad);
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -25.f * cro::Util::Const::degToRad);
@@ -182,6 +215,8 @@ void BilliardsState::addBall()
         if (e.getComponent<cro::Transform>().getPosition().y < -1.f)
         {
             m_scene.destroyEntity(e);
+
+            addBall();
         }
     };
 }

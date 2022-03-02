@@ -34,9 +34,21 @@ source distribution.
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <memory>
 #include <vector>
+
+struct CollisionID final
+{
+    enum
+    {
+        Table, Cushion,
+        Ball, Pocket,
+
+        Count
+    };
+};
 
 struct BilliardBall final : public btMotionState
 {
@@ -91,6 +103,11 @@ private:
     //tracks ball objects
     std::vector<std::unique_ptr<btRigidBody>> m_ballObjects;
     std::unique_ptr<btSphereShape> m_ballShape; //balls can all share this.
+
+    //pockets
+    std::unique_ptr<btBoxShape> m_pocketShape;
+
+    btRigidBody::btRigidBodyConstructionInfo createBodyDef(std::int32_t, float, btCollisionShape*, btMotionState* = nullptr);
 
     void onEntityAdded(cro::Entity) override;
     void onEntityRemoved(cro::Entity) override;
