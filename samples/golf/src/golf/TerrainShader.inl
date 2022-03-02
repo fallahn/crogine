@@ -47,6 +47,7 @@ static const std::string TerrainVertexShader = R"(
 #endif
 
     uniform vec4 u_clipPlane;
+    uniform vec2 u_scaledResolution;
     uniform float u_morphTime;
 
     VARYING_OUT vec3 v_normal;
@@ -65,7 +66,15 @@ static const std::string TerrainVertexShader = R"(
     void main()
     {
         vec4 position = u_worldMatrix * vec4(lerp(a_position.xyz, a_tangent, u_morphTime), 1.0);
-        gl_Position = u_viewProjectionMatrix * position;
+        //gl_Position = u_viewProjectionMatrix * position;
+
+        vec4 vertPos = u_viewProjectionMatrix * position;
+        vertPos.xyz /= vertPos.w;
+        vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
+        vertPos.xy = floor(vertPos.xy);
+        vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
+        vertPos.xyz *= vertPos.w;
+        gl_Position = vertPos;
 
     #if defined (RX_SHADOWS)
         v_lightWorldPosition = u_lightViewProjectionMatrix * position;
@@ -169,6 +178,8 @@ static const std::string CelVertexShader = R"(
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
 
+    uniform vec2 u_scaledResolution;
+
     VARYING_OUT float v_ditherAmount;
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec4 v_colour;
@@ -213,7 +224,15 @@ static const std::string CelVertexShader = R"(
     #endif
 
         vec4 worldPosition = worldMatrix * position;
-        gl_Position = u_projectionMatrix * worldViewMatrix * position;
+        //gl_Position = u_projectionMatrix * worldViewMatrix * position;
+
+        vec4 vertPos = u_projectionMatrix * worldViewMatrix * position;
+        vertPos.xyz /= vertPos.w;
+        vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
+        vertPos.xy = floor(vertPos.xy);
+        vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
+        vertPos.xyz *= vertPos.w;
+        gl_Position = vertPos;
 
         vec3 normal = a_normal;
     #if defined(SKINNED)

@@ -70,6 +70,7 @@ private:
     cro::RenderTexture m_backgroundTexture;
 
     std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
+    std::vector<std::pair<std::int32_t, std::int32_t>> m_resolutionUniforms;
 
     bool m_mouseVisible;
     cro::Clock m_mouseClock;
@@ -78,6 +79,7 @@ private:
     {
         enum
         {
+            Billboard,
             Cel,
             CelTextured,
             CelTexturedSkinned,

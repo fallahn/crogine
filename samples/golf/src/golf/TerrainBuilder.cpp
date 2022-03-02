@@ -59,6 +59,7 @@ source distribution.
 namespace
 {
 #include "TerrainShader.inl"
+#include "BillboardShader.inl"
 
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler
@@ -181,7 +182,9 @@ TerrainBuilder::~TerrainBuilder()
 }
 
 //public
-void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scene, const ThemeSettings& theme)
+void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scene, const ThemeSettings& theme,
+    std::vector<std::pair<std::int32_t, std::int32_t>>& resUniforms,
+    std::vector<std::pair<std::int32_t, std::int32_t>>& scaleUniforms)
 {
     //create a mesh for the height map - this is actually one quad short
     //top and left - but hey you didn't notice until you read this did you? :)
@@ -223,6 +226,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //use a custom material for morphage
     resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define RX_SHADOWS\n#define ADD_NOISE\n");
     const auto& shader = resources.shaders.get(ShaderID::Terrain);
+    resUniforms.emplace_back(shader.getGLHandle(), shader.getUniformID("u_scaledResolution"));
+    scaleUniforms.emplace_back(shader.getGLHandle(), shader.getUniformID("u_pixelScale"));
     m_terrainProperties.morphUniform = shader.getUniformID("u_morphTime");
     m_terrainProperties.shaderID = shader.getGLHandle();
     auto materialID = resources.materials.add(shader);
@@ -267,11 +272,18 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //parent the shrubbery so they always stay the same relative height
     m_terrainEntity = entity;
 
+    //modified billboard shader with vertex snapping for retro wobbliness
+    resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
+    const auto& billboardShader = resources.shaders.get(ShaderID::Billboard);
+    resUniforms.emplace_back(billboardShader.getGLHandle(), billboardShader.getUniformID("u_scaledResolution"));
+    scaleUniforms.emplace_back(billboardShader.getGLHandle(), billboardShader.getUniformID("u_pixelScale"));
+    auto billboardMatID = resources.materials.add(billboardShader);
 
     //custom shader for instanced plants
     resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
     const auto& reedShader = resources.shaders.get(ShaderID::CelTexturedInstanced);
-    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    resUniforms.emplace_back(reedShader.getGLHandle(), reedShader.getUniformID("u_scaledResolution"));
+    scaleUniforms.emplace_back(reedShader.getGLHandle(), reedShader.getUniformID("u_pixelScale"));
     materialID = resources.materials.add(reedShader);
 
     //create billboard entities
@@ -306,6 +318,10 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 entity.getComponent<cro::Model>().setHidden(true);
                 entity.getComponent<cro::Model>().getMeshData().boundingBox = { glm::vec3(0.f), glm::vec3(MapSize.x, 30.f, -static_cast<float>(MapSize.y)) };
                 entity.addComponent<cro::Callback>().function = transition;
+
+                auto material = resources.materials.get(billboardMatID);
+                applyMaterialData(billboardDef, material);
+                entity.getComponent<cro::Model>().setMaterial(0, material);
 
                 m_terrainEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             }

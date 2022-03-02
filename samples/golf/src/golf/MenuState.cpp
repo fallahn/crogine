@@ -82,6 +82,7 @@ source distribution.
 namespace
 {
 #include "TerrainShader.inl"
+#include "BillboardShader.inl"
 
     //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 }
@@ -504,23 +505,33 @@ void MenuState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX");
+    m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
 
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
     //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
+    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     //fudge this for the previews
     m_resources.materials.get(m_materialIDs[MaterialID::Hair]).doubleSided = true;
+
+    shader = &m_resources.shaders.get(ShaderID::Billboard);
+    m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
@@ -609,6 +620,10 @@ void MenuState::createScene()
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
 
+    auto billboardMat = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+    applyMaterialData(md, billboardMat);
+    entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
+
     if (entity.hasComponent<cro::BillboardCollection>())
     {
         std::array minBounds = { 30.f, 0.f };
@@ -690,6 +705,13 @@ void MenuState::createScene()
         {
             glCheck(glUseProgram(shader));
             glCheck(glUniform1f(uniform, invScale));
+        }
+
+        glm::vec2 scaledRes = texSize / invScale;
+        for (auto [shader, uniform] : m_resolutionUniforms)
+        {
+            glCheck(glUseProgram(shader));
+            glCheck(glUniform2f(uniform, scaledRes.x, scaledRes.y));
         }
 
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));

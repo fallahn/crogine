@@ -93,6 +93,7 @@ namespace
 #include "TransitionShader.inl"
 #include "MinimapShader.inl"
 #include "WireframeShader.inl"
+#include "BillboardShader.inl"
 
 #ifdef CRO_DEBUG_
     std::int32_t debugFlags = 0;
@@ -524,6 +525,7 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n");
+    m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
 
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
@@ -531,22 +533,32 @@ void DrivingState::loadAssets()
     //materials
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
     
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
    
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
     //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
+    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
 
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::Billboard);
+    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
     m_materialIDs[MaterialID::Wireframe] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
@@ -1059,6 +1071,13 @@ void DrivingState::createScene()
             glCheck(glUniform1f(uniform, invScale));
         }
 
+        glm::vec2 scaledRes = texSize / invScale;
+        for (auto [shader, uniform] : m_resolutionUniforms)
+        {
+            glCheck(glUseProgram(shader));
+            glCheck(glUniform2f(uniform, scaledRes.x, scaledRes.y));
+        }
+
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
@@ -1367,6 +1386,10 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
                 static constexpr std::array MinBounds = { 0.f, 0.f };
                 static constexpr std::array MaxBounds = { BillboardChunk.x, BillboardChunk.y };
                 createBillboards(entity, MinBounds, MaxBounds);
+
+                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+                applyMaterialData(md, material);
+                entity.getComponent<cro::Model>().setMaterial(0, material);
             }
 
             pos.x += RangeSize.x + BillboardChunk.x;
@@ -1383,6 +1406,10 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     if (entity.hasComponent<cro::BillboardCollection>())
     {
         createBillboards(entity, { 0.f, 0.f }, { RangeSize.x + (BillboardChunk.x * 2.f), BillboardChunk.x });
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+        applyMaterialData(md, material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
     }
 
     //magic height number here - should match the loaded pavilion height
@@ -1397,6 +1424,10 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
         if (entity.hasComponent<cro::BillboardCollection>())
         {
             createBillboards(entity, { 0.f, 0.f }, { (BillboardChunk.x * 2.8f), BillboardChunk.x / 2.f });
+
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+            applyMaterialData(md, material);
+            entity.getComponent<cro::Model>().setMaterial(0, material);
         }
 
         position.x += 170.f;
@@ -1411,6 +1442,10 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     if (entity.hasComponent<cro::BillboardCollection>())
     {
         createBillboards(entity, { 0.f, 0.f }, { RangeSize.x , BillboardChunk.x }, BillboardChunk.x - 15.f, { RangeSize.x / 2.f, BillboardChunk.x });
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+        applyMaterialData(md, material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
     }
 }
 

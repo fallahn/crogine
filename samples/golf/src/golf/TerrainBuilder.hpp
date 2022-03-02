@@ -74,7 +74,9 @@ public:
     TerrainBuilder& operator = (TerrainBuilder&&) = delete;
 
 
-    void create(cro::ResourceCollection&, cro::Scene&, const ThemeSettings&); //initial creation
+    void create(cro::ResourceCollection&, cro::Scene&, const ThemeSettings&,
+        std::vector<std::pair<std::int32_t, std::int32_t>>& res,
+        std::vector<std::pair<std::int32_t, std::int32_t>>& scale); //initial creation
 
     void update(std::size_t); //loads the configured data into the existing scene and signals the thread to queue upcoming data
 

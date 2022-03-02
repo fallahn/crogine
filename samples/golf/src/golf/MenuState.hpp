@@ -107,6 +107,7 @@ private:
             CelTextured,
             CelTexturedSkinned,
             Hair,
+            Billboard,
 
             Count
         };
@@ -115,6 +116,7 @@ private:
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
 
     std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
+    std::vector<std::pair<std::int32_t, std::int32_t>> m_resolutionUniforms;
 
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 

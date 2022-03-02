@@ -100,6 +100,7 @@ struct ShaderID final
     {
         Water = 100,
         Terrain,
+        Billboard,
         Cel,
         CelSkinned,
         CelTextured,
