@@ -70,6 +70,23 @@ BilliardsSystem::BilliardsSystem(cro::MessageBus& mb, BulletDebug& dd)
     requireComponent<cro::Transform>();
 
     m_ballShape = std::make_unique<btSphereShape>(0.0255f);
+
+    //note these have to be created in the right order so that destruction
+//is properly done in reverse...
+    m_collisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
+    m_collisionDispatcher = std::make_unique<btCollisionDispatcher>(m_collisionConfiguration.get());
+    m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
+    m_constraintSolver = std::make_unique<btSequentialImpulseConstraintSolver>();
+    m_collisionWorld = std::make_unique<btDiscreteDynamicsWorld>(
+        m_collisionDispatcher.get(),
+        m_broadphaseInterface.get(),
+        m_constraintSolver.get(),
+        m_collisionConfiguration.get());
+
+    //m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionConfiguration.get());
+
+    m_collisionWorld->setDebugDrawer(&m_debugDrawer);
+    m_collisionWorld->setGravity({ 0.f, -9.f, 0.f });
 }
 
 BilliardsSystem::~BilliardsSystem()
@@ -102,28 +119,17 @@ void BilliardsSystem::process(float dt)
 
 void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
 {
-    //note these have to be created in the right order so that destruction
-    //is properly done in reverse...
-    m_collisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
-    m_collisionDispatcher = std::make_unique<btCollisionDispatcher>(m_collisionConfiguration.get());
-    m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
-    m_constraintSolver = std::make_unique<btSequentialImpulseConstraintSolver>();
-    m_collisionWorld = std::make_unique<btDiscreteDynamicsWorld>(
-        m_collisionDispatcher.get(),
-        m_broadphaseInterface.get(),
-        m_constraintSolver.get(),
-        m_collisionConfiguration.get());
-
-    //m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionConfiguration.get());
-
-    m_collisionWorld->setDebugDrawer(&m_debugDrawer);
-    m_collisionWorld->setGravity({ 0.f, -9.f, 0.f });
-
     cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
 
     if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
     {
         LogE << "Mesh has no colour property in vertices. Will not be created." << std::endl;
+        return;
+    }
+
+    if (m_vertexData.empty() || m_indexData.empty())
+    {
+        LogE << "No collision mesh was loaded" << std::endl;
         return;
     }
 
