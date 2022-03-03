@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -139,6 +139,11 @@ namespace cro
         */
         const bool stopped() const { return (!m_running && m_nextFreeParticle == 0); }
 
+        /*!
+        \brief Returns the current bounding sphere of the emitter
+        */
+        const Sphere& getBounds() const { return m_bounds; }
+
         static const std::uint32_t MaxParticles = 1000u;
         EmitterSettings settings;
 
@@ -152,6 +157,7 @@ namespace cro
         bool m_running;
         Clock m_emissionClock;
         Sphere m_bounds;
+        bool m_visible = true;
 
         std::int32_t m_releaseCount;
 

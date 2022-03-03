@@ -1078,7 +1078,7 @@ void DrivingState::createScene()
             glCheck(glUniform2f(uniform, scaledRes.x, scaledRes.y));
         }
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 320.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -1170,7 +1170,7 @@ void DrivingState::createScene()
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, 320.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();

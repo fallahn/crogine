@@ -1973,7 +1973,7 @@ void GolfState::buildScene()
             glCheck(glUniform2f(uniform, scaledRes.x, scaledRes.y));
         }
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x)/* * 1.25f*/);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -2000,7 +2000,7 @@ void GolfState::buildScene()
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, /*vpSize.x*/320.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
@@ -2356,6 +2356,8 @@ void GolfState::spawnBall(const ActorInfo& info)
                 auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
                 ballPos.y = std::min(0.003f + m_collisionMesh.getTerrain(ballPos).height, ballPos.y); //just to prevent z-fighting
                 e.getComponent<cro::Transform>().setPosition(ballPos);
+
+                e.getComponent<cro::Model>().setHidden(ballEnt.getComponent<ClientCollider>().terrain == TerrainID::Green);
             }
         }
     };
@@ -2887,7 +2889,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             cmd.targetFlags = CommandID::Hole;
             cmd.action = [&](cro::Entity en, float)
             {
-                en.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
+                en.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin + glm::vec3(0.f, 0.004f, 0.f));
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -3199,14 +3201,22 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         {
             if (getClub() < ClubID::FiveIron)
             {
+                m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setHidden(false);
                 m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Wood]);
             }
             else
             {
+                m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setHidden(false);
                 m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Iron]);
             }
             m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
         }
+    }
+    else
+    {
+        m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setHidden(true);
+        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setHidden(true);
+        m_activeAvatar->model.getComponent<cro::Model>().setHidden(true);
     }
     setActiveCamera(CameraID::Player);
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -160,6 +160,19 @@ namespace
     const std::size_t MaxParticleSystems = 128; //max number of VBOs - must be divisible by min count
     const std::size_t MinParticleSystems = 4; //min amount before resizing - this many added on resize (so don't make too large!!)
     const std::size_t VertexSize = 10 * sizeof(float); //pos, colour, rotation/scale vert attribs
+
+
+    bool inFrustum(const Frustum& frustum, const ParticleEmitter& emitter)
+    {
+        bool visible = true;
+        std::size_t i = 0;
+        while (visible && i < frustum.size())
+        {
+            visible = (Spatial::intersects(frustum[i++], emitter.getBounds()) != Planar::Back);
+        }
+
+        return visible;
+    }
 }
 
 ParticleSystem::ParticleSystem(MessageBus& mb)
@@ -250,7 +263,7 @@ ParticleSystem::~ParticleSystem()
 
 //public
 void ParticleSystem::updateDrawList(Entity cameraEnt)
-{
+{   
     auto& cam = cameraEnt.getComponent<Camera>();
     auto passCount = cam.reflectionBuffer.available() ? 2 : 1;
 
@@ -262,24 +275,13 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
     const auto& entities = getEntities();
     for (auto entity : entities)
     {
-        const auto& emitter = entity.getComponent<ParticleEmitter>();
-        auto inFrustum = [&emitter](const Frustum& frustum)->bool
-        {
-            bool visible = true;
-            std::size_t i = 0;
-            while (visible && i < frustum.size())
-            {
-                visible = (Spatial::intersects(frustum[i++], emitter.m_bounds) != Planar::Back);
-            }
-
-            return visible;
-        };
-
+        auto& emitter = entity.getComponent<ParticleEmitter>();
         for (auto i = 0; i < passCount; ++i)
         {
             const auto& frustum = cam.getPass(i).getFrustum();
-            if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum))
+            if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum, emitter))
             {
+                emitter.m_visible = true;
                 m_visibleEntities[i].push_back(entity);
             }
         }
@@ -306,9 +308,13 @@ void ParticleSystem::process(float dt)
 
         //check each emitter to see if it should spawn a new particle
         auto& emitter = e.getComponent<ParticleEmitter>();
-        if (emitter.m_running &&
+        if (emitter.m_visible &&
+            emitter.m_running &&
             emitter.m_emissionClock.elapsed().asSeconds() > (1.f / emitter.settings.emitRate))
         {
+            //make sure not to update this again unless it gets marked as visible next frame
+            emitter.m_visible = false;
+            
             //apply fallback texture if one doesn't exist
             //this would be speedier to do once when adding the emitter to the system
             //but the texture may change at runtime.
