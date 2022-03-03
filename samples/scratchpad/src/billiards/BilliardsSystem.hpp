@@ -48,6 +48,8 @@ struct CollisionID final
 
         Count
     };
+
+    static const std::array<std::string, Count> Labels;
 };
 
 struct BilliardBall final : public btMotionState
@@ -104,8 +106,11 @@ private:
     std::vector<std::unique_ptr<btRigidBody>> m_ballObjects;
     std::unique_ptr<btSphereShape> m_ballShape; //balls can all share this.
 
-    //pockets
-    std::unique_ptr<btBoxShape> m_pocketShape;
+    //pockets/table surface
+    std::vector<std::unique_ptr<btBoxShape>> m_boxShapes;
+
+    std::vector<std::unique_ptr<btPairCachingGhostObject>> m_pocketObjects;
+    std::unique_ptr<btGhostPairCallback> m_ghostCallback;
 
     btRigidBody::btRigidBodyConstructionInfo createBodyDef(std::int32_t, float, btCollisionShape*, btMotionState* = nullptr);
 

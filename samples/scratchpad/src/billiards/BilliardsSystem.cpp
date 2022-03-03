@@ -40,6 +40,25 @@ namespace
     {
         return { v.getX(), v.getY(), v.getZ() };
     }
+
+    struct PocketCallback final : public btCollisionWorld::ContactResultCallback
+    {
+
+        //I don't know what this does, the bullet docs are tenuous at best.
+        btScalar addSingleResult(btManifoldPoint& cp,
+            const btCollisionObjectWrapper* colObj0Wrap,
+            int partId0,
+            int index0,
+            const btCollisionObjectWrapper* colObj1Wrap,
+            int partId1,
+            int index1) override
+        {
+            LogI << "Object 0: " << CollisionID::Labels[colObj0Wrap->getCollisionObject()->getUserIndex()] << std::endl;
+            LogI << "Object 1: " << CollisionID::Labels[colObj1Wrap->getCollisionObject()->getUserIndex()] << std::endl;
+
+            return 0.f;
+        }
+    };
 }
 
 void BilliardBall::getWorldTransform(btTransform& dest) const
@@ -60,7 +79,10 @@ void BilliardBall::setWorldTransform(const btTransform& src)
     tx.setRotation(glm::quat_cast(mat));
 }
 
-
+const std::array<std::string, CollisionID::Count> CollisionID::Labels =
+{
+    "Table", "Cushion", "Ball", "Pocket"
+};
 
 BilliardsSystem::BilliardsSystem(cro::MessageBus& mb, BulletDebug& dd)
     : cro::System(mb, typeid(BilliardsSystem)),
@@ -72,7 +94,7 @@ BilliardsSystem::BilliardsSystem(cro::MessageBus& mb, BulletDebug& dd)
     m_ballShape = std::make_unique<btSphereShape>(0.0255f);
 
     //note these have to be created in the right order so that destruction
-//is properly done in reverse...
+    //is properly done in reverse...
     m_collisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
     m_collisionDispatcher = std::make_unique<btCollisionDispatcher>(m_collisionConfiguration.get());
     m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
@@ -87,11 +109,19 @@ BilliardsSystem::BilliardsSystem(cro::MessageBus& mb, BulletDebug& dd)
 
     m_collisionWorld->setDebugDrawer(&m_debugDrawer);
     m_collisionWorld->setGravity({ 0.f, -9.f, 0.f });
+
+    m_ghostCallback = std::make_unique<btGhostPairCallback>();
+    m_broadphaseInterface->getOverlappingPairCache()->setInternalGhostPairCallback(m_ghostCallback.get());
 }
 
 BilliardsSystem::~BilliardsSystem()
 {
     for (auto& o : m_ballObjects)
+    {
+        m_collisionWorld->removeCollisionObject(o.get());
+    }
+
+    for (auto& o : m_pocketObjects)
     {
         m_collisionWorld->removeCollisionObject(o.get());
     }
@@ -108,13 +138,17 @@ void BilliardsSystem::process(float dt)
     m_collisionWorld->stepSimulation(dt, 10);
     m_collisionWorld->debugDrawWorld();
 
-    auto manifolds = m_collisionWorld->getDispatcher()->getNumManifolds();
-
-    /*auto& entities = getEntities();
-    for (auto entity : entities)
+    for (auto& pocket : m_pocketObjects)
     {
+        auto overlapCount = pocket->getNumOverlappingObjects();
+        for (auto i = 0; i < overlapCount; ++i)
+        {
+            auto other = pocket->getOverlappingObject(i);
 
-    }*/
+            PocketCallback cb;
+            m_collisionWorld->contactPairTest(pocket.get(), other, cb);
+        }
+    }
 }
 
 void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
@@ -156,7 +190,6 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
 
         float collisionID = m_vertexData[(m_indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset] * 255.f;
         collisionID = std::floor(collisionID / 10.f);
-        LogI << collisionID << ": you forgot to create submeshes..." << std::endl;
 
         m_tableVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(tableMesh);
         m_tableShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_tableVertices.back().get(), false));
@@ -173,7 +206,14 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
         m_collisionWorld->addRigidBody(body.get());
     }
 
-    //TODO create as few flat boxes as possible for the main table surface.
+    //create as few flat boxes as possible for the main table surface.
+    //TODO read dims from a config?
+    auto& tableShape = m_boxShapes.emplace_back(std::make_unique<btBoxShape>(btBoxShape(btVector3(0.93425f, 0.1f, 1.666f) / 2.f)));
+    transform.setOrigin({ 0.f, -0.05f, 0.f });
+    auto& table = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Table, 0.f, tableShape.get())));
+    table->setWorldTransform(transform);
+    m_collisionWorld->addCollisionObject(table.get());
+
 
     //create triggers for each pocket
     //TODO read this from some table data somewhere
@@ -189,16 +229,17 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
         btVector3(-0.5f, -0.1f, 0.96f)
     };
 
-    m_pocketShape = std::make_unique<btBoxShape>(btBoxShape({ 0.075f, 0.02f, 0.075f }));
+    auto& pocketShape = m_boxShapes.emplace_back(std::make_unique<btBoxShape>(btBoxShape({ 0.075f, 0.02f, 0.075f })));
     for (auto p : PocketPositions)
     {
         transform.setOrigin(p);
 
-        auto& pocket = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Pocket, 0.f, m_pocketShape.get())));
-        pocket->setCollisionShape(m_pocketShape.get());
+        //auto& pocket = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Pocket, 0.f, pocketShape.get())));
+        auto& pocket = m_pocketObjects.emplace_back(std::make_unique<btPairCachingGhostObject>());
+        pocket->setCollisionShape(pocketShape.get());
         pocket->setWorldTransform(transform);
         pocket->setUserIndex(CollisionID::Pocket);
-        pocket->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+        pocket->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE | pocket->getCollisionFlags());
         m_collisionWorld->addCollisionObject(pocket.get());
     }
 }

@@ -137,6 +137,16 @@ void BilliardsState::buildScene()
         md.createModel(entity);
 
         m_scene.getSystem<BilliardsSystem>()->initTable(entity.getComponent<cro::Model>().getMeshData());
+
+        //TODO extract the mesh data in a more sensible way such as reading it straight from the file...
+        m_scene.destroyEntity(entity);
+    }
+
+    if (md.loadFromFile("assets/billiards/pool_model.cmt"))
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
     }
 
     //ball
