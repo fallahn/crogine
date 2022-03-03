@@ -38,7 +38,6 @@ static const std::string BillboardVertexShader = R"(
     ATTRIBUTE vec4 a_colour;
 
     ATTRIBUTE MED vec2 a_texCoord0;
-    //ATTRIBUTE MED vec2 a_texCoord1; //contains the size of the billboard to which this vertex belongs
 
     uniform mat4 u_worldMatrix;
     uniform mat4 u_viewMatrix;
@@ -48,6 +47,8 @@ static const std::string BillboardVertexShader = R"(
     uniform vec3 u_cameraWorldPosition;
     uniform vec2 u_scaledResolution;
 
+    uniform float u_time = 0.0;
+    uniform vec3 u_windDir = vec3(0.5);
 
     VARYING_OUT LOW vec4 v_colour;
     VARYING_OUT MED vec2 v_texCoord0;
@@ -63,13 +64,34 @@ static const std::string BillboardVertexShader = R"(
         position = position + camRight * a_position.x
                             + camUp * a_position.y;
 
+
+        const float xFreq = 0.6;
+        const float yFreq = 0.8;
+        const float scale = 0.25;
+        const float minHeight = 3.0;
+        const float maxHeight = 9.0;
+
+        //only animate above 3 metres
+        float height = max(0.0, position.y - minHeight);
+
+        float strength = u_windDir.y;
+        float totalScale = scale * (height / maxHeight) * strength;
+
+        position.x += sin((u_time * (xFreq)) + a_normal.x) * totalScale;
+        position.z += sin((u_time * (yFreq)) + a_normal.z) * totalScale;
+        position.xz += (u_windDir.xz * strength * 2.0) * totalScale;
+
+
+
+
         //snap vert pos to nearest fragment for retro wobble
+        //hmm not so good when couple with wind (above)
         vec4 vertPos = u_viewProjectionMatrix * vec4(position, 1.0);
-        vertPos.xyz /= vertPos.w;
+        /*vertPos.xyz /= vertPos.w;
         vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
         vertPos.xy = floor(vertPos.xy);
         vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
-        vertPos.xyz *= vertPos.w;
+        vertPos.xyz *= vertPos.w;*/
         gl_Position = vertPos;
 
         v_colour = a_colour;

@@ -182,9 +182,7 @@ TerrainBuilder::~TerrainBuilder()
 }
 
 //public
-void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scene, const ThemeSettings& theme,
-    std::vector<std::pair<std::int32_t, std::int32_t>>& resUniforms,
-    std::vector<std::pair<std::int32_t, std::int32_t>>& scaleUniforms)
+void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scene, const ThemeSettings& theme)
 {
     //create a mesh for the height map - this is actually one quad short
     //top and left - but hey you didn't notice until you read this did you? :)
@@ -226,8 +224,6 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //use a custom material for morphage
     resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define RX_SHADOWS\n#define ADD_NOISE\n");
     const auto& shader = resources.shaders.get(ShaderID::Terrain);
-    resUniforms.emplace_back(shader.getGLHandle(), shader.getUniformID("u_scaledResolution"));
-    scaleUniforms.emplace_back(shader.getGLHandle(), shader.getUniformID("u_pixelScale"));
     m_terrainProperties.morphUniform = shader.getUniformID("u_morphTime");
     m_terrainProperties.shaderID = shader.getGLHandle();
     auto materialID = resources.materials.add(shader);
@@ -275,15 +271,11 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //modified billboard shader with vertex snapping for retro wobbliness
     resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
     const auto& billboardShader = resources.shaders.get(ShaderID::Billboard);
-    resUniforms.emplace_back(billboardShader.getGLHandle(), billboardShader.getUniformID("u_scaledResolution"));
-    scaleUniforms.emplace_back(billboardShader.getGLHandle(), billboardShader.getUniformID("u_pixelScale"));
     auto billboardMatID = resources.materials.add(billboardShader);
 
     //custom shader for instanced plants
     resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
     const auto& reedShader = resources.shaders.get(ShaderID::CelTexturedInstanced);
-    resUniforms.emplace_back(reedShader.getGLHandle(), reedShader.getUniformID("u_scaledResolution"));
-    scaleUniforms.emplace_back(reedShader.getGLHandle(), reedShader.getUniformID("u_pixelScale"));
     materialID = resources.materials.add(reedShader);
 
     //create billboard entities

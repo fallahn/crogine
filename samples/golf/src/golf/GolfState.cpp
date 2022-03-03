@@ -180,34 +180,14 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 #ifdef CRO_DEBUG_
     ballEntity = {};
 
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("buns"))
-    //        {
-    //            /*auto s = glm::vec2(m_gameSceneTexture.getSize());
-    //            ImGui::Text("Scene size: %3.3f, %3.3f", s.x, s.y);
-
-    //            auto s2 = glm::vec2(GolfGame::getActiveTarget()->getSize());
-    //            ImGui::Text("Output Size: %3.3f, %3.3f", s2.x, s2.y);
-
-    //            s2 /= m_viewScale;
-    //            ImGui::Text("Output Size (scaled): %3.3f, %3.3f", s2.x, s2.y);
-
-    //            ImGui::Text("Scale: %3.3f, %3.3f", m_viewScale.x, m_viewScale.y);*/
-
-    //            //auto active = m_freeCam.getComponent<cro::Camera>().active;
-    //            //ImGui::Text("Active %s", active ? "true" : "false");
-    //            
-    //            /*if (ballEntity.isValid())
-    //            {
-    //                auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
-    //                ImGui::Text("Ball Position: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-    //            }*/
-    //            //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().refractionBuffer.getTexture(), { 256.f, 256.f }, {0.f, 1.f}, { 1.f, 0.f });
-    //            ImGui::Image(m_leaderboardTexture.getTexture(), {388.f, 532.f}, {0.f, 1.f}, {1.f, 0.f});
-    //        }
-    //        ImGui::End();
-    //    });
+    /*registerWindow([&]() 
+        {
+            if (ImGui::Begin("buns"))
+            {
+                ImGui::Text("Speed %3.3f", m_billboardUniforms.currentWindSpeed);
+            }
+            ImGui::End();
+        });*/
 #endif
 }
 
@@ -736,7 +716,16 @@ bool GolfState::simulate(float dt)
 
     glUseProgram(m_waterShader.shaderID);
     glUniform1f(m_waterShader.timeUniform, elapsed * 15.f);
-    //glUseProgram(0);
+    
+    glUseProgram(m_billboardUniforms.shaderID);
+    glUniform1f(m_billboardUniforms.timeAccum, elapsed);
+
+    m_billboardUniforms.currentWindSpeed += (m_billboardUniforms.windVector.y - m_billboardUniforms.currentWindSpeed) * dt;
+    m_billboardUniforms.currentWindVector += (m_billboardUniforms.windVector - m_billboardUniforms.currentWindVector) * dt;
+
+    glUniform3f(m_billboardUniforms.windDirection, m_billboardUniforms.currentWindVector.x,
+                                                    m_billboardUniforms.currentWindSpeed,
+                                                    m_billboardUniforms.currentWindVector.z);
 
     m_terrainBuilder.updateTime(elapsed * 10.f);
 
@@ -1659,7 +1648,23 @@ void GolfState::loadAssets()
     }
     //else
     {
-        m_terrainBuilder.create(m_resources, m_gameScene, theme, m_resolutionUniforms, m_scaleUniforms);
+        m_terrainBuilder.create(m_resources, m_gameScene, theme);
+
+        //this will have loaded a series of shaders for which we need to capture some uniforms
+        shader = &m_resources.shaders.get(ShaderID::Billboard);
+        m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+        m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+        m_billboardUniforms.shaderID = shader->getGLHandle();
+        m_billboardUniforms.timeAccum = shader->getUniformID("u_time");
+        m_billboardUniforms.windDirection = shader->getUniformID("u_windDir");
+
+        shader = &m_resources.shaders.get(ShaderID::Terrain);
+        m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+        m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+
+        shader = &m_resources.shaders.get(ShaderID::CelTexturedInstanced);
+        m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+        m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     }
 
     //reserve the slots for each hole score

@@ -438,6 +438,14 @@ bool MenuState::simulate(float dt)
         }
     }
 
+    static float accumTime = 0.f;
+    accumTime += dt;
+    for (auto [shader, uniform] : m_timeUniforms)
+    {
+        glCheck(glUseProgram(shader));
+        glCheck(glUniform1f(uniform, accumTime));
+    }
+
     m_backgroundScene.simulate(dt);
     m_avatarScene.simulate(dt);
     m_uiScene.simulate(dt);
@@ -532,6 +540,7 @@ void MenuState::loadAssets()
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_timeUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_time"));
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;

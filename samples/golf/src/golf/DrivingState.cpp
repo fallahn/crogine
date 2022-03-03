@@ -419,7 +419,22 @@ void DrivingState::handleMessage(const cro::Message& msg)
 
 bool DrivingState::simulate(float dt)
 {
-    updateWindDisplay(m_gameScene.getSystem<BallSystem>()->getWindDirection());
+    auto windDir = m_gameScene.getSystem<BallSystem>()->getWindDirection();
+    updateWindDisplay(windDir);
+
+    static float elapsed = 0.f;
+    elapsed += dt;
+
+    glUseProgram(m_billboardUniforms.shaderID);
+    glUniform1f(m_billboardUniforms.timeAccum, elapsed);
+
+    m_billboardUniforms.currentWindSpeed += (windDir.y - m_billboardUniforms.currentWindSpeed) * dt;
+    m_billboardUniforms.currentWindVector += (windDir - m_billboardUniforms.currentWindVector) * dt;
+
+    glUniform3f(m_billboardUniforms.windDirection, m_billboardUniforms.currentWindVector.x,
+                                                    m_billboardUniforms.currentWindSpeed,
+                                                    m_billboardUniforms.currentWindVector.z);
+
 
     m_inputParser.update(dt);
     m_gameScene.simulate(dt);
@@ -559,6 +574,11 @@ void DrivingState::loadAssets()
     m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
+
+    m_billboardUniforms.shaderID = shader->getGLHandle();
+    m_billboardUniforms.timeAccum = shader->getUniformID("u_time");
+    m_billboardUniforms.windDirection = shader->getUniformID("u_windDir");
+
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
     m_materialIDs[MaterialID::Wireframe] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));

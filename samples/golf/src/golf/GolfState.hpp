@@ -115,6 +115,16 @@ private:
     cro::RenderTexture m_trophySceneTexture;
     std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
     std::vector<std::pair<std::int32_t, std::int32_t>> m_resolutionUniforms;
+    struct BillboardUniforms final
+    {
+        std::uint32_t shaderID = 0;
+        std::int32_t timeAccum = -1;
+        std::int32_t windDirection = -1;
+
+        float currentWindSpeed = 0.f;
+        glm::vec3 currentWindVector = glm::vec3(0.f);
+        glm::vec3 windVector = glm::vec3(0.f);
+    }m_billboardUniforms;
 
     cro::Image m_currentMap;
     std::vector<HoleData> m_holeData;

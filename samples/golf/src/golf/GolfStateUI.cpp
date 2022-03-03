@@ -1344,20 +1344,12 @@ void GolfState::showScoreboard(bool visible)
 void GolfState::updateWindDisplay(glm::vec3 direction)
 {
     float rotation = std::atan2(-direction.z, direction.x);
+    m_billboardUniforms.windVector = direction;
 
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::WindSock;
     cmd.action = [&, rotation](cro::Entity e, float dt)
     {
-        //nice idea but there's a little too much lag.
-        //might work better if we switch as quickly as we
-        //switch cameras, so maybe revisit this. For now
-        //let's leave it as a problem for future me.
-        /*auto target = m_cameras[m_currentCamera].getComponent<TargetInfo>().targetLookAt;
-        
-        auto targetDir = target - m_cameras[m_currentCamera].getComponent<cro::Transform>().getPosition();
-        auto camRotation = std::atan2(-targetDir.z, targetDir.x);*/
-
         auto r = rotation - m_camRotation;
 
         float& currRotation = e.getComponent<float>();

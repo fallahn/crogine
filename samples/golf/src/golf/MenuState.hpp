@@ -117,6 +117,7 @@ private:
 
     std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
     std::vector<std::pair<std::int32_t, std::int32_t>> m_resolutionUniforms;
+    std::vector<std::pair<std::int32_t, std::int32_t>> m_timeUniforms;
 
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
