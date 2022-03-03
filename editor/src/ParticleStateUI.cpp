@@ -401,6 +401,15 @@ void ParticleState::drawInspector()
                     m_particleSettings->textureSize = m_texture.getSize();
                 }
             }
+            if (!m_particleSettings->texturePath.empty())
+            {
+                auto smooth = m_texture.isSmooth();
+                ImGui::SameLine();
+                if (ImGui::Checkbox("Smooth", &smooth))
+                {
+                    m_texture.setSmooth(smooth);
+                }
+            }
 
             ImGui::EndTabItem();
         }
