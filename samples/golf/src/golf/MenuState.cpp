@@ -356,6 +356,10 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 applyTextEdit();
             }
             break;
+        case SDLK_ESCAPE:
+        case SDLK_BACKSPACE:
+            quitMenu();
+            break;
         }
     }
     else if (evt.type == SDL_KEYDOWN)

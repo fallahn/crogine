@@ -1391,6 +1391,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
             bb.size *= scale;
         }
         dst.getComponent<cro::BillboardCollection>().setBillboards(billboards);
+        dst.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap));
     };
 
     cro::ModelDefinition md(m_resources);

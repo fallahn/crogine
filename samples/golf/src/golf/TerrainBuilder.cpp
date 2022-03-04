@@ -309,6 +309,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
                 entity.getComponent<cro::Model>().setHidden(true);
                 entity.getComponent<cro::Model>().getMeshData().boundingBox = { glm::vec3(0.f), glm::vec3(MapSize.x, 30.f, -static_cast<float>(MapSize.y)) };
+                entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap));
                 entity.addComponent<cro::Callback>().function = transition;
 
                 auto material = resources.materials.get(billboardMatID);
