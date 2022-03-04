@@ -57,7 +57,8 @@ public:
     void setActive(bool);
     void setSuspended(bool);
     void setEnableFlags(std::uint16_t); //bits which are set are *enabled*
-    void setMaxClub(float);
+    void setMaxClub(float); //based on overall distance of hole
+    void setMaxClub(std::int32_t); //force set when only wanting wedges for example
     void resetPower();
     void update(float);
 

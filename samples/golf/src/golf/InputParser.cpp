@@ -332,6 +332,16 @@ void InputParser::setMaxClub(float dist)
     msg->type = GolfEvent::ClubChanged;
 }
 
+void InputParser::setMaxClub(std::int32_t clubID)
+{
+    CRO_ASSERT(clubID < ClubID::Putter, "");
+    m_firstClub = m_currentClub = clubID;
+    m_clubOffset = 0;
+
+    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+    msg->type = GolfEvent::ClubChanged;
+}
+
 void InputParser::resetPower()
 {
     m_power = 0.f;
@@ -377,8 +387,6 @@ void InputParser::update(float dt)
             if ((m_prevFlags & InputFlag::PrevClub) == 0
                 && (m_inputFlags & InputFlag::PrevClub))
             {
-                //m_currentClub = (m_currentClub + 1) % ClubID::Putter;
-
                 auto clubCount = ClubID::Putter - m_firstClub;
                 m_clubOffset = (m_clubOffset + 1) % clubCount;
                 m_currentClub = m_firstClub + m_clubOffset;
@@ -391,8 +399,6 @@ void InputParser::update(float dt)
             if ((m_prevFlags & InputFlag::NextClub) == 0
                 && (m_inputFlags & InputFlag::NextClub))
             {
-                //m_currentClub = (m_currentClub + ClubID::SandWedge) % ClubID::Putter;
-
                 auto clubCount = ClubID::Putter - m_firstClub;
                 m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
                 m_currentClub = m_firstClub + m_clubOffset;
@@ -481,9 +487,8 @@ void InputParser::setClub(float dist)
 {
     m_currentClub = ClubID::NineIron;
     while (Clubs[m_currentClub].target < dist
-        && m_currentClub != /*ClubID::Driver*/m_firstClub)
+        && m_currentClub != m_firstClub)
     {
-        //m_currentClub = (m_currentClub + ClubID::SandWedge) % ClubID::Putter;
         auto clubCount = ClubID::Putter - m_firstClub;
         m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
         m_currentClub = m_firstClub + m_clubOffset;

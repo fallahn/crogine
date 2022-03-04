@@ -3097,6 +3097,14 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     m_inputParser.setActive(localPlayer);
 
+    if (player.terrain == TerrainID::Bunker)
+    {
+        m_inputParser.setMaxClub(ClubID::PitchWedge);
+    }
+    else
+    {
+        m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin * 1.1f);
+    }
 
     //player UI name
     cro::Command cmd;
@@ -3775,8 +3783,6 @@ std::int32_t GolfState::getClub() const
     {
     default: 
         return m_inputParser.getClub();
-    case TerrainID::Bunker: 
-        return ClubID::PitchWedge + (m_inputParser.getClub() % 3);
     case TerrainID::Green: 
         return ClubID::Putter;
     }
