@@ -145,9 +145,10 @@ void WorldState::handleMessage(const cro::Message& msg)
             switch (data.id)
             {
             default: break;
+            case States::LayoutEditor:
             case States::ModelViewer:
             case States::ParticleEditor:
-            case States::LayoutEditor:
+            case States::SpriteEditor:
                 initUI();
                 break;
             }

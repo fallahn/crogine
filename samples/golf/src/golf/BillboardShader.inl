@@ -67,9 +67,9 @@ static const std::string BillboardVertexShader = R"(
 
         const float xFreq = 0.6;
         const float yFreq = 0.8;
-        const float scale = 0.25;
+        const float scale = 0.2;
         const float minHeight = 3.0;
-        const float maxHeight = 9.0;
+        const float maxHeight = 12.0;
 
         //only animate above 3 metres
         float height = max(0.0, position.y - minHeight);
@@ -85,7 +85,7 @@ static const std::string BillboardVertexShader = R"(
 
 
         //snap vert pos to nearest fragment for retro wobble
-        //hmm not so good when couple with wind (above)
+        //hmm not so good when coupled with wind (above)
         vec4 vertPos = u_viewProjectionMatrix * vec4(position, 1.0);
         /*vertPos.xyz /= vertPos.w;
         vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
