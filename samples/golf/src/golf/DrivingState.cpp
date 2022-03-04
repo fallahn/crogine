@@ -44,6 +44,8 @@ source distribution.
 #include "GolfSoundDirector.hpp"
 #include "CameraFollowSystem.hpp"
 #include "ClientCollisionSystem.hpp"
+#include "CloudSystem.hpp"
+#include "PoissonDisk.hpp"
 #include "server/ServerMessages.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
@@ -69,6 +71,7 @@ source distribution.
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
@@ -94,6 +97,7 @@ namespace
 #include "MinimapShader.inl"
 #include "WireframeShader.inl"
 #include "BillboardShader.inl"
+#include "CloudShader.inl"
 
 #ifdef CRO_DEBUG_
     std::int32_t debugFlags = 0;
@@ -499,6 +503,8 @@ void DrivingState::addSystems()
     m_gameScene.addSystem<BallSystem>(mb, DEBUG_DRAW);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
+    m_gameScene.addSystem<cro::SpriteSystem3D>(mb, PixelPerMetre);
+    m_gameScene.addSystem<CloudSystem>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(50.f);
@@ -727,8 +733,8 @@ void DrivingState::initAudio()
             cro::Entity planeEnt;
             if (md.loadFromFile("assets/golf/models/plane.cmt"))
             {
-                static constexpr glm::vec3 Start(-132.f, 60.f, 20.f);
-                static constexpr glm::vec3 End(252.f, 60.f, -220.f);
+                static constexpr glm::vec3 Start(-132.f, PlaneHeight, 20.f);
+                static constexpr glm::vec3 End(252.f, PlaneHeight, -220.f);
 
                 entity = m_gameScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition(Start);
@@ -1058,6 +1064,9 @@ void DrivingState::createScene()
 
     //create the billboards
     createFoliage(entity);
+
+    //and sky detail
+    createClouds();
 
     //tee marker
     md.loadFromFile("assets/golf/models/tee_balls.cmt");
@@ -1466,6 +1475,80 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
         applyMaterialData(md, material);
         entity.getComponent<cro::Model>().setMaterial(0, material);
+    }
+}
+
+void DrivingState::createClouds()
+{
+    //TODO would 3D models look better?
+    cro::SpriteSheet spriteSheet;
+    if (spriteSheet.loadFromFile("assets/golf/sprites/clouds.spt", m_resources.textures)
+        && spriteSheet.getSprites().size() > 1)
+    {
+        const auto& sprites = spriteSheet.getSprites();
+        std::vector<cro::Sprite> randSprites;
+        for (auto [_, sprite] : sprites)
+        {
+            randSprites.push_back(sprite);
+        }
+
+        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudVertex, CloudFragment);
+        auto& shader = m_resources.shaders.get(ShaderID::Cloud);
+        m_scaleUniforms.emplace_back(shader.getGLHandle(), shader.getUniformID("u_pixelscale"));
+
+        auto matID = m_resources.materials.add(shader);
+        auto material = m_resources.materials.get(matID);
+        material.blendMode = cro::Material::BlendMode::Alpha;
+        material.setProperty("u_texture", *spriteSheet.getTexture());
+
+        auto seed = static_cast<std::uint32_t>(std::time(nullptr));
+        static constexpr std::array MinBounds = { 0.f, 0.f };
+        static constexpr std::array MaxBounds = { 320.f, 320.f };
+        auto positions = pd::PoissonDiskSampling(150.f, MinBounds, MaxBounds, 30u, seed);
+
+        auto Offset = 160.f;
+
+        std::vector<cro::Entity> delayedUpdates;
+
+        for (const auto& position : positions)
+        {
+            float height = cro::Util::Random::value(20, 40) + PlaneHeight;
+            glm::vec3 cloudPos(position[0] - Offset, height, -position[1] + Offset);
+
+
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(cloudPos);
+            entity.addComponent<Cloud>().speedMultiplier = static_cast<float>(cro::Util::Random::value(10, 22)) / 100.f;
+            entity.addComponent<cro::Sprite>() = randSprites[cro::Util::Random::value(0u, randSprites.size() - 1)];
+            entity.addComponent<cro::Model>();
+
+            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+            bounds.width /= PixelPerMetre;
+            bounds.height /= PixelPerMetre;
+            entity.getComponent<cro::Transform>().setOrigin({bounds.width / 2.f, bounds.height / 2.f, 0.f});
+
+            float scale = static_cast<float>(cro::Util::Random::value(8, 20));
+            entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
+
+            delayedUpdates.push_back(entity);
+        }
+
+        //this is a work around because changing sprite 3D materials
+        //require at least once scene update to be run first.
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, material, delayedUpdates](cro::Entity e, float)
+        {
+            for (auto en : delayedUpdates)
+            {
+                en.getComponent<cro::Model>().setMaterial(0, material);
+            }
+
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        };
     }
 }
 

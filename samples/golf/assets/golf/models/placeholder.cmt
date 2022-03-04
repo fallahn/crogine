@@ -1,0 +1,10 @@
+model quad
+{
+    mesh = quad
+    size = 1,1
+
+    material Unlit
+    {
+        colour = 1,0.5,0,1
+    }
+}

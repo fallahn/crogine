@@ -305,6 +305,7 @@
     <ClCompile Include="src\golf\BallSystem.cpp" />
     <ClCompile Include="src\golf\CameraFollowSystem.cpp" />
     <ClCompile Include="src\golf\ClientCollisionSystem.cpp" />
+    <ClCompile Include="src\golf\CloudSystem.cpp" />
     <ClCompile Include="src\golf\CollisionMesh.cpp" />
     <ClCompile Include="src\golf\DebugDraw.cpp" />
     <ClCompile Include="src\golf\DrivingRangeDirector.cpp" />
@@ -362,6 +363,7 @@
     <ClInclude Include="src\golf\CircularBuffer.hpp" />
     <ClInclude Include="src\golf\ClientCollisionSystem.hpp" />
     <ClInclude Include="src\golf\ClientPacketData.hpp" />
+    <ClInclude Include="src\golf\CloudSystem.hpp" />
     <ClInclude Include="src\golf\Clubs.hpp" />
     <ClInclude Include="src\golf\CollisionMesh.hpp" />
     <ClInclude Include="src\golf\CommandIDs.hpp" />
@@ -421,6 +423,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\BillboardShader.inl" />
+    <None Include="src\golf\CloudShader.inl" />
     <None Include="src\golf\MinimapShader.inl" />
     <None Include="src\golf\PostProcess.inl" />
     <None Include="src\golf\TerrainShader.inl" />

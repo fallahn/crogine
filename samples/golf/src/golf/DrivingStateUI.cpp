@@ -34,6 +34,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "TextAnimCallback.hpp"
 #include "DrivingRangeDirector.hpp"
+#include "CloudSystem.hpp"
 #include "../Achievements.hpp"
 #include "../AchievementStrings.hpp"
 
@@ -1212,6 +1213,8 @@ void DrivingState::updateWindDisplay(glm::vec3 direction)
         e.getComponent<cro::Callback>().setUserData<float>(-direction.y);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    m_gameScene.getSystem<CloudSystem>()->setWindVector(direction);
 }
 
 void DrivingState::showMessage(float range)

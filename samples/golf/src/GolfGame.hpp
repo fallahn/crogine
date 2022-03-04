@@ -34,7 +34,6 @@ source distribution.
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/StateStack.hpp>
-#include <crogine/core/Cursor.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
@@ -53,7 +52,6 @@ private:
     
     SharedStateData m_sharedData;
     cro::StateStack m_stateStack;
-    cro::Cursor m_cursor;
 
     std::vector<std::string> m_hostAddresses;
 

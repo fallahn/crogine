@@ -89,7 +89,6 @@ cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
 
 GolfGame::GolfGame()
     : m_stateStack      ({*this, getWindow()}),
-    m_cursor            ("assets/images/cursor.png", 0, 0),
     m_postProcessIndex  (0),
     m_activeIndex       (0)
 {
@@ -135,13 +134,6 @@ void GolfGame::handleEvent(const cro::Event& evt)
             togglePixelScale(m_sharedData, true);
             break;
         }
-        break;
-    case SDL_WINDOWEVENT:
-    case SDL_WINDOWEVENT_ENTER:
-        //hmm appears to be a SDL2 'feature' which resets
-        //the mouse cursor to the system cursor when handling
-        //events. So no custom cursor for you.
-        getWindow().setCursor(&m_cursor);
         break;
     }
     
@@ -527,8 +519,6 @@ bool GolfGame::initialise()
 
     m_achievements = std::make_unique<DefaultAchievements>(getMessageBus());
     Achievements::init(*m_achievements);
-
-    getWindow().setCursor(&m_cursor);
 
     return true;
 }

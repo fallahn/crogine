@@ -152,6 +152,7 @@ private:
     void initAudio();
     void createScene();
     void createFoliage(cro::Entity);
+    void createClouds();
     void createPlayer(cro::Entity);
     void createBall();
     void createFlag();

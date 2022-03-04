@@ -36,6 +36,7 @@ source distribution.
 #include "SharedStateData.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
+#include <crogine/core/Cursor.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/core/String.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -80,6 +81,7 @@ public:
 
 private:
     SharedStateData& m_sharedData;
+    cro::Cursor m_cursor;
     cro::ResourceCollection m_resources;
 
     cro::Scene m_uiScene;

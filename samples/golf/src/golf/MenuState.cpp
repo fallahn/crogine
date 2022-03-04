@@ -90,6 +90,7 @@ namespace
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
+    m_cursor            (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_backgroundScene   (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_avatarScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
@@ -245,7 +246,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         m_sharedData.hosting = false;
     }
 
-
+    //for some reason this immediately unsets itself
+    //cro::App::getWindow().setCursor(&m_cursor);
 
 #ifdef CRO_DEBUG_
     //registerWindow([&]() 
