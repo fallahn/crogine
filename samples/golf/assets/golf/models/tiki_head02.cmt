@@ -1,0 +1,33 @@
+model tiki_head02
+{
+    mesh = assets/golf/models/tiki_head02.cmb
+    cast_shadows = true
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        rx_shadows = true
+        blendmode = none
+        diffuse = "assets/golf/images/tiki.png"
+        alpha_clip = 0.691000
+
+    }
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        rx_shadows = true
+        blendmode = none
+        diffuse = "assets/golf/images/rock.png"
+
+    }
+}
