@@ -111,7 +111,7 @@ void ParticleState::drawMenuBar()
                 {
                     m_particleSettings->textureID = m_texture.getGLHandle();
                     m_particleSettings->textureSize = m_texture.getSize();
-                    m_texture.setSmooth(true);
+                    m_texture.setSmooth(m_particleSettings->textureSmoothing);
                     m_texture.setRepeated(true);
                 }
             }
@@ -408,6 +408,7 @@ void ParticleState::drawInspector()
                 if (ImGui::Checkbox("Smooth", &smooth))
                 {
                     m_texture.setSmooth(smooth);
+                    m_particleSettings->textureSmoothing = smooth;
                 }
             }
 

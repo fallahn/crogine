@@ -1,6 +1,7 @@
 particle_system flame
 {
     src = assets/golf/images/fire_particle.png
+    texture_smoothing = false
     blendmode = add
     acceleration = 1.000000
     gravity = -0.057000,0.977000,0.000000

@@ -70,6 +70,7 @@ namespace cro
     struct CRO_EXPORT_API EmitterSettings final
     {
         std::string texturePath;
+        bool textureSmoothing = false;
 
         enum BlendMode
         {

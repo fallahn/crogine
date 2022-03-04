@@ -93,8 +93,17 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
                     texturePath = texPath;
                     textureID = textures.get(texPath).getGLHandle();
                     textureSize = textures.get(texPath).getSize();  
-                    textures.get(texturePath).setSmooth(true);
+                    textures.get(texturePath).setSmooth(textureSmoothing);
                     textures.get(texturePath).setRepeated(true);
+                }
+            }
+            else if (name == "texture_smoothing")
+            {
+                textureSmoothing = p.getValue<bool>();
+
+                if (!texturePath.empty())
+                {
+                    textures.get(texturePath).setSmooth(textureSmoothing);
                 }
             }
             else if (name == "blendmode")
@@ -254,6 +263,8 @@ bool EmitterSettings::saveToFile(const std::string& path)
         }
         cfg.addProperty("src", texPath);
     }
+    //hmm shame we don't have access to the texture here to read the property
+    cfg.addProperty("texture_smoothing").setValue(textureSmoothing);
 
     if (blendmode == Add)
     {
