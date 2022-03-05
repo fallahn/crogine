@@ -657,6 +657,9 @@
     <ClInclude Include="..\crogine\include\crogine\gui\detail\imgui.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\UniformBuffer.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1093,6 +1096,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\detail\BalancedTree.cpp">
       <Filter>Source Files\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\UniformBuffer.cpp">
+      <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
