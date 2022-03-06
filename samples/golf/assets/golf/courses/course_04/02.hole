@@ -294,4 +294,51 @@ hole 02
         scale = 1.000000,1.000000,1.000000
     }
 
+    prop
+    {
+        model = "assets/golf/models/tiki_head02.cmt"
+        position = 126.132072,0.990429,-140.004501
+        rotation = 191.523776
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tiki_head03.cmt"
+        position = 36.154839,0.926793,-105.943359
+        rotation = 144.653375
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tiki_torch.cmt"
+        position = 40.831120,0.859284,-100.147636
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tiki_head02.cmt"
+        position = 30.284565,1.511266,-26.204100
+        rotation = 171.350121
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    particles
+    {
+        path = "assets/golf/particles/flame.cps"
+        position = 29.531374,2.632452,-27.097328
+    }
+    particles
+    {
+        path = "assets/golf/particles/flame.cps"
+        position = 40.831287,1.996931,-100.147438
+    }
+    particles
+    {
+        path = "assets/golf/particles/flame.cps"
+        position = 125.117989,2.109571,-140.583252
+    }
 }
