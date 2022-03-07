@@ -553,10 +553,12 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 if (getClub() < ClubID::FiveIron)
                 {
+                    m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setHidden(false);
                     m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Wood]);
                 }
                 else
                 {
+                    m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setHidden(false);
                     m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Iron]);
                 }
                 m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());

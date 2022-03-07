@@ -3,6 +3,7 @@
     src = "assets/golf/images/clouds.png"
     smooth = false
     repeat = false
+    blend = none
 
     sprite 01
     {
