@@ -556,17 +556,16 @@ void DrivingState::loadAssets()
 
     //materials
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
     
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
    
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
-    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
@@ -575,15 +574,14 @@ void DrivingState::loadAssets()
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
 
     shader = &m_resources.shaders.get(ShaderID::Course);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Billboard);
-    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
-    m_scaleBuffer.addShader(*shader);
 
     m_billboardUniforms.shaderID = shader->getGLHandle();
     m_billboardUniforms.timeAccum = shader->getUniformID("u_time");
@@ -1096,13 +1094,6 @@ void DrivingState::createScene()
         auto invScale = (maxScale + 1.f) - scale;
         glCheck(glPointSize(invScale * BallPointSize));
         glCheck(glLineWidth(invScale));
-
-        //update checker uniforms
-        for (auto [shader, uniform] : m_scaleUniforms)
-        {
-            glCheck(glUseProgram(shader));
-            glCheck(glUniform1f(uniform, invScale));
-        }
 
         m_scaleBuffer.setData(&invScale);
 

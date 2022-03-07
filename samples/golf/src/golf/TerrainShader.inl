@@ -264,7 +264,11 @@ static const std::string CelVertexShader = R"(
 
 static const std::string CelFragmentShader = R"(
     uniform vec3 u_lightDirection;
-    uniform float u_pixelScale = 1.0;
+
+    layout (std140) uniform PixelScale
+    {
+        float u_pixelScale;
+    };
 
 #if defined (RX_SHADOWS)
     uniform sampler2D u_shadowMap;

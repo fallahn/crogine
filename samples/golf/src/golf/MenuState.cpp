@@ -529,17 +529,16 @@ void MenuState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
 
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
-    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
@@ -551,10 +550,9 @@ void MenuState::loadAssets()
 
     shader = &m_resources.shaders.get(ShaderID::Billboard);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
-    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_timeUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_time"));
-    m_scaleBuffer.addShader(*shader);
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
@@ -736,12 +734,6 @@ void MenuState::createScene()
         auto texSize = winSize / scale;
 
         auto invScale = (maxScale + 1) - scale;
-        for (auto [shader, uniform] : m_scaleUniforms)
-        {
-            glCheck(glUseProgram(shader));
-            glCheck(glUniform1f(uniform, invScale));
-
-        }
         m_scaleBuffer.setData(&invScale);
 
         glm::vec2 scaledRes = texSize / invScale;

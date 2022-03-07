@@ -119,7 +119,6 @@ private:
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
 
     cro::UniformBuffer m_scaleBuffer;
-    std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
     std::vector<std::pair<std::int32_t, std::int32_t>> m_resolutionUniforms;
     std::vector<std::pair<std::int32_t, std::int32_t>> m_timeUniforms;
 

@@ -851,25 +851,25 @@ void GolfState::loadAssets()
     //cel shaded material
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n");
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define SKINNED\n");
     shader = &m_resources.shaders.get(ShaderID::CelSkinned);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::CelSkinned] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
     shader = &m_resources.shaders.get(ShaderID::Ball);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n");
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
 
@@ -880,26 +880,24 @@ void GolfState::loadAssets()
 
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define NOCHEX\n");
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n#define RX_SHADOWS\n");
     shader = &m_resources.shaders.get(ShaderID::Player);
-    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::Player] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n");
     shader = &m_resources.shaders.get(ShaderID::Hair);
-    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
 
 
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
     shader = &m_resources.shaders.get(ShaderID::Course);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
@@ -1702,11 +1700,11 @@ void GolfState::loadAssets()
         m_billboardUniforms.windDirection = shader->getUniformID("u_windDir");
 
         shader = &m_resources.shaders.get(ShaderID::Terrain);
-        m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+        m_scaleBuffer.addShader(*shader);
         m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
 
         shader = &m_resources.shaders.get(ShaderID::CelTexturedInstanced);
-        m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+        m_scaleBuffer.addShader(*shader);
         m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     }
 
@@ -2010,12 +2008,6 @@ void GolfState::buildScene()
         auto invScale = (maxScale + 1.f) - scale;
         glCheck(glPointSize(invScale * BallPointSize));
         glCheck(glLineWidth(invScale));
-
-        for (auto [shader, uniform] : m_scaleUniforms)
-        {
-            glCheck(glUseProgram(shader));
-            glCheck(glUniform1f(uniform, invScale));
-        }
 
         m_scaleBuffer.setData(&invScale);
 
