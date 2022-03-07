@@ -140,6 +140,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
     m_wantsGameState    (true),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
+    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_currentHole       (0),
     m_terrainBuilder    (m_holeData),
     m_audioPath         ("assets/golf/sound/ambience.xas"),
@@ -789,7 +790,9 @@ bool GolfState::simulate(float dt)
 
 void GolfState::render()
 {
+    //TODO we probably only need to do this once after the scene is built
     m_scaleBuffer.bind(0);
+    m_resolutionBuffer.bind(1);
 
     //render reflections first
     //auto uiCam = m_uiScene.setActiveCamera(m_uiReflectionCam);
@@ -852,53 +855,53 @@ void GolfState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n");
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleBuffer.addShader(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define SKINNED\n");
     shader = &m_resources.shaders.get(ShaderID::CelSkinned);
     m_scaleBuffer.addShader(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelSkinned] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
     shader = &m_resources.shaders.get(ShaderID::Ball);
     m_scaleBuffer.addShader(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n");
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Leaderboard, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define SUBRECT\n");
     shader = &m_resources.shaders.get(ShaderID::Leaderboard);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Leaderboard] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define NOCHEX\n");
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
     m_scaleBuffer.addShader(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n#define RX_SHADOWS\n");
     shader = &m_resources.shaders.get(ShaderID::Player);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Player] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n");
     shader = &m_resources.shaders.get(ShaderID::Hair);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
 
 
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
     //scanline transition
@@ -1692,20 +1695,20 @@ void GolfState::loadAssets()
 
         //this will have loaded a series of shaders for which we need to capture some uniforms
         shader = &m_resources.shaders.get(ShaderID::Billboard);
-        //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
         m_scaleBuffer.addShader(*shader);
-        m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+        m_resolutionBuffer.addShader(*shader);
+
         m_billboardUniforms.shaderID = shader->getGLHandle();
         m_billboardUniforms.timeAccum = shader->getUniformID("u_time");
         m_billboardUniforms.windDirection = shader->getUniformID("u_windDir");
 
         shader = &m_resources.shaders.get(ShaderID::Terrain);
         m_scaleBuffer.addShader(*shader);
-        m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+        m_resolutionBuffer.addShader(*shader);
 
         shader = &m_resources.shaders.get(ShaderID::CelTexturedInstanced);
         m_scaleBuffer.addShader(*shader);
-        m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+        m_resolutionBuffer.addShader(*shader);
     }
 
     //reserve the slots for each hole score
@@ -2012,11 +2015,7 @@ void GolfState::buildScene()
         m_scaleBuffer.setData(&invScale);
 
         glm::vec2 scaledRes = texSize / invScale;
-        for (auto [shader, uniform] : m_resolutionUniforms)
-        {
-            glCheck(glUseProgram(shader));
-            glCheck(glUniform2f(uniform, scaledRes.x, scaledRes.y));
-        }
+        m_resolutionBuffer.setData(&scaledRes);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x)/* * 1.25f*/);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

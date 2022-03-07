@@ -47,8 +47,12 @@ static const std::string TerrainVertexShader = R"(
 #endif
 
     uniform vec4 u_clipPlane;
-    uniform vec2 u_scaledResolution;
     uniform float u_morphTime;
+
+    layout (std140) uniform ScaledResolution
+    {
+        vec2 u_scaledResolution;
+    };
 
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec4 v_colour;
@@ -178,7 +182,11 @@ static const std::string CelVertexShader = R"(
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
 
-    uniform vec2 u_scaledResolution;
+    //uniform vec2 u_scaledResolution;
+    layout (std140) uniform ScaledResolution
+    {
+        vec2 u_scaledResolution;
+    };
 
     VARYING_OUT float v_ditherAmount;
     VARYING_OUT vec3 v_normal;

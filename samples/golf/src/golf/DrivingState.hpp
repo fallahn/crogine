@@ -71,7 +71,7 @@ private:
     cro::RenderTexture m_backgroundTexture;
 
     cro::UniformBuffer m_scaleBuffer;
-    std::vector<std::pair<std::int32_t, std::int32_t>> m_resolutionUniforms;
+    cro::UniformBuffer m_resolutionBuffer;
 
     struct BillboardUniforms final
     {

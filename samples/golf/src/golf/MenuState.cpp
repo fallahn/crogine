@@ -98,6 +98,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_backgroundScene   (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_avatarScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
+    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu       (MenuID::Main),
     m_prevMenu          (MenuID::Main),
@@ -464,6 +465,9 @@ bool MenuState::simulate(float dt)
 
 void MenuState::render()
 {
+    m_scaleBuffer.bind(0);
+    m_resolutionBuffer.bind(1);
+
     //render ball preview first
     auto oldCam = m_backgroundScene.setActiveCamera(m_ballCam);
     m_ballTexture.clear(cro::Colour::Magenta);
@@ -477,7 +481,6 @@ void MenuState::render()
     m_avatarTexture.display();
 
     //then background scene
-    m_scaleBuffer.bind(0);
     m_backgroundScene.setActiveCamera(oldCam);
     m_backgroundTexture.clear();
     m_backgroundScene.render();
@@ -530,28 +533,28 @@ void MenuState::loadAssets()
 
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleBuffer.addShader(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     //fudge this for the previews
     m_resources.materials.get(m_materialIDs[MaterialID::Hair]).doubleSided = true;
 
     shader = &m_resources.shaders.get(ShaderID::Billboard);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
     m_scaleBuffer.addShader(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_timeUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_time"));
 
     //load the billboard rects from a sprite sheet and convert to templates
@@ -737,11 +740,7 @@ void MenuState::createScene()
         m_scaleBuffer.setData(&invScale);
 
         glm::vec2 scaledRes = texSize / invScale;
-        for (auto [shader, uniform] : m_resolutionUniforms)
-        {
-            glCheck(glUseProgram(shader));
-            glCheck(glUniform2f(uniform, scaledRes.x, scaledRes.y));
-        }
+        m_resolutionBuffer.setData(&scaledRes);
 
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 

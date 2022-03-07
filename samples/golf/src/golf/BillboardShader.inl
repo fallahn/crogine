@@ -45,10 +45,14 @@ static const std::string BillboardVertexShader = R"(
 
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
-    uniform vec2 u_scaledResolution;
 
     uniform float u_time = 0.0;
     uniform vec3 u_windDir = vec3(0.5);
+
+    layout (std140) uniform ScaledResolution
+    {
+        vec2 u_scaledResolution;
+    };
 
     VARYING_OUT LOW vec4 v_colour;
     VARYING_OUT MED vec2 v_texCoord0;

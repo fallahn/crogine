@@ -164,6 +164,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_uiScene           (context.appInstance.getMessageBus()),
     m_viewScale         (1.f),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
+    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_mouseVisible      (true),
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
@@ -462,7 +463,9 @@ bool DrivingState::simulate(float dt)
 
 void DrivingState::render()
 {
+    //TODO these probably only need to be bounds once on start-up
     m_scaleBuffer.bind(0);
+    m_resolutionBuffer.bind(1);
 
     m_backgroundTexture.clear();
     m_gameScene.render();
@@ -557,30 +560,30 @@ void DrivingState::loadAssets()
     //materials
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleBuffer.addShader(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
     
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
    
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Billboard);
     m_scaleBuffer.addShader(*shader);
-    m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
 
     m_billboardUniforms.shaderID = shader->getGLHandle();
@@ -1098,11 +1101,7 @@ void DrivingState::createScene()
         m_scaleBuffer.setData(&invScale);
 
         glm::vec2 scaledRes = texSize / invScale;
-        for (auto [shader, uniform] : m_resolutionUniforms)
-        {
-            glCheck(glUseProgram(shader));
-            glCheck(glUniform2f(uniform, scaledRes.x, scaledRes.y));
-        }
+        m_resolutionBuffer.setData(&scaledRes);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 320.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

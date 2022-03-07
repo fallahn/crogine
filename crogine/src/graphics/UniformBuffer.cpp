@@ -121,7 +121,12 @@ void UniformBuffer::addShader(const Shader& shader)
 	{
 		m_shaders.emplace_back(shader.getGLHandle(), blockIndex);
 	}
-
+#ifdef CRO_DEBUG_
+	else
+	{
+		LogW << "Shader " << shader.getGLHandle() << " was not added to " << m_blockName << std::endl;
+	}
+#endif
 #endif
 }
 

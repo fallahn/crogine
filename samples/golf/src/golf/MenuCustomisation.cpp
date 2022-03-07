@@ -565,6 +565,8 @@ void MenuState::updateThumb(std::size_t index)
     //avatars outside of the main update function.
     m_avatarScene.simulate(0.f);
 
+    m_resolutionBuffer.bind(0);
+
     m_avatarThumbs[index].clear(cro::Colour::Transparent);
     //m_avatarThumbs[index].clear(cro::Colour::Magenta);
     m_avatarScene.render();
