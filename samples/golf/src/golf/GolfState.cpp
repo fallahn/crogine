@@ -47,6 +47,7 @@ source distribution.
 #include "FpsCameraSystem.hpp"
 #include "NotificationSystem.hpp"
 #include "TrophyDisplaySystem.hpp"
+#include "CloudSystem.hpp"
 #include "../Achievements.hpp"
 #include "../AchievementStrings.hpp"
 
@@ -726,6 +727,10 @@ bool GolfState::simulate(float dt)
     glUniform3f(m_billboardUniforms.windDirection, m_billboardUniforms.currentWindVector.x,
                                                     m_billboardUniforms.currentWindSpeed,
                                                     m_billboardUniforms.currentWindVector.z);
+
+    m_gameScene.getSystem<CloudSystem>()->setWindVector({ m_billboardUniforms.currentWindVector.x,
+                                                        m_billboardUniforms.currentWindSpeed,
+                                                        m_billboardUniforms.currentWindVector.z });
 
     m_terrainBuilder.updateTime(elapsed * 10.f);
 
@@ -1686,6 +1691,7 @@ void GolfState::addSystems()
     auto& mb = m_gameScene.getMessageBus();
 
     m_gameScene.addSystem<InterpolationSystem>(mb);
+    m_gameScene.addSystem<CloudSystem>(mb);
     m_gameScene.addSystem<ClientCollisionSystem>(mb, m_holeData, m_collisionMesh);
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
@@ -2090,6 +2096,8 @@ void GolfState::buildScene()
 
     m_currentPlayer.position = m_holeData[m_currentHole].tee; //prevents the initial camera movement
 
+    createClouds();
+
     buildUI(); //put this here because we don't want to do this if the map data didn't load
     setCurrentHole(0);
 
@@ -2103,8 +2111,6 @@ void GolfState::buildScene()
 #ifdef CRO_DEBUG_
     //createWeather();
 #endif
-
-
 }
 
 void GolfState::initAudio()

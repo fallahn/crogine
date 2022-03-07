@@ -37,6 +37,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "PoissonDisk.hpp"
 #include "GolfCartSystem.hpp"
+#include "CloudSystem.hpp"
 #include "MessageIDs.hpp"
 #include "spooky2.hpp"
 #include "../ErrorCheck.hpp"
@@ -69,6 +70,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
@@ -83,6 +85,7 @@ namespace
 {
 #include "TerrainShader.inl"
 #include "BillboardShader.inl"
+#include "CloudShader.inl"
 
     //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 }
@@ -487,7 +490,9 @@ void MenuState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_backgroundScene.addSystem<GolfCartSystem>(mb);
+    m_backgroundScene.addSystem<CloudSystem>(mb)->setWindVector(glm::vec3(0.25f));
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
+    m_backgroundScene.addSystem<cro::SpriteSystem3D>(mb);
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
@@ -603,73 +608,81 @@ void MenuState::createScene()
     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
 
     cro::ModelDefinition md(m_resources);
-    md.loadFromFile("assets/golf/models/menu_pavilion.cmt");
-    applyMaterialData(md, texturedMat);
+    if (md.loadFromFile("assets/golf/models/menu_pavilion.cmt"))
+    {
+        applyMaterialData(md, texturedMat);
 
-    auto entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    md.createModel(entity);
-    entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+    }
 
-    md.loadFromFile("assets/golf/models/menu_ground.cmt");
-    entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    md.createModel(entity);
-    texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-    applyMaterialData(md, texturedMat);
-    entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+    if (md.loadFromFile("assets/golf/models/menu_ground.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+    }
 
-    md.loadFromFile("assets/golf/models/phone_box.cmt");
-    entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 8.2f, 0.f, 13.8f });
-    md.createModel(entity);
+    if (md.loadFromFile("assets/golf/models/phone_box.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 8.2f, 0.f, 13.8f });
+        md.createModel(entity);
 
-    texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-    applyMaterialData(md, texturedMat);
-    entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+    }
 
 
     //billboards
-    md.loadFromFile("assets/golf/models/shrubbery.cmt");
-    entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    md.createModel(entity);
-
-    auto billboardMat = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
-    applyMaterialData(md, billboardMat);
-    entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
-
-    if (entity.hasComponent<cro::BillboardCollection>())
+    if (md.loadFromFile("assets/golf/models/shrubbery.cmt"))
     {
-        std::array minBounds = { 30.f, 0.f };
-        std::array maxBounds = { 80.f, 10.f };
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
 
-        auto& collection = entity.getComponent<cro::BillboardCollection>();
+        auto billboardMat = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+        applyMaterialData(md, billboardMat);
+        entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
 
-        auto trees = pd::PoissonDiskSampling(2.8f, minBounds, maxBounds);
-        for (auto [x, y] : trees)
+        if (entity.hasComponent<cro::BillboardCollection>())
         {
-            float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+            std::array minBounds = { 30.f, 0.f };
+            std::array maxBounds = { 80.f, 10.f };
 
-            auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)];
-            bb.position = { x, 0.f, -y };
-            bb.size *= scale;
-            collection.addBillboard(bb);
-        }
+            auto& collection = entity.getComponent<cro::BillboardCollection>();
 
-        //repeat for grass
-        minBounds = { 10.5f, 12.f };
-        maxBounds = { 26.f, 30.f };
+            auto trees = pd::PoissonDiskSampling(2.8f, minBounds, maxBounds);
+            for (auto [x, y] : trees)
+            {
+                float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
 
-        auto grass = pd::PoissonDiskSampling(1.f, minBounds, maxBounds);
-        for (auto [x, y] : grass)
-        {
-            float scale = static_cast<float>(cro::Util::Random::value(8, 11)) / 10.f;
+                auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)];
+                bb.position = { x, 0.f, -y };
+                bb.size *= scale;
+                collection.addBillboard(bb);
+            }
 
-            auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Flowers03)];
-            bb.position = { -x, 0.1f, y };
-            bb.size *= scale;
-            collection.addBillboard(bb);
+            //repeat for grass
+            minBounds = { 10.5f, 12.f };
+            maxBounds = { 26.f, 30.f };
+
+            auto grass = pd::PoissonDiskSampling(1.f, minBounds, maxBounds);
+            for (auto [x, y] : grass)
+            {
+                float scale = static_cast<float>(cro::Util::Random::value(8, 11)) / 10.f;
+
+                auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Flowers03)];
+                bb.position = { -x, 0.1f, y };
+                bb.size *= scale;
+                collection.addBillboard(bb);
+            }
         }
     }
 
@@ -677,31 +690,33 @@ void MenuState::createScene()
     as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
 
     //golf carts
-    md.loadFromFile("assets/golf/models/cart.cmt");
-    entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 5.f, 0.01f, 1.8f });
-    entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 87.f * cro::Util::Const::degToRad);
-    md.createModel(entity);
-
-    texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-    applyMaterialData(md, texturedMat);
-    entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
-
-    //these ones move :)
-    for (auto i = 0u; i < 2u; ++i)
+    if (md.loadFromFile("assets/golf/models/cart.cmt"))
     {
-        entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(glm::vec3(-10000.f));
-        entity.addComponent<GolfCart>();
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 5.f, 0.01f, 1.8f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 87.f * cro::Util::Const::degToRad);
         md.createModel(entity);
+
+        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
-        entity.addComponent<cro::AudioEmitter>() = as.getEmitter("cart");
-        entity.getComponent<cro::AudioEmitter>().play();
+        //these ones move :)
+        for (auto i = 0u; i < 2u; ++i)
+        {
+            entity = m_backgroundScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec3(-10000.f));
+            entity.addComponent<GolfCart>();
+            md.createModel(entity);
+            entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+
+            entity.addComponent<cro::AudioEmitter>() = as.getEmitter("cart");
+            entity.getComponent<cro::AudioEmitter>().play();
+        }
     }
 
     //music
-    entity = m_backgroundScene.createEntity();
+    auto entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::AudioEmitter>() = as.getEmitter("music");
     entity.getComponent<cro::AudioEmitter>().play();
 
@@ -753,11 +768,85 @@ void MenuState::createScene()
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-0.967f*/-40.56f * cro::Util::Const::degToRad);
     //sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -80.7f * cro::Util::Const::degToRad);
 
+    createClouds();
 
     //set up cam / models for ball preview
     createBallScene();    
 
     createUI();
+}
+
+void MenuState::createClouds()
+{
+    cro::SpriteSheet spriteSheet;
+    if (spriteSheet.loadFromFile("assets/golf/sprites/clouds.spt", m_resources.textures)
+        && spriteSheet.getSprites().size() > 1)
+    {
+        const auto& sprites = spriteSheet.getSprites();
+        std::vector<cro::Sprite> randSprites;
+        for (auto [_, sprite] : sprites)
+        {
+            randSprites.push_back(sprite);
+        }
+
+        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudVertex, CloudFragment, "#define MAX_RADIUS 86\n");
+        auto& shader = m_resources.shaders.get(ShaderID::Cloud);
+        m_scaleUniforms.emplace_back(shader.getGLHandle(), shader.getUniformID("u_pixelscale"));
+
+        auto matID = m_resources.materials.add(shader);
+        auto material = m_resources.materials.get(matID);
+        material.blendMode = cro::Material::BlendMode::Alpha;
+        material.setProperty("u_texture", *spriteSheet.getTexture());
+
+        auto seed = static_cast<std::uint32_t>(std::time(nullptr));
+        static constexpr std::array MinBounds = { 0.f, 0.f };
+        static constexpr std::array MaxBounds = { 280.f, 280.f };
+        auto positions = pd::PoissonDiskSampling(40.f, MinBounds, MaxBounds, 30u, seed);
+
+        auto Offset = 140.f;
+
+        std::vector<cro::Entity> delayedUpdates;
+
+        for (const auto& position : positions)
+        {
+            float height = static_cast<float>(cro::Util::Random::value(20, 40));
+            glm::vec3 cloudPos(position[0] - Offset, height, -position[1] + Offset);
+
+
+            auto entity = m_backgroundScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(cloudPos);
+            entity.addComponent<Cloud>().speedMultiplier = static_cast<float>(cro::Util::Random::value(10, 22)) / 100.f;
+            entity.addComponent<cro::Sprite>() = randSprites[cro::Util::Random::value(0u, randSprites.size() - 1)];
+            entity.addComponent<cro::Model>();
+
+            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+            bounds.width /= PixelPerMetre;
+            bounds.height /= PixelPerMetre;
+            entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
+
+            float scale = static_cast<float>(cro::Util::Random::value(8, 20)) / 100.f;
+            entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
+
+            delayedUpdates.push_back(entity);
+        }
+
+        //this is a work around because changing sprite 3D materials
+        //require at least once scene update to be run first.
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, material, delayedUpdates](cro::Entity e, float)
+        {
+            for (auto en : delayedUpdates)
+            {
+                en.getComponent<cro::Model>().setMaterial(0, material);
+            }
+
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        };
+    }
 }
 
 void MenuState::handleNetEvent(const cro::NetEvent& evt)

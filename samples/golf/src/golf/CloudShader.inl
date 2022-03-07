@@ -64,8 +64,11 @@ R"(
     VARYING_IN vec3 v_worldPos;
     VARYING_IN vec2 v_texCoord;
 
+#if !defined(MAX_RADIUS)
     const float MaxDist = 180.0;
-
+#else
+    const float MaxDist = MAX_RADIUS;
+#endif
 
     //function based on example by martinsh.blogspot.com
     const int MatrixSize = 8;

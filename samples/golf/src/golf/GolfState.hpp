@@ -189,7 +189,8 @@ private:
     void buildScene();
     void initAudio();
 
-    void createWeather();
+    void createWeather(); //weather.cpp
+    void createClouds();
     void spawnBall(const struct ActorInfo&);
 
     void handleNetEvent(const cro::NetEvent&);

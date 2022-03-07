@@ -198,6 +198,7 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
+    void createClouds();
 
     struct CourseData final
     {
