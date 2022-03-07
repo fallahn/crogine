@@ -34,15 +34,20 @@ source distribution.
 using namespace cro;
 
 UniformBuffer::UniformBuffer(const std::string& blockName, std::size_t dataSize)
-	: m_blockName(blockName),
-	m_bufferSize(dataSize),
-	m_ubo(0)
+	: m_blockName	(blockName),
+	m_bufferSize	(dataSize),
+	m_ubo			(0)
 {
 #ifdef PLATFORM_DESKTOP
 	CRO_ASSERT(!blockName.empty(), "");
 	CRO_ASSERT(dataSize, "");
 
-	//TODO create buffer
+	//create buffer
+	glCheck(glGenBuffers(1, &m_ubo));
+	glCheck(glBindBuffer(GL_UNIFORM_BUFFER, m_ubo));
+	glCheck(glBufferData(GL_UNIFORM_BUFFER, dataSize, NULL, GL_DYNAMIC_DRAW));
+	glCheck(glBindBuffer(GL_UNIFORM_BUFFER, 0));
+
 #else
 	CRO_ASSERT(true, "Not available on mobile");
 #endif
@@ -52,31 +57,55 @@ UniformBuffer::UniformBuffer(const std::string& blockName, std::size_t dataSize)
 UniformBuffer::~UniformBuffer()
 {
 #ifdef PLATFORM_DESKTOP
-	if (m_ubo)
-	{
-
-	}
+	reset();
 #endif
 }
 
 UniformBuffer::UniformBuffer(UniformBuffer&& other) noexcept
+	: m_blockName	(other.m_blockName),
+	m_bufferSize	(other.m_bufferSize),
+	m_ubo			(other.m_ubo)
 {
+	m_shaders.swap(other.m_shaders);
 
+	other.m_blockName.clear();
+	other.m_bufferSize = 0;
+	other.m_ubo = 0;
+
+	other.m_shaders.clear();
 }
 
 const UniformBuffer& UniformBuffer::operator = (UniformBuffer&& other) noexcept
 {
+	if (&other != this)
+	{
+		reset();
 
+		m_blockName = other.m_blockName;
+		m_bufferSize = other.m_bufferSize;
+		m_ubo = other.m_ubo;
+
+		m_shaders.swap(other.m_shaders);
+
+		other.m_blockName.clear();
+		other.m_bufferSize = 0;
+		other.m_ubo = 0;
+
+		other.m_shaders.clear();
+	}
 	return *this;
 }
 
 //public
-void UniformBuffer::setData(void* data, std::size_t size)
+void UniformBuffer::setData(void* data)
 {
 #ifdef PLATFORM_DESKTOP
 	CRO_ASSERT(data, "");
-	CRO_ASSERT(size, "");
+	CRO_ASSERT(m_bufferSize, "");
 	CRO_ASSERT(m_ubo, "");
+
+	glCheck(glBindBuffer(GL_UNIFORM_BUFFER, m_ubo));
+	glCheck(glBufferData(GL_UNIFORM_BUFFER, m_bufferSize, data, GL_DYNAMIC_DRAW));
 
 #endif // PLATFORM_DESKTOP
 }
@@ -87,6 +116,11 @@ void UniformBuffer::addShader(const Shader& shader)
 	CRO_ASSERT(shader.getGLHandle(), "");
 
 	//if shader has uniform block matching our name, add
+	auto blockIndex = glGetUniformBlockIndex(shader.getGLHandle(), m_blockName.c_str());
+	if (blockIndex != GL_INVALID_INDEX)
+	{
+		m_shaders.emplace_back(shader.getGLHandle(), blockIndex);
+	}
 
 #endif
 }
@@ -97,11 +131,24 @@ void UniformBuffer::bind(std::uint32_t bindPoint)
 	CRO_ASSERT(bindPoint < GL_MAX_UNIFORM_BUFFER_BINDINGS, "");
 
 	//bind ubo to bind point
+	glCheck(glBindBufferBase(GL_UNIFORM_BUFFER, bindPoint, m_ubo));
 
 	for (auto [shader, blockID] : m_shaders)
 	{
 		//bind to bind point
+		glCheck(glUniformBlockBinding(shader, blockID, bindPoint));
 	}
+#endif
+}
 
+//private
+void UniformBuffer::reset()
+{
+#ifdef PLATFORM_DESKTOP
+	if (m_ubo)
+	{
+		glCheck(glDeleteBuffers(1, &m_ubo));
+		m_ubo = 0;
+	}
 #endif
 }

@@ -48,6 +48,7 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/UniformBuffer.hpp>
 
 #include <array>
 #include <unordered_map>
@@ -113,6 +114,8 @@ private:
 
     cro::RenderTexture m_gameSceneTexture;
     cro::RenderTexture m_trophySceneTexture;
+
+    cro::UniformBuffer m_scaleBuffer;
     std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
     std::vector<std::pair<std::int32_t, std::int32_t>> m_resolutionUniforms;
     struct BillboardUniforms final

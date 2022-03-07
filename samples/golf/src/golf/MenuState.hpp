@@ -44,6 +44,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/UniformBuffer.hpp>
 
 #include <array>
 
@@ -117,6 +118,7 @@ private:
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
 
+    cro::UniformBuffer m_scaleBuffer;
     std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
     std::vector<std::pair<std::int32_t, std::int32_t>> m_resolutionUniforms;
     std::vector<std::pair<std::int32_t, std::int32_t>> m_timeUniforms;

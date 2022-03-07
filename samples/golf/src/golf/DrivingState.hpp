@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/UniformBuffer.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
 #include <unordered_map>
@@ -69,6 +70,7 @@ private:
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_backgroundTexture;
 
+    cro::UniformBuffer m_scaleBuffer;
     std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
     std::vector<std::pair<std::int32_t, std::int32_t>> m_resolutionUniforms;
 

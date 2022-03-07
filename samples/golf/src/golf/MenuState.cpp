@@ -97,6 +97,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_backgroundScene   (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_avatarScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu       (MenuID::Main),
     m_prevMenu          (MenuID::Main),
@@ -476,6 +477,7 @@ void MenuState::render()
     m_avatarTexture.display();
 
     //then background scene
+    m_scaleBuffer.bind(0);
     m_backgroundScene.setActiveCamera(oldCam);
     m_backgroundTexture.clear();
     m_backgroundScene.render();
@@ -549,9 +551,10 @@ void MenuState::loadAssets()
 
     shader = &m_resources.shaders.get(ShaderID::Billboard);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_timeUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_time"));
+    m_scaleBuffer.addShader(*shader);
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
@@ -735,7 +738,9 @@ void MenuState::createScene()
         {
             glCheck(glUseProgram(shader));
             glCheck(glUniform1f(uniform, invScale));
+
         }
+        m_scaleBuffer.setData(&invScale);
 
         glm::vec2 scaledRes = texSize / invScale;
         for (auto [shader, uniform] : m_resolutionUniforms)

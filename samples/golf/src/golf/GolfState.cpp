@@ -139,6 +139,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_mouseVisible      (true),
     m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
     m_wantsGameState    (true),
+    m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_currentHole       (0),
     m_terrainBuilder    (m_holeData),
     m_audioPath         ("assets/golf/sound/ambience.xas"),
@@ -788,6 +789,8 @@ bool GolfState::simulate(float dt)
 
 void GolfState::render()
 {
+    m_scaleBuffer.bind(0);
+
     //render reflections first
     //auto uiCam = m_uiScene.setActiveCamera(m_uiReflectionCam);
 
@@ -1691,7 +1694,8 @@ void GolfState::loadAssets()
 
         //this will have loaded a series of shaders for which we need to capture some uniforms
         shader = &m_resources.shaders.get(ShaderID::Billboard);
-        m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+        //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+        m_scaleBuffer.addShader(*shader);
         m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
         m_billboardUniforms.shaderID = shader->getGLHandle();
         m_billboardUniforms.timeAccum = shader->getUniformID("u_time");
@@ -2010,6 +2014,8 @@ void GolfState::buildScene()
             glCheck(glUseProgram(shader));
             glCheck(glUniform1f(uniform, invScale));
         }
+
+        m_scaleBuffer.setData(&invScale);
 
         glm::vec2 scaledRes = texSize / invScale;
         for (auto [shader, uniform] : m_resolutionUniforms)

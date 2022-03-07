@@ -163,6 +163,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus()),
     m_viewScale         (1.f),
+    m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_mouseVisible      (true),
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
@@ -461,6 +462,8 @@ bool DrivingState::simulate(float dt)
 
 void DrivingState::render()
 {
+    m_scaleBuffer.bind(0);
+
     m_backgroundTexture.clear();
     m_gameScene.render();
 #ifdef CRO_DEBUG_
@@ -577,9 +580,10 @@ void DrivingState::loadAssets()
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Billboard);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     m_resolutionUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_scaledResolution"));
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
+    m_scaleBuffer.addShader(*shader);
 
     m_billboardUniforms.shaderID = shader->getGLHandle();
     m_billboardUniforms.timeAccum = shader->getUniformID("u_time");
@@ -1099,6 +1103,8 @@ void DrivingState::createScene()
             glCheck(glUseProgram(shader));
             glCheck(glUniform1f(uniform, invScale));
         }
+
+        m_scaleBuffer.setData(&invScale);
 
         glm::vec2 scaledRes = texSize / invScale;
         for (auto [shader, uniform] : m_resolutionUniforms)

@@ -117,7 +117,12 @@ static const std::string BillboardFragmentShader = R"(
     OUTPUT
 
     uniform sampler2D u_diffuseMap;
-    uniform float u_pixelScale = 1.0;
+    //uniform float u_pixelScale = 1.0;
+
+    layout (std140) uniform PixelScale
+    {
+        float u_pixelScale;
+    };
 
     VARYING_IN LOW vec4 v_colour;
     VARYING_IN MED vec2 v_texCoord0;
