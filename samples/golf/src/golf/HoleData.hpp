@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -43,6 +43,7 @@ struct HoleData final
     std::string modelPath;
     cro::Entity modelEntity;
     std::vector<cro::Entity> propEntities;
+    std::vector<cro::Entity> particleEntities;
 };
 
 static constexpr std::size_t MaxHoles = 18;

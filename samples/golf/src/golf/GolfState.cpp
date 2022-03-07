@@ -1353,6 +1353,7 @@ void GolfState::loadAssets()
     std::string prevHoleString;
     cro::Entity prevHoleEntity;
     std::vector<cro::Entity> prevProps;
+    std::vector<cro::Entity> prevParticles;
     std::vector<cro::Entity> leaderboardProps;
 
     for (const auto& hole : holeStrings)
@@ -1560,6 +1561,37 @@ void GolfState::loadAssets()
                             }
                         }
                     }
+                    else if (name == "particles")
+                    {
+                        const auto& particleProps = obj.getProperties();
+                        glm::vec3 position(0.f);
+                        std::string path;
+
+                        for (auto particleProp : particleProps)
+                        {
+                            auto propName = particleProp.getName();
+                            if (propName == "path")
+                            {
+                                path = particleProp.getValue<std::string>();
+                            }
+                            else if (propName == "position")
+                            {
+                                position = particleProp.getValue<glm::vec3>();
+                            }
+                        }
+
+                        if (!path.empty())
+                        {
+                            cro::EmitterSettings settings;
+                            if (settings.loadFromFile(path, m_resources.textures))
+                            {
+                                auto ent = m_gameScene.createEntity();
+                                ent.addComponent<cro::Transform>().setPosition(position);
+                                ent.addComponent<cro::ParticleEmitter>().settings = settings;
+                                holeData.particleEntities.push_back(ent);
+                            }
+                        }
+                    }
                     else if (name == "crowd")
                     {
                         const auto& modelProps = obj.getProperties();
@@ -1584,10 +1616,12 @@ void GolfState::loadAssets()
                 }
 
                 prevProps = holeData.propEntities;
+                prevParticles = holeData.particleEntities;
             }
             else
             {
                 holeData.propEntities = prevProps;
+                holeData.particleEntities = prevParticles;
             }
 
             //cos you know someone is dying to try and break the game :P
@@ -2729,10 +2763,11 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     //create hole model transition
     bool rescale = (hole == 0) || (m_holeData[hole - 1].modelPath != m_holeData[hole].modelPath);
     auto* propModels = &m_holeData[m_currentHole].propEntities;
+    auto* particles = &m_holeData[m_currentHole].particleEntities;
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().active = true;
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().setUserData<float>(0.f);
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().function =
-        [&, propModels, rescale](cro::Entity e, float dt)
+        [&, propModels, particles, rescale](cro::Entity e, float dt)
     {
         auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
         progress = std::min(1.f, progress + (dt / 2.f));
@@ -2753,6 +2788,15 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             {
                 //if we're not rescaling we're recycling the model so don't hide its props
                 propModels->at(i).getComponent<cro::Model>().setHidden(rescale);
+            }
+
+            for (auto i = 0u; i < particles->size(); ++i)
+            {
+                if (rescale)
+                {
+                    particles->at(i).getComponent<cro::ParticleEmitter>().stop();
+                }
+                //should already be started otherwise...
             }
 
             //index should be updated by now (as this is a callback)
@@ -2795,6 +2839,11 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             for (auto prop : m_holeData[m_currentHole].propEntities)
             {
                 prop.getComponent<cro::Model>().setHidden(false);
+            }
+
+            for (auto particle : m_holeData[m_currentHole].particleEntities)
+            {
+                particle.getComponent<cro::ParticleEmitter>().start();
             }
         }
     };

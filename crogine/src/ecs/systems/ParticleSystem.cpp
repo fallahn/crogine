@@ -308,7 +308,7 @@ void ParticleSystem::process(float dt)
 
         //check each emitter to see if it should spawn a new particle
         auto& emitter = e.getComponent<ParticleEmitter>();
-        if (emitter.m_visible &&
+        if (/*emitter.m_visible &&*/ //we get a chicken/egg here if an emitter becomes visible - as it never passes the visibility test without at least one update to set its bounds
             emitter.m_running &&
             emitter.m_emissionClock.elapsed().asSeconds() > (1.f / emitter.settings.emitRate))
         {

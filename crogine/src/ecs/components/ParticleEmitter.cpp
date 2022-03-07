@@ -241,6 +241,7 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
             Logger::log(path + ": no texture property found", Logger::Type::Warning);
         }
 #endif
+        return true;
     }
 
     return false;
