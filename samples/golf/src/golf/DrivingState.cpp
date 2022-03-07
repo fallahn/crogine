@@ -1501,7 +1501,7 @@ void DrivingState::createClouds()
 
         m_resources.shaders.loadFromString(ShaderID::Cloud, CloudVertex, CloudFragment);
         auto& shader = m_resources.shaders.get(ShaderID::Cloud);
-        m_scaleUniforms.emplace_back(shader.getGLHandle(), shader.getUniformID("u_pixelscale"));
+        m_scaleBuffer.addShader(shader);
 
         auto matID = m_resources.materials.add(shader);
         auto material = m_resources.materials.get(matID);

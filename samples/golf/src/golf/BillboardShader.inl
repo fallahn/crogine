@@ -117,7 +117,6 @@ static const std::string BillboardFragmentShader = R"(
     OUTPUT
 
     uniform sampler2D u_diffuseMap;
-    //uniform float u_pixelScale = 1.0;
 
     layout (std140) uniform PixelScale
     {

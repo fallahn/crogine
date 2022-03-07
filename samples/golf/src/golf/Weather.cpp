@@ -251,7 +251,7 @@ void GolfState::createClouds()
 
         m_resources.shaders.loadFromString(ShaderID::Cloud, CloudVertex, CloudFragment);
         auto& shader = m_resources.shaders.get(ShaderID::Cloud);
-        m_scaleUniforms.emplace_back(shader.getGLHandle(), shader.getUniformID("u_pixelscale"));
+        m_scaleBuffer.addShader(shader);
 
         auto centreID = shader.getUniformID("u_worldCentre");
         glCheck(glUseProgram(shader.getGLHandle()));

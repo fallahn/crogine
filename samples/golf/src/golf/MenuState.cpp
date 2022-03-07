@@ -718,6 +718,8 @@ void MenuState::createScene()
         }
     }
 
+    createClouds();
+
     //music
     auto entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::AudioEmitter>() = as.getEmitter("music");
@@ -773,8 +775,6 @@ void MenuState::createScene()
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-0.967f*/-40.56f * cro::Util::Const::degToRad);
     //sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -80.7f * cro::Util::Const::degToRad);
 
-    createClouds();
-
     //set up cam / models for ball preview
     createBallScene();    
 
@@ -796,7 +796,7 @@ void MenuState::createClouds()
 
         m_resources.shaders.loadFromString(ShaderID::Cloud, CloudVertex, CloudFragment, "#define MAX_RADIUS 86\n");
         auto& shader = m_resources.shaders.get(ShaderID::Cloud);
-        m_scaleUniforms.emplace_back(shader.getGLHandle(), shader.getUniformID("u_pixelscale"));
+        m_scaleBuffer.addShader(shader);
 
         auto matID = m_resources.materials.add(shader);
         auto material = m_resources.materials.get(matID);

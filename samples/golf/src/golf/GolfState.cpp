@@ -1994,6 +1994,8 @@ void GolfState::buildScene()
         }
     }
 
+    createClouds();
+
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
     {
@@ -2135,8 +2137,6 @@ void GolfState::buildScene()
 
 
     m_currentPlayer.position = m_holeData[m_currentHole].tee; //prevents the initial camera movement
-
-    createClouds();
 
     buildUI(); //put this here because we don't want to do this if the map data didn't load
     setCurrentHole(0);
