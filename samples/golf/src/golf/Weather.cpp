@@ -236,10 +236,12 @@ void GolfState::createWeather()
     };
 }
 
-void GolfState::createClouds()
+void GolfState::createClouds(const ThemeSettings& theme)
 {
+    auto spritePath = theme.cloudPath.empty() ? "assets/golf/sprites/clouds.spt" : theme.cloudPath;
+
     cro::SpriteSheet spriteSheet;
-    if (spriteSheet.loadFromFile("assets/golf/sprites/clouds.spt", m_resources.textures)
+    if (spriteSheet.loadFromFile(spritePath, m_resources.textures)
         && spriteSheet.getSprites().size() > 1)
     {
         const auto& sprites = spriteSheet.getSprites();

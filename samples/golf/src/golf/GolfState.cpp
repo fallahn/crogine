@@ -1342,6 +1342,10 @@ void GolfState::loadAssets()
         {
             theme.instancePath = prop.getValue<std::string>();
         }
+        else if (name == "clouds")
+        {
+            theme.cloudPath = prop.getValue<std::string>();
+        }
     }
     
     if (theme.billboardModel.empty()
@@ -1717,6 +1721,8 @@ void GolfState::loadAssets()
         shader = &m_resources.shaders.get(ShaderID::CelTexturedInstanced);
         m_scaleBuffer.addShader(*shader);
         m_resolutionBuffer.addShader(*shader);
+
+        createClouds(theme);
     }
 
     //reserve the slots for each hole score
@@ -2002,8 +2008,6 @@ void GolfState::buildScene()
             teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
     }
-
-    createClouds();
 
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)

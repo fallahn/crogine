@@ -60,6 +60,7 @@ struct ThemeSettings final
     cro::Colour grassColour = cro::Colour(0.137f, 0.274f, 0.231f, 1.f);
     cro::Colour grassTint = cro::Colour(0.123f, 0.246f, 0.207f, 1.f);
     std::string instancePath;
+    std::string cloudPath;
 };
 
 class TerrainBuilder final : public cro::GuiClient
