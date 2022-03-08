@@ -432,6 +432,13 @@ glm::vec3 BallSystem::getWindDirection() const
     return { m_windDirection.x, m_windStrength, m_windDirection.z };
 }
 
+void BallSystem::forceWindChange()
+{
+    m_windDirTime = cro::seconds(0.f);
+    m_windStrengthTime = cro::seconds(0.f);
+    updateWind();
+}
+
 bool BallSystem::setHoleData(const HoleData& holeData, bool rebuildMesh)
 {
     m_holeData = &holeData;

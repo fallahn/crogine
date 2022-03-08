@@ -100,6 +100,7 @@ namespace ServerCommand
         NextHole,
         NextPlayer,
         GotoGreen,
-        EndGame
+        EndGame,
+        ChangeWind
     };
 }

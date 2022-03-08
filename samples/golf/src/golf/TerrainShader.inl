@@ -182,7 +182,11 @@ static const std::string CelVertexShader = R"(
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
 
-    //uniform vec2 u_scaledResolution;
+    layout (std140) uniform WindValues
+    {
+        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
+    };    
+
     layout (std140) uniform ScaledResolution
     {
         vec2 u_scaledResolution;
@@ -235,11 +239,27 @@ static const std::string CelVertexShader = R"(
         //gl_Position = u_projectionMatrix * worldViewMatrix * position;
 
         vec4 vertPos = u_projectionMatrix * worldViewMatrix * position;
+
+#if defined (WIND_WARP)
+        //const float xFreq = 0.6;
+        float xFreq = 10.0 * a_colour.r;
+        const float yFreq = 0.8;
+        const float scale = 0.2;
+
+        float strength = u_windData.y;
+        float totalScale = scale * strength * a_colour.b;
+
+        vertPos.x += sin((u_windData.w * (xFreq)) + worldMatrix[3].x) * totalScale;
+        vertPos.z += sin((u_windData.w * (yFreq)) + worldMatrix[3].z) * totalScale;
+        vertPos.xz += (u_windData.xz * strength * 2.0) * totalScale;
+#else
+        //snapping kinda ruins the wind movement
         vertPos.xyz /= vertPos.w;
         vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
         vertPos.xy = floor(vertPos.xy);
         vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
         vertPos.xyz *= vertPos.w;
+#endif
         gl_Position = vertPos;
 
         vec3 normal = a_normal;

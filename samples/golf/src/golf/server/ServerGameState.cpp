@@ -741,6 +741,9 @@ void GameState::doServerCommand(const cro::NetEvent& evt)
     switch (evt.packet.as<std::uint8_t>())
     {
     default: break;
+    case ServerCommand::ChangeWind:
+        m_scene.getSystem<BallSystem>()->forceWindChange();
+        break;
     case ServerCommand::NextHole:
         if (m_currentHole < m_holeData.size() - 1)
         {

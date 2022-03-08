@@ -245,6 +245,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F8:
             showCountdown(20);
             break;
+        case SDLK_F9:
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::ChangeWind), cro::NetFlag::Reliable);
+            break;
         case SDLK_KP_0:
             setActiveCamera(0);
             break;
@@ -878,6 +881,7 @@ void GolfState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
+    //m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Leaderboard, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define SUBRECT\n");

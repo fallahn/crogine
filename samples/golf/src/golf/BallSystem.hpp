@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -92,6 +92,7 @@ public:
     void process(float) override;
 
     glm::vec3 getWindDirection() const;
+    void forceWindChange();
 
     bool setHoleData(const struct HoleData&, bool rebuildMesh = true);
 
