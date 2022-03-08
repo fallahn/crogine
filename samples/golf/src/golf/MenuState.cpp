@@ -63,6 +63,7 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -75,6 +76,7 @@ source distribution.
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
@@ -505,6 +507,7 @@ void MenuState::addSystems()
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
+    m_backgroundScene.addSystem<cro::ParticleSystem>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
 
     m_backgroundScene.addDirector<MenuSoundDirector>(m_resources.audio, m_currentMenu);
@@ -647,6 +650,14 @@ void MenuState::createScene()
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
     }
 
+    /*cro::EmitterSettings sprinkler;
+    if (sprinkler.loadFromFile("assets/golf/particles/sprinkler.cps", m_resources.textures))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -11.f, 0.f, 13.8f });
+        entity.addComponent<cro::ParticleEmitter>().settings = sprinkler;
+        entity.getComponent<cro::ParticleEmitter>().start();
+    }*/
 
     //billboards
     if (md.loadFromFile("assets/golf/models/shrubbery.cmt"))
