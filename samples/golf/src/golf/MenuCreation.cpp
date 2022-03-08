@@ -1730,7 +1730,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //server info message
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();// .setScale(glm::vec2(0.5f));
+    entity.addComponent<cro::Transform>();
     entity.addComponent<UIElement>().absolutePosition = { 10.f, 0.f };
     entity.getComponent<UIElement>().relativePosition = { 0.f, 0.98f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::ServerInfo;
@@ -1738,22 +1738,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString("Connected to");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::White);
+    entity.getComponent<cro::Text>().setShadowColour(cro::Colour(std::uint8_t(110), 179, 157));
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-    auto textEnt = entity;
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 1.f, -1.f, -0.1f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info));
-    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setFillColour(cro::Colour(std::uint8_t(110), 179, 157));
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [textEnt](cro::Entity e, float)
-    {
-        e.getComponent<cro::Text>().setString(textEnt.getComponent<cro::Text>().getString());
-    };
-    textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //running scores
     struct ScoreInfo final

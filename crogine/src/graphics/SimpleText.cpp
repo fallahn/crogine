@@ -108,6 +108,24 @@ void SimpleText::setOutlineThickness(float thickness)
     }
 }
 
+void SimpleText::setShadowColour(Colour colour)
+{
+    if (m_context.shadowColour != colour)
+    {
+        m_context.shadowColour = colour;
+        m_dirtyFlags |= DirtyFlags::ColourInner;
+    }
+}
+
+void SimpleText::setShadowOffset(glm::vec2 offset)
+{
+    if (m_context.shadowOffset != offset)
+    {
+        m_context.shadowOffset = offset;
+        m_dirtyFlags |= DirtyFlags::All;
+    }
+}
+
 const Font* SimpleText::getFont() const
 {
     return m_context.font;
@@ -141,6 +159,16 @@ Colour SimpleText::getOutlineColour() const
 float SimpleText::getOutlineThickness() const
 {
     return m_context.outlineThickness;
+}
+
+Colour SimpleText::getShadowColour() const
+{
+    return m_context.shadowColour;
+}
+
+glm::vec2 SimpleText::getShadowOffset() const
+{
+    return m_context.shadowOffset;
 }
 
 FloatRect SimpleText::getLocalBounds()

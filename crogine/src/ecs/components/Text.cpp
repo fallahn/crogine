@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -103,6 +103,24 @@ void Text::setOutlineThickness(float thickness)
     }
 }
 
+void Text::setShadowColour(Colour colour)
+{
+    if (m_context.shadowColour != colour)
+    {
+        m_context.shadowColour = colour;
+        m_dirtyFlags |= DirtyFlags::Colour;
+    }
+}
+
+void Text::setShadowOffset(glm::vec2 offset)
+{
+    if (m_context.shadowOffset != offset)
+    {
+        m_context.shadowOffset = offset;
+        m_dirtyFlags |= DirtyFlags::All;
+    }
+}
+
 const Font* Text::getFont() const
 {
     return m_context.font;
@@ -136,6 +154,16 @@ Colour Text::getOutlineColour() const
 float Text::getOutlineThickness() const
 {
     return m_context.outlineThickness;
+}
+
+Colour Text::getShadowColour() const
+{
+    return m_context.shadowColour;
+}
+
+glm::vec2 Text::getShadowOffset() const
+{
+    return m_context.shadowOffset;
 }
 
 FloatRect Text::getLocalBounds(Entity entity)
