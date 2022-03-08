@@ -1344,7 +1344,7 @@ void GolfState::showScoreboard(bool visible)
 void GolfState::updateWindDisplay(glm::vec3 direction)
 {
     float rotation = std::atan2(-direction.z, direction.x);
-    m_billboardUniforms.windVector = direction;
+    m_windUpdate.windVector = direction;
 
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::WindSock;

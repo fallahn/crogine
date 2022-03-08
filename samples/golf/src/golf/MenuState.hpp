@@ -120,8 +120,7 @@ private:
 
     cro::UniformBuffer m_scaleBuffer;
     cro::UniformBuffer m_resolutionBuffer;
-
-    std::vector<std::pair<std::int32_t, std::int32_t>> m_timeUniforms;
+    cro::UniformBuffer m_windBuffer;
 
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 

@@ -46,8 +46,10 @@ static const std::string BillboardVertexShader = R"(
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
 
-    uniform float u_time = 0.0;
-    uniform vec3 u_windDir = vec3(0.5);
+    layout (std140) uniform WindValues
+    {
+        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
+    };
 
     layout (std140) uniform ScaledResolution
     {
@@ -78,12 +80,12 @@ static const std::string BillboardVertexShader = R"(
         //only animate above 3 metres
         float height = max(0.0, position.y - minHeight);
 
-        float strength = u_windDir.y;
+        float strength = u_windData.y;
         float totalScale = scale * (height / maxHeight) * strength;
 
-        position.x += sin((u_time * (xFreq)) + a_normal.x) * totalScale;
-        position.z += sin((u_time * (yFreq)) + a_normal.z) * totalScale;
-        position.xz += (u_windDir.xz * strength * 2.0) * totalScale;
+        position.x += sin((u_windData.w * (xFreq)) + a_normal.x) * totalScale;
+        position.z += sin((u_windData.w * (yFreq)) + a_normal.z) * totalScale;
+        position.xz += (u_windData.xz * strength * 2.0) * totalScale;
 
 
 

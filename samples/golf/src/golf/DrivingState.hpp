@@ -72,16 +72,13 @@ private:
 
     cro::UniformBuffer m_scaleBuffer;
     cro::UniformBuffer m_resolutionBuffer;
+    cro::UniformBuffer m_windBuffer;
 
-    struct BillboardUniforms final
+    struct WindUpdate final
     {
-        std::uint32_t shaderID = 0;
-        std::int32_t timeAccum = -1;
-        std::int32_t windDirection = -1;
-
         float currentWindSpeed = 0.f;
         glm::vec3 currentWindVector = glm::vec3(0.f);
-    }m_billboardUniforms;
+    }m_windUpdate;
 
     bool m_mouseVisible;
     cro::Clock m_mouseClock;

@@ -96,6 +96,12 @@ struct MixerChannel final
     };
 };
 
+struct WindData final
+{
+    float direction[3];
+    float elapsedTime = 0.f;
+};
+
 struct ShaderID final
 {
     enum

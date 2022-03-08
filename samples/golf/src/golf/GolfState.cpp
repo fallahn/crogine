@@ -141,6 +141,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_wantsGameState    (true),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_windBuffer        ("WindValues", sizeof(WindData)),
     m_currentHole       (0),
     m_terrainBuilder    (m_holeData),
     m_audioPath         ("assets/golf/sound/ambience.xas"),
@@ -722,19 +723,19 @@ bool GolfState::simulate(float dt)
     glUseProgram(m_waterShader.shaderID);
     glUniform1f(m_waterShader.timeUniform, elapsed * 15.f);
     
-    glUseProgram(m_billboardUniforms.shaderID);
-    glUniform1f(m_billboardUniforms.timeAccum, elapsed);
+    m_windUpdate.currentWindSpeed += (m_windUpdate.windVector.y - m_windUpdate.currentWindSpeed) * dt;
+    m_windUpdate.currentWindVector += (m_windUpdate.windVector - m_windUpdate.currentWindVector) * dt;
 
-    m_billboardUniforms.currentWindSpeed += (m_billboardUniforms.windVector.y - m_billboardUniforms.currentWindSpeed) * dt;
-    m_billboardUniforms.currentWindVector += (m_billboardUniforms.windVector - m_billboardUniforms.currentWindVector) * dt;
+    WindData data;
+    data.direction[0] = m_windUpdate.currentWindVector.x;
+    data.direction[1] = m_windUpdate.currentWindSpeed;
+    data.direction[2] = m_windUpdate.currentWindVector.z;
+    data.elapsedTime = elapsed;
+    m_windBuffer.setData(&data);
 
-    glUniform3f(m_billboardUniforms.windDirection, m_billboardUniforms.currentWindVector.x,
-                                                    m_billboardUniforms.currentWindSpeed,
-                                                    m_billboardUniforms.currentWindVector.z);
-
-    m_gameScene.getSystem<CloudSystem>()->setWindVector({ m_billboardUniforms.currentWindVector.x,
-                                                        m_billboardUniforms.currentWindSpeed,
-                                                        m_billboardUniforms.currentWindVector.z });
+    m_gameScene.getSystem<CloudSystem>()->setWindVector({ m_windUpdate.currentWindVector.x,
+                                                        m_windUpdate.currentWindSpeed,
+                                                        m_windUpdate.currentWindVector.z });
 
     m_terrainBuilder.updateTime(elapsed * 10.f);
 
@@ -795,6 +796,7 @@ void GolfState::render()
     //TODO we probably only need to do this once after the scene is built
     m_scaleBuffer.bind(0);
     m_resolutionBuffer.bind(1);
+    m_windBuffer.bind(2);
 
     //render reflections first
     //auto uiCam = m_uiScene.setActiveCamera(m_uiReflectionCam);
@@ -1699,10 +1701,8 @@ void GolfState::loadAssets()
         shader = &m_resources.shaders.get(ShaderID::Billboard);
         m_scaleBuffer.addShader(*shader);
         m_resolutionBuffer.addShader(*shader);
+        m_windBuffer.addShader(*shader);
 
-        m_billboardUniforms.shaderID = shader->getGLHandle();
-        m_billboardUniforms.timeAccum = shader->getUniformID("u_time");
-        m_billboardUniforms.windDirection = shader->getUniformID("u_windDir");
 
         shader = &m_resources.shaders.get(ShaderID::Terrain);
         m_scaleBuffer.addShader(*shader);

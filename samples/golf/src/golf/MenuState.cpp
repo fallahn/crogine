@@ -99,6 +99,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_avatarScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_windBuffer        ("WindValues", sizeof(WindData)),
     m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu       (MenuID::Main),
     m_prevMenu          (MenuID::Main),
@@ -451,11 +452,13 @@ bool MenuState::simulate(float dt)
 
     static float accumTime = 0.f;
     accumTime += dt;
-    for (auto [shader, uniform] : m_timeUniforms)
-    {
-        glCheck(glUseProgram(shader));
-        glCheck(glUniform1f(uniform, accumTime));
-    }
+
+    WindData wind;
+    wind.direction[0] = 0.5f;
+    wind.direction[1] = 0.5f;
+    wind.direction[2] = 0.5f;
+    wind.elapsedTime = accumTime;
+    m_windBuffer.setData(&wind);
 
     m_backgroundScene.simulate(dt);
     m_avatarScene.simulate(dt);
@@ -467,6 +470,7 @@ void MenuState::render()
 {
     m_scaleBuffer.bind(0);
     m_resolutionBuffer.bind(1);
+    m_windBuffer.bind(2);
 
     //render ball preview first
     auto oldCam = m_backgroundScene.setActiveCamera(m_ballCam);
@@ -555,7 +559,7 @@ void MenuState::loadAssets()
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
-    m_timeUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_time"));
+    m_windBuffer.addShader(*shader);
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;

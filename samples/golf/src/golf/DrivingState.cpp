@@ -165,6 +165,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_viewScale         (1.f),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_windBuffer        ("WindValues", sizeof(WindData)),
     m_mouseVisible      (true),
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
@@ -431,16 +432,15 @@ bool DrivingState::simulate(float dt)
     static float elapsed = 0.f;
     elapsed += dt;
 
-    glUseProgram(m_billboardUniforms.shaderID);
-    glUniform1f(m_billboardUniforms.timeAccum, elapsed);
+    m_windUpdate.currentWindSpeed += (windDir.y - m_windUpdate.currentWindSpeed) * dt;
+    m_windUpdate.currentWindVector += (windDir - m_windUpdate.currentWindVector) * dt;
 
-    m_billboardUniforms.currentWindSpeed += (windDir.y - m_billboardUniforms.currentWindSpeed) * dt;
-    m_billboardUniforms.currentWindVector += (windDir - m_billboardUniforms.currentWindVector) * dt;
-
-    glUniform3f(m_billboardUniforms.windDirection, m_billboardUniforms.currentWindVector.x,
-                                                    m_billboardUniforms.currentWindSpeed,
-                                                    m_billboardUniforms.currentWindVector.z);
-
+    WindData data;
+    data.direction[0] = m_windUpdate.currentWindVector.x;
+    data.direction[1] = m_windUpdate.currentWindSpeed;
+    data.direction[2] = m_windUpdate.currentWindVector.z;
+    data.elapsedTime = elapsed;
+    m_windBuffer.setData(&data);
 
     m_inputParser.update(dt);
     m_gameScene.simulate(dt);
@@ -463,9 +463,10 @@ bool DrivingState::simulate(float dt)
 
 void DrivingState::render()
 {
-    //TODO these probably only need to be bounds once on start-up
+    //TODO these probably only need to be bound once on start-up
     m_scaleBuffer.bind(0);
     m_resolutionBuffer.bind(1);
+    m_windBuffer.bind(2);
 
     m_backgroundTexture.clear();
     m_gameScene.render();
@@ -584,11 +585,8 @@ void DrivingState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::Billboard);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
-
-    m_billboardUniforms.shaderID = shader->getGLHandle();
-    m_billboardUniforms.timeAccum = shader->getUniformID("u_time");
-    m_billboardUniforms.windDirection = shader->getUniformID("u_windDir");
 
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
