@@ -1,0 +1,13 @@
+hole 07
+{
+    map="assets/golf/courses/course_04/07.png"
+    model="assets/golf/models/course_04/07.cmt"
+    par = 3
+
+    pin = 255.211441,1.444007,-31.944550
+
+    target = 286.477081,1.445047,-66.029213
+
+    tee = 285.964539,1.445047,-168.795807
+
+}

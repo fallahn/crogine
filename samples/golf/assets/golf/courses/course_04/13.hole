@@ -1,0 +1,13 @@
+hole 13
+{
+    map="assets/golf/courses/course_04/13.png"
+    model="assets/golf/models/course_04/13.cmt"
+    par = 4
+
+    pin = 100.792099,1.275920,-46.270660
+
+    target = 159.949081,1.273557,-87.915451
+
+    tee = 285.097046,1.273557,-28.117798
+
+}

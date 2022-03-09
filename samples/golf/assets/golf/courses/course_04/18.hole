@@ -1,0 +1,13 @@
+hole 18
+{
+    map="assets/golf/courses/course_04/16.png"
+    model="assets/golf/models/course_04/16.cmt"
+    par = 4
+
+    pin = 177.176025,4.637780,-30.181587
+
+    target = 175.382111,3.521042,-137.304871
+
+    tee = 30.586319,2.000103,-173.439728
+
+}

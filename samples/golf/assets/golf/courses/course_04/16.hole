@@ -1,0 +1,13 @@
+hole 16
+{
+    map="assets/golf/courses/course_04/16.png"
+    model="assets/golf/models/course_04/16.cmt"
+    par = 3
+
+    pin = 273.023132,2.008380,-161.138489
+
+    target = 286.862061,2.000103,-96.813286
+
+    tee = 251.495987,2.000103,-25.568626
+
+}
