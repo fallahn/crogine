@@ -130,7 +130,7 @@ namespace
         void main()
         {
             float frameWidth = 1.0 / u_frameCount;
-            vec2 coord = gl_PointCoord;
+            vec2 coord = vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y);
             coord.x *= frameWidth;
             coord.x += v_currentFrame * frameWidth;
             vec2 centreOffset = vec2((v_currentFrame * frameWidth) + (frameWidth / 2.f), 0.5);
