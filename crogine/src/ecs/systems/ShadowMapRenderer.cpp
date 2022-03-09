@@ -108,7 +108,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         //this is used for depth sorting the draw list
         auto aabb = camera.getPass(Camera::Pass::Final).getAABB();
         auto centre = aabb[0] + ((aabb[1] - aabb[0]) / 2.f);
-        auto lightPos = centre - (lightDir * ((camera.m_farPlane - camera.m_nearPlane) / 2.f));
+        auto lightPos = centre - (lightDir * glm::length(centre)/*((camera.m_farPlane - camera.m_nearPlane) / 2.f)*/);
 
         camera.shadowViewMatrix = glm::inverse(glm::toMat4(lightRotation));
 

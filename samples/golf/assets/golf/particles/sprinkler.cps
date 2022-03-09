@@ -8,11 +8,11 @@ particle_system sprinkler
     spread = 41.438000
     lifetime = 1.000000
     lifetime_variance = 0.000000
-    colour = 31.000000,75.000000,251.000000,255.000000
+    colour = 151.000000,171.000000,255.000000,255.000000
     random_initial_rotation = true
     rotation_speed = 0.000000
     scale_affector = 0.000000
-    size = 0.024000
+    size = 0.010000
     emit_rate = 10.000000
     emit_count = 7
     spawn_radius = 0.000000

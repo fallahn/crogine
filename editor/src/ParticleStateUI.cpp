@@ -76,22 +76,7 @@ void ParticleState::drawMenuBar()
 {
     const auto openFile = [&](const std::string& path)
     {
-        if (cro::FileSystem::showMessageBox("Confirm", "Save Current Settings?", cro::FileSystem::ButtonType::YesNo))
-        {
-            if (!lastSavePath.empty())
-            {
-                m_particleSettings->saveToFile(lastSavePath);
-            }
-            else
-            {
-                auto path = cro::FileSystem::saveFileDialogue(lastSavePath, "cps");
-                if (!path.empty())
-                {
-                    m_particleSettings->saveToFile(path);
-                    lastSavePath = path;
-                }
-            }
-        }
+        confirmSave();
 
         m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().stop();
 
@@ -136,22 +121,7 @@ void ParticleState::drawMenuBar()
         {
             if (ImGui::MenuItem("New##Particle", nullptr, nullptr))
             {
-                if (cro::FileSystem::showMessageBox("Confirm", "Save Current Settings?", cro::FileSystem::ButtonType::YesNo))
-                {
-                    if (!lastSavePath.empty())
-                    {
-                        m_particleSettings->saveToFile(lastSavePath);
-                    }
-                    else
-                    {
-                        auto path = cro::FileSystem::saveFileDialogue(lastSavePath, "cps");
-                        if (!path.empty())
-                        {
-                            m_particleSettings->saveToFile(path);
-                            lastSavePath = path;
-                        }
-                    }
-                }
+                confirmSave();
 
                 m_cameras[CameraID::ThreeDee].emitter.getComponent<cro::ParticleEmitter>().settings = {};
 
@@ -232,6 +202,8 @@ void ParticleState::drawMenuBar()
             {
                 if (ImGui::MenuItem("Return To World Editor"))
                 {
+                    confirmSave();
+
                     getContext().mainWindow.setTitle("Crogine Editor");
                     requestStackPop();
                 }
@@ -239,6 +211,7 @@ void ParticleState::drawMenuBar()
 
             if (ImGui::MenuItem("Quit##Particle", nullptr, nullptr))
             {
+                confirmSave();
                 cro::App::quit();
             }
             ImGui::EndMenu();
@@ -266,6 +239,13 @@ void ParticleState::drawMenuBar()
                 {
                     openModel(path);
                 }
+            }
+
+            if (m_entities[EntityID::Model].isValid() &&
+                ImGui::MenuItem("Remove Preview Model", nullptr, nullptr))
+            {
+                m_scene.destroyEntity(m_entities[EntityID::Model]);
+                m_entities[EntityID::Model] = {};
             }
 
             if (ImGui::MenuItem("Sprite Renderer", nullptr, nullptr))
@@ -846,5 +826,25 @@ void ParticleState::openModel(const std::string& path)
 
         m_cameras[CameraID::ThreeDee].emitter.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_entities[EntityID::Model] = entity;
+    }
+}
+
+void ParticleState::confirmSave()
+{
+    if (cro::FileSystem::showMessageBox("Confirm", "Save Current Settings?", cro::FileSystem::ButtonType::YesNo))
+    {
+        if (!lastSavePath.empty())
+        {
+            m_particleSettings->saveToFile(lastSavePath);
+        }
+        else
+        {
+            auto path = cro::FileSystem::saveFileDialogue(lastSavePath, "cps");
+            if (!path.empty())
+            {
+                m_particleSettings->saveToFile(path);
+                lastSavePath = path;
+            }
+        }
     }
 }
