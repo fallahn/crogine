@@ -184,14 +184,15 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 #ifdef CRO_DEBUG_
     ballEntity = {};
 
-    /*registerWindow([&]() 
-        {
-            if (ImGui::Begin("buns"))
-            {
-                ImGui::Text("Speed %3.3f", m_billboardUniforms.currentWindSpeed);
-            }
-            ImGui::End();
-        });*/
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("buns"))
+    //        {
+    //            //ImGui::Text("Speed %3.3f", m_billboardUniforms.currentWindSpeed);
+    //            ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), {256.f, 256.f}, {0.f, 1.f}, {1.f, 0.f});
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
@@ -249,14 +250,19 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::ChangeWind), cro::NetFlag::Reliable);
             break;
         case SDLK_KP_0:
-            setActiveCamera(0);
+            //setActiveCamera(0);
+        {
+            static bool hidden = false;
+            m_activeAvatar->model.getComponent<cro::Model>().setHidden(!hidden);
+            hidden = !hidden;
+        }
             break;
         case SDLK_KP_1:
-            setActiveCamera(1);
-            m_cameras[CameraID::Sky].getComponent<CameraFollower>().state = CameraFollower::Zoom;
+            //setActiveCamera(1);
+            //m_cameras[CameraID::Sky].getComponent<CameraFollower>().state = CameraFollower::Zoom;
             break;
         case SDLK_KP_2:
-            setActiveCamera(2);
+            //setActiveCamera(2);
             break;
         case SDLK_PAGEUP:
         {
@@ -557,12 +563,10 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 if (getClub() < ClubID::FiveIron)
                 {
-                    m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setHidden(false);
                     m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Wood]);
                 }
                 else
                 {
-                    m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setHidden(false);
                     m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Iron]);
                 }
                 m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
@@ -1139,6 +1143,13 @@ void GolfState::loadAssets()
                             {
                                 hairEnt.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
                             }
+
+                            hairEnt.addComponent<cro::Callback>().active = true;
+                            hairEnt.getComponent<cro::Callback>().function =
+                                [entity](cro::Entity e, float)
+                            {
+                                e.getComponent<cro::Model>().setHidden(entity.getComponent<cro::Model>().isHidden());
+                            };
                         }
                     }
                 }
@@ -1166,6 +1177,18 @@ void GolfState::loadAssets()
     {
         createFallbackModel(m_clubModels[ClubModel::Wood], m_resources);
     }
+    m_clubModels[ClubModel::Wood].addComponent<cro::Callback>().active = true;
+    m_clubModels[ClubModel::Wood].getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        if (m_activeAvatar)
+        {
+            bool hidden = !(!m_activeAvatar->model.getComponent<cro::Model>().isHidden() &&
+                m_activeAvatar->hands->getModel() == e);
+
+            e.getComponent<cro::Model>().setHidden(hidden);
+        }
+    };
 
 
     m_clubModels[ClubModel::Iron] = m_gameScene.createEntity();
@@ -1184,7 +1207,18 @@ void GolfState::loadAssets()
         createFallbackModel(m_clubModels[ClubModel::Iron], m_resources);
         m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Cyan);
     }
+    m_clubModels[ClubModel::Iron].addComponent<cro::Callback>().active = true;
+    m_clubModels[ClubModel::Iron].getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        if (m_activeAvatar)
+        {
+            bool hidden = !(!m_activeAvatar->model.getComponent<cro::Model>().isHidden() &&
+                m_activeAvatar->hands->getModel() == e);
 
+            e.getComponent<cro::Model>().setHidden(hidden);
+        }
+    };
 
 
     //ball resources - ball is rendered as a single point
@@ -3278,12 +3312,10 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         {
             if (getClub() < ClubID::FiveIron)
             {
-                m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setHidden(false);
                 m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Wood]);
             }
             else
             {
-                m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setHidden(false);
                 m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Iron]);
             }
             m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
@@ -3291,8 +3323,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     }
     else
     {
-        m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setHidden(true);
-        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setHidden(true);
         m_activeAvatar->model.getComponent<cro::Model>().setHidden(true);
     }
     setActiveCamera(CameraID::Player);

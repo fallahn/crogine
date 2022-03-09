@@ -240,9 +240,9 @@ static const std::string CelVertexShader = R"(
 
         vec4 vertPos = u_projectionMatrix * worldViewMatrix * position;
 
-#if defined (WIND_WARP)
-        //const float xFreq = 0.6;
-        float xFreq = 10.0 * a_colour.r;
+#if defined(WIND_WARP)
+        const float xFreq = 0.6;
+        //float xFreq = 0.6 + (3.4 * a_colour.r);
         const float yFreq = 0.8;
         const float scale = 0.2;
 
