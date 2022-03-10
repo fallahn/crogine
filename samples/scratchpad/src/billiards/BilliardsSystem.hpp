@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/graphics/MeshData.hpp>
+#include <crogine/graphics/BoundingBox.hpp>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
@@ -82,6 +83,8 @@ private:
     cro::Entity m_parent;
     btRigidBody* m_physicsBody = nullptr;
 
+    std::int32_t m_pocketContact = -1; //ID of pocket, or -1
+
     friend class BilliardsSystem;
 };
 
@@ -127,11 +130,16 @@ private:
     std::vector<std::unique_ptr<btRigidBody>> m_ballObjects;
     std::unique_ptr<btSphereShape> m_ballShape; //balls can all share this.
 
-    //pockets/table surface
+    //table surface
     std::vector<std::unique_ptr<btBoxShape>> m_boxShapes;
 
-    std::vector<std::unique_ptr<btPairCachingGhostObject>> m_pocketObjects;
-    std::unique_ptr<btGhostPairCallback> m_ghostCallback;
+    //simplified pocketry
+    struct Pocket final
+    {
+        cro::Box box;
+        std::int32_t id = 0;
+    };
+    std::vector<Pocket> m_pockets;
 
     btRigidBody::btRigidBodyConstructionInfo createBodyDef(std::int32_t, float, btCollisionShape*, btMotionState* = nullptr);
 

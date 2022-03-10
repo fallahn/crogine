@@ -40,25 +40,6 @@ namespace
     {
         return { v.getX(), v.getY(), v.getZ() };
     }
-
-    struct PocketCallback final : public btCollisionWorld::ContactResultCallback
-    {
-
-        //I don't know what this does, the bullet docs are tenuous at best.
-        btScalar addSingleResult(btManifoldPoint& cp,
-            const btCollisionObjectWrapper* colObj0Wrap,
-            int partId0,
-            int index0,
-            const btCollisionObjectWrapper* colObj1Wrap,
-            int partId1,
-            int index1) override
-        {
-            LogI << "Object 0: " << CollisionID::Labels[colObj0Wrap->getCollisionObject()->getUserIndex()] << std::endl;
-            LogI << "Object 1: " << CollisionID::Labels[colObj1Wrap->getCollisionObject()->getUserIndex()] << std::endl;
-
-            return 0.f;
-        }
-    };
 }
 
 void BilliardBall::getWorldTransform(btTransform& dest) const
@@ -109,19 +90,11 @@ BilliardsSystem::BilliardsSystem(cro::MessageBus& mb, BulletDebug& dd)
 
     m_collisionWorld->setDebugDrawer(&m_debugDrawer);
     m_collisionWorld->setGravity({ 0.f, -9.f, 0.f });
-
-    m_ghostCallback = std::make_unique<btGhostPairCallback>();
-    m_broadphaseInterface->getOverlappingPairCache()->setInternalGhostPairCallback(m_ghostCallback.get());
 }
 
 BilliardsSystem::~BilliardsSystem()
 {
     for (auto& o : m_ballObjects)
-    {
-        m_collisionWorld->removeCollisionObject(o.get());
-    }
-
-    for (auto& o : m_pocketObjects)
     {
         m_collisionWorld->removeCollisionObject(o.get());
     }
@@ -138,15 +111,39 @@ void BilliardsSystem::process(float dt)
     m_collisionWorld->stepSimulation(dt, 10);
     m_collisionWorld->debugDrawWorld();
 
-    for (auto& pocket : m_pocketObjects)
+    for (auto entity : getEntities())
     {
-        auto overlapCount = pocket->getNumOverlappingObjects();
-        for (auto i = 0; i < overlapCount; ++i)
+        auto& ball = entity.getComponent<BilliardBall>();
+        if (ball.m_physicsBody->isActive())
         {
-            auto other = pocket->getOverlappingObject(i);
+            const auto position = entity.getComponent<cro::Transform>().getPosition();
+            if (position.y < 0)
+            {
+                auto lastContact = ball.m_pocketContact;
+                ball.m_pocketContact = -1;
+                for (const auto& pocket : m_pockets)
+                {
+                    if (pocket.box.contains(position))
+                    {
+                        ball.m_pocketContact = pocket.id;
+                        break;
+                    }
+                }
 
-            PocketCallback cb;
-            m_collisionWorld->contactPairTest(pocket.get(), other, cb);
+                if (lastContact != ball.m_pocketContact)
+                {
+                    if (ball.m_pocketContact != -1)
+                    {
+                        //contact begin
+                        LogI << "Ball " << ball.id << " in pocket " << ball.m_pocketContact << std::endl;
+                    }
+                    else
+                    {
+                        //contact end
+                        LogI << "Ball " << ball.id << " finished contact" << std::endl;
+                    }
+                }
+            }
         }
     }
 }
@@ -217,30 +214,26 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
 
     //create triggers for each pocket
     //TODO read this from some table data somewhere
-    //TODO add a callback for ball collision
     const std::array PocketPositions =
     {
-        btVector3(0.5f, -0.1f, -0.96f),
-        btVector3(0.5f, -0.1f, 0.f),
-        btVector3(0.5f, -0.1f, 0.96f),
+        glm::vec3(0.5f, -0.1f, -0.96f),
+        glm::vec3(0.5f, -0.1f, 0.f),
+        glm::vec3(0.5f, -0.1f, 0.96f),
 
-        btVector3(-0.5f, -0.1f, -0.96f),
-        btVector3(-0.5f, -0.1f, 0.f),
-        btVector3(-0.5f, -0.1f, 0.96f)
+        glm::vec3(-0.5f, -0.1f, -0.96f),
+        glm::vec3(-0.5f, -0.1f, 0.f),
+        glm::vec3(-0.5f, -0.1f, 0.96f)
     };
 
-    auto& pocketShape = m_boxShapes.emplace_back(std::make_unique<btBoxShape>(btBoxShape({ 0.075f, 0.02f, 0.075f })));
+    const glm::vec3 PocketHalfSize({ 0.075f, 0.1f, 0.075f });
+    auto i = 0;
+
     for (auto p : PocketPositions)
     {
-        transform.setOrigin(p);
-
-        //auto& pocket = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Pocket, 0.f, pocketShape.get())));
-        auto& pocket = m_pocketObjects.emplace_back(std::make_unique<btPairCachingGhostObject>());
-        pocket->setCollisionShape(pocketShape.get());
-        pocket->setWorldTransform(transform);
-        pocket->setUserIndex(CollisionID::Pocket);
-        pocket->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE | pocket->getCollisionFlags());
-        m_collisionWorld->addCollisionObject(pocket.get());
+        //place these in world space for simpler testing
+        auto& pocket = m_pockets.emplace_back();
+        pocket.box = { p - PocketHalfSize, p + PocketHalfSize };
+        pocket.id = i++;
     }
 }
 
@@ -250,6 +243,7 @@ void BilliardsSystem::applyImpulse()
     if (m_ballObjects.size() > 1)
     {
         auto& obj = m_ballObjects[cro::Util::Random::value(0u, m_ballObjects.size() - 1)];
+        obj->activate();
         obj->applyCentralImpulse({ 0.2f * ((cro::Util::Random::value(0,1) * 2) - 1), 0.f, -0.2f * ((cro::Util::Random::value(0,1) * 2) - 1) });
     }
 }
@@ -273,8 +267,8 @@ btRigidBody::btRigidBodyConstructionInfo BilliardsSystem::createBodyDef(std::int
         info.m_rollingFriction = 0.1f;
         info.m_spinningFriction = 0.1f;
         info.m_friction = 0.01f;
-        info.m_linearSleepingThreshold = 0.f;
-        info.m_angularSleepingThreshold = 0.f;
+        info.m_linearSleepingThreshold = 0.001f; //if this is 0 then we never sleep...
+        info.m_angularSleepingThreshold = 0.001f;
         break;
     }
 

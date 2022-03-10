@@ -119,6 +119,8 @@ bool Box::contains(glm::vec3 point) const
     if (point.x > m_points[1].x) return false;
     if (point.y > m_points[1].y) return false;
     if (point.z > m_points[1].z) return false;
+
+    return true;
 }
 
 float Box::getPerimeter() const

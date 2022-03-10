@@ -217,7 +217,7 @@ void BilliardsState::addBall()
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ cro::Util::Random::value(-0.1f, 0.1f), 0.5f, cro::Util::Random::value(-0.1f, 0.1f) });
     m_ballDef.createModel(entity);
-    entity.addComponent<BilliardBall>();
+    entity.addComponent<BilliardBall>().id = cro::Util::Random::value(0, 15);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
