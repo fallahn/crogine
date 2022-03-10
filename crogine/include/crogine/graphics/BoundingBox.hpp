@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -79,26 +79,37 @@ namespace cro
         const glm::vec3& operator [](std::size_t) const;
 
         /*!
-        \brief Returns true if the box intersects with the give box
+        \brief Returns true if the box intersects with the given box
         \param box Another box to test the intersection with
         \param overlap A pointer to a box which will be filled to
         create a box representing the intersection of the two boxes
         that are currently being tested.
         */
-        bool intersects(const Box& box, Box* overlap = nullptr);
+        bool intersects(const Box& box, Box* overlap = nullptr) const;
 
         /*!
         \brief Returns true if this box fully contains the given box
         */
-        bool contains(const Box& box);
+        bool contains(const Box& box) const;
+
+        /*!
+        \brief Returns true if this box contains the given point
+        */
+        bool contains(glm::vec3 point) const;
 
         /*!
         \brief Returns the size of the box as width/height/depth
         */
         glm::vec3 getSize() const { return m_points[1] - m_points[0]; }
 
+        /*!
+        \brief Returns the sum of all 6 sides of the box
+        */
         float getPerimeter() const;
 
+        /*!
+        \brief Returns the cubic volume of the box
+        */
         float getVolume() const;
 
         /*!
@@ -118,6 +129,7 @@ namespace cro
 
         /*!
         \brief Returns a new box created by merging the two given boxes
+        into a new encompassing box
         */
         static Box merge(Box, Box);
 

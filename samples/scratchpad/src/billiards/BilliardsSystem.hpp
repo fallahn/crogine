@@ -52,10 +52,31 @@ struct CollisionID final
     static const std::array<std::string, Count> Labels;
 };
 
+struct SnookerID final
+{
+    enum
+    {
+        White, Red, 
+        Yellow, Green, Brown,
+        Blue, Pink, Black
+    };
+};
+
 struct BilliardBall final : public btMotionState
 {
     void getWorldTransform(btTransform& worldTrans) const override;
     void setWorldTransform(const btTransform& worldTrans) override;
+
+    /*
+    In pool:
+    0 is cue ball
+    1 - 7 are spots / Reds
+    8 - 8 Ball :)
+    9 - 15 are stripes / Yellows
+
+    In snooker this matches SnookerID
+    */
+    std::int32_t id = 0;
 
 private:
     cro::Entity m_parent;

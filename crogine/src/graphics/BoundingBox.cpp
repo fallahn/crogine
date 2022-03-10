@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -78,7 +78,7 @@ const glm::vec3& Box::operator[](std::size_t idx) const
     return m_points[idx];
 }
 
-bool Box::intersects(const Box& other, Box* overlap)
+bool Box::intersects(const Box& other, Box* overlap) const
 {
     //auto result = ((m_points[0].x >= other[0].x && m_points[0].x <= other[1].x) || (other[0].x >= m_points[0].x && other[0].x <= m_points[1].x)) &&
     //            ((m_points[0].y >= other[0].y && m_points[0].y <= other[1].y) || (other[0].y >= m_points[0].y && other[0].y <= m_points[1].y)) &&
@@ -97,7 +97,7 @@ bool Box::intersects(const Box& other, Box* overlap)
     return result;
 }
 
-bool Box::contains(const Box& box)
+bool Box::contains(const Box& box) const
 {
     if (box[0].x < m_points[0].x) return false;
     if (box[0].y < m_points[0].y) return false;
@@ -108,6 +108,17 @@ bool Box::contains(const Box& box)
     if (box[1].z > m_points[1].z) return false;
 
     return true;
+}
+
+bool Box::contains(glm::vec3 point) const
+{
+    if (point.x < m_points[0].x) return false;
+    if (point.y < m_points[0].y) return false;
+    if (point.z < m_points[0].z) return false;
+
+    if (point.x > m_points[1].x) return false;
+    if (point.y > m_points[1].y) return false;
+    if (point.z > m_points[1].z) return false;
 }
 
 float Box::getPerimeter() const
