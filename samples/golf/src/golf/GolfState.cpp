@@ -2445,7 +2445,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                 ballPos.y = std::min(0.003f + m_collisionMesh.getTerrain(ballPos).height, ballPos.y); //just to prevent z-fighting
                 e.getComponent<cro::Transform>().setPosition(ballPos);
 
-                e.getComponent<cro::Model>().setHidden(ballEnt.getComponent<ClientCollider>().terrain == TerrainID::Green);
+                e.getComponent<cro::Model>().setHidden(m_currentPlayer.terrain == TerrainID::Green);
             }
         }
     };
