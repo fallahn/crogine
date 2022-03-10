@@ -1953,8 +1953,8 @@ void GolfState::buildScene()
     {
         0.f, 2.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
         0.f, 0.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
-        0.f,  0.001f,  0.f,    0.f, 0.f, 0.f, 0.5f,
-        1.4f, 0.001f, 1.4f,    0.f, 0.f, 0.f, 0.01f,
+        0.f,  0.005f,  0.f,    0.f, 0.f, 0.f, 0.5f,
+        1.4f, 0.005f, 1.4f,    0.f, 0.f, 0.f, 0.01f,
     };
     indices =
     {
