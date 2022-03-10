@@ -76,7 +76,7 @@ void ShadowMapRenderer::process(float)
 {
     //render here to ensure this only happens once per update
     //remember we might be rendering the Scene in multiple passes
-    //and re-rendering this is wasteful.
+    //which would call render() multiple times unnecessarily.
     render();
     m_activeCameras.clear();
 }
@@ -106,9 +106,8 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
         //calc a position for the directional light
         //this is used for depth sorting the draw list
-        auto aabb = camera.getPass(Camera::Pass::Final).getAABB();
-        auto centre = aabb[0] + ((aabb[1] - aabb[0]) / 2.f);
-        auto lightPos = centre - (lightDir * glm::length(centre)/*((camera.m_farPlane - camera.m_nearPlane) / 2.f)*/);
+        auto centre = camEnt.getComponent<cro::Transform>().getWorldPosition() + (camEnt.getComponent<cro::Transform>().getForwardVector() * (camera.m_farPlane / 2.f));
+        auto lightPos = centre - (lightDir * ((camera.m_farPlane - camera.m_nearPlane) / 2.f));
 
         camera.shadowViewMatrix = glm::inverse(glm::toMat4(lightRotation));
 
