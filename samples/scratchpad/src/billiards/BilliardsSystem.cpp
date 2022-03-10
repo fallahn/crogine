@@ -117,6 +117,8 @@ void BilliardsSystem::process(float dt)
         if (ball.m_physicsBody->isActive())
         {
             const auto position = entity.getComponent<cro::Transform>().getPosition();
+
+            //if below the table check for pocketry
             if (position.y < 0)
             {
                 auto lastContact = ball.m_pocketContact;
@@ -144,6 +146,38 @@ void BilliardsSystem::process(float dt)
                     }
                 }
             }
+            //check if we disable table contact by looking at our proximity to the pocket
+            else
+            {
+                auto lastContact = ball.m_pocketRadius;
+                ball.m_pocketRadius = false;
+
+                for (const auto& pocket : m_pockets)
+                {
+                    if (glm::length2(pocket.position - glm::vec2(position.x, position.z)) < Pocket::Radius * Pocket::Radius)
+                    {
+                        ball.m_pocketRadius = true;
+                        break;
+                    }
+                }
+
+                if (lastContact != ball.m_pocketRadius)
+                {
+                    auto flags = (1 << CollisionID::Cushion) | (1 << CollisionID::Ball);
+                    if (!ball.m_pocketRadius)
+                    {
+                        flags |= (1 << CollisionID::Table);
+                    }
+                    //apparently the only way to change the grouping - however network lag
+                    //seems to cover up any jitter...
+                    m_collisionWorld->removeRigidBody(ball.m_physicsBody);
+                    m_collisionWorld->addRigidBody(ball.m_physicsBody, (1 << CollisionID::Ball), flags);
+                    
+                    //hmmm setting this directly doesn't work :(
+                    //ball.m_physicsBody->getBroadphaseProxy()->m_collisionFilterGroup = (1 << CollisionID::Ball);
+                    //ball.m_physicsBody->getBroadphaseProxy()->m_collisionFilterMask = flags;
+                }
+            }
         }
     }
 }
@@ -152,11 +186,11 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
 {
     cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
 
-    if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
+    /*if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
     {
         LogE << "Mesh has no colour property in vertices. Will not be created." << std::endl;
         return;
-    }
+    }*/
 
     if (m_vertexData.empty() || m_indexData.empty())
     {
@@ -164,11 +198,11 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
         return;
     }
 
-    std::size_t colourOffset = 0;
+    /*std::size_t colourOffset = 0;
     for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
     {
         colourOffset += meshData.attributes[i];
-    }
+    }*/
 
     btTransform transform;
     transform.setIdentity();
@@ -185,8 +219,8 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
         tableMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
 
 
-        float collisionID = m_vertexData[(m_indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset] * 255.f;
-        collisionID = std::floor(collisionID / 10.f);
+        //float collisionID = m_vertexData[(m_indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset] * 255.f;
+        //collisionID = std::floor(collisionID / 10.f);
 
         m_tableVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(tableMesh);
         m_tableShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_tableVertices.back().get(), false));
@@ -199,34 +233,38 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
 
         auto& body = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Cushion/*collisionID*/, 0.f, m_tableShapes.back().get())));
         body->setWorldTransform(transform);
-        body->setUserIndex(static_cast<std::int32_t>(collisionID));
-        m_collisionWorld->addRigidBody(body.get());
+        //body->setUserIndex(static_cast<std::int32_t>(collisionID));
+        m_collisionWorld->addRigidBody(body.get(), (1<< CollisionID::Cushion), (1 << CollisionID::Ball));
     }
 
-    //create as few flat boxes as possible for the main table surface.
-    //TODO read dims from a config?
-    auto& tableShape = m_boxShapes.emplace_back(std::make_unique<btBoxShape>(btBoxShape(btVector3(0.93425f, 0.1f, 1.666f) / 2.f)));
+    //create a single flat surface for the table as even a few triangles perturb
+    //the physics. Balls check their proximity to pockets and disable table collision
+    //when they need to.
+    auto& tableShape = m_boxShapes.emplace_back(std::make_unique<btBoxShape>(btBoxShape(/*btVector3(0.93425f, 0.1f, 1.666f) / 2.f)*/btVector3(0.6f, 0.05f, 1.f))));
     transform.setOrigin({ 0.f, -0.05f, 0.f });
     auto& table = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Table, 0.f, tableShape.get())));
     table->setWorldTransform(transform);
-    m_collisionWorld->addCollisionObject(table.get());
-
+    m_collisionWorld->addCollisionObject(table.get(), (1 << CollisionID::Table), (1 << CollisionID::Ball));
 
     //create triggers for each pocket
     //TODO read this from some table data somewhere
     const std::array PocketPositions =
     {
-        glm::vec3(0.5f, -0.1f, -0.96f),
-        glm::vec3(0.5f, -0.1f, 0.f),
-        glm::vec3(0.5f, -0.1f, 0.96f),
+        glm::vec3(0.47f, -0.1f, -0.93f),
+        glm::vec3(0.54f, -0.1f, 0.f),
+        glm::vec3(0.47f, -0.1f, 0.93f),
 
-        glm::vec3(-0.5f, -0.1f, -0.96f),
-        glm::vec3(-0.5f, -0.1f, 0.f),
-        glm::vec3(-0.5f, -0.1f, 0.96f)
+        glm::vec3(-0.47f, -0.1f, -0.93f),
+        glm::vec3(-0.54f, -0.1f, 0.f),
+        glm::vec3(-0.47f, -0.1f, 0.93f)
     };
 
     const glm::vec3 PocketHalfSize({ 0.075f, 0.1f, 0.075f });
     auto i = 0;
+
+#ifdef CRO_DEBUG_
+    m_pocketShape = std::make_unique<btCylinderShape>(btVector3(Pocket::Radius, 0.01f, Pocket::Radius));
+#endif
 
     for (auto p : PocketPositions)
     {
@@ -234,6 +272,17 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
         auto& pocket = m_pockets.emplace_back();
         pocket.box = { p - PocketHalfSize, p + PocketHalfSize };
         pocket.id = i++;
+        pocket.position = { p.x, p.z };
+
+#ifdef CRO_DEBUG_
+        //just so something shows in debug drawer
+        //collision is actually done in process() by checking radial proximity.
+        auto& cylinder = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Table, 0.f, m_pocketShape.get())));
+        cylinder->setCollisionFlags(cylinder->getCollisionFlags() | btRigidBody::CollisionFlags::CF_NO_CONTACT_RESPONSE);
+        transform.setOrigin({ p.x, 0.f, p.z });
+        cylinder->setWorldTransform(transform);
+        m_collisionWorld->addCollisionObject(cylinder.get());
+#endif
     }
 }
 
@@ -287,7 +336,7 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
     body->setWorldTransform(transform);
     body->setUserIndex(CollisionID::Ball);
     
-    m_collisionWorld->addRigidBody(body.get());
+    m_collisionWorld->addRigidBody(body.get(), (1 << CollisionID::Ball), (1 << CollisionID::Table) | (1 << CollisionID::Cushion) | (1 << CollisionID::Ball));
 
     ball.m_physicsBody = body.get();
 }

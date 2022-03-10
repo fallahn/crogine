@@ -78,17 +78,20 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             requestStackPop();
             requestStackPush(States::ScratchPad::MainMenu);
             break;
-        case SDLK_KP_1:
+        case SDLK_KP_0:
             m_scene.setActiveCamera(m_cameras[0]);
             break;
-        case SDLK_KP_2:
+        case SDLK_KP_1:
             m_scene.setActiveCamera(m_cameras[1]);
             break;
-        case SDLK_KP_3:
+        case SDLK_KP_2:
             m_scene.setActiveCamera(m_cameras[2]);
             break;
-        case SDLK_KP_4:
+        case SDLK_KP_3:
             m_scene.setActiveCamera(m_cameras[3]);
+            break;
+        case SDLK_KP_4:
+            m_scene.setActiveCamera(m_cameras[4]);
             break;
         }
     }
@@ -207,6 +210,10 @@ void BilliardsState::buildScene()
 
     m_cameras[3].getComponent<cro::Transform>().setPosition({ -1.4f, 0.f, 0.f });
     m_cameras[3].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
+
+    m_cameras[4].getComponent<cro::Transform>().setPosition({ -0.f, 3.f, 0.f });
+    m_cameras[4].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
+    m_cameras[4].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
 
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -25.f * cro::Util::Const::degToRad);
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -25.f * cro::Util::Const::degToRad);

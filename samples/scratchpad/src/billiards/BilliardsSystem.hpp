@@ -84,6 +84,7 @@ private:
     btRigidBody* m_physicsBody = nullptr;
 
     std::int32_t m_pocketContact = -1; //ID of pocket, or -1
+    bool m_pocketRadius = false;
 
     friend class BilliardsSystem;
 };
@@ -138,8 +139,15 @@ private:
     {
         cro::Box box;
         std::int32_t id = 0;
+        glm::vec2 position = glm::vec2(0.f);
+
+        static constexpr float Radius = 0.06f;
     };
     std::vector<Pocket> m_pockets;
+
+#ifdef CRO_DEBUG_
+    std::unique_ptr<btCylinderShape> m_pocketShape;
+#endif
 
     btRigidBody::btRigidBodyConstructionInfo createBodyDef(std::int32_t, float, btCollisionShape*, btMotionState* = nullptr);
 

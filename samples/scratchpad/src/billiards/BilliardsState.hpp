@@ -64,7 +64,7 @@ private:
         enum
         {
             Overhead, Angle,
-            Front, Side,
+            Front, Side, Top,
             Count
         };
     };
