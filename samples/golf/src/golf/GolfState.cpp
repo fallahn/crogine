@@ -744,10 +744,23 @@ bool GolfState::simulate(float dt)
                                                         m_windUpdate.currentWindSpeed,
                                                         m_windUpdate.currentWindVector.z });
 
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::ParticleEmitter;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        static constexpr float Strength = 0.25f;
+        e.getComponent<cro::ParticleEmitter>().settings.forces[0] =
+        {
+            m_windUpdate.currentWindVector.x * m_windUpdate.currentWindSpeed * Strength,
+            0.f,
+            m_windUpdate.currentWindVector.z * m_windUpdate.currentWindSpeed * Strength
+        };
+    };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
     m_terrainBuilder.updateTime(elapsed * 10.f);
-
     m_inputParser.update(dt);
-
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 
@@ -1640,6 +1653,7 @@ void GolfState::loadAssets()
                                 auto ent = m_gameScene.createEntity();
                                 ent.addComponent<cro::Transform>().setPosition(position);
                                 ent.addComponent<cro::ParticleEmitter>().settings = settings;
+                                ent.addComponent<cro::CommandTarget>().ID = CommandID::ParticleEmitter;
                                 holeData.particleEntities.push_back(ent);
                             }
                         }
