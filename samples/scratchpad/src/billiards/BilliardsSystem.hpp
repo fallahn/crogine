@@ -154,6 +154,9 @@ private:
 
     btRigidBody::btRigidBodyConstructionInfo createBodyDef(std::int32_t, float, btCollisionShape*, btMotionState* = nullptr);
 
+    void doBallCollision() const;
+    void doPocketCollision() const;
+
     void onEntityAdded(cro::Entity) override;
     void onEntityRemoved(cro::Entity) override;
 };

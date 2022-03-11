@@ -116,75 +116,8 @@ void BilliardsSystem::process(float dt)
     m_collisionWorld->stepSimulation(dt, 10);
     m_collisionWorld->debugDrawWorld();
 
-    for (auto entity : getEntities())
-    {
-        auto& ball = entity.getComponent<BilliardBall>();
-        if (ball.m_physicsBody->isActive())
-        {
-            const auto position = entity.getComponent<cro::Transform>().getPosition();
-
-            //if below the table check for pocketry
-            if (position.y < 0)
-            {
-                auto lastContact = ball.m_pocketContact;
-                ball.m_pocketContact = -1;
-                for (const auto& pocket : m_pockets)
-                {
-                    if (pocket.box.contains(position))
-                    {
-                        ball.m_pocketContact = pocket.id;
-                        break;
-                    }
-                }
-
-                if (lastContact != ball.m_pocketContact)
-                {
-                    if (ball.m_pocketContact != -1)
-                    {
-                        //contact begin
-                        LogI << "Ball " << ball.id << " in pocket " << ball.m_pocketContact << std::endl;
-                    }
-                    else
-                    {
-                        //contact end
-                        LogI << "Ball " << ball.id << " finished contact" << std::endl;
-                    }
-                }
-            }
-            //check if we disable table contact by looking at our proximity to the pocket
-            else
-            {
-                auto lastContact = ball.m_pocketRadius;
-                ball.m_pocketRadius = false;
-
-                for (const auto& pocket : m_pockets)
-                {
-                    if (glm::length2(pocket.position - glm::vec2(position.x, position.z)) < Pocket::Radius * Pocket::Radius)
-                    {
-                        ball.m_pocketRadius = true;
-                        break;
-                    }
-                }
-
-                if (lastContact != ball.m_pocketRadius)
-                {
-                    auto flags = (1 << CollisionID::Cushion) | (1 << CollisionID::Ball) | (1 << CollisionID::Pocket);
-                    if (!ball.m_pocketRadius)
-                    {
-                        flags |= (1 << CollisionID::Table);
-                    }
-                    //apparently the only way to change the grouping - however network lag
-                    //seems to cover up any jitter...
-                    m_collisionWorld->removeRigidBody(ball.m_physicsBody);
-                    m_collisionWorld->addRigidBody(ball.m_physicsBody, (1 << CollisionID::Ball), flags);
-                    
-                    //hmmm setting this directly doesn't work :(
-                    //ball.m_physicsBody->getBroadphaseProxy()->m_collisionFilterGroup = (1 << CollisionID::Ball);
-                    //ball.m_physicsBody->getBroadphaseProxy()->m_collisionFilterMask = flags;
-                }
-            }
-        }
-    }
+    doBallCollision();
+    doPocketCollision();
 }
 
 void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
@@ -245,7 +178,7 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
     //create a single flat surface for the table as even a few triangles perturb
     //the physics. Balls check their proximity to pockets and disable table collision
     //when they need to.
-    //TODO read the width/height from something? or just assume a large plane?
+    //TODO read the width/height from something? AABB of mesh data sounds reasonable
     auto& tableShape = m_boxShapes.emplace_back(std::make_unique<btBoxShape>(btBoxShape(btVector3(0.6f, 0.05f, 1.f))));
     transform.setOrigin({ 0.f, -0.05f, 0.f });
     auto& table = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Table, 0.f, tableShape.get())));
@@ -353,6 +286,99 @@ btRigidBody::btRigidBodyConstructionInfo BilliardsSystem::createBodyDef(std::int
     }
 
     return info;
+}
+
+void BilliardsSystem::doBallCollision() const
+{
+    auto manifoldCount = m_collisionDispatcher->getNumManifolds();
+    for (auto i = 0; i < manifoldCount; ++i)
+    {
+        auto manifold = m_collisionDispatcher->getManifoldByIndexInternal(i);
+        auto body0 = manifold->getBody0();
+        auto body1 = manifold->getBody1();
+
+
+        //manifold->refreshContactPoints(body0->getWorldTransform(), body1->getWorldTransform());
+
+        auto contactCount = manifold->getNumContacts();
+        for (auto j = 0; j < contactCount; ++j)
+        {
+
+        }
+    }
+}
+
+void BilliardsSystem::doPocketCollision() const
+{
+    for (auto entity : getEntities())
+    {
+        auto& ball = entity.getComponent<BilliardBall>();
+        if (ball.m_physicsBody->isActive())
+        {
+            const auto position = entity.getComponent<cro::Transform>().getPosition();
+
+            //if below the table check for pocketry
+            if (position.y < 0)
+            {
+                auto lastContact = ball.m_pocketContact;
+                ball.m_pocketContact = -1;
+                for (const auto& pocket : m_pockets)
+                {
+                    if (pocket.box.contains(position))
+                    {
+                        ball.m_pocketContact = pocket.id;
+                        break;
+                    }
+                }
+
+                if (lastContact != ball.m_pocketContact)
+                {
+                    if (ball.m_pocketContact != -1)
+                    {
+                        //contact begin
+                        LogI << "Ball " << ball.id << " in pocket " << ball.m_pocketContact << std::endl;
+                    }
+                    else
+                    {
+                        //contact end
+                        LogI << "Ball " << ball.id << " finished contact" << std::endl;
+                    }
+                }
+            }
+            //check if we disable table contact by looking at our proximity to the pocket
+            else
+            {
+                auto lastContact = ball.m_pocketRadius;
+                ball.m_pocketRadius = false;
+
+                for (const auto& pocket : m_pockets)
+                {
+                    if (glm::length2(pocket.position - glm::vec2(position.x, position.z)) < Pocket::Radius * Pocket::Radius)
+                    {
+                        ball.m_pocketRadius = true;
+                        break;
+                    }
+                }
+
+                if (lastContact != ball.m_pocketRadius)
+                {
+                    auto flags = (1 << CollisionID::Cushion) | (1 << CollisionID::Ball) | (1 << CollisionID::Pocket);
+                    if (!ball.m_pocketRadius)
+                    {
+                        flags |= (1 << CollisionID::Table);
+                    }
+                    //apparently the only way to change the grouping - however network lag
+                    //seems to cover up any jitter...
+                    m_collisionWorld->removeRigidBody(ball.m_physicsBody);
+                    m_collisionWorld->addRigidBody(ball.m_physicsBody, (1 << CollisionID::Ball), flags);
+
+                    //hmmm setting this directly doesn't work :(
+                    //ball.m_physicsBody->getBroadphaseProxy()->m_collisionFilterGroup = (1 << CollisionID::Ball);
+                    //ball.m_physicsBody->getBroadphaseProxy()->m_collisionFilterMask = flags;
+                }
+            }
+        }
+    }
 }
 
 void BilliardsSystem::onEntityAdded(cro::Entity entity)
