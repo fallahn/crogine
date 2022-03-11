@@ -134,6 +134,9 @@ private:
     //table surface
     std::vector<std::unique_ptr<btBoxShape>> m_boxShapes;
 
+    //pocket walls
+    std::array<std::unique_ptr<btBoxShape>, 2u> m_pocketWalls;
+
     //simplified pocketry
     struct Pocket final
     {

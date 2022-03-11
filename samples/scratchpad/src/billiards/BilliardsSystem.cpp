@@ -40,6 +40,11 @@ namespace
     {
         return { v.getX(), v.getY(), v.getZ() };
     }
+
+    btVector3 glmToBt(glm::vec3 v)
+    {
+        return { v.x, v.y, v.z };
+    }
 }
 
 void BilliardBall::getWorldTransform(btTransform& dest) const
@@ -163,7 +168,7 @@ void BilliardsSystem::process(float dt)
 
                 if (lastContact != ball.m_pocketRadius)
                 {
-                    auto flags = (1 << CollisionID::Cushion) | (1 << CollisionID::Ball);
+                    auto flags = (1 << CollisionID::Cushion) | (1 << CollisionID::Ball) | (1 << CollisionID::Pocket);
                     if (!ball.m_pocketRadius)
                     {
                         flags |= (1 << CollisionID::Table);
@@ -240,7 +245,8 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
     //create a single flat surface for the table as even a few triangles perturb
     //the physics. Balls check their proximity to pockets and disable table collision
     //when they need to.
-    auto& tableShape = m_boxShapes.emplace_back(std::make_unique<btBoxShape>(btBoxShape(/*btVector3(0.93425f, 0.1f, 1.666f) / 2.f)*/btVector3(0.6f, 0.05f, 1.f))));
+    //TODO read the width/height from something? or just assume a large plane?
+    auto& tableShape = m_boxShapes.emplace_back(std::make_unique<btBoxShape>(btBoxShape(btVector3(0.6f, 0.05f, 1.f))));
     transform.setOrigin({ 0.f, -0.05f, 0.f });
     auto& table = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Table, 0.f, tableShape.get())));
     table->setWorldTransform(transform);
@@ -248,23 +254,38 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
 
     //create triggers for each pocket
     //TODO read this from some table data somewhere
+    //including radius probably
+    const glm::vec3 PocketHalfSize({ 0.075f, 0.1f, 0.075f });
+    static constexpr float WallThickness = 0.025f;
+    static constexpr float WallHeight = 0.1f;
     const std::array PocketPositions =
     {
-        glm::vec3(0.47f, -0.1f, -0.93f),
-        glm::vec3(0.54f, -0.1f, 0.f),
-        glm::vec3(0.47f, -0.1f, 0.93f),
+        glm::vec3(0.47f, -WallHeight, -0.93f),
+        glm::vec3(0.54f, -WallHeight, 0.f),
+        glm::vec3(0.47f, -WallHeight, 0.93f),
 
-        glm::vec3(-0.47f, -0.1f, -0.93f),
-        glm::vec3(-0.54f, -0.1f, 0.f),
-        glm::vec3(-0.47f, -0.1f, 0.93f)
+        glm::vec3(-0.47f, -WallHeight, -0.93f),
+        glm::vec3(-0.54f, -WallHeight, 0.f),
+        glm::vec3(-0.47f, -WallHeight, 0.93f)
     };
 
-    const glm::vec3 PocketHalfSize({ 0.075f, 0.1f, 0.075f });
     auto i = 0;
 
 #ifdef CRO_DEBUG_
     m_pocketShape = std::make_unique<btCylinderShape>(btVector3(Pocket::Radius, 0.01f, Pocket::Radius));
 #endif
+
+    m_pocketWalls[0] = std::make_unique<btBoxShape>(btVector3(Pocket::Radius, WallHeight, WallThickness));
+    m_pocketWalls[1] = std::make_unique<btBoxShape>(btVector3(WallThickness, WallHeight, Pocket::Radius));
+
+    static constexpr float OffsetAmount = Pocket::Radius + WallThickness;
+    std::array Offsets =
+    {
+        btVector3(0.f, 0.f, -OffsetAmount),
+        btVector3(OffsetAmount, 0.f, 0.f),
+        btVector3(0.f, 0.f, OffsetAmount),
+        btVector3(-OffsetAmount, 0.f, 0.f)
+    };
 
     for (auto p : PocketPositions)
     {
@@ -273,6 +294,16 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
         pocket.box = { p - PocketHalfSize, p + PocketHalfSize };
         pocket.id = i++;
         pocket.position = { p.x, p.z };
+
+        //wall objects
+        for (auto i = 0; i < 4; ++i)
+        {
+            const auto& wallShape = m_pocketWalls[i % 2];
+            auto& obj = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Pocket, 0.f, wallShape.get())));
+            transform.setOrigin(glmToBt(p) + Offsets[i]);
+            obj->setWorldTransform(transform);
+            m_collisionWorld->addCollisionObject(obj.get(), (1 << CollisionID::Pocket));
+        }
 
 #ifdef CRO_DEBUG_
         //just so something shows in debug drawer
