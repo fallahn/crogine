@@ -53,7 +53,6 @@ source distribution.
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 
-#include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
@@ -286,6 +285,43 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEMOTION)
     {
         updateSlider();
+    }
+    else if (evt.type == SDL_MOUSEWHEEL)
+    {
+        if (evt.wheel.y > 0)
+        {
+            cro::ButtonEvent fakeEvent;
+            fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+            fakeEvent.button.button = SDL_BUTTON_LEFT;
+
+            //up
+            auto menuID = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
+            if (menuID == MenuID::Achievements)
+            {
+                m_scrollFunctions[ScrollID::AchUp](cro::Entity(), fakeEvent);
+            }
+            else if (menuID == MenuID::Stats)
+            {
+                m_scrollFunctions[ScrollID::StatUp](cro::Entity(), fakeEvent);
+            }
+        }
+        else if (evt.wheel.y < 0)
+        {
+            cro::ButtonEvent fakeEvent;
+            fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+            fakeEvent.button.button = SDL_BUTTON_LEFT;
+
+            //down
+            auto menuID = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
+            if (menuID == MenuID::Achievements)
+            {
+                m_scrollFunctions[ScrollID::AchDown](cro::Entity(), fakeEvent);
+            }
+            else if (menuID == MenuID::Stats)
+            {
+                m_scrollFunctions[ScrollID::StatDown](cro::Entity(), fakeEvent);
+            }
+        }
     }
 
     m_scene.forwardEvent(evt);
@@ -1551,21 +1587,20 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
 
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(
-        [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+    m_scrollFunctions[ScrollID::AchUp] = [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+    {
+        if (activated(evt))
         {
-            if (activated(evt))
-            {
-                auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
-                pos.y = std::max(0.f, pos.y - Spacing);
-                scrollNode.getComponent<cro::Transform>().setPosition(pos);
+            auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
+            pos.y = std::max(0.f, pos.y - Spacing);
+            scrollNode.getComponent<cro::Transform>().setPosition(pos);
 
-                updateCropping();
+            updateCropping();
 
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-            }
-        });
-
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
+    };
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(m_scrollFunctions[ScrollID::AchUp]);
 
     m_achievementsNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -1634,21 +1669,23 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
 
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(
-        [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+    
+    m_scrollFunctions[ScrollID::AchDown] = [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+    {
+        if (activated(evt))
         {
-            if (activated(evt))
-            {
-                static constexpr float MaxScroll = Spacing * (AchievementID::Count - 4);
-                auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
-                pos.y = std::min(MaxScroll, pos.y + Spacing);
-                scrollNode.getComponent<cro::Transform>().setPosition(pos);
+            static constexpr float MaxScroll = Spacing * (AchievementID::Count - 4);
+            auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
+            pos.y = std::min(MaxScroll, pos.y + Spacing);
+            scrollNode.getComponent<cro::Transform>().setPosition(pos);
 
-                updateCropping();
+            updateCropping();
 
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-            }
-        });
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
+    };
+    
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(m_scrollFunctions[ScrollID::AchDown]);
 
     m_achievementsNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
@@ -1823,25 +1860,22 @@ cro::Entity OptionsState::buildStatsMenu(const cro::SpriteSheet& spriteSheet)
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Stats);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
-
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(
-        [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+   
+    m_scrollFunctions[ScrollID::StatUp] = [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+    {
+        if (activated(evt))
         {
-            if (activated(evt))
-            {
-                auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
-                pos.y = std::max(0.f, pos.y - ScrollOffset);
-                scrollNode.getComponent<cro::Transform>().setPosition(pos);
+            auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
+            pos.y = std::max(0.f, pos.y - ScrollOffset);
+            scrollNode.getComponent<cro::Transform>().setPosition(pos);
 
-                updateCropping();
+            updateCropping();
 
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-            }
-        });
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
+    };
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(m_scrollFunctions[ScrollID::StatUp]);
     rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-
 
 
     entity = m_scene.createEntity();
@@ -1900,21 +1934,22 @@ cro::Entity OptionsState::buildStatsMenu(const cro::SpriteSheet& spriteSheet)
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
 
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(
-        [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+    
+    m_scrollFunctions[ScrollID::StatDown] = [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+    {
+        if (activated(evt))
         {
-            if (activated(evt))
-            {
-                static constexpr float MaxScroll = ScrollOffset * (StatID::Count - 4);
-                auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
-                pos.y = std::min(MaxScroll, pos.y + ScrollOffset);
-                scrollNode.getComponent<cro::Transform>().setPosition(pos);
+            static constexpr float MaxScroll = ScrollOffset * (StatID::Count - 4);
+            auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
+            pos.y = std::min(MaxScroll, pos.y + ScrollOffset);
+            scrollNode.getComponent<cro::Transform>().setPosition(pos);
 
-                updateCropping();
+            updateCropping();
 
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-            }
-        });
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
+    };
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(m_scrollFunctions[ScrollID::StatDown]);
     rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     return rootEnt;

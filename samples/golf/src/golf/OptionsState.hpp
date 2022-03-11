@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/systems/UISystem.hpp>
 
 struct SharedStateData;
 
@@ -92,6 +93,17 @@ private:
     std::array<std::function<void()>, 2u> m_tabFunctions = {};
     std::size_t m_currentTabFunction;
     std::size_t m_previousMenuID;
+
+    struct ScrollID final
+    {
+        enum
+        {
+            AchUp, AchDown,
+            StatUp, StatDown,
+            Count
+        };
+    };
+    std::array<std::function<void(cro::Entity, cro::ButtonEvent)>, ScrollID::Count> m_scrollFunctions = {};
 
     struct ToolTipID final
     {
