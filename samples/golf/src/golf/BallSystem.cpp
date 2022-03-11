@@ -124,6 +124,19 @@ void BallSystem::process(float dt)
         default: break;
         case Ball::State::Idle:
             ball.hadAir = false;
+
+            //used this to test smoothness of client side interpolation
+            /*if (ball.terrain == TerrainID::Green)
+            {
+                static float accum = 0.f;
+                accum += dt;
+
+                auto holePos = m_holeData->pin;
+                holePos.x += std::sin(accum * 2.f);
+                holePos.z += std::cos(accum * 2.f);
+                entity.getComponent<cro::Transform>().setPosition(holePos);
+            }*/
+
             break;
         case Ball::State::Flight:
         {

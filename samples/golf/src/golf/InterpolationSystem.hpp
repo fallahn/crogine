@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -36,6 +36,11 @@ source distribution.
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
+namespace cro
+{
+    class Transform;
+}
+
 /*!
 \brief Contains information required for a inperpolation to occur
 */
@@ -50,7 +55,7 @@ struct InterpolationPoint final
 };
 
 /*!
-\brief Interpolates positionand rotation received from a server.
+\brief Interpolates position and rotation received from a server.
 When receiving infrequent (say 100ms or so) position updates from
 a remote server entities can have their position interpolated via
 this component. The component, when coupled with an InterpolationSystem
@@ -78,14 +83,11 @@ public:
     explicit InterpolationComponent(InterpolationPoint = {});
 
     /*!
-    \brief Sets the target position and timestamp.
+    \brief Sets the target interpolation point.
     The timestamp is used in conjunction with the previous timestamp
     to decide how quickly motion should be integrated between positions.
     The timestamp would usually be in server time, and arrive in the packet
     data with the destination postion, in milliseconds.
-    \param pos Target destination
-    \param timestamp Time at which this position should be reached, relative
-    to the previous position.
     */
     void setTarget(const InterpolationPoint&);
 
@@ -127,7 +129,11 @@ private:
 
     friend class InterpolationSystem;
 
-    void applyNextTarget();
+    /*
+    Searches for the next available target by discarding interpolations points
+    from the buffer until one with a later timestamp is found.
+    */
+    void applyNextTarget(glm::vec3 currentPos, glm::quat currentRot, std::int32_t timestamp);
 };
 
 /*!
