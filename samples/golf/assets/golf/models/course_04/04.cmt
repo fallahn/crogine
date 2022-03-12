@@ -73,7 +73,7 @@ model 04
         double_sided = false
         rx_shadows = true
         blendmode = none
-        diffuse = "assets/golf/images/stone.png"
+        diffuse = "assets/golf/images/volcano.png"
 
     }
 }
