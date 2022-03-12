@@ -46,7 +46,7 @@ def WriteParticles(file, path, location):
     file.write("    particles\n    {\n")
     file.write("        path = \"%s\"\n" % path)
     file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
-    file.write("    }\n")
+    file.write("    }\n\n")
 
 class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
     '''Export object position and rotation info'''

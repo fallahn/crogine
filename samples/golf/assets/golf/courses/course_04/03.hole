@@ -296,41 +296,12 @@ hole 03
 
     prop
     {
-        model = "assets/golf/models/tiki_head02.cmt"
-        position = 126.132072,0.990429,-140.004501
-        rotation = 191.523776
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/tiki_head03.cmt"
-        position = 36.154839,0.926793,-105.943359
-        rotation = 144.653375
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
         model = "assets/golf/models/tiki_torch.cmt"
         position = 40.831120,0.859284,-100.147636
         rotation = 0.000000
         scale = 1.000000,1.000000,1.000000
     }
 
-    prop
-    {
-        model = "assets/golf/models/tiki_head02.cmt"
-        position = 30.284565,1.511266,-26.204100
-        rotation = 171.350121
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    particles
-    {
-        path = "assets/golf/particles/flame.cps"
-        position = 29.531374,2.632452,-27.097328
-    }
     particles
     {
         path = "assets/golf/particles/flame.cps"
@@ -339,6 +310,29 @@ hole 03
     particles
     {
         path = "assets/golf/particles/flame.cps"
-        position = 125.117989,2.109571,-140.583252
+        position = 124.924004,2.089445,-139.739395
+    }
+    prop
+    {
+        model = "assets/golf/models/bench02.cmt"
+        position = 125.927605,0.961028,-139.993652
+        rotation = -178.695941
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets//golf/models/bench03.cmt"
+        position = 38.262947,0.933165,-104.657043
+        rotation = -73.271160
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/bench01.cmt"
+        position = 31.609671,1.436415,-26.658442
+        rotation = -20.225374
+        scale = 1.000000,1.000000,1.000000
     }
 }

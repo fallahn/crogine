@@ -433,7 +433,7 @@ void ModelState::createScene()
 
     cro::ModelDefinition def(m_resources);
     def.loadFromFile("assets/models/arrow.cmt", m_useDeferred);
-    def.createModel(m_scene.getSunlight());
+    //def.createModel(m_scene.getSunlight());
     //m_scene.getSunlight().getComponent<cro::Model>().setMaterialProperty(0, "u_maskColour", cro::Colour(1.f, 1.f, 0.f, 1.f));
 
     m_entities[EntityID::ArcBall] = m_scene.createEntity();
