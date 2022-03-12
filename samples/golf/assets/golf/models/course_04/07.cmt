@@ -63,4 +63,16 @@ model 07
         diffuse = "assets/golf/images/light_sand.png"
 
     }
+    material Unlit
+    {
+        name = "bridge"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = true
+        blendmode = none
+        diffuse = "assets/golf/images/bridge_texture.png"
+
+    }
 }
