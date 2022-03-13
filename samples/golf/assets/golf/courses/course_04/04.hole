@@ -10,6 +10,24 @@ hole 04
 
     tee = 29.624420,1.129441,-63.923363
 
+    particles
+    {
+        path = "assets/golf/particles/lava_spit.cps"
+        position = 42.617241,10.410876,-107.809914
+    }
+
+    particles
+    {
+        path = "assets/golf/particles/lava_spit.cps"
+        position = 46.323383,10.410876,-109.103752
+    }
+
+    particles
+    {
+        path = "assets/golf/particles/lava_spit.cps"
+        position = 44.313835,10.410877,-106.406906
+    }
+
     prop
     {
         model = "assets/golf/models/palm01.cmt"

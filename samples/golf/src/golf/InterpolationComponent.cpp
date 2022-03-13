@@ -30,6 +30,7 @@ source distribution.
 #include "InterpolationSystem.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/detail/Assert.hpp>
 
 InterpolationComponent::InterpolationComponent(InterpolationPoint initialPoint)
     : m_enabled         (true),
@@ -103,6 +104,8 @@ void InterpolationComponent::applyNextTarget(glm::vec3 currentPos, glm::quat cur
         m_previousPoint.timestamp = timestamp;
         m_previousPoint.position = currentPos;
         m_previousPoint.rotation = currentRot;
+
+        CRO_ASSERT(!std::isnan(m_previousPoint.position.x), "");
 
         m_elapsedTimer.restart();
 
