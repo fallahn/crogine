@@ -65,6 +65,8 @@ public:
     bool inProgress() const;
     bool getActive() const;
 
+    void setMaxRotation(float);
+
 private:
     const InputBinding& m_inputBinding;
     cro::MessageBus& m_messageBus;
@@ -84,6 +86,7 @@ private:
 
     float m_holeDirection; //radians
     float m_rotation; //+- max rads
+    float m_maxRotation;
 
     float m_power;
     float m_hook;

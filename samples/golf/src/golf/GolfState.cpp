@@ -164,6 +164,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
     createTransition();
+    m_inputParser.setMaxRotation(0.1f);
 
     sd.baseState = StateID::Game;
     Achievements::setActive(sd.localConnectionData.playerCount == 1);
@@ -491,13 +492,13 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (getClub() != ClubID::Putter)
             {
                 auto hook = m_inputParser.getHook();
-                if (hook < -0.15f)
+                if (hook < -0.2f)
                 {
                     auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg2->type = GolfEvent::HookedBall;
                     floatingMessage("Hook");
                 }
-                else if (hook > 0.15f)
+                else if (hook > 0.2f)
                 {
                     auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg2->type = GolfEvent::SlicedBall;
@@ -758,7 +759,7 @@ bool GolfState::simulate(float dt)
     cmd.targetFlags = CommandID::ParticleEmitter;
     cmd.action = [&](cro::Entity e, float)
     {
-        static constexpr float Strength = 0.25f;
+        static constexpr float Strength = 2.45f;
         e.getComponent<cro::ParticleEmitter>().settings.forces[0] =
         {
             m_windUpdate.currentWindVector.x * m_windUpdate.currentWindSpeed * Strength,

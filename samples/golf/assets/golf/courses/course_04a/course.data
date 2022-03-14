@@ -1,4 +1,4 @@
-course course_04
+course course_04a
 {
     skybox = "assets/golf/images/skybox/mountain/sky.ccm"
     billboard_model = "assets/golf/models/shrubbery02.cmt"

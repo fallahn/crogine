@@ -49,8 +49,8 @@ namespace
 }
 
 GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
-    : m_currentClient(0),
-    m_currentPlayer(0)
+    : m_currentClient   (0),
+    m_currentPlayer     (0)
 {
     //this must match with AudioID enum
     static const std::array<std::string, AudioID::Count> FilePaths =
@@ -275,7 +275,8 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     {
                         playSound(cro::Util::Random::value(AudioID::TerrainGreen01, AudioID::TerrainGreen02), glm::vec3(0.f));
 
-                        if (data.pinDistance < MinHoleDistance)
+                        if (data.pinDistance < MinHoleDistance //near the hole
+                            || data.travelDistance > 10000.f) //landed a long shot
                         {
                             playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f);
                         }

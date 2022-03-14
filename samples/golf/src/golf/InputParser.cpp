@@ -61,6 +61,7 @@ InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)
     m_prevMouseMove     (0),
     m_holeDirection     (0.f),
     m_rotation          (0.f),
+    m_maxRotation       (MaxRotation),
     m_power             (0.f),
     m_hook              (0.5f),
     m_powerbarDirection (1.f),
@@ -367,7 +368,7 @@ void InputParser::update(float dt)
         default: break;
         case State::Aim:
         {
-            const float rotation = RotationSpeed * MaxRotation * m_analogueAmount * dt;
+            const float rotation = RotationSpeed * m_maxRotation * m_analogueAmount * dt;
 
             if (m_inputFlags & InputFlag::Left)
             {
@@ -482,6 +483,11 @@ bool InputParser::getActive() const
     return m_active;
 }
 
+void InputParser::setMaxRotation(float rotation)
+{
+    m_maxRotation = std::max(0.1f, std::min(MaxRotation, rotation));
+}
+
 //private
 void InputParser::setClub(float dist)
 {
@@ -500,7 +506,7 @@ void InputParser::setClub(float dist)
 
 void InputParser::rotate(float rotation)
 {
-    m_rotation = std::min(MaxRotation, std::max(-MaxRotation, m_rotation + rotation));
+    m_rotation = std::min(m_maxRotation, std::max(-m_maxRotation, m_rotation + rotation));
 }
 
 void InputParser::checkControllerInput()
