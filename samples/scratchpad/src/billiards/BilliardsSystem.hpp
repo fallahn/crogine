@@ -63,6 +63,12 @@ struct SnookerID final
     };
 };
 
+struct PocketInfo final
+{
+    glm::vec2 position = glm::vec2(0.f);
+    std::int32_t value = 0;
+};
+
 struct BilliardBall final : public btMotionState
 {
     void getWorldTransform(btTransform& worldTrans) const override;
@@ -108,7 +114,7 @@ public:
     BilliardsSystem& operator = (BilliardsSystem&&) = delete;
 
     void process(float) override;
-    void initTable(const cro::Mesh::Data&);
+    void initTable(const cro::Mesh::Data&, const std::vector<PocketInfo>&);
 
     void applyImpulse(/*vec3 dir, vec3 offset*/);
 
@@ -147,6 +153,7 @@ private:
     {
         cro::Box box;
         std::int32_t id = 0;
+        std::int32_t value = 0;
         glm::vec2 position = glm::vec2(0.f);
 
         static constexpr float Radius = 0.06f;

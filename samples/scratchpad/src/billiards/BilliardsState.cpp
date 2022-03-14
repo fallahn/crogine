@@ -30,6 +30,8 @@ source distribution.
 #include "BilliardsState.hpp"
 #include "BilliardsSystem.hpp"
 
+#include <crogine/core/ConfigFile.hpp>
+
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -131,21 +133,71 @@ void BilliardsState::addSystems()
 
 void BilliardsState::buildScene()
 {
+    struct TableData final
+    {
+        std::string collisionModel;
+        std::string viewModel;
+        std::vector<PocketInfo> pockets;
+    }tableData;
+
+    cro::ConfigFile tableConfig;
+    if (tableConfig.loadFromFile("assets/billiards/billiards.table"))
+    {
+        const auto& props = tableConfig.getProperties();
+        for (const auto& p : props)
+        {
+            const auto& name = p.getName();
+            if (name == "model")
+            {
+                tableData.viewModel = p.getValue<std::string>();
+            }
+            else if (name == "collision")
+            {
+                tableData.collisionModel = p.getValue<std::string>();
+            }
+        }
+
+        const auto& objs = tableConfig.getObjects();
+        for (const auto& obj : objs)
+        {
+            const auto& name = obj.getName();
+            if (name == "pocket")
+            {
+                auto& pocket = tableData.pockets.emplace_back();
+
+                const auto& pocketProps = obj.getProperties();
+                for (const auto& prop : pocketProps)
+                {
+                    const auto& propName = prop.getName();
+                    if (propName == "position")
+                    {
+                        pocket.position = prop.getValue<glm::vec2>();
+                    }
+                    else if (propName == "value")
+                    {
+                        pocket.value = prop.getValue<std::int32_t>();
+                    }
+                }
+            }
+        }
+    }
+
+
     cro::ModelDefinition md(m_resources);
-    if (md.loadFromFile("assets/billiards/pool_collision.cmt"))
+    if (md.loadFromFile(tableData.collisionModel))
     {
         //table
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
 
-        m_scene.getSystem<BilliardsSystem>()->initTable(entity.getComponent<cro::Model>().getMeshData());
+        m_scene.getSystem<BilliardsSystem>()->initTable(entity.getComponent<cro::Model>().getMeshData(), tableData.pockets);
 
         //TODO extract the mesh data in a more sensible way such as reading it straight from the file...
         m_scene.destroyEntity(entity);
     }
 
-    if (md.loadFromFile("assets/billiards/pool_model.cmt"))
+    if (md.loadFromFile(tableData.viewModel))
     {
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>();

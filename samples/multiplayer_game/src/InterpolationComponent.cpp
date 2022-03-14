@@ -106,7 +106,15 @@ void InterpolationComponent::applyNextTarget(glm::vec3 currentPos, glm::quat cur
 
         m_elapsedTimer.restart();
 
-        m_timeDifference = target.timestamp - m_previousPoint.timestamp;
+        if (target.timestamp > m_previousPoint.timestamp)
+        {
+            m_timeDifference = target.timestamp - m_previousPoint.timestamp;
+        }
+        else
+        {
+            target = m_previousPoint;
+            target.timestamp += m_timeDifference / 2;
+        }
         m_targetPoint = target;
     }
 }

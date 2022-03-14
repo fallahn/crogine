@@ -91,9 +91,9 @@ BilliardsSystem::BilliardsSystem(cro::MessageBus& mb, BulletDebug& dd)
         m_constraintSolver.get(),
         m_collisionConfiguration.get());
 
-    //m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionConfiguration.get());
-
+#ifdef CRO_DEBUG_
     m_collisionWorld->setDebugDrawer(&m_debugDrawer);
+#endif
     m_collisionWorld->setGravity({ 0.f, -9.f, 0.f });
 }
 
@@ -140,27 +140,15 @@ void BilliardsSystem::process(float dt)
     doPocketCollision();
 }
 
-void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
+void BilliardsSystem::initTable(const cro::Mesh::Data& meshData, const std::vector<PocketInfo>& pocketInfo)
 {
     cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
-
-    /*if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
-    {
-        LogE << "Mesh has no colour property in vertices. Will not be created." << std::endl;
-        return;
-    }*/
-
     if (m_vertexData.empty() || m_indexData.empty())
     {
         LogE << "No collision mesh was loaded" << std::endl;
         return;
     }
 
-    /*std::size_t colourOffset = 0;
-    for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
-    {
-        colourOffset += meshData.attributes[i];
-    }*/
 
     btTransform transform;
     transform.setIdentity();
@@ -177,23 +165,18 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
         tableMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
 
 
-        //float collisionID = m_vertexData[(m_indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset] * 255.f;
-        //collisionID = std::floor(collisionID / 10.f);
-
         m_tableVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(tableMesh);
         m_tableShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_tableVertices.back().get(), false));
 
         auto& body = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Cushion, 0.f, m_tableShapes.back().get())));
         body->setWorldTransform(transform);
-        //body->setUserIndex(static_cast<std::int32_t>(collisionID));
         m_collisionWorld->addRigidBody(body.get(), (1<< CollisionID::Cushion), (1 << CollisionID::Ball));
     }
 
     //create a single flat surface for the table as even a few triangles perturb
     //the physics. Balls check their proximity to pockets and disable table collision
-    //when they need to.
-    //TODO read the width/height from something? AABB of mesh data sounds reasonable
-    auto& tableShape = m_boxShapes.emplace_back(std::make_unique<btBoxShape>(btBoxShape(btVector3(0.6f, 0.05f, 1.f))));
+    //when they need to. This way we can place a pocket anywhere on the surface.
+    auto& tableShape = m_boxShapes.emplace_back(std::make_unique<btBoxShape>(btBoxShape(btVector3(meshData.boundingBox[1].x, 0.05f, meshData.boundingBox[1].z))));
     transform.setOrigin({ 0.f, -0.05f, 0.f });
     auto& table = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Table, 0.f, tableShape.get())));
     table->setWorldTransform(transform);
@@ -205,16 +188,16 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
     const glm::vec3 PocketHalfSize({ 0.075f, 0.1f, 0.075f });
     static constexpr float WallThickness = 0.025f;
     static constexpr float WallHeight = 0.1f;
-    const std::array PocketPositions =
-    {
-        glm::vec3(0.47f, -WallHeight, -0.93f),
-        glm::vec3(0.54f, -WallHeight, 0.f),
-        glm::vec3(0.47f, -WallHeight, 0.93f),
+    //const std::array PocketPositions =
+    //{
+    //    glm::vec3(0.47f, -WallHeight, -0.93f),
+    //    glm::vec3(0.54f, -WallHeight, 0.f),
+    //    glm::vec3(0.47f, -WallHeight, 0.93f),
 
-        glm::vec3(-0.47f, -WallHeight, -0.93f),
-        glm::vec3(-0.54f, -WallHeight, 0.f),
-        glm::vec3(-0.47f, -WallHeight, 0.93f)
-    };
+    //    glm::vec3(-0.47f, -WallHeight, -0.93f),
+    //    glm::vec3(-0.54f, -WallHeight, 0.f),
+    //    glm::vec3(-0.47f, -WallHeight, 0.93f)
+    //};
 
     auto i = 0;
 
@@ -234,20 +217,23 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
         btVector3(-OffsetAmount, 0.f, 0.f)
     };
 
-    for (auto p : PocketPositions)
+    for (auto p : pocketInfo)
     {
+        glm::vec3 pocketPos(p.position.x, -WallHeight, p.position.y);
+
         //place these in world space for simpler testing
         auto& pocket = m_pockets.emplace_back();
-        pocket.box = { p - PocketHalfSize, p + PocketHalfSize };
+        pocket.box = { pocketPos - PocketHalfSize, pocketPos + PocketHalfSize };
         pocket.id = i++;
-        pocket.position = { p.x, p.z };
+        pocket.position = { pocketPos.x, pocketPos.z };
+        pocket.value = p.value;
 
         //wall objects
         for (auto i = 0; i < 4; ++i)
         {
             const auto& wallShape = m_pocketWalls[i % 2];
             auto& obj = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Pocket, 0.f, wallShape.get())));
-            transform.setOrigin(glmToBt(p) + Offsets[i]);
+            transform.setOrigin(glmToBt(pocketPos) + Offsets[i]);
             obj->setWorldTransform(transform);
             m_collisionWorld->addCollisionObject(obj.get(), (1 << CollisionID::Pocket), (1 << CollisionID::Ball));
         }
@@ -257,10 +243,15 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
         //collision is actually done in process() by checking radial proximity.
         auto& cylinder = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Table, 0.f, m_pocketShape.get())));
         cylinder->setCollisionFlags(cylinder->getCollisionFlags() | btRigidBody::CollisionFlags::CF_NO_CONTACT_RESPONSE);
-        transform.setOrigin({ p.x, 0.f, p.z });
+        transform.setOrigin({ pocketPos.x, 0.f, pocketPos.z });
         cylinder->setWorldTransform(transform);
         m_collisionWorld->addCollisionObject(cylinder.get());
 #endif
+    }
+
+    if (pocketInfo.empty())
+    {
+        LogW << "Pocket info was empty. This might be a boring game." << std::endl;
     }
 }
 
