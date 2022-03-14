@@ -1105,9 +1105,10 @@ void DrivingState::createScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
+    static constexpr std::uint32_t ShadowMapSize = 2048u;
     auto camEnt = m_gameScene.getActiveCamera();
     auto& cam = camEnt.getComponent<cro::Camera>();
-    cam.shadowMapBuffer.create(2048, 2048);
+    cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.resizeCallback = updateView;
     updateView(cam);
     
@@ -1206,7 +1207,7 @@ void DrivingState::createScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(16, 16); //not really rendering shadows as such, but without this we get artifcating
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 85.f * 85.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
@@ -1228,7 +1229,7 @@ void DrivingState::createScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(16, 16);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 20.f * 20.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
@@ -1243,6 +1244,7 @@ void DrivingState::createScene()
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = updateView;
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     //camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<FpsCamera>();

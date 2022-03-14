@@ -2135,7 +2135,7 @@ void GolfState::buildScene()
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
-    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(16, 16); //not really rendering shadows as such, but without this we get artifacting
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 80.f * 80.f;
@@ -2159,7 +2159,7 @@ void GolfState::buildScene()
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
-    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(16, 16);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 30.f * 30.f;
@@ -2209,12 +2209,12 @@ void GolfState::buildScene()
     buildUI(); //put this here because we don't want to do this if the map data didn't load
     setCurrentHole(0);
 
-    //careful with these values - they are fine tuned for shadowing of terrain
+
     auto sunEnt = m_gameScene.getSunlight();
     //sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -38.746f * cro::Util::Const::degToRad);
 
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -135.f * cro::Util::Const::degToRad);
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -76.746f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -75.f * cro::Util::Const::degToRad);
 
 #ifdef CRO_DEBUG_
     //createWeather();

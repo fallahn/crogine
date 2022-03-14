@@ -39,7 +39,7 @@ source distribution.
 namespace
 {
     static constexpr float RotationSpeed = 1.2f;
-    static constexpr float MaxRotation = 0.34f;
+    static constexpr float MaxRotation = 0.36f;
     static constexpr std::int16_t DeadZone = 8000;
 
     static constexpr float MinPower = 0.01f;
