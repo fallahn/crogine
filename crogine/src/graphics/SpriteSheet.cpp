@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,6 +34,7 @@ source distribution.
 using namespace cro;
 
 SpriteSheet::SpriteSheet()
+    : m_texture (nullptr)
 {
 
 }
@@ -49,6 +50,7 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
 
     m_sprites.clear();
     m_texturePath.clear();
+    m_texture = nullptr;
 
     std::size_t count = 0;
 
@@ -181,8 +183,62 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
         }
     }
 
+    m_texture = texture;
+
     //LOG("Found " + std::to_string(count) + " sprites in " + path, Logger::Type::Info);
     return count > 0;
+}
+
+bool SpriteSheet::saveToFile(const std::string& path)
+{
+    ConfigFile sheetFile;
+    sheetFile.addProperty("src", "\"" + m_texturePath + "\"");
+
+    if (m_texture)
+    {
+        sheetFile.addProperty("smooth").setValue(m_texture->isSmooth());
+        sheetFile.addProperty("repeat").setValue(m_texture->isRepeated());
+    }
+    else
+    {
+        sheetFile.addProperty("smooth").setValue(false);
+        sheetFile.addProperty("repeat").setValue(false);
+    }
+
+    for (const auto& [name, sprite] : m_sprites)
+    {
+        auto sprObj = sheetFile.addObject("sprite", name);
+        sprObj->addProperty("bounds").setValue(sprite.getTextureRect());
+        sprObj->addProperty("colour").setValue(sprite.getColour());
+
+        auto& anims = sprite.getAnimations();
+        for (auto i(0u); i < sprite.getAnimations().size(); i++)
+        {
+            auto animObj = sprObj->addObject("animation", m_animations[name][i]);
+            animObj->addProperty("framerate").setValue(anims[i].framerate);
+            animObj->addProperty("loop").setValue(anims[i].looped);
+            animObj->addProperty("loop_start").setValue(static_cast<std::int32_t>(anims[i].loopStart));
+
+            const auto& frames = anims[i].frames;
+            std::vector<glm::vec2> events;
+            for (auto j = 0u; j < anims[i].frames.size(); j++)
+            {
+                animObj->addProperty("frame").setValue(frames[j].frame);
+
+                if (anims[i].frames[j].event > -1)
+                {
+                    events.emplace_back(anims[i].frames[j].event, j);
+                }
+            }
+
+            for (const auto& evt : events)
+            {
+                animObj->addProperty("event").setValue(evt);
+            }
+        }
+    }
+
+    return sheetFile.save(path);
 }
 
 Sprite SpriteSheet::getSprite(const std::string& name) const

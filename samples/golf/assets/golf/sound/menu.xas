@@ -64,5 +64,14 @@ audioscape menu
         volume = 0.5
         mixer_channel = 2
         looped = false
-    }    
+    }
+
+    emitter firework
+    {
+        path = "assets/golf/sound/menu/firework.wav"
+        streaming = false
+        volume = 0.5
+        mixer_channel = 2
+        looped = false
+    }
 }

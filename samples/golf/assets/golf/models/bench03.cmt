@@ -1,0 +1,33 @@
+model bench03
+{
+    mesh = assets/golf/models/bench03.cmb
+    cast_shadows = true
+
+    material VertexLit
+    {
+        mask_colour = 1.000000,0.000000,0.000000,1.000000
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = true
+        rx_shadows = true
+        blendmode = none
+        diffuse = "assets/golf/images/bench.png"
+        alpha_clip = 1.000000
+
+    }
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+        diffuse = "assets/golf/images/rock.png"
+
+    }
+}

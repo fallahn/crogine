@@ -1,0 +1,9 @@
+cubemap sky
+{
+    up = "assets/golf/images/skybox/mountain_spring/py.png"
+    down = "assets/golf/images/skybox/mountain_spring/ny.png"
+    left = "assets/golf/images/skybox/mountain_spring/nx.png"
+    right = "assets/golf/images/skybox/mountain_spring/px.png"
+    front = "assets/golf/images/skybox/mountain_spring/pz.png"
+    back = "assets/golf/images/skybox/mountain_spring/nz.png"
+}

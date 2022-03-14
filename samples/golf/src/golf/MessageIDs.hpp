@@ -43,6 +43,7 @@ namespace MessageID
         SceneMessage,
         CollisionMessage,
         SystemMessage,
+        AchievementMessage,
 
         Count
     };
@@ -106,4 +107,9 @@ struct SystemEvent final
         InputActivated
     }type = PostProcessToggled;
     std::int32_t data = -1;
+};
+
+struct AchievementEvent final
+{
+    std::uint8_t id = 0;
 };

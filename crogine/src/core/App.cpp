@@ -215,6 +215,14 @@ App::App(std::uint32_t styleFlags)
         char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
         m_prefPath = std::string(pp);
         SDL_free(pp);
+
+#ifdef WIN32
+#ifdef CRO_DEBUG_
+        //places the console window in the top right so it's a bit more visible when debugging
+        HWND consoleWindow = GetConsoleWindow();
+        SetWindowPos(consoleWindow, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+#endif
+#endif
     }
 }
 
@@ -268,6 +276,8 @@ void App::run()
 
         ImGui::CreateContext();
         setImguiStyle(&ImGui::GetStyle());
+        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+        
         ImGui_ImplSDL2_InitForOpenGL(m_window.m_window, m_window.m_mainContext);
 #ifdef PLATFORM_DESKTOP
         ImGui_ImplOpenGL3_Init("#version 410 core");

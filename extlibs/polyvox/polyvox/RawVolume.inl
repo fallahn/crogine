@@ -251,5 +251,11 @@ namespace PolyVox
 	{
 		return this->getWidth() * this->getHeight() * this->getDepth() * sizeof(VoxelType);
 	}
+
+	template <typename VoxelType>
+	void RawVolume<VoxelType>::reset()
+	{
+		initialise(m_regValidRegion);
+	}
 }
 

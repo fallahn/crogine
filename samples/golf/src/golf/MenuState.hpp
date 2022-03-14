@@ -36,6 +36,7 @@ source distribution.
 #include "SharedStateData.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
+#include <crogine/core/Cursor.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/core/String.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -43,6 +44,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/UniformBuffer.hpp>
 
 #include <array>
 
@@ -80,6 +82,7 @@ public:
 
 private:
     SharedStateData& m_sharedData;
+    cro::Cursor m_cursor;
     cro::ResourceCollection m_resources;
 
     cro::Scene m_uiScene;
@@ -107,6 +110,7 @@ private:
             CelTextured,
             CelTexturedSkinned,
             Hair,
+            Billboard,
 
             Count
         };
@@ -114,7 +118,9 @@ private:
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
 
-    std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
+    cro::UniformBuffer m_scaleBuffer;
+    cro::UniformBuffer m_resolutionBuffer;
+    cro::UniformBuffer m_windBuffer;
 
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
@@ -193,6 +199,7 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
+    void createClouds();
 
     struct CourseData final
     {

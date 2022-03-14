@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -32,6 +32,7 @@ source distribution.
 #include "WorldState.hpp"
 #include "ParticleState.hpp"
 #include "LayoutState.hpp"
+#include "SpriteState.hpp"
 #include "LoadingScreen.hpp"
 #include "SharedStateData.hpp"
 #include "Messages.hpp"
@@ -56,6 +57,7 @@ MyApp::MyApp()
     m_stateStack.registerState<WorldState>(States::ID::WorldEditor, sharedData);
     m_stateStack.registerState<ParticleState>(States::ID::ParticleEditor, sharedData);
     m_stateStack.registerState<LayoutState>(States::ID::LayoutEditor, sharedData);
+    m_stateStack.registerState<SpriteState>(States::ID::SpriteEditor, sharedData);
 }
 
 //public
@@ -112,10 +114,11 @@ bool MyApp::initialise()
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Crogine Editor");
 
-    //m_stateStack.pushState(States::WorldEditor);
-    m_stateStack.pushState(States::ModelViewer);
+    m_stateStack.pushState(States::WorldEditor);
+    //m_stateStack.pushState(States::ModelViewer);
     //m_stateStack.pushState(States::ParticleEditor);
     //m_stateStack.pushState(States::LayoutEditor);
+    //m_stateStack.pushState(States::SpriteEditor);
 
     return true;
 }

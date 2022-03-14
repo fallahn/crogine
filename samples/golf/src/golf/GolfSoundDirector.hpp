@@ -86,6 +86,7 @@ private:
             ScorePar,
 
             Applause,
+            ApplausePlus,
 
             TerrainBunker01,
             TerrainBunker02,

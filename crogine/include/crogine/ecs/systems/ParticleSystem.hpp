@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -66,7 +66,6 @@ namespace cro
         void render(Entity, const RenderTarget&) override;
 
     private:
-        
         std::array<std::vector<Entity>, 2u> m_visibleEntities;
 
         void onEntityAdded(Entity) override;

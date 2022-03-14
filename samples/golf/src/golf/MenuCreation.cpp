@@ -1738,6 +1738,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString("Connected to");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::White);
+    entity.getComponent<cro::Text>().setShadowColour(cro::Colour(std::uint8_t(110), 179, 157));
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
 
@@ -2418,11 +2420,11 @@ void MenuState::createPlayerConfigMenu()
 void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
     //these can have fixed positions as they are attached to a menuEntity[] which is UI scaled
-    constexpr glm::vec3 EditButtonOffset(-47.f, -57.f, 0.f);
-    constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-68.f, -18.f, 0.f);
-    constexpr glm::vec3 BGOffset = AvatarOffset + glm::vec3(1.f, 7.f, -0.02f);
-    constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(115.f, 42.f, 0.f);
-    constexpr float LineHeight = 11.f; //-8.f
+    static constexpr glm::vec3 EditButtonOffset(-47.f, -57.f, 0.f);
+    static constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-68.f, -18.f, 0.f);
+    static constexpr glm::vec3 BGOffset = AvatarOffset + glm::vec3(1.f, 7.f, -0.02f);
+    static constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(115.f, 42.f, 0.f);
+    static constexpr float LineHeight = 11.f; //-8.f
 
     for (auto e : m_avatarListEntities)
     {
@@ -2465,7 +2467,6 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         //add avatar preview
         applyAvatarColours(i);
         updateThumb(i);
-        auto id = m_avatarIndices[i];
                 
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(localPos + AvatarOffset);
@@ -2665,7 +2666,7 @@ void MenuState::updateLobbyAvatars()
         {
             if (c.connectionID < m_sharedData.nameTextures.size())
             {
-                m_sharedData.nameTextures[c.connectionID].clear(cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha / 4.f));
+                m_sharedData.nameTextures[c.connectionID].clear(cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha / 3.f));
                 
                 for (auto i = 0u; i < c.playerCount; ++i)
                 {

@@ -34,6 +34,9 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "TextAnimCallback.hpp"
 #include "DrivingRangeDirector.hpp"
+#include "CloudSystem.hpp"
+#include "../Achievements.hpp"
+#include "../AchievementStrings.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 
@@ -52,12 +55,12 @@ source distribution.
 
 namespace
 {
-    constexpr float SummaryOffset = 54.f;
-    constexpr float SummaryHeight = 254.f;
+    static constexpr float SummaryOffset = 54.f;
+    static constexpr float SummaryHeight = 254.f;
 
-    constexpr float BadScore = 50.f;
-    constexpr float GoodScore = 75.f;
-    constexpr float ExcellentScore = 95.f;
+    static constexpr float BadScore = 50.f;
+    static constexpr float GoodScore = 75.f;
+    static constexpr float ExcellentScore = 95.f;
 
     struct MenuID final
     {
@@ -1210,6 +1213,8 @@ void DrivingState::updateWindDisplay(glm::vec3 direction)
         e.getComponent<cro::Callback>().setUserData<float>(-direction.y);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    m_gameScene.getSystem<CloudSystem>()->setWindVector(direction);
 }
 
 void DrivingState::showMessage(float range)
@@ -1427,12 +1432,14 @@ void DrivingState::showMessage(float range)
                     {
                         s << "Could Do Better...";
                         m_summaryScreen.stars[0].getComponent<cro::Callback>().active = true;
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::BronzeStar]);
                     }
                     else if (totalScore < ExcellentScore)
                     {
                         s << "Great Job!";
                         m_summaryScreen.stars[0].getComponent<cro::Callback>().active = true;
                         m_summaryScreen.stars[1].getComponent<cro::Callback>().active = true;
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::SilverStar]);
                     }
                     else
                     {
@@ -1440,6 +1447,7 @@ void DrivingState::showMessage(float range)
                         m_summaryScreen.stars[0].getComponent<cro::Callback>().active = true;
                         m_summaryScreen.stars[1].getComponent<cro::Callback>().active = true;
                         m_summaryScreen.stars[2].getComponent<cro::Callback>().active = true;
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::GoldStar]);
                     }
 
                     m_summaryScreen.summary.getComponent<cro::Text>().setString(s.str());

@@ -1,0 +1,101 @@
+audioscape ambience
+{
+    emitter 01
+    {
+        path = "assets/golf/sound/ambience/beach01.ogg"
+        streaming = true
+        volume = 1.15
+        mixer_channel = 1
+        attenuation = 0.06
+        looped = true
+    }
+
+    emitter 02
+    {
+        path = "assets/golf/sound/ambience/beach02.ogg"
+        streaming = true
+        volume = 1.15
+        mixer_channel = 1
+        attenuation = 0.06
+        looped = true
+    }
+
+    emitter 03
+    {
+        path = "assets/golf/sound/ambience/beach03.ogg"
+        streaming = true
+        volume = 1.15
+        mixer_channel = 1
+        attenuation = 0.06
+        looped = true
+    }
+
+    emitter 04
+    {
+        path = "assets/golf/sound/ambience/beach04.ogg"
+        streaming = true
+        volume = 0.9
+        mixer_channel = 1
+        attenuation = 0.06
+        looped = true
+    }
+
+    emitter 05
+    {
+        path = "assets/golf/sound/ambience/beach05.ogg"
+        streaming = true
+        volume = 0.9
+        mixer_channel = 1
+        attenuation = 0.06
+        looped = true
+    }
+
+    emitter 06
+    {
+        path = "assets/golf/sound/ambience/beach06.ogg"
+        streaming = true
+        volume = 0.9
+        mixer_channel = 1
+        attenuation = 0.06
+        looped = true
+    }    
+
+    emitter incidental01
+    {
+        path = "assets/golf/sound/ambience/inc01.ogg"
+        streaming = true
+        volume = 1.3
+        mixer_channel = 1
+        attenuation = 0
+        looped = false
+    }      
+
+    emitter incidental02
+    {
+        path = "assets/golf/sound/ambience/inc02.ogg"
+        streaming = true
+        volume = 0.7
+        mixer_channel = 1
+        attenuation = 0
+        looped = false
+    }
+
+    emitter plane
+    {
+        path = "assets/golf/sound/ambience/plane.ogg"
+        streaming = true
+        volume = 2
+        mixer_channel = 1
+        looped = false
+        attenuation = 0.01
+    }
+
+    emitter music
+    {
+        path = "assets/golf/sound/new_hole.ogg"
+        streaming = true
+        volume = 0.5
+        mixer_channel = 0
+        looped = false
+    }
+}

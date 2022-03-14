@@ -53,6 +53,9 @@ namespace PolyVox
 		/// The interpolated voxel data from the neighbouring voxels which generated this
 		/// vertex (every vertex is placed between two voxels by the MArching Cubes algorithm)
 		DataType data;
+
+		Vector3DFloat position;
+		Vector3DFloat normal;
 	};
 
 	// Convienient shorthand for declaring a mesh of marching cubes vertices

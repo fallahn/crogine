@@ -3,6 +3,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/BallSystem.cpp
   ${PROJECT_DIR}/golf/CameraFollowSystem.cpp
   ${PROJECT_DIR}/golf/ClientCollisionSystem.cpp
+  ${PROJECT_DIR}/golf/CloudSystem.cpp
   ${PROJECT_DIR}/golf/CollisionMesh.cpp
   ${PROJECT_DIR}/golf/DebugDraw.cpp
   ${PROJECT_DIR}/golf/DrivingRangeDirector.cpp
@@ -24,6 +25,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/MenuCustomisation.cpp
   ${PROJECT_DIR}/golf/MenuSoundDirector.cpp
   ${PROJECT_DIR}/golf/MenuState.cpp
+  ${PROJECT_DIR}/golf/NotificationSystem.cpp
   ${PROJECT_DIR}/golf/OptionsState.cpp
   ${PROJECT_DIR}/golf/PauseState.cpp
   ${PROJECT_DIR}/golf/ParticleDirector.cpp
@@ -35,6 +37,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/SoundEffectsDirector.cpp
   ${PROJECT_DIR}/golf/spooky2.cpp
   ${PROJECT_DIR}/golf/TerrainBuilder.cpp
+  ${PROJECT_DIR}/golf/TrophyDisplaySystem.cpp
   ${PROJECT_DIR}/golf/TutorialDirector.cpp
   ${PROJECT_DIR}/golf/TutorialState.cpp
   ${PROJECT_DIR}/golf/Weather.cpp

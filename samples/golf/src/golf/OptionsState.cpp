@@ -33,6 +33,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
+#include "../AchievementStrings.hpp"
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/Mouse.hpp>
@@ -41,6 +42,7 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/gui/Gui.hpp>
 
+#include <crogine/ecs/InfoFlags.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
@@ -51,7 +53,6 @@ source distribution.
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 
-#include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
@@ -65,13 +66,18 @@ source distribution.
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
+#include <sstream>
+
 namespace
 {
+    static constexpr glm::vec2 BackgroundSize(192.f, 108.f);
+    const cro::Colour BackgroundColour = cro::Colour(std::uint8_t(26), 30, 45);
+
     struct MenuID final
     {
         enum
         {
-            Video, Controls, Dummy
+            Video, Controls, Dummy, Achievements, Stats
         };
     };
 
@@ -88,23 +94,26 @@ namespace
     //the slider callbacks :3
     std::uint8_t mixerChannelIndex = MixerChannel::Music;
 
-    constexpr float SliderWidth = 144.f;
-    constexpr glm::vec3 ToolTipOffset(10.f, 10.f, 0.f);
+    static constexpr float SliderWidth = 142.f;
+    static constexpr glm::vec3 ToolTipOffset(10.f, 10.f, 0.f);
 
     struct SliderData final
     {
         const glm::vec2 basePosition = glm::vec2(0.f);
-        explicit SliderData(glm::vec2 p)
-            : basePosition(p) {}
+        const float width = SliderWidth;
+        std::function<void(float)> onActivate;
+
+        explicit SliderData(glm::vec2 p, float w = SliderWidth)
+            : basePosition(p), width(w) {}
     };
 
     struct SliderCallback final
     {
         void operator() (cro::Entity e, float)
         {
-            const auto& [pos] = e.getComponent<cro::Callback>().getUserData<SliderData>();
+            const auto& [pos, width, _] = e.getComponent<cro::Callback>().getUserData<SliderData>();
             float vol = cro::AudioMixer::getVolume(mixerChannelIndex);
-            e.getComponent<cro::Transform>().setPosition({ pos.x + (SliderWidth * vol), pos.y });
+            e.getComponent<cro::Transform>().setPosition({ pos.x + (width * vol), pos.y });
         }
     };
 
@@ -149,12 +158,13 @@ namespace
 
 OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State        (ss, ctx),
-    m_scene             (ctx.appInstance.getMessageBus()),
+    m_scene             (ctx.appInstance.getMessageBus(), 256/*, cro::INFO_FLAG_SYSTEMS_ACTIVE | cro::INFO_FLAG_SYSTEM_TIME*/),
     m_sharedData        (sd),
     m_updatingKeybind   (false),
     m_lastMousePos      (0.f),
     m_bindingIndex      (-1),
     m_currentTabFunction(1),
+    m_previousMenuID    (MenuID::Controls),
     m_viewScale         (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -276,6 +286,43 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     {
         updateSlider();
     }
+    else if (evt.type == SDL_MOUSEWHEEL)
+    {
+        if (evt.wheel.y > 0)
+        {
+            cro::ButtonEvent fakeEvent;
+            fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+            fakeEvent.button.button = SDL_BUTTON_LEFT;
+
+            //up
+            auto menuID = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
+            if (menuID == MenuID::Achievements)
+            {
+                m_scrollFunctions[ScrollID::AchUp](cro::Entity(), fakeEvent);
+            }
+            else if (menuID == MenuID::Stats)
+            {
+                m_scrollFunctions[ScrollID::StatUp](cro::Entity(), fakeEvent);
+            }
+        }
+        else if (evt.wheel.y < 0)
+        {
+            cro::ButtonEvent fakeEvent;
+            fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+            fakeEvent.button.button = SDL_BUTTON_LEFT;
+
+            //down
+            auto menuID = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
+            if (menuID == MenuID::Achievements)
+            {
+                m_scrollFunctions[ScrollID::AchDown](cro::Entity(), fakeEvent);
+            }
+            else if (menuID == MenuID::Stats)
+            {
+                m_scrollFunctions[ScrollID::StatDown](cro::Entity(), fakeEvent);
+            }
+        }
+    }
 
     m_scene.forwardEvent(evt);
     return false;
@@ -324,8 +371,8 @@ void OptionsState::updateSlider()
         auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
         float movement = (mousePos.x - m_lastMousePos) / m_viewScale.x;
 
-        const auto& [pos] = m_activeSlider.getComponent<cro::Callback>().getUserData<SliderData>();
-        float maxMove = pos.x + SliderWidth;
+        const auto& [pos, width, onActivate] = m_activeSlider.getComponent<cro::Callback>().getUserData<SliderData>();
+        float maxMove = pos.x + width;
         float minMove = pos.x;
 
         auto currentPos = m_activeSlider.getComponent<cro::Transform>().getPosition();
@@ -333,8 +380,7 @@ void OptionsState::updateSlider()
 
         m_activeSlider.getComponent<cro::Transform>().setPosition({ finalPos, currentPos.y });
 
-        float vol = (finalPos - pos.x) / SliderWidth;
-        cro::AudioMixer::setVolume(vol, mixerChannelIndex);
+        onActivate((finalPos - pos.x) / width);
 
         m_lastMousePos = mousePos.x;
     }
@@ -504,7 +550,7 @@ void OptionsState::buildScene()
 
     //options background
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.3f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.4f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -536,7 +582,7 @@ void OptionsState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    createButtons(entity, MenuID::Video, selectedID, unselectedID);
+    createButtons(entity, MenuID::Video, selectedID, unselectedID, spriteSheet);
     auto videoButtonEnt = entity;
 
     //control options
@@ -550,8 +596,19 @@ void OptionsState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    createButtons(entity, MenuID::Controls, selectedID, unselectedID);
+    createButtons(entity, MenuID::Controls, selectedID, unselectedID, spriteSheet);
     auto controlButtonEnt = entity;
+
+    //create the bottom buttons for achievements / stats
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    createButtons(entity, MenuID::Achievements, selectedID, unselectedID, spriteSheet);
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    createButtons(entity, MenuID::Stats, selectedID, unselectedID, spriteSheet);
 
     //tab bar header
     entity = m_scene.createEntity();
@@ -612,8 +669,8 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Dummy);
 
-    selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); e.getComponent<cro::AudioEmitter>().play(); });
-    unselectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
+    auto spriteSelectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); e.getComponent<cro::AudioEmitter>().play(); });
+    auto spriteUnselectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
 
     //tab button to switch to video
     m_tabFunctions[0] = [&, tabEnt, videoButtonEnt, controlButtonEnt]() mutable
@@ -638,8 +695,8 @@ void OptionsState::buildScene()
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = spriteSelectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = spriteUnselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
     {
@@ -674,8 +731,8 @@ void OptionsState::buildScene()
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Video);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = spriteSelectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = spriteUnselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)  mutable
         {
@@ -689,20 +746,20 @@ void OptionsState::buildScene()
 
     buildAVMenu(videoEnt, spriteSheet);
     buildControlMenu(controlEnt, spriteSheet);
-
+    buildAchievementsMenu(bgEnt, spriteSheet);
 
     //tool tips for options
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     auto createToolTip = [&](const cro::String& tip)
     {
         auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, 0.2f});
+        entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, 2.2f});
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(font).setString(tip);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         
-        constexpr float Padding = 10.f;
+        static constexpr float Padding = 10.f;
         auto bounds = cro::Text::getLocalBounds(entity);
         bounds.width += Padding;
         bounds.height += Padding;
@@ -711,7 +768,7 @@ void OptionsState::buildScene()
 
         auto colour = cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha);
         auto bgEnt = m_scene.createEntity();
-        bgEnt.addComponent<cro::Transform>().setPosition({0.f, 0.f, - 0.5f});
+        bgEnt.addComponent<cro::Transform>().setPosition({0.f, 0.f, -0.5f});
         bgEnt.addComponent<cro::Drawable2D>().setVertexData(
             {
                 cro::Vertex2D(glm::vec2(bounds.left, bounds.bottom + bounds.height), colour),
@@ -725,8 +782,10 @@ void OptionsState::buildScene()
         return entity;
     };
     m_tooltips[ToolTipID::Volume] = createToolTip("Vol: 100");
+    m_tooltips[ToolTipID::FOV] = createToolTip("FOV: 60");
     m_tooltips[ToolTipID::Pixel] = createToolTip("Scale up pixels to match\nthe current resolution.");
-
+    m_tooltips[ToolTipID::Achievements] = createToolTip("Show or Hide Achievements");
+    m_tooltips[ToolTipID::Stats] = createToolTip("Show Stats");
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
@@ -785,41 +844,28 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     auto audioLabel = createLabel(glm::vec2(bgBounds.width / 2.f, 98.f), "Music Volume");
     centreText(audioLabel);
 
+    //FOV label
+    auto fovLabel = createLabel(glm::vec2(6.f, 59.f), "FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
+
     //resolution label
-    auto resLabel = createLabel(glm::vec2(bgBounds.width / 2.f, 60.f), "Resolution");
-    centreText(resLabel);
+    auto resLabel = createLabel(glm::vec2(6.f, 45.f), "Resolution");
+    //centreText(resLabel);
 
     //resolution value text
-    resLabel = createLabel(glm::vec2(bgBounds.width / 2.f, 49.f), m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
+    resLabel = createLabel(glm::vec2(130.f, 45.f), m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
     centreText(resLabel);
 
     //pixel scale label
-    auto pixelLabel = createLabel(glm::vec2(72.f, 31.f), "Pixel Scaling");
+    auto pixelLabel = createLabel(glm::vec2(6.f, 31.f), "Pixel Scaling");
     pixelLabel.addComponent<cro::Callback>().active = true;
     pixelLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float) mutable
     {
-        auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
-        auto bounds = e.getComponent<cro::Drawable2D>().getLocalBounds();
-        bounds = e.getComponent<cro::Transform>().getWorldTransform() * bounds;
-
-        if (bounds.contains(mousePos))
-        {
-            mousePos.x = std::floor(mousePos.x);
-            mousePos.y = std::floor(mousePos.y);
-            mousePos.z = 1.f;
-
-            m_tooltips[ToolTipID::Pixel].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
-            m_tooltips[ToolTipID::Pixel].getComponent<cro::Transform>().setScale(m_viewScale);
-        }
-        else
-        {
-            m_tooltips[ToolTipID::Pixel].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        }
+        updateToolTip(e, ToolTipID::Pixel);
     };
 
     //full screen label
-    createLabel(glm::vec2(72.f, 15.f), "Full Screen");
+    createLabel(glm::vec2(6.f, 15.f), "Full Screen");
 
 
 
@@ -830,47 +876,120 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("slider");
         auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), /*std::floor*/(bounds.height / 2.f) });
 
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<SliderData>(position);
-        entity.getComponent<cro::Callback>().function = SliderCallback();
 
-        auto tipEnt = m_scene.createEntity();
-        tipEnt.addComponent<cro::Transform>();
-        tipEnt.addComponent<cro::Callback>().active = true;
-        tipEnt.getComponent<cro::Callback>().function =
-            [&, entity](cro::Entity, float)
+        auto userData = SliderData(position);
+        userData.onActivate = [](float distance)
         {
-            auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
-            auto bounds = entity.getComponent<cro::Drawable2D>().getLocalBounds();
-            bounds = entity.getComponent<cro::Transform>().getWorldTransform() * bounds;
-
-            if (bounds.contains(mousePos))
-            {
-                mousePos.x = std::floor(mousePos.x);
-                mousePos.y = std::floor(mousePos.y);
-                mousePos.z = 1.f;
-
-                m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
-                m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setScale(m_viewScale);
-
-                float vol = cro::AudioMixer::getVolume(mixerChannelIndex);
-                m_tooltips[ToolTipID::Volume].getComponent<cro::Text>().setString("Vol: " + std::to_string(static_cast<std::int32_t>(vol * 100.f)));
-            }
-            else
-            {
-                m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-            }
+            float vol = distance;
+            cro::AudioMixer::setVolume(vol, mixerChannelIndex);
         };
-        entity.getComponent<cro::Transform>().addChild(tipEnt.getComponent<cro::Transform>());
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<SliderData>(userData);
+        entity.getComponent<cro::Callback>().function = SliderCallback();
 
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
         m_sliders.push_back(entity);
+        return entity;
     };
 
-    createSlider(glm::vec2(24.f, 80.f));
+    //volume slider
+    auto volSlider = createSlider(glm::vec2(25.f, 80.f));
+    auto tipEnt = m_scene.createEntity();
+    tipEnt.addComponent<cro::Transform>();
+    tipEnt.addComponent<cro::Callback>().active = true;
+    tipEnt.getComponent<cro::Callback>().function =
+        [&, volSlider](cro::Entity e, float)
+    {
+        auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+        auto bounds = volSlider.getComponent<cro::Drawable2D>().getLocalBounds();
+        bounds = volSlider.getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+        if (bounds.contains(mousePos))
+        {
+            mousePos.x = std::floor(mousePos.x);
+            mousePos.y = std::floor(mousePos.y);
+            mousePos.z = 1.f;
+
+            m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
+            m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setScale(m_viewScale);
+
+            float vol = cro::AudioMixer::getVolume(mixerChannelIndex);
+            m_tooltips[ToolTipID::Volume].getComponent<cro::Text>().setString("Vol: " + std::to_string(static_cast<std::int32_t>(vol * 100.f)));
+        }
+        else
+        {
+            m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+    };
+    volSlider.getComponent<cro::Transform>().addChild(tipEnt.getComponent<cro::Transform>());
+
+
+
+    //fov slider
+    auto fovPos = glm::vec2(93.f, 56.f);
+    auto fovSlider = createSlider(fovPos);
+    auto userData = SliderData(fovPos, 76.f);
+    userData.onActivate = 
+        [&, fovLabel](float distance) mutable
+    {
+        float fov = MinFOV + ((MaxFOV - MinFOV) * distance);
+
+        m_sharedData.fov = fov;
+
+        //raise a window resize message to trigger callbacks
+        auto size = cro::App::getWindow().getSize();
+        auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+        msg->data0 = size.x;
+        msg->data1 = size.y;
+        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+
+        fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
+    };
+
+    fovSlider.getComponent<cro::Callback>().setUserData<SliderData>(userData);
+    fovSlider.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        const auto& [pos, width, _] = e.getComponent<cro::Callback>().getUserData<SliderData>();
+        float amount = (m_sharedData.fov - MinFOV) / (MaxFOV - MinFOV);
+
+        e.getComponent<cro::Transform>().setPosition({ pos.x + (width * amount), pos.y });
+    };
+
+    tipEnt = m_scene.createEntity();
+    tipEnt.addComponent<cro::Transform>();
+    tipEnt.addComponent<cro::Callback>().active = true;
+    tipEnt.getComponent<cro::Callback>().function =
+        [&, fovSlider](cro::Entity, float)
+    {
+        auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+        auto bounds = fovSlider.getComponent<cro::Drawable2D>().getLocalBounds();
+        bounds = fovSlider.getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+        if (bounds.contains(mousePos))
+        {
+            mousePos.x = std::floor(mousePos.x);
+            mousePos.y = std::floor(mousePos.y);
+            mousePos.z = 1.f;
+
+            m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
+            m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setScale(m_viewScale);
+
+            float fov = m_sharedData.fov;
+            m_tooltips[ToolTipID::FOV].getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(fov)));
+        }
+        else
+        {
+            m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+    };
+    fovSlider.getComponent<cro::Transform>().addChild(tipEnt.getComponent<cro::Transform>());
+
+
+
 
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
     auto selectedID = uiSystem.addCallback([](cro::Entity e) 
@@ -942,9 +1061,65 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity = createHighlight(glm::vec2(174.f, 74.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(m_audioEnts[AudioID::Accept]));
 
+    //FOV down
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 21.f, 50.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback(
+            [&, fovLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                auto fov = m_sharedData.fov;
+                fov = std::max(MinFOV, fov - 5.f);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                if (fov < m_sharedData.fov)
+                {
+                    m_sharedData.fov = fov;
+
+                    //raise a window resize message to trigger callbacks
+                    auto size = cro::App::getWindow().getSize();
+                    auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+                    msg->data0 = size.x;
+                    msg->data1 = size.y;
+                    msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+
+                    fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
+                }
+            }
+        });
+
+    //FOV up
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) + 80.f, 50.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback(
+            [&, fovLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                auto fov = m_sharedData.fov;
+                fov = std::min(MaxFOV, fov + 5.f);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                if (fov > m_sharedData.fov)
+                {
+                    m_sharedData.fov = fov;
+
+                    //raise a window resize message to trigger callbacks
+                    auto size = cro::App::getWindow().getSize();
+                    auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+                    msg->data0 = size.x;
+                    msg->data1 = size.y;
+                    msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+
+                    fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
+                }
+            }
+        });
+
 
     //res down
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 56.f, 40.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 21.f, 36.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback(
             [&, resLabel](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -953,13 +1128,13 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             {
                 m_videoSettings.resolutionIndex = (m_videoSettings.resolutionIndex + (m_sharedData.resolutions.size() - 1)) % m_sharedData.resolutions.size();
                 resLabel.getComponent<cro::Text>().setString(m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
-
+                centreText(resLabel);
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
 
     //res up
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) + 45.f, 40.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) + 80.f, 36.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback(
             [&, resLabel](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -968,14 +1143,14 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 {
                     m_videoSettings.resolutionIndex = (m_videoSettings.resolutionIndex + 1) % m_sharedData.resolutions.size();
                     resLabel.getComponent<cro::Text>().setString(m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
-
+                    centreText(resLabel);
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
 
     //pixel scale check box
-    entity = createHighlight(glm::vec2(59.f, 22.f));
+    entity = createHighlight(glm::vec2(75.f, 22.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -988,7 +1163,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //pixel scale checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(61.f, 24.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(77.f, 24.f));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -1008,7 +1183,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //full screen check box
-    entity = createHighlight(glm::vec2(59.f, 6.f));
+    entity = createHighlight(glm::vec2(75.f, 6.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -1021,7 +1196,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //full screen checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(61.f, 8.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(77.f, 8.f));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -1215,10 +1390,582 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     createLabel(glm::vec2(20.f, 35.f), InputBinding::Right);
 }
 
-void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::uint32_t selectedID, std::uint32_t unselectedID)
+void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
+{
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({4.f, 20.f, 0.9f});
+    entity.getComponent<cro::Transform>().setScale({ 0.f, 1.f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, BackgroundSize.y), BackgroundColour),
+            cro::Vertex2D(glm::vec2(0.f), BackgroundColour),
+            cro::Vertex2D(BackgroundSize, BackgroundColour),
+            cro::Vertex2D(glm::vec2(BackgroundSize.x, 0.f), BackgroundColour)
+        });
+
+    struct CallbackData final
+    {
+        float scale = 0.f;
+        std::int32_t direction = 0;
+    };
+    entity.addComponent<cro::Callback>().setUserData<CallbackData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<CallbackData>();
+        float moveTime = dt * 2.f;
+        if (data.direction == 0)
+        {
+            data.scale = std::min(1.f, data.scale + moveTime);
+
+            if (data.scale == 1)
+            {
+                m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Achievements);
+                data.direction = 1;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        else
+        {
+            data.scale = std::max(0.f, data.scale - moveTime);
+
+            if (data.scale == 0)
+            {
+                m_scene.getSystem<cro::UISystem>()->setActiveGroup(m_previousMenuID);
+                data.direction = 0;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeOutCubic(data.scale), 1.f });
+    };
+
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_achievementsNode = entity;
+
+
+    //create entries
+    glm::vec3 entryPos(2.f, 74.f, 0.1f);
+    static constexpr glm::vec3 TitleOffset(36.f, 30.f, 0.1f);
+    static constexpr glm::vec3 DescOffset(36.f, 20.f, 0.1f);
+
+    static constexpr float Spacing = 36.f;
+    static constexpr std::int32_t ItemsPerRow = 5;
+    static constexpr float ItemSize = 64.f;
+
+    auto scrollNode = m_scene.createEntity();
+    scrollNode.addComponent<cro::Transform>();
+    m_achievementsNode.getComponent<cro::Transform>().addChild(scrollNode.getComponent<cro::Transform>());
+
+    auto& tex = m_sharedData.sharedResources->textures.get("assets/images/achievements.png");
+    const auto texSize = glm::vec2(tex.getSize());
+    auto& titleFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto& descFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    auto iconEnt = m_scene.createEntity();
+    iconEnt.addComponent<cro::Transform>();
+    iconEnt.addComponent<cro::Drawable2D>().setTexture(&tex);
+    scrollNode.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
+    std::vector<cro::Vertex2D> iconVertices;
+
+    auto titleEnt = m_scene.createEntity();
+    titleEnt.addComponent<cro::Transform>().setPosition(entryPos + TitleOffset);
+    titleEnt.addComponent<cro::Drawable2D>();
+    titleEnt.addComponent<cro::Text>(titleFont).setCharacterSize(UITextSize);
+    titleEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    titleEnt.getComponent<cro::Text>().setVerticalSpacing(Spacing - UITextSize);
+    scrollNode.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
+    std::string titleString;
+
+    std::vector<cro::Entity> croppedEnts = { iconEnt, titleEnt };
+    for (auto i = 1; i < AchievementID::Count; ++i)
+    {
+        //image
+        auto x = i % ItemsPerRow;
+        auto y = i / ItemsPerRow;
+
+        if (!Achievements::getAchievement(AchievementStrings[i])->achieved)
+        {
+            x = y = 0;
+        }
+
+        cro::FloatRect bounds(x * ItemSize, y * ItemSize, ItemSize, ItemSize);
+        //if (texSize.x != 0 && texSize.y != 0) //should at least have a fall back texture.
+        {
+            bounds.left /= texSize.x;
+            bounds.width /= texSize.x;
+            bounds.bottom /= texSize.y;
+            bounds.height /= texSize.y;
+        }
+
+        iconVertices.emplace_back(glm::vec2(entryPos.x, entryPos.y), glm::vec2(bounds.left, bounds.bottom));
+        iconVertices.emplace_back(glm::vec2(entryPos.x, entryPos.y), glm::vec2(bounds.left, bounds.bottom));
+
+        iconVertices.emplace_back(glm::vec2(entryPos.x, entryPos.y + (ItemSize / 2.f)), glm::vec2(bounds.left, bounds.bottom + bounds.height));
+        iconVertices.emplace_back(glm::vec2(entryPos.x + (ItemSize / 2.f), entryPos.y), glm::vec2(bounds.left + bounds.width, bounds.bottom));
+
+        iconVertices.emplace_back(glm::vec2(entryPos.x + (ItemSize / 2.f), entryPos.y + (ItemSize / 2.f)), glm::vec2(bounds.left + bounds.width, bounds.bottom + bounds.height));
+        iconVertices.emplace_back(glm::vec2(entryPos.x + (ItemSize / 2.f), entryPos.y + (ItemSize / 2.f)), glm::vec2(bounds.left + bounds.width, bounds.bottom + bounds.height));
+
+
+        //title
+        titleString += AchievementLabels[i] + "\n";
+
+        //description - hmmm... whats a good way to batch these? We can set the line spacing
+        //as some of these cover two lines...
+        static constexpr std::size_t MaxStrLen = 20;
+        auto str = AchievementDesc[i].first;
+
+        if (str.size() > MaxStrLen)
+        {
+            if (auto result = str.substr(MaxStrLen).find_first_of(" "); result != std::string::npos)
+            {
+                str[result + MaxStrLen] = '\n';
+            }
+        }
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(entryPos + DescOffset);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(descFont).setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setString(str);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        croppedEnts.push_back(entity);
+
+        entryPos.y -= Spacing;
+    }
+
+    iconEnt.getComponent<cro::Drawable2D>().setVertexData(iconVertices);
+    titleEnt.getComponent<cro::Text>().setString(titleString);
+
+    auto updateCropping = [croppedEnts, scrollNode]()
+    {
+        for (auto ent : croppedEnts)
+        {
+            cro::FloatRect crop
+            (
+                -glm::vec2(ent.getComponent<cro::Transform>().getPosition()) - glm::vec2(scrollNode.getComponent<cro::Transform>().getPosition()),
+                BackgroundSize
+            );
+
+            auto scale = glm::vec2(1.f) / glm::vec2(ent.getComponent<cro::Transform>().getScale());
+            crop.left *= scale.x;
+            crop.bottom *= scale.y;
+            crop.width *= scale.x;
+            crop.height *= scale.y;
+
+            ent.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+        }
+    };
+    updateCropping();
+
+    //highlight
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("square_highlight");
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    m_achievementsNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto* uiSystem = m_scene.getSystem<cro::UISystem>();
+    auto selected = uiSystem->addCallback(
+        [entity](cro::Entity e)mutable 
+        {
+            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
+            entity.getComponent<cro::AudioEmitter>().play();
+        });
+    auto unselected = uiSystem->addCallback([entity](cro::Entity)mutable {entity.getComponent<cro::Transform>().setPosition(glm::vec3(10000.f)); });
+
+    //scroll up
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 180.f, 92.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_up");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Achievements);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+
+    m_scrollFunctions[ScrollID::AchUp] = [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+    {
+        if (activated(evt))
+        {
+            auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
+            pos.y = std::max(0.f, pos.y - Spacing);
+            scrollNode.getComponent<cro::Transform>().setPosition(pos);
+
+            updateCropping();
+
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
+    };
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(m_scrollFunctions[ScrollID::AchUp]);
+
+    m_achievementsNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("highlight_large");
+    m_achievementsNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto arrowSelected = uiSystem->addCallback([entity](cro::Entity e)mutable
+        {
+            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() - glm::vec3(1.f, 1.f, 0.f));
+        });
+    auto arrowUnselected = uiSystem->addCallback([entity](cro::Entity e)mutable
+        {
+            entity.getComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
+        });
+
+    auto statsMenu = buildStatsMenu(spriteSheet);
+    m_achievementsNode.getComponent<cro::Transform>().addChild(statsMenu.getComponent<cro::Transform>());
+
+    //show stats
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 196.f, 46.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_left");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Achievements);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselected;
+
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(
+        [&, uiSystem, statsMenu](cro::Entity, const cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                uiSystem->setActiveGroup(MenuID::Dummy);
+                statsMenu.getComponent<cro::Callback>().active = true;
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, statsMenu](cro::Entity e, float)
+    {
+        m_tooltips[ToolTipID::Stats].getComponent<cro::Text>().setString("Show Stats");
+        updateToolTip(e, ToolTipID::Stats);
+
+        auto statsScale = statsMenu.getComponent<cro::Transform>().getScale();
+        statsScale.x = 1.f - statsScale.x;
+        e.getComponent<cro::Transform>().setScale(statsScale);
+    };
+
+    m_achievementsNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //scroll down
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 180.f, 4.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_down");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Achievements);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+
+    
+    m_scrollFunctions[ScrollID::AchDown] = [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+    {
+        if (activated(evt))
+        {
+            static constexpr float MaxScroll = Spacing * (AchievementID::Count - 4);
+            auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
+            pos.y = std::min(MaxScroll, pos.y + Spacing);
+            scrollNode.getComponent<cro::Transform>().setPosition(pos);
+
+            updateCropping();
+
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
+    };
+    
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(m_scrollFunctions[ScrollID::AchDown]);
+
+    m_achievementsNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+}
+
+cro::Entity OptionsState::buildStatsMenu(const cro::SpriteSheet& spriteSheet)
+{
+    auto rootEnt = m_scene.createEntity();
+    rootEnt.addComponent<cro::Transform>().setPosition({ BackgroundSize.x, 0.f, 0.9f });
+    rootEnt.getComponent<cro::Transform>().setScale({ 0.f, 1.f });
+    rootEnt.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-BackgroundSize.x, BackgroundSize.y), BackgroundColour),
+            cro::Vertex2D(glm::vec2(-BackgroundSize.x, 0.f), BackgroundColour),
+            cro::Vertex2D(glm::vec2(0.f, BackgroundSize.y), BackgroundColour),
+            cro::Vertex2D(glm::vec2(0.f), BackgroundColour)
+        });
+
+    struct CallbackData final
+    {
+        float scale = 0.f;
+        std::int32_t direction = 0;
+    };
+    rootEnt.addComponent<cro::Callback>().setUserData<CallbackData>();
+    rootEnt.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<CallbackData>();
+        float moveTime = dt * 2.f;
+        if (data.direction == 0)
+        {
+            data.scale = std::min(1.f, data.scale + moveTime);
+
+            if (data.scale == 1)
+            {
+                m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Stats);
+                data.direction = 1;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        else
+        {
+            data.scale = std::max(0.f, data.scale - moveTime);
+
+            if (data.scale == 0)
+            {
+                m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Achievements);
+                data.direction = 0;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeOutCubic(data.scale), 1.f });
+    };
+
+    auto scrollNode = m_scene.createEntity();
+    scrollNode.addComponent<cro::Transform>();
+    rootEnt.getComponent<cro::Transform>().addChild(scrollNode.getComponent<cro::Transform>());
+
+    static constexpr glm::vec3 EntryPos(-194.f, 74.f, 0.1f);
+    static constexpr glm::vec3 TitleOffset(10.f, 30.f, 0.f);
+    static constexpr glm::vec3 DescOffset(10.f, 20.f, 0.f);
+    static constexpr float Spacing = 26.f;
+
+    //auto& titleFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto& descFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    auto titleEnt = m_scene.createEntity();
+    titleEnt.addComponent<cro::Transform>().setPosition(EntryPos + TitleOffset);
+    titleEnt.addComponent<cro::Drawable2D>();
+    titleEnt.addComponent<cro::Text>(descFont).setCharacterSize(InfoTextSize);
+    titleEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    titleEnt.getComponent<cro::Text>().setVerticalSpacing(Spacing - InfoTextSize);
+    scrollNode.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
+    std::string titleString;
+
+    auto descEnt = m_scene.createEntity();
+    descEnt.addComponent<cro::Transform>().setPosition(EntryPos + DescOffset);
+    descEnt.addComponent<cro::Drawable2D>();
+    descEnt.addComponent<cro::Text>(descFont).setCharacterSize(InfoTextSize);
+    descEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    descEnt.getComponent<cro::Text>().setVerticalSpacing(Spacing - InfoTextSize);
+    scrollNode.getComponent<cro::Transform>().addChild(descEnt.getComponent<cro::Transform>());
+    std::string descString;
+
+    std::vector<cro::Entity> croppedEnts = { titleEnt, descEnt };
+    for (auto i = 0u; i < StatID::Count; ++i)
+    {
+        //title
+        titleString += StatLabels[i] + "\n";
+
+        //value
+        std::string value;
+        switch (StatTypes[i])
+        {
+        default:
+        case StatType::Float:
+        {
+            std::stringstream ss;
+            ss.precision(2);
+            ss << std::fixed << Achievements::getStat(StatStrings[i])->value;
+            value = ss.str();
+        }
+            break;
+        case StatType::Integer:
+            value = std::to_string(static_cast<std::int32_t>(Achievements::getStat(StatStrings[i])->value));
+            break;
+        case StatType::Percent:
+        {
+            float v = Achievements::getStat(StatStrings[i])->value * 100.f;
+            std::stringstream ss;
+            ss.precision(2);
+            ss << std::fixed << v << "%";
+            value = ss.str();
+        }
+            break;
+        }
+
+        descString += value + "\n";
+    }
+    titleEnt.getComponent<cro::Text>().setString(titleString);
+    descEnt.getComponent<cro::Text>().setString(descString);
+
+    auto updateCropping = [croppedEnts, scrollNode]()
+    {
+        for (auto ent : croppedEnts)
+        {
+            cro::FloatRect crop
+            (
+                glm::vec2(-BackgroundSize.x, 0.f) - glm::vec2(ent.getComponent<cro::Transform>().getPosition()) - glm::vec2(scrollNode.getComponent<cro::Transform>().getPosition()),
+                BackgroundSize
+            );
+
+            auto scale = glm::vec2(1.f) / glm::vec2(ent.getComponent<cro::Transform>().getScale());
+            crop.left *= scale.x;
+            crop.bottom *= scale.y;
+            crop.width *= scale.x;
+            crop.height *= scale.y;
+
+            ent.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+        }
+    };
+    updateCropping();
+
+
+
+    //highlight
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("square_highlight");
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto* uiSystem = m_scene.getSystem<cro::UISystem>();
+    auto selected = uiSystem->addCallback(
+        [entity](cro::Entity e)mutable
+        {
+            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
+            entity.getComponent<cro::AudioEmitter>().play();
+        });
+    auto unselected = uiSystem->addCallback([entity](cro::Entity)mutable {entity.getComponent<cro::Transform>().setPosition(glm::vec3(10000.f)); });
+
+    static constexpr float ScrollOffset = (Spacing + 2.f);
+
+    //scroll up
+    entity = m_scene.createEntity();
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -12.f, 92.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_up");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Stats);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+   
+    m_scrollFunctions[ScrollID::StatUp] = [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+    {
+        if (activated(evt))
+        {
+            auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
+            pos.y = std::max(0.f, pos.y - ScrollOffset);
+            scrollNode.getComponent<cro::Transform>().setPosition(pos);
+
+            updateCropping();
+
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
+    };
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(m_scrollFunctions[ScrollID::StatUp]);
+    rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("highlight_large");
+    rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto arrowSelected = uiSystem->addCallback([entity](cro::Entity e)mutable
+        {
+            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() - glm::vec3(1.f, 1.f, 0.f));
+        });
+    auto arrowUnselected = uiSystem->addCallback([entity](cro::Entity e)mutable
+        {
+            entity.getComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
+        });
+
+
+    //close
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({-206.f, 46.f, 0.2f});
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_right");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Stats);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(
+        [rootEnt, uiSystem](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        {
+            if (activated(evt))
+            {
+                uiSystem->setActiveGroup(MenuID::Dummy);
+                rootEnt.getComponent<cro::Callback>().active = true;
+            }
+        });
+    
+    /*entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        m_tooltips[ToolTipID::Stats].getComponent<cro::Text>().setString("Hide Stats");
+        updateToolTip(e, ToolTipID::Stats);
+    };*/
+    rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //scroll down
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -12.f, 4.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_down");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Stats);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+
+    
+    m_scrollFunctions[ScrollID::StatDown] = [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
+    {
+        if (activated(evt))
+        {
+            static constexpr float MaxScroll = ScrollOffset * (StatID::Count - 4);
+            auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
+            pos.y = std::min(MaxScroll, pos.y + ScrollOffset);
+            scrollNode.getComponent<cro::Transform>().setPosition(pos);
+
+            updateCropping();
+
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
+    };
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(m_scrollFunctions[ScrollID::StatDown]);
+    rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    return rootEnt;
+}
+
+void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::uint32_t selectedID, std::uint32_t unselectedID, const cro::SpriteSheet& spriteSheet)
 {
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
+
+    auto textHideCallback = [&, menuID](cro::Entity e, float)
+    {
+        auto current = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
+        float scale = (current == menuID || current == MenuID::Dummy) ? 1 : 0.f;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    };
 
     //advanced
     auto entity = m_scene.createEntity();
@@ -1242,6 +1989,85 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
+
+    //hack to stop multiple instances covering each other when not active
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = textHideCallback;
+        
+
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //toggle highlight
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 79.f, 2.f, 1.5f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ach_button_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto highlightEnt = entity;
+
+    //trophy toggle
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 79.f, 2.f, 1.f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ach_button");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    if (menuID != MenuID::Stats)
+    {
+        entity.addComponent<cro::UIInput>().setGroup(menuID);
+        entity.getComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
+            [highlightEnt](cro::Entity e) mutable
+            {
+                highlightEnt.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+                e.getComponent<cro::AudioEmitter>().play();
+            });
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = uiSystem.addCallback(
+            [highlightEnt](cro::Entity e) mutable
+            {
+                highlightEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+            });
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+            [&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                auto currentID = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
+                if (currentID != MenuID::Stats
+                    && activated(evt))
+                {
+                    if (currentID != MenuID::Achievements)
+                    {
+                        m_previousMenuID = currentID;
+                    }
+
+                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+                    m_achievementsNode.getComponent<cro::Callback>().active = true;
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    }
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        auto active = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
+        if (active == MenuID::Achievements
+            || active == MenuID::Stats)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+        }
+        else
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        }
+
+        //update the tool tip
+        if (active != MenuID::Stats)
+        {
+            updateToolTip(e, ToolTipID::Achievements);
+        }
+    };
 
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -1268,7 +2094,8 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
-
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = textHideCallback;
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //close
@@ -1293,8 +2120,31 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
-
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = textHideCallback;
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+}
+
+void OptionsState::updateToolTip(cro::Entity e, std::int32_t tipID)
+{
+    //update the tool tip
+    auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+    auto bounds = e.getComponent<cro::Drawable2D>().getLocalBounds();
+    bounds = e.getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+    if (bounds.contains(mousePos))
+    {
+        mousePos.x = std::floor(mousePos.x);
+        mousePos.y = std::floor(mousePos.y);
+        mousePos.z = 2.f;
+
+        m_tooltips[tipID].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
+        m_tooltips[tipID].getComponent<cro::Transform>().setScale(m_viewScale);
+    }
+    else
+    {
+        m_tooltips[tipID].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    }
 }
 
 void OptionsState::quitState()

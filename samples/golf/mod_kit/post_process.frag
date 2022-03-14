@@ -12,5 +12,7 @@ void main()
 {
     vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
 
+    //do fancy processing to colour here.
+
     FRAG_OUT = vec4(vec3(1.0) - colour.rgb, colour.a); 
 }

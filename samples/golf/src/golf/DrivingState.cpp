@@ -44,9 +44,12 @@ source distribution.
 #include "GolfSoundDirector.hpp"
 #include "CameraFollowSystem.hpp"
 #include "ClientCollisionSystem.hpp"
+#include "CloudSystem.hpp"
+#include "PoissonDisk.hpp"
 #include "server/ServerMessages.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
+#include "../Achievements.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -68,6 +71,7 @@ source distribution.
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
@@ -92,6 +96,8 @@ namespace
 #include "TransitionShader.inl"
 #include "MinimapShader.inl"
 #include "WireframeShader.inl"
+#include "BillboardShader.inl"
+#include "CloudShader.inl"
 
 #ifdef CRO_DEBUG_
     std::int32_t debugFlags = 0;
@@ -105,10 +111,10 @@ namespace
 #define DEBUG_DRAW false
 #endif
 
-    constexpr glm::vec3 CameraPosition = PlayerPosition + glm::vec3(0.f, CameraStrokeHeight, CameraStrokeOffset);
+    static constexpr glm::vec3 CameraPosition = PlayerPosition + glm::vec3(0.f, CameraStrokeHeight, CameraStrokeOffset);
 
-    constexpr glm::vec2 BillboardChunk(40.f, 50.f);
-    constexpr std::size_t ChunkCount = 5;
+    static constexpr glm::vec2 BillboardChunk(40.f, 50.f);
+    static constexpr std::size_t ChunkCount = 5;
 
     struct FoliageCallback final
     {
@@ -157,6 +163,9 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus()),
     m_viewScale         (1.f),
+    m_scaleBuffer       ("PixelScale", sizeof(float)),
+    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_windBuffer        ("WindValues", sizeof(WindData)),
     m_mouseVisible      (true),
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
@@ -169,6 +178,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
         loadAssets();
         createScene();
     });
+
+    Achievements::setActive(true);
 
 #ifdef CRO_DEBUG_
     /*registerWindow([&]()
@@ -415,7 +426,21 @@ void DrivingState::handleMessage(const cro::Message& msg)
 
 bool DrivingState::simulate(float dt)
 {
-    updateWindDisplay(m_gameScene.getSystem<BallSystem>()->getWindDirection());
+    auto windDir = m_gameScene.getSystem<BallSystem>()->getWindDirection();
+    updateWindDisplay(windDir);
+
+    static float elapsed = 0.f;
+    elapsed += dt;
+
+    m_windUpdate.currentWindSpeed += (windDir.y - m_windUpdate.currentWindSpeed) * dt;
+    m_windUpdate.currentWindVector += (windDir - m_windUpdate.currentWindVector) * dt;
+
+    WindData data;
+    data.direction[0] = m_windUpdate.currentWindVector.x;
+    data.direction[1] = m_windUpdate.currentWindSpeed;
+    data.direction[2] = m_windUpdate.currentWindVector.z;
+    data.elapsedTime = elapsed;
+    m_windBuffer.setData(&data);
 
     m_inputParser.update(dt);
     m_gameScene.simulate(dt);
@@ -438,6 +463,11 @@ bool DrivingState::simulate(float dt)
 
 void DrivingState::render()
 {
+    //TODO these probably only need to be bound once on start-up
+    m_scaleBuffer.bind(0);
+    m_resolutionBuffer.bind(1);
+    m_windBuffer.bind(2);
+
     m_backgroundTexture.clear();
     m_gameScene.render();
 #ifdef CRO_DEBUG_
@@ -480,6 +510,8 @@ void DrivingState::addSystems()
     m_gameScene.addSystem<BallSystem>(mb, DEBUG_DRAW);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
+    m_gameScene.addSystem<cro::SpriteSystem3D>(mb, PixelPerMetre);
+    m_gameScene.addSystem<CloudSystem>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(50.f);
@@ -521,29 +553,41 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n");
+    m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
 
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
 
     //materials
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
     
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
    
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
-    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
+    m_resolutionBuffer.addShader(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Course);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::Billboard);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
+
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
     m_materialIDs[MaterialID::Wireframe] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
@@ -692,8 +736,8 @@ void DrivingState::initAudio()
             cro::Entity planeEnt;
             if (md.loadFromFile("assets/golf/models/plane.cmt"))
             {
-                static constexpr glm::vec3 Start(-132.f, 60.f, 20.f);
-                static constexpr glm::vec3 End(252.f, 60.f, -220.f);
+                static constexpr glm::vec3 Start(-132.f, PlaneHeight, 20.f);
+                static constexpr glm::vec3 End(252.f, PlaneHeight, -220.f);
 
                 entity = m_gameScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition(Start);
@@ -1024,6 +1068,9 @@ void DrivingState::createScene()
     //create the billboards
     createFoliage(entity);
 
+    //and sky detail
+    createClouds();
+
     //tee marker
     md.loadFromFile("assets/golf/models/tee_balls.cmt");
     entity = m_gameScene.createEntity();
@@ -1049,26 +1096,25 @@ void DrivingState::createScene()
         glCheck(glPointSize(invScale * BallPointSize));
         glCheck(glLineWidth(invScale));
 
-        //update checker uniforms
-        for (auto [shader, uniform] : m_scaleUniforms)
-        {
-            glCheck(glUseProgram(shader));
-            glCheck(glUniform1f(uniform, invScale));
-        }
+        m_scaleBuffer.setData(&invScale);
 
-        cam.setPerspective(FOV, texSize.x / texSize.y, 0.1f, vpSize.x);
+        glm::vec2 scaledRes = texSize / invScale;
+        m_resolutionBuffer.setData(&scaledRes);
+
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 320.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
+    static constexpr std::uint32_t ShadowMapSize = 2048u;
     auto camEnt = m_gameScene.getActiveCamera();
     auto& cam = camEnt.getComponent<cro::Camera>();
-    cam.shadowMapBuffer.create(2048, 2048);
+    cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.resizeCallback = updateView;
     updateView(cam);
     
     m_cameras[CameraID::Player] = camEnt;
 
-    constexpr auto halfSize = RangeSize / 2.f;
+    static constexpr auto halfSize = RangeSize / 2.f;
 
     struct TransitionPath final
     {
@@ -1144,24 +1190,24 @@ void DrivingState::createScene()
 
 
     //create an overhead camera
-    auto setPerspective = [](cro::Camera& cam)
+    auto setPerspective = [&](cro::Camera& cam)
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
 
-        cam.setPerspective(FOV, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, 320.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>().setPosition({ RangeSize.x / 3.f, SkyCamHeight, 10.f });
     camEnt.addComponent<cro::Camera>().resizeCallback =
-        [camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
+        [&, camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective(FOV * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective((m_sharedData.fov* cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(16, 16); //not really rendering shadows as such, but without this we get artifcating
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 85.f * 85.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
@@ -1176,14 +1222,14 @@ void DrivingState::createScene()
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback =
-        [camEnt](cro::Camera& cam)
+        [&,camEnt](cro::Camera& cam)
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective(FOV * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective((m_sharedData.fov* cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(16, 16);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 20.f * 20.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
@@ -1198,6 +1244,7 @@ void DrivingState::createScene()
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = updateView;
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     //camEnt.getComponent<cro::Camera>().reflectionBuffer.create(1024, 1024);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<FpsCamera>();
@@ -1303,7 +1350,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
         std::vector<cro::Billboard> billboards;
 
         glm::vec3 offsetPos = dst.getComponent<cro::Transform>().getPosition();
-        constexpr glm::vec2 centreOffset(140.f, 125.f);
+        static constexpr glm::vec2 centreOffset(140.f, 125.f);
 
         const float radSqr = radius * radius;
 
@@ -1340,6 +1387,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
             bb.size *= scale;
         }
         dst.getComponent<cro::BillboardCollection>().setBillboards(billboards);
+        dst.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap));
     };
 
     cro::ModelDefinition md(m_resources);
@@ -1364,6 +1412,10 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
                 static constexpr std::array MinBounds = { 0.f, 0.f };
                 static constexpr std::array MaxBounds = { BillboardChunk.x, BillboardChunk.y };
                 createBillboards(entity, MinBounds, MaxBounds);
+
+                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+                applyMaterialData(md, material);
+                entity.getComponent<cro::Model>().setMaterial(0, material);
             }
 
             pos.x += RangeSize.x + BillboardChunk.x;
@@ -1380,6 +1432,10 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     if (entity.hasComponent<cro::BillboardCollection>())
     {
         createBillboards(entity, { 0.f, 0.f }, { RangeSize.x + (BillboardChunk.x * 2.f), BillboardChunk.x });
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+        applyMaterialData(md, material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
     }
 
     //magic height number here - should match the loaded pavilion height
@@ -1394,6 +1450,10 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
         if (entity.hasComponent<cro::BillboardCollection>())
         {
             createBillboards(entity, { 0.f, 0.f }, { (BillboardChunk.x * 2.8f), BillboardChunk.x / 2.f });
+
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+            applyMaterialData(md, material);
+            entity.getComponent<cro::Model>().setMaterial(0, material);
         }
 
         position.x += 170.f;
@@ -1408,6 +1468,84 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     if (entity.hasComponent<cro::BillboardCollection>())
     {
         createBillboards(entity, { 0.f, 0.f }, { RangeSize.x , BillboardChunk.x }, BillboardChunk.x - 15.f, { RangeSize.x / 2.f, BillboardChunk.x });
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+        applyMaterialData(md, material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+    }
+}
+
+void DrivingState::createClouds()
+{
+    //TODO would 3D models look better?
+    cro::SpriteSheet spriteSheet;
+    if (spriteSheet.loadFromFile("assets/golf/sprites/clouds.spt", m_resources.textures)
+        && spriteSheet.getSprites().size() > 1)
+    {
+        const auto& sprites = spriteSheet.getSprites();
+        std::vector<cro::Sprite> randSprites;
+        for (auto [_, sprite] : sprites)
+        {
+            randSprites.push_back(sprite);
+        }
+
+        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudVertex, CloudFragment);
+        auto& shader = m_resources.shaders.get(ShaderID::Cloud);
+        m_scaleBuffer.addShader(shader);
+
+        auto matID = m_resources.materials.add(shader);
+        auto material = m_resources.materials.get(matID);
+        material.blendMode = cro::Material::BlendMode::Alpha;
+        material.setProperty("u_texture", *spriteSheet.getTexture());
+
+        auto seed = static_cast<std::uint32_t>(std::time(nullptr));
+        static constexpr std::array MinBounds = { 0.f, 0.f };
+        static constexpr std::array MaxBounds = { 320.f, 320.f };
+        auto positions = pd::PoissonDiskSampling(150.f, MinBounds, MaxBounds, 30u, seed);
+
+        auto Offset = 160.f;
+
+        std::vector<cro::Entity> delayedUpdates;
+
+        for (const auto& position : positions)
+        {
+            float height = cro::Util::Random::value(20, 40) + PlaneHeight;
+            glm::vec3 cloudPos(position[0] - Offset, height, -position[1] + Offset);
+
+
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(cloudPos);
+            entity.addComponent<Cloud>().speedMultiplier = static_cast<float>(cro::Util::Random::value(10, 22)) / 100.f;
+            entity.addComponent<cro::Sprite>() = randSprites[cro::Util::Random::value(0u, randSprites.size() - 1)];
+            entity.addComponent<cro::Model>();
+
+            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+            bounds.width /= PixelPerMetre;
+            bounds.height /= PixelPerMetre;
+            entity.getComponent<cro::Transform>().setOrigin({bounds.width / 2.f, bounds.height / 2.f, 0.f});
+
+            float scale = static_cast<float>(cro::Util::Random::value(8, 20));
+            entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
+
+            delayedUpdates.push_back(entity);
+        }
+
+        //this is a work around because changing sprite 3D materials
+        //require at least once scene update to be run first.
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, material, delayedUpdates](cro::Entity e, float)
+        {
+            for (auto en : delayedUpdates)
+            {
+                en.getComponent<cro::Model>().setMaterial(0, material);
+            }
+
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        };
     }
 }
 

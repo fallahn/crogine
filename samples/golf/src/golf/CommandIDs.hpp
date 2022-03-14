@@ -42,7 +42,8 @@ struct CommandID final
         SlopeIndicator  = 0x40,
         //PlayerShadow    = 0x80,
         SpectatorCam    = 0x100,
-        PlayerAvatar    = 0x200
+        PlayerAvatar    = 0x200,
+        ParticleEmitter = 0x400
     };
 
     struct UI final

@@ -17,6 +17,8 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/OriginIconBuilder.cpp
   ${PROJECT_DIR}/ParticleState.cpp
   ${PROJECT_DIR}/ParticleStateUI.cpp
+  ${PROJECT_DIR}/SpriteState.cpp
+  ${PROJECT_DIR}/SpriteStateUI.cpp
   ${PROJECT_DIR}/SrgbTransform.cpp
   ${PROJECT_DIR}/TextEditor.cpp
   ${PROJECT_DIR}/WorldState.cpp

@@ -1,9 +1,9 @@
 cubemap sky
 {
-	up = "assets/golf/images/skybox/summer/py.png"
-	down = "assets/golf/images/skybox/summer/ny.png"
-	left = "assets/golf/images/skybox/summer/nx.png"
-	right = "assets/golf/images/skybox/summer/px.png"
-	front = "assets/golf/images/skybox/summer/pz.png"
-	back = "assets/golf/images/skybox/summer/nz.png"
+    up = "assets/golf/images/skybox/summer/py.png"
+    down = "assets/golf/images/skybox/summer/ny.png"
+    left = "assets/golf/images/skybox/summer/nx.png"
+    right = "assets/golf/images/skybox/summer/px.png"
+    front = "assets/golf/images/skybox/summer/pz.png"
+    back = "assets/golf/images/skybox/summer/nz.png"
 }

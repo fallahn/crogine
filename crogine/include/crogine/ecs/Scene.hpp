@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -68,7 +68,20 @@ namespace cro
     class CRO_EXPORT_API Scene final
     {
     public:
-        explicit Scene(MessageBus&, std::size_t initialPoolSize = 128);
+
+        /*!
+        \brief Constructor
+        \param messageBus A reference to the App's active message bus
+        \param initialPoolSize How much memory to allocate up front for the Scene's component pool
+        This is the number of components in the pool before it automatically resizes. Reserving
+        a larger size on construction can prevent interruptions caused by the reallocation
+        of resources, however is not strictly necessary. The maximum value is 1024 and Defaults to 128.
+        Debug builds will print a message to the console when a pool resizes, which can help decide
+        what this initial value will be.
+        \param infoFlags A bitwise value made from combining INFO_FLAG values by OR'ing
+        them together. \see InfoFlags.hpp
+        */
+        explicit Scene(MessageBus& messageBus, std::size_t initialPoolSize = 128, std::uint32_t infoFlags = 0);
 
         ~Scene();
         Scene(const Scene&) = delete;
@@ -348,8 +361,14 @@ namespace cro
         MessageBus& getMessageBus() { return m_messageBus; }
         const MessageBus& getMessageBus() const { return m_messageBus; }
 
+        /*!
+        \brief Returns a unique ID for the current Scene instance
+        */
+        std::size_t getInstanceID() const { return m_uid; }
+
     private:
         MessageBus& m_messageBus;
+        std::size_t m_uid;
 
         Entity m_defaultCamera;
         Entity m_activeCamera;

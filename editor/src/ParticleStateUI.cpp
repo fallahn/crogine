@@ -76,22 +76,7 @@ void ParticleState::drawMenuBar()
 {
     const auto openFile = [&](const std::string& path)
     {
-        if (cro::FileSystem::showMessageBox("Confirm", "Save Current Settings?", cro::FileSystem::ButtonType::YesNo))
-        {
-            if (!lastSavePath.empty())
-            {
-                m_particleSettings->saveToFile(lastSavePath);
-            }
-            else
-            {
-                auto path = cro::FileSystem::saveFileDialogue(lastSavePath, "cps");
-                if (!path.empty())
-                {
-                    m_particleSettings->saveToFile(path);
-                    lastSavePath = path;
-                }
-            }
-        }
+        confirmSave();
 
         m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().stop();
 
@@ -111,7 +96,7 @@ void ParticleState::drawMenuBar()
                 {
                     m_particleSettings->textureID = m_texture.getGLHandle();
                     m_particleSettings->textureSize = m_texture.getSize();
-                    m_texture.setSmooth(true);
+                    m_texture.setSmooth(m_particleSettings->textureSmoothing);
                     m_texture.setRepeated(true);
                 }
             }
@@ -136,22 +121,7 @@ void ParticleState::drawMenuBar()
         {
             if (ImGui::MenuItem("New##Particle", nullptr, nullptr))
             {
-                if (cro::FileSystem::showMessageBox("Confirm", "Save Current Settings?", cro::FileSystem::ButtonType::YesNo))
-                {
-                    if (!lastSavePath.empty())
-                    {
-                        m_particleSettings->saveToFile(lastSavePath);
-                    }
-                    else
-                    {
-                        auto path = cro::FileSystem::saveFileDialogue(lastSavePath, "cps");
-                        if (!path.empty())
-                        {
-                            m_particleSettings->saveToFile(path);
-                            lastSavePath = path;
-                        }
-                    }
-                }
+                confirmSave();
 
                 m_cameras[CameraID::ThreeDee].emitter.getComponent<cro::ParticleEmitter>().settings = {};
 
@@ -232,6 +202,8 @@ void ParticleState::drawMenuBar()
             {
                 if (ImGui::MenuItem("Return To World Editor"))
                 {
+                    confirmSave();
+
                     getContext().mainWindow.setTitle("Crogine Editor");
                     requestStackPop();
                 }
@@ -239,6 +211,7 @@ void ParticleState::drawMenuBar()
 
             if (ImGui::MenuItem("Quit##Particle", nullptr, nullptr))
             {
+                confirmSave();
                 cro::App::quit();
             }
             ImGui::EndMenu();
@@ -266,6 +239,13 @@ void ParticleState::drawMenuBar()
                 {
                     openModel(path);
                 }
+            }
+
+            if (m_entities[EntityID::Model].isValid() &&
+                ImGui::MenuItem("Remove Preview Model", nullptr, nullptr))
+            {
+                m_scene.destroyEntity(m_entities[EntityID::Model]);
+                m_entities[EntityID::Model] = {};
             }
 
             if (ImGui::MenuItem("Sprite Renderer", nullptr, nullptr))
@@ -308,6 +288,9 @@ void ParticleState::drawInspector()
         {
             //lifetime
             ImGui::SliderFloat("Lifetime", &m_particleSettings->lifetime, 0.1f, 10.f);
+
+            //lifetime variance
+            ImGui::SliderFloat("Variance", &m_particleSettings->lifetimeVariance, 0.f, m_particleSettings->lifetime - 0.1f);
 
             //spread
             ImGui::SliderFloat("Spread", &m_particleSettings->spread, 0.f, 360.f);
@@ -396,6 +379,16 @@ void ParticleState::drawInspector()
                     m_particleSettings->textureID = m_texture.getGLHandle();
                     m_particleSettings->texturePath = path;
                     m_particleSettings->textureSize = m_texture.getSize();
+                }
+            }
+            if (!m_particleSettings->texturePath.empty())
+            {
+                auto smooth = m_texture.isSmooth();
+                ImGui::SameLine();
+                if (ImGui::Checkbox("Smooth", &smooth))
+                {
+                    m_texture.setSmooth(smooth);
+                    m_particleSettings->textureSmoothing = smooth;
                 }
             }
 
@@ -833,5 +826,25 @@ void ParticleState::openModel(const std::string& path)
 
         m_cameras[CameraID::ThreeDee].emitter.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_entities[EntityID::Model] = entity;
+    }
+}
+
+void ParticleState::confirmSave()
+{
+    if (cro::FileSystem::showMessageBox("Confirm", "Save Current Settings?", cro::FileSystem::ButtonType::YesNo))
+    {
+        if (!lastSavePath.empty())
+        {
+            m_particleSettings->saveToFile(lastSavePath);
+        }
+        else
+        {
+            auto path = cro::FileSystem::saveFileDialogue(lastSavePath, "cps");
+            if (!path.empty())
+            {
+                m_particleSettings->saveToFile(path);
+                lastSavePath = path;
+            }
+        }
     }
 }

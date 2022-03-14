@@ -35,8 +35,8 @@ source distribution.
 //just to detect client/server version mismatch
 //(terrain data changed between 100 -> 110)
 //(model format changed betweem 120 -> 130)
-static constexpr std::uint16_t CURRENT_VER = 130;
-static const std::string StringVer("1.3.0");
+static constexpr std::uint16_t CURRENT_VER = 140;
+static const std::string StringVer("1.4.0");
 
 namespace MessageType
 {
@@ -74,6 +74,7 @@ namespace PacketID
         BallLanded, //< BallUpdate struct
 
         EntityRemoved, //< uint32 entity ID
+        ReadyQuitStatus, //< uint8 flags containing status of ready/quit at round end
 
         //from client
         ClientVersion, //uint32 CURRENT_VER of client. Clients are kicked if this does not match the server
@@ -83,10 +84,12 @@ namespace PacketID
         PlayerInfo, //< ConnectionData array
         ServerCommand, //< uint8_t command type
         TransitionComplete, //< uint8 clientID, signal hole transition completed
+        ReadyQuit, //< uint8 clientID - client wants to toggle skip viewing scores
 
         //both directions
         MapInfo, //< serialised cro::String containing course directory
         LobbyReady, //< uint8 playerID uint8 0 false 1 true
+        AchievementGet //< uint8 client uint8 achievement id (always assume first player on client, as achievements are disabled other wise)
     };
 }
 
@@ -97,6 +100,7 @@ namespace ServerCommand
         NextHole,
         NextPlayer,
         GotoGreen,
-        EndGame
+        EndGame,
+        ChangeWind
     };
 }

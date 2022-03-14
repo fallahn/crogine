@@ -46,6 +46,7 @@ source distribution.
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 
 #include <crogine/util/Matrix.hpp>
 
@@ -111,6 +112,9 @@ bool ParticleState::handleEvent(const cro::Event& evt)
     switch(evt.type)
     {
     default: break;
+    case SDL_QUIT:
+        confirmSave();
+        break;
     case SDL_KEYDOWN:
         if (evt.key.keysym.mod & (KMOD_LSHIFT | KMOD_RSHIFT))
         {
@@ -297,6 +301,7 @@ void ParticleState::addSystems()
 
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
+    m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
     m_scene.addSystem<cro::ParticleSystem>(mb);
 }
@@ -333,7 +338,7 @@ void ParticleState::setupScene()
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(DefaultCameraPosition);
-    entity.addComponent<cro::Camera>().shadowMapBuffer.create(4096, 4096);
+    entity.addComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
     m_viewportRatio = updateView(entity, DefaultFarPlane, DefaultFOV);
 
     m_cameras[CameraID::ThreeDee].camera = entity;
@@ -353,10 +358,16 @@ void ParticleState::setupScene()
     //setCamera(m_cameraIndex); //assigns the emitter entity too
 
     //sunlight node
-    /*cro::ModelDefinition def;
-    def.loadFromFile("assets/models/arrow.cmt", m_resources);
-    def.createModel(m_scene.getSunlight(), m_resources);
-    m_scene.getSunlight().setLabel("Sunlight");*/
+    m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -45.f * cro::Util::Const::degToRad);
+
+
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/models/ground_plane.cmt"))
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+    }
 }
 
 void ParticleState::setCamera(std::int32_t idx)
@@ -386,7 +397,7 @@ void ParticleState::setCamera(std::int32_t idx)
         //m_selectedEntity = m_entities[EntityID::Emitter];
         if (m_entities[EntityID::Model].isValid())
         {
-            m_entities[EntityID::Model].getComponent<cro::Model>().setHidden(true);
+            m_entities[EntityID::Model].getComponent<cro::Model>().setHidden(false);
         }
     }
     m_particleSettings = &m_cameras[m_cameraIndex].emitter.getComponent<cro::ParticleEmitter>().settings;

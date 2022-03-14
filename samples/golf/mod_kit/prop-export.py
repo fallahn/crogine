@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2022, 1, 31),
+    "version": (2022, 3, 6),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -40,6 +40,12 @@ def WriteCrowd(file, location, rotation):
     file.write("    crowd\n    {\n")
     file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
     file.write("        rotation = %f\n" % (rotation[2] * (180.0 / 3.141)))
+    file.write("    }\n\n")
+
+def WriteParticles(file, path, location):
+    file.write("    particles\n    {\n")
+    file.write("        path = \"%s\"\n" % path)
+    file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
     file.write("    }\n\n")
 
 class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
@@ -109,6 +115,14 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                 else:
                     if ob.type == 'MESH':
                         WriteProp(file, modelName, worldLocation, worldRotation, worldScale)
+                    elif ob.type == 'EMPTY':
+                        if ob.get('type') is not None:
+                            if ob['type'] == 1:
+                            # is a particle emitter
+                                if ob.get('path') is not None:
+                                    WriteParticles(file, ob['path'], worldLocation)
+                                else:
+                                    WriteParticles(file, "path_missing", worldLocation)
 
         file.write("}")
         file.close()

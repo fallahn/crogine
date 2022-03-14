@@ -216,7 +216,6 @@ namespace cro
         ie a path to a file in a bundle, or an absolute path to a file
         stored in a user directory such as Application Support. Does nothing
         on Windows or Linux.
-        \param relative
         \returns true on success, else false if something went wrong
         */
         bool loadFromFile(const std::string& path, bool relative = true);

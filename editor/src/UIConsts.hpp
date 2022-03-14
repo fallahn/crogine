@@ -47,6 +47,7 @@ namespace uiConst
     static constexpr float MinMaterialSlotSize = 20.f;
     static constexpr float ViewManipSize = 96.f;
     static constexpr float InfoBarHeight = 26.f;
+    static constexpr float IndentSize = 12.f;
 
     static constexpr std::size_t MaxMaterials = 99;
 

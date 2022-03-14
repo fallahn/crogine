@@ -42,11 +42,25 @@ static const std::string TerrainVertexShader = R"(
     uniform mat4 u_worldMatrix;
     uniform mat4 u_viewProjectionMatrix;
 
+#if defined(RX_SHADOWS)
+    uniform mat4 u_lightViewProjectionMatrix;
+#endif
+
     uniform vec4 u_clipPlane;
     uniform float u_morphTime;
 
+    layout (std140) uniform ScaledResolution
+    {
+        vec2 u_scaledResolution;
+    };
+
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec4 v_colour;
+    VARYING_OUT vec3 v_worldPosition;
+
+#if defined(RX_SHADOWS)
+    VARYING_OUT LOW vec4 v_lightWorldPosition;
+#endif
 
     vec3 lerp(vec3 a, vec3 b, float t)
     {
@@ -56,11 +70,24 @@ static const std::string TerrainVertexShader = R"(
     void main()
     {
         vec4 position = u_worldMatrix * vec4(lerp(a_position.xyz, a_tangent, u_morphTime), 1.0);
-        gl_Position = u_viewProjectionMatrix * position;
+        //gl_Position = u_viewProjectionMatrix * position;
+
+        vec4 vertPos = u_viewProjectionMatrix * position;
+        vertPos.xyz /= vertPos.w;
+        vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
+        vertPos.xy = floor(vertPos.xy);
+        vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
+        vertPos.xyz *= vertPos.w;
+        gl_Position = vertPos;
+
+    #if defined (RX_SHADOWS)
+        v_lightWorldPosition = u_lightViewProjectionMatrix * position;
+    #endif
 
         //this should be a slerp really but lerp is good enough for low spec shenanigans
         v_normal = u_normalMatrix * lerp(a_normal, a_bitangent, u_morphTime);
         v_colour = a_colour;
+        v_worldPosition = position.xyz;
 
         gl_ClipDistance[0] = dot(position, u_clipPlane);
     })";
@@ -155,6 +182,16 @@ static const std::string CelVertexShader = R"(
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
 
+    layout (std140) uniform WindValues
+    {
+        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
+    };    
+
+    layout (std140) uniform ScaledResolution
+    {
+        vec2 u_scaledResolution;
+    };
+
     VARYING_OUT float v_ditherAmount;
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec4 v_colour;
@@ -199,7 +236,31 @@ static const std::string CelVertexShader = R"(
     #endif
 
         vec4 worldPosition = worldMatrix * position;
-        gl_Position = u_projectionMatrix * worldViewMatrix * position;
+        //gl_Position = u_projectionMatrix * worldViewMatrix * position;
+
+        vec4 vertPos = u_projectionMatrix * worldViewMatrix * position;
+
+#if defined(WIND_WARP)
+        const float xFreq = 0.6;
+        //float xFreq = 0.6 + (3.4 * a_colour.r);
+        const float yFreq = 0.8;
+        const float scale = 0.2;
+
+        float strength = u_windData.y;
+        float totalScale = scale * strength * a_colour.b;
+
+        vertPos.x += sin((u_windData.w * (xFreq)) + worldMatrix[3].x) * totalScale;
+        vertPos.z += sin((u_windData.w * (yFreq)) + worldMatrix[3].z) * totalScale;
+        vertPos.xz += (u_windData.xz * strength * 2.0) * totalScale;
+#else
+        //snapping kinda ruins the wind movement
+        //vertPos.xyz /= vertPos.w;
+        //vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
+        //vertPos.xy = floor(vertPos.xy);
+        //vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
+        //vertPos.xyz *= vertPos.w;
+#endif
+        gl_Position = vertPos;
 
         vec3 normal = a_normal;
     #if defined(SKINNED)
@@ -231,7 +292,11 @@ static const std::string CelVertexShader = R"(
 
 static const std::string CelFragmentShader = R"(
     uniform vec3 u_lightDirection;
-    uniform float u_pixelScale = 1.0;
+
+    layout (std140) uniform PixelScale
+    {
+        float u_pixelScale;
+    };
 
 #if defined (RX_SHADOWS)
     uniform sampler2D u_shadowMap;
@@ -320,6 +385,19 @@ static const std::string CelFragmentShader = R"(
 
         float amount = shadow / 9.0;
         return 1.0 - amount;
+    }
+#endif
+
+#if defined (ADD_NOISE)
+    uniform vec4 u_noiseColour = vec4(0.0,0.0,0.0,1.0);
+    VARYING_IN vec3 v_worldPosition;
+
+    const float NoisePerMetre = 10.0;
+    float rand(float n){return fract(sin(n) * 43758.5453123);}
+
+    float noise(vec2 pos)
+    {
+        return fract(sin(dot(pos, vec2(12.9898, 4.1414))) * 43758.5453);
     }
 #endif
 
@@ -424,6 +502,13 @@ static const std::string CelFragmentShader = R"(
             if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
             FRAG_OUT.rgb += vec3(0.0,0.0,0.5);
         }*/
+#endif
+
+#if defined (ADD_NOISE)
+        float noiseVal = noise(floor(v_worldPosition.xz * NoisePerMetre)) * 0.4;
+        //noiseVal *= (noise(floor(v_worldPosition.xz / 6.0)) * 0.3);
+        //FRAG_OUT.rgb *= (1.0 - noiseVal);
+        FRAG_OUT.rgb = mix(FRAG_OUT.rgb, u_noiseColour.rgb, noiseVal);
 #endif
 
 #if defined(DITHERED)

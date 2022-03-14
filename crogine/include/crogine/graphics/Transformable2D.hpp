@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -92,7 +92,9 @@ namespace cro
         */
         void scale(glm::vec2 amount);
 
-    protected:
+        /*!
+        \brief Returns the combined transform
+        */
         const glm::mat4& getTransform() const;
 
     private:

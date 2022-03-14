@@ -48,6 +48,7 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/UniformBuffer.hpp>
 
 #include <array>
 #include <unordered_map>
@@ -101,6 +102,7 @@ private:
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
+    cro::Scene m_trophyScene;
 
     cro::Clock m_mouseClock;
     bool m_mouseVisible;
@@ -111,7 +113,18 @@ private:
     cro::Clock m_readyClock; //pings ready state until ack'd
 
     cro::RenderTexture m_gameSceneTexture;
-    std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
+    cro::RenderTexture m_trophySceneTexture;
+
+    cro::UniformBuffer m_scaleBuffer;
+    cro::UniformBuffer m_resolutionBuffer;
+    cro::UniformBuffer m_windBuffer;
+
+    struct WindUpdate final
+    {
+        float currentWindSpeed = 0.f;
+        glm::vec3 currentWindVector = glm::vec3(0.f);
+        glm::vec3 windVector = glm::vec3(0.f);
+    }m_windUpdate;
 
     cro::Image m_currentMap;
     std::vector<HoleData> m_holeData;
@@ -137,6 +150,7 @@ private:
             Hair,
             Course,
             Ball,
+            Billboard,
 
             Count
         };
@@ -176,7 +190,8 @@ private:
     void buildScene();
     void initAudio();
 
-    void createWeather();
+    void createWeather(); //weather.cpp
+    void createClouds(const ThemeSettings&);
     void spawnBall(const struct ActorInfo&);
 
     void handleNetEvent(const cro::NetEvent&);
@@ -216,6 +231,8 @@ private:
             MessageBoard,
             Bunker,
             Foul,
+            QuitReady,
+            QuitNotReady,
 
             Count
         };
@@ -247,6 +264,7 @@ private:
     cro::Entity m_courseEnt;
     cro::Entity m_waterEnt;
     cro::Entity m_uiReflectionCam;
+    std::uint8_t m_readyQuitFlags;
 
     void buildUI();
     void showCountdown(std::uint8_t);
@@ -263,6 +281,13 @@ private:
     void showMessageBoard(MessageBoardID);
     void floatingMessage(const std::string&);
     void createTransition();
+    void notifyAchievement(const std::array<std::uint8_t, 2u>&);
+    void showNotification(const std::string&);
+    void toggleQuitReady();
+
+    void buildTrophyScene();
+    std::array<cro::Entity, 3u> m_trophies = {};
+    std::array<cro::Entity, 3u> m_trophyLabels = {};
 
     //-----------
 
@@ -275,4 +300,17 @@ private:
 
     cro::Entity m_greenCam;
     cro::RenderTexture m_greenBuffer;
+
+    //------------
+
+    bool m_hadFoul; //tracks 'boomerang' stat
+
+    //for tracking scoreboard based stats
+    struct StatBoardEntry final
+    {
+        std::uint8_t client = 0;
+        std::uint8_t player = 0;
+        std::int32_t score = 0;
+    };
+    std::vector<StatBoardEntry> m_statBoardScores;
 };

@@ -165,6 +165,11 @@ void WorldState::drawMenuBar()
                 requestStackPush(States::LayoutEditor);
                 unregisterWindows();
             }
+            if (ImGui::MenuItem("Sprite Editor", nullptr, nullptr))
+            {
+                requestStackPush(States::SpriteEditor);
+                unregisterWindows();
+            }
 
             ImGui::EndMenu();
         }

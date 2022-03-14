@@ -174,8 +174,8 @@ void SpriteSystem3D::process(float)
 
 
             //update bounding box
-            meshData.boundingBox[0] = { subRect.left, subRect.bottom, -0.01f };
-            meshData.boundingBox[1] = { subRect.left + subRect.width, subRect.bottom + subRect.height, 0.01f };
+            meshData.boundingBox[0] = { 0.f, 0.f, 0.1f };
+            meshData.boundingBox[1] = { subRect.width,subRect.height, -0.1f };
 
             //update bounding sphere
             auto rad = (meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f;

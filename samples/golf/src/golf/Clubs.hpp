@@ -68,5 +68,5 @@ static const std::array<Club, ClubID::Count> Clubs =
     Club("Pitch Wedge 70m", "70m", 25.9f, 52.f, 70.f),
     Club("Gap Wedge 30m", "30m", 17.8f, 60.f, 30.f),
     Club("Sand Wedge 10m", "10m", 10.65f, 60.f, 10.f),
-    Club("Putter 5m", "5m", 4.65f, 0.f, 5.f)
+    Club("Putter 7m", "7m", /*4.65f*/7.f, 0.f, 7.f)
 };

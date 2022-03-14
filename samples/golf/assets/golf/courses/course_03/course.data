@@ -1,6 +1,6 @@
 course course_03
 {
-    skybox = "assets/golf/images/skybox/spring/sky.ccm"
+    skybox = "assets/golf/images/skybox/mountain_spring/sky.ccm"
     billboard_model = "assets/golf/models/shrubbery.cmt"
     billboard_sprites = "assets/golf/sprites/shrubbery.spt"
     audio = "assets/golf/sound/ambience.xas"

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -281,7 +281,11 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
             }
             else
             {
-                shaderType = useDeferredShaders ? ShaderResource::PBRDeferred : ShaderResource::PBR;
+                //fall back to vertex lit if no env map is supplied
+                if (m_envMap)
+                {
+                    shaderType = useDeferredShaders ? ShaderResource::PBRDeferred : ShaderResource::PBR;
+                }
             }
         }
         else if (m_billboard)

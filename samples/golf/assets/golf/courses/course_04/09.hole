@@ -1,0 +1,181 @@
+hole 09
+{
+    map="assets/golf/courses/course_04/07.png"
+    model="assets/golf/models/course_04/07.cmt"
+    par = 4
+
+    pin = 206.775314,1.448828,-88.837753
+
+    target = 107.084045,1.445047,-150.087662
+
+    tee = 31.226440,1.445047,-128.304230
+
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 163.416885,0.075561,-120.750229
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 163.694275,0.081478,-123.187973
+        rotation = 169.766052
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 165.286041,0.075561,-134.162430
+        rotation = 35.080736
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 166.775543,0.081478,-137.971298
+        rotation = 224.896570
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/boat01.cmt"
+        position = 121.526421,-0.367723,-199.684753
+        rotation = 14.169178
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = 204.530441,3.581944,-51.219025
+        rotation = -147.149132
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/beach_hut.cmt"
+        position = 20.684198,1.342857,-33.174828
+        rotation = -36.944127
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets//golf/models/bench03.cmt"
+        position = 26.022776,1.438936,-30.780785
+        rotation = 161.891694
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 10.171611,1.445045,-68.730927
+        rotation = 74.267804
+    }
+
+    crowd
+    {
+        position = 19.055796,1.445047,-85.989098
+        rotation = 38.327617
+    }
+
+    prop
+    {
+        model = "assets/golf/models/reeds_large.cmt"
+        position = 163.156799,-0.005888,-113.179985
+        rotation = 34.002353
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/reeds_large.cmt"
+        position = 160.643173,-0.005888,-111.994911
+        rotation = 17.489130
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 246.105377,1.503310,-97.328720
+        rotation = 72.270874
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 244.523911,1.503309,-93.323135
+        rotation = 59.922541
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 247.568497,1.445047,-102.307648
+        rotation = 88.343415
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cart.cmt"
+        position = 242.904068,1.445049,-88.495644
+        rotation = 75.882397
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 214.287643,1.502830,-67.441841
+        rotation = -159.574566
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/boat02.cmt"
+        position = 255.325027,-0.512657,6.748154
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/beach_hut.cmt"
+        position = 298.317902,1.133549,-21.857483
+        rotation = -28.810665
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/bench01.cmt"
+        position = 299.581940,1.454058,-29.280478
+        rotation = 0.153922
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/rock_large.cmt"
+        position = 294.002808,1.400002,-17.115868
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 283.147644,1.445049,-11.148572
+        rotation = 23.615514
+    }
+
+}

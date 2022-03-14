@@ -56,7 +56,7 @@ Cursor::Cursor(const std::string& path, std::int32_t x, std::int32_t y)
     m_cursor    (nullptr),
     m_inUse     (false)
 {
-    Image image;
+    Image image(true);
     if (image.loadFromFile(path))
     {
         auto size = image.getSize();
@@ -68,22 +68,25 @@ Cursor::Cursor(const std::string& path, std::int32_t x, std::int32_t y)
         else if (format == ImageFormat::RGB ||
             format == ImageFormat::RGBA)
         {
+            const auto channels = format == ImageFormat::RGB ? 3 : 4;
+
             auto* data = image.getPixelData();
             auto length = size.x * size.y;
-            length *= format == ImageFormat::RGB ? 3 : 4;
+            length *= channels;
 
             m_imageData.resize(length);
             std::memcpy(m_imageData.data(), data, length);
 
-            std::uint32_t rMask = 0x000000ff;
-            std::uint32_t gMask = 0x0000ff00;
-            std::uint32_t bMask = 0x00ff0000;
-            std::uint32_t aMask = format == ImageFormat::RGB ? 0 : 0xff000000;
+            static constexpr std::uint32_t rMask = 0x000000ff;
+            static constexpr std::uint32_t gMask = 0x0000ff00;
+            static constexpr std::uint32_t bMask = 0x00ff0000;
+            const std::uint32_t aMask = format == ImageFormat::RGB ? 0 : 0xff000000;
 
-            std::int32_t depth = format == ImageFormat::RGB ? 3 : 4;
-            std::int32_t pitch = size.x * depth;
+            const std::int32_t depth = 8 * channels;
+            const std::int32_t pitch = size.x * channels;
 
             m_surface = SDL_CreateRGBSurfaceFrom(m_imageData.data(), size.x, size.y, depth, pitch, rMask, gMask, bMask, aMask);
+
             if (m_surface)
             {
                 m_cursor = SDL_CreateColorCursor(m_surface, x, y);

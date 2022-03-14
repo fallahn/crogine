@@ -64,6 +64,7 @@
     <ClInclude Include="..\crogine\include\crogine\core\Wavetable.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Window.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Assert.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\detail\BalancedTree.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\GlobalConsts.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\HashCombine.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\ModelBinary.hpp" />
@@ -94,6 +95,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\components\UIInput.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Director.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Entity.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\InfoFlags.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Renderable.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Scene.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Sunlight.hpp" />
@@ -161,16 +163,17 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\Texture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\TextureResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Transformable2D.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\UniformBuffer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Vertex2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\GraphEditor.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImCurveEdit.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGradient.h" />
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\imgui.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGuizmo.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImSequencer.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImZoomSlider.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\Gui.hpp" />
     <ClInclude Include="..\crogine\include\crogine\gui\GuiClient.hpp" />
-    <ClInclude Include="..\crogine\include\crogine\gui\imgui.h" />
     <ClInclude Include="..\crogine\include\crogine\network\NetClient.hpp" />
     <ClInclude Include="..\crogine\include\crogine\network\NetData.hpp" />
     <ClInclude Include="..\crogine\include\crogine\network\NetHost.hpp" />
@@ -251,6 +254,7 @@
     <ClCompile Include="..\crogine\src\core\tinyfiledialogs.c" />
     <ClCompile Include="..\crogine\src\core\Wavetable.cpp" />
     <ClCompile Include="..\crogine\src\core\Window.cpp" />
+    <ClCompile Include="..\crogine\src\detail\BalancedTree.cpp" />
     <ClCompile Include="..\crogine\src\detail\DistanceField.cpp" />
     <ClCompile Include="..\crogine\src\detail\enet\callbacks.c" />
     <ClCompile Include="..\crogine\src\detail\enet\compress.c" />
@@ -342,6 +346,7 @@
     <ClCompile Include="..\crogine\src\graphics\Texture.cpp" />
     <ClCompile Include="..\crogine\src\graphics\TextureResource.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Transformable2D.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\UniformBuffer.cpp" />
     <ClCompile Include="..\crogine\src\imgui\GraphEditor.cpp" />
     <ClCompile Include="..\crogine\src\imgui\Gui.cpp" />
     <ClCompile Include="..\crogine\src\imgui\GuiClient.cpp" />

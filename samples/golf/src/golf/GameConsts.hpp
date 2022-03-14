@@ -48,7 +48,6 @@ static constexpr float CameraStrokeHeight = 2.f;// 3.2f;// 2.6f;
 static constexpr float CameraPuttHeight = 0.3f;
 static constexpr float CameraStrokeOffset = 5.f;// 7.5f;// 5.1f;
 static constexpr float CameraPuttOffset = 0.8f;
-static constexpr float FOV = 60.f * cro::Util::Const::degToRad;
 
 static constexpr float GreenCamHeight = 3.f;
 static constexpr float SkyCamHeight = 16.f;
@@ -68,6 +67,8 @@ static constexpr float PlayerShadowOffset = 0.04f;
 
 static constexpr float MinPixelScale = 1.f;
 static constexpr float MaxPixelScale = 3.f;
+
+static constexpr float PlaneHeight = 60.f;
 
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
@@ -95,17 +96,25 @@ struct MixerChannel final
     };
 };
 
+struct WindData final
+{
+    float direction[3];
+    float elapsedTime = 0.f;
+};
+
 struct ShaderID final
 {
     enum
     {
         Water = 100,
         Terrain,
+        Billboard,
         Cel,
         CelSkinned,
         CelTextured,
         CelTexturedInstanced,
         CelTexturedSkinned,
+        Cloud,
         Leaderboard,
         Player,
         Hair,
@@ -217,6 +226,7 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
         {
             dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
         }
+
         dest.doubleSided = m->doubleSided;
     }
 }
@@ -265,7 +275,7 @@ static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, floa
     auto index = (y * static_cast<std::uint32_t>(size.x) + x) * stride;
 
     std::uint8_t terrain = img.getPixelData()[index] / 10;
-    terrain = std::min(static_cast<std::uint8_t>(TerrainID::Scrub), terrain);
+    terrain = std::min(static_cast<std::uint8_t>(TerrainID::Stone), terrain);
 
     auto height = static_cast<float>(img.getPixelData()[index + 1]) / 255.f;
     height *= MaxTerrainHeight;

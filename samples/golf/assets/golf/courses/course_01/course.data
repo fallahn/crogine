@@ -6,7 +6,7 @@ course course_01
     audio = "assets/golf/sound/ambience.xas"
 
     title = "Westington links, Isle of Pendale"
-    description = "Where we swing a stick at our balls"
+    description = "Where We Swing a Stick At Our Balls"
 
     hole = "assets/golf/courses/course_01/01.hole"
     hole = "assets/golf/courses/course_01/02.hole"

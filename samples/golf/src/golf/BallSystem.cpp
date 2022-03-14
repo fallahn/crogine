@@ -49,7 +49,7 @@ source distribution.
 
 namespace
 {
-    constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
+    static constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
 
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
     static constexpr float FallRadius = Ball::Radius * 0.25f;
@@ -124,6 +124,19 @@ void BallSystem::process(float dt)
         default: break;
         case Ball::State::Idle:
             ball.hadAir = false;
+
+            //used this to test smoothness of client side interpolation
+            /*if (ball.terrain == TerrainID::Green)
+            {
+                static float accum = 0.f;
+                accum += dt;
+
+                auto holePos = m_holeData->pin;
+                holePos.x += std::sin(accum * 2.f);
+                holePos.z += std::cos(accum * 2.f);
+                entity.getComponent<cro::Transform>().setPosition(holePos);
+            }*/
+
             break;
         case Ball::State::Flight:
         {
@@ -430,6 +443,13 @@ glm::vec3 BallSystem::getWindDirection() const
     //the Y value is unused so we pack the strength in here
     //(it's only for vis on the client anyhoo)
     return { m_windDirection.x, m_windStrength, m_windDirection.z };
+}
+
+void BallSystem::forceWindChange()
+{
+    m_windDirTime = cro::seconds(0.f);
+    m_windStrengthTime = cro::seconds(0.f);
+    updateWind();
 }
 
 bool BallSystem::setHoleData(const HoleData& holeData, bool rebuildMesh)

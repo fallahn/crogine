@@ -84,29 +84,23 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
 {
     m_drawList.clear();
     auto& camera = camEnt.getComponent<Camera>();
-    const auto& frustum = camera.getPass(Camera::Pass::Final).getFrustum();
+    CRO_ASSERT(camera.isOrthographic(), "");
+    auto viewRect = camEnt.getComponent<cro::Transform>().getWorldTransform() * camera.getViewSize();
+
+    //TODO Optionally using a balanced/quad tree
+    //might also help on more populated scenes.
 
     auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& drawable = entity.getComponent<Drawable2D>();
-
         if (drawable.m_autoCrop)
         {
             const auto worldMat = entity.getComponent<cro::Transform>().getWorldTransform();
 
             //check local bounds for visibility and draw if visible
             auto bounds = drawable.m_localBounds.transform(worldMat);
-            cro::Box aabb(glm::vec3(bounds.left, bounds.bottom, -0.1f), glm::vec3(bounds.left + bounds.width, bounds.bottom + bounds.height, 0.1f));
-
-            bool visible = true;
-            std::size_t i = 0;
-            while (visible && i < frustum.size())
-            {
-                visible = (Spatial::intersects(frustum[i++], aabb) != Planar::Back);
-            }
-
-            if (visible)
+            if (bounds.intersects(viewRect))
             {
                 m_drawList.push_back(entity);
             }
@@ -125,7 +119,10 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
             return a.getComponent<Drawable2D>().m_sortCriteria < b.getComponent<Drawable2D>().m_sortCriteria;
         });
 
-    camera.getDrawList(Camera::Pass::Final)[getType()] = std::make_any<std::vector<Entity>>(m_drawList);
+    auto& drawList = camera.getDrawList(Camera::Pass::Final)[getType()];
+    
+    //you'd think swapping vectors ought to be faster, but it doesn't appear so...
+    drawList = std::make_any<std::vector<Entity>>(m_drawList);
 }
 
 void RenderSystem2D::process(float)

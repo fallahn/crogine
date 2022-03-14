@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -63,6 +63,8 @@ namespace cro
         Colour fillColour = Colour::White;
         Colour outlineColour = Colour::Black;
         float outlineThickness = 0.f;
+        Colour shadowColour = Colour::Black;
+        glm::vec2 shadowOffset = glm::vec2(0.f);
     };
 
     /*!

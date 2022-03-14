@@ -37,6 +37,7 @@ namespace States
         {
             MainMenu,
             BatCat,
+            Billiards,
             BSP,
             MeshCollision,
             Voxels,

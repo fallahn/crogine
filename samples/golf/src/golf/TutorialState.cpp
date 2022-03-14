@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -1295,7 +1295,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         currTime = std::max(0.f, std::min(currTime + (dt * direction), 1.f));
 
         auto area = bounds;
-        area.width *= currTime;
+        area.width *= cro::Util::Easing::easeInSine(currTime);
         e.getComponent<cro::Drawable2D>().setCroppingArea(area);
 
         if (currTime == 1)

@@ -314,6 +314,8 @@
     <ClCompile Include="src\OriginIconBuilder.cpp" />
     <ClCompile Include="src\ParticleState.cpp" />
     <ClCompile Include="src\ParticleStateUI.cpp" />
+    <ClCompile Include="src\SpriteState.cpp" />
+    <ClCompile Include="src\SpriteStateUI.cpp" />
     <ClCompile Include="src\SrgbTransform.cpp" />
     <ClCompile Include="src\TextEditor.cpp" />
     <ClCompile Include="src\WorldState.cpp" />
@@ -341,6 +343,7 @@
     <ClInclude Include="src\ParticleState.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\SharedStateData.hpp" />
+    <ClInclude Include="src\SpriteState.hpp" />
     <ClInclude Include="src\SrgbTransform.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\TextEditor.h" />

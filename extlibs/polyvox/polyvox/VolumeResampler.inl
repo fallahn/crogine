@@ -84,13 +84,13 @@ namespace PolyVox
 	template< typename SrcVolumeType, typename DstVolumeType>
 	void VolumeResampler<SrcVolumeType, DstVolumeType>::resampleArbitrary()
 	{
-		float srcWidth = m_regSrc.getWidthInCells();
-		float srcHeight = m_regSrc.getHeightInCells();
-		float srcDepth = m_regSrc.getDepthInCells();
+		float srcWidth = static_cast<float>(m_regSrc.getWidthInCells());
+		float srcHeight = static_cast<float>(m_regSrc.getHeightInCells());
+		float srcDepth = static_cast<float>(m_regSrc.getDepthInCells());
 
-		float dstWidth = m_regDst.getWidthInCells();
-		float dstHeight = m_regDst.getHeightInCells();
-		float dstDepth = m_regDst.getDepthInCells();
+		float dstWidth = static_cast<float>(m_regDst.getWidthInCells());
+		float dstHeight = static_cast<float>(m_regDst.getHeightInCells());
+		float dstDepth = static_cast<float>(m_regDst.getDepthInCells());
 
 		float fScaleX = srcWidth / dstWidth;
 		float fScaleY = srcHeight / dstHeight;
@@ -112,7 +112,7 @@ namespace PolyVox
 					sy += m_regSrc.getLowerY();
 					sz += m_regSrc.getLowerZ();
 
-					sampler.setPosition(sx, sy, sz);
+					sampler.setPosition(static_cast<std::int32_t>(sx), static_cast<std::int32_t>(sy), static_cast<std::int32_t>(sz));
 					const typename SrcVolumeType::VoxelType& voxel000 = sampler.peekVoxel0px0py0pz();
 					const typename SrcVolumeType::VoxelType& voxel001 = sampler.peekVoxel0px0py1pz();
 					const typename SrcVolumeType::VoxelType& voxel010 = sampler.peekVoxel0px1py0pz();
@@ -123,12 +123,13 @@ namespace PolyVox
 					const typename SrcVolumeType::VoxelType& voxel111 = sampler.peekVoxel1px1py1pz();
 
 					//FIXME - should accept all float parameters, but GCC complains?
-					double dummy;
-					sx = modf(sx, &dummy);
-					sy = modf(sy, &dummy);
-					sz = modf(sz, &dummy);
+					float dummy = 0.f;
+					sx = std::modf(sx, &dummy);
+					sy = std::modf(sy, &dummy);
+					sz = std::modf(sz, &dummy);
 
-					typename SrcVolumeType::VoxelType tInterpolatedValue = trilerp<float>(voxel000, voxel100, voxel010, voxel110, voxel001, voxel101, voxel011, voxel111, sx, sy, sz);
+					//requires voxel type have +,- and * defined to interpolate its density value.
+					typename SrcVolumeType::VoxelType tInterpolatedValue = trilerp<SrcVolumeType::VoxelType>(voxel000, voxel100, voxel010, voxel110, voxel001, voxel101, voxel011, voxel111, sx, sy, sz);
 
 					typename DstVolumeType::VoxelType result = static_cast<typename DstVolumeType::VoxelType>(tInterpolatedValue);
 					m_pVolDst->setVoxel(dx, dy, dz, result);

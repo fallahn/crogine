@@ -41,6 +41,7 @@ include_directories(
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 include(${PROJECT_DIR}/batcat/CMakeLists.txt)
+include(${PROJECT_DIR}/billiards/CMakeLists.txt)
 include(${PROJECT_DIR}/bsp/CMakeLists.txt)
 include(${PROJECT_DIR}/collision/CMakeLists.txt)
 include(${PROJECT_DIR}/voxels/CMakeLists.txt)
@@ -48,6 +49,7 @@ include(${PROJECT_DIR}/voxels/CMakeLists.txt)
 add_executable(${PROJECT_NAME}
                ${PROJECT_SRC}
                ${BATCAT_SRC}
+               ${BILLIARDS_SRC}
                ${BSP_SRC}
                ${COLLISION_SRC}
                ${VOXEL_SRC})

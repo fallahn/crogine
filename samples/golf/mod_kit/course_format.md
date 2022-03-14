@@ -9,7 +9,10 @@ A course folder should contain one file with the name `course.data`. It has the 
         skybox = "assets/golf/images/skybox/sky.ccm" //a path to the skybox to use when the course is loaded
         billboard_model = "assets/golf/models/shrubbery.cmt" //path to the model definition for the billboard file containing the trees/shrubs
         billboard_sprites = "assets/golf/sprites/shrubbery.spt" //path to the spritesheet containing the sprite definitions for each billboard in the billboard model
+        instance_model = "assets/golf/models/reeds_large.cmt" //optional path to a model which is instanced around the water's edge. Defaults to reeds if this is omitted
+        clouds = "assets/golf/sprites/clouds.spt" //optional path to a sprite sheet containing cloud sprites. These are used for the dynamic clouds.
         grass = 1,0.5,0,1 //surrounding grass colour. This is optional and will default to dark green from the colordome-32 palette
+        grass_tint = 1.0, 1.0, 0.5, 1 //affects the colour of the noise applied to the grass colour. This is optional, by default just darkens the grass colour
         audio = "assets/golf/sound/ambience.xas" //optional path to a crogine audioscape file for environment sounds (see below)
 
         title = "St. Billybob's links, Isle of Wibble" //course title, shown in the game lobby
@@ -24,7 +27,7 @@ A course folder should contain one file with the name `course.data`. It has the 
 The course file contains a list of paths to `*.hole` files which describe the individual holes that make up a course. This way holes can be recycled thoughout different course layouts should it be so desired. Up to 18 holes can be added to a course (any further holes will be ignored when the course file is loaded). The optional `audio` property is a path to an `AudioScape` file. This should contain definitions for up to 6 looped sound effects, labelled 01 - 06. These are placed evenly throughout the scene and should be *mono* for positional audio to take effect. Optionally up to two emitters labelled `incidental01` and `incidental02` can be added. These should be stereo and are played at random intervals, for example this could be the sound of a plane flying overhead. These should not be looped. Finally an emitter called `music` can be defined to play the incidental music during hole transitions. This should be stereo, and also not looped. See `assets/golf/sound/ambience.xas` for an example `AudioScape`.
 
 ###### Hole file
-Hole files describe which models/assets make up the hole, as well as the position of the tee, the hole and the par for that hole. Optionally prop objects can be added to the hole to display models as props in the game. Crowd objects can also optionally be added to place a small crowd of spectators. By default crowds are aligned left to right along the X axis and can be rotated with the `rotation` property.
+Hole files describe which models/assets make up the hole, as well as the position of the tee, the hole and the par for that hole. Optionally prop objects can be added to the hole to display models as props in the game. Crowd objects can also optionally be added to place a small crowd of spectators. By default crowds are aligned left to right along the X axis and can be rotated with the `rotation` property. Particle objects denote an emitter settings file and world position for particle effects. These are triggered as the hole is loaded.
 
     hole 01 //hole ID
     {
@@ -47,6 +50,12 @@ Hole files describe which models/assets make up the hole, as well as the positio
         {
             position = -130, 0, -65 //position of the left-most crowd member in world units
             rotation = 180 //rotation about the Y axis at the left-most point
+        }
+
+        particles
+        {
+            path = "assets/particles/fire.cps" //path to particle emitter settings
+            position = 120, 2, 97 //world position of particle emitter
         }
     }
 

@@ -76,7 +76,7 @@ void ShadowMapRenderer::process(float)
 {
     //render here to ensure this only happens once per update
     //remember we might be rendering the Scene in multiple passes
-    //and re-rendering this is wasteful.
+    //which would call render() multiple times unnecessarily.
     render();
     m_activeCameras.clear();
 }
@@ -106,8 +106,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
         //calc a position for the directional light
         //this is used for depth sorting the draw list
-        auto aabb = camera.getPass(Camera::Pass::Final).getAABB();
-        auto centre = aabb[0] + ((aabb[1] - aabb[0]) / 2.f);
+        auto centre = camEnt.getComponent<cro::Transform>().getWorldPosition() + (camEnt.getComponent<cro::Transform>().getForwardVector() * (camera.m_farPlane / 2.f));
         auto lightPos = centre - (lightDir * ((camera.m_farPlane - camera.m_nearPlane) / 2.f));
 
         camera.shadowViewMatrix = glm::inverse(glm::toMat4(lightRotation));
@@ -212,6 +211,13 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             auto scale = tx.getScale();
             sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
+            float distance = glm::dot(lightDir, sphere.centre - lightPos);
+            if (distance < -sphere.radius)
+            {
+                //we're behind the frustum
+                continue;
+            }
+
             model.m_visible = true;
             std::size_t i = 0;
             while (model.m_visible&& i < frustum.size())
@@ -224,8 +230,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
             if (model.m_visible)
             {
-                float depth = glm::dot(lightPos - tx.getWorldPosition(), lightDir);
-                drawList.push_back(std::make_pair(entity, depth));
+                drawList.push_back(std::make_pair(entity, distance));
             }
         }
 

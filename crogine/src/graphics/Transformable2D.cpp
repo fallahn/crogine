@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -86,7 +86,6 @@ void Transformable2D::scale(glm::vec2 amount)
     m_dirty = true;
 }
 
-//protected
 const glm::mat4& Transformable2D::getTransform() const
 {
     if (m_dirty)

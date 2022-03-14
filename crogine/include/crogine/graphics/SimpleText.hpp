@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -113,6 +113,21 @@ namespace cro
         void setOutlineThickness(float outlineThickness);
 
         /*!
+        \brief Sets the drop-shadow colour, applied when the
+        shadow offset is not 0, and the border value is set to 0
+        \param colour Colour with which to render the shadow
+        */
+        void setShadowColour(Colour colour);
+
+        /*!
+        \brief Sets the shadow offset value.
+        Shadows are only rendered if the the Text has no outlining
+        \param offset A vec2 containing the offset in X/Y direction
+        \see setShadowColour()
+        */
+        void setShadowOffset(glm::vec2 offset);
+
+        /*!
         \brief Return a pointer to the active font
         May be nullptr
         */
@@ -149,6 +164,17 @@ namespace cro
         float getOutlineThickness() const;
 
         /*!
+        \brief Gets the current shadow colour. Default is black.
+        */
+        Colour getShadowColour() const;
+
+        /*!
+        \brief Returns the current shadow offset.
+        \see setShadowOffset
+        */
+        glm::vec2 getShadowOffset() const;
+
+        /*!
         \brief Get the enclosing AABB
         */
         FloatRect getLocalBounds();
@@ -160,8 +186,11 @@ namespace cro
 
         /*!
         \brief Draw the text to the active buffer
+        \param parentTransform An optional transform with which
+        the Text's transform is multiplied to create a scene-graph
+        like hierachy
         */
-        void draw() override;
+        void draw(const glm::mat4& parentTransform = glm::mat4(1.f)) override;
 
     private:
         TextContext m_context;

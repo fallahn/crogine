@@ -43,6 +43,12 @@
     <Filter Include="Header Files\layout editor">
       <UniqueIdentifier>{5c9a054a-0ef9-4f78-94f5-74dc47707042}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\sprite editor">
+      <UniqueIdentifier>{5d85a18d-161e-4aa9-bc75-bcc9e6c7b34a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\sprite editor">
+      <UniqueIdentifier>{717c8f5c-465e-4fed-b320-453a213edd04}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -110,6 +116,12 @@
     </ClCompile>
     <ClCompile Include="src\EditorWindow.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SpriteState.cpp">
+      <Filter>Source Files\sprite editor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SpriteStateUI.cpp">
+      <Filter>Source Files\sprite editor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -190,6 +202,9 @@
     </ClInclude>
     <ClInclude Include="src\EditorWindow.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SpriteState.hpp">
+      <Filter>Header Files\sprite editor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

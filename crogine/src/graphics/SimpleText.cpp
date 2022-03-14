@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -108,6 +108,24 @@ void SimpleText::setOutlineThickness(float thickness)
     }
 }
 
+void SimpleText::setShadowColour(Colour colour)
+{
+    if (m_context.shadowColour != colour)
+    {
+        m_context.shadowColour = colour;
+        m_dirtyFlags |= DirtyFlags::ColourInner;
+    }
+}
+
+void SimpleText::setShadowOffset(glm::vec2 offset)
+{
+    if (m_context.shadowOffset != offset)
+    {
+        m_context.shadowOffset = offset;
+        m_dirtyFlags |= DirtyFlags::All;
+    }
+}
+
 const Font* SimpleText::getFont() const
 {
     return m_context.font;
@@ -143,6 +161,16 @@ float SimpleText::getOutlineThickness() const
     return m_context.outlineThickness;
 }
 
+Colour SimpleText::getShadowColour() const
+{
+    return m_context.shadowColour;
+}
+
+glm::vec2 SimpleText::getShadowOffset() const
+{
+    return m_context.shadowOffset;
+}
+
 FloatRect SimpleText::getLocalBounds()
 {
     if (m_dirtyFlags)
@@ -158,7 +186,7 @@ FloatRect SimpleText::getGlobalBounds()
     return getLocalBounds().transform(getTransform());
 }
 
-void SimpleText::draw()
+void SimpleText::draw(const glm::mat4& parentTransform)
 {
     if (m_dirtyFlags
         || (m_fontTexture && m_fontTexture->getSize() != m_lastTextureSize))
@@ -166,7 +194,7 @@ void SimpleText::draw()
         m_dirtyFlags = 0;
         updateVertices();
     }
-    drawGeometry(getTransform());
+    drawGeometry(getTransform() * parentTransform);
 }
 
 //private

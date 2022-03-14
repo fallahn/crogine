@@ -1,141 +1,178 @@
-spritesheet scoreboard
+ 
 {
     src = "assets/golf/images/score_background.png"
-
-    sprite border
-    {
-        bounds = 388,0,400,300
-    }
-
-    sprite background
-    {
-        bounds = 0,0,388,532
-    }
-
-    sprite board
-    {
-        bounds = 0,0,388,266
-    }
-
-    sprite player_select
-    {
-        bounds = 400,308,94,98
-    }
-
-    sprite stroke_select
-    {
-        bounds = 400,420,48,22
-    }
-
-    sprite arrow_left
-    {
-        bounds = 448,420,16,15
-    }
-
-    sprite arrow_right
-    {
-        bounds = 464,420,16,15
-    }
-
-    sprite start_button
-    {
-        bounds = 400,452,48,16
-    }
-
-    sprite start_highlight
-    {
-        bounds = 400, 472,48,18
-    }
-
-    sprite yes_button
-    {
-        bounds = 464,452,32,16
-    }
+    smooth = false
+    repeat = false
 
     sprite yes_highlight
     {
-        bounds = 464, 472,32,18
-    }
+        bounds = 464.000000,472.000000,32.000000,18.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
-    sprite no_button
+    }
+    sprite arrow_right
     {
-        bounds = 512,452,32,16
-    }
+        bounds = 464.000000,420.000000,16.000000,15.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
+    }
+    sprite border
+    {
+        bounds = 388.000000,0.000000,400.000000,300.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite player_select
+    {
+        bounds = 400.000000,308.000000,94.000000,98.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
     sprite no_highlight
     {
-        bounds = 512, 472,32,18
-    }
+        bounds = 512.000000,472.000000,32.000000,18.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
+    }
+    sprite background
+    {
+        bounds = 0.000000,0.000000,388.000000,532.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite board
+    {
+        bounds = 0.000000,0.000000,388.000000,266.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite stroke_select
+    {
+        bounds = 400.000000,420.000000,48.000000,22.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite arrow_left
+    {
+        bounds = 448.000000,420.000000,16.000000,15.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite start_button
+    {
+        bounds = 400.000000,452.000000,48.000000,16.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite quit_not_ready
+    {
+        bounds = 416.000000,500.000000,16.000000,16.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite start_highlight
+    {
+        bounds = 400.000000,472.000000,48.000000,18.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite yes_button
+    {
+        bounds = 464.000000,452.000000,32.000000,16.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite no_button
+    {
+        bounds = 512.000000,452.000000,32.000000,16.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
     sprite minimap
     {
-        bounds = 576,308,112,144
-    }
+        bounds = 576.000000,308.000000,112.000000,144.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
+    }
+    sprite quit_ready
+    {
+        bounds = 400.000000,500.000000,16.000000,16.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
     sprite star
     {
-        bounds = 544,308,32,32
+        bounds = 544.000000,308.000000,32.000000,32.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
         animation black
         {
-            frame = 544,340,32,32
+            framerate = 12.000000
             loop = false
-        }
+            loop_start = 0
+            frame = 544.000000,340.000000,32.000000,32.000000
 
+        }
         animation gold
         {
-            frame = 544,308,32,32
+            framerate = 12.000000
             loop = false
+            loop_start = 0
+            frame = 544.000000,308.000000,32.000000,32.000000
+
         }
     }
-
     sprite orbs
     {
-        bounds = 512,332,32,8
+        bounds = 512.000000,332.000000,32.000000,8.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
         animation zero
         {
-            frame = 512,332,32,8
+            framerate = 12.000000
             loop = false
-        }
+            loop_start = 0
+            frame = 512.000000,332.000000,32.000000,8.000000
 
+        }
         animation one
         {
-            frame = 512,332,32,8
-            frame = 512, 324,32,8
+            framerate = 2.000000
             loop = false
-            framerate = 2
+            loop_start = 0
+            frame = 512.000000,332.000000,32.000000,8.000000
+            frame = 512.000000,324.000000,32.000000,8.000000
+            event = 1.000000,0.000000
+            event = 1.000000,1.000000
 
-            event = 1,0
-            event = 1,1
         }
-
         animation two
         {
-            frame = 512,332,32,8
-            frame = 512, 324,32,8
-            frame = 512,316,32,8
+            framerate = 2.000000
             loop = false
-            framerate = 2
+            loop_start = 0
+            frame = 512.000000,332.000000,32.000000,8.000000
+            frame = 512.000000,324.000000,32.000000,8.000000
+            frame = 512.000000,316.000000,32.000000,8.000000
+            event = 1.000000,0.000000
+            event = 1.000000,1.000000
+            event = 1.000000,2.000000
 
-            event = 1,0
-            event = 1,1
-            event = 1,2
         }
-
         animation three
         {
-            frame = 512,332,32,8
-            frame = 512, 324,32,8
-            frame = 512,316,32,8
-            frame = 512, 308,32,8
-            framerate = 2
+            framerate = 2.000000
             loop = false
+            loop_start = 0
+            frame = 512.000000,332.000000,32.000000,8.000000
+            frame = 512.000000,324.000000,32.000000,8.000000
+            frame = 512.000000,316.000000,32.000000,8.000000
+            frame = 512.000000,308.000000,32.000000,8.000000
+            event = 1.000000,0.000000
+            event = 1.000000,1.000000
+            event = 1.000000,2.000000
+            event = 1.000000,3.000000
 
-            event = 1,0
-            event = 1,1
-            event = 1,2
-            event = 1,3
         }
     }
 }

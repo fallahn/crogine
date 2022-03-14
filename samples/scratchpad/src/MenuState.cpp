@@ -240,6 +240,18 @@ void MenuState::createScene()
                 }
             });
 
+    //billiards button
+    textPos.y -= MenuSpacing;
+    entity = createButton("Billiards", textPos);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(States::ScratchPad::Billiards);
+                }
+            });
 
 
     //quit button

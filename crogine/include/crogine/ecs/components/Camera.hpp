@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -172,6 +172,11 @@ namespace cro
             glm::mat4 viewMatrix = glm::mat4(1.f);
 
             /*!
+            \brief The forward vector (the direction in which the pass looks)
+            */
+            glm::vec3 forwardVector = glm::vec3(0.f, 0.f, -1.f);
+
+            /*!
             \brief ViewProjection matrix.
             \see viewMatrix
             */
@@ -316,6 +321,18 @@ namespace cro
         bool active = true;
 
         /*!
+        \brief If this camera is in a static Scene then this can be set to true.
+        Static cameras will only update their draw list once, before automatically
+        setting the active flag to false. Manually setting the active flag to true
+        again will cause a single draw list update before returning the active flag
+        to false. This can provide a performance increase on Scenes where the camera
+        moves little to none at all between frames and saves on the cost of culling
+        and sorting. Setting this back to false will cause draw list updates every
+        frame when the camera is set to active.
+        */
+        bool isStatic = false;
+
+        /*!
         \brief Target to use as this camera's reflection buffer.
         This is up to the user to initiate and draw to - by default
         the buffer remains uninitialised. Note that the visibility
@@ -427,6 +444,8 @@ namespace cro
         /*
         \brief Returns the world coordinates currently projected onto
         the given screen coordinates.
+        If this gives unusual results, particularly with orthographic projections,
+        makes sure that the camer'a viewport is set correctly.
         */
         glm::vec3 pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize = cro::App::getWindow().getSize()) const;
 
@@ -436,6 +455,11 @@ namespace cro
         */
         FrustumData getFrustumData() const { return m_frustumData; }
 
+        /*!
+        \brief Returns the view size if this is an orthographic camera
+        else returns an empty FloatRect
+        */
+        FloatRect getViewSize() const { return m_orthographicView; }
 
 #ifdef CRO_DEBUG_
         //l,r,b,t,n,f
@@ -457,6 +481,7 @@ namespace cro
         float m_farPlane;
 
         bool m_orthographic;
+        FloatRect m_orthographicView;
         FrustumData m_frustumData;
 
         friend class ShadowMapRenderer;

@@ -36,6 +36,7 @@ namespace States
         WorldEditor,
         ModelViewer,
         ParticleEditor,
-        LayoutEditor
+        LayoutEditor,
+        SpriteEditor
     };
 }

@@ -154,7 +154,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>CRO_DEBUG_;_CRT_SECURE_NO_WARNINGS;_MBCS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\polyvox</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -163,7 +163,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)extlibs\bullet\lib\x64\Debug;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine-d.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;LinearMath_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>crogine-d.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;LinearMath_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugASan|x64'">
@@ -263,7 +263,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\polyvox</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -273,7 +273,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)extlibs\bullet\lib\x64\Release;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine.lib;SDL2.lib;SDL2main.lib;BulletCollision.lib;LinearMath.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>crogine.lib;SDL2.lib;SDL2main.lib;BulletCollision.lib;BulletDynamics.lib;LinearMath.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-asan|x64'">
@@ -300,6 +300,8 @@
     <ClCompile Include="src\batcat\BatcatState.cpp" />
     <ClCompile Include="src\batcat\PlayerDirector.cpp" />
     <ClCompile Include="src\batcat\TerrainSystem.cpp" />
+    <ClCompile Include="src\billiards\BilliardsState.cpp" />
+    <ClCompile Include="src\billiards\BilliardsSystem.cpp" />
     <ClCompile Include="src\bsp\BspState.cpp" />
     <ClCompile Include="src\bsp\FpsCameraSystem.cpp" />
     <ClCompile Include="src\bsp\InputParser.cpp" />
@@ -312,7 +314,10 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
+    <ClCompile Include="src\voxels\MarchingCubes.cpp" />
+    <ClCompile Include="src\voxels\SurfaceNet.cpp" />
     <ClCompile Include="src\voxels\VoxelFpsCameraSystem.cpp" />
+    <ClCompile Include="src\voxels\VoxelMesh.cpp" />
     <ClCompile Include="src\voxels\VoxelState.cpp" />
     <ClCompile Include="src\voxels\VoxelStateUI.cpp" />
   </ItemGroup>
@@ -325,6 +330,8 @@
     <ClInclude Include="src\batcat\ResourceIDs.hpp" />
     <ClInclude Include="src\batcat\TerrainChunk.hpp" />
     <ClInclude Include="src\batcat\TerrainSystem.hpp" />
+    <ClInclude Include="src\billiards\BilliardsState.hpp" />
+    <ClInclude Include="src\billiards\BilliardsSystem.hpp" />
     <ClInclude Include="src\bsp\BspState.hpp" />
     <ClInclude Include="src\bsp\FpsCameraSystem.hpp" />
     <ClInclude Include="src\bsp\InputParser.hpp" />
@@ -343,7 +350,12 @@
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\voxels\Consts.hpp" />
     <ClInclude Include="src\voxels\FpsCameraSystem.hpp" />
+    <ClInclude Include="src\voxels\IsoSurface.hpp" />
+    <ClInclude Include="src\voxels\VoxelData.hpp" />
     <ClInclude Include="src\voxels\VoxelState.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\voxels\Tables.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

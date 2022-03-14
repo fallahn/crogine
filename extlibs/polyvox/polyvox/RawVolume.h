@@ -157,6 +157,9 @@ namespace PolyVox
 		/// Calculates approximatly how many bytes of memory the volume is currently using.
 		uint32_t calculateSizeInBytes(void);
 
+		/// reset the volume to default values.
+		void reset();
+
 	protected:
 		/// Copy constructor
 		RawVolume(const RawVolume& rhs);

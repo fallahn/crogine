@@ -46,6 +46,7 @@ source distribution.
 #include "SplashScreenState.hpp"
 #include "ErrorCheck.hpp"
 #include "icon.hpp"
+#include "Achievements.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/Clock.hpp>
@@ -56,12 +57,6 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 
 #include <crogine/util/Network.hpp>
-
-//#include <polyvox/RawVolume.h>
-//#include <polyvox/MarchingCubesSurfaceExtractor.h>
-//#include <polyvox/CubicSurfaceExtractor.h>
-
-//namespace pv = PolyVox;
 
 namespace
 {
@@ -111,30 +106,15 @@ GolfGame::GolfGame()
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
     m_stateStack.registerState<PuttingState>(StateID::PuttingRange, m_sharedData);
-
-    //pv::RawVolume<std::uint8_t> volume(pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(10)));
-    //volume.setVoxel(3, 5, 6, 10);
-
-    //auto meshData = pv::extractMarchingCubesMesh<pv::RawVolume<std::uint8_t>>(&volume, volume.getEnclosingRegion());
-
-#ifdef WIN32
-#ifdef CRO_DEBUG_
-    //places the console window in the to right so it's a bit more visible when debugging
-    HWND consoleWindow = GetConsoleWindow();
-    SetWindowPos(consoleWindow, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-#endif
-#endif
 }
 
 //public
 void GolfGame::handleEvent(const cro::Event& evt)
 {
-    if (evt.type == SDL_WINDOWEVENT_SIZE_CHANGED)
+    switch (evt.type)
     {
-        
-    }
-    else if (evt.type == SDL_KEYUP)
-    {
+    default: break;
+    case SDL_KEYUP:
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -142,6 +122,9 @@ void GolfGame::handleEvent(const cro::Event& evt)
         case SDLK_ESCAPE:
         case SDLK_AC_BACK:
             App::quit();
+            break;
+        case SDLK_t:
+            m_achievements->showTest();
             break;
 #endif
         case SDLK_KP_MINUS:
@@ -151,6 +134,7 @@ void GolfGame::handleEvent(const cro::Event& evt)
             togglePixelScale(m_sharedData, true);
             break;
         }
+        break;
     }
     
     m_stateStack.handleEvent(evt);
@@ -243,6 +227,8 @@ void GolfGame::simulate(float dt)
     }
 
     m_stateStack.simulate(dt);
+
+    Achievements::update();
 }
 
 void GolfGame::render()
@@ -259,6 +245,8 @@ void GolfGame::render()
     {
         m_stateStack.render();
     }
+
+    m_achievements->drawOverlay();
 }
 
 bool GolfGame::initialise()
@@ -529,6 +517,9 @@ bool GolfGame::initialise()
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
 
+    m_achievements = std::make_unique<DefaultAchievements>(getMessageBus());
+    Achievements::init(*m_achievements);
+
     return true;
 }
 
@@ -556,6 +547,9 @@ void GolfGame::finalise()
     m_postQuad.reset();
     m_postShader.reset();
     m_postBuffer.reset();
+    m_achievements.reset();
+
+    getWindow().setCursor(nullptr);
 }
 
 void GolfGame::loadPreferences()
@@ -599,6 +593,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.pixelScale = prop.getValue<bool>();
                 }
+                else if (name == "fov")
+                {
+                    m_sharedData.fov = std::max(MinFOV, std::min(MaxFOV, prop.getValue<float>()));
+                }
             }
         }
     }
@@ -636,6 +634,7 @@ void GolfGame::savePreferences()
     }
     cfg.addProperty("last_ip").setValue(m_sharedData.targetIP.toAnsiString());
     cfg.addProperty("pixel_scale").setValue(m_sharedData.pixelScale);
+    cfg.addProperty("fov").setValue(m_sharedData.fov);
     cfg.save(path);
 
 

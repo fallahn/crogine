@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -34,8 +34,7 @@ source distribution.
 
 namespace
 {
-    const float MaxDistSqr = 460.f * 460.f; //if we're bigger than this go straight to dest to hide flickering
-
+    static constexpr float MaxDistSqr = 4.f * 4.f; //if we're bigger than this go straight to dest to hide flickering
 }
 
 InterpolationSystem::InterpolationSystem(cro::MessageBus& mb)
@@ -63,7 +62,7 @@ void InterpolationSystem::process(float dt)
                 tx.setPosition(interp.m_targetPoint.position);
                 tx.setRotation(interp.m_targetPoint.rotation);
 
-                interp.applyNextTarget();
+                interp.applyNextTarget(tx.getPosition(), tx.getRotation(), interp.m_targetPoint.timestamp);
             }
             continue;
         }
@@ -71,21 +70,16 @@ void InterpolationSystem::process(float dt)
         //previous position + diff * timePassed
         if (interp.m_enabled)
         {
-            float currTime = std::min(static_cast<float>(interp.m_elapsedTimer.elapsed().asMilliseconds()) / interp.m_timeDifference, 1.f);
+            auto elapsed = interp.m_elapsedTimer.elapsed().asMilliseconds();
+            float currTime = std::min(1.f, static_cast<float>(elapsed) / (static_cast<float>(interp.m_timeDifference) + 0.001f));
 
-            if (currTime < 1)
-            {
-                tx.setRotation(glm::slerp(interp.m_previousPoint.rotation, interp.m_targetPoint.rotation, currTime));
-                tx.setPosition(interp.m_previousPoint.position + (diff * currTime));
-            }
-            else
-            {
-                //snap to target
-                tx.setPosition(interp.m_targetPoint.position);
-                tx.setRotation(interp.m_targetPoint.rotation);
+            tx.setRotation(glm::slerp(interp.m_previousPoint.rotation, interp.m_targetPoint.rotation, currTime));
+            tx.setPosition(interp.m_previousPoint.position + (diff * currTime));
 
+            if (elapsed >= interp.m_timeDifference)
+            {
                 //shift interp target to next in buffer if available
-                interp.applyNextTarget();
+                interp.applyNextTarget(tx.getPosition(), tx.getRotation(), interp.m_previousPoint.timestamp + elapsed);
             }
         }
     }

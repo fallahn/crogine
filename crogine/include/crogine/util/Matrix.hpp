@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -44,6 +44,7 @@ namespace cro
         {
             /*!
             \brief Returns the forward vector of the given matrix
+            This won't be normalised if the scale is anything but 1,1,1
             */
             static inline glm::vec3 getForwardVector(const glm::mat4& mat)
             {
@@ -52,6 +53,7 @@ namespace cro
 
             /*!
             \brief Returns the up vector of the given matrix
+            This won't be normalised if the scale is anything but 1,1,1
             */
             static inline glm::vec3 getUpVector(const glm::mat4& mat)
             {
@@ -60,6 +62,7 @@ namespace cro
 
             /*!
             \brief Returns the right vector of the given matrix
+            This won't be normalised if the scale is anything but 1,1,1
             */
             static inline glm::vec3 getRightVector(const glm::mat4& mat)
             {

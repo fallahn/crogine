@@ -392,8 +392,8 @@ void MenuState::createAvatarScene()
     avatarCam.addComponent<cro::Transform>().setPosition({ 0.f, 0.649f, 1.3f });
     //avatarCam.addComponent<cro::Camera>().setPerspective(75.f * cro::Util::Const::degToRad, static_cast<float>(AvatarPreviewSize.x) / AvatarPreviewSize.y, 0.001f, 10.f);
 
-    constexpr float ratio = static_cast<float>(AvatarPreviewSize.y) / AvatarPreviewSize.x;
-    constexpr float orthoWidth = 0.7f;
+    static constexpr float ratio = static_cast<float>(AvatarPreviewSize.y) / AvatarPreviewSize.x;
+    static constexpr float orthoWidth = 0.7f;
     auto orthoSize = glm::vec2(orthoWidth, orthoWidth * ratio);
     avatarCam.addComponent<cro::Camera>().setOrthographic(-orthoSize.x, orthoSize.x, -orthoSize.y, orthoSize.y, 0.001f, 10.f);
     avatarCam.getComponent<cro::Camera>().resizeCallback = avatarTexCallback;
@@ -511,7 +511,7 @@ void MenuState::createAvatarScene()
         if (!m_sharedData.avatarInfo[i].audioscape.empty() &&
             as.loadFromFile(m_sharedData.avatarInfo[i].audioscape, m_resources.audio))
         {
-            for (const auto name : emitterNames)
+            for (const auto& name : emitterNames)
             {
                 if (as.hasEmitter(name))
                 {
@@ -564,6 +564,8 @@ void MenuState::updateThumb(std::size_t index)
     //draw call as this func might be called in a loop to update multiple
     //avatars outside of the main update function.
     m_avatarScene.simulate(0.f);
+
+    m_resolutionBuffer.bind(0);
 
     m_avatarThumbs[index].clear(cro::Colour::Transparent);
     //m_avatarThumbs[index].clear(cro::Colour::Magenta);

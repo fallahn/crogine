@@ -57,12 +57,15 @@ public:
     void setActive(bool);
     void setSuspended(bool);
     void setEnableFlags(std::uint16_t); //bits which are set are *enabled*
-    void setMaxClub(float);
+    void setMaxClub(float); //based on overall distance of hole
+    void setMaxClub(std::int32_t); //force set when only wanting wedges for example
     void resetPower();
     void update(float);
 
     bool inProgress() const;
     bool getActive() const;
+
+    void setMaxRotation(float);
 
 private:
     const InputBinding& m_inputBinding;
@@ -83,6 +86,7 @@ private:
 
     float m_holeDirection; //radians
     float m_rotation; //+- max rads
+    float m_maxRotation;
 
     float m_power;
     float m_hook;

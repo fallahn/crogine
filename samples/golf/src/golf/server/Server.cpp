@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -156,6 +156,11 @@ void Server::run()
                     {
                         validatePeer(evt.peer);
                     }
+                }
+                else if (evt.packet.getID() == PacketID::AchievementGet)
+                {
+                    //re-broadcast to all clients
+                    m_sharedData.host.broadcastPacket(PacketID::AchievementGet, evt.packet.as<std::array<std::uint8_t, 2u>>(), cro::NetFlag::Reliable);
                 }
             }
         }

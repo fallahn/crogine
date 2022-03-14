@@ -1,0 +1,18 @@
+model rock_large
+{
+    mesh = assets/golf/models/rock_large.cmb
+    cast_shadows = true
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+        diffuse = "assets/golf/images/rock.png"
+
+    }
+}

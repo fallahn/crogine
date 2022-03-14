@@ -37,11 +37,11 @@ source distribution.
 
 namespace
 {
-    constexpr std::array Path01 = { glm::vec3(-70.f, 0.01f, 5.4f),glm::vec3(60.f, 0.01f, 5.4f),  glm::vec3(70.f, 0.01f, 5.4f),  glm::vec3(77.f, 0.01f, 5.4f) };
-    constexpr std::array Path03 = { glm::vec3(76.f, 0.01f, 9.5f), glm::vec3(8.f, 0.01f, 9.5f), glm::vec3(-30.f, 0.01f, 9.5f),glm::vec3(-70.f, 0.01f, 9.5f) };
-    constexpr std::array Path02 = { glm::vec3(-7.f, 0.01f, 70.f),glm::vec3(-7.f, 0.01f, 11.f), glm::vec3(-9.f, 0.01f, 9.5f), glm::vec3(-70.f, 0.01f, 9.5f) };
+    static constexpr std::array Path01 = { glm::vec3(-70.f, 0.01f, 5.4f),glm::vec3(60.f, 0.01f, 5.4f),  glm::vec3(70.f, 0.01f, 5.4f),  glm::vec3(77.f, 0.01f, 5.4f) };
+    static constexpr std::array Path03 = { glm::vec3(76.f, 0.01f, 9.5f), glm::vec3(8.f, 0.01f, 9.5f), glm::vec3(-30.f, 0.01f, 9.5f),glm::vec3(-70.f, 0.01f, 9.5f) };
+    static constexpr std::array Path02 = { glm::vec3(-7.f, 0.01f, 70.f),glm::vec3(-7.f, 0.01f, 11.f), glm::vec3(-9.f, 0.01f, 9.5f), glm::vec3(-70.f, 0.01f, 9.5f) };
 
-    constexpr std::array Paths =
+    static constexpr std::array Paths =
     {
         Path01, Path02, Path03
     };
@@ -134,7 +134,7 @@ void GolfCartSystem::process(float dt)
                     }
                 }
 
-                constexpr float RotationSpeed = 2.f;
+                static constexpr float RotationSpeed = 2.f;
 
                 auto rotation = cro::Util::Maths::shortestRotation(cart.rotation, std::atan2(-dir.z, dir.x));
                 cart.rotation += rotation * RotationSpeed * accel * dt;

@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "Consts.hpp"
+#include "VoxelData.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -38,8 +39,13 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+
+#include <polyvox/RawVolume.h>
 
 #include <array>
+
+namespace pv = PolyVox;
 
 class VoxelState final : public cro::State, public cro::GuiClient
 {
@@ -66,8 +72,11 @@ private:
     std::array<std::int32_t, Material::Count> m_materialIDs = {};
 
     std::array<cro::Entity, Layer::Count> m_layers;
+    std::vector<cro::Entity> m_chunks;
     cro::Entity m_cursor;
     std::int32_t m_activeLayer;
+
+    cro::Entity m_exportPreview;
 
     struct TerrainVertex final
     {
@@ -75,6 +84,9 @@ private:
         glm::vec4 colour = glm::vec4(0.1568f, 0.305f, 0.2627f, 1.f);
         glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
     };
+    std::vector<TerrainVertex> m_terrainBuffer;
+
+    pv::RawVolume<Voxel::Data> m_voxelVolume;
 
     void buildScene();
     void createLayers();
@@ -98,21 +110,42 @@ private:
         };
         std::int32_t editMode = EditMode::Add;
 
+        struct PaintMode final
+        {
+            enum
+            {
+                Paint, Carve
+            };
+        };
+        std::int32_t paintMode = PaintMode::Paint;
+
+        std::int32_t terrain = TerrainID::Rough;
+
     }m_brush;
-    bool m_showBrushWindow;
 
     void applyEdit();
     void editTerrain();
     void updateTerrainImage(cro::IntRect);
+    void updateTerrainMesh(cro::IntRect);
+    void resetTerrain();
     void editVoxel();
+    void updateVoxelMesh(const pv::Region&);
+    void resetVolume();
+
+    void createExportMesh();
 
     //---VoxelStateUI.cpp---//
+    bool m_showBrushWindow;
     bool m_showLayerWindow;
+    bool m_drawTopView;
+    cro::RenderTexture m_overviewImage;
+    cro::Entity m_overviewCam;
     std::array<bool, Layer::Count> m_showLayer = {};
     
     void drawMenuBar();
     void drawLayerWindow();
     void drawBrushWindow();
+    void drawTopView();
 
     void handleKeyboardShortcut(const SDL_KeyboardEvent&);
 };

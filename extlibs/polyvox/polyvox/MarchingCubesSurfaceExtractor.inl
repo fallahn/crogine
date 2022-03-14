@@ -148,10 +148,8 @@ namespace PolyVox
 	}
 
 	// This 'sobel' version of gradient estimation provides better (smoother) normals than the central difference version.
-	// Even with the 16-bit normal encoding it does seem to make a difference, so is probably worth keeping. However, there
-	// is no way to call it at the moment beyond modifying the main Marching Cubes function below to call this function
-	// instead of the central difference one. We should provide a way to control the normal generation method, perhaps
-	// including *no* normals incase the user wants to generate them afterwards (e.g. from the mesh).
+	// Even with the 16-bit normal encoding it does seem to make a difference, so is probably worth keeping.
+	// Using a constexpr int member Sobel in the controller we can choose this over the central difference version.
 	template< typename Sampler, typename ControllerType>
 	Vector3DFloat computeSobelGradient(const Sampler& volIter, ControllerType& controller)
 	{
@@ -388,7 +386,15 @@ namespace PolyVox
 						// adjacent voxels. Perhaps we could expand this and eliminate dupicates in the future. Alternatively, 
 						// we could compute vertex normals from adjacent face normals instead of via central differencing, 
 						// but not for vertices on the edge of the region (as this causes visual discontinities).
-						const Vector3DFloat n111 = computeCentralDifferenceGradient(sampler, controller);
+						Vector3DFloat n111 = 0.f;
+						if constexpr (controller.Sobel)
+						{
+							 n111 = computeSobelGradient(sampler, controller);
+						}
+						else
+						{
+							n111 = computeCentralDifferenceGradient(sampler, controller);
+						}
 
 						/* Find the vertices where the surface intersects the cube */
 						if ((uEdge & 64) && (uXRegSpace > 0))
@@ -402,7 +408,16 @@ namespace PolyVox
 							const Vector3DFloat v3dPosition(static_cast<float>(uXRegSpace - 1) + fInterp, static_cast<float>(uYRegSpace), static_cast<float>(uZRegSpace));
 
 							// Compute the normal
-							const Vector3DFloat n011 = computeCentralDifferenceGradient(sampler, controller);
+							Vector3DFloat n011 = 0.f;
+							if constexpr (controller.Sobel)
+							{
+								n011 = computeSobelGradient(sampler, controller);
+							}
+							else
+							{
+								n011 = computeCentralDifferenceGradient(sampler, controller);
+							}
+
 							Vector3DFloat v3dNormal = (n111*fInterp) + (n011*(1 - fInterp));
 
 							// The gradient for a voxel can be zero (e.g. solid voxel surrounded by empty ones) and so
@@ -415,10 +430,19 @@ namespace PolyVox
 							// Allow the controller to decide how the material should be derived from the voxels.
 							const typename VolumeType::VoxelType uMaterial = controller.blendMaterials(v011, v111, fInterp);
 
+							//vertex data is compressed only when using the default mesh type.
 							MarchingCubesVertex<typename VolumeType::VoxelType> surfaceVertex;
-							const Vector3DUint16 v3dScaledPosition(static_cast<uint16_t>(v3dPosition.getX() * 256.0f), static_cast<uint16_t>(v3dPosition.getY() * 256.0f), static_cast<uint16_t>(v3dPosition.getZ() * 256.0f));
-							surfaceVertex.encodedPosition = v3dScaledPosition;
-							surfaceVertex.encodedNormal = encodeNormal(v3dNormal);
+							if constexpr (std::is_same<MeshType, Mesh<MarchingCubesVertex<typename VolumeType::VoxelType>>>::value)
+							{
+								const Vector3DUint16 v3dScaledPosition(static_cast<uint16_t>(v3dPosition.getX() * 256.0f), static_cast<uint16_t>(v3dPosition.getY() * 256.0f), static_cast<uint16_t>(v3dPosition.getZ() * 256.0f));
+								surfaceVertex.encodedPosition = v3dScaledPosition;
+								surfaceVertex.encodedNormal = encodeNormal(v3dNormal);
+							}
+							else
+							{
+								surfaceVertex.position = v3dPosition;
+								surfaceVertex.normal = v3dNormal;
+							}
 							surfaceVertex.data = uMaterial;
 
 							const uint32_t uLastVertexIndex = result->addVertex(surfaceVertex);
@@ -437,7 +461,15 @@ namespace PolyVox
 							const Vector3DFloat v3dPosition(static_cast<float>(uXRegSpace), static_cast<float>(uYRegSpace - 1) + fInterp, static_cast<float>(uZRegSpace));
 
 							// Compute the normal
-							const Vector3DFloat n101 = computeCentralDifferenceGradient(sampler, controller);
+							Vector3DFloat n101 = 0.f;
+							if constexpr (controller.Sobel)
+							{
+								n101 = computeSobelGradient(sampler, controller);
+							}
+							else
+							{
+								n101 = computeCentralDifferenceGradient(sampler, controller);
+							}
 							Vector3DFloat v3dNormal = (n111*fInterp) + (n101*(1 - fInterp));
 
 							// The gradient for a voxel can be zero (e.g. solid voxel surrounded by empty ones) and so
@@ -451,9 +483,17 @@ namespace PolyVox
 							const typename VolumeType::VoxelType uMaterial = controller.blendMaterials(v101, v111, fInterp);
 
 							MarchingCubesVertex<typename VolumeType::VoxelType> surfaceVertex;
-							const Vector3DUint16 v3dScaledPosition(static_cast<uint16_t>(v3dPosition.getX() * 256.0f), static_cast<uint16_t>(v3dPosition.getY() * 256.0f), static_cast<uint16_t>(v3dPosition.getZ() * 256.0f));
-							surfaceVertex.encodedPosition = v3dScaledPosition;
-							surfaceVertex.encodedNormal = encodeNormal(v3dNormal);
+							if constexpr (std::is_same<MeshType, Mesh<MarchingCubesVertex<typename VolumeType::VoxelType>>>::value)
+							{
+								const Vector3DUint16 v3dScaledPosition(static_cast<uint16_t>(v3dPosition.getX() * 256.0f), static_cast<uint16_t>(v3dPosition.getY() * 256.0f), static_cast<uint16_t>(v3dPosition.getZ() * 256.0f));
+								surfaceVertex.encodedPosition = v3dScaledPosition;
+								surfaceVertex.encodedNormal = encodeNormal(v3dNormal);
+							}
+							else
+							{
+								surfaceVertex.position = v3dPosition;
+								surfaceVertex.normal = v3dNormal;
+							}
 							surfaceVertex.data = uMaterial;
 
 							uint32_t uLastVertexIndex = result->addVertex(surfaceVertex);
@@ -472,7 +512,15 @@ namespace PolyVox
 							const Vector3DFloat v3dPosition(static_cast<float>(uXRegSpace), static_cast<float>(uYRegSpace), static_cast<float>(uZRegSpace - 1) + fInterp);
 
 							// Compute the normal
-							const Vector3DFloat n110 = computeCentralDifferenceGradient(sampler, controller);
+							Vector3DFloat n110 = 0.f;
+							if constexpr (controller.Sobel)
+							{
+								n110 = computeSobelGradient(sampler, controller);
+							}
+							else
+							{
+								n110 = computeCentralDifferenceGradient(sampler, controller);
+							}
 							Vector3DFloat v3dNormal = (n111*fInterp) + (n110*(1 - fInterp));
 
 							// The gradient for a voxel can be zero (e.g. solid voxel surrounded by empty ones) and so
@@ -486,9 +534,17 @@ namespace PolyVox
 							const typename VolumeType::VoxelType uMaterial = controller.blendMaterials(v110, v111, fInterp);
 
 							MarchingCubesVertex<typename VolumeType::VoxelType> surfaceVertex;
-							const Vector3DUint16 v3dScaledPosition(static_cast<uint16_t>(v3dPosition.getX() * 256.0f), static_cast<uint16_t>(v3dPosition.getY() * 256.0f), static_cast<uint16_t>(v3dPosition.getZ() * 256.0f));
-							surfaceVertex.encodedPosition = v3dScaledPosition;
-							surfaceVertex.encodedNormal = encodeNormal(v3dNormal);
+							if constexpr (std::is_same<MeshType, Mesh<MarchingCubesVertex<typename VolumeType::VoxelType>>>::value)
+							{
+								const Vector3DUint16 v3dScaledPosition(static_cast<uint16_t>(v3dPosition.getX() * 256.0f), static_cast<uint16_t>(v3dPosition.getY() * 256.0f), static_cast<uint16_t>(v3dPosition.getZ() * 256.0f));
+								surfaceVertex.encodedPosition = v3dScaledPosition;
+								surfaceVertex.encodedNormal = encodeNormal(v3dNormal);
+							}
+							else
+							{
+								surfaceVertex.position = v3dPosition;
+								surfaceVertex.normal = v3dNormal;
+							}
 							surfaceVertex.data = uMaterial;
 
 							const uint32_t uLastVertexIndex = result->addVertex(surfaceVertex);
@@ -501,7 +557,6 @@ namespace PolyVox
 						// any (the region size in cells is one less than the region size in voxels)
 						if ((uXRegSpace != 0) && (uYRegSpace != 0) && (uZRegSpace != 0))
 						{
-
 							int32_t indlist[12];
 
 							/* Find the vertices where the surface intersects the cube */

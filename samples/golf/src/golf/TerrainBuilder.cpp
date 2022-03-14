@@ -61,19 +61,19 @@ namespace
 #include "TerrainShader.inl"
 
     //params for poisson disk samples
-    constexpr float GrassDensity = 1.7f; //radius for PD sampler
-    constexpr float TreeDensity = 4.f;
+    static constexpr float GrassDensity = 1.7f; //radius for PD sampler
+    static constexpr float TreeDensity = 4.f;
 
     //TODO for grass billboard we could shrink the area slightly as we prefer trees further away
-    constexpr std::array MinBounds = { 0.f, 0.f };
-    constexpr std::array MaxBounds = { static_cast<float>(MapSize.x), static_cast<float>(MapSize.y) };
+    static constexpr std::array MinBounds = { 0.f, 0.f };
+    static constexpr std::array MaxBounds = { static_cast<float>(MapSize.x), static_cast<float>(MapSize.y) };
 
-    constexpr std::uint32_t QuadsPerMetre = 1;
+    static constexpr std::uint32_t QuadsPerMetre = 1;
 
-    constexpr float MaxShrubOffset = MaxTerrainHeight + 13.f;
-    constexpr std::int32_t SlopeGridSize = 20;
-    constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
-    constexpr std::int32_t NormalMapMultiplier = 4; //number of times the resolution of the map to increase normal map resolution by
+    static constexpr float MaxShrubOffset = MaxTerrainHeight + 13.f;
+    static constexpr std::int32_t SlopeGridSize = 20;
+    static constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
+    static constexpr std::int32_t NormalMapMultiplier = 4; //number of times the resolution of the map to increase normal map resolution by
 
     //callback data
     struct SwapData final
@@ -195,8 +195,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         m_terrainBuffer[i].colour = theme.grassColour.getVec4();
     }
 
-    constexpr auto xCount = static_cast<std::uint32_t>(MapSize.x / QuadsPerMetre);
-    constexpr auto yCount = static_cast<std::uint32_t>(MapSize.y / QuadsPerMetre);
+    static constexpr auto xCount = static_cast<std::uint32_t>(MapSize.x / QuadsPerMetre);
+    static constexpr auto yCount = static_cast<std::uint32_t>(MapSize.y / QuadsPerMetre);
     std::vector<std::uint32_t> indices;// (xCount * yCount * 6);
 
 
@@ -221,7 +221,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
 
     //use a custom material for morphage
-    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
+    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define RX_SHADOWS\n#define ADD_NOISE\n");
     const auto& shader = resources.shaders.get(ShaderID::Terrain);
     m_terrainProperties.morphUniform = shader.getUniformID("u_morphTime");
     m_terrainProperties.shaderID = shader.getGLHandle();
@@ -229,6 +229,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal |
         cro::VertexProperty::Tangent | cro::VertexProperty::Bitangent; //use tan/bitan slots to store target position/normal
     auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_TRIANGLE_STRIP));
+    auto terrainMat = resources.materials.get(materialID);
+    terrainMat.setProperty("u_noiseColour", theme.grassTint);
 
     auto entity = scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, TerrainLevel, 0.f });
@@ -244,7 +246,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             e.getComponent<cro::Callback>().active = false;
         }
     };
-    entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), resources.materials.get(materialID));
+    entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), terrainMat);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
 
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
@@ -265,11 +267,13 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //parent the shrubbery so they always stay the same relative height
     m_terrainEntity = entity;
 
+    //modified billboard shader
+    const auto& billboardShader = resources.shaders.get(ShaderID::Billboard);
+    auto billboardMatID = resources.materials.add(billboardShader);
 
     //custom shader for instanced plants
     resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
     const auto& reedShader = resources.shaders.get(ShaderID::CelTexturedInstanced);
-    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
     materialID = resources.materials.add(reedShader);
 
     //create billboard entities
@@ -303,13 +307,20 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
                 entity.getComponent<cro::Model>().setHidden(true);
                 entity.getComponent<cro::Model>().getMeshData().boundingBox = { glm::vec3(0.f), glm::vec3(MapSize.x, 30.f, -static_cast<float>(MapSize.y)) };
+                entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap));
                 entity.addComponent<cro::Callback>().function = transition;
+
+                auto material = resources.materials.get(billboardMatID);
+                applyMaterialData(billboardDef, material);
+                entity.getComponent<cro::Model>().setMaterial(0, material);
 
                 m_terrainEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             }
 
             //create a child entity for instanced geometry
-            if (reedsDef.loadFromFile("assets/golf/models/reeds_large.cmt", true))
+            std::string instancePath = theme.instancePath.empty() ? "assets/golf/models/reeds_large.cmt" : theme.instancePath;
+
+            if (reedsDef.loadFromFile(instancePath, true))
             {
                 auto material = resources.materials.get(materialID);
 
@@ -664,6 +675,14 @@ void TerrainBuilder::threadFunc()
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)]);
                                 bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards
                                 bb.size *= scale;
+                                
+                                if (cro::Util::Random::value(0, 1) == 0)
+                                {
+                                    //flip billboard
+                                    auto rect = bb.textureRect;
+                                    bb.textureRect.left = rect.left + rect.width;
+                                    bb.textureRect.width = -rect.width;
+                                }
                             }
                         }
                     }
@@ -730,7 +749,7 @@ void TerrainBuilder::threadFunc()
                     auto u = heightAt(x, y + 1);
                     auto d = heightAt(x, y - 1);
 
-                    glm::vec3 normal = { l - r, d - u, 2.f };
+                    glm::vec3 normal = { l - r, 2.f, -(d - u) };
                     normal = glm::normalize(normal);
 
                     m_terrainBuffer[i].position = m_terrainBuffer[i].targetPosition;
@@ -752,9 +771,9 @@ void TerrainBuilder::threadFunc()
                 auto pinPos = m_holeData[m_currentHole].pin;
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
-                constexpr float DashCount = 40.f; //actual div by TAU cos its sin but eh.
-                constexpr float SlopeSpeed = -50.f;
-                constexpr std::int32_t AvgDistance = 5;
+                static constexpr float DashCount = 40.f; //actual div by TAU cos its sin but eh.
+                static constexpr float SlopeSpeed = -50.f;
+                static constexpr std::int32_t AvgDistance = 5;
 
                 for (auto y = startY; y < startY + SlopeGridSize; ++y)
                 {

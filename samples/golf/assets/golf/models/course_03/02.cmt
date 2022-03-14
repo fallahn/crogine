@@ -80,10 +80,10 @@ model 02
     {
         name = "bridge"
         colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = true
+        smooth = false
         repeat = true
         depth_test = true
-        double_sided = false
+        double_sided = true
         blendmode = none
         diffuse = "assets/golf/images/bridge_texture.png"
 

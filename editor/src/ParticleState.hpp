@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -164,4 +164,5 @@ private:
     void updateMouseInput(const cro::Event&);
 
     void openModel(const std::string&);
+    void confirmSave();
 };

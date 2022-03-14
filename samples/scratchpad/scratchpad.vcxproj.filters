@@ -37,6 +37,12 @@
     <Filter Include="Source Files\voxels">
       <UniqueIdentifier>{ab6c2b6c-ecba-408c-b910-50a94c3f0b16}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\billiards">
+      <UniqueIdentifier>{59d04970-f1cb-4e43-8ef1-3408c42b2034}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\billiards">
+      <UniqueIdentifier>{d965ca6c-b462-403b-a56e-e9a26c2818dc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -92,6 +98,21 @@
     </ClCompile>
     <ClCompile Include="src\voxels\VoxelFpsCameraSystem.cpp">
       <Filter>Source Files\voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="src\voxels\SurfaceNet.cpp">
+      <Filter>Source Files\voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="src\voxels\MarchingCubes.cpp">
+      <Filter>Source Files\voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="src\voxels\VoxelMesh.cpp">
+      <Filter>Source Files\voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="src\billiards\BilliardsState.cpp">
+      <Filter>Source Files\billiards</Filter>
+    </ClCompile>
+    <ClCompile Include="src\billiards\BilliardsSystem.cpp">
+      <Filter>Source Files\billiards</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -176,5 +197,22 @@
     <ClInclude Include="src\voxels\FpsCameraSystem.hpp">
       <Filter>Header Files\voxels</Filter>
     </ClInclude>
+    <ClInclude Include="src\voxels\IsoSurface.hpp">
+      <Filter>Header Files\voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="src\voxels\VoxelData.hpp">
+      <Filter>Header Files\voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="src\billiards\BilliardsState.hpp">
+      <Filter>Header Files\billiards</Filter>
+    </ClInclude>
+    <ClInclude Include="src\billiards\BilliardsSystem.hpp">
+      <Filter>Header Files\billiards</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\voxels\Tables.inl">
+      <Filter>Header Files\voxels</Filter>
+    </None>
   </ItemGroup>
 </Project>

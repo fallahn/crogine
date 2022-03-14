@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -34,15 +34,16 @@ source distribution.
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
+#include <crogine/util/Easings.hpp>
 
 namespace
 {
-    constexpr float RotationSpeed = 1.2f;
-    constexpr float MaxRotation = 0.34f;
-    constexpr std::int16_t DeadZone = 8000;
+    static constexpr float RotationSpeed = 1.2f;
+    static constexpr float MaxRotation = 0.36f;
+    static constexpr std::int16_t DeadZone = 8000;
 
-    constexpr float MinPower = 0.01f;
-    constexpr float MaxPower = 1.f - MinPower;
+    static constexpr float MinPower = 0.01f;
+    static constexpr float MaxPower = 1.f - MinPower;
 }
 
 InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)
@@ -60,6 +61,7 @@ InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)
     m_prevMouseMove     (0),
     m_holeDirection     (0.f),
     m_rotation          (0.f),
+    m_maxRotation       (MaxRotation),
     m_power             (0.f),
     m_hook              (0.5f),
     m_powerbarDirection (1.f),
@@ -271,7 +273,7 @@ float InputParser::getYaw() const
 
 float InputParser::getPower() const
 {
-    return MinPower + (MaxPower * m_power);
+    return MinPower + (MaxPower * cro::Util::Easing::easeInSine(m_power));
 }
 
 float InputParser::getHook() const
@@ -331,6 +333,16 @@ void InputParser::setMaxClub(float dist)
     msg->type = GolfEvent::ClubChanged;
 }
 
+void InputParser::setMaxClub(std::int32_t clubID)
+{
+    CRO_ASSERT(clubID < ClubID::Putter, "");
+    m_firstClub = m_currentClub = clubID;
+    m_clubOffset = 0;
+
+    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+    msg->type = GolfEvent::ClubChanged;
+}
+
 void InputParser::resetPower()
 {
     m_power = 0.f;
@@ -356,7 +368,7 @@ void InputParser::update(float dt)
         default: break;
         case State::Aim:
         {
-            const float rotation = RotationSpeed * MaxRotation * m_analogueAmount * dt;
+            const float rotation = RotationSpeed * m_maxRotation * m_analogueAmount * dt;
 
             if (m_inputFlags & InputFlag::Left)
             {
@@ -376,8 +388,6 @@ void InputParser::update(float dt)
             if ((m_prevFlags & InputFlag::PrevClub) == 0
                 && (m_inputFlags & InputFlag::PrevClub))
             {
-                //m_currentClub = (m_currentClub + 1) % ClubID::Putter;
-
                 auto clubCount = ClubID::Putter - m_firstClub;
                 m_clubOffset = (m_clubOffset + 1) % clubCount;
                 m_currentClub = m_firstClub + m_clubOffset;
@@ -390,8 +400,6 @@ void InputParser::update(float dt)
             if ((m_prevFlags & InputFlag::NextClub) == 0
                 && (m_inputFlags & InputFlag::NextClub))
             {
-                //m_currentClub = (m_currentClub + ClubID::SandWedge) % ClubID::Putter;
-
                 auto clubCount = ClubID::Putter - m_firstClub;
                 m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
                 m_currentClub = m_firstClub + m_clubOffset;
@@ -404,7 +412,7 @@ void InputParser::update(float dt)
         break;
         case State::Power:
             //move level to 1 and back (returning to 0 is a fluff)
-            m_power = std::min(1.f, std::max(0.f, m_power + (dt * m_powerbarDirection)));
+            m_power = std::min(1.f, std::max(0.f, m_power + (dt * 0.8f * m_powerbarDirection)));
 
             if (m_power == 1)
             {
@@ -475,14 +483,18 @@ bool InputParser::getActive() const
     return m_active;
 }
 
+void InputParser::setMaxRotation(float rotation)
+{
+    m_maxRotation = std::max(0.1f, std::min(MaxRotation, rotation));
+}
+
 //private
 void InputParser::setClub(float dist)
 {
     m_currentClub = ClubID::NineIron;
     while (Clubs[m_currentClub].target < dist
-        && m_currentClub != /*ClubID::Driver*/m_firstClub)
+        && m_currentClub != m_firstClub)
     {
-        //m_currentClub = (m_currentClub + ClubID::SandWedge) % ClubID::Putter;
         auto clubCount = ClubID::Putter - m_firstClub;
         m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
         m_currentClub = m_firstClub + m_clubOffset;
@@ -494,7 +506,7 @@ void InputParser::setClub(float dist)
 
 void InputParser::rotate(float rotation)
 {
-    m_rotation = std::min(MaxRotation, std::max(-MaxRotation, m_rotation + rotation));
+    m_rotation = std::min(m_maxRotation, std::max(-m_maxRotation, m_rotation + rotation));
 }
 
 void InputParser::checkControllerInput()

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -28,6 +28,8 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "TextConstruction.hpp"
+
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 using namespace cro;
 
@@ -57,6 +59,7 @@ void Detail::Text::addQuad(std::vector<Vertex2D>& vertices, glm::vec2 position, 
 FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& context)
 {
     std::vector<Vertex2D> outlineVerts;
+    std::vector<Vertex2D> shadowVerts;
     std::vector<Vertex2D> characterVerts;
 
     const auto& texture = context.font->getTexture(context.charSize);
@@ -135,6 +138,11 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
         {
             addOutline();
         }
+        else if (glm::length2(context.shadowOffset) != 0)
+        {
+            //add a shadow if only no outline
+            Detail::Text::addQuad(shadowVerts, glm::vec2(x, y) + context.shadowOffset, context.shadowColour, glyph, texture.getSize());
+        }
         Detail::Text::addQuad(characterVerts, glm::vec2(x, y), context.fillColour, glyph, texture.getSize());
 
         //only do this if not outlined
@@ -160,7 +168,8 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
     localBounds.width = maxX - minX;
     localBounds.height = maxY - minY;
 
-    //ensures the outline is always drawn first
+    //ensures the outline/shadow is always drawn first
+    outlineVerts.insert(outlineVerts.end(), shadowVerts.begin(), shadowVerts.end());
     outlineVerts.insert(outlineVerts.end(), characterVerts.begin(), characterVerts.end());
     dst.swap(outlineVerts);
 

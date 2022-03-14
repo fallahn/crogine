@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,6 +29,9 @@ source distribution.
 
 #include "InterpolationSystem.hpp"
 
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/detail/Assert.hpp>
+
 InterpolationComponent::InterpolationComponent(InterpolationPoint initialPoint)
     : m_enabled         (true),
     m_targetPoint       (initialPoint),
@@ -52,7 +55,6 @@ void InterpolationComponent::setTarget(const InterpolationPoint& target)
     {
         m_started = true;
     }
-    applyNextTarget();
 }
 
 void InterpolationComponent::setEnabled(bool enabled)
@@ -76,26 +78,39 @@ void InterpolationComponent::resetRotation(glm::quat rotation)
 }
 
 //private
-void InterpolationComponent::applyNextTarget()
+void InterpolationComponent::applyNextTarget(glm::vec3 currentPos, glm::quat currentRot, std::int32_t timestamp)
 {
     if (m_started && m_buffer.size() > 0)
     {
         InterpolationPoint target;
         while (m_buffer.size() > 0 &&
-            target.timestamp <= m_targetPoint.timestamp)
+            target.timestamp < timestamp)
         {
             //skips old/out of date targets
             target = m_buffer.pop_front();
         }
 
-        //before this function is called the entity
-        //is usually snapped to the target position/rotation
-        //anyway so we can assume the previous point will be
-        //assigned the current position/rotation
-        m_previousPoint = m_targetPoint;
+
+        //we want to interp from where we actually got to
+        //otherwise snapping might cause jerky behaviour
+        //with async updates
+        m_previousPoint.timestamp = timestamp;
+        m_previousPoint.position = currentPos;
+        m_previousPoint.rotation = currentRot;
+
+        CRO_ASSERT(!std::isnan(m_previousPoint.position.x), "");
+
         m_elapsedTimer.restart();
 
-        m_timeDifference = target.timestamp - m_previousPoint.timestamp;
+        if (target.timestamp > m_previousPoint.timestamp)
+        {
+            m_timeDifference = target.timestamp - m_previousPoint.timestamp;
+        }
+        else
+        {
+            target = m_previousPoint;
+            target.timestamp += m_timeDifference / 2;
+        }
         m_targetPoint = target;
     }
 }

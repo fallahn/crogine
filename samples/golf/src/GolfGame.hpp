@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include "DefaultAchievements.hpp"
 #include "golf/SharedStateData.hpp"
 
 #include <crogine/core/App.hpp>
@@ -73,6 +74,9 @@ private:
     std::array<std::int32_t, UniformID::Count> m_uniformIDs = {};
 
     static cro::RenderTarget* m_renderTarget;
+
+    //this contains GL resources so we need to control its lifetime with initialise / finialise
+    std::unique_ptr<DefaultAchievements> m_achievements; 
 
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;

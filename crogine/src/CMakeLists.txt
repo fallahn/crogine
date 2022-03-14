@@ -29,6 +29,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/core/Wavetable.cpp
   ${PROJECT_DIR}/core/Window.cpp
 
+  ${PROJECT_DIR}/detail/BalancedTree.cpp
   ${PROJECT_DIR}/detail/DistanceField.cpp
   ${PROJECT_DIR}/detail/glad.c
   ${PROJECT_DIR}/detail/ModelBinary.cpp
@@ -122,6 +123,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/Texture.cpp
   ${PROJECT_DIR}/graphics/TextureResource.cpp
   ${PROJECT_DIR}/graphics/Transformable2D.cpp
+  ${PROJECT_DIR}/graphics/UniformBuffer.cpp
   
   ${PROJECT_DIR}/graphics/postprocess/PostChromeAB.cpp
   ${PROJECT_DIR}/graphics/postprocess/PostProcess.cpp

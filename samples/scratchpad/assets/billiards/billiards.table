@@ -1,0 +1,41 @@
+table
+{
+    model = "assets/billiards/pool_model.cmt"
+    collision = "assets/billiards/pool_collision.cmt"
+
+    pocket
+    {
+        position = 0.47,-0.93
+        value = 0
+    }
+
+    pocket
+    {
+        position = 0.54, 0
+        value = 0
+    }
+
+    pocket
+    {
+        position = 0.47, 0.93
+        value = 0
+    }
+
+    pocket
+    {
+        position = -0.47,-0.93
+        value = 0
+    }
+
+    pocket
+    {
+        position = -0.54, 0
+        value = 0
+    }
+
+    pocket
+    {
+        position = -0.47, 0.93
+        value = 0
+    }
+}

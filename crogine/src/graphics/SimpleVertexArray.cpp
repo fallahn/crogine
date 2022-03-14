@@ -57,7 +57,7 @@ void SimpleVertexArray::setVertexData(const std::vector<Vertex2D>& data)
 	SimpleDrawable::setVertexData(data);
 }
 
-void SimpleVertexArray::draw()
+void SimpleVertexArray::draw(const glm::mat4& parentTransform)
 {
-	drawGeometry(getTransform());
+	drawGeometry(getTransform() * parentTransform);
 }

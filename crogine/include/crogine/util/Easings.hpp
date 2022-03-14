@@ -52,7 +52,7 @@ namespace cro
         {
             static inline float easeInSine(float t)
             {
-                return std::sin(1.5707963f * t);
+                return 1.f - std::cos((t * Const::PI) / 2.f);// (1.5707963f * t);
             }
 
             static inline float easeOutSine(float t)

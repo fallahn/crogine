@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/systems/UISystem.hpp>
 
 struct SharedStateData;
 
@@ -91,12 +92,25 @@ private:
 
     std::array<std::function<void()>, 2u> m_tabFunctions = {};
     std::size_t m_currentTabFunction;
+    std::size_t m_previousMenuID;
+
+    struct ScrollID final
+    {
+        enum
+        {
+            AchUp, AchDown,
+            StatUp, StatDown,
+            Count
+        };
+    };
+    std::array<std::function<void(cro::Entity, cro::ButtonEvent)>, ScrollID::Count> m_scrollFunctions = {};
 
     struct ToolTipID final
     {
         enum
         {
-            Volume, Pixel,
+            Volume, FOV, Pixel,
+            Achievements, Stats,
             Count
         };
     };
@@ -104,12 +118,17 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
+    cro::Entity m_achievementsNode;
     void buildScene();
 
     void buildAVMenu(cro::Entity, const cro::SpriteSheet&);
     void buildControlMenu(cro::Entity, const cro::SpriteSheet&);
+    void buildAchievementsMenu(cro::Entity, const cro::SpriteSheet&);
+    cro::Entity buildStatsMenu(const cro::SpriteSheet&);
 
-    void createButtons(cro::Entity, std::int32_t, std::uint32_t, std::uint32_t);
+    void createButtons(cro::Entity, std::int32_t, std::uint32_t, std::uint32_t, const cro::SpriteSheet&);
+
+    void updateToolTip(cro::Entity, std::int32_t);
 
     void quitState();
 };

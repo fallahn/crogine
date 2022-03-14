@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -563,6 +563,7 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
     }
 
     std::stringstream stream;
+    stream.precision(3);
     stream << indent << getName() << " " << getId() << std::endl;
     stream << indent << "{" << std::endl;
     for (const auto& p : m_properties)
@@ -572,7 +573,7 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
         if (!p.m_isStringValue
             || (str.front() == '\"' && str.back() == '\"'))
         {
-            stream << str;
+            stream << std::fixed << str;
         }
         else
         {

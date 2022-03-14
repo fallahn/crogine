@@ -1,0 +1,24 @@
+course course_04a
+{
+    skybox = "assets/golf/images/skybox/mountain/sky.ccm"
+    billboard_model = "assets/golf/models/shrubbery02.cmt"
+    billboard_sprites = "assets/golf/sprites/shrubbery02.spt"
+    audio = "assets/golf/sound/ambience_beach.xas"
+    grass = 0.909,0.89,0.713,1
+    grass_tint = 0.909, 0.909, 0.773, 1.0
+    instance_model = "assets/golf/models/rock.cmt"
+    clouds = "assets/golf/sprites/clouds02.spt"
+
+    title = "Roving Sands, East Nerringham"
+    description = "Front 9 Holes"
+
+    hole = "assets/golf/courses/course_04/01.hole"
+    hole = "assets/golf/courses/course_04/02.hole"
+    hole = "assets/golf/courses/course_04/03.hole"
+    hole = "assets/golf/courses/course_04/04.hole"
+    hole = "assets/golf/courses/course_04/05.hole"
+    hole = "assets/golf/courses/course_04/06.hole"
+    hole = "assets/golf/courses/course_04/07.hole"
+    hole = "assets/golf/courses/course_04/08.hole"
+    hole = "assets/golf/courses/course_04/09.hole"
+}

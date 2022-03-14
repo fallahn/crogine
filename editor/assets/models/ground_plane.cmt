@@ -1,0 +1,12 @@
+model ground_plane
+{
+    mesh = quad
+    size = 3,3
+    uv=0,0,1,1
+
+    material Unlit
+    {
+        diffuse = "assets/images/grid.png"
+        rx_shadows = true
+    }
+}
