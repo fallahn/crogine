@@ -67,6 +67,7 @@ struct PocketInfo final
 {
     glm::vec2 position = glm::vec2(0.f);
     std::int32_t value = 0;
+    float radius = 0.06f;
 };
 
 struct BilliardBall final : public btMotionState
@@ -151,12 +152,13 @@ private:
     //simplified pocketry
     struct Pocket final
     {
+        static constexpr float DefaultRadius = 0.06f;
+
         cro::Box box;
         std::int32_t id = 0;
         std::int32_t value = 0;
+        float radius = DefaultRadius;
         glm::vec2 position = glm::vec2(0.f);
-
-        static constexpr float Radius = 0.06f;
     };
     std::vector<Pocket> m_pockets;
 

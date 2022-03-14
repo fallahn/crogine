@@ -183,43 +183,35 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData, const std::vect
     m_collisionWorld->addCollisionObject(table.get(), (1 << CollisionID::Table), (1 << CollisionID::Ball));
 
     //create triggers for each pocket
-    //TODO read this from some table data somewhere
-    //including radius probably
     const glm::vec3 PocketHalfSize({ 0.075f, 0.1f, 0.075f });
     static constexpr float WallThickness = 0.025f;
     static constexpr float WallHeight = 0.1f;
-    //const std::array PocketPositions =
-    //{
-    //    glm::vec3(0.47f, -WallHeight, -0.93f),
-    //    glm::vec3(0.54f, -WallHeight, 0.f),
-    //    glm::vec3(0.47f, -WallHeight, 0.93f),
 
-    //    glm::vec3(-0.47f, -WallHeight, -0.93f),
-    //    glm::vec3(-0.54f, -WallHeight, 0.f),
-    //    glm::vec3(-0.47f, -WallHeight, 0.93f)
-    //};
 
     auto i = 0;
 
 #ifdef CRO_DEBUG_
-    m_pocketShape = std::make_unique<btCylinderShape>(btVector3(Pocket::Radius, 0.01f, Pocket::Radius));
+    m_pocketShape = std::make_unique<btCylinderShape>(btVector3(Pocket::DefaultRadius, 0.01f, Pocket::DefaultRadius));
 #endif
 
-    m_pocketWalls[0] = std::make_unique<btBoxShape>(btVector3(Pocket::Radius, WallHeight, WallThickness));
-    m_pocketWalls[1] = std::make_unique<btBoxShape>(btVector3(WallThickness, WallHeight, Pocket::Radius));
+    m_pocketWalls[0] = std::make_unique<btBoxShape>(btVector3(Pocket::DefaultRadius, WallHeight, WallThickness));
+    m_pocketWalls[1] = std::make_unique<btBoxShape>(btVector3(WallThickness, WallHeight, Pocket::DefaultRadius));
 
-    static constexpr float OffsetAmount = Pocket::Radius + WallThickness;
-    std::array Offsets =
+    const std::array Offsets =
     {
-        btVector3(0.f, 0.f, -OffsetAmount),
-        btVector3(OffsetAmount, 0.f, 0.f),
-        btVector3(0.f, 0.f, OffsetAmount),
-        btVector3(-OffsetAmount, 0.f, 0.f)
+        btVector3(0.f, 0.f, -1.f),
+        btVector3(1.f, 0.f, 0.f),
+        btVector3(0.f, 0.f, 1.f),
+        btVector3(-1.f, 0.f, 0.f)
     };
 
     for (auto p : pocketInfo)
     {
         glm::vec3 pocketPos(p.position.x, -WallHeight, p.position.y);
+        if (p.radius <= 0)
+        {
+            p.radius = Pocket::DefaultRadius;
+        }
 
         //place these in world space for simpler testing
         auto& pocket = m_pockets.emplace_back();
@@ -233,7 +225,7 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData, const std::vect
         {
             const auto& wallShape = m_pocketWalls[i % 2];
             auto& obj = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Pocket, 0.f, wallShape.get())));
-            transform.setOrigin(glmToBt(pocketPos) + Offsets[i]);
+            transform.setOrigin(glmToBt(pocketPos) + (Offsets[i] * (WallThickness + p.radius)));
             obj->setWorldTransform(transform);
             m_collisionWorld->addCollisionObject(obj.get(), (1 << CollisionID::Pocket), (1 << CollisionID::Ball));
         }
@@ -363,7 +355,7 @@ void BilliardsSystem::doPocketCollision() const
 
                 for (const auto& pocket : m_pockets)
                 {
-                    if (glm::length2(pocket.position - glm::vec2(position.x, position.z)) < Pocket::Radius * Pocket::Radius)
+                    if (glm::length2(pocket.position - glm::vec2(position.x, position.z)) < pocket.radius * pocket.radius)
                     {
                         ball.m_inPocketRadius = true;
                         break;

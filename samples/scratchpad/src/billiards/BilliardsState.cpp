@@ -177,6 +177,10 @@ void BilliardsState::buildScene()
                     {
                         pocket.value = prop.getValue<std::int32_t>();
                     }
+                    else if (propName == "radius")
+                    {
+                        pocket.radius = prop.getValue<float>();
+                    }
                 }
             }
         }
