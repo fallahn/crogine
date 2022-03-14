@@ -966,7 +966,7 @@ void GolfState::loadAssets()
     //water
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Water));
-    //forces rendering last to reduce overdraw - overdraws strok indicator though
+    //forces rendering last to reduce overdraw - overdraws stroke indicator though
     //m_resources.materials.get(m_materialIDs[MaterialID::Water]).blendMode = cro::Material::BlendMode::Alpha; 
 
     m_waterShader.shaderID = m_resources.shaders.get(ShaderID::Water).getGLHandle();
@@ -1967,7 +1967,7 @@ void GolfState::buildScene()
 
 
     //draw the flag pole as a single line which can be
-    //see from a distance - hole and model are also attached to this
+    //seen from a distance - hole and model are also attached to this
     material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulled]);
     material.setProperty("u_colour", cro::Colour::White);
     meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
@@ -1983,12 +1983,12 @@ void GolfState::buildScene()
     {
         0.f, 2.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
         0.f, 0.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
-        0.f,  0.005f,  0.f,    0.f, 0.f, 0.f, 0.5f,
-        1.4f, 0.005f, 1.4f,    0.f, 0.f, 0.f, 0.01f,
+        //0.f,  0.005f,  0.f,    0.f, 0.f, 0.f, 0.5f,
+        //1.4f, 0.005f, 1.4f,    0.f, 0.f, 0.f, 0.01f,
     };
     indices =
     {
-        0,1,2,3
+        0,1//,2,3
     };
     meshData->vertexCount = verts.size() / vertStride;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
