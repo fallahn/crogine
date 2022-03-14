@@ -59,7 +59,6 @@ source distribution.
 namespace
 {
 #include "TerrainShader.inl"
-#include "BillboardShader.inl"
 
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler
@@ -268,8 +267,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //parent the shrubbery so they always stay the same relative height
     m_terrainEntity = entity;
 
-    //modified billboard shader with vertex snapping for retro wobbliness
-    resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
+    //modified billboard shader
     const auto& billboardShader = resources.shaders.get(ShaderID::Billboard);
     auto billboardMatID = resources.materials.add(billboardShader);
 

@@ -113,6 +113,7 @@ namespace
 #include "MinimapShader.inl"
 #include "WireframeShader.inl"
 #include "TransitionShader.inl"
+#include "BillboardShader.inl"
 #include "PostProcess.inl"
 
     std::int32_t debugFlags = 0;
@@ -938,6 +939,14 @@ void GolfState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
+
+    m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
+    shader = &m_resources.shaders.get(ShaderID::Billboard);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
+
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
 
@@ -1311,6 +1320,10 @@ void GolfState::loadAssets()
             ent.addComponent<cro::Transform>().setPosition(position);
             ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
             billboardDef.createModel(ent);
+
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+            applyMaterialData(billboardDef, material);
+            ent.getComponent<cro::Model>().setMaterial(0, material);
 
             glm::vec3 bbPos(-8.f, 0.f, 0.f);
             for (auto i = 0; i < 16; ++i)
@@ -1765,12 +1778,6 @@ void GolfState::loadAssets()
         m_terrainBuilder.create(m_resources, m_gameScene, theme);
 
         //this will have loaded a series of shaders for which we need to capture some uniforms
-        shader = &m_resources.shaders.get(ShaderID::Billboard);
-        m_scaleBuffer.addShader(*shader);
-        m_resolutionBuffer.addShader(*shader);
-        m_windBuffer.addShader(*shader);
-
-
         shader = &m_resources.shaders.get(ShaderID::Terrain);
         m_scaleBuffer.addShader(*shader);
         m_resolutionBuffer.addShader(*shader);

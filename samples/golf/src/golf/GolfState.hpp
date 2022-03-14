@@ -150,6 +150,7 @@ private:
             Hair,
             Course,
             Ball,
+            Billboard,
 
             Count
         };
