@@ -254,11 +254,11 @@ static const std::string CelVertexShader = R"(
         vertPos.xz += (u_windData.xz * strength * 2.0) * totalScale;
 #else
         //snapping kinda ruins the wind movement
-        vertPos.xyz /= vertPos.w;
-        vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
-        vertPos.xy = floor(vertPos.xy);
-        vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
-        vertPos.xyz *= vertPos.w;
+        //vertPos.xyz /= vertPos.w;
+        //vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
+        //vertPos.xy = floor(vertPos.xy);
+        //vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
+        //vertPos.xyz *= vertPos.w;
 #endif
         gl_Position = vertPos;
 

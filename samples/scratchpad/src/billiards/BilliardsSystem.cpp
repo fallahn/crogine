@@ -77,7 +77,7 @@ BilliardsSystem::BilliardsSystem(cro::MessageBus& mb, BulletDebug& dd)
     requireComponent<BilliardBall>();
     requireComponent<cro::Transform>();
 
-    m_ballShape = std::make_unique<btSphereShape>(0.0255f);
+    m_ballShape = std::make_unique<btSphereShape>(BilliardBall::Radius);
 
     //note these have to be created in the right order so that destruction
     //is properly done in reverse...
@@ -408,10 +408,13 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
     btTransform transform;
     transform.setFromOpenGLMatrix(&entity.getComponent<cro::Transform>().getWorldTransform()[0][0]);
     
-    auto& body = m_ballObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Ball, 0.156f, m_ballShape.get(), &ball)));
+    auto& body = m_ballObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Ball, BilliardBall::Mass, m_ballShape.get(), &ball)));
     body->setWorldTransform(transform);
     body->setUserIndex(CollisionID::Ball);
     body->setUserPointer(&ball);
+    body->setCcdMotionThreshold(BilliardBall::Radius);
+    body->setCcdSweptSphereRadius(BilliardBall::Radius * 0.5f);
+    
     
     m_collisionWorld->addRigidBody(body.get(), (1 << CollisionID::Ball), (1 << CollisionID::Table) | (1 << CollisionID::Cushion) | (1 << CollisionID::Ball));
 
