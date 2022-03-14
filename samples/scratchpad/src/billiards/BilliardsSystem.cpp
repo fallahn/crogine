@@ -116,6 +116,26 @@ void BilliardsSystem::process(float dt)
     m_collisionWorld->stepSimulation(dt, 10);
     m_collisionWorld->debugDrawWorld();
 
+    //we either have to iterate before AND after collision test
+    //else we can do it once and accept the results are one frame late
+    for (auto entity : getEntities())
+    {
+        auto& ball = entity.getComponent<BilliardBall>();
+        if (ball.m_prevBallContact != ball.m_ballContact)
+        {
+            if (ball.m_ballContact == -1)
+            {
+                LogI << "Ball ended contact with " << ball.m_prevBallContact << std::endl;
+            }
+            else
+            {
+                LogI << "Ball started contact with " << ball.m_ballContact << std::endl;
+            }
+        }
+        ball.m_prevBallContact = ball.m_ballContact;
+        ball.m_ballContact = -1;
+    }
+
     doBallCollision();
     doPocketCollision();
 }
@@ -163,13 +183,7 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
         m_tableVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(tableMesh);
         m_tableShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_tableVertices.back().get(), false));
 
-
-        //auto& body = m_tableObjects.emplace_back(std::make_unique<btPairCachingGhostObject>());
-        //body->setCollisionShape(m_tableShapes.back().get());
-        //body->setUserIndex(static_cast<std::int32_t>(collisionID));
-        //m_collisionWorld->addCollisionObject(body.get());
-
-        auto& body = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Cushion/*collisionID*/, 0.f, m_tableShapes.back().get())));
+        auto& body = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Cushion, 0.f, m_tableShapes.back().get())));
         body->setWorldTransform(transform);
         //body->setUserIndex(static_cast<std::int32_t>(collisionID));
         m_collisionWorld->addRigidBody(body.get(), (1<< CollisionID::Cushion), (1 << CollisionID::Ball));
@@ -235,7 +249,7 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData)
             auto& obj = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Pocket, 0.f, wallShape.get())));
             transform.setOrigin(glmToBt(p) + Offsets[i]);
             obj->setWorldTransform(transform);
-            m_collisionWorld->addCollisionObject(obj.get(), (1 << CollisionID::Pocket));
+            m_collisionWorld->addCollisionObject(obj.get(), (1 << CollisionID::Pocket), (1 << CollisionID::Ball));
         }
 
 #ifdef CRO_DEBUG_
@@ -297,13 +311,18 @@ void BilliardsSystem::doBallCollision() const
         auto body0 = manifold->getBody0();
         auto body1 = manifold->getBody1();
 
-
-        //manifold->refreshContactPoints(body0->getWorldTransform(), body1->getWorldTransform());
-
-        auto contactCount = manifold->getNumContacts();
-        for (auto j = 0; j < contactCount; ++j)
+        if (body0->getUserIndex() == CollisionID::Ball
+            && body1->getUserIndex() == CollisionID::Ball)
         {
+            auto contactCount = std::min(1, manifold->getNumContacts());
+            for (auto j = 0; j < contactCount; ++j)
+            {
+                auto ballA = static_cast<BilliardBall*>(body0->getUserPointer());
+                auto ballB = static_cast<BilliardBall*>(body1->getUserPointer());
 
+                ballA->m_ballContact = ballB->id;
+                ballB->m_ballContact = ballA->id;
+            }
         }
     }
 }
@@ -348,22 +367,22 @@ void BilliardsSystem::doPocketCollision() const
             //check if we disable table contact by looking at our proximity to the pocket
             else
             {
-                auto lastContact = ball.m_pocketRadius;
-                ball.m_pocketRadius = false;
+                auto lastContact = ball.m_inPocketRadius;
+                ball.m_inPocketRadius = false;
 
                 for (const auto& pocket : m_pockets)
                 {
                     if (glm::length2(pocket.position - glm::vec2(position.x, position.z)) < Pocket::Radius * Pocket::Radius)
                     {
-                        ball.m_pocketRadius = true;
+                        ball.m_inPocketRadius = true;
                         break;
                     }
                 }
 
-                if (lastContact != ball.m_pocketRadius)
+                if (lastContact != ball.m_inPocketRadius)
                 {
                     auto flags = (1 << CollisionID::Cushion) | (1 << CollisionID::Ball) | (1 << CollisionID::Pocket);
-                    if (!ball.m_pocketRadius)
+                    if (!ball.m_inPocketRadius)
                     {
                         flags |= (1 << CollisionID::Table);
                     }
@@ -392,6 +411,7 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
     auto& body = m_ballObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Ball, 0.156f, m_ballShape.get(), &ball)));
     body->setWorldTransform(transform);
     body->setUserIndex(CollisionID::Ball);
+    body->setUserPointer(&ball);
     
     m_collisionWorld->addRigidBody(body.get(), (1 << CollisionID::Ball), (1 << CollisionID::Table) | (1 << CollisionID::Cushion) | (1 << CollisionID::Ball));
 
@@ -401,6 +421,7 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
 void BilliardsSystem::onEntityRemoved(cro::Entity entity)
 {
     auto* body = entity.getComponent<BilliardBall>().m_physicsBody;
+    body->setUserPointer(nullptr);
 
     m_collisionWorld->removeRigidBody(body);
 

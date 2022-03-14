@@ -84,7 +84,10 @@ private:
     btRigidBody* m_physicsBody = nullptr;
 
     std::int32_t m_pocketContact = -1; //ID of pocket, or -1
-    bool m_pocketRadius = false;
+    bool m_inPocketRadius = false;
+
+    std::int32_t m_ballContact = -1; //other ball or -1
+    std::int32_t m_prevBallContact = -1;
 
     friend class BilliardsSystem;
 };

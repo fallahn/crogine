@@ -2211,8 +2211,6 @@ void GolfState::buildScene()
 
 
     auto sunEnt = m_gameScene.getSunlight();
-    //sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -38.746f * cro::Util::Const::degToRad);
-
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -135.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -75.f * cro::Util::Const::degToRad);
 
