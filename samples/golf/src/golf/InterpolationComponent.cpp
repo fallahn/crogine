@@ -90,13 +90,6 @@ void InterpolationComponent::applyNextTarget(glm::vec3 currentPos, glm::quat cur
             target = m_buffer.pop_front();
         }
 
-        //ideally we'd reject *any* timestamp that's in the
-        //past else we end up moving backwards (which looks stuttery)
-        //however as the interpolation then starts to become extrapolation
-        //timestamps will lag further into the past and the server
-        //is not longer authorative - all the while the extrapolation
-        //disappears off into the sunset...
-
 
         //we want to interp from where we actually got to
         //otherwise snapping might cause jerky behaviour

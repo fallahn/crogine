@@ -20,7 +20,7 @@ model fence01
     {
         name = "Shadow"
         colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = true
+        smooth = false
         repeat = true
         depth_test = true
         double_sided = false

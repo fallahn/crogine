@@ -71,7 +71,7 @@ void InterpolationSystem::process(float dt)
         if (interp.m_enabled)
         {
             auto elapsed = interp.m_elapsedTimer.elapsed().asMilliseconds();
-            float currTime = static_cast<float>(elapsed) / (static_cast<float>(interp.m_timeDifference) + 0.001f);
+            float currTime = std::min(1.f, static_cast<float>(elapsed) / (static_cast<float>(interp.m_timeDifference) + 0.001f));
 
             tx.setRotation(glm::slerp(interp.m_previousPoint.rotation, interp.m_targetPoint.rotation, currTime));
             tx.setPosition(interp.m_previousPoint.position + (diff * currTime));
