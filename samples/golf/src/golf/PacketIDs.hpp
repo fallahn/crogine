@@ -79,7 +79,7 @@ namespace PacketID
 
         //from client
         ClientVersion, //uint32 CURRENT_VER of client. Clients are kicked if this does not match the server
-        RequestGameStart,
+        RequestGameStart, //uint8  sv::State, ie Golf to start golf, Billiards to start billiards etc
         ClientReady, //< uint8 clientID - requests game data from server. Sent repeatedly until ack'd
         InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput)
         PlayerInfo, //< ConnectionData array

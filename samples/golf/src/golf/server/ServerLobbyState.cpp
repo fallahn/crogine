@@ -55,10 +55,7 @@ LobbyState::LobbyState(SharedData& sd)
     }
 
     //this is lobby readiness
-    for (auto& b : m_readyState)
-    {
-        b = false;
-    }
+    std::fill(m_readyState.begin(), m_readyState.end(), false);
 }
 
 void LobbyState::handleMessage(const cro::Message& msg)
@@ -103,7 +100,12 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
         case PacketID::RequestGameStart:
             if (evt.peer.getID() == m_sharedData.hostID)
             {
-                m_returnValue = StateID::Golf;
+                auto state = evt.packet.as<std::uint8_t>();
+                if (state < StateID::Count)
+                {
+                    m_returnValue = state;
+                }
+                //TODO throw a server error if this is a weird value
             }
             break;
         }

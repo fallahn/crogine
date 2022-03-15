@@ -887,7 +887,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
 
                 if (m_sharedData.tutorial)
                 {
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
                 else
                 {

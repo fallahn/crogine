@@ -81,7 +81,9 @@ namespace sv
         {
             Lobby,
             Golf,
-            Billiards
+            Billiards,
+
+            Count
         };
     }
 
