@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MenuState.hpp"
+#include "MenuCallbacks.hpp"
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
 #include "MenuConsts.hpp"
@@ -90,103 +91,7 @@ namespace
         }
     };
     std::vector<float> CursorAnimationCallback::WaveTable;
-
-    struct TitleTextCallback final
-    {
-        void operator() (cro::Entity e, float dt)
-        {
-            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-            currTime = std::min(1.f, currTime + dt);
-            float scale = cro::Util::Easing::easeOutBounce(currTime);
-            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-
-            if (currTime == 1)
-            {
-                e.getComponent<cro::Callback>().active = false;
-            }
-        }
-    };
 }
-
-void MenuCallback::operator()(cro::Entity e, float dt)
-{
-    static constexpr float Speed = 2.f;
-    auto& menuData = e.getComponent<cro::Callback>().getUserData<MenuData>();
-    if (menuData.direction == MenuData::In)
-    {
-        //expand vertically
-        menuData.currentTime = std::min(1.f, menuData.currentTime + (dt * Speed));
-        e.getComponent<cro::Transform>().setScale({ 1.f, cro::Util::Easing::easeInQuint(menuData.currentTime) });
-
-        if (menuData.currentTime == 1)
-        {
-            //stop here
-            menuData.direction = MenuData::Out;
-            e.getComponent<cro::Callback>().active = false;
-            menuState.m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(menuData.targetMenu);
-            menuState.m_currentMenu = menuData.targetMenu;
-
-            //if we're hosting a lobby update the stride
-            if ((menuData.targetMenu == MenuState::MenuID::Lobby
-                && menuState.m_sharedData.hosting)
-                /*|| menuData.targetMenu == MenuState::MenuID::Avatar*/)
-            {
-                menuState.m_uiScene.getSystem<cro::UISystem>()->setColumnCount(2);
-            }
-            else
-            {
-                menuState.m_uiScene.getSystem<cro::UISystem>()->setColumnCount(1);
-            }
-
-            //start title animation
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::Menu::TitleText;
-            cmd.action = [](cro::Entity t, float)
-            {
-                t.getComponent<cro::Callback>().setUserData<float>(0.f);
-                t.getComponent<cro::Callback>().active = true;
-            };
-            menuState.m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-        }
-    }
-    else
-    {
-        //contract horizontally
-        menuData.currentTime = std::max(0.f, menuData.currentTime - (dt * Speed));
-        e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeInQuint(menuData.currentTime), 1.f });
-
-        if (menuData.currentTime == 0)
-        {
-            //stop this callback
-            menuData.direction = MenuData::In;
-            e.getComponent<cro::Callback>().active = false;
-
-            //set target position and init target animation
-            auto* positions = &menuState.m_menuPositions;
-            auto viewScale = menuState.m_viewScale;
-
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::Menu::RootNode;
-            cmd.action = [positions, menuData, viewScale](cro::Entity n, float)
-            {
-                n.getComponent<cro::Transform>().setPosition(positions->at(menuData.targetMenu) * viewScale);
-            };
-            menuState.m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-            menuState.m_menuEntities[menuData.targetMenu].getComponent<cro::Callback>().active = true;
-            menuState.m_menuEntities[menuData.targetMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = menuData.targetMenu;
-
-            //hide incoming titles
-            cmd.targetFlags = CommandID::Menu::TitleText;
-            cmd.action = [](cro::Entity t, float)
-            {
-                t.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
-            };
-            menuState.m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-        }
-    }
-}
-
 
 constexpr std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPositions =
 {
@@ -382,7 +287,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     menuEntity.addComponent<cro::Callback>().setUserData<MenuData>();
     menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().direction = MenuData::Out;
     menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().currentTime = 1.f;
-    menuEntity.getComponent<cro::Callback>().function = MenuCallback(*this);
+    menuEntity.getComponent<cro::Callback>().function = MenuCallback(MainMenuContext(this));
     m_menuEntities[MenuID::Main] = menuEntity;
     parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
 
@@ -703,7 +608,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     auto menuEntity = m_uiScene.createEntity();
     menuEntity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     menuEntity.addComponent<cro::Callback>().setUserData<MenuData>();
-    menuEntity.getComponent<cro::Callback>().function = MenuCallback(*this);
+    menuEntity.getComponent<cro::Callback>().function = MenuCallback(MainMenuContext(this));
     m_menuEntities[MenuID::Avatar] = menuEntity;
     parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
     
@@ -1189,7 +1094,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     auto menuEntity = m_uiScene.createEntity();
     menuEntity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     menuEntity.addComponent<cro::Callback>().setUserData<MenuData>();
-    menuEntity.getComponent<cro::Callback>().function = MenuCallback(*this);
+    menuEntity.getComponent<cro::Callback>().function = MenuCallback(MainMenuContext(this));
     m_menuEntities[MenuID::Join] = menuEntity;
     parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
 
@@ -1440,7 +1345,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto menuEntity = m_uiScene.createEntity();
     menuEntity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     menuEntity.addComponent<cro::Callback>().setUserData<MenuData>();
-    menuEntity.getComponent<cro::Callback>().function = MenuCallback(*this);
+    menuEntity.getComponent<cro::Callback>().function = MenuCallback(MainMenuContext(this));
     m_menuEntities[MenuID::Lobby] = menuEntity;
     parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
 

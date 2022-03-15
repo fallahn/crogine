@@ -35,6 +35,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "GameConsts.hpp"
 #include "MenuConsts.hpp"
+#include "MenuCallbacks.hpp"
 #include "PoissonDisk.hpp"
 #include "GolfCartSystem.hpp"
 #include "CloudSystem.hpp"
@@ -92,6 +93,17 @@ namespace
     //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 }
 
+MainMenuContext::MainMenuContext(MenuState* state)
+{
+    uiScene = &state->m_uiScene;
+    currentMenu = &state->m_currentMenu;
+    menuEntities = state->m_menuEntities.data();
+
+    menuPositions = state->m_menuPositions.data();
+    viewScale = &state->m_viewScale;
+    sharedData = &state->m_sharedData;
+}
+
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
@@ -116,7 +128,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
-        loadAvatars();
+        //loadAvatars();
 
         //add systems to scene
         addSystems();

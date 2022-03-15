@@ -162,15 +162,16 @@ void ErrorState::buildScene()
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
             if (currTime == 0)
             {
-                //if (m_sharedData.baseState != StateID::Menu)
+                requestStackClear();
+
+                if (m_sharedData.baseState != StateID::Clubhouse)
                 {
-                    requestStackClear();
                     requestStackPush(StateID::Menu);
                 }
-                /*else
+                else
                 {
-                    requestStackPop();
-                }*/
+                    requestStackPush(StateID::Clubhouse);
+                }
             }
             break;
         }

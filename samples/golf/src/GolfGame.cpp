@@ -58,12 +58,14 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 
 #include <crogine/util/Network.hpp>
+#include <crogine/util/Random.hpp>
 
 namespace
 {
 #include "golf/TutorialShaders.inl"
 #include "golf/TerrainShader.inl"
 #include "golf/PostProcess.inl"
+#include "golf/RandNames.hpp"
 
     struct ShaderDescription final
     {
@@ -427,6 +429,7 @@ bool GolfGame::initialise()
     cro::AudioMixer::setLabel("Announcer", MixerChannel::Voice);
 
     loadPreferences();
+    loadAvatars();
 
     m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
@@ -648,6 +651,86 @@ void GolfGame::savePreferences()
     if (file.file)
     {
         SDL_RWwrite(file.file, &m_sharedData.inputBinding, sizeof(InputBinding), 1);
+    }
+}
+
+void GolfGame::loadAvatars()
+{
+    auto path = cro::App::getPreferencePath() + "avatars.cfg";
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile(path, false))
+    {
+        std::uint32_t i = 0;
+
+        const auto& objects = cfg.getObjects();
+        for (const auto& obj : objects)
+        {
+            if (obj.getName() == "avatar"
+                && i < m_sharedData.localConnectionData.MaxPlayers)
+            {
+                const auto& props = obj.getProperties();
+                for (const auto& prop : props)
+                {
+                    const auto& name = prop.getName();
+                    if (name == "name")
+                    {
+                        //TODO try running this through unicode parser
+                        m_sharedData.localConnectionData.playerData[i].name = prop.getValue<std::string>();
+                    }
+                    else if (name == "ball_id")
+                    {
+                        auto id = prop.getValue<std::uint32_t>();
+                        m_sharedData.localConnectionData.playerData[i].ballID = id;
+                    }
+                    else if (name == "hair_id")
+                    {
+                        auto id = prop.getValue<std::uint32_t>();
+                        m_sharedData.localConnectionData.playerData[i].hairID = id;
+                    }
+                    else if (name == "skin_id")
+                    {
+                        auto id = prop.getValue<std::uint32_t>();
+                        m_sharedData.localConnectionData.playerData[i].skinID = id;
+                    }
+                    else if (name == "flipped")
+                    {
+                        m_sharedData.localConnectionData.playerData[i].flipped = prop.getValue<bool>();
+                    }
+
+                    else if (name == "flags0")
+                    {
+                        auto flag = prop.getValue<std::int32_t>();
+                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        m_sharedData.localConnectionData.playerData[i].avatarFlags[0] = static_cast<std::uint8_t>(flag);
+                    }
+                    else if (name == "flags1")
+                    {
+                        auto flag = prop.getValue<std::int32_t>();
+                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        m_sharedData.localConnectionData.playerData[i].avatarFlags[1] = static_cast<std::uint8_t>(flag);
+                    }
+                    else if (name == "flags2")
+                    {
+                        auto flag = prop.getValue<std::int32_t>();
+                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        m_sharedData.localConnectionData.playerData[i].avatarFlags[2] = static_cast<std::uint8_t>(flag);
+                    }
+                    else if (name == "flags3")
+                    {
+                        auto flag = prop.getValue<std::int32_t>();
+                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        m_sharedData.localConnectionData.playerData[i].avatarFlags[3] = static_cast<std::uint8_t>(flag);
+                    }
+                }
+
+                i++;
+            }
+        }
+    }
+
+    if (m_sharedData.localConnectionData.playerData[0].name.empty())
+    {
+        m_sharedData.localConnectionData.playerData[0].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
     }
 }
 

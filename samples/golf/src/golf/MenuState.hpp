@@ -34,6 +34,7 @@ source distribution.
 #include "PlayerAvatar.hpp"
 #include "Billboard.hpp"
 #include "SharedStateData.hpp"
+#include "MenuCallbacks.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/Cursor.hpp>
@@ -55,12 +56,9 @@ namespace cro
 }
 
 class MenuState;
-struct MenuCallback final
+struct MainMenuContext final : public MenuContext
 {
-    MenuState& menuState;
-    explicit MenuCallback(MenuState& m) : menuState(m) {}
-
-    void operator()(cro::Entity, float);
+    explicit MainMenuContext(MenuState*);
 };
 
 class MenuState final : public cro::State, public cro::GuiClient
@@ -131,34 +129,6 @@ private:
     std::tuple<std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t> m_courseSelectCallbacks;
     std::array<std::uint32_t, 4u> m_avatarEditCallbacks = {};
 
-    struct SpriteID final
-    {
-        enum
-        {
-            Controller,
-            Keyboard,
-            ThumbBackground,
-            ArrowLeft,
-            ArrowRight,
-            ArrowLeftHighlight,
-            ArrowRightHighlight,
-
-            ButtonBanner,
-            Cursor,
-            Flag,
-            PrevMenu,
-            NextMenu,
-            AddPlayer,
-            RemovePlayer,
-            ReadyUp,
-            StartGame,
-            Connect,
-            PrevCourse,
-            NextCourse,
-
-            Count
-        };
-    };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
     std::size_t m_currentMenu; //used by view callback to reposition the root node on window resize
@@ -255,21 +225,9 @@ private:
     void addCourseSelectButtons();
 
     void saveAvatars();
-    void loadAvatars();
+    //loading moved to GolfGame.cpp
 
     void handleNetEvent(const cro::NetEvent&);
 
-    friend struct MenuCallback;
-};
-
-//used in animation callback
-struct MenuData final
-{
-    enum
-    {
-        In, Out
-    }direction = In;
-    float currentTime = 0.f;
-
-    std::int32_t targetMenu = MenuState::MenuID::Main;
+    friend struct MainMenuContext;
 };

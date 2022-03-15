@@ -30,14 +30,28 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "MenuCallbacks.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/detail/glm/vec2.hpp>
+
+namespace cro
+{
+    struct NetEvent;
+}
+
+class ClubhouseState;
+struct ClubhouseContext final : public MenuContext
+{
+    explicit ClubhouseContext(ClubhouseState*);
+};
 
 struct SharedStateData;
 class ClubhouseState final : public cro::State
@@ -92,8 +106,13 @@ private:
     cro::UniformBuffer m_resolutionBuffer;
 
     glm::vec2 m_viewScale;
-    static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
+    static const std::array<glm::vec2, MenuID::Count> m_menuPositions; //I've forgotten why this is static...
+    std::array<cro::Entity, MenuID::Count> m_menuEntities = {};
     std::size_t m_currentMenu;
+
+    std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
+
+    std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
     void addSystems();
     void loadResources();
@@ -104,4 +123,10 @@ private:
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
+
+    void quitLobby();
+
+    void handleNetEvent(const cro::NetEvent&);
+
+    friend struct ClubhouseContext;
 };

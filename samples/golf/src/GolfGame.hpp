@@ -87,5 +87,6 @@ private:
 
     void loadPreferences();
     void savePreferences();
+    void loadAvatars();
     void recreatePostProcess();
 };
