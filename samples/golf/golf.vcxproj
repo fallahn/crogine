@@ -336,7 +336,7 @@
     <ClCompile Include="src\golf\PuttingState.cpp" />
     <ClCompile Include="src\golf\PuttingStateUI.cpp" />
     <ClCompile Include="src\golf\server\Server.cpp" />
-    <ClCompile Include="src\golf\server\ServerGameState.cpp" />
+    <ClCompile Include="src\golf\server\ServerGolfState.cpp" />
     <ClCompile Include="src\golf\server\ServerLobbyState.cpp" />
     <ClCompile Include="src\golf\SharedStateData.cpp" />
     <ClCompile Include="src\golf\SoundEffectsDirector.cpp" />
@@ -401,7 +401,7 @@
     <ClInclude Include="src\golf\RandNames.hpp" />
     <ClInclude Include="src\golf\ScoreStrings.hpp" />
     <ClInclude Include="src\golf\server\Server.hpp" />
-    <ClInclude Include="src\golf\server\ServerGameState.hpp" />
+    <ClInclude Include="src\golf\server\ServerGolfState.hpp" />
     <ClInclude Include="src\golf\server\ServerLobbyState.hpp" />
     <ClInclude Include="src\golf\server\ServerMessages.hpp" />
     <ClInclude Include="src\golf\server\ServerPacketData.hpp" />

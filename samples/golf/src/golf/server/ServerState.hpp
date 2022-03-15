@@ -80,7 +80,8 @@ namespace sv
         enum
         {
             Lobby,
-            Game
+            Golf,
+            Billiards
         };
     }
 

@@ -94,7 +94,7 @@ public:
 
     void render() override;
 
-    cro::StateID getStateID() const override { return StateID::Game; }
+    cro::StateID getStateID() const override { return StateID::Golf; }
 
 private:
     cro::ResourceCollection m_resources;    

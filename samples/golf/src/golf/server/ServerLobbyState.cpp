@@ -103,7 +103,7 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
         case PacketID::RequestGameStart:
             if (evt.peer.getID() == m_sharedData.hostID)
             {
-                m_returnValue = StateID::Game;
+                m_returnValue = StateID::Golf;
             }
             break;
         }

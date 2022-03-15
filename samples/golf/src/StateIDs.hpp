@@ -34,7 +34,7 @@ struct StateID final
     enum
     {
         Menu,
-        Game,
+        Golf,
         Options,
         Pause,
         Error,

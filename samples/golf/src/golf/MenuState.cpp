@@ -868,10 +868,10 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
         {
         default: break;
         case PacketID::StateChange:
-            if (evt.packet.as<std::uint8_t>() == sv::StateID::Game)
+            if (evt.packet.as<std::uint8_t>() == sv::StateID::Golf)
             {
                 requestStackClear();
-                requestStackPush(StateID::Game);
+                requestStackPush(StateID::Golf);
             }
             break;
         case PacketID::ConnectionAccepted:

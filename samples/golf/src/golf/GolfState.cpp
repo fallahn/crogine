@@ -166,7 +166,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     createTransition();
     m_inputParser.setMaxRotation(0.1f);
 
-    sd.baseState = StateID::Game;
+    sd.baseState = StateID::Golf;
     Achievements::setActive(sd.localConnectionData.playerCount == 1);
     
     std::int32_t clientCount = 0;
@@ -186,24 +186,24 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 #ifdef CRO_DEBUG_
     ballEntity = {};
 
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("buns"))
-            {
-                //ImGui::Text("Speed %3.3f", m_billboardUniforms.currentWindSpeed);
-                //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), {256.f, 256.f}, {0.f, 1.f}, {1.f, 0.f});
-                if (ballEntity.isValid())
-                {
-                    auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
-                    ImGui::Text("Ball Pos: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-                }
-                else
-                {
-                    ImGui::Text("Ball Entity not valid");
-                }
-            }
-            ImGui::End();
-        });
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("buns"))
+    //        {
+    //            //ImGui::Text("Speed %3.3f", m_billboardUniforms.currentWindSpeed);
+    //            //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), {256.f, 256.f}, {0.f, 1.f}, {1.f, 0.f});
+    //            if (ballEntity.isValid())
+    //            {
+    //                auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
+    //                ImGui::Text("Ball Pos: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+    //            }
+    //            else
+    //            {
+    //                ImGui::Text("Ball Entity not valid");
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 

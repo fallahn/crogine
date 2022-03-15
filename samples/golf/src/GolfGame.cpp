@@ -98,7 +98,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<SplashState>(StateID::SplashScreen);
     m_stateStack.registerState<KeyboardState>(StateID::Keyboard);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData);
-    m_stateStack.registerState<GolfState>(StateID::Game, m_sharedData);
+    m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData);
     m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);
     m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
     m_stateStack.registerState<PauseState>(StateID::Pause, m_sharedData);

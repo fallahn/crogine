@@ -30,7 +30,7 @@ source distribution.
 #include "../PacketIDs.hpp"
 
 #include "Server.hpp"
-#include "ServerGameState.hpp"
+#include "ServerGolfState.hpp"
 #include "ServerLobbyState.hpp"
 #include "ServerMessages.hpp"
 
@@ -189,8 +189,8 @@ void Server::run()
             switch (nextState)
             {
             default: m_running = false; break;
-            case sv::StateID::Game:
-                m_currentState = std::make_unique<sv::GameState>(m_sharedData);
+            case sv::StateID::Golf:
+                m_currentState = std::make_unique<sv::GolfState>(m_sharedData);
                 break;
             case sv::StateID::Lobby:
                 m_currentState = std::make_unique<sv::LobbyState>(m_sharedData);

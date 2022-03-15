@@ -75,7 +75,7 @@
     <ClCompile Include="src\golf\server\Server.cpp">
       <Filter>Source Files\golf\server</Filter>
     </ClCompile>
-    <ClCompile Include="src\golf\server\ServerGameState.cpp">
+    <ClCompile Include="src\golf\server\ServerGolfState.cpp">
       <Filter>Source Files\golf\server</Filter>
     </ClCompile>
     <ClCompile Include="src\golf\server\ServerLobbyState.cpp">
@@ -230,7 +230,7 @@
     <ClInclude Include="src\golf\server\Server.hpp">
       <Filter>Header Files\golf\server</Filter>
     </ClInclude>
-    <ClInclude Include="src\golf\server\ServerGameState.hpp">
+    <ClInclude Include="src\golf\server\ServerGolfState.hpp">
       <Filter>Header Files\golf\server</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\server\ServerLobbyState.hpp">

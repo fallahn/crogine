@@ -32,7 +32,7 @@ source distribution.
 #include "../GameConsts.hpp"
 #include "../ClientPacketData.hpp"
 #include "../BallSystem.hpp"
-#include "ServerGameState.hpp"
+#include "ServerGolfState.hpp"
 #include "ServerMessages.hpp"
 
 #include <crogine/core/Log.hpp>
@@ -55,8 +55,8 @@ namespace
     const cro::Time TurnTime = cro::seconds(90.f);
 }
 
-GameState::GameState(SharedData& sd)
-    : m_returnValue (StateID::Game),
+GolfState::GolfState(SharedData& sd)
+    : m_returnValue (StateID::Golf),
     m_sharedData    (sd),
     m_mapDataValid  (false),
     m_scene         (sd.messageBus, 512),
@@ -73,7 +73,7 @@ GameState::GameState(SharedData& sd)
     LOG("Entered Server Game State", cro::Logger::Type::Info);
 }
 
-void GameState::handleMessage(const cro::Message& msg)
+void GolfState::handleMessage(const cro::Message& msg)
 {
     if (msg.id == sv::MessageID::ConnectionMessage)
     {
@@ -172,7 +172,7 @@ void GameState::handleMessage(const cro::Message& msg)
     m_scene.forwardMessage(msg);
 }
 
-void GameState::netEvent(const cro::NetEvent& evt)
+void GolfState::netEvent(const cro::NetEvent& evt)
 {
     if (evt.type == cro::NetEvent::PacketReceived)
     {
@@ -207,7 +207,7 @@ void GameState::netEvent(const cro::NetEvent& evt)
     }
 }
 
-void GameState::netBroadcast()
+void GolfState::netBroadcast()
 {
     if (m_playerInfo.empty())
     {
@@ -240,7 +240,7 @@ void GameState::netBroadcast()
     m_sharedData.host.broadcastPacket(PacketID::WindDirection, wind, cro::NetFlag::Unreliable);
 }
 
-std::int32_t GameState::process(float dt)
+std::int32_t GolfState::process(float dt)
 {
     if (m_gameStarted)
     {
@@ -279,7 +279,7 @@ std::int32_t GameState::process(float dt)
 }
 
 //private
-void GameState::sendInitialGameState(std::uint8_t clientID)
+void GolfState::sendInitialGameState(std::uint8_t clientID)
 {
     //only send data the first time
     if (!m_sharedData.clients[clientID].ready)
@@ -347,7 +347,7 @@ void GameState::sendInitialGameState(std::uint8_t clientID)
     }
 }
 
-void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
+void GolfState::handlePlayerInput(const cro::NetEvent::Packet& packet)
 {
     if (m_playerInfo.empty())
     {
@@ -391,7 +391,7 @@ void GameState::handlePlayerInput(const cro::NetEvent::Packet& packet)
     }
 }
 
-void GameState::checkReadyQuit(std::uint8_t clientID)
+void GolfState::checkReadyQuit(std::uint8_t clientID)
 {
     if (m_gameStarted)
     {
@@ -431,7 +431,7 @@ void GameState::checkReadyQuit(std::uint8_t clientID)
     m_returnValue = StateID::Lobby;
 }
 
-void GameState::setNextPlayer()
+void GolfState::setNextPlayer()
 {
     //broadcast current player's score first
     ScoreUpdate su;
@@ -470,7 +470,7 @@ void GameState::setNextPlayer()
     m_turnTimer.restart();
 }
 
-void GameState::setNextHole()
+void GolfState::setNextHole()
 {
     //broadcast all scores to make sure everyone is up to date
     for (auto& player : m_playerInfo)
@@ -580,7 +580,7 @@ void GameState::setNextHole()
     }
 }
 
-bool GameState::validateMap()
+bool GolfState::validateMap()
 {
     auto mapDir = m_sharedData.mapDir.toAnsiString();
     auto mapPath = ConstVal::MapPath + mapDir + "/course.data";
@@ -697,7 +697,7 @@ bool GameState::validateMap()
     return true;
 }
 
-void GameState::initScene()
+void GolfState::initScene()
 {
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
@@ -719,7 +719,7 @@ void GameState::initScene()
     }
 }
 
-void GameState::buildWorld()
+void GolfState::buildWorld()
 {
     //create a ball entity for each player
     for (auto& player : m_playerInfo)
@@ -735,7 +735,7 @@ void GameState::buildWorld()
     }
 }
 
-void GameState::doServerCommand(const cro::NetEvent& evt)
+void GolfState::doServerCommand(const cro::NetEvent& evt)
 {
 #ifdef CRO_DEBUG_
     switch (evt.packet.as<std::uint8_t>())

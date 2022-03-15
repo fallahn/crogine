@@ -39,17 +39,17 @@ source distribution.
 
 namespace sv
 {
-    class GameState final : public State
+    class GolfState final : public State
     {
     public:
-        explicit GameState(SharedData&);
+        explicit GolfState(SharedData&);
 
         void handleMessage(const cro::Message&) override;
         void netEvent(const cro::NetEvent&) override;
         void netBroadcast() override;
         std::int32_t process(float) override;
 
-        std::int32_t stateID() const override { return StateID::Game; }
+        std::int32_t stateID() const override { return StateID::Golf; }
 
     private:
         std::int32_t m_returnValue;

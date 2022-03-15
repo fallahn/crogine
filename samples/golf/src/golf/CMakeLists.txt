@@ -43,5 +43,5 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/Weather.cpp
 
   ${PROJECT_DIR}/golf/server/Server.cpp
-  ${PROJECT_DIR}/golf/server/ServerGameState.cpp
+  ${PROJECT_DIR}/golf/server/ServerGolfState.cpp
   ${PROJECT_DIR}/golf/server/ServerLobbyState.cpp)
