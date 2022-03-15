@@ -573,22 +573,33 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     static constexpr float LineSpacing = 10.f;
     glm::vec3 textPos = { TextOffset, 54.f, 0.1f };
 
+    auto createButton = [&](const std::string& label)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(textPos);
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString(label);
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+
+        bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        textPos.y -= LineSpacing;
+
+        return entity;
+    };
+
+
     if (!m_courseData.empty()
         && !m_sharedData.ballModels.empty()
         && ! m_sharedData.avatarInfo.empty())
     {
         //host
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(textPos);
-        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString("Create Game");
-        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
-        entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+        entity = createButton("Create Game");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
@@ -603,21 +614,10 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
                 });
-        bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        textPos.y -= LineSpacing;
+
 
         //join
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(textPos);
-        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString("Join Game");
-        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+        entity = createButton("Join Game");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
@@ -632,21 +632,9 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
                 });
-        bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        textPos.y -= LineSpacing;
 
         //practice menu
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(textPos);
-        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString("Practice");
-        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+        entity = createButton("Practice");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
                 {
@@ -656,8 +644,6 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                         //m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
                 });
-        bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        textPos.y -= LineSpacing;
     }
     else
     {
@@ -688,17 +674,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     }
 
     //options
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(textPos);
-    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Options");
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity = createButton("Options");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -708,21 +684,10 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
-    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    textPos.y -= LineSpacing;
+
 
     //quit
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(textPos);
-    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Quit");
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity = createButton("Quit");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -731,7 +696,6 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     cro::App::quit();
                 }
             });
-    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)

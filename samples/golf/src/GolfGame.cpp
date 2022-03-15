@@ -38,6 +38,7 @@ source distribution.
 #include "golf/PracticeState.hpp"
 #include "golf/DrivingState.hpp"
 #include "golf/PuttingState.hpp"
+#include "golf/ClubhouseState.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
@@ -106,6 +107,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
     m_stateStack.registerState<PuttingState>(StateID::PuttingRange, m_sharedData);
+    m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData);
 }
 
 //public
@@ -511,7 +513,8 @@ bool GolfGame::initialise()
 
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
-    m_stateStack.pushState(StateID::Menu);
+    //m_stateStack.pushState(StateID::Menu);
+    m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
 #else
     m_stateStack.pushState(StateID::SplashScreen);

@@ -213,6 +213,12 @@
     <ClCompile Include="src\golf\CloudSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\ClubhouseState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ClubhouseStateUI.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -418,6 +424,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\CloudSystem.hpp">
       <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ClubhouseState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
