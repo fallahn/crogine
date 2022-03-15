@@ -59,9 +59,9 @@ void DefaultAchievements::init()
 
     readFile();
 
-    m_texture.loadFromFile(cro::FileSystem::getResourcePath() + "assets/images/achievements.png");
+    m_texture.loadFromFile("assets/images/achievements.png");
     m_texture.setRepeated(true);
-    m_font.loadFromFile(cro::FileSystem::getResourcePath() + "assets/golf/fonts/ProggyClean.ttf");
+    m_font.loadFromFile("assets/golf/fonts/ProggyClean.ttf");
 
     for (auto i = 1; i < AchievementID::Count; ++i)
     {
