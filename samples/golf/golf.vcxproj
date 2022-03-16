@@ -304,6 +304,7 @@
     <ClCompile Include="src\DefaultAchievements.cpp" />
     <ClCompile Include="src\golf\BallSystem.cpp" />
     <ClCompile Include="src\golf\BilliardsState.cpp" />
+    <ClCompile Include="src\golf\BilliardsSystem.cpp" />
     <ClCompile Include="src\golf\CameraFollowSystem.cpp" />
     <ClCompile Include="src\golf\ClientCollisionSystem.cpp" />
     <ClCompile Include="src\golf\CloudSystem.cpp" />
@@ -365,6 +366,7 @@
     <ClInclude Include="src\golf\BallSystem.hpp" />
     <ClInclude Include="src\golf\Billboard.hpp" />
     <ClInclude Include="src\golf\BilliardsState.hpp" />
+    <ClInclude Include="src\golf\BilliardsSystem.hpp" />
     <ClInclude Include="src\golf\CameraFollowSystem.hpp" />
     <ClInclude Include="src\golf\CircularBuffer.hpp" />
     <ClInclude Include="src\golf\ClientCollisionSystem.hpp" />

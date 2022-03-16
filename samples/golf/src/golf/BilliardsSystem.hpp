@@ -75,6 +75,8 @@ struct TableData final
     std::string collisionModel;
     std::string viewModel;
     std::vector<PocketInfo> pockets;
+
+    bool loadFromFile(const std::string&);
 };
 
 struct BilliardBall final : public btMotionState

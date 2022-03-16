@@ -7,7 +7,7 @@ model pool_model
     {
         mask_colour = 1.000000,0.000000,0.000000,1.000000
         name = "Untitled"
-        colour = 1.000000,0.999990,1.000000,1.000000
+        colour = 1.000000,1.0,1.000000,1.000000
         smooth = true
         repeat = true
         depth_test = true

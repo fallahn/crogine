@@ -35,6 +35,8 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/UniformBuffer.hpp>
 
 namespace cro
 {
@@ -60,10 +62,15 @@ private:
     cro::Scene m_gameScene;
     cro::ResourceCollection m_resources;
 
+    cro::RenderTexture m_gameSceneTexture;
+    cro::UniformBuffer m_scaleBuffer;
+    cro::UniformBuffer m_resolutionBuffer;
+
     bool m_wantsGameState;
     cro::Clock m_readyClock;
 
     void loadAssets();
+    void addSystems();
     void buildScene();
 
     void handleNetEvent(const cro::NetEvent&);

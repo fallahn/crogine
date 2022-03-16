@@ -228,6 +228,9 @@
     <ClCompile Include="src\golf\BilliardsState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\BilliardsSystem.cpp">
+      <Filter>Source Files\golf\server\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -445,6 +448,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\BilliardsState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BilliardsSystem.hpp">
+      <Filter>Header Files\golf\server\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

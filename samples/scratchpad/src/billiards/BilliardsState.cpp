@@ -133,12 +133,7 @@ void BilliardsState::addSystems()
 
 void BilliardsState::buildScene()
 {
-    struct TableData final
-    {
-        std::string collisionModel;
-        std::string viewModel;
-        std::vector<PocketInfo> pockets;
-    }tableData;
+    TableData tableData;
 
     cro::ConfigFile tableConfig;
     if (tableConfig.loadFromFile("assets/billiards/billiards.table"))

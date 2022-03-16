@@ -30,8 +30,21 @@ source distribution.
 #include "BilliardsState.hpp"
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
+#include "GameConsts.hpp"
+#include "BilliardsSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
+
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/Camera.hpp>
+
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/AudioSystem.hpp>
+
+#include <crogine/util/Constants.hpp>
 
 namespace
 {
@@ -42,11 +55,14 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     : cro::State        (ss, ctx),
     m_sharedData        (sd),
     m_gameScene         (ctx.appInstance.getMessageBus()),
+    m_scaleBuffer       ("PixelScale", sizeof(float)),
+    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_wantsGameState    (true)
 {
     ctx.mainWindow.loadResources([&]() 
         {
             loadAssets();
+            addSystems();
             buildScene();
         });
 }
@@ -160,7 +176,7 @@ bool BilliardsState::simulate(float dt)
 
 void BilliardsState::render()
 {
-
+    m_gameScene.render();
 }
 
 //private
@@ -169,9 +185,77 @@ void BilliardsState::loadAssets()
 
 }
 
+void BilliardsState::addSystems()
+{
+    auto& mb = getContext().appInstance.getMessageBus();
+
+    m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
+    m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::AudioSystem>(mb);
+}
+
 void BilliardsState::buildScene()
 {
+    //TODO validate the table data (or should this be done by the menu?)
 
+    std::string path = "assets/golf/tables/" + m_sharedData.mapDirectory + ".table";
+    TableData tableData;
+    if (tableData.loadFromFile(path))
+    {
+        cro::ModelDefinition md(m_resources);
+        if (md.loadFromFile(tableData.viewModel))
+        {
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            md.createModel(entity);
+        }
+    }
+    else
+    {
+        //TODO push error for missing data.
+    }
+
+    //update the 3D view
+    auto updateView = [&](cro::Camera& cam)
+    {
+        auto vpSize = calcVPSize();
+
+        auto winSize = glm::vec2(cro::App::getWindow().getSize());
+        float maxScale = std::floor(winSize.y / vpSize.y);
+        float scale = m_sharedData.pixelScale ? maxScale : 1.f;
+        auto texSize = winSize / scale;
+        m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+
+        auto invScale = (maxScale + 1.f) - scale;
+        /*glCheck(glPointSize(invScale * BallPointSize));
+        glCheck(glLineWidth(invScale));*/
+
+        m_scaleBuffer.setData(&invScale);
+
+        glm::vec2 scaledRes = texSize / invScale;
+        m_resolutionBuffer.setData(&scaledRes);
+
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 5.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+
+    auto camEnt = m_gameScene.getActiveCamera();
+    camEnt.getComponent<cro::Transform>().setPosition({-2.f, 1.2f, 0.f});
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
+    //m_cameras[CameraID::Player] = camEnt;
+    auto& cam = camEnt.getComponent<cro::Camera>();
+    cam.resizeCallback = updateView;
+    updateView(cam);
+
+    static constexpr std::uint32_t ShadowMapSize = 2048u;
+    cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+
+    //TODO overhead cam etc
+
+
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
 }
 
 void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
