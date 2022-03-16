@@ -31,15 +31,18 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
 
+#include <crogine/gui/Gui.hpp>
+
 namespace
 {
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 }
 
 BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State(ss, ctx),
-    m_sharedData(sd),
-    m_gameScene(ctx.appInstance.getMessageBus())
+    : cro::State        (ss, ctx),
+    m_sharedData        (sd),
+    m_gameScene         (ctx.appInstance.getMessageBus()),
+    m_wantsGameState    (true)
 {
     ctx.mainWindow.loadResources([&]() 
         {
@@ -51,6 +54,70 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
 //public
 bool BilliardsState::handleEvent(const cro::Event& evt)
 {
+    if (ImGui::GetIO().WantCaptureKeyboard
+        || ImGui::GetIO().WantCaptureMouse)
+    {
+        return false;
+    }
+
+
+
+    if (evt.type == SDL_KEYDOWN)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_ESCAPE:
+        case SDLK_p:
+        case SDLK_PAUSE:
+            requestStackPush(StateID::Pause);
+            break;
+        case SDLK_SPACE:
+            //toggleQuitReady();
+            break;
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN
+        && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+    {
+        switch (evt.cbutton.button)
+        {
+        default: break;
+        case cro::GameController::ButtonA:
+            //toggleQuitReady();
+            break;
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP
+        && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+    {
+        switch (evt.cbutton.button)
+        {
+        default: break;
+        case cro::GameController::ButtonStart:
+            requestStackPush(StateID::Pause);
+            break;
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    {
+        //check if any players are using the controller
+        //and reassign any still connected devices
+        for (auto i = 0; i < 4; ++i)
+        {
+            if (evt.cdevice.which == cro::GameController::deviceID(i))
+            {
+                for (auto& idx : m_sharedData.controllerIDs)
+                {
+                    idx = std::max(0, i - 1);
+                }
+                //update the input parser in case this player is active
+                //m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer.player];
+                break;
+            }
+        }
+    }
+
     m_gameScene.forwardEvent(evt);
     return false;
 }
@@ -107,7 +174,45 @@ void BilliardsState::buildScene()
 
 }
 
-void BilliardsState::handleNetEvent(const cro::NetEvent&)
+void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
 {
+    if (evt.type == cro::NetEvent::PacketReceived)
+    {
+        switch (evt.packet.getID())
+        {
+        default: break;
+        case PacketID::SetPlayer:
+            m_wantsGameState = false;
 
+            //TODO this wants to be done after any animation
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete,
+                m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+            break;
+        case PacketID::ClientDisconnected:
+            //TODO we should only have 2 clients max
+            //so if only one player locally then game is forfeited.
+            break;
+        case PacketID::AchievementGet:
+            LogI << "TODO: Notify Achievement" << std::endl;
+            break;
+        case PacketID::ServerError:
+            switch (evt.packet.as<std::uint8_t>())
+            {
+            default:
+                m_sharedData.errorMessage = "Server Error (Unknown)";
+                break;
+            case MessageType::MapNotFound:
+                m_sharedData.errorMessage = "Server Failed To Load Table Data";
+                break;
+            }
+            requestStackPush(StateID::Error);
+            break;
+        }
+    }
+    else if (evt.type == cro::NetEvent::ClientDisconnect)
+    {
+        m_sharedData.errorMessage = "Disconnected From Server (Host Quit)";
+        requestStackPush(StateID::Error);
+    }
 }

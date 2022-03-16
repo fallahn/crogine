@@ -32,6 +32,7 @@ source distribution.
 #include "ServerState.hpp"
 #include "ServerPacketData.hpp"
 
+#include <crogine/core/Clock.hpp>
 #include <crogine/ecs/Scene.hpp>
 
 namespace sv
@@ -53,7 +54,18 @@ namespace sv
         SharedData& m_sharedData;
         cro::Scene m_scene;
 
+        bool m_tableDataValid;
+        bool m_gameStarted;
+        bool m_allMapsLoaded;
+        cro::Clock m_turnTimer;
+
+        bool validateData() const;
+
         void initScene();
         void buildWorld();
+        void sendInitialGameState(std::uint8_t);
+        void doServerCommand(const cro::NetEvent&);
+
+        void setNextPlayer();
     };
 }

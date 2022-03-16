@@ -63,7 +63,7 @@ namespace PacketID
         ServerError, //< uint8 MessageType
         StateChange, //< uint8 state ID
         LobbyUpdate, //< ConnectionData array
-        SetPlayer, //< ActivePlayer struct
+        SetPlayer, //< ActivePlayer struct in golf, player/client in billiards
         SetHole, //< uint8 hole
         ScoreUpdate, //< ScoreUpdate struct
         GameEnd, //< uint8 seconds. tells clients to show scoreboard/countdown to lobby
