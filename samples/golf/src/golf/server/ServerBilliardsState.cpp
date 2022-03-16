@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -27,24 +27,54 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "ServerBilliardsState.hpp"
 
-struct StateID final
+using namespace sv;
+
+BilliardsState::BilliardsState(SharedData& sd)
+    : m_returnValue(StateID::Billiards),
+    m_sharedData(sd),
+    m_scene(sd.messageBus, 512)
 {
-    enum
+    //TODO validate table data
+    initScene();
+    buildWorld();
+
+    LOG("Entered Billiards state", cro::Logger::Type::Info);
+}
+
+//public
+void BilliardsState::handleMessage(const cro::Message& msg)
+{
+    m_scene.forwardMessage(msg);
+}
+
+void BilliardsState::netEvent(const cro::NetEvent& evt)
+{
+    if (evt.type == cro::NetEvent::PacketReceived)
     {
-        Menu,
-        Golf,
-        Options,
-        Pause,
-        Error,
-        SplashScreen,
-        Tutorial,
-        Keyboard,
-        Practice,
-        DrivingRange,
-        PuttingRange,
-        Clubhouse,
-        Billiards
-    };
-};
+
+    }
+}
+
+void BilliardsState::netBroadcast()
+{
+
+}
+
+std::int32_t BilliardsState::process(float dt)
+{
+    m_scene.simulate(dt);
+    return m_returnValue;
+}
+
+//private
+void BilliardsState::initScene()
+{
+
+}
+
+void BilliardsState::buildWorld()
+{
+
+}

@@ -30,6 +30,7 @@ source distribution.
 #include "GolfGame.hpp"
 #include "golf/MenuState.hpp"
 #include "golf/GolfState.hpp"
+#include "golf/BilliardsState.hpp"
 #include "golf/ErrorState.hpp"
 #include "golf/OptionsState.hpp"
 #include "golf/PauseState.hpp"
@@ -108,8 +109,9 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
-    m_stateStack.registerState<PuttingState>(StateID::PuttingRange, m_sharedData);
+    //m_stateStack.registerState<PuttingState>(StateID::PuttingRange, m_sharedData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData);
+    m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
 }
 
 //public

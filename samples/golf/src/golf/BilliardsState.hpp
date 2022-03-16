@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,22 +29,42 @@ source distribution.
 
 #pragma once
 
-struct StateID final
+#include "../StateIDs.hpp"
+
+#include <crogine/core/Clock.hpp>
+#include <crogine/core/State.hpp>
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
+
+namespace cro
 {
-    enum
-    {
-        Menu,
-        Golf,
-        Options,
-        Pause,
-        Error,
-        SplashScreen,
-        Tutorial,
-        Keyboard,
-        Practice,
-        DrivingRange,
-        PuttingRange,
-        Clubhouse,
-        Billiards
-    };
+    struct NetEvent;
+}
+
+struct SharedStateData;
+class BilliardsState final : public cro::State 
+{
+public:
+    BilliardsState(cro::StateStack&, cro::State::Context, SharedStateData&);
+
+    bool handleEvent(const cro::Event&) override;
+    void handleMessage(const cro::Message&) override;
+    bool simulate(float) override;
+    void render() override;
+
+    cro::StateID getStateID() const override { return StateID::Billiards; }
+
+private:
+
+    SharedStateData& m_sharedData;
+    cro::Scene m_gameScene;
+    cro::ResourceCollection m_resources;
+
+    bool m_wantsGameState;
+    cro::Clock m_readyClock;
+
+    void loadAssets();
+    void buildScene();
+
+    void handleNetEvent(const cro::NetEvent&);
 };

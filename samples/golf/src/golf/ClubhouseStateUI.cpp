@@ -33,6 +33,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "MenuCallbacks.hpp"
 #include "PacketIDs.hpp"
+#include "Utility.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/ecs/components/Camera.hpp>
@@ -445,8 +446,8 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
 
                                 //send the initially selected table - this triggers the menu to move to the next stage.
                                 //m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
-                                //auto data = serialiseString(m_sharedData.mapDirectory);
-                                //m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+                                auto data = serialiseString(m_sharedData.mapDirectory);
+                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
                             }
                         }
                     }

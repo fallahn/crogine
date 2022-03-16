@@ -32,6 +32,7 @@ source distribution.
 #include "Server.hpp"
 #include "ServerGolfState.hpp"
 #include "ServerLobbyState.hpp"
+#include "ServerBilliardsState.hpp"
 #include "ServerMessages.hpp"
 
 #include <crogine/core/Log.hpp>
@@ -194,6 +195,9 @@ void Server::run()
                 break;
             case sv::StateID::Lobby:
                 m_currentState = std::make_unique<sv::LobbyState>(m_sharedData);
+                break;
+            case sv::StateID::Billiards:
+                m_currentState = std::make_unique<sv::BilliardsState>(m_sharedData);
                 break;
             }
 

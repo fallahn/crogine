@@ -92,7 +92,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     sd.inputBinding.controllerID = 0;
     sd.baseState = StateID::Clubhouse;
-
+    sd.mapDirectory = "pool";
 
     //we returned from a previous game
     if (sd.clientConnection.connected)
@@ -147,7 +147,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
 
             //send the initially selected map/course
-            m_sharedData.mapDirectory = "pool";
+            m_sharedData.mapDirectory = "pool"; //TODO read this from a list of parsed directories EG m_tables[m_sharedDirectory.courseIndex]
             auto data = serialiseString(m_sharedData.mapDirectory);
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
         }
@@ -297,7 +297,7 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Billiards)
             {
                 requestStackClear();
-                //requestStackPush(StateID::Billiards);
+                requestStackPush(StateID::Billiards);
             }
             break;
         case PacketID::ConnectionAccepted:

@@ -142,6 +142,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     
     sd.inputBinding.controllerID = 0;
     sd.baseState = StateID::Menu;
+    sd.mapDirectory = "course_01";
 
     sd.clientConnection.ready = false;
 

@@ -70,7 +70,7 @@ GolfState::GolfState(SharedData& sd)
         buildWorld();
     }
 
-    LOG("Entered Server Game State", cro::Logger::Type::Info);
+    LOG("Entered Server Golf State", cro::Logger::Type::Info);
 }
 
 void GolfState::handleMessage(const cro::Message& msg)

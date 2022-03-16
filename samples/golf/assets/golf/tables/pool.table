@@ -1,0 +1,42 @@
+table
+{
+    model = "assets/golf/models/hole_19/pool_model.cmt"
+    collision = "assets/golf/models/hole_19/pool_collision.cmt"
+    rulset = "8_ball"
+
+    pocket
+    {
+        position = 0.47,-0.93
+        value = 0
+    }
+
+    pocket
+    {
+        position = 0.54, 0
+        value = 0
+    }
+
+    pocket
+    {
+        position = 0.47, 0.93
+        value = 0
+    }
+
+    pocket
+    {
+        position = -0.47,-0.93
+        value = 0
+    }
+
+    pocket
+    {
+        position = -0.54, 0
+        value = 0
+    }
+
+    pocket
+    {
+        position = -0.47, 0.93
+        value = 0
+    }
+}

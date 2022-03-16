@@ -303,6 +303,7 @@
     <ClCompile Include="src\Achievements.cpp" />
     <ClCompile Include="src\DefaultAchievements.cpp" />
     <ClCompile Include="src\golf\BallSystem.cpp" />
+    <ClCompile Include="src\golf\BilliardsState.cpp" />
     <ClCompile Include="src\golf\CameraFollowSystem.cpp" />
     <ClCompile Include="src\golf\ClientCollisionSystem.cpp" />
     <ClCompile Include="src\golf\CloudSystem.cpp" />
@@ -339,6 +340,7 @@
     <ClCompile Include="src\golf\PuttingState.cpp" />
     <ClCompile Include="src\golf\PuttingStateUI.cpp" />
     <ClCompile Include="src\golf\server\Server.cpp" />
+    <ClCompile Include="src\golf\server\ServerBilliardsState.cpp" />
     <ClCompile Include="src\golf\server\ServerGolfState.cpp" />
     <ClCompile Include="src\golf\server\ServerLobbyState.cpp" />
     <ClCompile Include="src\golf\SharedStateData.cpp" />
@@ -362,6 +364,7 @@
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\golf\BallSystem.hpp" />
     <ClInclude Include="src\golf\Billboard.hpp" />
+    <ClInclude Include="src\golf\BilliardsState.hpp" />
     <ClInclude Include="src\golf\CameraFollowSystem.hpp" />
     <ClInclude Include="src\golf\CircularBuffer.hpp" />
     <ClInclude Include="src\golf\ClientCollisionSystem.hpp" />
@@ -406,6 +409,7 @@
     <ClInclude Include="src\golf\RandNames.hpp" />
     <ClInclude Include="src\golf\ScoreStrings.hpp" />
     <ClInclude Include="src\golf\server\Server.hpp" />
+    <ClInclude Include="src\golf\server\ServerBilliardsState.hpp" />
     <ClInclude Include="src\golf\server\ServerGolfState.hpp" />
     <ClInclude Include="src\golf\server\ServerLobbyState.hpp" />
     <ClInclude Include="src\golf\server\ServerMessages.hpp" />

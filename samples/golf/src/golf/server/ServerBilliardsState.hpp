@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,55 +29,31 @@ source distribution.
 
 #pragma once
 
-#include "../HoleData.hpp"
 #include "ServerState.hpp"
 #include "ServerPacketData.hpp"
 
 #include <crogine/ecs/Scene.hpp>
-#include <crogine/core/Clock.hpp>
 
 namespace sv
 {
-    class GolfState final : public State
+    class BilliardsState final : public State
     {
     public:
-        explicit GolfState(SharedData&);
+        explicit BilliardsState(SharedData&);
 
         void handleMessage(const cro::Message&) override;
         void netEvent(const cro::NetEvent&) override;
         void netBroadcast() override;
         std::int32_t process(float) override;
 
-        std::int32_t stateID() const override { return StateID::Golf; }
+        std::int32_t stateID() const override { return StateID::Billiards; }
 
     private:
         std::int32_t m_returnValue;
         SharedData& m_sharedData;
-        bool m_mapDataValid;
-
-        std::vector<HoleData> m_holeData;
-        cro::Clock m_serverTime; //used in timestamping
         cro::Scene m_scene;
 
-        //game rule stuff. TODO encapsulate somewhere
-        bool m_gameStarted;
-        bool m_allMapsLoaded;
-        std::uint8_t m_currentHole;
-        std::vector<PlayerStatus> m_playerInfo; //active players. Sorted by distance so the front position is active player
-
-        cro::Clock m_turnTimer;
-
-        void sendInitialGameState(std::uint8_t);
-        void handlePlayerInput(const cro::NetEvent::Packet&);
-        void checkReadyQuit(std::uint8_t);
-
-        void setNextPlayer();
-        void setNextHole();
-
-        bool validateMap();
         void initScene();
         void buildWorld();
-
-        void doServerCommand(const cro::NetEvent&);
     };
 }

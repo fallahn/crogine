@@ -1,6 +1,7 @@
 
 set(GOLF_SRC
   ${PROJECT_DIR}/golf/BallSystem.cpp
+  ${PROJECT_DIR}/golf/BilliardsState.cpp
   ${PROJECT_DIR}/golf/CameraFollowSystem.cpp
   ${PROJECT_DIR}/golf/ClientCollisionSystem.cpp
   ${PROJECT_DIR}/golf/CloudSystem.cpp
@@ -46,5 +47,6 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/Weather.cpp
 
   ${PROJECT_DIR}/golf/server/Server.cpp
+  ${PROJECT_DIR}/golf/server/ServerBilliardsState.cpp
   ${PROJECT_DIR}/golf/server/ServerGolfState.cpp
   ${PROJECT_DIR}/golf/server/ServerLobbyState.cpp)
