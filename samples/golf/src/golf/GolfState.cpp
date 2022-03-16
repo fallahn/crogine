@@ -1858,7 +1858,6 @@ void GolfState::addSystems()
 
 void GolfState::buildScene()
 {
-    bool clearHoles = false;
     if (m_holeData.empty())
     {
         //use dummy data to get scene standing

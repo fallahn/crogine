@@ -701,7 +701,6 @@ void GolfState::buildUI()
 
         auto vpSize = calcVPSize();
         m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
-        auto texSize = glm::vec2(m_gameSceneTexture.getSize());
 
         glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);
 

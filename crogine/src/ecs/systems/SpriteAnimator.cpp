@@ -69,7 +69,7 @@ void SpriteAnimator::process(float dt)
             //know how many animations there are - given that they
             //are stored in the sprite and could theoretically change at any time...
             //CRO_ASSERT(animation.id < sprite.m_animations.size(), "");
-            if (animation.id >= sprite.m_animations.size())
+            if (animation.id >= static_cast<std::int32_t>(sprite.m_animations.size()))
             {
                 animation.stop();
                 continue;

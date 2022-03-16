@@ -388,7 +388,6 @@ DefaultAchievements::AchievementIcon::AchievementIcon(const AchievementData& dat
     m_sprite.setTexture(da.m_texture);
     m_sprite.setTextureRect({ x * 64.f, y * 64.f, 64.f, 64.f });
 
-    glm::vec2 windowSize = cro::App::getWindow().getSize();
     setPosition({ 0.f, -IconSize.y });
 }
 
