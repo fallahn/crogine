@@ -47,7 +47,12 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
+#include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Network.hpp>
@@ -61,8 +66,10 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     : cro::State        (ss, ctx),
     m_sharedData        (sd),
     m_gameScene         (ctx.appInstance.getMessageBus()),
+    m_uiScene           (ctx.appInstance.getMessageBus()),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_viewScale         (2.f),
     m_ballDefinition    (m_resources),
     m_wantsGameState    (true)
 {
@@ -157,12 +164,14 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
     }
 
     m_gameScene.forwardEvent(evt);
+    m_uiScene.forwardEvent(evt);
     return false;
 }
 
 void BilliardsState::handleMessage(const cro::Message& msg)
 {
     m_gameScene.forwardMessage(msg);
+    m_uiScene.forwardMessage(msg);
 }
 
 bool BilliardsState::simulate(float dt)
@@ -193,12 +202,17 @@ bool BilliardsState::simulate(float dt)
     }
 
     m_gameScene.simulate(dt);
+    m_uiScene.simulate(dt);
     return false;
 }
 
 void BilliardsState::render()
 {
+    m_gameSceneTexture.clear(cro::Colour::AliceBlue);
     m_gameScene.render();
+    m_gameSceneTexture.display();
+
+    m_uiScene.render();
 }
 
 //private
@@ -217,6 +231,14 @@ void BilliardsState::addSystems()
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
+
+    m_uiScene.addSystem<cro::CommandSystem>(mb);
+    m_uiScene.addSystem<cro::CallbackSystem>(mb);
+    m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
+    m_uiScene.addSystem<cro::TextSystem>(mb);
+    m_uiScene.addSystem<cro::CameraSystem>(mb);
+    m_uiScene.addSystem<cro::RenderSystem2D>(mb);
+    m_uiScene.addSystem<cro::AudioPlayerSystem>(mb);
 }
 
 void BilliardsState::buildScene()
@@ -280,6 +302,8 @@ void BilliardsState::buildScene()
 
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+
+    createUI();
 }
 
 void BilliardsState::handleNetEvent(const cro::NetEvent& evt)

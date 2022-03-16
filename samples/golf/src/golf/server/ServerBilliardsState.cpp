@@ -106,7 +106,7 @@ void BilliardsState::netBroadcast()
     for (auto entity : balls)
     {
         auto& ball = entity.getComponent<BilliardBall>();
-        //if (ball.hadUpdate) //for some reason this misses some updates.
+        //if (ball.hadUpdate) //for some reason this misses some updates? - actually might not be
         {
             //TODO we can probably send a smaller struct here
             //but it probably doesn't matter

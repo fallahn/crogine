@@ -61,11 +61,13 @@ private:
 
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
+    cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
 
     cro::RenderTexture m_gameSceneTexture;
     cro::UniformBuffer m_scaleBuffer;
     cro::UniformBuffer m_resolutionBuffer;
+    glm::vec2 m_viewScale;
 
     cro::ModelDefinition m_ballDefinition;
 
@@ -79,4 +81,7 @@ private:
     void handleNetEvent(const cro::NetEvent&);
     void spawnBall(const ActorInfo&);
     void updateBall(const ActorInfo&);
+
+    //**BilliardsStateUI.cpp**//
+    void createUI();
 };
