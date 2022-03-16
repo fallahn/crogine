@@ -212,6 +212,7 @@ void BilliardsState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_gameScene.addSystem<cro::CommandSystem>(mb);
+    m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
@@ -288,6 +289,9 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::ActorUpdate:
+            updateBall(evt.packet.as<ActorInfo>());
+            break;
         case PacketID::EntityRemoved:
         {
             auto id = evt.packet.as<std::uint32_t>();
@@ -349,8 +353,26 @@ void BilliardsState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Transform>().setPosition(info.position);
     entity.getComponent<cro::Transform>().setRotation(cro::Util::Net::decompressQuat(info.rotation));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
-    entity.addComponent<InterpolationComponent>().setID(info.serverID);
+    entity.addComponent<InterpolationComponent>(InterpolationPoint(info.position, cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).setID(info.serverID);
+    //entity.getComponent<InterpolationComponent>().setEnabled(false);
     m_ballDefinition.createModel(entity);
 
     //TODO set colour/model based on type stored in info.state
+}
+
+void BilliardsState::updateBall(const ActorInfo& info)
+{
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Ball;
+    cmd.action = [info](cro::Entity e, float)
+    {
+        auto& interp = e.getComponent<InterpolationComponent>();
+        if (interp.getID() == info.serverID)
+        {
+            interp.setTarget({ info.position, cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
+
+            //e.getComponent<cro::Transform>().setPosition(info.position);
+        }
+    };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

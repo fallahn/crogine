@@ -78,4 +78,5 @@ private:
 
     void handleNetEvent(const cro::NetEvent&);
     void spawnBall(const ActorInfo&);
+    void updateBall(const ActorInfo&);
 };

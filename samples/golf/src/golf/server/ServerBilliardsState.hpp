@@ -61,6 +61,8 @@ namespace sv
         bool m_allMapsLoaded;
         cro::Clock m_turnTimer;
 
+        cro::Clock m_serverTime;
+
         TableData m_tableData;
         bool validateData();
 

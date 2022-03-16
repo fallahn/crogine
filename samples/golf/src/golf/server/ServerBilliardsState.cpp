@@ -100,7 +100,27 @@ void BilliardsState::netEvent(const cro::NetEvent& evt)
 
 void BilliardsState::netBroadcast()
 {
+    auto timestamp = m_serverTime.elapsed().asMilliseconds();
 
+    auto& balls = m_scene.getSystem<BilliardsSystem>()->getEntities();
+    for (auto entity : balls)
+    {
+        auto& ball = entity.getComponent<BilliardBall>();
+        //if (ball.hadUpdate) //for some reason this misses some updates.
+        {
+            //TODO we can probably send a smaller struct here
+            //but it probably doesn't matter
+            ActorInfo info;
+            info.position = entity.getComponent<cro::Transform>().getPosition();
+            info.rotation = cro::Util::Net::compressQuat(entity.getComponent<cro::Transform>().getRotation());
+            info.serverID = entity.getIndex();
+            info.timestamp = timestamp;
+
+            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Unreliable);
+
+            ball.hadUpdate = false;
+        }
+    }
 }
 
 std::int32_t BilliardsState::process(float dt)
@@ -282,6 +302,7 @@ void BilliardsState::addBall(glm::vec3 position, std::uint8_t id)
     info.position = entity.getComponent<cro::Transform>().getPosition();
     info.rotation = cro::Util::Net::compressQuat(entity.getComponent<cro::Transform>().getRotation());
     info.state = entity.getComponent<BilliardBall>().id;
+    info.timestamp = m_serverTime.elapsed().asMilliseconds();
 
     m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }

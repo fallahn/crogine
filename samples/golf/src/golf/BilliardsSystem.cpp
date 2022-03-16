@@ -116,6 +116,8 @@ void BilliardBall::setWorldTransform(const btTransform& src)
     auto& tx = m_parent.getComponent<cro::Transform>();
     tx.setPosition(glm::vec3(mat[3]));
     tx.setRotation(glm::quat_cast(mat));
+
+    hadUpdate = true;
 }
 
 const std::array<std::string, CollisionID::Count> CollisionID::Labels =
@@ -396,12 +398,12 @@ void BilliardsSystem::doPocketCollision() const
                     if (ball.m_pocketContact != -1)
                     {
                         //contact begin
-                        LogI << "Ball " << ball.id << " in pocket " << ball.m_pocketContact << std::endl;
+                        LogI << "Ball " << (int)ball.id << " in pocket " << ball.m_pocketContact << std::endl;
                     }
                     else
                     {
                         //contact end
-                        LogI << "Ball " << ball.id << " finished contact" << std::endl;
+                        LogI << "Ball " << (int)ball.id << " finished contact" << std::endl;
                     }
                 }
             }
