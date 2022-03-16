@@ -98,10 +98,15 @@ namespace ServerCommand
 {
     enum
     {
+        //golf
         NextHole,
         NextPlayer,
         GotoGreen,
         EndGame,
-        ChangeWind
+        ChangeWind,
+
+        //billiards
+        SpawnBall,
+        StrikeBall
     };
 }

@@ -44,6 +44,7 @@ namespace cro
 }
 
 struct SharedStateData;
+struct ActorInfo;
 class BilliardsState final : public cro::State 
 {
 public:
@@ -66,6 +67,8 @@ private:
     cro::UniformBuffer m_scaleBuffer;
     cro::UniformBuffer m_resolutionBuffer;
 
+    cro::ModelDefinition m_ballDefinition;
+
     bool m_wantsGameState;
     cro::Clock m_readyClock;
 
@@ -74,4 +77,5 @@ private:
     void buildScene();
 
     void handleNetEvent(const cro::NetEvent&);
+    void spawnBall(const ActorInfo&);
 };

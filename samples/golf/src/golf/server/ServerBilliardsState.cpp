@@ -35,6 +35,9 @@ source distribution.
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 
+#include <crogine/util/Random.hpp>
+#include <crogine/util/Network.hpp>
+
 using namespace sv;
 
 namespace
@@ -228,10 +231,19 @@ void BilliardsState::sendInitialGameState(std::uint8_t clientID)
     }
 }
 
-void BilliardsState::doServerCommand(const cro::NetEvent&)
+void BilliardsState::doServerCommand(const cro::NetEvent& evt)
 {
 #ifdef CRO_DEBUG_
-
+    switch (evt.packet.as<std::uint8_t>())
+    {
+    default: break;
+    case ServerCommand::SpawnBall:
+        addBall({ cro::Util::Random::value(-0.1f, 0.1f), 0.5f, cro::Util::Random::value(-0.1f, 0.1f) }, cro::Util::Random::value(0, 15));
+        break;
+    case ServerCommand::StrikeBall:
+        m_scene.getSystem<BilliardsSystem>()->applyImpulse();
+        break;
+    }
 #endif
 }
 
@@ -244,4 +256,32 @@ void BilliardsState::setNextPlayer()
     m_sharedData.host.broadcastPacket(PacketID::SetPlayer, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_turnTimer.restart();
+}
+
+void BilliardsState::addBall(glm::vec3 position, std::uint8_t id)
+{
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.addComponent<BilliardBall>().id = id;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, position, id](cro::Entity e, float)
+    {
+        if (e.getComponent<cro::Transform>().getPosition().y < -1.f)
+        {
+            m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, e.getIndex(), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_scene.destroyEntity(e);
+
+            addBall(position, id);
+        }
+    };
+
+    //notify client
+    ActorInfo info;
+    info.serverID = entity.getIndex();
+    info.position = entity.getComponent<cro::Transform>().getPosition();
+    info.rotation = cro::Util::Net::compressQuat(entity.getComponent<cro::Transform>().getRotation());
+    info.state = entity.getComponent<BilliardBall>().id;
+
+    m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }

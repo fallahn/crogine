@@ -30,21 +30,27 @@ source distribution.
 #include "BilliardsState.hpp"
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
+#include "CommandIDs.hpp"
 #include "GameConsts.hpp"
 #include "BilliardsSystem.hpp"
+#include "InterpolationSystem.hpp"
+#include "server/ServerPacketData.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Network.hpp>
 
 namespace
 {
@@ -57,6 +63,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_gameScene         (ctx.appInstance.getMessageBus()),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_ballDefinition    (m_resources),
     m_wantsGameState    (true)
 {
     ctx.mainWindow.loadResources([&]() 
@@ -76,7 +83,22 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         return false;
     }
 
-
+#ifdef CRO_DEBUG_
+    if (evt.type == SDL_KEYUP)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_F2:
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::SpawnBall), cro::NetFlag::Reliable);
+            break;
+        case SDLK_F3:
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::StrikeBall), cro::NetFlag::Reliable);
+            break;
+        }
+    }
+    else 
+#endif
 
     if (evt.type == SDL_KEYDOWN)
     {
@@ -182,13 +204,14 @@ void BilliardsState::render()
 //private
 void BilliardsState::loadAssets()
 {
-
+    m_ballDefinition.loadFromFile("assets/golf/models/hole_19/billiard_ball.cmt");
 }
 
 void BilliardsState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
+    m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
@@ -265,6 +288,25 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::EntityRemoved:
+        {
+            auto id = evt.packet.as<std::uint32_t>();
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Ball;
+            cmd.action = [&, id](cro::Entity e, float)
+            {
+                if (e.getComponent<InterpolationComponent>().getID() == id)
+                {
+                    m_gameScene.destroyEntity(e);
+                }
+            };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+            break;
+        case PacketID::ActorSpawn:
+            spawnBall(evt.packet.as<ActorInfo>());
+            break;
         case PacketID::SetPlayer:
             m_wantsGameState = false;
 
@@ -299,4 +341,16 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         m_sharedData.errorMessage = "Disconnected From Server (Host Quit)";
         requestStackPush(StateID::Error);
     }
+}
+
+void BilliardsState::spawnBall(const ActorInfo& info)
+{
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(info.position);
+    entity.getComponent<cro::Transform>().setRotation(cro::Util::Net::decompressQuat(info.rotation));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
+    entity.addComponent<InterpolationComponent>().setID(info.serverID);
+    m_ballDefinition.createModel(entity);
+
+    //TODO set colour/model based on type stored in info.state
 }

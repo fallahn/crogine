@@ -93,7 +93,7 @@ struct BilliardBall final : public btMotionState
 
     In snooker this matches SnookerID
     */
-    std::int32_t id = 0;
+    std::uint8_t id = 0;
     static constexpr float Mass = 0.156f;
     static constexpr float Radius = 0.0255f;
 

@@ -500,6 +500,41 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
                 meshData.indexData[i].indexCount = static_cast<std::uint32_t>(dstIdx[i].size());
             }
         }
+
+
+        meshData.boundingBox[0] = glm::vec3(std::numeric_limits<float>::max());
+        meshData.boundingBox[1] = glm::vec3(std::numeric_limits<float>::lowest());
+        for (std::size_t i = 0; i < dstVert.size(); i += (meshData.vertexSize / sizeof(float)))
+        {
+            //min point
+            if (meshData.boundingBox[0].x > dstVert[i])
+            {
+                meshData.boundingBox[0].x = dstVert[i];
+            }
+            if (meshData.boundingBox[0].y > dstVert[i + 1])
+            {
+                meshData.boundingBox[0].y = dstVert[i + 1];
+            }
+            if (meshData.boundingBox[0].z > dstVert[i + 2])
+            {
+                meshData.boundingBox[0].z = dstVert[i + 2];
+            }
+
+            //maxpoint
+            if (meshData.boundingBox[1].x < dstVert[i])
+            {
+                meshData.boundingBox[1].x = dstVert[i];
+            }
+            if (meshData.boundingBox[1].y < dstVert[i + 1])
+            {
+                meshData.boundingBox[1].y = dstVert[i + 1];
+            }
+            if (meshData.boundingBox[1].z < dstVert[i + 2])
+            {
+                meshData.boundingBox[1].z = dstVert[i + 2];
+            }
+        }
+        meshData.boundingSphere = meshData.boundingBox;
     }
     else
     {

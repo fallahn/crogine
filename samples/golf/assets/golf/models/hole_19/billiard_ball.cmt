@@ -1,0 +1,19 @@
+model pool_collision
+{
+    mesh = sphere
+    radius = 0.025
+    cast_shadows = true
+
+    material VertexLit
+    {
+        name = "Untitled"
+        colour = 1.000000,0.0,1.000000,1.000000
+        mask_colour = 1.0,0.0,0.0,1.0
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+
+    }
+}
