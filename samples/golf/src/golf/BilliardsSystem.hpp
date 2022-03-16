@@ -114,6 +114,7 @@ class BulletDebug;
 class BilliardsSystem final : public cro::System
 {
 public:
+    BilliardsSystem(cro::MessageBus&);
     BilliardsSystem(cro::MessageBus&, BulletDebug&);
     ~BilliardsSystem();
 
@@ -124,12 +125,11 @@ public:
     BilliardsSystem& operator = (BilliardsSystem&&) = delete;
 
     void process(float) override;
-    void initTable(const cro::Mesh::Data&, const std::vector<PocketInfo>&);
+    void initTable(const TableData&);
 
     void applyImpulse(/*vec3 dir, vec3 offset*/);
 
 private:
-    BulletDebug& m_debugDrawer;
 
     std::unique_ptr<btCollisionConfiguration> m_collisionConfiguration;
     std::unique_ptr<btCollisionDispatcher> m_collisionDispatcher;

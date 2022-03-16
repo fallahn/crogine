@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
 
+#include <crogine/graphics/MeshData.hpp>
+
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
@@ -272,4 +274,6 @@ namespace cro::Detail::ModelBinary
     };
 
     CRO_EXPORT_API bool write(cro::Entity, const std::string&, bool includeSkeleton = true);
+
+    CRO_EXPORT_API cro::Mesh::Data read(const std::string&, std::vector<float>& dstVert, std::vector<std::vector<std::uint32_t>>& dstIdx);
 }

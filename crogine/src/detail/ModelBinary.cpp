@@ -348,3 +348,163 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
 
     return retVal;
 }
+
+cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::vector<float>& dstVert, std::vector<std::vector<std::uint32_t>>& dstIdx)
+{
+    //make sure everything is empty - who knows what gets passed in ;)
+    dstVert.clear();
+    dstIdx.clear();
+
+    cro::Mesh::Data meshData;
+
+    cro::RaiiRWops file;
+    file.file = SDL_RWFromFile(binPath.c_str(), "rb");
+    if (file.file)
+    {
+        cro::Detail::ModelBinary::Header header;
+        auto len = SDL_RWseek(file.file, 0, RW_SEEK_END);
+        if (len < sizeof(header))
+        {
+            LogE << "Unable to open " << binPath << ": invalid file size" << std::endl;
+            return {};
+        }
+
+        SDL_RWseek(file.file, 0, RW_SEEK_SET);
+        SDL_RWread(file.file, &header, sizeof(header), 1);
+
+        if (header.magic != cro::Detail::ModelBinary::MAGIC
+            && header.magic != cro::Detail::ModelBinary::MAGIC_V1)
+        {
+            LogE << "Invalid header found" << std::endl;
+            return {};
+        }
+
+        if (header.meshOffset)
+        {
+            cro::Detail::ModelBinary::MeshHeader meshHeader;
+            SDL_RWread(file.file, &meshHeader, sizeof(meshHeader), 1);
+
+            if ((meshHeader.flags & cro::VertexProperty::Position) == 0)
+            {
+                LogE << "No position data in mesh" << std::endl;
+                return {};
+            }
+
+            std::vector<float> tempVerts;
+            std::vector<std::uint32_t> sizes(meshHeader.indexArrayCount);
+            dstIdx.resize(meshHeader.indexArrayCount);
+
+            SDL_RWread(file.file, sizes.data(), meshHeader.indexArrayCount * sizeof(std::uint32_t), 1);
+
+            std::uint32_t vertStride = 0;
+            for (auto i = 0u; i < cro::Mesh::Attribute::Total; ++i)
+            {
+                if (meshHeader.flags & (1 << i))
+                {
+                    switch (i)
+                    {
+                    default:
+                    case cro::Mesh::Attribute::Bitangent:
+                        break;
+                    case cro::Mesh::Attribute::Position:
+                        vertStride += 3;
+                        meshData.attributes[i] = 3;
+                        break;
+                    case cro::Mesh::Attribute::Colour:
+                        vertStride += 4;
+                        meshData.attributes[i] = 1; //TODO - do this properly instead of hack for golf game
+                        break;
+                    case cro::Mesh::Attribute::Normal:
+                        vertStride += 3;
+                        break;
+                    case cro::Mesh::Attribute::UV0:
+                    case cro::Mesh::Attribute::UV1:
+                        vertStride += 2;
+                        break;
+                    case cro::Mesh::Attribute::Tangent:
+                    case cro::Mesh::Attribute::BlendIndices:
+                    case cro::Mesh::Attribute::BlendWeights:
+                        vertStride += 4;
+                        break;
+                    }
+                }
+            }
+
+            auto pos = SDL_RWtell(file.file);
+            auto vertSize = meshHeader.indexArrayOffset - pos;
+            tempVerts.resize(vertSize / sizeof(float));
+            SDL_RWread(file.file, tempVerts.data(), vertSize, 1);
+            CRO_ASSERT(tempVerts.size() % vertStride == 0, "");
+
+            for (auto i = 0u; i < meshHeader.indexArrayCount; ++i)
+            {
+                dstIdx[i].resize(sizes[i]);
+                SDL_RWread(file.file, dstIdx[i].data(), sizes[i] * sizeof(std::uint32_t), 1);
+            }
+
+            //process vertex data
+            for (auto i = 0u; i < tempVerts.size(); i += vertStride)
+            {
+                std::uint32_t offset = 0;
+                for (auto j = 0u; j < cro::Mesh::Attribute::Total; ++j)
+                {
+                    if (meshHeader.flags & (1 << j))
+                    {
+                        switch (j)
+                        {
+                        default: break;
+                        case cro::Mesh::Attribute::Position:
+                            dstVert.push_back(tempVerts[i + offset]);
+                            dstVert.push_back(tempVerts[i + offset + 1]);
+                            dstVert.push_back(tempVerts[i + offset + 2]);
+
+                            offset += 3;
+                            meshData.attributeFlags |= cro::VertexProperty::Position;
+                            break;
+                        case cro::Mesh::Attribute::Colour:
+                            dstVert.push_back(tempVerts[i + offset]);
+                            //TODO: unkludge this
+                            /*m_vertexData.push_back(tempVerts[i + offset + 1]);
+                            m_vertexData.push_back(tempVerts[i + offset + 2]);
+                            m_vertexData.push_back(tempVerts[i + offset + 3]);*/
+                            offset += 1;
+                            meshData.attributeFlags |= cro::VertexProperty::Colour;
+                            break;
+                        case cro::Mesh::Attribute::Normal:
+                        case cro::Mesh::Attribute::Tangent:
+                        case cro::Mesh::Attribute::Bitangent:
+                        case cro::Mesh::Attribute::UV0:
+                        case cro::Mesh::Attribute::UV1:
+                        case cro::Mesh::Attribute::BlendIndices:
+                        case cro::Mesh::Attribute::BlendWeights:
+                            break;
+                        }
+                    }
+                }
+            }
+
+            meshData.primitiveType = GL_TRIANGLES;
+
+            for (const auto& a : meshData.attributes)
+            {
+                meshData.vertexSize += a;
+            }
+            meshData.vertexSize *= sizeof(float);
+            meshData.vertexCount = dstVert.size() / (meshData.vertexSize / sizeof(float));
+
+            meshData.submeshCount = meshHeader.indexArrayCount;
+            for (auto i = 0u; i < meshData.submeshCount; ++i)
+            {
+                meshData.indexData[i].format = GL_UNSIGNED_INT;
+                meshData.indexData[i].primitiveType = meshData.primitiveType;
+                meshData.indexData[i].indexCount = static_cast<std::uint32_t>(dstIdx[i].size());
+            }
+        }
+    }
+    else
+    {
+        LogE << binPath << ": " << SDL_GetError() << std::endl;
+        return {};
+    }
+    return meshData;
+}

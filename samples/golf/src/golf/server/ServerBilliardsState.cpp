@@ -131,20 +131,33 @@ std::int32_t BilliardsState::process(float dt)
 }
 
 //private
-bool BilliardsState::validateData() const
+bool BilliardsState::validateData()
 {
-    return true;
+    auto path = "assets/golf/tables/" + m_sharedData.mapDir + ".table";
+    if (m_tableData.loadFromFile(path))
+    {
+        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + m_tableData.collisionModel))
+        {
+            return false;
+        }
+        //TODO validate ruleset property
+        return true;
+    }
+    return false;
 }
 
 void BilliardsState::initScene()
 {
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
+    m_scene.addSystem<BilliardsSystem>(mb);
+
+    //TODO add director based on rule set
 }
 
 void BilliardsState::buildWorld()
 {
-
+    m_scene.getSystem<BilliardsSystem>()->initTable(m_tableData);
 }
 
 void BilliardsState::sendInitialGameState(std::uint8_t clientID)

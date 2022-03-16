@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "../BilliardsSystem.hpp"
+
 #include "ServerState.hpp"
 #include "ServerPacketData.hpp"
 
@@ -59,7 +61,8 @@ namespace sv
         bool m_allMapsLoaded;
         cro::Clock m_turnTimer;
 
-        bool validateData() const;
+        TableData m_tableData;
+        bool validateData();
 
         void initScene();
         void buildWorld();

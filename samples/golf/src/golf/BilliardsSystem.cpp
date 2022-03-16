@@ -31,6 +31,7 @@ source distribution.
 #include "DebugDraw.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/detail/ModelBinary.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/graphics/MeshBuilder.hpp>
@@ -122,9 +123,8 @@ const std::array<std::string, CollisionID::Count> CollisionID::Labels =
     "Table", "Cushion", "Ball", "Pocket"
 };
 
-BilliardsSystem::BilliardsSystem(cro::MessageBus& mb, BulletDebug& dd)
-    : cro::System(mb, typeid(BilliardsSystem)),
-    m_debugDrawer(dd)
+BilliardsSystem::BilliardsSystem(cro::MessageBus& mb)
+    : cro::System(mb, typeid(BilliardsSystem))
 {
     requireComponent<BilliardBall>();
     requireComponent<cro::Transform>();
@@ -142,11 +142,16 @@ BilliardsSystem::BilliardsSystem(cro::MessageBus& mb, BulletDebug& dd)
         m_broadphaseInterface.get(),
         m_constraintSolver.get(),
         m_collisionConfiguration.get());
-
-#ifdef CRO_DEBUG_
-    m_collisionWorld->setDebugDrawer(&m_debugDrawer);
-#endif
     m_collisionWorld->setGravity({ 0.f, -9.f, 0.f });
+}
+
+BilliardsSystem::BilliardsSystem(cro::MessageBus& mb, BulletDebug& dd)
+    : BilliardsSystem(mb)
+{
+#ifdef CRO_DEBUG_
+    m_collisionWorld->setDebugDrawer(&dd);
+#endif
+
 }
 
 BilliardsSystem::~BilliardsSystem()
@@ -192,9 +197,10 @@ void BilliardsSystem::process(float dt)
     doPocketCollision();
 }
 
-void BilliardsSystem::initTable(const cro::Mesh::Data& meshData, const std::vector<PocketInfo>& pocketInfo)
+void BilliardsSystem::initTable(const TableData& tableData)
 {
-    cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
+    auto meshData = cro::Detail::ModelBinary::read(tableData.collisionModel, m_vertexData, m_indexData);
+
     if (m_vertexData.empty() || m_indexData.empty())
     {
         LogE << "No collision mesh was loaded" << std::endl;
@@ -257,7 +263,7 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData, const std::vect
         btVector3(-1.f, 0.f, 0.f)
     };
 
-    for (auto p : pocketInfo)
+    for (auto p : tableData.pockets)
     {
         glm::vec3 pocketPos(p.position.x, -WallHeight, p.position.y);
         if (p.radius <= 0)
@@ -293,7 +299,7 @@ void BilliardsSystem::initTable(const cro::Mesh::Data& meshData, const std::vect
 #endif
     }
 
-    if (pocketInfo.empty())
+    if (tableData.pockets.empty())
     {
         LogW << "Pocket info was empty. This might be a boring game." << std::endl;
     }
