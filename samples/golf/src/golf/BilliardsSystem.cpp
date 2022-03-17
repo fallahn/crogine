@@ -49,6 +49,11 @@ namespace
     }
 }
 
+const std::array<std::string, TableData::Rules::Count> TableData::RuleStrings =
+{
+    "8_ball", "9_ball", "bar_billiards", "snooker", "void"
+};
+
 bool TableData::loadFromFile(const std::string& path)
 {
     cro::ConfigFile tableConfig;
@@ -65,6 +70,15 @@ bool TableData::loadFromFile(const std::string& path)
             else if (name == "collision")
             {
                 collisionModel = p.getValue<std::string>();
+            }
+            else if (name == "ruleset")
+            {
+                std::string ruleString = p.getValue<std::string>();
+                auto result = std::find_if(TableData::RuleStrings.begin(), TableData::RuleStrings.end(), [&ruleString](const std::string& s) {return s == ruleString; });
+                if (result != TableData::RuleStrings.end())
+                {
+                    rules = static_cast<TableData::Rules>(std::distance(TableData::RuleStrings.begin(), result));
+                }
             }
         }
 
@@ -95,7 +109,7 @@ bool TableData::loadFromFile(const std::string& path)
                 }
             }
         }
-        return !viewModel.empty() && !collisionModel.empty() && !pockets.empty();
+        return !viewModel.empty() && !collisionModel.empty() && !pockets.empty() && rules != TableData::Void;
     }
     return false;
 }

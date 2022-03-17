@@ -100,25 +100,28 @@ void BilliardsState::netEvent(const cro::NetEvent& evt)
 
 void BilliardsState::netBroadcast()
 {
-    auto timestamp = m_serverTime.elapsed().asMilliseconds();
-
-    auto& balls = m_scene.getSystem<BilliardsSystem>()->getEntities();
-    for (auto entity : balls)
+    if (m_tableDataValid)
     {
-        auto& ball = entity.getComponent<BilliardBall>();
-        if (ball.hadUpdate)
+        auto timestamp = m_serverTime.elapsed().asMilliseconds();
+
+        auto& balls = m_scene.getSystem<BilliardsSystem>()->getEntities();
+        for (auto entity : balls)
         {
-            //TODO we can probably send a smaller struct here
-            //but it probably doesn't matter
-            ActorInfo info;
-            info.position = entity.getComponent<cro::Transform>().getPosition();
-            info.rotation = cro::Util::Net::compressQuat(entity.getComponent<cro::Transform>().getRotation());
-            info.serverID = entity.getIndex();
-            info.timestamp = timestamp;
+            auto& ball = entity.getComponent<BilliardBall>();
+            if (ball.hadUpdate)
+            {
+                //TODO we can probably send a smaller struct here
+                //but it probably doesn't matter
+                ActorInfo info;
+                info.position = entity.getComponent<cro::Transform>().getPosition();
+                info.rotation = cro::Util::Net::compressQuat(entity.getComponent<cro::Transform>().getRotation());
+                info.serverID = entity.getIndex();
+                info.timestamp = timestamp;
 
-            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Unreliable);
+                m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Unreliable);
 
-            ball.hadUpdate = false;
+                ball.hadUpdate = false;
+            }
         }
     }
 }
@@ -163,7 +166,6 @@ bool BilliardsState::validateData()
         {
             return false;
         }
-        //TODO validate ruleset property
         return true;
     }
     return false;
@@ -176,6 +178,13 @@ void BilliardsState::initScene()
     m_scene.addSystem<BilliardsSystem>(mb);
 
     //TODO add director based on rule set
+    switch (m_tableData.rules)
+    {
+    default: break;
+    case TableData::Eightball:
+        LogI << "Loading eightball rules..." << std::endl;
+        break;
+    }
 }
 
 void BilliardsState::buildWorld()
@@ -195,19 +204,22 @@ void BilliardsState::sendInitialGameState(std::uint8_t clientID)
         }
 
         //send all the ball positions
-        /*auto timestamp = m_serverTime.elapsed().asMilliseconds();
-        for (const auto& player : m_playerInfo)
+        auto timestamp = m_serverTime.elapsed().asMilliseconds();
+
+        auto& balls = m_scene.getSystem<BilliardsSystem>()->getEntities();
+        for (auto entity : balls)
         {
-            auto ball = player.ballEntity;
+            auto& ball = entity.getComponent<BilliardBall>();
 
             ActorInfo info;
-            info.serverID = static_cast<std::uint32_t>(ball.getIndex());
-            info.position = ball.getComponent<cro::Transform>().getPosition();
-            info.clientID = player.client;
-            info.playerID = player.player;
+            info.position = entity.getComponent<cro::Transform>().getPosition();
+            info.rotation = cro::Util::Net::compressQuat(entity.getComponent<cro::Transform>().getRotation());
+            info.serverID = entity.getIndex();
             info.timestamp = timestamp;
+            info.state = ball.id;
+
             m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ActorSpawn, info, cro::NetFlag::Reliable);
-        }*/
+        }
     }
 
     m_sharedData.clients[clientID].ready = true;

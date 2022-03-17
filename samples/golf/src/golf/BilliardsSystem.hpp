@@ -76,6 +76,18 @@ struct TableData final
     std::string viewModel;
     std::vector<PocketInfo> pockets;
 
+    enum Rules
+    {
+        Eightball,
+        Nineball,
+        BarBillliards,
+        Snooker,
+
+        Void,
+        Count
+    }rules = Void;
+    static const std::array<std::string, Rules::Count> RuleStrings;
+
     bool loadFromFile(const std::string&);
 };
 
@@ -91,7 +103,7 @@ struct BilliardBall final : public btMotionState
     8 - 8 Ball :)
     9 - 15 are stripes / Yellows
 
-    In snooker this matches SnookerID
+    In snooker/bar billiards this matches SnookerID
     */
     std::int8_t id = 0;
     bool hadUpdate = false;
