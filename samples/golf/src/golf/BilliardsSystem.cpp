@@ -173,7 +173,9 @@ BilliardsSystem::~BilliardsSystem()
 void BilliardsSystem::process(float dt)
 {
     m_collisionWorld->stepSimulation(dt, 10);
+#ifdef CRO_DEBUG_
     m_collisionWorld->debugDrawWorld();
+#endif
 
     //we either have to iterate before AND after collision test
     //else we can do it once and accept the results are one frame late
@@ -184,19 +186,20 @@ void BilliardsSystem::process(float dt)
         {
             if (ball.m_ballContact == -1)
             {
-                LogI << "Ball ended contact with " << ball.m_prevBallContact << std::endl;
+                LogI << "Ball ended contact with " << (int)ball.m_prevBallContact << std::endl;
             }
             else
             {
-                LogI << "Ball started contact with " << ball.m_ballContact << std::endl;
+                LogI << "Ball started contact with " << (int)ball.m_ballContact << std::endl;
             }
         }
         ball.m_prevBallContact = ball.m_ballContact;
         ball.m_ballContact = -1;
+
+        doPocketCollision(entity);
     }
 
     doBallCollision();
-    doPocketCollision();
 }
 
 void BilliardsSystem::initTable(const TableData& tableData)
@@ -370,74 +373,71 @@ void BilliardsSystem::doBallCollision() const
     }
 }
 
-void BilliardsSystem::doPocketCollision() const
+void BilliardsSystem::doPocketCollision(cro::Entity entity) const
 {
-    for (auto entity : getEntities())
+    auto& ball = entity.getComponent<BilliardBall>();
+    if (ball.m_physicsBody->isActive())
     {
-        auto& ball = entity.getComponent<BilliardBall>();
-        if (ball.m_physicsBody->isActive())
+        const auto position = entity.getComponent<cro::Transform>().getPosition();
+
+        //if below the table check for pocketry
+        if (position.y < 0)
         {
-            const auto position = entity.getComponent<cro::Transform>().getPosition();
-
-            //if below the table check for pocketry
-            if (position.y < 0)
+            auto lastContact = ball.m_pocketContact;
+            ball.m_pocketContact = -1;
+            for (const auto& pocket : m_pockets)
             {
-                auto lastContact = ball.m_pocketContact;
-                ball.m_pocketContact = -1;
-                for (const auto& pocket : m_pockets)
+                if (pocket.box.contains(position))
                 {
-                    if (pocket.box.contains(position))
-                    {
-                        ball.m_pocketContact = pocket.id;
-                        break;
-                    }
-                }
-
-                if (lastContact != ball.m_pocketContact)
-                {
-                    if (ball.m_pocketContact != -1)
-                    {
-                        //contact begin
-                        LogI << "Ball " << (int)ball.id << " in pocket " << ball.m_pocketContact << std::endl;
-                    }
-                    else
-                    {
-                        //contact end
-                        LogI << "Ball " << (int)ball.id << " finished contact" << std::endl;
-                    }
+                    ball.m_pocketContact = pocket.id;
+                    break;
                 }
             }
-            //check if we disable table contact by looking at our proximity to the pocket
-            else
+
+            if (lastContact != ball.m_pocketContact)
             {
-                auto lastContact = ball.m_inPocketRadius;
-                ball.m_inPocketRadius = false;
-
-                for (const auto& pocket : m_pockets)
+                if (ball.m_pocketContact != -1)
                 {
-                    if (glm::length2(pocket.position - glm::vec2(position.x, position.z)) < pocket.radius * pocket.radius)
-                    {
-                        ball.m_inPocketRadius = true;
-                        break;
-                    }
+                    //contact begin
+                    LogI << "Ball " << (int)ball.id << " in pocket " << ball.m_pocketContact << std::endl;
                 }
-
-                if (lastContact != ball.m_inPocketRadius)
+                else
                 {
-                    auto flags = (1 << CollisionID::Cushion) | (1 << CollisionID::Ball) | (1 << CollisionID::Pocket);
-                    if (!ball.m_inPocketRadius)
-                    {
-                        flags |= (1 << CollisionID::Table);
-                    }
-                    //apparently the only way to change the grouping - however network lag
-                    //seems to cover up any jitter...
-                    m_collisionWorld->removeRigidBody(ball.m_physicsBody);
-                    m_collisionWorld->addRigidBody(ball.m_physicsBody, (1 << CollisionID::Ball), flags);
-
-                    //hmmm setting this directly doesn't work :(
-                    //ball.m_physicsBody->getBroadphaseProxy()->m_collisionFilterGroup = (1 << CollisionID::Ball);
-                    //ball.m_physicsBody->getBroadphaseProxy()->m_collisionFilterMask = flags;
+                    //contact end
+                    LogI << "Ball " << (int)ball.id << " finished contact" << std::endl;
                 }
+            }
+        }
+        //check if we disable table contact by looking at our proximity to the pocket
+        else
+        {
+            auto lastContact = ball.m_inPocketRadius;
+            ball.m_inPocketRadius = false;
+
+            for (const auto& pocket : m_pockets)
+            {
+                if (glm::length2(pocket.position - glm::vec2(position.x, position.z)) < pocket.radius * pocket.radius)
+                {
+                    ball.m_inPocketRadius = true;
+                    break;
+                }
+            }
+
+            if (lastContact != ball.m_inPocketRadius)
+            {
+                auto flags = (1 << CollisionID::Cushion) | (1 << CollisionID::Ball) | (1 << CollisionID::Pocket);
+                if (!ball.m_inPocketRadius)
+                {
+                    flags |= (1 << CollisionID::Table);
+                }
+                //apparently the only way to change the grouping - however network lag
+                //seems to cover up any jitter...
+                m_collisionWorld->removeRigidBody(ball.m_physicsBody);
+                m_collisionWorld->addRigidBody(ball.m_physicsBody, (1 << CollisionID::Ball), flags);
+
+                //hmmm setting this directly doesn't work :(
+                //ball.m_physicsBody->getBroadphaseProxy()->m_collisionFilterGroup = (1 << CollisionID::Ball);
+                //ball.m_physicsBody->getBroadphaseProxy()->m_collisionFilterMask = flags;
             }
         }
     }

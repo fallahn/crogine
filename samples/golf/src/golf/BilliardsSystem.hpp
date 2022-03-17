@@ -93,7 +93,7 @@ struct BilliardBall final : public btMotionState
 
     In snooker this matches SnookerID
     */
-    std::uint8_t id = 0;
+    std::int8_t id = 0;
     bool hadUpdate = false;
     static constexpr float Mass = 0.156f;
     static constexpr float Radius = 0.0255f;
@@ -105,8 +105,8 @@ private:
     std::int32_t m_pocketContact = -1; //ID of pocket, or -1
     bool m_inPocketRadius = false;
 
-    std::int32_t m_ballContact = -1; //other ball or -1
-    std::int32_t m_prevBallContact = -1;
+    std::int8_t m_ballContact = -1; //other ball or -1
+    std::int8_t m_prevBallContact = -1;
 
     friend class BilliardsSystem;
 };
@@ -179,7 +179,7 @@ private:
     btRigidBody::btRigidBodyConstructionInfo createBodyDef(std::int32_t, float, btCollisionShape*, btMotionState* = nullptr);
 
     void doBallCollision() const;
-    void doPocketCollision() const;
+    void doPocketCollision(cro::Entity) const;
 
     void onEntityAdded(cro::Entity) override;
     void onEntityRemoved(cro::Entity) override;
