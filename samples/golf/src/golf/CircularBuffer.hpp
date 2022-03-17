@@ -100,6 +100,11 @@ public:
         return s;
     }
 
+    bool empty() const
+    {
+        return m_size == 0;
+    }
+
 private:
     std::size_t m_front;
     std::size_t m_back;

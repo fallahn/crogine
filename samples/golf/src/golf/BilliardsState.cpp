@@ -287,7 +287,7 @@ void BilliardsState::buildScene()
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({-2.f, 1.2f, 0.f});
+    camEnt.getComponent<cro::Transform>().setPosition({-1.5f, 0.8f, 0.f});
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
     //m_cameras[CameraID::Player] = camEnt;
@@ -378,10 +378,23 @@ void BilliardsState::spawnBall(const ActorInfo& info)
     entity.getComponent<cro::Transform>().setRotation(cro::Util::Net::decompressQuat(info.rotation));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<InterpolationComponent>(InterpolationPoint(info.position, cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).setID(info.serverID);
-    //entity.getComponent<InterpolationComponent>().setEnabled(false);
+
     m_ballDefinition.createModel(entity);
 
     //TODO set colour/model based on type stored in info.state
+
+    /*std::array points =
+    {
+        InterpolationPoint(glm::vec3(0.f, 0.1f, 0.f), glm::quat(1.f,0.f,0.f,0.f), 1000 + info.timestamp),
+        InterpolationPoint(glm::vec3(1.f, 0.1f, 1.f), glm::quat(1.f,0.f,0.f,0.f), 2000 + info.timestamp),
+        InterpolationPoint(glm::vec3(1.f, 0.1f, 0.f), glm::quat(1.f,0.f,0.f,0.f), 3000 + info.timestamp),
+        InterpolationPoint(glm::vec3(0.f, 0.1f, -1.f), glm::quat(1.f,0.f,0.f,0.f), 4000 + info.timestamp),
+        InterpolationPoint(glm::vec3(0.f, 0.1f, 0.f), glm::quat(1.f,0.f,0.f,0.f), 5000 + info.timestamp),
+    };
+    for (const auto& p : points)
+    {
+        entity.getComponent<InterpolationComponent>().setTarget(p);
+    }*/
 }
 
 void BilliardsState::updateBall(const ActorInfo& info)
@@ -394,8 +407,6 @@ void BilliardsState::updateBall(const ActorInfo& info)
         if (interp.getID() == info.serverID)
         {
             interp.setTarget({ info.position, cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
-
-            //e.getComponent<cro::Transform>().setPosition(info.position);
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
