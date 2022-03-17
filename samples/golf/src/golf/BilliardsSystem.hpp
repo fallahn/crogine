@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/detail/NoResize.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/BoundingBox.hpp>
 
@@ -91,7 +92,8 @@ struct TableData final
     bool loadFromFile(const std::string&);
 };
 
-struct BilliardBall final : public btMotionState
+//this needs to be non-resizable as the physics world keeps references to motion states
+struct BilliardBall final : public btMotionState, public cro::Detail::NonResizeable
 {
     void getWorldTransform(btTransform& worldTrans) const override;
     void setWorldTransform(const btTransform& worldTrans) override;
