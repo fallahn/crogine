@@ -34,7 +34,7 @@ void System::requireComponent()
 }
 
 template <typename T>
-T* System::postMessage(cro::Message::ID id)
+T* System::postMessage(cro::Message::ID id) const
 {
 	return m_messageBus.post<T>(id);
 }

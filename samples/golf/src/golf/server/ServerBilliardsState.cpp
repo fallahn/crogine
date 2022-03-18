@@ -30,6 +30,7 @@ source distribution.
 #include "../PacketIDs.hpp"
 #include "ServerBilliardsState.hpp"
 #include "EightballDirector.hpp"
+#include "ServerMessages.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -52,7 +53,8 @@ BilliardsState::BilliardsState(SharedData& sd)
     m_scene             (sd.messageBus, 512),
     m_tableDataValid    (false),
     m_gameStarted       (false),
-    m_allMapsLoaded     (false)
+    m_allMapsLoaded     (false),
+    m_activeDirector    (nullptr)
 {
     if (m_tableDataValid = validateData(); m_tableDataValid)
     {
@@ -65,6 +67,24 @@ BilliardsState::BilliardsState(SharedData& sd)
 //public
 void BilliardsState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::SceneMessage)
+    {
+        const auto& data = msg.getData<cro::Message::SceneEvent>();
+        if (data.event == cro::Message::SceneEvent::EntityDestroyed)
+        {
+            m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, data.entityID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+    }
+    else if (msg.id == MessageID::BilliardsMessage)
+    {
+        const auto& data = msg.getData<BilliardsEvent>();
+        if (data.type == BilliardsEvent::OutOfBounds
+            && data.first == CueBall)
+        {
+            spawnBall(addBall(m_activeDirector->getCueballPosition(), CueBall));
+        }
+    }
+
     m_scene.forwardMessage(msg);
 }
 
@@ -183,7 +203,7 @@ void BilliardsState::initScene()
     {
     default: break;
     case TableData::Eightball:
-        m_scene.addDirector<EightballDirector>();
+        m_activeDirector = m_scene.addDirector<EightballDirector>();
         break;
     }
 }
@@ -192,24 +212,15 @@ void BilliardsState::buildWorld()
 {
     m_scene.getSystem<BilliardsSystem>()->initTable(m_tableData);
 
-    const std::vector<BallInfo>* ballLayout = nullptr;
-    const BilliardsDirector* director = nullptr;
-    switch (m_tableData.rules)
-    {
-    default: break;
-    case TableData::Eightball:
-        director = m_scene.getDirector<EightballDirector>();
-        break;
-    }
 
-    if (director)
+    if (m_activeDirector)
     {
-        for (const auto& ball : director->getBallLayout())
+        for (const auto& ball : m_activeDirector->getBallLayout())
         {
             addBall(ball.position, ball.id);
         }
 
-        addBall(director->getCueballPosition(), 0);
+        addBall(m_activeDirector->getCueballPosition(), CueBall);
     }
 }
 
@@ -331,7 +342,6 @@ void BilliardsState::spawnBall(cro::Entity entity)
     {
         if (e.getComponent<cro::Transform>().getPosition().y < -1.f)
         {
-            m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, e.getIndex(), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
             m_scene.destroyEntity(e);
 
             spawnBall(addBall(position, id));

@@ -64,6 +64,8 @@ struct SnookerID final
     };
 };
 
+static constexpr std::int8_t CueBall = 0;
+
 struct PocketInfo final
 {
     glm::vec2 position = glm::vec2(0.f);
@@ -166,6 +168,7 @@ private:
     //tracks ball objects
     std::vector<std::unique_ptr<btRigidBody>> m_ballObjects;
     std::unique_ptr<btSphereShape> m_ballShape; //balls can all share this.
+    btRigidBody* m_cueball;
 
     //table surface
     std::vector<std::unique_ptr<btBoxShape>> m_boxShapes;

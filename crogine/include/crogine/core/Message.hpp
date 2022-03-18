@@ -99,11 +99,11 @@ namespace cro
             {
                 EntityDestroyed
             }event = EntityDestroyed;
-            std::int32_t entityID = -1;
+            std::uint32_t entityID = std::numeric_limits<std::uint32_t>::max();
         };
 
         /*!
-        \brief Raised when ther is a State
+        \brief Raised when there is a State
         change in the StateStack
         */
         struct StateEvent final

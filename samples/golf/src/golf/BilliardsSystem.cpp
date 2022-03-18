@@ -29,9 +29,11 @@ source distribution.
 
 #include "BilliardsSystem.hpp"
 #include "DebugDraw.hpp"
+#include "server/ServerMessages.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/detail/ModelBinary.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/graphics/MeshBuilder.hpp>
@@ -140,7 +142,8 @@ const std::array<std::string, CollisionID::Count> CollisionID::Labels =
 };
 
 BilliardsSystem::BilliardsSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(BilliardsSystem))
+    : cro::System(mb, typeid(BilliardsSystem)),
+    m_cueball   (nullptr)
 {
     requireComponent<BilliardBall>();
     requireComponent<cro::Transform>();
@@ -200,17 +203,32 @@ void BilliardsSystem::process(float dt)
         {
             if (ball.m_ballContact == -1)
             {
-                LogI << "Ball ended contact with " << (int)ball.m_prevBallContact << std::endl;
+                //LogI << "Ball ended contact with " << (int)ball.m_prevBallContact << std::endl;
+                auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+                msg->type = BilliardsEvent::Collision;
+                msg->first = ball.id;
+                msg->second = ball.m_prevBallContact;
             }
-            else
+            /*else
             {
                 LogI << "Ball started contact with " << (int)ball.m_ballContact << std::endl;
-            }
+            }*/
         }
         ball.m_prevBallContact = ball.m_ballContact;
         ball.m_ballContact = -1;
 
         doPocketCollision(entity);
+
+        //tidy up rogue balls
+        auto pos = entity.getComponent<cro::Transform>().getPosition();
+        if (pos.y < -2.f)
+        {
+            getScene()->destroyEntity(entity);
+
+            auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+            msg->type = BilliardsEvent::OutOfBounds;
+            msg->first = ball.id;
+        }
     }
 
     doBallCollision();
@@ -324,14 +342,12 @@ void BilliardsSystem::initTable(const TableData& tableData)
     }
 }
 
-#include <crogine/util/Random.hpp>
 void BilliardsSystem::applyImpulse()
 {
-    if (m_ballObjects.size() > 1)
+    if (m_cueball)
     {
-        auto& obj = m_ballObjects[cro::Util::Random::value(0u, m_ballObjects.size() - 1)];
-        obj->activate();
-        obj->applyCentralImpulse({ 0.2f * ((cro::Util::Random::value(0,1) * 2) - 1), 0.f, -0.2f * ((cro::Util::Random::value(0,1) * 2) - 1) });
+        m_cueball->activate();
+        m_cueball->applyImpulse({ 0.f, 0.f, -0.8f }, { 0.f, 0.f, 0.f });
     }
 }
 
@@ -413,12 +429,15 @@ void BilliardsSystem::doPocketCollision(cro::Entity entity) const
                 if (ball.m_pocketContact != -1)
                 {
                     //contact begin
-                    LogI << "Ball " << (int)ball.id << " in pocket " << ball.m_pocketContact << std::endl;
+                    auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+                    msg->type = BilliardsEvent::Pocket;
+                    msg->first = ball.id;
+                    msg->second = ball.m_pocketContact;
                 }
                 else
                 {
                     //contact end
-                    LogI << "Ball " << (int)ball.id << " finished contact" << std::endl;
+                    //TODO raise message?
                 }
             }
         }
@@ -475,12 +494,24 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
     m_collisionWorld->addRigidBody(body.get(), (1 << CollisionID::Ball), (1 << CollisionID::Table) | (1 << CollisionID::Cushion) | (1 << CollisionID::Ball));
 
     ball.m_physicsBody = body.get();
+
+    if (ball.id == CueBall)
+    {
+        m_cueball = body.get();
+    }
 }
 
 void BilliardsSystem::onEntityRemoved(cro::Entity entity)
 {
-    auto* body = entity.getComponent<BilliardBall>().m_physicsBody;
+    auto& ball = entity.getComponent<BilliardBall>();
+
+    auto* body = ball.m_physicsBody;
     body->setUserPointer(nullptr);
+
+    if (m_cueball == body)
+    {
+        m_cueball = nullptr;
+    }
 
     m_collisionWorld->removeRigidBody(body);
 

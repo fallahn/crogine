@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/Scene.hpp>
 
+class BilliardsDirector;
 namespace sv
 {
     class BilliardsState final : public State
@@ -62,6 +63,8 @@ namespace sv
         cro::Clock m_turnTimer;
 
         cro::Clock m_serverTime;
+
+        BilliardsDirector* m_activeDirector;
 
         TableData m_tableData;
         bool validateData();
