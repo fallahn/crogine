@@ -72,6 +72,7 @@ namespace sv
         void doServerCommand(const cro::NetEvent&);
 
         void setNextPlayer();
-        void addBall(glm::vec3, std::uint8_t);
+        cro::Entity addBall(glm::vec3, std::uint8_t);
+        void spawnBall(cro::Entity);
     };
 }

@@ -29,6 +29,7 @@ source distribution.
 
 #include "../PacketIDs.hpp"
 #include "ServerBilliardsState.hpp"
+#include "EightballDirector.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -177,12 +178,12 @@ void BilliardsState::initScene()
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<BilliardsSystem>(mb);
 
-    //TODO add director based on rule set
+    //add director based on rule set
     switch (m_tableData.rules)
     {
     default: break;
     case TableData::Eightball:
-        LogI << "Loading eightball rules..." << std::endl;
+        m_scene.addDirector<EightballDirector>();
         break;
     }
 }
@@ -190,6 +191,26 @@ void BilliardsState::initScene()
 void BilliardsState::buildWorld()
 {
     m_scene.getSystem<BilliardsSystem>()->initTable(m_tableData);
+
+    const std::vector<BallInfo>* ballLayout = nullptr;
+    const BilliardsDirector* director = nullptr;
+    switch (m_tableData.rules)
+    {
+    default: break;
+    case TableData::Eightball:
+        director = m_scene.getDirector<EightballDirector>();
+        break;
+    }
+
+    if (director)
+    {
+        for (const auto& ball : director->getBallLayout())
+        {
+            addBall(ball.position, ball.id);
+        }
+
+        addBall(director->getCueballPosition(), 0);
+    }
 }
 
 void BilliardsState::sendInitialGameState(std::uint8_t clientID)
@@ -270,7 +291,7 @@ void BilliardsState::doServerCommand(const cro::NetEvent& evt)
     {
     default: break;
     case ServerCommand::SpawnBall:
-        addBall({ cro::Util::Random::value(-0.1f, 0.1f), 0.5f, cro::Util::Random::value(-0.1f, 0.1f) }, cro::Util::Random::value(0, 15));
+        spawnBall(addBall({ cro::Util::Random::value(-0.1f, 0.1f), 0.5f, cro::Util::Random::value(-0.1f, 0.1f) }, cro::Util::Random::value(0, 15)));
         break;
     case ServerCommand::StrikeBall:
         m_scene.getSystem<BilliardsSystem>()->applyImpulse();
@@ -290,11 +311,20 @@ void BilliardsState::setNextPlayer()
     m_turnTimer.restart();
 }
 
-void BilliardsState::addBall(glm::vec3 position, std::uint8_t id)
+cro::Entity BilliardsState::addBall(glm::vec3 position, std::uint8_t id)
 {
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
     entity.addComponent<BilliardBall>().id = id;
+    
+    return entity;
+}
+
+void BilliardsState::spawnBall(cro::Entity entity)
+{
+    auto position = entity.getComponent<cro::Transform>().getPosition();
+    auto id = entity.getComponent<BilliardBall>().id;
+
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&, position, id](cro::Entity e, float)
@@ -304,7 +334,7 @@ void BilliardsState::addBall(glm::vec3 position, std::uint8_t id)
             m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, e.getIndex(), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
             m_scene.destroyEntity(e);
 
-            addBall(position, id);
+            spawnBall(addBall(position, id));
         }
     };
 

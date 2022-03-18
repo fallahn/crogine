@@ -71,7 +71,8 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_viewScale         (2.f),
     m_ballDefinition    (m_resources),
-    m_wantsGameState    (true)
+    m_wantsGameState    (true),
+    m_gameMode          (TableData::Void)
 {
     ctx.mainWindow.loadResources([&]() 
         {
@@ -119,6 +120,12 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_SPACE:
             //toggleQuitReady();
+            break;
+        case SDLK_KP_0:
+            setActiveCamera(CameraID::Player);
+            break;
+        case SDLK_KP_1:
+            setActiveCamera(CameraID::Overhead);
             break;
         }
     }
@@ -256,6 +263,7 @@ void BilliardsState::buildScene()
             entity.addComponent<cro::Transform>();
             md.createModel(entity);
         }
+        m_gameMode = tableData.rules;
     }
     else
     {
@@ -290,7 +298,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Transform>().setPosition({-1.5f, 0.8f, 0.f});
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
-    //m_cameras[CameraID::Player] = camEnt;
+    m_cameras[CameraID::Player] = camEnt;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     updateView(cam);
@@ -298,7 +306,23 @@ void BilliardsState::buildScene()
     static constexpr std::uint32_t ShadowMapSize = 2048u;
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
 
-    //TODO overhead cam etc
+    //overhead cam
+    auto setPerspective = [&](cro::Camera& cam)
+    {
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
+
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, 10.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 2.f, 0.f });
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -90.f * cro::Util::Const::degToRad);
+    camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+    camEnt.getComponent<cro::Camera>().active = false;
+    setPerspective(camEnt.getComponent<cro::Camera>());
+    m_cameras[CameraID::Overhead] = camEnt;
 
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
@@ -380,8 +404,40 @@ void BilliardsState::spawnBall(const ActorInfo& info)
     entity.addComponent<InterpolationComponent>(InterpolationPoint(info.position, cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).setID(info.serverID);
 
     m_ballDefinition.createModel(entity);
+    
 
-    //TODO set colour/model based on type stored in info.state
+    //set colour/model based on type stored in info.state
+    if (m_gameMode == TableData::Eightball)
+    {
+        switch (info.state)
+        {
+        default: break;
+        case 0: //cueball
+            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::White);
+            break;
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7: 
+            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Red);
+            break;
+        case 8:
+            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Black);
+            break;
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Yellow);
+            break;
+        }
+    }
 
     /*std::array points =
     {
@@ -410,4 +466,11 @@ void BilliardsState::updateBall(const ActorInfo& info)
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+}
+
+void BilliardsState::setActiveCamera(std::int32_t camID)
+{
+    m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = false;
+    m_gameScene.setActiveCamera(m_cameras[camID]);
+    m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 }

@@ -74,6 +74,19 @@ private:
     bool m_wantsGameState;
     cro::Clock m_readyClock;
 
+    struct CameraID final
+    {
+        enum
+        {
+            Player,
+            Overhead,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, CameraID::Count> m_cameras;
+    std::int32_t m_gameMode;
+
     void loadAssets();
     void addSystems();
     void buildScene();
@@ -81,6 +94,8 @@ private:
     void handleNetEvent(const cro::NetEvent&);
     void spawnBall(const ActorInfo&);
     void updateBall(const ActorInfo&);
+
+    void setActiveCamera(std::int32_t);
 
     //**BilliardsStateUI.cpp**//
     void createUI();

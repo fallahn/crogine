@@ -341,6 +341,7 @@
     <ClCompile Include="src\golf\PracticeState.cpp" />
     <ClCompile Include="src\golf\PuttingState.cpp" />
     <ClCompile Include="src\golf\PuttingStateUI.cpp" />
+    <ClCompile Include="src\golf\server\EightballDirector.cpp" />
     <ClCompile Include="src\golf\server\Server.cpp" />
     <ClCompile Include="src\golf\server\ServerBilliardsState.cpp" />
     <ClCompile Include="src\golf\server\ServerGolfState.cpp" />
@@ -411,6 +412,8 @@
     <ClInclude Include="src\golf\PuttingState.hpp" />
     <ClInclude Include="src\golf\RandNames.hpp" />
     <ClInclude Include="src\golf\ScoreStrings.hpp" />
+    <ClInclude Include="src\golf\server\BilliardsDirector.hpp" />
+    <ClInclude Include="src\golf\server\EightballDirector.hpp" />
     <ClInclude Include="src\golf\server\Server.hpp" />
     <ClInclude Include="src\golf\server\ServerBilliardsState.hpp" />
     <ClInclude Include="src\golf\server\ServerGolfState.hpp" />

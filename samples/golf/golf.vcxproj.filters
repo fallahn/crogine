@@ -61,6 +61,12 @@
     <Filter Include="Source Files\golf\client\directors">
       <UniqueIdentifier>{ac49d76a-c9e3-46b1-8ee8-3b845a7951bc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf\server\directors">
+      <UniqueIdentifier>{9435f93f-32eb-4f29-b555-81dc58f0b4f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\server\directors">
+      <UniqueIdentifier>{f9b88068-78c7-43b5-ae2e-d550da45d78a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -233,6 +239,9 @@
     </ClCompile>
     <ClCompile Include="src\golf\BilliardsStateUI.cpp">
       <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\server\EightballDirector.cpp">
+      <Filter>Source Files\golf\server\directors</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -454,6 +463,12 @@
     </ClInclude>
     <ClInclude Include="src\golf\BilliardsSystem.hpp">
       <Filter>Header Files\golf\server\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\BilliardsDirector.hpp">
+      <Filter>Header Files\golf\server\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\EightballDirector.hpp">
+      <Filter>Header Files\golf\server\directors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
