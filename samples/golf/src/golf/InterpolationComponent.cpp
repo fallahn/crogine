@@ -31,6 +31,11 @@ source distribution.
 
 #include <crogine/detail/Assert.hpp>
 
+namespace
+{
+
+}
+
 InterpolationComponent::InterpolationComponent(InterpolationPoint initialPoint)
     : m_enabled         (true),
     m_targetPoint       (initialPoint),
@@ -44,7 +49,7 @@ InterpolationComponent::InterpolationComponent(InterpolationPoint initialPoint)
 }
 
 //public
-void InterpolationComponent::setTarget(const InterpolationPoint& target)
+void InterpolationComponent::addTarget(const InterpolationPoint& target)
 {
     if(m_buffer.size() < m_buffer.capacity())
     {
@@ -57,7 +62,7 @@ void InterpolationComponent::setTarget(const InterpolationPoint& target)
             if (m_buffer.size() == 1)
             {
                 auto delta = target.timestamp - m_targetPoint.timestamp;
-                if (delta > 350) //20 frames ish
+                if (delta > 167) //10 frames ish
                 {
                     m_targetPoint.timestamp = target.timestamp - 17;
                 }

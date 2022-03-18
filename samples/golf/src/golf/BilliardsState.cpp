@@ -406,7 +406,7 @@ void BilliardsState::updateBall(const ActorInfo& info)
         auto& interp = e.getComponent<InterpolationComponent>();
         if (interp.getID() == info.serverID)
         {
-            interp.setTarget({ info.position, cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
+            interp.addTarget({ info.position, cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

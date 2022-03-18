@@ -3461,7 +3461,7 @@ void GolfState::updateActor(const ActorInfo& update)
             bool active = (interp.getID() == update.serverID);
             if (active)
             {
-                interp.setTarget({ update.position, cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
+                interp.addTarget({ update.position, cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
 
                 //update spectator camera
                 cro::Command cmd2;

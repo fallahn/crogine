@@ -186,7 +186,7 @@ BilliardsSystem::~BilliardsSystem()
 //public
 void BilliardsSystem::process(float dt)
 {
-    m_collisionWorld->stepSimulation(dt, 10);
+    m_collisionWorld->stepSimulation(dt, 10, 1.f/120.f);
 #ifdef CRO_DEBUG_
     m_collisionWorld->debugDrawWorld();
 #endif
@@ -469,9 +469,8 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
     body->setWorldTransform(transform);
     body->setUserIndex(CollisionID::Ball);
     body->setUserPointer(&ball);
-    body->setCcdMotionThreshold(BilliardBall::Radius);
-    body->setCcdSweptSphereRadius(BilliardBall::Radius * 0.5f);
-    
+    body->setCcdMotionThreshold(BilliardBall::Radius * 0.5f);
+    body->setCcdSweptSphereRadius(BilliardBall::Radius);
     
     m_collisionWorld->addRigidBody(body.get(), (1 << CollisionID::Ball), (1 << CollisionID::Table) | (1 << CollisionID::Cushion) | (1 << CollisionID::Ball));
 

@@ -1,7 +1,7 @@
-model pool_collision
+model billiard_ball
 {
     mesh = sphere
-    radius = 0.025000
+    radius = 0.027000
     cast_shadows = true
 
     material VertexLit

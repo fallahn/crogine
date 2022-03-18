@@ -79,13 +79,14 @@ public:
     explicit InterpolationComponent(InterpolationPoint = {});
 
     /*!
-    \brief Sets the target interpolation point.
+    \brief Adds a target interpolation point.
     The timestamp is used in conjunction with the previous timestamp
     to decide how quickly motion should be integrated between positions.
     The timestamp would usually be in server time, and arrive in the packet
-    data with the destination postion, in milliseconds.
+    data with the destination postion, in milliseconds. Targets are buffered
+    only if the new target has a newer timestamp than the last queued target
     */
-    void setTarget(const InterpolationPoint&);
+    void addTarget(const InterpolationPoint&);
 
     /*!
     \brief Sets whether or not this component is enabled
