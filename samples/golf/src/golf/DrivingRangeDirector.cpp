@@ -63,10 +63,10 @@ void DrivingRangeDirector::handleMessage(const cro::Message& msg)
         }
     }
         break;
-    case sv::MessageID::BallMessage:
+    case sv::MessageID::GolfMessage:
     {
-        const auto& data = msg.getData<BallEvent>();
-        if (data.type == BallEvent::TurnEnded)
+        const auto& data = msg.getData<GolfBallEvent>();
+        if (data.type == GolfBallEvent::TurnEnded)
         {
             auto hole = getCurrentHole();
             auto idx = m_totalHoleCount - m_holeCount;

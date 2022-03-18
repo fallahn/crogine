@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -36,7 +36,8 @@ namespace sv::MessageID
     enum
     {
         ConnectionMessage = cro::Message::Count,
-        BallMessage
+        GolfMessage,
+        BilliardsMessage
     };
 }
 
@@ -49,7 +50,7 @@ struct ConnectionEvent final
     }type = Connected;
 };
 
-struct BallEvent final
+struct GolfBallEvent final
 {
     enum
     {
@@ -61,4 +62,15 @@ struct BallEvent final
     std::int32_t terrain = -1;
     float distance = 0.f;
     glm::vec3 position = glm::vec3(0.f);
+};
+
+struct BilliardsEvent final
+{
+    enum
+    {
+        Collision,
+        Pocket
+    }type = Collision;
+    std::int8_t first = -1; //ballA
+    std::int8_t second = -1; //ballB or pocketID
 };

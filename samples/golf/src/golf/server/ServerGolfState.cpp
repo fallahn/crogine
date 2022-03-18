@@ -117,10 +117,10 @@ void GolfState::handleMessage(const cro::Message& msg)
             }
         }
     }
-    else if (msg.id == sv::MessageID::BallMessage)
+    else if (msg.id == sv::MessageID::GolfMessage)
     {
-        const auto& data = msg.getData<BallEvent>();
-        if (data.type == BallEvent::TurnEnded)
+        const auto& data = msg.getData<GolfBallEvent>();
+        if (data.type == GolfBallEvent::TurnEnded)
         {
             //check if we reached max strokes
             if (m_playerInfo[0].holeScore[m_currentHole] >= MaxStrokes)
@@ -137,7 +137,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_playerInfo[0].terrain = data.terrain;
             setNextPlayer();
         }
-        else if (data.type == BallEvent::Holed)
+        else if (data.type == GolfBallEvent::Holed)
         {
             //set the player as being on the pin so
             //they shouldn't be picked as next player
@@ -147,7 +147,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             setNextPlayer();
         }
-        else if (data.type == BallEvent::Foul)
+        else if (data.type == GolfBallEvent::Foul)
         {
             m_playerInfo[0].holeScore[m_currentHole]++; //penalty stroke.
 
@@ -159,7 +159,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_playerInfo[0].terrain = TerrainID::Green;
             }
         }
-        else if (data.type == BallEvent::Landed)
+        else if (data.type == GolfBallEvent::Landed)
         {
             //immediate, pre-pause event when the ball stops moving
             BallUpdate bu;

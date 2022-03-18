@@ -307,8 +307,8 @@ void BallSystem::process(float dt)
                     position = tx.getPosition();
                     len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
 
-                    auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
-                    msg->type = BallEvent::Landed;
+                    auto* msg = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
+                    msg->type = GolfBallEvent::Landed;
                     msg->terrain = ((penetration > Ball::Radius)||(len2 < MinBallDistance)) ? TerrainID::Hole : ball.terrain;
 
                     if (msg->terrain == TerrainID::Hole)
@@ -386,8 +386,8 @@ void BallSystem::process(float dt)
                 }
 
                 //raise message to say player should be penalised
-                auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
-                msg->type = BallEvent::Foul;
+                auto* msg = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
+                msg->type = GolfBallEvent::Foul;
                 msg->terrain = terrain;
                 msg->position = tx.getPosition();
 
@@ -407,7 +407,7 @@ void BallSystem::process(float dt)
                 auto len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
 
                 //send message to report status
-                auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
+                auto* msg = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
                 msg->terrain = ball.terrain;
                 msg->position = position;
 
@@ -416,12 +416,12 @@ void BallSystem::process(float dt)
                         || (len2 <= BallHoleDistance))
                 {
                     //we're in the hole
-                    msg->type = BallEvent::Holed;
+                    msg->type = GolfBallEvent::Holed;
                     //LogI << "Ball Holed" << std::endl;
                 }
                 else
                 {
-                    msg->type = BallEvent::TurnEnded;
+                    msg->type = GolfBallEvent::TurnEnded;
                     //LogI << "Turn Ended" << std::endl;
                 }
                 //LogI << "Distance: " << len2 << ", terrain: " << TerrainStrings[ball.terrain] << std::endl;
@@ -526,8 +526,8 @@ void BallSystem::doCollision(cro::Entity entity)
         ball.delay = BallTurnDelay;
         ball.terrain = terrain;
 
-        auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
-        msg->type = BallEvent::Landed;
+        auto* msg = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
+        msg->type = GolfBallEvent::Landed;
         msg->terrain = ball.terrain;
         msg->position = tx.getPosition();
     };
