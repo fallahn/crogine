@@ -36,7 +36,7 @@ source distribution.
 //(terrain data changed between 100 -> 110)
 //(model format changed betweem 120 -> 130)
 static constexpr std::uint16_t CURRENT_VER = 140;
-static const std::string StringVer("1.4.0");
+static const std::string StringVer("1.4.1");
 
 namespace MessageType
 {
