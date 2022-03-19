@@ -70,7 +70,19 @@ source distribution.
 
 namespace
 {
-    static constexpr glm::vec2 BackgroundSize(192.f, 108.f);
+    constexpr float CameraDepth = 3.f;
+
+    constexpr float BackgroundDepth = -0.5f;
+    constexpr float OptionsDepth = -0.4f;
+    constexpr float TabWindowDepth = 0.1f;
+    constexpr float TabBarDepth = 0.15f;
+
+    constexpr float HighlightOffset = 0.2f;
+    constexpr float TextOffset = 0.1f;
+
+    constexpr float ToolTipDepth = CameraDepth - 0.8f;
+
+    constexpr glm::vec2 BackgroundSize(192.f, 108.f);
     const cro::Colour BackgroundColour = cro::Colour(std::uint8_t(26), 30, 45);
 
     struct MenuID final
@@ -518,7 +530,7 @@ void OptionsState::buildScene()
 
     //quad to darken the screen
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.4f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, BackgroundDepth });
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(-0.5f, 0.5f), cro::Colour::Black),
@@ -550,7 +562,7 @@ void OptionsState::buildScene()
 
     //options background
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.4f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, OptionsDepth });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -572,7 +584,7 @@ void OptionsState::buildScene()
 
     //video options
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, 20.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 4.f, 20.f, TabWindowDepth });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("audio_video");
@@ -587,7 +599,7 @@ void OptionsState::buildScene()
 
     //control options
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, 20.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 4.f, 20.f, TabWindowDepth });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("input");
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -616,7 +628,7 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_bar");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ 0.f, bgSize.y - bounds.height, 0.1f });
+    entity.getComponent<cro::Transform>().setPosition({ 0.f, bgSize.y - bounds.height, TabBarDepth });
     entity.addComponent<cro::Callback>();
     entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(1.f, 1);
     entity.getComponent<cro::Callback>().function =
@@ -688,7 +700,7 @@ void OptionsState::buildScene()
     };
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 130.f, 0.2f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 130.f, TabBarDepth + HighlightOffset));
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_highlight");
@@ -724,7 +736,7 @@ void OptionsState::buildScene()
 
     //tab button to switch to controls
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(100.f, 130.f, 0.2f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(100.f, 130.f, TabBarDepth + HighlightOffset));
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_highlight");
@@ -753,7 +765,7 @@ void OptionsState::buildScene()
     auto createToolTip = [&](const cro::String& tip)
     {
         auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, 2.2f});
+        entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, ToolTipDepth});
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(font).setString(tip);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -768,7 +780,7 @@ void OptionsState::buildScene()
 
         auto colour = cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha);
         auto bgEnt = m_scene.createEntity();
-        bgEnt.addComponent<cro::Transform>().setPosition({0.f, 0.f, -0.5f});
+        bgEnt.addComponent<cro::Transform>().setPosition({0.f, 0.f, -TextOffset});
         bgEnt.addComponent<cro::Drawable2D>().setVertexData(
             {
                 cro::Vertex2D(glm::vec2(bounds.left, bounds.bottom + bounds.height), colour),
@@ -802,7 +814,7 @@ void OptionsState::buildScene()
     };
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, CameraDepth });
     entity.addComponent<cro::Camera>().resizeCallback = updateView;
     m_scene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
@@ -830,7 +842,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     auto createLabel = [&](glm::vec2 pos, const std::string& str)
     {
         auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(pos);
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, TextOffset));
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setString(str);
@@ -876,7 +888,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("slider");
         auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), /*std::floor*/(bounds.height / 2.f) });
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), /*std::floor*/(bounds.height / 2.f), -TextOffset });
 
 
         auto userData = SliderData(position);
@@ -911,8 +923,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         {
             mousePos.x = std::floor(mousePos.x);
             mousePos.y = std::floor(mousePos.y);
-            mousePos.z = 1.f;
-
+            mousePos.z = ToolTipDepth / 2.f;
+            
             m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
             m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setScale(m_viewScale);
 
@@ -973,7 +985,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         {
             mousePos.x = std::floor(mousePos.x);
             mousePos.y = std::floor(mousePos.y);
-            mousePos.z = 1.f;
+            mousePos.z = ToolTipDepth;
 
             m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
             m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setScale(m_viewScale);
@@ -1018,7 +1030,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
 
         ent.addComponent<cro::Callback>().function = HighlightAnimationCallback();
-        ent.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        ent.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -HighlightOffset });
         ent.getComponent<cro::Transform>().move({ bounds.width / 2.f, bounds.height / 2.f });
 
         parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
@@ -1163,7 +1175,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //pixel scale checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(77.f, 24.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(77.f, 24.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -1196,7 +1208,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //full screen checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(77.f, 8.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(77.f, 8.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -1221,7 +1233,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     auto& infoFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     auto infoEnt = m_scene.createEntity();
-    infoEnt.addComponent<cro::Transform>().setPosition(glm::vec2(parentBounds.width / 2.f, parentBounds.height - 4.f));
+    infoEnt.addComponent<cro::Transform>().setPosition(glm::vec3(parentBounds.width / 2.f, parentBounds.height - 4.f, TextOffset));
     infoEnt.addComponent<cro::Drawable2D>();
     infoEnt.addComponent<cro::Text>(infoFont);// .setString("Info Text");
     infoEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1256,7 +1268,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     auto createHighlight = [&, infoEnt](glm::vec2 position, std::int32_t keyIndex)
     {
         auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(position);
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(position, HighlightOffset));
         entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight");
@@ -1365,7 +1377,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     auto createLabel = [&](glm::vec2 position, std::int32_t bindingIndex)
     {
         auto e = m_scene.createEntity();
-        e.addComponent<cro::Transform>().setPosition(position);
+        e.addComponent<cro::Transform>().setPosition(glm::vec3(position, TextOffset));
         e.addComponent<cro::Drawable2D>();
         e.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
         e.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1462,7 +1474,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     auto& descFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
     auto iconEnt = m_scene.createEntity();
-    iconEnt.addComponent<cro::Transform>();
+    iconEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, TextOffset });
     iconEnt.addComponent<cro::Drawable2D>().setTexture(&tex);
     scrollNode.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
     std::vector<cro::Vertex2D> iconVertices;
@@ -1578,7 +1590,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
 
     //scroll up
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 180.f, 92.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ 180.f, 92.f, HighlightOffset });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_up");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1624,7 +1636,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
 
     //show stats
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 196.f, 46.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ 196.f, 46.f, HighlightOffset });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_left");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1660,7 +1672,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
 
     //scroll down
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 180.f, 4.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ 180.f, 4.f, HighlightOffset });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_down");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1962,7 +1974,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
 
     auto textHideCallback = [&, menuID](cro::Entity e, float)
     {
-        auto current = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
+        auto current = static_cast<std::int32_t>(m_scene.getSystem<cro::UISystem>()->getActiveGroup());
         float scale = (current == menuID || current == MenuID::Dummy) ? 1 : 0.f;
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
