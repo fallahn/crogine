@@ -39,14 +39,14 @@ hole 09
 
     prop
     {
-        model = "assets/golf/models/birch02.cmt"
+        model = "assets/golf/models/pine02.cmt"
         position = 118.432373,1.371866,-78.235847
         rotation = -0.000067
     }
 
     prop
     {
-        model = "assets/golf/models/birch01.cmt"
+        model = "assets/golf/models/pine01.cmt"
         position = 111.953491,1.350885,-73.260796
         rotation = -132.291488
     }

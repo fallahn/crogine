@@ -1986,12 +1986,12 @@ void DrivingState::createFlag()
     {
         0.f, 2.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
         0.f, 0.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
-        0.f,  0.001f,  0.f,    0.f, 0.f, 0.f, 0.5f, //shadow
-        1.4f, 0.001f, 1.4f,    0.f, 0.f, 0.f, 0.01f,
+        //0.f,  0.001f,  0.f,    0.f, 0.f, 0.f, 0.5f, //shadow
+        //1.4f, 0.001f, 1.4f,    0.f, 0.f, 0.f, 0.01f,
     };
     std::vector<std::uint32_t> indices =
     {
-        0,1,2,3
+        0,1//,2,3
     };
     meshData->vertexCount = verts.size() / vertStride;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));

@@ -10,14 +10,14 @@ hole 04
 
     prop
     {
-        model = "assets/golf/models/birch01.cmt"
+        model = "assets/golf/models/pine01.cmt"
         position = 210.612564,2.398726,-90.189430
         rotation = 0.000000
     }
 
     prop
     {
-        model = "assets/golf/models/birch02.cmt"
+        model = "assets/golf/models/pine02.cmt"
         position = 217.147629,2.367812,-100.961174
         rotation = 18.808399
     }
