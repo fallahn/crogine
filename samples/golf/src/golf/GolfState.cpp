@@ -868,7 +868,7 @@ void GolfState::render()
     }
 
 #ifndef CRO_DEBUG_
-    if (m_roundEnded && !m_sharedData.tutorial)
+    if (m_roundEnded /* && !m_sharedData.tutorial */)
 #endif
     {
         m_trophySceneTexture.clear(cro::Colour::Transparent);
