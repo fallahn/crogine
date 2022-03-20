@@ -2,7 +2,7 @@ particle_system hio
 {
     src = assets/golf/images/hio_particle.png
     texture_smoothing = false
-    blendmode = add
+    blendmode = alpha
     acceleration = 1.000000
     gravity = 0.000000,-1.437000,0.000000
     velocity = 0.000000,2.586000,0.000000

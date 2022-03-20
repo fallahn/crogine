@@ -84,6 +84,7 @@ private:
             ScoreEagle,
             ScoreHole,
             ScorePar,
+            ScoreHIO,
 
             Applause,
             ApplausePlus,

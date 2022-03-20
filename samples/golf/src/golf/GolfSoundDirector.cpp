@@ -79,6 +79,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/holes/eagle.wav",
         "assets/golf/sound/holes/hole.wav",
         "assets/golf/sound/holes/par.wav",
+        "assets/golf/sound/holes/hio.wav",
 
         "assets/golf/sound/ball/applause.wav",
         "assets/golf/sound/ball/applause_plus.wav",
@@ -337,6 +338,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             else if (data.terrain == TerrainID::Hole)
             {
                 playSound(AudioID::Hole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                //playSound(AudioID::ScoreHIO, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             }
         }
     }
