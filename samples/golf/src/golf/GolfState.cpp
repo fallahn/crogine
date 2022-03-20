@@ -520,6 +520,12 @@ void GolfState::handleMessage(const cro::Message& msg)
 
                 //enable the camera following
                 m_gameScene.setSystemActive<CameraFollowSystem>(true);
+
+                //hide the ball briefly to hack around the motion lag
+                //(the callback automatically scales back)
+                m_activeAvatar->ballModel.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                m_activeAvatar->ballModel.getComponent<cro::Callback>().active = true;
+                m_activeAvatar->ballModel.getComponent<cro::Model>().setHidden(true);
             }            
         }
     }
@@ -2447,6 +2453,21 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.ballMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
 
+    entity.addComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto scale = e.getComponent<cro::Transform>().getScale().x;
+        scale = std::min(1.f, scale + dt);
+        e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+
+        if (scale == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            e.getComponent<cro::Model>().setHidden(false);
+        }
+    };
+    m_avatars[info.clientID][info.playerID].ballModel = entity;
+
     //ball shadow
     auto ballEnt = entity;
     material.setProperty("u_colour", cro::Colour::White);
@@ -2473,7 +2494,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                 ballPos.y = std::min(0.003f + m_collisionMesh.getTerrain(ballPos).height, ballPos.y); //just to prevent z-fighting
                 e.getComponent<cro::Transform>().setPosition(ballPos);
 
-                e.getComponent<cro::Model>().setHidden(m_currentPlayer.terrain == TerrainID::Green);
+                e.getComponent<cro::Model>().setHidden((m_currentPlayer.terrain == TerrainID::Green) || ballEnt.getComponent<cro::Model>().isHidden());
             }
         }
     };
@@ -2496,6 +2517,7 @@ void GolfState::spawnBall(const ActorInfo& info)
             e.getComponent<cro::Callback>().active = false;
             m_gameScene.destroyEntity(e);
         }
+        e.getComponent<cro::Model>().setHidden(ballEnt.getComponent<cro::Model>().isHidden());
     };
 
     //adding a ball model means we see something a bit more reasonable when close up
@@ -2503,7 +2525,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&, ballEnt](cro::Entity e, float)
+        [&, ballEnt](cro::Entity e, float dt)
     {
         if (ballEnt.destroyed())
         {

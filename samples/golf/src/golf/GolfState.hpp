@@ -245,6 +245,7 @@ private:
         cro::Entity model;
         cro::Attachment* hands = nullptr;
         std::array<std::size_t, AnimationID::Count> animationIDs = {};
+        cro::Entity ballModel;
     };
     std::array<std::array<Avatar, ConnectionData::MaxPlayers>, ConstVal::MaxClients> m_avatars;
     Avatar* m_activeAvatar;
