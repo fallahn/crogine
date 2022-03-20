@@ -64,7 +64,12 @@ void InterpolationComponent::addTarget(const InterpolationPoint& target)
                 auto delta = target.timestamp - m_targetPoint.timestamp;
                 if (delta > 167) //10 frames ish
                 {
-                    m_targetPoint.timestamp = target.timestamp - 17;
+                    m_previousPoint = m_targetPoint = target;
+
+                    m_targetPoint.timestamp = target.timestamp - 1;
+                    m_previousPoint.timestamp = m_targetPoint.timestamp - 1;
+
+                    m_elapsedTimer.restart();
                 }
             }
         }

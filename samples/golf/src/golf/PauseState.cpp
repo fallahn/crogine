@@ -374,7 +374,15 @@ void PauseState::buildScene()
                     m_sharedData.tutorial = true;
 
                     requestStackClear();
-                    requestStackPush(StateID::Menu);
+                    //requestStackPush(StateID::Menu);
+                    if (m_sharedData.baseState != StateID::Clubhouse)
+                    {
+                        requestStackPush(StateID::Menu);
+                    }
+                    else
+                    {
+                        requestStackPush(StateID::Clubhouse);
+                    }
                 }
             });
 

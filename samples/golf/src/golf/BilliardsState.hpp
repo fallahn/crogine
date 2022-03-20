@@ -45,6 +45,7 @@ namespace cro
 
 struct SharedStateData;
 struct ActorInfo;
+struct BilliardsUpdate;
 class BilliardsState final : public cro::State 
 {
 public:
@@ -93,7 +94,7 @@ private:
 
     void handleNetEvent(const cro::NetEvent&);
     void spawnBall(const ActorInfo&);
-    void updateBall(const ActorInfo&);
+    void updateBall(const BilliardsUpdate&);
 
     void setActiveCamera(std::int32_t);
 

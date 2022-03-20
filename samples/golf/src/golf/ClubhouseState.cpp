@@ -94,6 +94,21 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     sd.baseState = StateID::Clubhouse;
     sd.mapDirectory = "pool";
 
+    //this is actually set asa flag from the pause menu
+    //to say we want to quit
+    if (sd.tutorial)
+    {
+        sd.serverInstance.stop();
+        sd.hosting = false;
+
+        sd.tutorial = false;
+        sd.clientConnection.connected = false;
+        sd.clientConnection.connectionID = 4;
+        sd.clientConnection.ready = false;
+        sd.clientConnection.netClient.disconnect();
+    }
+
+
     //we returned from a previous game
     if (sd.clientConnection.connected)
     {

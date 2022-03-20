@@ -338,7 +338,7 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         {
         default: break;
         case PacketID::ActorUpdate:
-            updateBall(evt.packet.as<ActorInfo>());
+            updateBall(evt.packet.as<BilliardsUpdate>());
             break;
         case PacketID::EntityRemoved:
         {
@@ -453,7 +453,7 @@ void BilliardsState::spawnBall(const ActorInfo& info)
     }*/
 }
 
-void BilliardsState::updateBall(const ActorInfo& info)
+void BilliardsState::updateBall(const BilliardsUpdate& info)
 {
     cro::Command cmd;
     cmd.targetFlags = CommandID::Ball;

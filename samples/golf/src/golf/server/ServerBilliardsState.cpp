@@ -129,11 +129,9 @@ void BilliardsState::netBroadcast()
         for (auto entity : balls)
         {
             auto& ball = entity.getComponent<BilliardBall>();
-            if (ball.hadUpdate)
+            //if (ball.hadUpdate) //sending updates, even non-moving ones, provides smoother client side interpolation
             {
-                //TODO we can probably send a smaller struct here
-                //but it probably doesn't matter
-                ActorInfo info;
+                BilliardsUpdate info;
                 info.position = entity.getComponent<cro::Transform>().getPosition();
                 info.rotation = cro::Util::Net::compressQuat(entity.getComponent<cro::Transform>().getRotation());
                 info.serverID = entity.getIndex();

@@ -94,3 +94,11 @@ struct BallUpdate final
     glm::vec3 position = glm::vec3(0.f);
     std::uint8_t terrain = 0;
 };
+
+struct BilliardsUpdate final
+{
+    std::array<std::int16_t, 4u> rotation = {};
+    std::uint32_t serverID = 0;
+    glm::vec3 position = glm::vec3(0.f);
+    std::int32_t timestamp = 0;
+};
