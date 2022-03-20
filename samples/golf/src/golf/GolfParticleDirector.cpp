@@ -50,12 +50,14 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr)
     m_emitterSettings[ParticleID::Grass].loadFromFile("assets/golf/particles/dirt.cps", tr);
     m_emitterSettings[ParticleID::Sand].loadFromFile("assets/golf/particles/sand.cps", tr);
     m_emitterSettings[ParticleID::Sparkle].loadFromFile("assets/golf/particles/new_ball.cps", tr);
+    m_emitterSettings[ParticleID::HIO].loadFromFile("assets/golf/particles/hio.cps", tr);
 
     //hmm how to set smoothing on the texture?
     cro::SpriteSheet spriteSheet;
     if (spriteSheet.loadFromFile("assets/golf/sprites/rings.spt", tr))
     {
         m_ringSprite = spriteSheet.getSprite("rings");
+        const_cast<cro::Texture*>(m_ringSprite.getTexture())->setSmooth(false);
     }
 }
 
@@ -122,6 +124,13 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
                 getEnt(ParticleID::Water, data.position);
                 spawnRings(data.position);
                 break;
+            }
+        }
+        else
+        {
+            if (data.terrain == TerrainID::Hole)
+            {
+                //getEnt(ParticleID::HIO, data.position);
             }
         }
     }
