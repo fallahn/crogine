@@ -2669,6 +2669,8 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                     {
                         //just completed the course
                         Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
+
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
                     }
 
                     //check putt distance / if this was in fact a putt

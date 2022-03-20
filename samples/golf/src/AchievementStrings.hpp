@@ -60,6 +60,7 @@ namespace AchievementID
         GoldStar,
 
         CluedUp,
+        JoinTheClub,
 
         Count
     };
@@ -81,7 +82,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "bronze_star",
     "silver_star",
     "gold_star",
-    "clued_up"
+    "clued_up",
+    "join_the_club"
 };
 
 //appears on the notification
@@ -100,7 +102,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Bronze",
     "Silver",
     "Gold",
-    "Clued Up"
+    "Clued Up",
+    "Join The Club"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -119,7 +122,8 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Get a One Star rating on the driving range", false),
     std::make_pair("Get a Two Star rating on the driving range", false),
     std::make_pair("Get a Three Star rating on the driving range", false),
-    std::make_pair("Complete the Tutorial", false)
+    std::make_pair("Complete the Tutorial", false),
+    std::make_pair("Make it to the 19th Hole", false)
 };
 
 namespace StatID
