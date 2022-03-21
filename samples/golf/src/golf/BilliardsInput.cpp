@@ -28,8 +28,10 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "BilliardsInput.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/MessageBus.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Constants.hpp>
@@ -40,17 +42,19 @@ namespace
     constexpr float CamRotationSpeedFast = CamRotationSpeed * 5.f;
     constexpr float CueRotationSpeed = 0.025f;
     constexpr float MaxCueRotation = cro::Util::Const::PI / 16.f;
+    constexpr float PowerStep = 0.1f;
+    constexpr float MinPower = PowerStep;
 }
 
-BilliardsInput::BilliardsInput(const InputBinding& ip)
+BilliardsInput::BilliardsInput(const InputBinding& ip, cro::MessageBus& mb)
     : m_inputBinding(ip),
+    m_messageBus    (mb),
     m_inputFlags    (0),
     m_prevFlags     (0),
-    m_mouseWheel    (0),
-    m_prevMouseWheel(0),
     m_mouseMove     (0.f),
     m_prevMouseMove (0.f),
-    m_active        (true)
+    m_active        (true),
+    m_power         (0.1f)
 {
 
 }
@@ -229,7 +233,7 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_MOUSEWHEEL)
     {
-        m_mouseWheel += evt.wheel.y;
+        m_power = std::max(MinPower, std::min(MaxPower, m_power + (PowerStep * evt.wheel.y)));
     }
     else if (evt.type == SDL_MOUSEMOTION)
     {
@@ -268,15 +272,20 @@ void BilliardsInput::update(float dt)
                 m_camEntity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camEntity.getComponent<ControllerRotation>().rotation);
             }
         }
+
+        auto diff = m_prevFlags ^ m_inputFlags;
+        if ((diff & m_inputFlags & InputFlag::Action) != 0)
+        {
+            //TODO play the cue animation instead?
+            auto* msg = m_messageBus.post<BilliardBallEvent>(MessageID::BilliardsMessage);
+            msg->type = BilliardBallEvent::ShotTaken;
+        }
     }
 
     m_prevFlags = m_inputFlags;
     
     m_prevMouseMove = m_mouseMove;
     m_mouseMove = 0;
-
-    m_prevMouseWheel = m_mouseWheel;
-    m_mouseWheel = 0;
 }
 
 void BilliardsInput::setControlEntities(cro::Entity camera, cro::Entity cue)
@@ -300,5 +309,5 @@ std::pair<glm::vec3, glm::vec3> BilliardsInput::getImpulse() const
     //TODO multiply by strength
     //TODO read offset
 
-    return { glm::vec3(direction), glm::vec3(0.f) };
+    return { glm::vec3(direction) * m_power, glm::vec3(0.f) };
 }

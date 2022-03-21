@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -44,6 +44,7 @@ namespace MessageID
         CollisionMessage,
         SystemMessage,
         AchievementMessage,
+        BilliardsMessage,
 
         Count
     };
@@ -113,4 +114,12 @@ struct SystemEvent final
 struct AchievementEvent final
 {
     std::uint8_t id = 0;
+};
+
+struct BilliardBallEvent final
+{
+    enum
+    {
+        ShotTaken
+    }type = ShotTaken;
 };

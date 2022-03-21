@@ -43,7 +43,7 @@ struct ControllerRotation final
 class BilliardsInput final
 {
 public:
-    explicit BilliardsInput(const InputBinding&);
+    BilliardsInput(const InputBinding&, cro::MessageBus&);
 
     void handleEvent(const cro::Event&);
     void update(float);
@@ -53,18 +53,22 @@ public:
 
     std::pair<glm::vec3, glm::vec3> getImpulse() const;
 
+    static constexpr float MaxPower = 0.7f;
+    float getPower() const { return m_power; }
+
 private:
     const InputBinding& m_inputBinding;
+    cro::MessageBus& m_messageBus;
 
     std::uint16_t m_inputFlags;
     std::uint16_t m_prevFlags;
 
-    std::int32_t m_mouseWheel;
-    std::int32_t m_prevMouseWheel;
     float m_mouseMove;
     float m_prevMouseMove;
 
     bool m_active;
+
+    float m_power;
 
     cro::Entity m_camEntity;
     cro::Entity m_cueEntity;

@@ -31,6 +31,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
 #include "CommandIDs.hpp"
+#include "MessageIDs.hpp"
 #include "GameConsts.hpp"
 #include "BilliardsSystem.hpp"
 #include "InterpolationSystem.hpp"
@@ -67,7 +68,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_sharedData        (sd),
     m_gameScene         (ctx.appInstance.getMessageBus()),
     m_uiScene           (ctx.appInstance.getMessageBus()),
-    m_inputParser       (sd.inputBinding),
+    m_inputParser       (sd.inputBinding, ctx.appInstance.getMessageBus()),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_viewScale         (2.f),
@@ -84,11 +85,13 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
         });
 
 #ifdef CRO_DEBUG_
-    /*registerWindow([&]() 
+    registerWindow([&]() 
         {
             if (ImGui::Begin("Buns"))
             {
-                auto pos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
+                ImGui::Text("Power %3.3f", m_inputParser.getPower());
+
+                /*auto pos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
                 if (ImGui::SliderFloat("Height", &pos.y, 0.1f, 1.f))
                 {
                     m_cameras[CameraID::Player].getComponent<cro::Transform>().setPosition(pos);
@@ -105,10 +108,10 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
                 if (ImGui::SliderFloat("Rotation", &rotation, -90.f, 0.f))
                 {
                     m_cameras[CameraID::Player].getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rotation * cro::Util::Const::degToRad);
-                }
+                }*/
             }
             ImGui::End();
-        });*/
+        });
 #endif
 }
 
@@ -233,6 +236,21 @@ void BilliardsState::handleMessage(const cro::Message& msg)
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
             resizeBuffers();
+        }
+    }
+        break;
+    case MessageID::BilliardsMessage:
+    {
+        const auto& data = msg.getData<BilliardBallEvent>();
+        if (data.type == BilliardBallEvent::ShotTaken)
+        {
+            BilliardBallInput input;
+            auto [impulse, offset] = m_inputParser.getImpulse();
+            input.impulse = impulse;
+            input.offset = offset;
+            //TODO set active player
+
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
     }
         break;

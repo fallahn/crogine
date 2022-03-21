@@ -342,12 +342,12 @@ void BilliardsSystem::initTable(const TableData& tableData)
     }
 }
 
-void BilliardsSystem::applyImpulse()
+void BilliardsSystem::applyImpulse(glm::vec3 dir, glm::vec3 offset)
 {
     if (m_cueball)
     {
         m_cueball->activate();
-        m_cueball->applyImpulse({ 0.f, 0.f, -0.8f }, { 0.f, 0.f, 0.f });
+        m_cueball->applyImpulse(glmToBt(dir), glmToBt(offset));
     }
 }
 

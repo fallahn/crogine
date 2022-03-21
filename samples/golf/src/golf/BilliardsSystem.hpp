@@ -144,7 +144,7 @@ public:
     void process(float) override;
     void initTable(const TableData&);
 
-    void applyImpulse(/*vec3 dir, vec3 offset*/);
+    void applyImpulse(glm::vec3 dir, glm::vec3 offset);
 
 private:
 

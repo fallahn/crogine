@@ -102,3 +102,11 @@ struct BilliardsUpdate final
     glm::vec3 position = glm::vec3(0.f);
     std::int32_t timestamp = 0;
 };
+
+struct BilliardBallInput final
+{
+    glm::vec3 impulse = glm::vec3(0.f);
+    glm::vec3 offset = glm::vec3(0.f);
+    std::uint8_t client = 0;
+    std::uint8_t player = 0;
+};

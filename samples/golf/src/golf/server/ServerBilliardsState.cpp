@@ -95,6 +95,13 @@ void BilliardsState::netEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::InputUpdate:
+        {
+            auto data = evt.packet.as<BilliardBallInput>();
+            //TODO validate active player with director
+            m_scene.getSystem<BilliardsSystem>()->applyImpulse(data.impulse, data.offset);
+        }
+            break;
         case PacketID::ClientReady:
             if (!m_sharedData.clients[evt.packet.as<std::uint8_t>()].ready)
             {
@@ -303,7 +310,7 @@ void BilliardsState::doServerCommand(const cro::NetEvent& evt)
         spawnBall(addBall({ cro::Util::Random::value(-0.1f, 0.1f), 0.5f, cro::Util::Random::value(-0.1f, 0.1f) }, cro::Util::Random::value(0, 15)));
         break;
     case ServerCommand::StrikeBall:
-        m_scene.getSystem<BilliardsSystem>()->applyImpulse();
+        m_scene.getSystem<BilliardsSystem>()->applyImpulse({0.f, 0.f, -0.7f}, {0.f, 0.f, 0.f});
         break;
     }
 #endif
