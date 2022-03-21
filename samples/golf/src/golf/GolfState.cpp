@@ -271,6 +271,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_KP_1:
             //setActiveCamera(1);
             //m_cameras[CameraID::Sky].getComponent<CameraFollower>().state = CameraFollower::Zoom;
+        {
+            auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+            msg->type = GolfEvent::HoleInOne;
+            msg->position = m_holeData[m_currentHole].pin;
+        }
             break;
         case SDLK_KP_2:
             //setActiveCamera(2);
@@ -2685,13 +2690,16 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                     if (score == 1)
                     {
                         Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOne]);
+
+                        auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                        msg->type = GolfEvent::HoleInOne;
+                        msg->position = m_holeData[m_currentHole].pin;
                     }
 
                     if (m_currentHole == 17)
                     {
                         //just completed the course
                         Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
-
                         Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
                     }
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -160,6 +160,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case GolfEvent::HoleInOne:
+            playSound(AudioID::ScoreHIO, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            break;
         case GolfEvent::DriveComplete:
         if (cro::Util::Random::value(0, 2) != 0)
         {
@@ -338,7 +341,6 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             else if (data.terrain == TerrainID::Hole)
             {
                 playSound(AudioID::Hole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-                //playSound(AudioID::ScoreHIO, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             }
         }
     }
