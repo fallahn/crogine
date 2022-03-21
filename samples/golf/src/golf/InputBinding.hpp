@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -38,15 +38,15 @@ namespace InputFlag
 {
     enum 
     {
-        Up         = 0x1,
-        Down       = 0x2,
-        Left       = 0x4,
-        Right      = 0x8,
-        Action     = 0x10,
-        NextClub   = 0x20,
-        PrevClub   = 0x40,
-        Unused0    = 0x80,
-        Unused1    = 0x100,
+        Up          = 0x1,
+        Down        = 0x2,
+        Left        = 0x4,
+        Right       = 0x8,
+        Action      = 0x10,
+        NextClub    = 0x20,
+        PrevClub    = 0x40,
+        CamModifier = 0x80,
+        Unused1     = 0x100,
 
         All = 0xFFFF
     };
@@ -58,7 +58,7 @@ struct InputBinding final
     //button array as well as the key array
     enum
     {
-        Action, NextClub, PrevClub, Unused0, Unused1, Left, Right, Up, Down, Count
+        Action, NextClub, PrevClub, CamModifier, Unused1, Left, Right, Up, Down, Count
     };
 
     std::array<std::int32_t, Count> keys =
@@ -70,8 +70,8 @@ struct InputBinding final
         SDLK_UNKNOWN,
         SDLK_a,
         SDLK_d,
-        SDLK_UNKNOWN,
-        SDLK_UNKNOWN
+        SDLK_w,
+        SDLK_s
     };
 
     std::array<std::int32_t, 5u> buttons =

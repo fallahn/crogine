@@ -243,6 +243,9 @@
     <ClCompile Include="src\golf\server\EightballDirector.cpp">
       <Filter>Source Files\golf\server\directors</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\BilliardsInput.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -469,6 +472,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\server\EightballDirector.hpp">
       <Filter>Header Files\golf\server\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BilliardsInput.hpp">
+      <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

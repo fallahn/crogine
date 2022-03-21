@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "BilliardsInput.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
@@ -66,6 +67,8 @@ private:
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
 
+    BilliardsInput m_inputParser;
+
     cro::RenderTexture m_gameSceneTexture;
     cro::UniformBuffer m_scaleBuffer;
     cro::UniformBuffer m_resolutionBuffer;
@@ -91,7 +94,6 @@ private:
     std::array<cro::Entity, CameraID::Count> m_cameras;
     cro::Entity m_cameraController; //player cam is parented to this
     std::int32_t m_activeCamera;
-
 
     std::int32_t m_gameMode;
 

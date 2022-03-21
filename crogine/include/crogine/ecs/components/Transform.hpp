@@ -93,7 +93,7 @@ namespace cro
 
         /*!
         \brief Sets the rotation around the given axis.
-        \param axis A 3 dimention axis around which the rotation is set
+        \param axis A 3 dimensional axis around which the rotation is set
         \param angle The angle in radians to rotate
         */
         void setRotation(glm::vec3 axis, float angle);

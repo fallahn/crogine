@@ -67,6 +67,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_sharedData        (sd),
     m_gameScene         (ctx.appInstance.getMessageBus()),
     m_uiScene           (ctx.appInstance.getMessageBus()),
+    m_inputParser       (sd.inputBinding),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_viewScale         (2.f),
@@ -83,7 +84,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
         });
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]() 
+    /*registerWindow([&]() 
         {
             if (ImGui::Begin("Buns"))
             {
@@ -107,7 +108,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
                 }
             }
             ImGui::End();
-        });
+        });*/
 #endif
 }
 
@@ -215,6 +216,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         }
     }
 
+    m_inputParser.handleEvent(evt);
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
     return false;
@@ -266,6 +268,8 @@ bool BilliardsState::simulate(float dt)
         m_sharedData.errorMessage = "Lost connection to host.";
         requestStackPush(StateID::Error);
     }
+
+    m_inputParser.update(dt);
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
@@ -335,6 +339,7 @@ void BilliardsState::buildScene()
     struct CameraProperties final
     {
         float FOVAdjust = 1.f;
+        float farPlane = 5.f;
     };
 
     auto setPerspective = [&](cro::Camera& cam)
@@ -348,13 +353,16 @@ void BilliardsState::buildScene()
             });
 
         float fovMultiplier = 1.f;
+        float farPlane = 5.f;
+
         if (ent != m_cameras.end() && 
             ent->isValid())
         {
             fovMultiplier = ent->getComponent<CameraProperties>().FOVAdjust;
+            farPlane = ent->getComponent<CameraProperties>().farPlane;
         }
 
-        cam.setPerspective(m_sharedData.fov * fovMultiplier * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, 10.f);
+        cam.setPerspective(m_sharedData.fov * fovMultiplier * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, farPlane);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -379,8 +387,8 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<CameraProperties>();
-    setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Front] = camEnt;
+    setPerspective(camEnt.getComponent<cro::Camera>());
 
     //overhead cam
     camEnt = m_gameScene.createEntity();
@@ -391,14 +399,15 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<CameraProperties>();
-    setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Overhead] = camEnt;
+    setPerspective(camEnt.getComponent<cro::Camera>());
 
 
     //player cam is a bit more complicated because it can be rotated
     //by the player, and transformed by the game.
     m_cameraController = m_gameScene.createEntity();
     m_cameraController.addComponent<cro::Transform>();
+    m_cameraController.addComponent<ControllerRotation>();
 
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.353f, 0.376f });
@@ -407,10 +416,25 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.9f;
+    camEnt.getComponent<CameraProperties>().farPlane = 2.f;
     m_cameras[CameraID::Player] = camEnt;
     setPerspective(camEnt.getComponent<cro::Camera>());
 
     m_cameraController.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
+    m_cameraController.getComponent<ControllerRotation>().activeCamera = &camEnt.getComponent<cro::Camera>().active;
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<ControllerRotation>();
+
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/golf/models/hole_19/cue.cmt"))
+    {
+        md.createModel(entity);
+        m_cameraController.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        m_inputParser.setControlEntities(m_cameraController, entity);
+    }
 
 
     //lights point straight down in billiards.
