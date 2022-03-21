@@ -49,6 +49,7 @@ source distribution.
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/gui/Gui.hpp>
 
 ClubhouseContext::ClubhouseContext(ClubhouseState* state)
 {
@@ -201,6 +202,11 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 //public
 bool ClubhouseState::handleEvent(const cro::Event& evt)
 {
+    if (cro::ui::wantsKeyboard() || cro::ui::wantsMouse())
+    {
+        return false;
+    }
+
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
 
     m_backgroundScene.forwardEvent(evt);
