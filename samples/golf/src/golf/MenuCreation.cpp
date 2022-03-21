@@ -41,6 +41,7 @@ source distribution.
 
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/core/Mouse.hpp>
 #include <crogine/audio/AudioScape.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -164,10 +165,56 @@ void MenuState::parseCourseDirectory()
     }
 }
 
+void MenuState::createToolTip()
+{
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font);// .setString("buns");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(cro::Colour::Black);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.addComponent<cro::Callback>().function = 
+        [&](cro::Entity e, float)
+    {
+        auto position = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+        position.x = std::floor(position.x);
+        position.y = std::floor(position.y);
+        position.z = 2.f;
+
+        static constexpr glm::vec3 Offset(8.f, 4.f, 0.f);
+        position += (Offset * m_viewScale.x);
+
+        e.getComponent<cro::Transform>().setPosition(position);
+        e.getComponent<cro::Transform>().setScale(m_viewScale);
+    };
+    m_toolTip = entity;
+}
+
+void MenuState::showToolTip(const std::string& label)
+{
+    if (label != m_toolTip.getComponent<cro::Text>().getString())
+    {
+        m_toolTip.getComponent<cro::Text>().setString(label);
+    }
+
+    m_toolTip.getComponent<cro::Callback>().active = true;
+}
+
+void MenuState::hideToolTip()
+{
+    m_toolTip.getComponent<cro::Callback>().active = false;
+    m_toolTip.getComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
+}
+
 void MenuState::createUI()
 {
     parseCourseDirectory();
     parseAvatarDirectory();
+    createToolTip();
 
     auto mouseEnterCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e) mutable
@@ -782,10 +829,21 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
+    auto showTip = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, glm::vec2, const cro::MotionEvent&)
+        {
+            showToolTip(e.getLabel());
+        });
 
+    auto hideTip = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, glm::vec2, const cro::MotionEvent&)
+        {
+            hideToolTip();
+        });
 
     //add player button
     entity = m_uiScene.createEntity();
+    entity.setLabel("Add Player");
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
@@ -798,6 +856,8 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = hideTip;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Enter] = showTip;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, mouseEnter, mouseExit](cro::Entity, const cro::ButtonEvent& evt) mutable
@@ -825,6 +885,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
 
     //remove player button
     entity = m_uiScene.createEntity();
+    entity.setLabel("Remove Player");
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
@@ -837,6 +898,8 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = hideTip;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Enter] = showTip;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, mouseEnter, mouseExit](cro::Entity, const cro::ButtonEvent& evt) mutable

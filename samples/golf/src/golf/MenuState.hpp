@@ -181,6 +181,12 @@ private:
     std::vector<CourseData> m_courseData;
     void parseCourseDirectory();
 
+    cro::Entity m_toolTip;
+    void createToolTip();
+    void showToolTip(const std::string&);
+    void hideToolTip();
+
+
     //----ball, avatar and hair funcs are in MenuCustomisation.cpp----//
     std::array<std::size_t, ConnectionData::MaxPlayers> m_ballIndices = {}; //index into the model list, not ballID
     cro::Entity m_ballCam;
