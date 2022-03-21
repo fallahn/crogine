@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/MessageBus.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Skeleton.hpp>
 #include <crogine/util/Constants.hpp>
 
 namespace
@@ -277,8 +278,9 @@ void BilliardsInput::update(float dt)
         if ((diff & m_inputFlags & InputFlag::Action) != 0)
         {
             //TODO play the cue animation instead?
-            auto* msg = m_messageBus.post<BilliardBallEvent>(MessageID::BilliardsMessage);
-            msg->type = BilliardBallEvent::ShotTaken;
+            /*auto* msg = m_messageBus.post<BilliardBallEvent>(MessageID::BilliardsMessage);
+            msg->type = BilliardBallEvent::ShotTaken;*/
+            m_cueEntity.getComponent<cro::Skeleton>().play(1);
         }
     }
 
@@ -301,12 +303,11 @@ std::pair<glm::vec3, glm::vec3> BilliardsInput::getImpulse() const
 {
     const float TotalRotation = m_camEntity.getComponent<ControllerRotation>().rotation + m_cueEntity.getComponent<ControllerRotation>().rotation;
 
-    glm::vec4 direction(1.f, 0.f, 0.f, 0.f);
+    glm::vec4 direction(0.f, 0.f, -1.f, 0.f);
     auto rotation = glm::rotate(glm::mat4(1.f), TotalRotation, cro::Transform::Y_AXIS);
 
     direction = rotation * direction;
 
-    //TODO multiply by strength
     //TODO read offset
 
     return { glm::vec3(direction) * m_power, glm::vec3(0.f) };

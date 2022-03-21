@@ -44,6 +44,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -239,10 +240,10 @@ void BilliardsState::handleMessage(const cro::Message& msg)
         }
     }
         break;
-    case MessageID::BilliardsMessage:
+    case cro::Message::SkeletalAnimationMessage:
     {
-        const auto& data = msg.getData<BilliardBallEvent>();
-        if (data.type == BilliardBallEvent::ShotTaken)
+        const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
+        if (data.userType == 0)
         {
             BilliardBallInput input;
             auto [impulse, offset] = m_inputParser.getImpulse();
@@ -251,6 +252,21 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             //TODO set active player
 
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+    }
+    break;
+    case MessageID::BilliardsMessage:
+    {
+        const auto& data = msg.getData<BilliardBallEvent>();
+        if (data.type == BilliardBallEvent::ShotTaken)
+        {
+            //BilliardBallInput input;
+            //auto [impulse, offset] = m_inputParser.getImpulse();
+            //input.impulse = impulse;
+            //input.offset = offset;
+            ////TODO set active player
+
+            //m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
     }
         break;
@@ -314,6 +330,7 @@ void BilliardsState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_gameScene.addSystem<cro::CommandSystem>(mb);
+    m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
