@@ -467,6 +467,7 @@ namespace cro
         glm::vec3 depthPosition = glm::vec3(0.f);
 #endif
 
+
     private:
 
         std::array<Pass, 2u> m_passes = {}; //final pass and refraction pass share the same data
@@ -486,4 +487,20 @@ namespace cro
 
         friend class ShadowMapRenderer;
     };
+}
+
+/*!
+\brief Comparison operator
+Cameras are only moveable, so it only makes sense that comparing cameras returns whether
+or not we're comparing a reference to the same instance, particulary in sort/find cases
+*/
+
+static inline bool operator == (const cro::Camera& lhs, const cro::Camera& rhs)
+{
+    return &lhs == &rhs;
+}
+
+static inline bool operator != (const cro::Camera& lhs, const cro::Camera& rhs)
+{
+    return !(lhs == rhs);
 }

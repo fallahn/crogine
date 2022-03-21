@@ -72,6 +72,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_viewScale         (2.f),
     m_ballDefinition    (m_resources),
     m_wantsGameState    (true),
+    m_activeCamera      (CameraID::Side),
     m_gameMode          (TableData::Void)
 {
     ctx.mainWindow.loadResources([&]() 
@@ -80,6 +81,34 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
             addSystems();
             buildScene();
         });
+
+#ifdef CRO_DEBUG_
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Buns"))
+            {
+                auto pos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
+                if (ImGui::SliderFloat("Height", &pos.y, 0.1f, 1.f))
+                {
+                    m_cameras[CameraID::Player].getComponent<cro::Transform>().setPosition(pos);
+                }
+                
+                if (ImGui::SliderFloat("Distance", &pos.z, 0.1f, 1.f))
+                {
+                    m_cameras[CameraID::Player].getComponent<cro::Transform>().setPosition(pos);
+                }
+
+                ImGui::Text("Position %3.3f, %3.3f", pos.y, pos.z);
+
+                static float rotation = -10.f;
+                if (ImGui::SliderFloat("Rotation", &rotation, -90.f, 0.f))
+                {
+                    m_cameras[CameraID::Player].getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rotation * cro::Util::Const::degToRad);
+                }
+            }
+            ImGui::End();
+        });
+#endif
 }
 
 //public
@@ -121,11 +150,21 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE:
             //toggleQuitReady();
             break;
-        case SDLK_KP_0:
-            setActiveCamera(CameraID::Player);
-            break;
         case SDLK_KP_1:
+        case SDLK_1:
+            setActiveCamera(CameraID::Side);
+            break;
+        case SDLK_KP_2:
+        case SDLK_2:
+            setActiveCamera(CameraID::Front);
+            break;
+        case SDLK_KP_3:
+        case SDLK_3:
             setActiveCamera(CameraID::Overhead);
+            break;
+        case SDLK_KP_4:
+        case SDLK_4:
+            setActiveCamera(CameraID::Player);
             break;
         }
     }
@@ -137,6 +176,12 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         default: break;
         case cro::GameController::ButtonA:
             //toggleQuitReady();
+            break;
+        case cro::GameController::ButtonLeftShoulder:
+            setActiveCamera((m_activeCamera + (CameraID::Count - 1)) % CameraID::Count);
+            break;
+        case cro::GameController::ButtonRightShoulder:
+            setActiveCamera((m_activeCamera + 1) % CameraID::Count);
             break;
         }
     }
@@ -177,6 +222,20 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
 
 void BilliardsState::handleMessage(const cro::Message& msg)
 {
+    switch (msg.id)
+    {
+    default: break;
+    case cro::Message::WindowMessage:
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            resizeBuffers();
+        }
+    }
+        break;
+    }
+
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
@@ -271,49 +330,59 @@ void BilliardsState::buildScene()
     }
 
     //update the 3D view
-    auto updateView = [&](cro::Camera& cam)
+    resizeBuffers();
+    
+    struct CameraProperties final
     {
-        auto vpSize = calcVPSize();
-
-        auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float maxScale = std::floor(winSize.y / vpSize.y);
-        float scale = m_sharedData.pixelScale ? maxScale : 1.f;
-        auto texSize = winSize / scale;
-        m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
-
-        auto invScale = (maxScale + 1.f) - scale;
-        /*glCheck(glPointSize(invScale * BallPointSize));
-        glCheck(glLineWidth(invScale));*/
-
-        m_scaleBuffer.setData(&invScale);
-
-        glm::vec2 scaledRes = texSize / invScale;
-        m_resolutionBuffer.setData(&scaledRes);
-
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 5.f);
-        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+        float FOVAdjust = 1.f;
     };
 
-    auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({-1.5f, 0.8f, 0.f});
-    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
-    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
-    m_cameras[CameraID::Player] = camEnt;
-    auto& cam = camEnt.getComponent<cro::Camera>();
-    cam.resizeCallback = updateView;
-    updateView(cam);
-
-    static constexpr std::uint32_t ShadowMapSize = 2048u;
-    cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
-
-    //overhead cam
     auto setPerspective = [&](cro::Camera& cam)
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, 10.f);
+        //fudge to see which camera we're working on 
+        auto ent = std::find_if(m_cameras.begin(), m_cameras.end(), [&cam](const cro::Entity& c)
+            {
+                return c.isValid() && c.getComponent<cro::Camera>() == cam;
+            });
+
+        float fovMultiplier = 1.f;
+        if (ent != m_cameras.end() && 
+            ent->isValid())
+        {
+            fovMultiplier = ent->getComponent<CameraProperties>().FOVAdjust;
+        }
+
+        cam.setPerspective(m_sharedData.fov * fovMultiplier * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
+
+    auto camEnt = m_gameScene.getActiveCamera();
+    camEnt.getComponent<cro::Transform>().setPosition({ -1.5f, 0.8f, 0.f });
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
+    camEnt.addComponent<CameraProperties>();
+    m_cameras[CameraID::Side] = camEnt;
+    auto& cam = camEnt.getComponent<cro::Camera>();
+    cam.resizeCallback = setPerspective;
+    setPerspective(cam);
+
+    static constexpr std::uint32_t ShadowMapSize = 2048u;
+    cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+
+    //front cam
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 1.8f });
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
+    camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+    camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.addComponent<CameraProperties>();
+    setPerspective(camEnt.getComponent<cro::Camera>());
+    m_cameras[CameraID::Front] = camEnt;
+
+    //overhead cam
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 2.f, 0.f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
@@ -321,10 +390,30 @@ void BilliardsState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.addComponent<CameraProperties>();
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Overhead] = camEnt;
 
 
+    //player cam is a bit more complicated because it can be rotated
+    //by the player, and transformed by the game.
+    m_cameraController = m_gameScene.createEntity();
+    m_cameraController.addComponent<cro::Transform>();
+
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.353f, 0.376f });
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -23.5f * cro::Util::Const::degToRad);
+    camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+    camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.addComponent<CameraProperties>().FOVAdjust = 0.9f;
+    m_cameras[CameraID::Player] = camEnt;
+    setPerspective(camEnt.getComponent<cro::Camera>());
+
+    m_cameraController.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
+
+
+    //lights point straight down in billiards.
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
 
     createUI();
@@ -414,6 +503,9 @@ void BilliardsState::spawnBall(const ActorInfo& info)
         default: break;
         case 0: //cueball
             entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::White);
+
+            m_cameraController.getComponent<cro::Transform>().setPosition(info.position);
+            setActiveCamera(CameraID::Player);
             break;
         case 1:
         case 2:
@@ -473,4 +565,26 @@ void BilliardsState::setActiveCamera(std::int32_t camID)
     m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = false;
     m_gameScene.setActiveCamera(m_cameras[camID]);
     m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+
+    m_activeCamera = camID;
+}
+
+void BilliardsState::resizeBuffers()
+{
+    glm::vec2 winSize(cro::App::getWindow().getSize());
+
+    auto vpSize = calcVPSize();
+    float maxScale = std::floor(winSize.y / vpSize.y);
+    float scale = m_sharedData.pixelScale ? maxScale : 1.f;
+    auto texSize = winSize / scale;
+    m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+
+    auto invScale = (maxScale + 1.f) - scale;
+    /*glCheck(glPointSize(invScale * BallPointSize));
+    glCheck(glLineWidth(invScale));*/
+
+    m_scaleBuffer.setData(&invScale);
+
+    glm::vec2 scaledRes = texSize / invScale;
+    m_resolutionBuffer.setData(&scaledRes);
 }

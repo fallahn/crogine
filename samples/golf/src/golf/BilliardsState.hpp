@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 namespace cro
 {
@@ -46,7 +47,7 @@ namespace cro
 struct SharedStateData;
 struct ActorInfo;
 struct BilliardsUpdate;
-class BilliardsState final : public cro::State 
+class BilliardsState final : public cro::State , public cro::GuiClient
 {
 public:
     BilliardsState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -79,13 +80,19 @@ private:
     {
         enum
         {
-            Player,
+            Side,
+            Front,
             Overhead,
+            Player,
 
             Count
         };
     };
     std::array<cro::Entity, CameraID::Count> m_cameras;
+    cro::Entity m_cameraController; //player cam is parented to this
+    std::int32_t m_activeCamera;
+
+
     std::int32_t m_gameMode;
 
     void loadAssets();
@@ -97,6 +104,7 @@ private:
     void updateBall(const BilliardsUpdate&);
 
     void setActiveCamera(std::int32_t);
+    void resizeBuffers();
 
     //**BilliardsStateUI.cpp**//
     void createUI();
