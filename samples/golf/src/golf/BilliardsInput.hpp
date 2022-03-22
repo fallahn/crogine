@@ -65,9 +65,11 @@ private:
 
     std::uint16_t m_inputFlags;
     std::uint16_t m_prevFlags;
+    std::uint16_t m_prevStick;
 
     float m_mouseMove;
     float m_prevMouseMove;
+    float m_analogueAmount;
 
     bool m_active;
 
@@ -78,4 +80,6 @@ private:
 
     cro::Entity m_camEntity;
     cro::Entity m_cueEntity;
+
+    void checkController(float);
 };

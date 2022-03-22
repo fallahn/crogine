@@ -46,6 +46,9 @@ namespace
     constexpr float PowerStep = 0.1f;
     constexpr float MinPower = PowerStep;
     constexpr float MaxSpin = cro::Util::Const::PI / 6.f;
+
+    constexpr std::int16_t DeadZone = 8000;
+    constexpr float AnalogueDeadZone = 0.2f;
 }
 
 BilliardsInput::BilliardsInput(const InputBinding& ip, cro::MessageBus& mb)
@@ -53,8 +56,10 @@ BilliardsInput::BilliardsInput(const InputBinding& ip, cro::MessageBus& mb)
     m_messageBus    (mb),
     m_inputFlags    (0),
     m_prevFlags     (0),
+    m_prevStick     (0),
     m_mouseMove     (0.f),
     m_prevMouseMove (0.f),
+    m_analogueAmount(1.f),
     m_active        (true),
     m_power         (0.5f),
     m_topSpin       (0.f),
@@ -91,11 +96,13 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
         {
-            m_inputFlags |= InputFlag::NextClub;
+            //m_inputFlags |= InputFlag::NextClub;
+            m_power = std::min(MaxPower, m_power + PowerStep);
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
         {
-            m_inputFlags |= InputFlag::PrevClub;
+            //m_inputFlags |= InputFlag::PrevClub;
+            m_power = std::max(MinPower, m_power - PowerStep);
         }
     }
     else if (evt.type == SDL_KEYUP)
@@ -250,6 +257,8 @@ void BilliardsInput::update(float dt)
 {
     if (m_active)
     {
+        checkController(dt);
+
         if (m_mouseMove)
         {
             if (*m_camEntity.getComponent<ControllerRotation>().activeCamera)
@@ -272,7 +281,7 @@ void BilliardsInput::update(float dt)
             }
             else
             {
-                //some other view so just rotate the camera
+                //some other view so just rotate the camera - TODO use the angle to the mouse cursor, but how to do with controller?
                 m_camEntity.getComponent<ControllerRotation>().rotation += CamRotationSpeedFast * m_mouseMove * dt;
                 m_camEntity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camEntity.getComponent<ControllerRotation>().rotation);
             }
@@ -280,19 +289,19 @@ void BilliardsInput::update(float dt)
 
         if (m_inputFlags & InputFlag::Left)
         {
-            m_sideSpin = std::max(-MaxSpin, m_sideSpin - dt);
+            m_sideSpin = std::max(-MaxSpin, m_sideSpin - (dt * m_analogueAmount));
         }
         if (m_inputFlags & InputFlag::Right)
         {
-            m_sideSpin = std::min(MaxSpin, m_sideSpin + dt);
+            m_sideSpin = std::min(MaxSpin, m_sideSpin + (dt * m_analogueAmount));
         }
         if (m_inputFlags & InputFlag::Up)
         {
-            m_topSpin = std::max(-MaxSpin, m_topSpin - dt);
+            m_topSpin = std::max(-MaxSpin, m_topSpin - (dt * m_analogueAmount));
         }
         if (m_inputFlags & InputFlag::Down)
         {
-            m_topSpin = std::min(MaxSpin, m_topSpin + dt);
+            m_topSpin = std::min(MaxSpin, m_topSpin + (dt * m_analogueAmount));
         }
         if (m_inputFlags & (InputFlag::Up | InputFlag::Down | InputFlag::Left | InputFlag::Right))
         {
@@ -348,4 +357,93 @@ std::pair<glm::vec3, glm::vec3> BilliardsInput::getImpulse() const
     offset = m_spinOffset * offset;
 
     return { glm::vec3(direction) * m_power, glm::vec3(offset) };
+}
+
+void BilliardsInput::checkController(float dt)
+{
+    m_analogueAmount = 1.f;
+
+    if (!cro::GameController::isConnected(m_inputBinding.controllerID))
+    {
+        return;
+    }
+
+    //triggers to set power
+    float powerUp = static_cast<float>(cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::TriggerRight)) / cro::GameController::AxisMax;
+    if (powerUp > AnalogueDeadZone)
+    {
+        m_power = std::min(MaxPower, m_power + (PowerStep * powerUp * dt));
+    }
+
+    float powerDown = static_cast<float>(cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::TriggerLeft)) / cro::GameController::AxisMax;
+    if (powerDown > AnalogueDeadZone)
+    {
+        m_power = std::max(MinPower, m_power - (PowerStep * powerDown * dt));
+    }
+
+    //left stick to adjust spin
+    auto startInput = m_inputFlags;
+    float xPos = cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::AxisLeftX);
+    if (xPos < -DeadZone)
+    {
+        m_inputFlags |= InputFlag::Left;
+    }
+    else if (m_prevStick & InputFlag::Left)
+    {
+        m_inputFlags &= ~InputFlag::Left;
+    }
+
+    if (xPos > DeadZone)
+    {
+        m_inputFlags |= InputFlag::Right;
+    }
+    else if (m_prevStick & InputFlag::Right)
+    {
+        m_inputFlags &= ~InputFlag::Right;
+    }
+
+    float yPos = cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::AxisLeftY);
+    if (yPos > (DeadZone))
+    {
+        m_inputFlags |= InputFlag::Down;
+        m_inputFlags &= ~InputFlag::Up;
+    }
+    else if (m_prevStick & InputFlag::Down)
+    {
+        m_inputFlags &= ~InputFlag::Down;
+    }
+
+    if (yPos < (-DeadZone))
+    {
+        m_inputFlags |= InputFlag::Up;
+        m_inputFlags &= ~InputFlag::Down;
+    }
+    else if (m_prevStick & InputFlag::Up)
+    {
+        m_inputFlags &= ~InputFlag::Up;
+    }
+
+    float len2 = (xPos * xPos) + (yPos * yPos);
+    static const float MinLen2 = (DeadZone * DeadZone);
+    if (len2 > MinLen2)
+    {
+        m_analogueAmount = std::sqrt(len2) / (cro::GameController::AxisMax - DeadZone);
+    }
+
+    if (startInput ^ m_inputFlags)
+    {
+        m_prevStick = m_inputFlags;
+    }
+
+
+    //right stick emulates mouse movement (but shouldn't overwrite it)
+    if (m_mouseMove == 0)
+    {
+        float xMove = static_cast<float>(cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::AxisRightX)) / cro::GameController::AxisMax;
+
+        if (xMove > AnalogueDeadZone || xMove < -AnalogueDeadZone)
+        {
+            m_mouseMove = xMove * 0.5f;
+        }
+    }
 }

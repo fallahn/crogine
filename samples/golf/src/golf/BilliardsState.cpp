@@ -628,6 +628,8 @@ void BilliardsState::setActiveCamera(std::int32_t camID)
     m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 
     m_activeCamera = camID;
+
+    cro::App::getWindow().setMouseCaptured(camID == CameraID::Player);
 }
 
 void BilliardsState::resizeBuffers()
