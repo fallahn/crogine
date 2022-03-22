@@ -347,29 +347,37 @@ void BilliardsSystem::applyImpulse(glm::vec3 dir, glm::vec3 offset)
     if (m_cueball)
     {
         m_cueball->activate();
-        m_cueball->applyImpulse(glmToBt(dir), glmToBt(offset));
+        m_cueball->applyImpulse(glmToBt(dir), glmToBt(offset / 4.f));
     }
 }
 
 //private
 btRigidBody::btRigidBodyConstructionInfo BilliardsSystem::createBodyDef(std::int32_t collisionID, float mass, btCollisionShape* shape, btMotionState* motionState)
 {
-    btRigidBody::btRigidBodyConstructionInfo info(mass, motionState, shape);
+    btVector3 inertia(0.f, 0.f, 0.f);
+    if (mass > 0.f)
+    {
+        shape->calculateLocalInertia(mass, inertia);
+    }
+
+
+    btRigidBody::btRigidBodyConstructionInfo info(mass, motionState, shape, inertia);
 
     switch (collisionID)
     {
     default: break;
     case CollisionID::Table:
-        
+        info.m_friction = 0.26f;
         break;
     case CollisionID::Cushion:
         info.m_restitution = 0.5f;
+        info.m_friction = 0.28f;
         break;
     case CollisionID::Ball:
         info.m_restitution = 0.5f;
-        info.m_rollingFriction = 0.1f;
-        info.m_spinningFriction = 0.1f;
-        info.m_friction = 0.01f;
+        info.m_rollingFriction = 0.0013f;
+        info.m_spinningFriction = 0.0013f;
+        info.m_friction = 0.15f;
         info.m_linearSleepingThreshold = 0.001f; //if this is 0 then we never sleep...
         info.m_angularSleepingThreshold = 0.001f;
         break;
@@ -491,6 +499,8 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
     body->setCcdMotionThreshold(BilliardBall::Radius * 0.5f);
     body->setCcdSweptSphereRadius(BilliardBall::Radius);
     
+    body->setAnisotropicFriction(m_ballShape->getAnisotropicRollingFrictionDirection(), btCollisionObject::CF_ANISOTROPIC_ROLLING_FRICTION);
+
     m_collisionWorld->addRigidBody(body.get(), (1 << CollisionID::Ball), (1 << CollisionID::Table) | (1 << CollisionID::Cushion) | (1 << CollisionID::Ball));
 
     ball.m_physicsBody = body.get();

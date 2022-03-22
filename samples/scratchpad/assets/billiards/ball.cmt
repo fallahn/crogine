@@ -1,6 +1,7 @@
 model pool_collision
 {
-    mesh = sphere
+    mesh = cube
+    size = 0.056, 0.056, 0.056
     radius = 0.025
     cast_shadows = false
 

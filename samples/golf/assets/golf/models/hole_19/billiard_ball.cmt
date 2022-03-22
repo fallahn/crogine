@@ -1,6 +1,7 @@
 model billiard_ball
 {
     mesh = sphere
+    size = 0.052, 0.052, 0.052
     radius = 0.027000
     cast_shadows = true
 

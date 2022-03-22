@@ -45,6 +45,7 @@ namespace
     constexpr float MaxCueRotation = cro::Util::Const::PI / 16.f;
     constexpr float PowerStep = 0.1f;
     constexpr float MinPower = PowerStep;
+    constexpr float MaxSpin = cro::Util::Const::PI / 6.f;
 }
 
 BilliardsInput::BilliardsInput(const InputBinding& ip, cro::MessageBus& mb)
@@ -55,7 +56,10 @@ BilliardsInput::BilliardsInput(const InputBinding& ip, cro::MessageBus& mb)
     m_mouseMove     (0.f),
     m_prevMouseMove (0.f),
     m_active        (true),
-    m_power         (0.1f)
+    m_power         (0.5f),
+    m_topSpin       (0.f),
+    m_sideSpin      (0.f),
+    m_spinOffset    (1.f, 0.f, 0.f, 0.f)
 {
 
 }
@@ -274,6 +278,28 @@ void BilliardsInput::update(float dt)
             }
         }
 
+        if (m_inputFlags & InputFlag::Left)
+        {
+            m_sideSpin = std::max(-MaxSpin, m_sideSpin - dt);
+        }
+        if (m_inputFlags & InputFlag::Right)
+        {
+            m_sideSpin = std::min(MaxSpin, m_sideSpin + dt);
+        }
+        if (m_inputFlags & InputFlag::Up)
+        {
+            m_topSpin = std::max(-MaxSpin, m_topSpin - dt);
+        }
+        if (m_inputFlags & InputFlag::Down)
+        {
+            m_topSpin = std::min(MaxSpin, m_topSpin + dt);
+        }
+        if (m_inputFlags & (InputFlag::Up | InputFlag::Down | InputFlag::Left | InputFlag::Right))
+        {
+            m_spinOffset = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), m_topSpin, cro::Transform::X_AXIS);
+            m_spinOffset = glm::rotate(m_spinOffset, m_sideSpin, cro::Transform::Y_AXIS);
+        }
+
         auto diff = m_prevFlags ^ m_inputFlags;
         if ((diff & m_inputFlags & InputFlag::Action) != 0)
         {
@@ -288,6 +314,16 @@ void BilliardsInput::update(float dt)
     
     m_prevMouseMove = m_mouseMove;
     m_mouseMove = 0;
+}
+
+void BilliardsInput::setActive(bool active)
+{
+    m_active = active;
+
+    m_topSpin = 0.f;
+    m_sideSpin = 0.f;
+    m_power = 0.5f;
+    m_spinOffset = glm::quat(1.f, 0.f, 0.f, 0.f);
 }
 
 void BilliardsInput::setControlEntities(cro::Entity camera, cro::Entity cue)
@@ -308,7 +344,8 @@ std::pair<glm::vec3, glm::vec3> BilliardsInput::getImpulse() const
 
     direction = rotation * direction;
 
-    //TODO read offset
+    glm::vec4 offset = rotation * glm::vec4(0.f, 0.f, 0.028f, 0.f); //ball radius(ish)
+    offset = m_spinOffset * offset;
 
-    return { glm::vec3(direction) * m_power, glm::vec3(0.f) };
+    return { glm::vec3(direction) * m_power, glm::vec3(offset) };
 }

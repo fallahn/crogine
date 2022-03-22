@@ -33,6 +33,7 @@ source distribution.
 
 #include <crogine/core/Window.hpp>
 #include <crogine/ecs/Entity.hpp>
+#include <crogine/detail/glm/gtc/quaternion.hpp>
 
 struct ControllerRotation final
 {
@@ -48,13 +49,15 @@ public:
     void handleEvent(const cro::Event&);
     void update(float);
 
-    void setActive(bool active) { m_active = active; }
+    void setActive(bool active);
     void setControlEntities(cro::Entity cam, cro::Entity cue);
 
     std::pair<glm::vec3, glm::vec3> getImpulse() const;
 
-    static constexpr float MaxPower = 0.7f;
+    static constexpr float MaxPower = 1.f;
     float getPower() const { return m_power; }
+
+    const glm::quat& getSpinOffset() const { return m_spinOffset; }
 
 private:
     const InputBinding& m_inputBinding;
@@ -69,6 +72,9 @@ private:
     bool m_active;
 
     float m_power;
+    float m_topSpin;
+    float m_sideSpin;
+    glm::quat m_spinOffset;
 
     cro::Entity m_camEntity;
     cro::Entity m_cueEntity;

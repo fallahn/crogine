@@ -42,6 +42,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
@@ -330,6 +331,7 @@ void BilliardsState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_gameScene.addSystem<cro::CommandSystem>(mb);
+    m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
