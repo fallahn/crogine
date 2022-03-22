@@ -84,6 +84,14 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             spawnBall(addBall(m_activeDirector->getCueballPosition(), CueBall));
         }
     }
+    else if (msg.id == sv::MessageID::ConnectionMessage)
+    {
+        const auto& data = msg.getData<ConnectionEvent>();
+        if (data.type == ConnectionEvent::Disconnected)
+        {
+            //TODO default win the game to remaining player
+        }
+    }
 
     m_scene.forwardMessage(msg);
 }
@@ -98,8 +106,13 @@ void BilliardsState::netEvent(const cro::NetEvent& evt)
         case PacketID::InputUpdate:
         {
             auto data = evt.packet.as<BilliardBallInput>();
-            //TODO validate active player with director
-            m_scene.getSystem<BilliardsSystem>()->applyImpulse(data.impulse, data.offset);
+            auto currentPlayer = m_activeDirector->getCurrentPlayer();
+
+            if (data.client == m_playerInfo[currentPlayer].client
+                && data.player == m_playerInfo[currentPlayer].player)
+            {
+                m_scene.getSystem<BilliardsSystem>()->applyImpulse(data.impulse, data.offset);
+            }
         }
             break;
         case PacketID::ClientReady:
@@ -108,9 +121,6 @@ void BilliardsState::netEvent(const cro::NetEvent& evt)
                 sendInitialGameState(evt.packet.as<std::uint8_t>());
             }
             break;
-        /*case PacketID::InputUpdate:
-            handlePlayerInput(evt.packet);
-            break;*/
         case PacketID::ServerCommand:
             if (evt.peer.getID() == m_sharedData.hostID)
             {
@@ -211,12 +221,24 @@ void BilliardsState::initScene()
         m_activeDirector = m_scene.addDirector<EightballDirector>();
         break;
     }
+
+    for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
+    {
+        if (m_sharedData.clients[i].connected)
+        {
+            for (auto j = 0u; j < m_sharedData.clients[i].playerCount && m_playerInfo.size() < 2u; ++j)
+            {
+                auto& player = m_playerInfo.emplace_back();
+                player.client = i;
+                player.player = j;
+            }
+        }
+    }
 }
 
 void BilliardsState::buildWorld()
 {
     m_scene.getSystem<BilliardsSystem>()->initTable(m_tableData);
-
 
     if (m_activeDirector)
     {
@@ -320,9 +342,9 @@ void BilliardsState::setNextPlayer()
 {
     //TODO update scores
 
-    //broadcast PacketID::SetPlayer
-    //TODO include relevant player ID
-    m_sharedData.host.broadcastPacket(PacketID::SetPlayer, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    auto info = m_playerInfo[m_activeDirector->getCurrentPlayer()];
+    m_sharedData.host.broadcastPacket(PacketID::SetPlayer, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    LogI << "Sent client " << (int)info.client << ", player " << (int)info.player << std::endl;
 
     m_turnTimer.restart();
 }

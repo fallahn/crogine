@@ -71,6 +71,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_gameScene         (ctx.appInstance.getMessageBus()),
     m_uiScene           (ctx.appInstance.getMessageBus()),
     m_inputParser       (sd.inputBinding, ctx.appInstance.getMessageBus()),
+    m_currentPlayer     (0),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_viewScale         (2.f),
@@ -215,7 +216,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
                     idx = std::max(0, i - 1);
                 }
                 //update the input parser in case this player is active
-                //m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer.player];
+                m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer];
                 break;
             }
         }
@@ -250,9 +251,12 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             auto [impulse, offset] = m_inputParser.getImpulse();
             input.impulse = impulse;
             input.offset = offset;
-            //TODO set active player
+            input.client = m_sharedData.localConnectionData.connectionID;
+            input.player = m_currentPlayer;
 
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+            m_inputParser.setActive(false);
         }
     }
     break;
@@ -478,6 +482,11 @@ void BilliardsState::buildScene()
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
 
     createUI();
+
+
+    //TODO this wants to be done after any animation
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete,
+        m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
@@ -511,11 +520,7 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
             break;
         case PacketID::SetPlayer:
             m_wantsGameState = false;
-
-            //TODO this wants to be done after any animation
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete,
-                m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
+            setPlayer(evt.packet.as<BilliardsPlayer>());
             break;
         case PacketID::ClientDisconnected:
             //TODO we should only have 2 clients max
@@ -555,6 +560,23 @@ void BilliardsState::spawnBall(const ActorInfo& info)
 
     m_ballDefinition.createModel(entity);
     
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
+        progress = std::min(1.f, progress + dt);
+        
+        float scale = cro::Util::Easing::easeInOutBack(progress);
+        e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+
+        if (progress == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
 
     //set colour/model based on type stored in info.state
     if (m_gameMode == TableData::Eightball)
@@ -619,6 +641,19 @@ void BilliardsState::updateBall(const BilliardsUpdate& info)
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+}
+
+void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
+{
+
+
+    //TODO wait for animation to finish first
+    if (playerInfo.client == m_sharedData.localConnectionData.connectionID)
+    {
+        m_inputParser.setActive(true);
+        m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[playerInfo.player];
+        m_currentPlayer = playerInfo.player;
+    }
 }
 
 void BilliardsState::setActiveCamera(std::int32_t camID)

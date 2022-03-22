@@ -42,7 +42,10 @@ public:
 
     glm::vec3 getCueballPosition() const override;
 
+    std::size_t getCurrentPlayer() const override { return m_currentPlayer; }
+
 private:
     std::vector<BallInfo> m_ballLayout;
     glm::vec3 m_cubeballPosition;
+    std::size_t m_currentPlayer;
 };

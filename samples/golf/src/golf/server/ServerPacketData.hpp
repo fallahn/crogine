@@ -110,3 +110,10 @@ struct BilliardBallInput final
     std::uint8_t client = 0;
     std::uint8_t player = 0;
 };
+
+struct BilliardsPlayer final
+{
+    std::uint8_t client = 0;
+    std::uint8_t player = 0;
+    std::int32_t score = 0;
+};

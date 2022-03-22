@@ -46,6 +46,12 @@ source distribution.
 #include <crogine/ecs/components/UIInput.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/util/Random.hpp>
+
+namespace
+{
+#include "RandNames.hpp"
+}
 
 void ClubhouseState::createUI()
 {
@@ -356,6 +362,107 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+
+    //add player button
+    entity = m_uiScene.createEntity();
+    entity.setLabel("Add Player");
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, MenuBottomBorder };
+    entity.getComponent<UIElement>().relativePosition = { 0.3334f, 0.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::AddPlayer];
+    bounds = m_sprites[SpriteID::AddPlayer].getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::PlayerSelect);
+    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
+    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = hideTip;
+    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Enter] = showTip;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, mouseEnter, mouseExit](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    //applyTextEdit();
+                    if (m_sharedData.localConnectionData.playerCount < 2)
+                    {
+                        auto index = m_sharedData.localConnectionData.playerCount;
+
+                        if (m_sharedData.localConnectionData.playerData[index].name.empty())
+                        {
+                            m_sharedData.localConnectionData.playerData[index].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
+                        }
+                        m_sharedData.localConnectionData.playerCount++;
+
+                        //updateLocalAvatars(mouseEnter, mouseExit);
+
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    }
+                }
+            });
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    //remove player button
+    entity = m_uiScene.createEntity();
+    entity.setLabel("Remove Player");
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, MenuBottomBorder };
+    entity.getComponent<UIElement>().relativePosition = { 0.6667f, 0.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::RemovePlayer];
+    bounds = m_sprites[SpriteID::RemovePlayer].getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::PlayerSelect);
+    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
+    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = hideTip;
+    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Enter] = showTip;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, mouseEnter, mouseExit](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    //applyTextEdit();
+
+                    if (m_sharedData.localConnectionData.playerCount > 1)
+                    {
+                        m_sharedData.localConnectionData.playerCount--;
+                        //updateLocalAvatars(mouseEnter, mouseExit);
+
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                    }
+                }
+            });
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+
+    //TEMP status text
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        if (m_sharedData.localConnectionData.playerCount == 1)
+        {
+            e.getComponent<cro::Text>().setString("Host or Join");
+        }
+        else
+        {
+            e.getComponent<cro::Text>().setString("Start Game");
+        }
+    };
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
     //continue

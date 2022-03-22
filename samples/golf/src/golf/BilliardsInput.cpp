@@ -60,7 +60,7 @@ BilliardsInput::BilliardsInput(const InputBinding& ip, cro::MessageBus& mb)
     m_mouseMove     (0.f),
     m_prevMouseMove (0.f),
     m_analogueAmount(1.f),
-    m_active        (true),
+    m_active        (false),
     m_power         (0.5f),
     m_topSpin       (0.f),
     m_sideSpin      (0.f),
@@ -97,12 +97,12 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
         {
             //m_inputFlags |= InputFlag::NextClub;
-            m_power = std::min(MaxPower, m_power + PowerStep);
+            if (m_active) m_power = std::min(MaxPower, m_power + PowerStep);
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
         {
             //m_inputFlags |= InputFlag::PrevClub;
-            m_power = std::max(MinPower, m_power - PowerStep);
+            if (m_active) m_power = std::max(MinPower, m_power - PowerStep);
         }
     }
     else if (evt.type == SDL_KEYUP)
@@ -243,7 +243,8 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_MOUSEWHEEL)
+    else if (evt.type == SDL_MOUSEWHEEL
+        && m_active)
     {
         m_power = std::max(MinPower, std::min(MaxPower, m_power + (PowerStep * evt.wheel.y)));
     }
@@ -329,10 +330,13 @@ void BilliardsInput::setActive(bool active)
 {
     m_active = active;
 
-    m_topSpin = 0.f;
-    m_sideSpin = 0.f;
-    m_power = 0.5f;
-    m_spinOffset = glm::quat(1.f, 0.f, 0.f, 0.f);
+    if (active)
+    {
+        m_topSpin = 0.f;
+        m_sideSpin = 0.f;
+        m_power = 0.5f;
+        m_spinOffset = glm::quat(1.f, 0.f, 0.f, 0.f);
+    }
 }
 
 void BilliardsInput::setControlEntities(cro::Entity camera, cro::Entity cue)

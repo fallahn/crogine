@@ -148,6 +148,8 @@ public:
 
 private:
 
+    std::int32_t m_awakeCount;
+
     std::unique_ptr<btCollisionConfiguration> m_collisionConfiguration;
     std::unique_ptr<btCollisionDispatcher> m_collisionDispatcher;
     std::unique_ptr<btBroadphaseInterface> m_broadphaseInterface;

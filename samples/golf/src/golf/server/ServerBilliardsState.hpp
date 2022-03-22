@@ -65,6 +65,7 @@ namespace sv
         cro::Clock m_serverTime;
 
         BilliardsDirector* m_activeDirector;
+        std::vector<BilliardsPlayer> m_playerInfo;
 
         TableData m_tableData;
         bool validateData();

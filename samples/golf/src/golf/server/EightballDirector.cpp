@@ -28,7 +28,10 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "EightballDirector.hpp"
+#include "ServerMessages.hpp"
 #include "../BilliardsSystem.hpp"
+
+#include <crogine/util/Random.hpp>
 
 namespace
 {
@@ -36,7 +39,8 @@ namespace
 }
 
 EightballDirector::EightballDirector()
-    : m_cubeballPosition(0.f, BallHeight, 0.56f)
+    : m_cubeballPosition(0.f, BallHeight, 0.56f),
+    m_currentPlayer     (cro::Util::Random::value(0,1))
 {
     static constexpr glm::vec3 Offset(0.f, BallHeight, 0.0935f - 0.55f); //distance to 8 ball minus distance to spot
 
@@ -69,9 +73,16 @@ EightballDirector::EightballDirector()
 }
 
 //public
-void EightballDirector::handleMessage(const cro::Message&)
+void EightballDirector::handleMessage(const cro::Message& msg)
 {
-
+    if (msg.id == sv::MessageID::BilliardsMessage)
+    {
+        const auto& data = msg.getData<BilliardsEvent>();
+        if (data.type == BilliardsEvent::TurnEnded)
+        {
+            LogI << "Turn ended" << std::endl;
+        }
+    }
 }
 
 const std::vector<BallInfo>& EightballDirector::getBallLayout() const

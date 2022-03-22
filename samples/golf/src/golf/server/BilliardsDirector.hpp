@@ -54,4 +54,6 @@ public:
     virtual const std::vector<BallInfo>& getBallLayout() const = 0;
 
     virtual glm::vec3 getCueballPosition() const = 0;
+
+    virtual std::size_t getCurrentPlayer() const = 0;
 };

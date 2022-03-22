@@ -143,6 +143,7 @@ const std::array<std::string, CollisionID::Count> CollisionID::Labels =
 
 BilliardsSystem::BilliardsSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(BilliardsSystem)),
+    m_awakeCount(0),
     m_cueball   (nullptr)
 {
     requireComponent<BilliardBall>();
@@ -190,9 +191,12 @@ BilliardsSystem::~BilliardsSystem()
 void BilliardsSystem::process(float dt)
 {
     m_collisionWorld->stepSimulation(dt, 10, 1.f/120.f);
+
 #ifdef CRO_DEBUG_
     m_collisionWorld->debugDrawWorld();
 #endif
+
+    std::int32_t awakeCount = 0;
 
     //we either have to iterate before AND after collision test
     //else we can do it once and accept the results are one frame late
@@ -229,9 +233,24 @@ void BilliardsSystem::process(float dt)
             msg->type = BilliardsEvent::OutOfBounds;
             msg->first = ball.id;
         }
+
+        if (ball.m_physicsBody->isActive())
+        {
+            awakeCount++;
+        }
     }
 
     doBallCollision();
+
+
+    //notify if balls came to rest
+    if (awakeCount == 0
+        && awakeCount != m_awakeCount)
+    {
+        auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+        msg->type = BilliardsEvent::TurnEnded;
+    }
+    m_awakeCount = awakeCount;
 }
 
 void BilliardsSystem::initTable(const TableData& tableData)

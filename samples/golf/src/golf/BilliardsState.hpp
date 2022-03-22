@@ -48,6 +48,8 @@ namespace cro
 struct SharedStateData;
 struct ActorInfo;
 struct BilliardsUpdate;
+struct BilliardsPlayer;
+
 class BilliardsState final : public cro::State , public cro::GuiClient
 {
 public:
@@ -68,6 +70,7 @@ private:
     cro::ResourceCollection m_resources;
 
     BilliardsInput m_inputParser;
+    std::uint8_t m_currentPlayer;
 
     cro::RenderTexture m_gameSceneTexture;
     cro::UniformBuffer m_scaleBuffer;
@@ -104,6 +107,7 @@ private:
     void handleNetEvent(const cro::NetEvent&);
     void spawnBall(const ActorInfo&);
     void updateBall(const BilliardsUpdate&);
+    void setPlayer(const BilliardsPlayer&);
 
     void setActiveCamera(std::int32_t);
     void resizeBuffers();
