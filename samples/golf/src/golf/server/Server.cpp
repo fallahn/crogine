@@ -42,7 +42,8 @@ source distribution.
 #include <functional>
 
 Server::Server()
-    : m_running(false)
+    : m_maxConnections  (ConstVal::MaxClients),
+    m_running           (false)
 {
 
 }
@@ -56,7 +57,7 @@ Server::~Server()
 }
 
 //public
-void Server::launch()
+void Server::launch(std::size_t maxConnections)
 {
     //stop any existing instance first
     stop();
@@ -66,6 +67,8 @@ void Server::launch()
     {
         m_sharedData.messageBus.poll();
     }
+
+    m_maxConnections = std::max(std::size_t(1u), std::min(ConstVal::MaxClients, maxConnections));
 
     m_running = true;
     m_thread = std::make_unique<std::thread>(&Server::run, this);
@@ -252,7 +255,7 @@ void Server::validatePeer(cro::NetPeer& peer)
 
     if (result != m_pendingConnections.end())
     {
-        if (auto i = addClient(peer); i >= ConstVal::MaxClients)
+        if (auto i = addClient(peer); i >= /*ConstVal::MaxClients*/m_maxConnections)
         {
             //tell client server is full
             m_sharedData.host.sendPacket(peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerFull), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);

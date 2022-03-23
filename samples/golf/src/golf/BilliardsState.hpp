@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "BilliardsInput.hpp"
+#include "server/ServerPacketData.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
@@ -46,9 +47,6 @@ namespace cro
 }
 
 struct SharedStateData;
-struct ActorInfo;
-struct BilliardsUpdate;
-struct BilliardsPlayer;
 
 class BilliardsState final : public cro::State , public cro::GuiClient
 {
@@ -99,6 +97,8 @@ private:
     std::int32_t m_activeCamera;
 
     std::int32_t m_gameMode;
+    TableInfo m_tableInfo;
+    cro::Entity m_cueball;
 
     void loadAssets();
     void addSystems();

@@ -117,3 +117,8 @@ struct BilliardsPlayer final
     std::uint8_t player = 0;
     std::int32_t score = 0;
 };
+
+struct TableInfo final
+{
+    glm::vec3 cueballPosition = glm::vec3(0.f);
+};

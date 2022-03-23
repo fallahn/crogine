@@ -144,6 +144,7 @@ const std::array<std::string, CollisionID::Count> CollisionID::Labels =
 BilliardsSystem::BilliardsSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(BilliardsSystem)),
     m_awakeCount(0),
+    m_shotActive(false),
     m_cueball   (nullptr)
 {
     requireComponent<BilliardBall>();
@@ -244,11 +245,14 @@ void BilliardsSystem::process(float dt)
 
 
     //notify if balls came to rest
-    if (awakeCount == 0
+    if (m_shotActive
+        && awakeCount == 0
         && awakeCount != m_awakeCount)
     {
         auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
         msg->type = BilliardsEvent::TurnEnded;
+
+        m_shotActive = false;
     }
     m_awakeCount = awakeCount;
 }
@@ -367,6 +371,10 @@ void BilliardsSystem::applyImpulse(glm::vec3 dir, glm::vec3 offset)
     {
         m_cueball->activate();
         m_cueball->applyImpulse(glmToBt(dir), glmToBt(offset / 4.f));
+        m_shotActive = true;
+
+        auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+        msg->type = BilliardsEvent::TurnBegan;
     }
 }
 

@@ -992,7 +992,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                     {
                         if (!m_sharedData.clientConnection.connected)
                         {
-                            m_sharedData.serverInstance.launch();
+                            m_sharedData.serverInstance.launch(ConstVal::MaxClients);
 
                             //small delay for server to get ready
                             cro::Clock clock;

@@ -71,7 +71,9 @@ struct BilliardsEvent final
         Collision,
         Pocket,
         OutOfBounds,
-        TurnEnded
+        TurnBegan,
+        TurnEnded,
+        PlayerSwitched
     }type = Collision;
     std::int8_t first = -1; //ballA
     std::int8_t second = -1; //ballB or pocketID

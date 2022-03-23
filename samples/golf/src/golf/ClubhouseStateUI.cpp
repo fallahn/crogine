@@ -491,7 +491,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                     {
                         if (!m_sharedData.clientConnection.connected)
                         {
-                            m_sharedData.serverInstance.launch();
+                            m_sharedData.serverInstance.launch(2);
 
                             //small delay for server to get ready
                             cro::Clock clock;
@@ -654,7 +654,7 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
                     if (m_sharedData.hosting)
                     {
                         //check all members ready
-                        bool ready = true;
+                        bool ready = (m_sharedData.localConnectionData.playerCount == 2 || m_sharedData.connectionData[1].playerCount == 1);
                         for (auto i = 0u; i < ConstVal::MaxClients; ++i)
                         {
                             if (m_sharedData.connectionData[i].playerCount != 0

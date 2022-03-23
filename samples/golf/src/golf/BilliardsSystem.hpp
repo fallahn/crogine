@@ -149,6 +149,7 @@ public:
 private:
 
     std::int32_t m_awakeCount;
+    bool m_shotActive;
 
     std::unique_ptr<btCollisionConfiguration> m_collisionConfiguration;
     std::unique_ptr<btCollisionDispatcher> m_collisionDispatcher;

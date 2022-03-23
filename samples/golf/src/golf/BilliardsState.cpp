@@ -58,6 +58,8 @@ source distribution.
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Easings.hpp>
+#include <crogine/util/Maths.hpp>
 #include <crogine/util/Network.hpp>
 
 namespace
@@ -173,6 +175,15 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         case SDLK_4:
             setActiveCamera(CameraID::Player);
             break;
+#ifdef CRO_DEBUG_
+        case SDLK_TAB:
+            if (m_activeCamera == CameraID::Player)
+            {
+                cro::App::getWindow().setMouseCaptured(false);
+            }
+            break;
+#endif //CRO_DEBUG_
+
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN
@@ -317,7 +328,7 @@ bool BilliardsState::simulate(float dt)
 
 void BilliardsState::render()
 {
-    m_gameSceneTexture.clear(cro::Colour::AliceBlue);
+    m_gameSceneTexture.clear(/*cro::Colour::AliceBlue*/);
     m_gameScene.render();
     m_gameSceneTexture.display();
 
@@ -427,7 +438,7 @@ void BilliardsState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.addComponent<CameraProperties>();
+    camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
     m_cameras[CameraID::Front] = camEnt;
     setPerspective(camEnt.getComponent<cro::Camera>());
 
@@ -439,7 +450,8 @@ void BilliardsState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.addComponent<CameraProperties>();
+    camEnt.addComponent<CameraProperties>().FOVAdjust = 0.75f;
+    camEnt.getComponent<CameraProperties>().farPlane = 2.5f;
     m_cameras[CameraID::Overhead] = camEnt;
     setPerspective(camEnt.getComponent<cro::Camera>());
 
@@ -451,13 +463,13 @@ void BilliardsState::buildScene()
     m_cameraController.addComponent<ControllerRotation>();
 
     camEnt = m_gameScene.createEntity();
-    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.353f, 0.376f });
-    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -23.5f * cro::Util::Const::degToRad);
+    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.367f, 0.423f });
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -26.7f * cro::Util::Const::degToRad);
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.addComponent<CameraProperties>().FOVAdjust = 0.9f;
-    camEnt.getComponent<CameraProperties>().farPlane = 2.f;
+    camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
+    camEnt.getComponent<CameraProperties>().farPlane = 3.f;
     m_cameras[CameraID::Player] = camEnt;
     setPerspective(camEnt.getComponent<cro::Camera>());
 
@@ -496,6 +508,9 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::TableInfo:
+            m_tableInfo = evt.packet.as<TableInfo>();
+            break;
         case PacketID::ActorUpdate:
             updateBall(evt.packet.as<BilliardsUpdate>());
             break;
@@ -567,7 +582,7 @@ void BilliardsState::spawnBall(const ActorInfo& info)
         [](cro::Entity e, float dt)
     {
         auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
-        progress = std::min(1.f, progress + dt);
+        progress = std::min(1.f, progress + (dt * 3.f));
         
         float scale = cro::Util::Easing::easeInOutBack(progress);
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
@@ -586,9 +601,9 @@ void BilliardsState::spawnBall(const ActorInfo& info)
         default: break;
         case 0: //cueball
             entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::White);
-
-            m_cameraController.getComponent<cro::Transform>().setPosition(info.position);
-            setActiveCamera(CameraID::Player);
+            m_cueball = entity;
+            //m_cameraController.getComponent<cro::Transform>().setPosition(info.position);
+            //setActiveCamera(CameraID::Player);
             break;
         case 1:
         case 2:
@@ -645,15 +660,75 @@ void BilliardsState::updateBall(const BilliardsUpdate& info)
 
 void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
 {
+    //TODO hide the cue model and wait for anim to finish to
+    //decide which cue model should be shown (local or remote)
 
 
-    //TODO wait for animation to finish first
-    if (playerInfo.client == m_sharedData.localConnectionData.connectionID)
+    struct TargetData final
     {
-        m_inputParser.setActive(true);
-        m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[playerInfo.player];
-        m_currentPlayer = playerInfo.player;
-    }
+        glm::vec3 camStart = glm::vec3(0.f);
+        glm::vec3 camTarget = glm::vec3(0.f);
+
+        float rotationStart = 0.f;
+        float rotationTarget = 0.f;
+
+        float elapsedTime = 0.f;
+    };
+
+    TargetData data;
+    data.camStart = m_cameraController.getComponent<cro::Transform>().getPosition();
+    data.camTarget = m_cueball.isValid() ? m_cueball.getComponent<cro::Transform>().getPosition() : m_tableInfo.cueballPosition;
+    data.rotationStart = m_cameraController.getComponent<ControllerRotation>().rotation;
+    data.rotationTarget = std::atan2(-data.camTarget.z, data.camTarget.x) + (cro::Util::Const::PI / 2.f); //TODO get a better target point than 0,0
+
+    //entity performs animation in callback then pops itself when done.
+    cro::Entity entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<TargetData>(data);
+    entity.getComponent<cro::Callback>().function =
+        [&, playerInfo](cro::Entity e, float dt) mutable
+    {
+        const float updateSpeed = dt;// *2.f;
+
+        auto& data = e.getComponent<cro::Callback>().getUserData<TargetData>();
+        data.elapsedTime = std::min(1.f, data.elapsedTime + updateSpeed);
+
+        float interpTime = cro::Util::Easing::easeOutQuint(data.elapsedTime);
+
+        //update controller position/rotation
+        auto currRotation = data.rotationStart + cro::Util::Maths::shortestRotation(data.rotationStart, data.rotationTarget) * interpTime;
+        m_cameraController.getComponent<ControllerRotation>().rotation = currRotation;
+
+        m_cameraController.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
+        m_cameraController.getComponent<cro::Transform>().setPosition(interpolate(data.camStart, data.camTarget, interpTime));
+        
+        if (data.elapsedTime == 1)
+        {
+            //TODO we want to get the cue entity from somewhere and set rotation to 0...
+
+            m_cameraController.getComponent<ControllerRotation>().rotation = data.rotationTarget;
+            m_cameraController.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.rotationTarget);
+            m_cameraController.getComponent<cro::Transform>().setPosition(data.camTarget);
+
+            //wait for animation to finish first
+            if (playerInfo.client == m_sharedData.localConnectionData.connectionID)
+            {
+                m_inputParser.setActive(true);
+                m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[playerInfo.player];
+                m_currentPlayer = playerInfo.player;
+
+                //TODO show / hide cue depending on local player or not
+
+                //TODO if local cueball not valid put into spawn mode
+
+
+                setActiveCamera(CameraID::Player);
+            }
+
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+    };
 }
 
 void BilliardsState::setActiveCamera(std::int32_t camID)

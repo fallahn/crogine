@@ -268,7 +268,7 @@ void BilliardsInput::update(float dt)
                 if (m_inputFlags & InputFlag::CamModifier)
                 {
                     //move cam
-                    m_camEntity.getComponent<ControllerRotation>().rotation += CamRotationSpeed * m_mouseMove * dt;
+                    m_camEntity.getComponent<ControllerRotation>().rotation -= CamRotationSpeed * m_mouseMove * dt;
                     m_camEntity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camEntity.getComponent<ControllerRotation>().rotation);
                 }
                 else

@@ -78,9 +78,17 @@ void EightballDirector::handleMessage(const cro::Message& msg)
     if (msg.id == sv::MessageID::BilliardsMessage)
     {
         const auto& data = msg.getData<BilliardsEvent>();
-        if (data.type == BilliardsEvent::TurnEnded)
+        if (data.type == BilliardsEvent::TurnBegan)
         {
-            LogI << "Turn ended" << std::endl;
+            //TODO start tracking ball events for current player
+        }
+        else if (data.type == BilliardsEvent::TurnEnded)
+        {
+            //TODO check foul status/pot status etc
+            m_currentPlayer = (m_currentPlayer + 1) % 2;
+
+            auto* msg2 = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+            msg2->type = BilliardsEvent::PlayerSwitched;
         }
     }
 }

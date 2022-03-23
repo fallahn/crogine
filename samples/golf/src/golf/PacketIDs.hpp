@@ -74,6 +74,7 @@ namespace PacketID
         ActorSpawn, //< ActorInfo
         WindDirection, //< compressed vec3
         BallLanded, //< BallUpdate struct
+        TableInfo, //< TableInfo struct
 
         EntityRemoved, //< uint32 entity ID
         ReadyQuitStatus, //< uint8 flags containing status of ready/quit at round end

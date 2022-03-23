@@ -78,11 +78,21 @@ void BilliardsState::handleMessage(const cro::Message& msg)
     else if (msg.id == MessageID::BilliardsMessage)
     {
         const auto& data = msg.getData<BilliardsEvent>();
-        if (data.type == BilliardsEvent::OutOfBounds
-            && data.first == CueBall)
+
+        switch (data.type)
         {
-            spawnBall(addBall(m_activeDirector->getCueballPosition(), CueBall));
-        }
+        default: break;
+        case BilliardsEvent::OutOfBounds:
+            //TODO this should be handled by director
+            if (data.first == CueBall)
+            {
+                spawnBall(addBall(m_activeDirector->getCueballPosition(), CueBall));
+            }
+            break;
+        case BilliardsEvent::PlayerSwitched:
+            setNextPlayer();
+            break;
+        }        
     }
     else if (msg.id == sv::MessageID::ConnectionMessage)
     {
@@ -279,6 +289,11 @@ void BilliardsState::sendInitialGameState(std::uint8_t clientID)
 
             m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ActorSpawn, info, cro::NetFlag::Reliable);
         }
+
+        //and the table info such as the cueball spawn
+        TableInfo info;
+        info.cueballPosition = m_activeDirector->getCueballPosition();
+        m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::TableInfo, info, cro::NetFlag::Reliable);
     }
 
     m_sharedData.clients[clientID].ready = true;
@@ -344,7 +359,6 @@ void BilliardsState::setNextPlayer()
 
     auto info = m_playerInfo[m_activeDirector->getCurrentPlayer()];
     m_sharedData.host.broadcastPacket(PacketID::SetPlayer, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-    LogI << "Sent client " << (int)info.client << ", player " << (int)info.player << std::endl;
 
     m_turnTimer.restart();
 }
