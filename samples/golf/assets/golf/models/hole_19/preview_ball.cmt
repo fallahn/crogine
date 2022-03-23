@@ -1,0 +1,20 @@
+model preview_ball
+{
+    mesh = sphere
+    radius = 0.027000
+    cast_shadows = true
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 0.000001,0.000001,0.000001,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        rim = 1.000000,1.000000,1.000000,1.000000
+        rim_falloff = 0.367000
+        blendmode = none
+
+    }
+}

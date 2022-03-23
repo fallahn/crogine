@@ -113,6 +113,19 @@ void BilliardsState::netEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::BallPlaced:
+        if (!m_scene.getSystem<BilliardsSystem>()->hasCueball())
+        {
+            auto data = evt.packet.as<BilliardBallInput>();
+            auto currentPlayer = m_activeDirector->getCurrentPlayer();
+
+            if (data.client == m_playerInfo[currentPlayer].client
+                && data.player == m_playerInfo[currentPlayer].player)
+            {
+                spawnBall(addBall(data.offset, CueBall));
+            }
+        }
+            break;
         case PacketID::InputUpdate:
         {
             auto data = evt.packet.as<BilliardBallInput>();
@@ -232,6 +245,7 @@ void BilliardsState::initScene()
         break;
     }
 
+    //place active players into a more convenient container..
     for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
     {
         if (m_sharedData.clients[i].connected)
@@ -256,8 +270,6 @@ void BilliardsState::buildWorld()
         {
             addBall(ball.position, ball.id);
         }
-
-        addBall(m_activeDirector->getCueballPosition(), CueBall);
     }
 }
 
@@ -369,12 +381,17 @@ cro::Entity BilliardsState::addBall(glm::vec3 position, std::uint8_t id)
     entity.addComponent<cro::Transform>().setPosition(position);
     entity.addComponent<BilliardBall>().id = id;
     
+    if (id == CueBall)
+    {
+        m_activeDirector->setCueball(entity);
+    }
+
     return entity;
 }
 
 void BilliardsState::spawnBall(cro::Entity entity)
 {
-    auto position = entity.getComponent<cro::Transform>().getPosition();
+    /*auto position = entity.getComponent<cro::Transform>().getPosition();
     auto id = entity.getComponent<BilliardBall>().id;
 
     entity.addComponent<cro::Callback>().active = true;
@@ -387,7 +404,7 @@ void BilliardsState::spawnBall(cro::Entity entity)
 
             spawnBall(addBall(position, id));
         }
-    };
+    };*/
 
     //notify client
     ActorInfo info;

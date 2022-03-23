@@ -146,6 +146,8 @@ public:
 
     void applyImpulse(glm::vec3 dir, glm::vec3 offset);
 
+    bool hasCueball() const { return m_cueball != nullptr; }
+
 private:
 
     std::int32_t m_awakeCount;

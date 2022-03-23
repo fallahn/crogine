@@ -120,6 +120,8 @@ struct BilliardBallEvent final
 {
     enum
     {
-        ShotTaken
+        ShotTaken,
+        BallPlaced,
     }type = ShotTaken;
+    glm::vec3 position = glm::vec3(0.f);
 };

@@ -56,4 +56,12 @@ public:
     virtual glm::vec3 getCueballPosition() const = 0;
 
     virtual std::size_t getCurrentPlayer() const = 0;
+
+    virtual void setCueball(cro::Entity e) { m_cueball = e; }
+
+protected:
+    cro::Entity getCueball() const { return m_cueball; }
+
+private:
+    cro::Entity m_cueball;
 };

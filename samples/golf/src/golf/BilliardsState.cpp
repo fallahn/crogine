@@ -126,6 +126,12 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
     if (ImGui::GetIO().WantCaptureKeyboard
         || ImGui::GetIO().WantCaptureMouse)
     {
+        if (evt.type == SDL_MOUSEMOTION
+            && cro::App::getWindow().getMouseCaptured())
+        {
+            cro::App::getWindow().setMouseCaptured(false);
+        }
+
         return false;
     }
 
@@ -177,7 +183,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             break;
 #ifdef CRO_DEBUG_
         case SDLK_TAB:
-            if (m_activeCamera == CameraID::Player)
+            //if (m_activeCamera == CameraID::Player)
             {
                 cro::App::getWindow().setMouseCaptured(false);
             }
@@ -266,23 +272,20 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             input.player = m_currentPlayer;
 
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-            m_inputParser.setActive(false);
         }
     }
     break;
     case MessageID::BilliardsMessage:
     {
         const auto& data = msg.getData<BilliardBallEvent>();
-        if (data.type == BilliardBallEvent::ShotTaken)
+        if (data.type == BilliardBallEvent::BallPlaced)
         {
-            //BilliardBallInput input;
-            //auto [impulse, offset] = m_inputParser.getImpulse();
-            //input.impulse = impulse;
-            //input.offset = offset;
-            ////TODO set active player
+            BilliardBallInput input;
+            input.offset = data.position;
+            input.client = m_sharedData.localConnectionData.connectionID;
+            input.player = m_currentPlayer;
 
-            //m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::BallPlaced, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
     }
         break;
@@ -480,14 +483,28 @@ void BilliardsState::buildScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<ControllerRotation>();
 
+    ControlEntities controlEntities;
+    controlEntities.camera = m_cameraController;
+
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("assets/golf/models/hole_19/cue.cmt"))
     {
         md.createModel(entity);
         m_cameraController.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-        m_inputParser.setControlEntities(m_cameraController, entity);
     }
+    controlEntities.cue = entity;
+
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+
+    if (md.loadFromFile("assets/golf/models/hole_19/preview_ball.cmt"))
+    {
+        md.createModel(entity);
+        entity.getComponent<cro::Model>().setHidden(true);
+    }
+    controlEntities.previewBall = entity;
+    m_inputParser.setControlEntities(controlEntities);
+
 
 
     //lights point straight down in billiards.
@@ -688,7 +705,7 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
     entity.getComponent<cro::Callback>().function =
         [&, playerInfo](cro::Entity e, float dt) mutable
     {
-        const float updateSpeed = dt;// *2.f;
+        const float updateSpeed = dt;
 
         auto& data = e.getComponent<cro::Callback>().getUserData<TargetData>();
         data.elapsedTime = std::min(1.f, data.elapsedTime + updateSpeed);
@@ -713,14 +730,11 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
             //wait for animation to finish first
             if (playerInfo.client == m_sharedData.localConnectionData.connectionID)
             {
-                m_inputParser.setActive(true);
+                m_inputParser.setActive(true, !m_cueball.isValid());
                 m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[playerInfo.player];
                 m_currentPlayer = playerInfo.player;
 
                 //TODO show / hide cue depending on local player or not
-
-                //TODO if local cueball not valid put into spawn mode
-
 
                 setActiveCamera(CameraID::Player);
             }

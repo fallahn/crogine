@@ -41,6 +41,13 @@ struct ControllerRotation final
     bool* activeCamera = nullptr;
 };
 
+struct ControlEntities final
+{
+    cro::Entity camera;
+    cro::Entity cue;
+    cro::Entity previewBall;
+};
+
 class BilliardsInput final
 {
 public:
@@ -49,8 +56,8 @@ public:
     void handleEvent(const cro::Event&);
     void update(float);
 
-    void setActive(bool active);
-    void setControlEntities(cro::Entity cam, cro::Entity cue);
+    void setActive(bool active, bool placeCueball);
+    void setControlEntities(ControlEntities);
 
     std::pair<glm::vec3, glm::vec3> getImpulse() const;
 
@@ -62,6 +69,11 @@ public:
 private:
     const InputBinding& m_inputBinding;
     cro::MessageBus& m_messageBus;
+
+    enum
+    {
+        Play, PlaceBall
+    }m_state = PlaceBall;
 
     std::uint16_t m_inputFlags;
     std::uint16_t m_prevFlags;
@@ -78,8 +90,10 @@ private:
     float m_sideSpin;
     glm::quat m_spinOffset;
 
-    cro::Entity m_camEntity;
-    cro::Entity m_cueEntity;
+    ControlEntities m_controlEntities;
+    glm::vec3 m_basePosition;
 
     void checkController(float);
+    void updatePlay(float);
+    void updatePlaceBall(float);
 };
