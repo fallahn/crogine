@@ -31,6 +31,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MenuConsts.hpp"
 #include "CommandIDs.hpp"
+#include "PacketIDs.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -106,4 +107,56 @@ void BilliardsState::createUI()
     entity.addComponent<cro::Camera>().resizeCallback = updateView;
     m_uiScene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
+}
+
+void BilliardsState::showGameEnd(const BilliardsPlayer& player)
+{
+    //this may be from a player quitting mid-summary
+    if (!m_gameEnded)
+    {
+        //show summary screen
+
+        auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 400.f, 300.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("Game Ended");
+
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 200.f, 10.f, 0.23f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::uint8_t>>(1.f, ConstVal::SummaryTimeout);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            auto& [current, sec] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::uint8_t>>();
+            current -= dt;
+            if (current < 0)
+            {
+                current += 1.f;
+                sec--;
+            }
+
+            e.getComponent<cro::Text>().setString("Returning to lobby in: " + std::to_string(sec));
+
+            auto bounds = cro::Text::getLocalBounds(e);
+            bounds.width = std::floor(bounds.width / 2.f);
+            e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+        };
+
+
+        m_gameEnded = true;
+    }
+}
+
+void BilliardsState::toggleQuitReady()
+{
+    if (m_gameEnded)
+    {
+        m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::ReadyQuit, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 -2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -60,4 +60,6 @@ namespace ConstVal
     //root dir for course files prepended to directory
     //received from the hosting client
     static const std::string MapPath("assets/golf/courses/");
+
+    static const std::uint8_t SummaryTimeout = 30;
 }

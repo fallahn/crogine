@@ -78,5 +78,8 @@ namespace sv
         void setNextPlayer();
         cro::Entity addBall(glm::vec3, std::uint8_t);
         void spawnBall(cro::Entity);
+
+        void endGame(const BilliardsPlayer&);
+        void checkReadyQuit(std::uint8_t);
     };
 }

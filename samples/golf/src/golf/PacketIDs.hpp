@@ -67,7 +67,7 @@ namespace PacketID
         SetPlayer, //< ActivePlayer struct in golf, player/client in billiards
         SetHole, //< uint8 hole
         ScoreUpdate, //< ScoreUpdate struct
-        GameEnd, //< uint8 seconds. tells clients to show scoreboard/countdown to lobby
+        GameEnd, //< uint8 seconds. tells clients to show scoreboard/countdown to lobby, or BilliardsPlayer of winner in billiards
 
         ActorAnimation, //< Tell player sprite to play the given anim with uint8 ID
         ActorUpdate, //< ActorInfo - ball interpolation

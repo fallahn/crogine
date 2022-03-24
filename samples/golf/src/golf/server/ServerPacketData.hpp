@@ -116,6 +116,7 @@ struct BilliardsPlayer final
     std::uint8_t client = 0;
     std::uint8_t player = 0;
     std::int32_t score = 0;
+    bool readyQuit = false;
 };
 
 struct TableInfo final

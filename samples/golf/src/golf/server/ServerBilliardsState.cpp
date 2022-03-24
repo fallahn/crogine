@@ -85,6 +85,10 @@ void BilliardsState::handleMessage(const cro::Message& msg)
         case BilliardsEvent::PlayerSwitched:
             setNextPlayer();
             break;
+        case BilliardsEvent::GameEnded:
+            auto winner = m_playerInfo[m_activeDirector->getCurrentPlayer()];
+            endGame(winner);
+            break;
         }        
     }
     else if (msg.id == sv::MessageID::ConnectionMessage)
@@ -92,7 +96,23 @@ void BilliardsState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<ConnectionEvent>();
         if (data.type == ConnectionEvent::Disconnected)
         {
-            //TODO default win the game to remaining player
+            m_playerInfo.erase(std::remove_if(m_playerInfo.begin(), m_playerInfo.end(),
+                [data](const BilliardsPlayer& p)
+                {
+                    return p.client == data.clientID;
+                }),
+                m_playerInfo.end());
+
+            //default win the game to remaining player
+            for (const auto& player : m_playerInfo)
+            {
+                if (player.client != data.clientID)
+                {
+                    endGame(player);
+                }
+            }
+
+            checkReadyQuit(10); //doesn't matter which client number, just update status...
         }
     }
 
@@ -152,6 +172,10 @@ void BilliardsState::netEvent(const cro::NetEvent& evt)
             auto clientID = evt.packet.as<std::uint8_t>();
             m_sharedData.clients[clientID].mapLoaded = true;
         }
+            break;
+        case PacketID::ReadyQuit:
+            checkReadyQuit(evt.packet.as<std::uint8_t>());
+            break;
         }
     }
 }
@@ -412,4 +436,68 @@ void BilliardsState::spawnBall(cro::Entity entity)
     info.timestamp = m_serverTime.elapsed().asMilliseconds();
 
     m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
+void BilliardsState::endGame(const BilliardsPlayer& winner)
+{
+    //create a timer ent which returns to lobby on time out
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(ConstVal::SummaryTimeout);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& remain = e.getComponent<cro::Callback>().getUserData<float>();
+        remain -= dt;
+        if (remain < 0)
+        {
+            m_returnValue = StateID::Lobby;
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
+
+    m_gameStarted = false;
+
+    m_sharedData.host.broadcastPacket(PacketID::GameEnd, winner, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
+void BilliardsState::checkReadyQuit(std::uint8_t clientID)
+{
+    if (m_gameStarted)
+    {
+        return;
+    }
+
+    std::uint8_t broadcastFlags = 0;
+
+    for (auto& p : m_playerInfo)
+    {
+        if (p.client == clientID)
+        {
+            p.readyQuit = !p.readyQuit;
+        }
+
+        if (p.readyQuit)
+        {
+            broadcastFlags |= (1 << p.client);
+        }
+        else
+        {
+            broadcastFlags &= ~(1 << p.client);
+        }
+    }
+    //let clients know to update their display
+    m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::ReadyQuitStatus, broadcastFlags, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    for (const auto& p : m_playerInfo)
+    {
+        if (!p.readyQuit)
+        {
+            //not everyone is ready
+            return;
+        }
+    }
+    //if we made it here it's time to quit!
+    m_returnValue = StateID::Lobby;
 }

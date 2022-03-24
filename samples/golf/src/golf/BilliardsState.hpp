@@ -78,6 +78,7 @@ private:
     cro::ModelDefinition m_ballDefinition;
 
     bool m_wantsGameState;
+    bool m_gameEnded;
     cro::Clock m_readyClock;
 
 
@@ -102,6 +103,7 @@ private:
     cro::Entity m_cueball;
     cro::Entity m_localCue;
     cro::Entity m_remoteCue;
+    std::uint8_t m_readyQuitFlags;
 
     void loadAssets();
     void addSystems();
@@ -118,4 +120,6 @@ private:
 
     //**BilliardsStateUI.cpp**//
     void createUI();
+    void showGameEnd(const BilliardsPlayer&);
+    void toggleQuitReady();
 };

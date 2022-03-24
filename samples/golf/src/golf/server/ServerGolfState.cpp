@@ -554,16 +554,14 @@ void GolfState::setNextHole()
     }
     else
     {
-        static constexpr std::uint8_t Timeout = 30; //seconds
-
         //end of game baby!
-        m_sharedData.host.broadcastPacket(PacketID::GameEnd, Timeout, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::GameEnd, ConstVal::SummaryTimeout, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         //create a timer ent which returns to lobby on time out
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<float>(Timeout);
+        entity.getComponent<cro::Callback>().setUserData<float>(ConstVal::SummaryTimeout);
         entity.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
         {

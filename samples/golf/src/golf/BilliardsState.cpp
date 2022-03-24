@@ -87,8 +87,10 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_viewScale         (2.f),
     m_ballDefinition    (m_resources),
     m_wantsGameState    (true),
+    m_gameEnded         (false),
     m_activeCamera      (CameraID::Side),
-    m_gameMode          (TableData::Void)
+    m_gameMode          (TableData::Void),
+    m_readyQuitFlags    (0)
 {
     ctx.mainWindow.loadResources([&]() 
         {
@@ -171,7 +173,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::Pause);
             break;
         case SDLK_SPACE:
-            //toggleQuitReady();
+            toggleQuitReady();
             break;
         case SDLK_KP_1:
         case SDLK_1:
@@ -207,7 +209,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case cro::GameController::ButtonA:
-            //toggleQuitReady();
+            toggleQuitReady();
             break;
         case cro::GameController::ButtonLeftShoulder:
             setActiveCamera((m_activeCamera + (CameraID::Count - 1)) % CameraID::Count);
@@ -621,6 +623,12 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::ReadyQuitStatus:
+            m_readyQuitFlags = evt.packet.as<std::uint8_t>();
+            break;
+        case PacketID::GameEnd:
+            showGameEnd(evt.packet.as<BilliardsPlayer>());
+            break;
         case PacketID::CueUpdate:
             updateGhost(evt.packet.as<BilliardsUpdate>());
             break;
@@ -671,6 +679,13 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
                 break;
             }
             requestStackPush(StateID::Error);
+            break;
+        case PacketID::StateChange:
+            if (evt.packet.as<std::uint8_t>() == sv::StateID::Lobby)
+            {
+                requestStackClear();
+                requestStackPush(StateID::Clubhouse);
+            }
             break;
         }
     }

@@ -110,6 +110,13 @@ void EightballDirector::handleMessage(const cro::Message& msg)
                 }
             };
         }
+        else if (data.type == BilliardsEvent::Pocket)
+        {
+            auto* msg2 = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+            msg2->type = BilliardsEvent::GameEnded;
+
+            //TODO set active player to winner as this is what the server reads
+        }
     }
 }
 
