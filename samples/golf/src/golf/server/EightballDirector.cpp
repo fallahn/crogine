@@ -91,7 +91,6 @@ void EightballDirector::handleMessage(const cro::Message& msg)
 
             //delay this slightly to allow ball status to
             //sync with clients
-
             auto entity = getScene().createEntity();
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().setUserData<float>(1.f);

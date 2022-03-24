@@ -79,9 +79,10 @@ private:
     std::uint16_t m_prevFlags;
     std::uint16_t m_prevStick;
 
-    float m_mouseMove;
-    float m_prevMouseMove;
-    float m_analogueAmount;
+    glm::vec2 m_mouseMove;
+    glm::vec2 m_prevMouseMove;
+    float m_analogueAmountLeft;
+    float m_analogueAmountRight;
 
     bool m_active;
 
@@ -92,6 +93,8 @@ private:
 
     ControlEntities m_controlEntities;
     glm::vec3 m_basePosition;
+
+    bool hasMouseMotion() const;
 
     void checkController(float);
     void updatePlay(float);

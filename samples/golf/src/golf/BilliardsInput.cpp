@@ -45,9 +45,9 @@ source distribution.
 
 namespace
 {
-    constexpr float CamRotationSpeed = 0.05f;
+    constexpr float CamRotationSpeed = 46.f;
     constexpr float CamRotationSpeedFast = CamRotationSpeed * 5.f;
-    constexpr float CueRotationSpeed = 0.025f;
+    constexpr float CueRotationSpeed = 20.f;
     constexpr float MaxCueRotation = cro::Util::Const::PI / 16.f;
     constexpr float PowerStep = 0.1f;
     constexpr float MinPower = PowerStep;
@@ -58,20 +58,21 @@ namespace
 }
 
 BilliardsInput::BilliardsInput(const InputBinding& ip, cro::MessageBus& mb)
-    : m_inputBinding(ip),
-    m_messageBus    (mb),
-    m_inputFlags    (0),
-    m_prevFlags     (0),
-    m_prevStick     (0),
-    m_mouseMove     (0.f),
-    m_prevMouseMove (0.f),
-    m_analogueAmount(1.f),
-    m_active        (false),
-    m_power         (0.5f),
-    m_topSpin       (0.f),
-    m_sideSpin      (0.f),
-    m_spinOffset    (1.f, 0.f, 0.f, 0.f),
-    m_basePosition  (0.f)
+    : m_inputBinding        (ip),
+    m_messageBus            (mb),
+    m_inputFlags            (0),
+    m_prevFlags             (0),
+    m_prevStick             (0),
+    m_mouseMove             (0.f),
+    m_prevMouseMove         (0.f),
+    m_analogueAmountLeft    (1.f),
+    m_analogueAmountRight   (1.f),
+    m_active                (false),
+    m_power                 (0.5f),
+    m_topSpin               (0.f),
+    m_sideSpin              (0.f),
+    m_spinOffset            (1.f, 0.f, 0.f, 0.f),
+    m_basePosition          (0.f)
 {
 
 }
@@ -257,7 +258,9 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEMOTION)
     {
-        m_mouseMove = static_cast<float>(evt.motion.xrel);
+        //normalise this else we move slower at higher screen res...    
+        m_mouseMove.x = static_cast<float>(evt.motion.xrel) / cro::App::getWindow().getSize().x;
+        m_mouseMove.y = static_cast<float>(evt.motion.yrel) / cro::App::getWindow().getSize().y;
     }
 }
 
@@ -280,7 +283,7 @@ void BilliardsInput::update(float dt)
     m_prevFlags = m_inputFlags;
     
     m_prevMouseMove = m_mouseMove;
-    m_mouseMove = 0;
+    m_mouseMove = glm::vec2(0.f);
 }
 
 void BilliardsInput::setActive(bool active, bool placeBall)
@@ -335,9 +338,15 @@ std::pair<glm::vec3, glm::vec3> BilliardsInput::getImpulse() const
 }
 
 //private
+bool BilliardsInput::hasMouseMotion() const
+{
+    return (m_mouseMove.x + m_mouseMove.y) != 0.f;
+}
+
 void BilliardsInput::checkController(float dt)
 {
-    m_analogueAmount = 1.f;
+    m_analogueAmountLeft = 1.f;
+    m_analogueAmountRight = 1.f;
 
     if (!cro::GameController::isConnected(m_inputBinding.controllerID))
     {
@@ -403,7 +412,7 @@ void BilliardsInput::checkController(float dt)
     static const float MinLen2 = (DeadZone * DeadZone);
     if (len2 > MinLen2)
     {
-        m_analogueAmount = std::sqrt(len2) / (cro::GameController::AxisMax - DeadZone);
+        m_analogueAmountLeft = std::sqrt(len2) / (cro::GameController::AxisMax - DeadZone);
     }
 
     if (startInput ^ m_inputFlags)
@@ -413,20 +422,32 @@ void BilliardsInput::checkController(float dt)
 
 
     //right stick emulates mouse movement (but shouldn't overwrite it)
-    if (m_mouseMove == 0)
+    if (!hasMouseMotion())
     {
         float xMove = static_cast<float>(cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::AxisRightX)) / cro::GameController::AxisMax;
 
         if (xMove > AnalogueDeadZone || xMove < -AnalogueDeadZone)
         {
-            m_mouseMove = xMove * 0.5f;
+            m_mouseMove.x = xMove;
+        }
+
+        float yMove = static_cast<float>(cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::AxisRightY)) / cro::GameController::AxisMax;
+
+        if (yMove > AnalogueDeadZone || yMove < -AnalogueDeadZone)
+        {
+            m_mouseMove.y = yMove;
+        }
+
+        if (hasMouseMotion())
+        {
+            m_analogueAmountRight = glm::length(m_mouseMove);
         }
     }
 }
 
 void BilliardsInput::updatePlay(float dt)
 {
-    if (m_mouseMove)
+    if (hasMouseMotion())
     {
         if (*m_controlEntities.camera.getComponent<ControllerRotation>().activeCamera)
         {
@@ -434,13 +455,13 @@ void BilliardsInput::updatePlay(float dt)
             if (m_inputFlags & InputFlag::CamModifier)
             {
                 //move cam
-                m_controlEntities.camera.getComponent<ControllerRotation>().rotation -= CamRotationSpeed * m_mouseMove * dt;
+                m_controlEntities.camera.getComponent<ControllerRotation>().rotation -= CamRotationSpeed * m_mouseMove.x * dt;
                 m_controlEntities.camera.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_controlEntities.camera.getComponent<ControllerRotation>().rotation);
             }
             else
             {
                 //move cue
-                auto rotation = m_controlEntities.cue.getComponent<ControllerRotation>().rotation + CueRotationSpeed * m_mouseMove * dt;
+                auto rotation = m_controlEntities.cue.getComponent<ControllerRotation>().rotation + CueRotationSpeed * m_mouseMove.x * dt;
                 rotation = std::max(-MaxCueRotation, std::min(MaxCueRotation, rotation));
                 m_controlEntities.cue.getComponent<ControllerRotation>().rotation = rotation;
                 m_controlEntities.cue.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
@@ -448,27 +469,27 @@ void BilliardsInput::updatePlay(float dt)
         }
         else
         {
-            //some other view so just rotate the camera - TODO use the angle to the mouse cursor, but how to do with controller?
-            m_controlEntities.camera.getComponent<ControllerRotation>().rotation += CamRotationSpeedFast * m_mouseMove * dt;
+            //some other view so just rotate the camera
+            m_controlEntities.camera.getComponent<ControllerRotation>().rotation += CamRotationSpeedFast * m_mouseMove.x * m_analogueAmountRight * dt;
             m_controlEntities.camera.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_controlEntities.camera.getComponent<ControllerRotation>().rotation);
         }
     }
 
     if (m_inputFlags & InputFlag::Left)
     {
-        m_sideSpin = std::max(-MaxSpin, m_sideSpin - (dt * m_analogueAmount));
+        m_sideSpin = std::max(-MaxSpin, m_sideSpin - (dt * m_analogueAmountLeft));
     }
     if (m_inputFlags & InputFlag::Right)
     {
-        m_sideSpin = std::min(MaxSpin, m_sideSpin + (dt * m_analogueAmount));
+        m_sideSpin = std::min(MaxSpin, m_sideSpin + (dt * m_analogueAmountLeft));
     }
     if (m_inputFlags & InputFlag::Up)
     {
-        m_topSpin = std::max(-MaxSpin, m_topSpin - (dt * m_analogueAmount));
+        m_topSpin = std::max(-MaxSpin, m_topSpin - (dt * m_analogueAmountLeft));
     }
     if (m_inputFlags & InputFlag::Down)
     {
-        m_topSpin = std::min(MaxSpin, m_topSpin + (dt * m_analogueAmount));
+        m_topSpin = std::min(MaxSpin, m_topSpin + (dt * m_analogueAmountLeft));
     }
     if (m_inputFlags & (InputFlag::Up | InputFlag::Down | InputFlag::Left | InputFlag::Right))
     {
@@ -487,27 +508,35 @@ void BilliardsInput::updatePlay(float dt)
 void BilliardsInput::updatePlaceBall(float dt)
 {
     glm::vec3 movement(0.f);
-    if (m_inputFlags & InputFlag::Left)
-    {
-        movement.x = -1.f;
-    }
-    if (m_inputFlags & InputFlag::Right)
-    {
-        movement.x += 1.f;
-    }
-    if (m_inputFlags & InputFlag::Up)
-    {
-        movement.z = -1.f;
-    }
-    if (m_inputFlags & InputFlag::Down)
-    {
-        movement.z += 1.f;
-    }
-    if (glm::length2(movement) > 1)
-    {
-        movement = glm::normalize(movement);
-    }
 
+    if (hasMouseMotion())
+    {
+        movement = glm::normalize(glm::vec3(m_mouseMove.x, 0.f, -m_mouseMove.y)) * m_analogueAmountRight;
+    }
+    else
+    {
+        if (m_inputFlags & InputFlag::Left)
+        {
+            movement.x = -1.f;
+        }
+        if (m_inputFlags & InputFlag::Right)
+        {
+            movement.x += 1.f;
+        }
+        if (m_inputFlags & InputFlag::Up)
+        {
+            movement.z = -1.f;
+        }
+        if (m_inputFlags & InputFlag::Down)
+        {
+            movement.z += 1.f;
+        }
+        if (glm::length2(movement) > 1)
+        {
+            movement = glm::normalize(movement);
+        }
+        movement *= m_analogueAmountLeft;
+    }
 
     m_controlEntities.previewBall.getComponent<cro::Transform>().move(movement * 0.3f * dt);
     auto newPos = m_controlEntities.previewBall.getComponent<cro::Transform>().getPosition();
