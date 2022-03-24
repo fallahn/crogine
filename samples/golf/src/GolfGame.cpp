@@ -642,6 +642,16 @@ void GolfGame::loadPreferences()
             }
         }
     }
+
+    //hack for existing keybinds which weren't expecting the billiards update
+    if (m_sharedData.inputBinding.keys[InputBinding::Up] == SDLK_UNKNOWN)
+    {
+        m_sharedData.inputBinding.keys[InputBinding::Up] = SDLK_w;
+    }
+    if (m_sharedData.inputBinding.keys[InputBinding::Down] == SDLK_UNKNOWN)
+    {
+        m_sharedData.inputBinding.keys[InputBinding::Down] = SDLK_s;
+    }
 }
 
 void GolfGame::savePreferences()

@@ -57,6 +57,7 @@ public:
     void update(float);
 
     void setActive(bool active, bool placeCueball);
+    bool getActive() const { return m_active; }
     void setControlEntities(ControlEntities);
 
     std::pair<glm::vec3, glm::vec3> getImpulse() const;

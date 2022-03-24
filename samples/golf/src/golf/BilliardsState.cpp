@@ -65,6 +65,15 @@ source distribution.
 namespace
 {
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
+
+    struct CueCallbackData final
+    {
+        float currentScale = 0.f;
+        enum
+        {
+            In, Out
+        }direction = In;
+    };
 }
 
 BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -73,7 +82,6 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_gameScene         (ctx.appInstance.getMessageBus()),
     m_uiScene           (ctx.appInstance.getMessageBus()),
     m_inputParser       (sd.inputBinding, ctx.appInstance.getMessageBus()),
-    m_currentPlayer     (0),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_viewScale         (2.f),
@@ -233,7 +241,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
                     idx = std::max(0, i - 1);
                 }
                 //update the input parser in case this player is active
-                m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer];
+                m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer.player];
                 break;
             }
         }
@@ -269,7 +277,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             input.impulse = impulse;
             input.offset = offset;
             input.client = m_sharedData.localConnectionData.connectionID;
-            input.player = m_currentPlayer;
+            input.player = m_currentPlayer.player;
 
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
@@ -283,7 +291,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             BilliardBallInput input;
             input.offset = data.position;
             input.client = m_sharedData.localConnectionData.connectionID;
-            input.player = m_currentPlayer;
+            input.player = m_currentPlayer.player;
 
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::BallPlaced, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
@@ -326,6 +334,44 @@ bool BilliardsState::simulate(float dt)
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
+
+    if (m_inputParser.getActive())
+    {
+        if (!cro::App::getWindow().getMouseCaptured())
+        {
+#ifdef CRO_DEBUG_
+            if (!cro::Keyboard::isKeyPressed(SDLK_TAB))
+#endif
+                cro::App::getWindow().setMouseCaptured(true);
+        }
+
+        //send our cue model data (less frequently) so remote clients
+        //can see an approximate ghost version
+        static int32_t netCounter = 0;
+        netCounter = (netCounter + 1) % 3;
+
+        if (netCounter == 0)
+        {
+            auto position = m_localCue.getComponent<cro::Transform>().getWorldPosition();
+            auto rotation = glm::quat_cast(m_localCue.getComponent<cro::Transform>().getWorldTransform());
+            auto timestamp = m_readyClock.elapsed().asMilliseconds(); //re-use this clock: timestamps are just used for ordering.
+
+            BilliardsUpdate info;
+            info.position = position;
+            info.rotation = cro::Util::Net::compressQuat(rotation);
+            info.timestamp = timestamp;
+
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::CueUpdate, info, cro::NetFlag::Unreliable);
+        }
+    }
+    else
+    {
+        if (cro::App::getWindow().getMouseCaptured())
+        {
+            cro::App::getWindow().setMouseCaptured(false);
+        }
+    }
+
     return false;
 }
 
@@ -479,21 +525,71 @@ void BilliardsState::buildScene()
     m_cameraController.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
     m_cameraController.getComponent<ControllerRotation>().activeCamera = &camEnt.getComponent<cro::Camera>().active;
 
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<ControllerRotation>();
-
     ControlEntities controlEntities;
     controlEntities.camera = m_cameraController;
 
+    auto cueScaleCallback = [](cro::Entity e, float dt)
+    {
+        auto& [currScale, direction] = e.getComponent<cro::Callback>().getUserData<CueCallbackData>();
+        if (direction == CueCallbackData::In)
+        {
+            e.getComponent<cro::Model>().setHidden(false);
+            currScale = std::min(1.f, currScale + dt);
+
+            if (currScale == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                direction = CueCallbackData::Out;
+            }
+        }
+        else
+        {
+            currScale = std::max(0.f, currScale - (dt * 4.f));
+            if (currScale == 0)
+            {
+                //mini-optimisation - hiding the model stops the
+                //renderer from sending the model to be drawn which
+                //otherwise happens even when scaled to 0
+                e.getComponent<cro::Model>().setHidden(true);
+                e.getComponent<cro::Callback>().active = false;
+                direction = CueCallbackData::In;
+            }
+        }
+        float scale = cro::Util::Easing::easeOutBack(currScale);
+        e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+    };
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<ControllerRotation>();
+    entity.addComponent<cro::Callback>().setUserData<CueCallbackData>();
+    entity.getComponent<cro::Callback>().function = cueScaleCallback;
+
+    //two cue models - one for local player,
+    //one to display what the remote player is doing
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("assets/golf/models/hole_19/cue.cmt"))
     {
         md.createModel(entity);
+        entity.getComponent<cro::Model>().setHidden(true);
         m_cameraController.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
+    m_localCue = entity;
     controlEntities.cue = entity;
 
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<InterpolationComponent>();
+    entity.addComponent<cro::Callback>().setUserData<CueCallbackData>();
+    entity.getComponent<cro::Callback>().function = cueScaleCallback;
+    if (md.loadFromFile("assets/golf/models/hole_19/remote_cue.cmt"))
+    {
+        md.createModel(entity);
+        entity.getComponent<cro::Model>().setHidden(true);
+    }
+    m_remoteCue = entity;
+
+    //semi-transparent ball for placing the cueball
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
 
@@ -525,6 +621,9 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::CueUpdate:
+            updateGhost(evt.packet.as<BilliardsUpdate>());
+            break;
         case PacketID::TableInfo:
             m_tableInfo = evt.packet.as<TableInfo>();
             break;
@@ -675,11 +774,19 @@ void BilliardsState::updateBall(const BilliardsUpdate& info)
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
+void BilliardsState::updateGhost(const BilliardsUpdate& info)
+{
+    m_remoteCue.getComponent<InterpolationComponent>().addTarget({ info.position, cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
+}
+
 void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
 {
-    //TODO hide the cue model and wait for anim to finish to
-    //decide which cue model should be shown (local or remote)
+    //hide the cue model(s)
+    m_localCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::Out;
+    m_localCue.getComponent<cro::Callback>().active = true;
 
+    m_remoteCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::Out;
+    //m_remoteCue.getComponent<cro::Callback>().active = true;
 
     struct TargetData final
     {
@@ -721,7 +828,7 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
         
         if (data.elapsedTime == 1)
         {
-            //TODO we want to get the cue entity from somewhere and set rotation to 0...
+            //TODO we want to get the cue entity and set rotation to 0..?
 
             m_cameraController.getComponent<ControllerRotation>().rotation = data.rotationTarget;
             m_cameraController.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.rotationTarget);
@@ -732,11 +839,19 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
             {
                 m_inputParser.setActive(true, !m_cueball.isValid());
                 m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[playerInfo.player];
-                m_currentPlayer = playerInfo.player;
+                m_currentPlayer.player = playerInfo.player;
+                m_currentPlayer.client = playerInfo.client;
 
-                //TODO show / hide cue depending on local player or not
+                m_localCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::In;
+                m_localCue.getComponent<cro::Callback>().active = true;
 
                 setActiveCamera(CameraID::Player);
+            }
+            else
+            {
+                //show the remote 'ghost' cue
+                m_remoteCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::In;
+                m_remoteCue.getComponent<cro::Callback>().active = true;
             }
 
             e.getComponent<cro::Callback>().active = false;
@@ -752,8 +867,6 @@ void BilliardsState::setActiveCamera(std::int32_t camID)
     m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 
     m_activeCamera = camID;
-
-    cro::App::getWindow().setMouseCaptured(camID == CameraID::Player);
 }
 
 void BilliardsState::resizeBuffers()

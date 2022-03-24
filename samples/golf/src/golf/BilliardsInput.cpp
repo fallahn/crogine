@@ -260,7 +260,7 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
     {
         //normalise this else we move slower at higher screen res...    
         m_mouseMove.x = static_cast<float>(evt.motion.xrel) / cro::App::getWindow().getSize().x;
-        m_mouseMove.y = static_cast<float>(evt.motion.yrel) / cro::App::getWindow().getSize().y;
+        m_mouseMove.y = static_cast<float>(-evt.motion.yrel) / cro::App::getWindow().getSize().y;
     }
 }
 
@@ -507,61 +507,71 @@ void BilliardsInput::updatePlay(float dt)
 
 void BilliardsInput::updatePlaceBall(float dt)
 {
-    glm::vec3 movement(0.f);
+    //kludge to stop this in anything other than
+    //player view - ideally we want to allow this but
+    //ofc the top down or side views have a rotated
+    //X/Z axis relative to the camera so placing the
+    //ball just feels... weird in these views because
+    //it doesn't move in the way the player expects...
 
-    if (hasMouseMotion())
+    if (*m_controlEntities.camera.getComponent<ControllerRotation>().activeCamera)
     {
-        movement = glm::normalize(glm::vec3(m_mouseMove.x, 0.f, -m_mouseMove.y)) * m_analogueAmountRight;
-    }
-    else
-    {
-        if (m_inputFlags & InputFlag::Left)
-        {
-            movement.x = -1.f;
-        }
-        if (m_inputFlags & InputFlag::Right)
-        {
-            movement.x += 1.f;
-        }
-        if (m_inputFlags & InputFlag::Up)
-        {
-            movement.z = -1.f;
-        }
-        if (m_inputFlags & InputFlag::Down)
-        {
-            movement.z += 1.f;
-        }
-        if (glm::length2(movement) > 1)
-        {
-            movement = glm::normalize(movement);
-        }
-        movement *= m_analogueAmountLeft;
-    }
+        glm::vec3 movement(0.f);
 
-    m_controlEntities.previewBall.getComponent<cro::Transform>().move(movement * 0.3f * dt);
-    auto newPos = m_controlEntities.previewBall.getComponent<cro::Transform>().getPosition();
+        if (hasMouseMotion())
+        {
+            movement = glm::normalize(glm::vec3(m_mouseMove.x, 0.f, -m_mouseMove.y)) * m_analogueAmountRight;
+        }
+        else
+        {
+            if (m_inputFlags & InputFlag::Left)
+            {
+                movement.x = -1.f;
+            }
+            if (m_inputFlags & InputFlag::Right)
+            {
+                movement.x += 1.f;
+            }
+            if (m_inputFlags & InputFlag::Up)
+            {
+                movement.z = -1.f;
+            }
+            if (m_inputFlags & InputFlag::Down)
+            {
+                movement.z += 1.f;
+            }
+            if (glm::length2(movement) > 1)
+            {
+                movement = glm::normalize(movement);
+            }
+            movement *= m_analogueAmountLeft;
+        }
 
-    //clamp to radius
-    static constexpr float Radius = 0.12f;
-    static constexpr float MaxRadius = Radius * Radius;
-    auto diff = m_basePosition - newPos;
-    if (float len2 = glm::length2(diff); len2 > MaxRadius)
-    {
-        diff /= std::sqrt(len2);
-        diff *= Radius;
-        newPos = m_basePosition - diff;
-        m_controlEntities.previewBall.getComponent<cro::Transform>().setPosition(newPos);
-    }
-    m_controlEntities.camera.getComponent<cro::Transform>().setPosition(newPos);
+        m_controlEntities.previewBall.getComponent<cro::Transform>().move(movement * 0.3f * dt);
+        auto newPos = m_controlEntities.previewBall.getComponent<cro::Transform>().getPosition();
 
-    auto flagDiff = m_prevFlags ^ m_inputFlags;
-    if ((flagDiff & m_inputFlags & InputFlag::Action) != 0)
-    {
-        auto* msg = m_messageBus.post<BilliardBallEvent>(MessageID::BilliardsMessage);
-        msg->type = BilliardBallEvent::BallPlaced;
-        msg->position = m_controlEntities.previewBall.getComponent<cro::Transform>().getPosition();
+        //clamp to radius
+        static constexpr float Radius = 0.12f;
+        static constexpr float MaxRadius = Radius * Radius;
+        auto diff = m_basePosition - newPos;
+        if (float len2 = glm::length2(diff); len2 > MaxRadius)
+        {
+            diff /= std::sqrt(len2);
+            diff *= Radius;
+            newPos = m_basePosition - diff;
+            m_controlEntities.previewBall.getComponent<cro::Transform>().setPosition(newPos);
+        }
+        m_controlEntities.camera.getComponent<cro::Transform>().setPosition(newPos);
 
-        m_state = Play;
-        m_controlEntities.previewBall.getComponent<cro::Model>().setHidden(true);
+        auto flagDiff = m_prevFlags ^ m_inputFlags;
+        if ((flagDiff & m_inputFlags & InputFlag::Action) != 0)
+        {
+            auto* msg = m_messageBus.post<BilliardBallEvent>(MessageID::BilliardsMessage);
+            msg->type = BilliardBallEvent::BallPlaced;
+            msg->position = m_controlEntities.previewBall.getComponent<cro::Transform>().getPosition();
+
+            m_state = Play;
+            m_controlEntities.previewBall.getComponent<cro::Model>().setHidden(true);
+        }
     }
 }

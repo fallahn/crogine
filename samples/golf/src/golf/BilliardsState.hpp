@@ -68,7 +68,7 @@ private:
     cro::ResourceCollection m_resources;
 
     BilliardsInput m_inputParser;
-    std::uint8_t m_currentPlayer;
+    ActivePlayer m_currentPlayer;
 
     cro::RenderTexture m_gameSceneTexture;
     cro::UniformBuffer m_scaleBuffer;
@@ -79,6 +79,7 @@ private:
 
     bool m_wantsGameState;
     cro::Clock m_readyClock;
+
 
     struct CameraID final
     {
@@ -99,6 +100,8 @@ private:
     std::int32_t m_gameMode;
     TableInfo m_tableInfo;
     cro::Entity m_cueball;
+    cro::Entity m_localCue;
+    cro::Entity m_remoteCue;
 
     void loadAssets();
     void addSystems();
@@ -107,6 +110,7 @@ private:
     void handleNetEvent(const cro::NetEvent&);
     void spawnBall(const ActorInfo&);
     void updateBall(const BilliardsUpdate&);
+    void updateGhost(const BilliardsUpdate&);
     void setPlayer(const BilliardsPlayer&);
 
     void setActiveCamera(std::int32_t);
