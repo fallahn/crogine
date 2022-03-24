@@ -104,13 +104,13 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
         {
-            //m_inputFlags |= InputFlag::NextClub;
-            if (m_active) m_power = std::min(MaxPower, m_power + PowerStep);
+            m_inputFlags |= InputFlag::NextClub;
+            //if (m_active) m_power = std::min(MaxPower, m_power + PowerStep);
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
         {
-            //m_inputFlags |= InputFlag::PrevClub;
-            if (m_active) m_power = std::max(MinPower, m_power - PowerStep);
+            m_inputFlags |= InputFlag::PrevClub;
+            //if (m_active) m_power = std::max(MinPower, m_power - PowerStep);
         }
     }
     else if (evt.type == SDL_KEYUP)

@@ -199,7 +199,15 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             }
             break;
 #endif //CRO_DEBUG_
+        }
 
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        {
+            setActiveCamera((m_activeCamera + (CameraID::Count - 1)) % CameraID::Count);
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        {
+            setActiveCamera((m_activeCamera + 1) % CameraID::Count);
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN

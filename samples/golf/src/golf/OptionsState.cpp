@@ -1303,6 +1303,39 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         return entity;
     };
 
+    static std::vector<std::string> labelStrings;
+    if (m_sharedData.baseState == StateID::Clubhouse)
+    {
+        labelStrings =
+        {
+            "Take Shot",
+            "Cycle View",
+            "Cycle View",
+            "Rotate Camera",
+            "",
+            "Side Spin",
+            "Side Spin",
+            "Top Spin",
+            "Back Spin"
+        };
+
+        //TODO add overlay from sprite sheet
+    }
+    else
+    {
+        labelStrings =
+        {
+            "Take Shot",
+            "Next Club",
+            "Previous Club",
+            "",
+            "",
+            "Aim Left",
+            "Aim Right"
+        };
+    }
+
+
     //prev club
     auto entity = createHighlight(glm::vec2(58.f, 80.f), InputBinding::PrevClub);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
@@ -1310,7 +1343,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
-            infoEnt.getComponent<cro::Text>().setString("Previous Club");
+            infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::PrevClub]);
             centreText(infoEnt);
         });
 
@@ -1322,7 +1355,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
-            infoEnt.getComponent<cro::Text>().setString("Next Club");
+            infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::NextClub]);
             centreText(infoEnt);
         });
 
@@ -1333,7 +1366,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
-            infoEnt.getComponent<cro::Text>().setString("Aim Left");
+            infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::Left]);
             centreText(infoEnt);
         });
 
@@ -1344,7 +1377,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
-            infoEnt.getComponent<cro::Text>().setString("Aim Right");
+            infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::Right]);
             centreText(infoEnt);
         });
 
@@ -1355,9 +1388,15 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
-            infoEnt.getComponent<cro::Text>().setString("Take Shot");
+            infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::Action]);
             centreText(infoEnt);
         });
+
+    if (m_sharedData.baseState == StateID::Clubhouse)
+    {
+        //TODO add top spin, back spin
+        //and power adjust
+    }
 
 
     //label entities
@@ -1400,6 +1439,12 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     
     //right
     createLabel(glm::vec2(20.f, 35.f), InputBinding::Right);
+
+    if (m_sharedData.baseState == StateID::Clubhouse)
+    {
+        //TODO add back spin and top spin - 
+        //label that power if fixed to trigger/mouse wheel
+    }
 }
 
 void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
