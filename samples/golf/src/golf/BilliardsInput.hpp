@@ -33,6 +33,7 @@ source distribution.
 
 #include <crogine/core/Window.hpp>
 #include <crogine/ecs/Entity.hpp>
+#include <crogine/gui/GuiClient.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
 struct ControllerRotation final
@@ -48,7 +49,7 @@ struct ControlEntities final
     cro::Entity previewBall;
 };
 
-class BilliardsInput final
+class BilliardsInput final : public cro::GuiClient
 {
 public:
     BilliardsInput(const InputBinding&, cro::MessageBus&);
