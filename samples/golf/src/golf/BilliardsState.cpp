@@ -801,7 +801,7 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
     m_localCue.getComponent<cro::Callback>().active = true;
 
     m_remoteCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::Out;
-    //m_remoteCue.getComponent<cro::Callback>().active = true;
+    m_remoteCue.getComponent<cro::Callback>().active = true;
 
     struct TargetData final
     {
@@ -816,9 +816,30 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
 
     TargetData data;
     data.camStart = m_cameraController.getComponent<cro::Transform>().getPosition();
-    data.camTarget = m_cueball.isValid() ? m_cueball.getComponent<cro::Transform>().getPosition() : m_tableInfo.cueballPosition;
     data.rotationStart = m_cameraController.getComponent<ControllerRotation>().rotation;
-    data.rotationTarget = std::atan2(-data.camTarget.z, data.camTarget.x) + (cro::Util::Const::PI / 2.f); //TODO get a better target point than 0,0
+
+    glm::vec3 lookAtPosition(0.f); //default to table centre
+    if (m_cueball.isValid())
+    {
+        const auto& balls = m_gameScene.getSystem<InterpolationSystem>()->getEntities();
+        auto result = std::find_if(balls.begin(), balls.end(),
+            [playerInfo](const cro::Entity& e)
+            {
+                return e.getComponent<InterpolationComponent>().getID() == playerInfo.targetID;
+            });
+        if (result != balls.end())
+        {
+            lookAtPosition = result->getComponent<cro::Transform>().getPosition();
+        }
+        data.camTarget = m_cueball.getComponent<cro::Transform>().getPosition();
+    }
+    else
+    {
+        data.camTarget = m_tableInfo.cueballPosition;
+    }
+
+    auto targetDir = data.camTarget - lookAtPosition;
+    data.rotationTarget = std::atan2(-targetDir.z, targetDir.x) + (cro::Util::Const::PI / 2.f);
 
     //entity performs animation in callback then pops itself when done.
     cro::Entity entity = m_gameScene.createEntity();

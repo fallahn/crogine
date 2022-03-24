@@ -133,6 +133,9 @@ namespace cro
         template <typename T>
         T* getSystem();
 
+        template <typename T>
+        const T* getSystem() const;
+
         /*!
         \brief Sets the given system type active or inactive in the scene.
         Inactive systems are moved from the processing list and are ignored

@@ -213,6 +213,9 @@ namespace cro
         template <typename T>
         T* getSystem();
 
+        template <typename T>
+        const T* getSystem() const;
+
         /*!
         \brief Returns true if a system of this type exists within the manager
         */

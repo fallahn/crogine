@@ -391,6 +391,7 @@ void BilliardsState::setNextPlayer()
     //TODO update scores
 
     auto info = m_playerInfo[m_activeDirector->getCurrentPlayer()];
+    info.targetID = m_activeDirector->getTargetID();
     m_sharedData.host.broadcastPacket(PacketID::SetPlayer, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_turnTimer.restart();

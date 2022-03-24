@@ -112,10 +112,7 @@ void EightballDirector::handleMessage(const cro::Message& msg)
         }
         else if (data.type == BilliardsEvent::Pocket)
         {
-            auto* msg2 = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
-            msg2->type = BilliardsEvent::GameEnded;
 
-            //TODO set active player to winner as this is what the server reads
         }
     }
 }
@@ -128,4 +125,16 @@ const std::vector<BallInfo>& EightballDirector::getBallLayout() const
 glm::vec3 EightballDirector::getCueballPosition() const
 {
     return m_cubeballPosition;
+}
+
+std::uint32_t EightballDirector::getTargetID() const
+{
+    //TODO make this look up something appropriate, like the first
+    //ball which has the current player's colour
+    const auto& balls = getScene().getSystem<BilliardsSystem>()->getEntities();
+    if (!balls.empty())
+    {
+        return balls[0].getIndex();
+    }
+    return std::numeric_limits<std::uint32_t>::max();
 }

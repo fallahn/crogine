@@ -46,6 +46,12 @@ T* Scene::getSystem()
 }
 
 template <typename T>
+const T* Scene::getSystem() const
+{
+    return m_systemManager.getSystem<T>();
+}
+
+template <typename T>
 void Scene::setSystemActive(bool active)
 {
     m_systemManager.setSystemActive<T>(active);

@@ -127,6 +127,19 @@ T* SystemManager::getSystem()
 }
 
 template <typename T>
+const T* SystemManager::getSystem() const
+{
+    UniqueType type(typeid(T));
+    auto result = std::find_if(std::begin(m_systems), std::end(m_systems),
+        [&type](const System::Ptr& sys)
+        {
+            return sys->getType() == type;
+        });
+
+    return result == m_systems.end() ? nullptr : static_cast<const T*>(result->get());
+}
+
+template <typename T>
 bool SystemManager::hasSystem() const
 {
     UniqueType type(typeid(T));

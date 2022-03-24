@@ -94,6 +94,7 @@ namespace cro
         \brief Returns a reference to this Director's parent Scene
         */
         Scene& getScene();
+        const Scene& getScene() const;
 
     private:
 
