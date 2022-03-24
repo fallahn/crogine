@@ -1,6 +1,6 @@
 model billiard_ball
 {
-    mesh = sphere
+    mesh = assets/golf/models/hole_19/preview_ball.cmb
     size = 0.052, 0.052, 0.052
     radius = 0.027000
     cast_shadows = true

@@ -82,13 +82,6 @@ void BilliardsState::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
-        case BilliardsEvent::OutOfBounds:
-            //TODO this should be handled by director
-            if (data.first == CueBall)
-            {
-                spawnBall(addBall(m_activeDirector->getCueballPosition(), CueBall));
-            }
-            break;
         case BilliardsEvent::PlayerSwitched:
             setNextPlayer();
             break;

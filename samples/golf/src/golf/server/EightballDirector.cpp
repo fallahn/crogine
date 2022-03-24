@@ -31,6 +31,8 @@ source distribution.
 #include "ServerMessages.hpp"
 #include "../BilliardsSystem.hpp"
 
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 #include <crogine/util/Random.hpp>
 
 namespace
@@ -87,8 +89,27 @@ void EightballDirector::handleMessage(const cro::Message& msg)
             //TODO check foul status/pot status etc
             m_currentPlayer = (m_currentPlayer + 1) % 2;
 
-            auto* msg2 = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
-            msg2->type = BilliardsEvent::PlayerSwitched;
+            //delay this slightly to allow ball status to
+            //sync with clients
+
+            auto entity = getScene().createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+            {
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime -= dt;
+
+                if (currTime <= 0)
+                {
+                    auto* msg2 = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+                    msg2->type = BilliardsEvent::PlayerSwitched;
+
+                    e.getComponent<cro::Callback>().active = false;
+                    getScene().destroyEntity(e);
+                }
+            };
         }
     }
 }
