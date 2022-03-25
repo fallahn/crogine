@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Constants.hpp>
@@ -118,12 +119,10 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
         {
             m_inputFlags |= InputFlag::NextClub;
-            //if (m_active) m_power = std::min(MaxPower, m_power + PowerStep);
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
         {
             m_inputFlags |= InputFlag::PrevClub;
-            //if (m_active) m_power = std::max(MinPower, m_power - PowerStep);
         }
     }
     else if (evt.type == SDL_KEYUP)
@@ -296,15 +295,23 @@ void BilliardsInput::update(float dt)
 
     m_prevFlags = m_inputFlags;
     
+#ifdef CRO_DEBUG_
     mouseMove = m_mouseMove;
-
+#endif
     m_prevMouseMove = m_mouseMove;
     m_mouseMove = glm::vec2(0.f);
+
+    auto rotation = m_controlEntities.camera.getComponent<ControllerRotation>().rotation;
+    m_controlEntities.camera.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+
+    rotation = m_controlEntities.cue.getComponent<ControllerRotation>().rotation;
+    m_controlEntities.cue.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
 }
 
 void BilliardsInput::setActive(bool active, bool placeBall)
 {
     m_active = active;
+    m_controlEntities.camera.getComponent<cro::Callback>().active = !active;
 
     if (active)
     {
@@ -472,7 +479,6 @@ void BilliardsInput::updatePlay(float dt)
             {
                 //move cam
                 m_controlEntities.camera.getComponent<ControllerRotation>().rotation -= CamRotationSpeed * m_mouseMove.x * m_analogueAmountLeft * dt;
-                m_controlEntities.camera.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_controlEntities.camera.getComponent<ControllerRotation>().rotation);
             }
             else
             {
@@ -480,17 +486,16 @@ void BilliardsInput::updatePlay(float dt)
                 auto rotation = m_controlEntities.cue.getComponent<ControllerRotation>().rotation + CueRotationSpeed * m_mouseMove.x * m_analogueAmountLeft * dt;
                 rotation = std::max(-MaxCueRotation, std::min(MaxCueRotation, rotation));
                 m_controlEntities.cue.getComponent<ControllerRotation>().rotation = rotation;
-                m_controlEntities.cue.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
             }
         }
         else
         {
             //some other view so just rotate the camera
             m_controlEntities.camera.getComponent<ControllerRotation>().rotation += CamRotationSpeedFast * m_mouseMove.x * m_analogueAmountLeft * dt;
-            m_controlEntities.camera.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_controlEntities.camera.getComponent<ControllerRotation>().rotation);
         }
     }
 
+    //side/top/back spin
     if (m_inputFlags & InputFlag::Left)
     {
         m_sideSpin = std::max(-MaxSpin, m_sideSpin - (dt * m_analogueAmountRight));
@@ -511,6 +516,16 @@ void BilliardsInput::updatePlay(float dt)
     {
         m_spinOffset = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), m_topSpin, cro::Transform::X_AXIS);
         m_spinOffset = glm::rotate(m_spinOffset, m_sideSpin, cro::Transform::Y_AXIS);
+    }
+
+    //power
+    if (m_inputFlags & InputFlag::PrevClub)
+    {
+        m_power = std::max(PowerStep, m_power - dt);
+    }
+    if(m_inputFlags & InputFlag::NextClub)
+    {
+        m_power = std::min(1.f, m_power + dt);
     }
 
     auto diff = m_prevFlags ^ m_inputFlags;

@@ -200,15 +200,6 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             break;
 #endif //CRO_DEBUG_
         }
-
-        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
-        {
-            setActiveCamera((m_activeCamera + (CameraID::Count - 1)) % CameraID::Count);
-        }
-        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
-        {
-            setActiveCamera((m_activeCamera + 1) % CameraID::Count);
-        }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN
         && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
@@ -219,10 +210,10 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonA:
             toggleQuitReady();
             break;
-        case cro::GameController::ButtonLeftShoulder:
+        /*case cro::GameController::ButtonLeftShoulder:
             setActiveCamera((m_activeCamera + (CameraID::Count - 1)) % CameraID::Count);
-            break;
-        case cro::GameController::ButtonRightShoulder:
+            break;*/
+        case cro::GameController::ButtonY:
             setActiveCamera((m_activeCamera + 1) % CameraID::Count);
             break;
         }
@@ -534,6 +525,21 @@ void BilliardsState::buildScene()
 
     m_cameraController.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
     m_cameraController.getComponent<ControllerRotation>().activeCamera = &camEnt.getComponent<cro::Camera>().active;
+    m_cameraController.addComponent<cro::Callback>().active = true;
+    m_cameraController.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        if (m_cueball.isValid()
+            && !m_inputParser.getActive())
+        {
+            //turn to face cue ball
+            auto dir = /*glm::normalize*/(m_cueball.getComponent<cro::Transform>().getPosition() - e.getComponent<cro::Transform>().getPosition());
+            
+            float adjustment = glm::dot(dir, e.getComponent<cro::Transform>().getRightVector());
+            adjustment *= (cro::Util::Const::PI / 2.f);
+            e.getComponent<ControllerRotation>().rotation -= adjustment * dt;
+        }
+    };
 
     ControlEntities controlEntities;
     controlEntities.camera = m_cameraController;
@@ -866,16 +872,16 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
         //update controller position/rotation
         auto currRotation = data.rotationStart + cro::Util::Maths::shortestRotation(data.rotationStart, data.rotationTarget) * interpTime;
         m_cameraController.getComponent<ControllerRotation>().rotation = currRotation;
-
-        m_cameraController.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
         m_cameraController.getComponent<cro::Transform>().setPosition(interpolate(data.camStart, data.camTarget, interpTime));
         
+        auto cueRot = m_localCue.getComponent<ControllerRotation>().rotation;
+        m_localCue.getComponent<ControllerRotation>().rotation -= cueRot / 2.f;
+
         if (data.elapsedTime == 1)
         {
-            //TODO we want to get the cue entity and set rotation to 0..?
+            m_localCue.getComponent<ControllerRotation>().rotation = 0.f;
 
             m_cameraController.getComponent<ControllerRotation>().rotation = data.rotationTarget;
-            m_cameraController.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.rotationTarget);
             m_cameraController.getComponent<cro::Transform>().setPosition(data.camTarget);
 
             //wait for animation to finish first
