@@ -79,7 +79,8 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_viewScale         (2.f),
-    m_currentMenu       (MenuID::Main)
+    m_currentMenu       (MenuID::Main),
+    m_prevMenu          (MenuID::Main)
 {
     std::fill(m_readyState.begin(), m_readyState.end(), false);
 
@@ -205,6 +206,15 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
     if (cro::ui::wantsKeyboard() || cro::ui::wantsMouse())
     {
         return false;
+    }
+
+    if (evt.type == SDL_KEYDOWN)
+    {
+        handleTextEdit(evt);
+    }
+    else if (evt.type == SDL_TEXTINPUT)
+    {
+        handleTextEdit(evt);
     }
 
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);

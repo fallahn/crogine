@@ -109,6 +109,14 @@ private:
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions; //I've forgotten why this is static...
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {};
     std::size_t m_currentMenu;
+    std::size_t m_prevMenu;
+
+    struct TextEdit final
+    {
+        cro::String* string = nullptr;
+        cro::Entity entity;
+        std::size_t maxLen = ConstVal::MaxStringChars;
+    }m_textEdit;
 
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
@@ -125,6 +133,10 @@ private:
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
 
     void quitLobby();
+
+    void beginTextEdit(cro::Entity, cro::String*, std::size_t);
+    void handleTextEdit(const cro::Event&);
+    bool applyTextEdit(); //returns true if this consumed event
 
     void handleNetEvent(const cro::NetEvent&);
 
