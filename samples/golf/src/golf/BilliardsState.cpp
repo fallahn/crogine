@@ -468,6 +468,7 @@ void BilliardsState::buildScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
+    //side cam
     auto camEnt = m_gameScene.getActiveCamera();
     camEnt.getComponent<cro::Transform>().setPosition({ -1.5f, 0.8f, 0.f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
@@ -489,6 +490,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
+    camEnt.getComponent<CameraProperties>().farPlane = 7.f;
     m_cameras[CameraID::Front] = camEnt;
     setPerspective(camEnt.getComponent<cro::Camera>());
 
@@ -501,10 +503,19 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.75f;
-    camEnt.getComponent<CameraProperties>().farPlane = 2.5f;
+    camEnt.getComponent<CameraProperties>().farPlane = 6.f;
     m_cameras[CameraID::Overhead] = camEnt;
     setPerspective(camEnt.getComponent<cro::Camera>());
 
+    //transition cam
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>();
+    camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+    camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.addComponent<CameraProperties>().farPlane = 5.f;
+    m_cameras[CameraID::Transition] = camEnt;
+    setPerspective(camEnt.getComponent<cro::Camera>());
 
     //player cam is a bit more complicated because it can be rotated
     //by the player, and transformed by the game.
@@ -519,7 +530,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
-    camEnt.getComponent<CameraProperties>().farPlane = 3.f;
+    camEnt.getComponent<CameraProperties>().farPlane = 6.f;
     m_cameras[CameraID::Player] = camEnt;
     setPerspective(camEnt.getComponent<cro::Camera>());
 
@@ -536,8 +547,11 @@ void BilliardsState::buildScene()
             auto dir = /*glm::normalize*/(m_cueball.getComponent<cro::Transform>().getPosition() - e.getComponent<cro::Transform>().getPosition());
             
             float adjustment = glm::dot(dir, e.getComponent<cro::Transform>().getRightVector());
-            adjustment *= (cro::Util::Const::PI / 2.f);
-            e.getComponent<ControllerRotation>().rotation -= adjustment * dt;
+            if (std::abs(adjustment) > 0.2f)
+            {
+                adjustment *= (cro::Util::Const::PI / 2.f);
+                e.getComponent<ControllerRotation>().rotation -= adjustment * dt;
+            }
         }
     };
 
@@ -912,11 +926,79 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
 
 void BilliardsState::setActiveCamera(std::int32_t camID)
 {
+    if (camID == m_activeCamera
+        || m_gameScene.getActiveCamera() == m_cameras[CameraID::Transition])
+    {
+        //we're already set, or already mid-transition
+        return;
+    }
+
+    CRO_ASSERT(camID != CameraID::Transition, "don't try to get meta.");
+
+    //calc start / end points
+    //REMEMBER not all cameras share an FOV so this is interpolated too
+    struct TransitionData final
+    {
+        glm::vec3 startPos = glm::vec3(0.f);
+        glm::quat startRot = glm::quat(1.f, 0.f, 0.f, 0.f);
+        float startFOV = 1.f;
+
+        glm::vec3 endPos = glm::vec3(0.f);
+        glm::quat endRot = glm::quat(1.f, 0.f, 0.f, 0.f);
+        float endFOV = 1.f;
+
+        float currentTime = 0.f;
+    }transitionData;
+
+    transitionData.startFOV = m_cameras[m_activeCamera].getComponent<cro::Camera>().getFOV();
+    transitionData.startPos = m_cameras[m_activeCamera].getComponent<cro::Transform>().getWorldPosition();
+    transitionData.startRot = glm::quat_cast(m_cameras[m_activeCamera].getComponent<cro::Transform>().getWorldTransform());
+
+    transitionData.endFOV = m_cameras[camID].getComponent<cro::Camera>().getFOV();
+    transitionData.endPos = m_cameras[camID].getComponent<cro::Transform>().getWorldPosition();
+    transitionData.endRot = glm::quat_cast(m_cameras[camID].getComponent<cro::Transform>().getWorldTransform());
+
+    //set the current cam to the transition one
     m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = false;
-    m_gameScene.setActiveCamera(m_cameras[camID]);
+    m_gameScene.setActiveCamera(m_cameras[CameraID::Transition]);
+    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition(transitionData.startPos);
+    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setRotation(transitionData.startRot);
     m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 
-    m_activeCamera = camID;
+    //create a temp entity to interp the transition camera
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, transitionData, camID](cro::Entity e, float dt) mutable
+    {
+        transitionData.currentTime = std::min(1.f, transitionData.currentTime + (dt * 2.f));
+
+        auto t = cro::Util::Easing::easeInOutCubic(transitionData.currentTime);
+
+        auto fov = interpolate(transitionData.startFOV, transitionData.endFOV, t);
+        auto pos = interpolate(transitionData.startPos, transitionData.endPos, t);
+        auto rot = glm::slerp(transitionData.startRot, transitionData.endRot, t);
+
+        auto aspect = m_cameras[CameraID::Transition].getComponent<cro::Camera>().getAspectRatio();
+
+        m_cameras[CameraID::Transition].getComponent<cro::Transform>().setPosition(pos);
+        m_cameras[CameraID::Transition].getComponent<cro::Transform>().setRotation(rot);
+        m_cameras[CameraID::Transition].getComponent<cro::Camera>().setPerspective(fov, aspect, 0.1f, 5.f);
+
+        if (transitionData.currentTime == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+
+            m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = false;
+            m_gameScene.setActiveCamera(m_cameras[camID]);
+            m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+
+            m_activeCamera = camID;
+        }
+    };
+
+
 }
 
 void BilliardsState::resizeBuffers()

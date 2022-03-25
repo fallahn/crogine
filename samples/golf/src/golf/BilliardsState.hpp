@@ -90,6 +90,7 @@ private:
             Front,
             Overhead,
             Player,
+            Transition,
 
             Count
         };

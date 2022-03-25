@@ -405,6 +405,11 @@ namespace cro
         float getFOV() const { return m_verticalFOV; }
 
         /*!
+        \brief Returns the aspect ratio of the projection matrix
+        */
+        float getAspectRatio() const { return m_aspectRatio; }
+
+        /*!
         \brief Returns the near plane value of the projection matrix
         */
         float getNearPlane() const { return m_nearPlane; }
