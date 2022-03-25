@@ -64,7 +64,8 @@ namespace PacketID
         ServerError, //< uint8 MessageType
         StateChange, //< uint8 state ID
         LobbyUpdate, //< ConnectionData array
-        SetPlayer, //< ActivePlayer struct in golf, player/client in billiards
+        NotifyPlayer, //< BilliardsPlayer in billiards (wait for ack)
+        SetPlayer, //< ActivePlayer struct in golf, BilliardsPlayer in billiards
         SetHole, //< uint8 hole
         ScoreUpdate, //< ScoreUpdate struct
         GameEnd, //< uint8 seconds. tells clients to show scoreboard/countdown to lobby, or BilliardsPlayer of winner in billiards
@@ -89,6 +90,7 @@ namespace PacketID
         TransitionComplete, //< uint8 clientID, signal hole transition completed
         ReadyQuit, //< uint8 clientID - client wants to toggle skip viewing scores
         BallPlaced, //< BilliardBallInput with position in offset member
+        TurnReady, //< uint8 clientID - ready to take their turn
 
         //both directions
         MapInfo, //< serialised cro::String containing course directory

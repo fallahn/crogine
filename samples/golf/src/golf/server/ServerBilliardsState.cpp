@@ -83,7 +83,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
         {
         default: break;
         case BilliardsEvent::PlayerSwitched:
-            setNextPlayer();
+            setNextPlayer(true);
             break;
         case BilliardsEvent::GameEnded:
             auto winner = m_playerInfo[m_activeDirector->getCurrentPlayer()];
@@ -175,6 +175,12 @@ void BilliardsState::netEvent(const cro::NetEvent& evt)
             break;
         case PacketID::ReadyQuit:
             checkReadyQuit(evt.packet.as<std::uint8_t>());
+            break;
+        case PacketID::TurnReady:
+            if (evt.packet.as<std::uint8_t>() == m_playerInfo[m_activeDirector->getCurrentPlayer()].client)
+            {
+                setNextPlayer(false);
+            }
             break;
         }
     }
@@ -358,7 +364,7 @@ void BilliardsState::sendInitialGameState(std::uint8_t clientID)
         {
             if (m_allMapsLoaded)
             {
-                setNextPlayer();
+                setNextPlayer(true);
                 e.getComponent<cro::Callback>().active = false;
                 m_scene.destroyEntity(e);
             }
@@ -386,13 +392,13 @@ void BilliardsState::doServerCommand(const cro::NetEvent& evt)
 #endif
 }
 
-void BilliardsState::setNextPlayer()
+void BilliardsState::setNextPlayer(bool waitForAck)
 {
-    //TODO update scores
+    auto packetID = waitForAck ? PacketID::NotifyPlayer : PacketID::SetPlayer;
 
     auto info = m_playerInfo[m_activeDirector->getCurrentPlayer()];
     info.targetID = m_activeDirector->getTargetID();
-    m_sharedData.host.broadcastPacket(PacketID::SetPlayer, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket(packetID, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_turnTimer.restart();
 }

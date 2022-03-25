@@ -78,6 +78,7 @@ private:
     cro::ModelDefinition m_ballDefinition;
 
     bool m_wantsGameState;
+    bool m_wantsNotify;
     bool m_gameEnded;
     cro::Clock m_readyClock;
 
@@ -115,12 +116,14 @@ private:
     void updateBall(const BilliardsUpdate&);
     void updateGhost(const BilliardsUpdate&);
     void setPlayer(const BilliardsPlayer&);
+    void sendReadyNotify();
 
     void setActiveCamera(std::int32_t);
     void resizeBuffers();
 
     //**BilliardsStateUI.cpp**//
     void createUI();
+    void showReadyNotify(const BilliardsPlayer&);
     void showGameEnd(const BilliardsPlayer&);
     void toggleQuitReady();
 };

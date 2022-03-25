@@ -87,6 +87,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_viewScale         (2.f),
     m_ballDefinition    (m_resources),
     m_wantsGameState    (true),
+    m_wantsNotify       (false),
     m_gameEnded         (false),
     m_activeCamera      (CameraID::Side),
     m_gameMode          (TableData::Void),
@@ -200,6 +201,11 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             break;
 #endif //CRO_DEBUG_
         }
+
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        {
+            sendReadyNotify();
+        }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN
         && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
@@ -209,6 +215,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         default: break;
         case cro::GameController::ButtonA:
             toggleQuitReady();
+            sendReadyNotify();
             break;
         /*case cro::GameController::ButtonLeftShoulder:
             setActiveCamera((m_activeCamera + (CameraID::Count - 1)) % CameraID::Count);
@@ -547,10 +554,12 @@ void BilliardsState::buildScene()
             auto dir = /*glm::normalize*/(m_cueball.getComponent<cro::Transform>().getPosition() - e.getComponent<cro::Transform>().getPosition());
             
             float adjustment = glm::dot(dir, e.getComponent<cro::Transform>().getRightVector());
-            if (std::abs(adjustment) > 0.2f)
+
+            auto absDiff = std::abs(adjustment);
+            if (absDiff > 0.2f)
             {
                 adjustment *= (cro::Util::Const::PI / 2.f);
-                e.getComponent<ControllerRotation>().rotation -= adjustment * dt;
+                e.getComponent<ControllerRotation>().rotation -= adjustment * (absDiff - 0.2f) * dt;
             }
         }
     };
@@ -651,6 +660,9 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::NotifyPlayer:
+            showReadyNotify(evt.packet.as<BilliardsPlayer>());
+            break;
         case PacketID::ReadyQuitStatus:
             m_readyQuitFlags = evt.packet.as<std::uint8_t>();
             break;
@@ -922,6 +934,21 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
             m_gameScene.destroyEntity(e);
         }
     };
+}
+
+void BilliardsState::sendReadyNotify()
+{
+    //remove message from UI
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::MessageBoard;
+    cmd.action = [&](cro::Entity e, float) {m_uiScene.destroyEntity(e); };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    if (m_wantsNotify)
+    {
+        m_wantsNotify = false;
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::TurnReady, m_sharedData.localConnectionData.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
 }
 
 void BilliardsState::setActiveCamera(std::int32_t camID)

@@ -75,7 +75,7 @@ namespace sv
         void sendInitialGameState(std::uint8_t);
         void doServerCommand(const cro::NetEvent&);
 
-        void setNextPlayer();
+        void setNextPlayer(bool waitForAck);
         cro::Entity addBall(glm::vec3, std::uint8_t);
         void spawnBall(cro::Entity);
 

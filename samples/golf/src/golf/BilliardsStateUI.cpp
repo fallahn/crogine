@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 
 void BilliardsState::createUI()
@@ -107,6 +108,29 @@ void BilliardsState::createUI()
     entity.addComponent<cro::Camera>().resizeCallback = updateView;
     m_uiScene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
+}
+
+void BilliardsState::showReadyNotify(const BilliardsPlayer& player)
+{
+    m_wantsNotify = (player.client == m_sharedData.localConnectionData.connectionID);
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 400.f, 300.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString(m_sharedData.connectionData[player.client].playerData[player.player].name + "'s Turn");
+    entity.addComponent<UIElement>().relativePosition= glm::vec2(0.5f);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard | CommandID::UI::UIElement;
+
+    if (m_wantsNotify)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 400.f, 200.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("Press Button"); //TODO read controller/keyboard status for more meaningful string
+        entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 0.33f);
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard | CommandID::UI::UIElement;
+    }
 }
 
 void BilliardsState::showGameEnd(const BilliardsPlayer& player)
