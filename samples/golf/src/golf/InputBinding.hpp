@@ -58,7 +58,7 @@ struct InputBinding final
     //button array as well as the key array
     enum
     {
-        Action, NextClub, PrevClub, CamModifier, Unused1, Left, Right, Up, Down, Count
+        Action, NextClub, PrevClub, CamModifier, SwitchView, Left, Right, Up, Down, Count
     };
 
     std::array<std::int32_t, Count> keys =
@@ -80,7 +80,7 @@ struct InputBinding final
         SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
         SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
         SDL_CONTROLLER_BUTTON_X,
-        SDL_CONTROLLER_BUTTON_B
+        SDL_CONTROLLER_BUTTON_Y
     };
     std::int32_t controllerID = 0;
 };

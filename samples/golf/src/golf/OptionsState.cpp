@@ -1309,17 +1309,22 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         labelStrings =
         {
             "Take Shot",
-            "Cycle View",
-            "Cycle View",
-            "Rotate Camera",
-            "",
+            "Power Up",
+            "Power Down",
+            "Rotate Camera (Hold)",
+            "Switch View",
             "Side Spin",
             "Side Spin",
             "Top Spin",
             "Back Spin"
         };
 
-        //TODO add overlay from sprite sheet
+        //add overlay from sprite sheet
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 36.f, 16.f, HighlightOffset });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("extra_buttons");
+        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
     else
     {
@@ -1382,7 +1387,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         });
 
     //swing
-    entity = createHighlight(glm::vec2(152.f, 41.f), InputBinding::Action);
+    entity = createHighlight(glm::vec2(152.f, 31.f), InputBinding::Action);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt](cro::Entity e) mutable
         {
@@ -1392,10 +1397,55 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             centreText(infoEnt);
         });
 
+    //TODO - unnfortunate effect of adding these last is that
+    //the selection order using keyboard/controller is now unintuitive
     if (m_sharedData.baseState == StateID::Clubhouse)
     {
-        //TODO add top spin, back spin
-        //and power adjust
+        //top spin
+        entity = createHighlight(glm::vec2(30.f, 57.f), InputBinding::Up);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
+            [infoEnt](cro::Entity e) mutable
+            {
+                e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+                e.getComponent<cro::AudioEmitter>().play();
+                infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::Up]);
+                centreText(infoEnt);
+            });
+
+        //back spin
+        entity = createHighlight(glm::vec2(30.f, 12.f), InputBinding::Down);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
+            [infoEnt](cro::Entity e) mutable
+            {
+                e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+                e.getComponent<cro::AudioEmitter>().play();
+                infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::Down]);
+                centreText(infoEnt);
+            });
+
+        //switch view
+        entity = createHighlight(glm::vec2(138.f, 68.f), InputBinding::SwitchView);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0; //don't rebind this
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
+            [infoEnt](cro::Entity e) mutable
+            {
+                e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+                e.getComponent<cro::AudioEmitter>().play();
+                infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::SwitchView]);
+                centreText(infoEnt);
+            });
+
+        //rotate cam
+        entity = createHighlight(glm::vec2(92.f, 65.f), InputBinding::CamModifier);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0; //don't rebind this
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
+            [infoEnt](cro::Entity e) mutable
+            {
+                e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+                e.getComponent<cro::AudioEmitter>().play();
+                infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::CamModifier]);
+                centreText(infoEnt);
+            });
     }
 
 
@@ -1432,7 +1482,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     createLabel(glm::vec2(140.f, 94.f), InputBinding::NextClub);
 
     //stroke
-    createLabel(glm::vec2(160.f, 59.f), InputBinding::Action);
+    createLabel(glm::vec2(166.f, 29.f), InputBinding::Action);
 
     //left
     createLabel(glm::vec2(20.f, 50.f), InputBinding::Left);
@@ -1442,8 +1492,29 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     if (m_sharedData.baseState == StateID::Clubhouse)
     {
-        //TODO add back spin and top spin - 
-        //label that power if fixed to trigger/mouse wheel
+        //up
+        createLabel(glm::vec2(20.f, 65.f), InputBinding::Up);
+
+        //down
+        createLabel(glm::vec2(20.f, 20.f), InputBinding::Down);
+
+        //rotate cam
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 88.f, 85.f, TextOffset });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setString("RMB");
+        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        //switch view
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 147.f, 68.f, TextOffset });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setString("Num 1-4");
+        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 }
 

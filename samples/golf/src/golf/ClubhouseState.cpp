@@ -252,6 +252,7 @@ void ClubhouseState::render()
 void ClubhouseState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
 
 
