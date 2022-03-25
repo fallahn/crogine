@@ -246,6 +246,9 @@
     <ClCompile Include="src\golf\BilliardsInput.cpp">
       <Filter>Source Files\golf\client</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\BilliardsClientCollision.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -475,6 +478,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\BilliardsInput.hpp">
       <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BilliardsClientCollision.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

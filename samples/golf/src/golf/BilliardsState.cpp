@@ -34,6 +34,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "GameConsts.hpp"
 #include "BilliardsSystem.hpp"
+#include "BilliardsClientCollision.hpp"
 #include "InterpolationSystem.hpp"
 #include "server/ServerPacketData.hpp"
 
@@ -254,6 +255,13 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             }
         }
     }
+    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    {
+        if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            sendReadyNotify();
+        }
+    }
 
     m_inputParser.handleEvent(evt);
     m_gameScene.forwardEvent(evt);
@@ -406,6 +414,7 @@ void BilliardsState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<InterpolationSystem>(mb);
+    m_gameScene.addSystem<BilliardsCollisionSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);

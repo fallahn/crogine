@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,48 +29,25 @@ source distribution.
 
 #pragma once
 
+#include <crogine/ecs/System.hpp>
+
 /*
 NOTE since the introduction of Billiards the collision mesh
 classes have become somewhat ambiguous in naming... this class
-deals specifically with golf terrain collision on the client.
+deals specifically with billiards collision on the client.
+
+Note that the actual billiards physics are done by the
+BilliardsSystem class on the server. This class merely raises
+events for sound/particle effects and performs ray testing
+for UI feedback
 */
 
-#include "HoleData.hpp"
-
-#include <crogine/ecs/System.hpp>
-
-#include <crogine/graphics/Image.hpp>
-
-#include <crogine/detail/glm/vec3.hpp>
-
-class CollisionMesh;
-
-struct ClientCollider final
-{
-    std::int32_t previousDirection = 0;
-    float previousHeight = 0.f; //relative to terrain
-    float previousWorldHeight = 0.f;
-    std::uint8_t terrain = 0;
-    std::uint8_t state = 0;
-    bool active = false;
-};
-
-class ClientCollisionSystem final : public cro::System 
+class BilliardsCollisionSystem final : public cro::System
 {
 public:
-    ClientCollisionSystem(cro::MessageBus&, const std::vector<HoleData>&, const CollisionMesh&);
+    explicit BilliardsCollisionSystem(cro::MessageBus&);
 
     void process(float) override;
 
-    void setActiveClub(std::int32_t club) { m_club = club; } //hacky.
-
-    void setMap(std::uint32_t);
-
 private:
-    const std::vector<HoleData>& m_holeData;
-    std::uint32_t m_holeIndex;
-    const CollisionMesh& m_collisionMesh;
-    std::int32_t m_club;
-
-    cro::Image m_mapImage;
 };
