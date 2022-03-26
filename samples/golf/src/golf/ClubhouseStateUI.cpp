@@ -975,6 +975,17 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 }
 
+void ClubhouseState::updateLobbyData(const cro::NetEvent& evt)
+{
+    ConnectionData cd;
+    if (cd.deserialise(evt.packet))
+    {
+        m_sharedData.connectionData[cd.connectionID] = cd;
+    }
+
+    //updateLobbyAvatars();
+}
+
 void ClubhouseState::quitLobby()
 {
     m_sharedData.clientConnection.connected = false;

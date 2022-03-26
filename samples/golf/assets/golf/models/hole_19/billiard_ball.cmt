@@ -1,22 +1,22 @@
 model billiard_ball
 {
-    mesh = assets/golf/models/hole_19/preview_ball.cmb
-    size = 0.052, 0.052, 0.052
-    radius = 0.027000
+    mesh = assets/golf/models/hole_19/billiard_ball.cmb
     cast_shadows = true
 
     material VertexLit
     {
         mask_colour = 1.000000,1.000000,0.000000,1.000000
         name = "Untitled"
-        colour = 0.162630,0.646018,0.082896,1.000000
-        smooth = true
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
         repeat = true
         depth_test = true
         double_sided = false
         rim = 0.056608,0.455752,0.030249,1.000000
         rim_falloff = 0.262000
+        subrect = 0.500000,0.000000,0.500000,0.125000
         blendmode = none
+        diffuse = "assets/golf/images/billiards/pool_spots.png"
 
     }
 }

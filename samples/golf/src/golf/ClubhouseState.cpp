@@ -402,7 +402,7 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
         }
         break;
         case PacketID::LobbyUpdate:
-            //updateLobbyData(evt);
+            updateLobbyData(evt);
             break;
         case PacketID::ClientDisconnected:
         {

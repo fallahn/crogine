@@ -132,6 +132,7 @@ private:
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
 
+    void updateLobbyData(const cro::NetEvent&);
     void quitLobby();
 
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);

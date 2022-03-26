@@ -1041,37 +1041,39 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //channel select down
     auto entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 56.f, 89.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+        [&,audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
                 mixerChannelIndex = (mixerChannelIndex + (MixerChannel::Count - 1)) % MixerChannel::Count;
                 audioLabel.getComponent<cro::Text>().setString(MixerLabels[mixerChannelIndex]);
                 centreText(audioLabel);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
 
     //channel select up
     entity = createHighlight(glm::vec2((bgBounds.width / 2.f) + 45.f, 89.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+        [&,audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
                 mixerChannelIndex = (mixerChannelIndex + 1) % MixerChannel::Count;
                 audioLabel.getComponent<cro::Text>().setString(MixerLabels[mixerChannelIndex]);
                 centreText(audioLabel);
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         });
 
 
     //audio down
     entity = createHighlight(glm::vec2(7.f, 74.f));
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(m_audioEnts[AudioID::Back]));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(m_audioEnts[AudioID::Accept]));
 
     //audio up
     entity = createHighlight(glm::vec2(174.f, 74.f));
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(m_audioEnts[AudioID::Accept]));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(m_audioEnts[AudioID::Back]));
 
     //FOV down
     entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 21.f, 50.f));
@@ -1111,7 +1113,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             {
                 auto fov = m_sharedData.fov;
                 fov = std::min(MaxFOV, fov + 5.f);
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 
                 if (fov > m_sharedData.fov)
                 {
@@ -1425,6 +1427,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
         //switch view
         entity = createHighlight(glm::vec2(138.f, 68.f), InputBinding::SwitchView);
+        entity.getComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight_white");
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0; //don't rebind this
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
             [infoEnt](cro::Entity e) mutable
@@ -1437,6 +1441,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
         //rotate cam
         entity = createHighlight(glm::vec2(92.f, 65.f), InputBinding::CamModifier);
+        entity.getComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight_white");
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0; //don't rebind this
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
             [infoEnt](cro::Entity e) mutable

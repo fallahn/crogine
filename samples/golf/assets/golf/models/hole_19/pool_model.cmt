@@ -3,18 +3,17 @@ model pool_model
     mesh = assets/golf/models/hole_19/pool_model.cmb
     cast_shadows = false
 
-    material VertexLit
+    material Unlit
     {
-        mask_colour = 1.000000,0.000000,0.000000,1.000000
         name = "Untitled"
-        colour = 1.000000,1.0,1.000000,1.000000
-        smooth = true
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
         repeat = true
         depth_test = true
         double_sided = false
-        vertex_coloured = true
         rx_shadows = true
         blendmode = none
+        diffuse = "assets/golf/images/billiards/pool_table_green.png"
 
     }
 }

@@ -582,7 +582,7 @@ void BilliardsInput::updatePlaceBall(float dt)
         auto newPos = m_controlEntities.previewBall.getComponent<cro::Transform>().getPosition();
 
         //clamp to radius
-        static constexpr float Radius = 0.12f;
+        static constexpr float Radius = 0.07f;
         static constexpr float MaxRadius = Radius * Radius;
         auto diff = m_basePosition - newPos;
         if (float len2 = glm::length2(diff); len2 > MaxRadius)

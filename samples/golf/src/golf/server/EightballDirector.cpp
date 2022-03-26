@@ -41,10 +41,10 @@ namespace
 }
 
 EightballDirector::EightballDirector()
-    : m_cubeballPosition(0.f, BallHeight, 0.56f),
+    : m_cubeballPosition(0.f, BallHeight, 0.57f),
     m_currentPlayer     (cro::Util::Random::value(0,1))
 {
-    static constexpr glm::vec3 Offset(0.f, BallHeight, 0.0935f - 0.55f); //distance to 8 ball minus distance to spot
+    static constexpr glm::vec3 Offset(0.f, BallHeight, 0.0935f - 0.465f); //distance to 8 ball minus distance to spot
 
     const std::array IDs =
     {
