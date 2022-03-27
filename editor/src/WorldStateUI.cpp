@@ -30,6 +30,7 @@ source distribution.
 #include "WorldState.hpp"
 #include "UIConsts.hpp"
 #include "SharedStateData.hpp"
+#include "Palettiser.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -203,6 +204,28 @@ void WorldState::drawMenuBar()
             }
             ImGui::SameLine();
             uiConst::showToolTip("Convert a 16x16 image to byte array");
+
+
+            if (ImGui::MenuItem("Create Look-up Palette"))
+            {
+                auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
+                if (!path.empty())
+                {
+                    cro::Image img;
+                    if (img.loadFromFile(path))
+                    {
+                        auto outpath = cro::FileSystem::saveFileDialogue("", "png");
+                        if (!outpath.empty() &&
+                            pt::processPalette(img, outpath))
+                        {
+                            cro::FileSystem::showMessageBox("Success", "Palette File Written Successfully");
+                        }
+                    }
+                }
+            }
+            ImGui::SameLine();
+            uiConst::showToolTip("Creates a look-up table for the given image palette\nYou probably don't want to do this with large images.");
+
             ImGui::EndMenu();
         }
 

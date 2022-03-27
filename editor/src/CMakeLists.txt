@@ -15,6 +15,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/MyApp.cpp
   ${PROJECT_DIR}/NormalVisMeshBuilder.cpp
   ${PROJECT_DIR}/OriginIconBuilder.cpp
+  ${PROJECT_DIR}/Palettiser.cpp
   ${PROJECT_DIR}/ParticleState.cpp
   ${PROJECT_DIR}/ParticleStateUI.cpp
   ${PROJECT_DIR}/SpriteState.cpp

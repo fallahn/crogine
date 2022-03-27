@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -29,24 +29,16 @@ source distribution.
 
 #pragma once
 
-#include <crogine/core/Message.hpp>
+/*
+Create a look-up palette from a given image on 16x16 grid.
+ported from original python code
+https://github.com/KevinVDVelden/BunchOfTests/blob/master/palettebuilder.py
+*/
 
-#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/graphics/Image.hpp>
+#include <string>
 
-namespace MessageID
+namespace pt
 {
-    enum
-    {
-        UIMessage = cro::Message::Count,
-    };
+	bool processPalette(const cro::Image& i, const std::string& outpath);
 }
-
-
-struct UIEvent final
-{
-    enum
-    {
-        Invalid = -1,
-        WrotePreferences //< sub-mode such as model viewer wrote preferences, so global prefs should be saved too.
-    }type = Invalid;
-};
