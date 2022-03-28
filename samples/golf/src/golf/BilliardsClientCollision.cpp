@@ -32,6 +32,7 @@ source distribution.
 #include "MessageIDs.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/detail/ModelBinary.hpp>
 #include <crogine/gui/Gui.hpp>
 
 namespace
@@ -53,7 +54,7 @@ BilliardsCollisionSystem::BilliardsCollisionSystem(cro::MessageBus& mb)
     m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionCfg.get());
 
     m_collisionWorld->setDebugDrawer(&m_debugDrawer);
-    m_debugDrawer.setDebugMode(BulletDebug::DebugFlags);
+    m_debugDrawer.setDebugMode(/*BulletDebug::DebugFlags*/3);
 
     m_ballShape = std::make_unique<btSphereShape>(BilliardBall::Radius * 1.05f);
 
@@ -85,17 +86,27 @@ BilliardsCollisionSystem::~BilliardsCollisionSystem()
         m_collisionWorld->removeCollisionObject(obj.get());
     }
 
-    m_ballObjects.clear();
-    //m_groundShapes.clear();
-    //m_groundVertices.clear();
-
-    //m_vertexData.clear();
-    //m_indexData.clear();
+    for (auto& obj : m_tableObjects)
+    {
+        m_collisionWorld->removeCollisionObject(obj.get());
+    }
 }
 
 //public
 void BilliardsCollisionSystem::process(float)
 {
+    const auto raiseMessage = [&](glm::vec3 position, std::int32_t collisionID)
+    {
+        //hmmmm would be nice to include some guestimated velocity
+        //which could affect sounds more subtly
+
+        auto* msg = postMessage<BilliardBallEvent>(MessageID::BilliardsMessage);
+        msg->type = BilliardBallEvent::Collision;
+        msg->position = position;
+        msg->data = collisionID;
+        //LogI << CollisionID::Labels[collisionID] << std::endl;
+    };
+
     btTransform transform;
 
     for (auto entity : getEntities())
@@ -105,20 +116,40 @@ void BilliardsCollisionSystem::process(float)
         auto& ball = entity.getComponent<BilliardBall>();
         if (ball.m_prevBallContact != ball.m_ballContact)
         {
-            if (ball.m_ballContact == -1)
+            //note this is contact begin
+            if (ball.m_ballContact != -1)
             {
-                //LogI << "Ball ended contact with " << (int)ball.m_prevBallContact << std::endl;
-                auto* msg = postMessage<BilliardBallEvent>(MessageID::BilliardsMessage);
-                msg->type = BilliardBallEvent::Collision;
-                msg->position = entity.getComponent<cro::Transform>().getPosition();
-                //msg->first = ball.id;
-                //msg->second = ball.m_prevBallContact;
+                raiseMessage(entity.getComponent<cro::Transform>().getPosition(), CollisionID::Ball);
             }
         }
         ball.m_prevBallContact = ball.m_ballContact;
         ball.m_ballContact = -1;
 
-        //TODO pocket collision
+        //pocket collision
+        if (ball.m_pocketContact != ball.m_prevPocketContact)
+        {
+            //this is contact begin
+            if (ball.m_pocketContact == 1)
+            {
+                raiseMessage(entity.getComponent<cro::Transform>().getPosition(), CollisionID::Pocket);
+            }
+        }
+
+        ball.m_prevPocketContact = ball.m_pocketContact;
+        ball.m_pocketContact = -1;
+
+
+        //cushion collision
+        if (ball.m_cushionContact != ball.m_prevCushionContact)
+        {
+            if (ball.m_cushionContact == 1)
+            {
+                raiseMessage(entity.getComponent<cro::Transform>().getPosition(), CollisionID::Cushion);
+            }
+        }
+
+        ball.m_prevCushionContact = ball.m_cushionContact;
+        ball.m_cushionContact = -1;
 
         //hm do motion states also work in reverse?
         transform.setFromOpenGLMatrix(&entity.getComponent<cro::Transform>().getLocalTransform()[0][0]);
@@ -129,6 +160,38 @@ void BilliardsCollisionSystem::process(float)
 
 
     //look for contacts
+    const auto testBody = [&](const btCollisionObject* body0, const btCollisionObject* body1, const btPersistentManifold* manifold)
+    {
+        if (body0->getUserIndex() == CollisionID::Ball)
+        {
+            auto contactCount = std::min(1, manifold->getNumContacts());
+            for (auto j = 0; j < contactCount; ++j)
+            {
+                auto ballA = static_cast<BilliardBall*>(body0->getUserPointer());
+
+                switch (body1->getUserIndex())
+                {
+                default: break;
+                case CollisionID::Ball:
+                {
+                    auto ballB = static_cast<BilliardBall*>(body1->getUserPointer());
+                    ballA->m_ballContact = ballB->id;
+                    ballB->m_ballContact = ballA->id;
+                }
+                break;
+                case CollisionID::Pocket:
+                    ballA->m_pocketContact = 1; //we're not interested in specific ID, just if it collides
+                    break;
+                case CollisionID::Cushion:
+                    ballA->m_cushionContact = 1;
+                    break;
+                }
+            }
+            return true;
+        }
+        return false;
+    };
+
     auto manifoldCount = m_collisionDispatcher->getNumManifolds();
     collisionCount = manifoldCount;
     for (auto i = 0; i < manifoldCount; ++i)
@@ -137,18 +200,9 @@ void BilliardsCollisionSystem::process(float)
         auto body0 = manifold->getBody0();
         auto body1 = manifold->getBody1();
 
-        if (body0->getUserIndex() == CollisionID::Ball
-            && body1->getUserIndex() == CollisionID::Ball)
+        if (!testBody(body0, body1, manifold))
         {
-            auto contactCount = std::min(1, manifold->getNumContacts());
-            for (auto j = 0; j < contactCount; ++j)
-            {
-                auto ballA = static_cast<BilliardBall*>(body0->getUserPointer());
-                auto ballB = static_cast<BilliardBall*>(body1->getUserPointer());
-
-                ballA->m_ballContact = ballB->id;
-                ballB->m_ballContact = ballA->id;
-            }
+            testBody(body1, body0, manifold);
         }
     }
 
@@ -156,6 +210,56 @@ void BilliardsCollisionSystem::process(float)
 #ifdef CRO_DEBUG_
     m_collisionWorld->debugDrawWorld();
 #endif
+}
+
+void BilliardsCollisionSystem::initTable(const TableData& tableData)
+{
+    auto meshData = cro::Detail::ModelBinary::read(tableData.collisionModel, m_vertexData, m_indexData);
+
+    if (m_vertexData.empty() || m_indexData.empty())
+    {
+        LogE << "No collision mesh was loaded" << std::endl;
+        return;
+    }
+
+    btTransform transform;
+    transform.setIdentity();
+
+    for (auto i = 0u; i < m_indexData.size(); ++i)
+    {
+        btIndexedMesh tableMesh;
+        tableMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
+        tableMesh.m_numVertices = static_cast<std::int32_t>(meshData.vertexCount);
+        tableMesh.m_vertexStride = static_cast<std::int32_t>(meshData.vertexSize);
+
+        tableMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
+        tableMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
+        tableMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
+
+
+        m_tableVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(tableMesh);
+        m_tableShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_tableVertices.back().get(), false));
+
+        auto& obj = m_tableObjects.emplace_back(std::make_unique<btPairCachingGhostObject>());
+        obj->setCollisionShape(m_tableShapes.back().get());
+        obj->setUserIndex(CollisionID::Cushion);
+        m_collisionWorld->addCollisionObject(obj.get());
+    }
+
+    //create triggers for each pocket
+    static constexpr float PocketHeight = 0.1f;
+    const btVector3 PocketHalfSize({ 0.075f, 0.1f, 0.075f });
+    m_pocketShape = std::make_unique<btBoxShape>(PocketHalfSize);
+
+    for (auto p : tableData.pockets)
+    {
+        transform.setOrigin({ p.position.x, -PocketHeight, p.position.y });
+        auto& obj = m_tableObjects.emplace_back(std::make_unique<btPairCachingGhostObject>());
+        obj->setCollisionShape(m_pocketShape.get());
+        obj->setWorldTransform(transform);
+        obj->setUserIndex(CollisionID::Pocket);
+        m_collisionWorld->addCollisionObject(obj.get());
+    }
 }
 
 void BilliardsCollisionSystem::renderDebug(const glm::mat4& mat, glm::uvec2 targetSize)

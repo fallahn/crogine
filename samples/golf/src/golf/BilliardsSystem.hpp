@@ -123,10 +123,15 @@ private:
         btPairCachingGhostObject* m_collisionBody;
     };
     std::int32_t m_pocketContact = -1; //ID of pocket, or -1
+    std::int32_t m_prevPocketContact = -1; //client side only
     bool m_inPocketRadius = false;
 
     std::int8_t m_ballContact = -1; //other ball or -1
     std::int8_t m_prevBallContact = -1;
+
+    //client side only
+    std::int32_t m_cushionContact = -1;
+    std::int32_t m_prevCushionContact = -1;
 
     friend class BilliardsSystem;
     friend class BilliardsCollisionSystem;

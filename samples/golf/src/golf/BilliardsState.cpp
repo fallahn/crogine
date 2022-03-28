@@ -463,6 +463,8 @@ void BilliardsState::buildScene()
             md.createModel(entity);
         }
         m_gameMode = tableData.rules;
+
+        m_gameScene.getSystem<BilliardsCollisionSystem>()->initTable(tableData);
     }
     else
     {

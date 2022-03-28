@@ -301,7 +301,7 @@ void BilliardsSystem::initTable(const TableData& tableData)
     m_collisionWorld->addCollisionObject(table.get(), (1 << CollisionID::Table), (1 << CollisionID::Ball));
 
     //create triggers for each pocket
-    const glm::vec3 PocketHalfSize({ 0.075f, 0.1f, 0.075f });
+    static constexpr glm::vec3 PocketHalfSize({ 0.075f, 0.1f, 0.075f });
     static constexpr float WallThickness = 0.025f;
     static constexpr float WallHeight = 0.1f;
 

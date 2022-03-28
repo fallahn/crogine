@@ -124,5 +124,6 @@ struct BilliardBallEvent final
         BallPlaced,
         Collision
     }type = ShotTaken;
+    std::int32_t data = -1; //collision ID
     glm::vec3 position = glm::vec3(0.f);
 };

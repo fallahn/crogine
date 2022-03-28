@@ -64,6 +64,7 @@ public:
 
     void process(float) override;
 
+    void initTable(const struct TableData&);
     void renderDebug(const glm::mat4& viewProj, glm::uvec2 targetSize);
 
 private:
@@ -75,13 +76,15 @@ private:
     std::unique_ptr<btCollisionWorld> m_collisionWorld;
 
     std::vector<std::unique_ptr<btPairCachingGhostObject>> m_ballObjects;
-    /*std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_groundShapes;
-    std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_groundVertices;
+    std::vector<std::unique_ptr<btPairCachingGhostObject>> m_tableObjects; //remind me... why are these separate?
+    std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_tableShapes;
+    std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_tableVertices;
 
     std::vector<float> m_vertexData;
-    std::vector<std::vector<std::uint32_t>> m_indexData;*/
+    std::vector<std::vector<std::uint32_t>> m_indexData;
 
     std::unique_ptr<btSphereShape> m_ballShape;
+    std::unique_ptr<btBoxShape> m_pocketShape;
 
     void onEntityAdded(cro::Entity) override;
     void onEntityRemoved(cro::Entity) override;
