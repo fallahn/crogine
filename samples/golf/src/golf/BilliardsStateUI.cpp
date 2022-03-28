@@ -33,6 +33,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "PacketIDs.hpp"
 #include "../GolfGame.hpp"
+#include "../ErrorCheck.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
@@ -40,6 +41,11 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+
+namespace
+{
+#include "PaletteSwap.inl"
+}
 
 void BilliardsState::createUI()
 {
@@ -62,6 +68,17 @@ void BilliardsState::createUI()
     };
     auto courseEnt = entity;
 
+    /*if (m_gameSceneShader.loadFromString(PaletteSwapVertex, PaletteSwapFragment)
+        && m_lutTexture.loadFromFile("assets/golf/images/lut.png"))
+    {
+        auto uniformID = m_gameSceneShader.getUniformID("u_palette");
+
+        if (uniformID != -1)
+        {
+            entity.getComponent<cro::Drawable2D>().setShader(&m_gameSceneShader);
+            entity.getComponent<cro::Drawable2D>().bindUniform("u_palette", m_lutTexture);
+        }
+    }*/
 
 
     //ui viewport is set 1:1 with window, then the scene

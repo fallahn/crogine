@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
@@ -71,6 +72,8 @@ private:
     ActivePlayer m_currentPlayer;
 
     cro::RenderTexture m_gameSceneTexture;
+    cro::Shader m_gameSceneShader;
+    cro::Texture m_lutTexture;
     cro::UniformBuffer m_scaleBuffer;
     cro::UniformBuffer m_resolutionBuffer;
     glm::vec2 m_viewScale;
