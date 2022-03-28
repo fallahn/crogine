@@ -841,12 +841,20 @@ void BilliardsState::spawnBall(const ActorInfo& info)
 
         static constexpr float Width = 0.5f;
         static constexpr float Height = 1 / 8.f;
-        static constexpr std::uint8_t RowCount = 7;
+        static constexpr std::uint8_t RowCount = 8;
+        static constexpr float Border = 0.001f;
 
         float left = Width * (info.state / RowCount);
         float bottom = Height * (info.state % RowCount);
 
-        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", glm::vec4(left, bottom, Width, Height));
+        //despite being 'glsl compatible' vec4 is xyzw and glm::vec4 is wxyz
+        glm::vec4 rect;
+        rect.x = left + Border;
+        rect.y = bottom;
+        rect.z = Width - (Border * 2.f);
+        rect.w = Height;
+
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", rect);
     }
 
     /*std::array points =
@@ -885,6 +893,10 @@ void BilliardsState::updateGhost(const BilliardsUpdate& info)
 
 void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
 {
+    m_cameraController.getComponent<cro::Callback>().active = false;
+    m_cameraController.getComponent<cro::Callback>().setUserData<float>(0.f);
+
+
     //hide the cue model(s)
     m_localCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::Out;
     m_localCue.getComponent<cro::Callback>().active = true;

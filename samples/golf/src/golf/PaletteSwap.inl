@@ -67,12 +67,12 @@ VARYING_IN vec2 v_texCoord;
 
 void main()
 {
-    vec3 outColour = TEXTURE(u_texture, v_texCoord).rgb;
+    vec3 outColour = TEXTURE(u_texture, v_texCoord).rgb * 255.0;
 
     outColour = floor(outColour * 16.0);
     float index = outColour.r + (outColour.g * 16.0) + (outColour.b * 16.0 * 16.0);
 
-    vec2 paletteCoord = vec2(index / 64.0, mod(index, 64.0));
+    vec2 paletteCoord = vec2(index / 64.0, 64.0 - mod(index, 64.0));
 
-    FRAG_OUT = TEXTURE(u_palette, floor(paletteCoord)) * v_colour;
+    FRAG_OUT = TEXTURE(u_palette, floor(paletteCoord) / vec2(64.0)) * v_colour;
 })";

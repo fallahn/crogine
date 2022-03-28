@@ -56,7 +56,7 @@ BilliardsCollisionSystem::BilliardsCollisionSystem(cro::MessageBus& mb)
     m_collisionWorld->setDebugDrawer(&m_debugDrawer);
     m_debugDrawer.setDebugMode(/*BulletDebug::DebugFlags*/0);
 
-    m_ballShape = std::make_unique<btSphereShape>(BilliardBall::Radius * 1.05f);
+    m_ballShape = std::make_unique<btSphereShape>(BilliardBall::Radius * 1.1f);
 
 #ifdef CRO_DEBUG_
     registerWindow([&]() 

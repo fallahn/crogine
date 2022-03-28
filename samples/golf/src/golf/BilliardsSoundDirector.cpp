@@ -76,12 +76,15 @@ void BilliardsSoundDirector::handleMessage(const cro::Message& msg)
             {
             default: break;
             case CollisionID::Cushion:
-                playSound(AudioID::CushionHit, data.position);
+            {
+                auto ent = playSound(AudioID::CushionHit, data.position);
+                ent.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.15f));
+            }
                 break;
             case CollisionID::Ball:
             {
                 auto ent = playSound(AudioID::BallHit, data.position);
-                ent.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.95f, 1.05f));
+                ent.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.15f));
             }
                 break;
             case CollisionID::Pocket:
