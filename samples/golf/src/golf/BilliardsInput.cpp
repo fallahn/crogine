@@ -79,7 +79,7 @@ BilliardsInput::BilliardsInput(const InputBinding& ip, cro::MessageBus& mb)
     m_basePosition          (0.f)
 {
 #ifdef CRO_DEBUG_
-    registerWindow([&]()
+    /*registerWindow([&]()
         {
             if (ImGui::Begin("Controls"))
             {
@@ -87,7 +87,7 @@ BilliardsInput::BilliardsInput(const InputBinding& ip, cro::MessageBus& mb)
                 ImGui::Text("Spin %3.3f, %3.3f", m_topSpin, m_sideSpin);
             }
             ImGui::End();
-        });
+        });*/
 #endif
 }
 

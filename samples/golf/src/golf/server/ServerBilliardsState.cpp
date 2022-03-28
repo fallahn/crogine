@@ -181,6 +181,8 @@ void BilliardsState::netEvent(const cro::NetEvent& evt)
             {
                 setNextPlayer(false);
             }
+            //rebroadcast to tell clients to clear their UI
+            m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::TurnReady, std::uint8_t(255), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
         }
     }

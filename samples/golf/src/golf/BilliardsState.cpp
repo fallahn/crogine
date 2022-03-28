@@ -102,33 +102,33 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
         });
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("Buns"))
-            {
-                ImGui::Text("Power %3.3f", m_inputParser.getPower());
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Buns"))
+    //        {
+    //            ImGui::Text("Power %3.3f", m_inputParser.getPower());
 
-                /*auto pos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
-                if (ImGui::SliderFloat("Height", &pos.y, 0.1f, 1.f))
-                {
-                    m_cameras[CameraID::Player].getComponent<cro::Transform>().setPosition(pos);
-                }
-                
-                if (ImGui::SliderFloat("Distance", &pos.z, 0.1f, 1.f))
-                {
-                    m_cameras[CameraID::Player].getComponent<cro::Transform>().setPosition(pos);
-                }
+    //            /*auto pos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
+    //            if (ImGui::SliderFloat("Height", &pos.y, 0.1f, 1.f))
+    //            {
+    //                m_cameras[CameraID::Player].getComponent<cro::Transform>().setPosition(pos);
+    //            }
+    //            
+    //            if (ImGui::SliderFloat("Distance", &pos.z, 0.1f, 1.f))
+    //            {
+    //                m_cameras[CameraID::Player].getComponent<cro::Transform>().setPosition(pos);
+    //            }
 
-                ImGui::Text("Position %3.3f, %3.3f", pos.y, pos.z);
+    //            ImGui::Text("Position %3.3f, %3.3f", pos.y, pos.z);
 
-                static float rotation = -10.f;
-                if (ImGui::SliderFloat("Rotation", &rotation, -90.f, 0.f))
-                {
-                    m_cameras[CameraID::Player].getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rotation * cro::Util::Const::degToRad);
-                }*/
-            }
-            ImGui::End();
-        });
+    //            static float rotation = -10.f;
+    //            if (ImGui::SliderFloat("Rotation", &rotation, -90.f, 0.f))
+    //            {
+    //                m_cameras[CameraID::Player].getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rotation * cro::Util::Const::degToRad);
+    //            }*/
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
@@ -669,6 +669,15 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::TurnReady:
+        {
+            //remove message from UI
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::MessageBoard;
+            cmd.action = [&](cro::Entity e, float) {m_uiScene.destroyEntity(e); };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+            break;
         case PacketID::NotifyPlayer:
             showReadyNotify(evt.packet.as<BilliardsPlayer>());
             break;
@@ -947,12 +956,6 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
 
 void BilliardsState::sendReadyNotify()
 {
-    //remove message from UI
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::UI::MessageBoard;
-    cmd.action = [&](cro::Entity e, float) {m_uiScene.destroyEntity(e); };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
     if (m_wantsNotify)
     {
         m_wantsNotify = false;

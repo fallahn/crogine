@@ -90,9 +90,9 @@ namespace PacketID
         TransitionComplete, //< uint8 clientID, signal hole transition completed
         ReadyQuit, //< uint8 clientID - client wants to toggle skip viewing scores
         BallPlaced, //< BilliardBallInput with position in offset member
-        TurnReady, //< uint8 clientID - ready to take their turn
 
         //both directions
+        TurnReady, //< uint8 clientID - ready to take their turn - rebroadcast by server to tell all clients to clear messages
         MapInfo, //< serialised cro::String containing course directory
         LobbyReady, //< uint8 playerID uint8 0 false 1 true
         AchievementGet, //< uint8 client uint8 achievement id (always assume first player on client, as achievements are disabled other wise)
