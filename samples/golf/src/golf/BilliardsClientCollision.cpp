@@ -54,7 +54,7 @@ BilliardsCollisionSystem::BilliardsCollisionSystem(cro::MessageBus& mb)
     m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionCfg.get());
 
     m_collisionWorld->setDebugDrawer(&m_debugDrawer);
-    m_debugDrawer.setDebugMode(/*BulletDebug::DebugFlags*/3);
+    m_debugDrawer.setDebugMode(/*BulletDebug::DebugFlags*/0);
 
     m_ballShape = std::make_unique<btSphereShape>(BilliardBall::Radius * 1.05f);
 
@@ -260,6 +260,12 @@ void BilliardsCollisionSystem::initTable(const TableData& tableData)
         obj->setUserIndex(CollisionID::Pocket);
         m_collisionWorld->addCollisionObject(obj.get());
     }
+}
+
+void BilliardsCollisionSystem::toggleDebug()
+{
+    auto flags = m_debugDrawer.getDebugMode() == 0 ? 3 : 0;
+    m_debugDrawer.setDebugMode(flags);
 }
 
 void BilliardsCollisionSystem::renderDebug(const glm::mat4& mat, glm::uvec2 targetSize)

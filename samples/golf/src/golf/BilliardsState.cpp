@@ -36,6 +36,7 @@ source distribution.
 #include "BilliardsSystem.hpp"
 #include "BilliardsClientCollision.hpp"
 #include "InterpolationSystem.hpp"
+#include "BilliardsSoundDirector.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/gui/Gui.hpp>
@@ -159,6 +160,9 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_F3:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::StrikeBall), cro::NetFlag::Reliable);
+            break;
+        case SDLK_HOME:
+            m_gameScene.getSystem<BilliardsCollisionSystem>()->toggleDebug();
             break;
         }
     }
@@ -437,6 +441,8 @@ void BilliardsState::addSystems()
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
+
+    m_gameScene.addDirector<BilliardsSoundDirector>(m_resources.audio);
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);

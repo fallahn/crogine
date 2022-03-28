@@ -305,6 +305,7 @@
     <ClCompile Include="src\golf\BallSystem.cpp" />
     <ClCompile Include="src\golf\BilliardsClientCollision.cpp" />
     <ClCompile Include="src\golf\BilliardsInput.cpp" />
+    <ClCompile Include="src\golf\BilliardsSoundDirector.cpp" />
     <ClCompile Include="src\golf\BilliardsState.cpp" />
     <ClCompile Include="src\golf\BilliardsStateUI.cpp" />
     <ClCompile Include="src\golf\BilliardsSystem.cpp" />
@@ -370,6 +371,7 @@
     <ClInclude Include="src\golf\BallSystem.hpp" />
     <ClInclude Include="src\golf\Billboard.hpp" />
     <ClInclude Include="src\golf\BilliardsClientCollision.hpp" />
+    <ClInclude Include="src\golf\BilliardsSoundDirector.hpp" />
     <ClInclude Include="src\golf\BilliardsState.hpp" />
     <ClInclude Include="src\golf\BilliardsSystem.hpp" />
     <ClInclude Include="src\golf\BilliardsInput.hpp" />

@@ -3,6 +3,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/BallSystem.cpp
   ${PROJECT_DIR}/golf/BilliardsClientCollision.cpp
   ${PROJECT_DIR}/golf/BilliardsInput.cpp
+  ${PROJECT_DIR}/golf/BilliardsSoundDirector.cpp
   ${PROJECT_DIR}/golf/BilliardsState.cpp
   ${PROJECT_DIR}/golf/BilliardsStateUI.cpp
   ${PROJECT_DIR}/golf/BilliardsSystem.cpp

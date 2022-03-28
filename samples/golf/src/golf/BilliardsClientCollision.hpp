@@ -65,6 +65,8 @@ public:
     void process(float) override;
 
     void initTable(const struct TableData&);
+
+    void toggleDebug();
     void renderDebug(const glm::mat4& viewProj, glm::uvec2 targetSize);
 
 private:
