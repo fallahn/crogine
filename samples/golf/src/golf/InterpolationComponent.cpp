@@ -74,7 +74,13 @@ void InterpolationComponent::addTarget(const InterpolationPoint& target)
             }
         }
     }
-    //m_enabled = m_buffer.size() > 2; //this *might* help keep things smoother (hard to tell) but it def causes lag between the cue anim
+
+    //if (!m_enabled)
+    //{
+    //    //this *might* help keep things smoother (hard to tell) but it def causes lag between the cue/club anim
+    //    //we can tune this for a local client, however it is also variable in time depending on the client's lag...
+    //    m_enabled = m_buffer.size() > 6; 
+    //}
 }
 
 void InterpolationComponent::setEnabled(bool enabled)

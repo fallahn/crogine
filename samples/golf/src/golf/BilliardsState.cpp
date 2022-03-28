@@ -312,6 +312,17 @@ void BilliardsState::handleMessage(const cro::Message& msg)
 
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::BallPlaced, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
+        /*else if (data.type == BilliardBallEvent::ShotTaken)
+        {
+            BilliardBallInput input;
+            auto [impulse, offset] = m_inputParser.getImpulse();
+            input.impulse = impulse;
+            input.offset = offset;
+            input.client = m_sharedData.localConnectionData.connectionID;
+            input.player = m_currentPlayer.player;
+
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }*/
     }
         break;
     }
@@ -558,6 +569,7 @@ void BilliardsState::buildScene()
     m_cameraController.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
     m_cameraController.getComponent<ControllerRotation>().activeCamera = &camEnt.getComponent<cro::Camera>().active;
     m_cameraController.addComponent<cro::Callback>().active = true;
+    m_cameraController.getComponent<cro::Callback>().setUserData<float>(0.f);
     m_cameraController.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
@@ -575,6 +587,21 @@ void BilliardsState::buildScene()
                 adjustment *= (cro::Util::Const::PI / 2.f);
                 e.getComponent<ControllerRotation>().rotation -= adjustment * (absDiff - 0.2f) * dt;
             }
+
+            //after some time check if the ball is too close
+            //and change the view
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime += dt;
+
+            if (currTime > 3
+                && glm::dot(dir, e.getComponent<cro::Transform>().getForwardVector()) < 0.2f)
+            {
+                setActiveCamera(CameraID::Overhead);
+            }
+        }
+        else
+        {
+            e.getComponent<cro::Callback>().getUserData<float>() = 0.f;
         }
     };
 
@@ -662,7 +689,7 @@ void BilliardsState::buildScene()
     createUI();
 
 
-    //TODO this wants to be done after any animation
+    //TODO this wants to be done after any loading animation
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete,
         m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
@@ -790,37 +817,19 @@ void BilliardsState::spawnBall(const ActorInfo& info)
     //set colour/model based on type stored in info.state
     if (m_gameMode == TableData::Eightball)
     {
-        switch (info.state)
+        if (info.state == 0)
         {
-        default: break;
-        case 0: //cueball
-            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::White);
             m_cueball = entity;
-            //m_cameraController.getComponent<cro::Transform>().setPosition(info.position);
-            //setActiveCamera(CameraID::Player);
-            break;
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-        case 7: 
-            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Red);
-            break;
-        case 8:
-            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Black);
-            break;
-        case 9:
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-        case 15:
-            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Yellow);
-            break;
         }
+
+        static constexpr float Width = 0.5f;
+        static constexpr float Height = 1 / 8.f;
+        static constexpr std::uint8_t RowCount = 7;
+
+        float left = Width * (info.state / RowCount);
+        float bottom = Height * (info.state % RowCount);
+
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", glm::vec4(left, bottom, Width, Height));
     }
 
     /*std::array points =

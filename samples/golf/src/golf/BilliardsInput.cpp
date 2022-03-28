@@ -312,6 +312,7 @@ void BilliardsInput::setActive(bool active, bool placeBall)
 {
     m_active = active;
     m_controlEntities.camera.getComponent<cro::Callback>().active = !active;
+    m_controlEntities.camera.getComponent<cro::Callback>().getUserData<float>() = 0.f;
 
     if (active)
     {
@@ -533,6 +534,10 @@ void BilliardsInput::updatePlay(float dt)
     {
         m_controlEntities.cue.getComponent<cro::Skeleton>().play(1);
         setActive(false, false);
+
+        auto* msg = m_messageBus.post<BilliardBallEvent>(MessageID::BilliardsMessage);
+        msg->type = BilliardBallEvent::ShotTaken;
+        msg->position = m_controlEntities.camera.getComponent<cro::Transform>().getPosition();
     }
 }
 
