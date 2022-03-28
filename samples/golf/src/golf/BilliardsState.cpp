@@ -45,6 +45,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
+#include <crogine/ecs/components/AudioListener.hpp>
 
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
@@ -507,6 +508,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
     camEnt.getComponent<CameraProperties>().farPlane = 7.f;
+    camEnt.addComponent<cro::AudioListener>();
     m_cameras[CameraID::Front] = camEnt;
     setPerspective(camEnt.getComponent<cro::Camera>());
 
@@ -520,6 +522,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.75f;
     camEnt.getComponent<CameraProperties>().farPlane = 6.f;
+    camEnt.addComponent<cro::AudioListener>();
     m_cameras[CameraID::Overhead] = camEnt;
     setPerspective(camEnt.getComponent<cro::Camera>());
 
@@ -530,6 +533,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<CameraProperties>().farPlane = 5.f;
+    camEnt.addComponent<cro::AudioListener>();
     m_cameras[CameraID::Transition] = camEnt;
     setPerspective(camEnt.getComponent<cro::Camera>());
 
@@ -547,6 +551,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
     camEnt.getComponent<CameraProperties>().farPlane = 6.f;
+    camEnt.addComponent<cro::AudioListener>();
     m_cameras[CameraID::Player] = camEnt;
     setPerspective(camEnt.getComponent<cro::Camera>());
 
@@ -1003,6 +1008,7 @@ void BilliardsState::setActiveCamera(std::int32_t camID)
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition(transitionData.startPos);
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setRotation(transitionData.startRot);
     m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+    m_gameScene.setActiveListener(m_cameras[CameraID::Transition]);
 
     //create a temp entity to interp the transition camera
     auto entity = m_gameScene.createEntity();
@@ -1032,6 +1038,8 @@ void BilliardsState::setActiveCamera(std::int32_t camID)
             m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = false;
             m_gameScene.setActiveCamera(m_cameras[camID]);
             m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+
+            m_gameScene.setActiveListener(m_cameras[camID]);
 
             m_activeCamera = camID;
         }

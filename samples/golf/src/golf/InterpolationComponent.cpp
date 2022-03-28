@@ -74,6 +74,7 @@ void InterpolationComponent::addTarget(const InterpolationPoint& target)
             }
         }
     }
+    //m_enabled = m_buffer.size() > 2; //this *might* help keep things smoother (hard to tell) but it def causes lag between the cue anim
 }
 
 void InterpolationComponent::setEnabled(bool enabled)
