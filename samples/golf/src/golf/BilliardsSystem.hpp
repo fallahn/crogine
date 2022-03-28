@@ -97,6 +97,7 @@ struct TableData final
 //this needs to be non-resizable as the physics world keeps references to motion states
 struct BilliardBall final : public btMotionState, public cro::Detail::NonResizeable
 {
+    BilliardBall() : m_physicsBody(nullptr) {}
     void getWorldTransform(btTransform& worldTrans) const override;
     void setWorldTransform(const btTransform& worldTrans) override;
 
@@ -116,8 +117,11 @@ struct BilliardBall final : public btMotionState, public cro::Detail::NonResizea
 
 private:
     cro::Entity m_parent;
-    btRigidBody* m_physicsBody = nullptr;
-
+    union
+    {
+        btRigidBody* m_physicsBody;
+        btPairCachingGhostObject* m_collisionBody;
+    };
     std::int32_t m_pocketContact = -1; //ID of pocket, or -1
     bool m_inPocketRadius = false;
 
@@ -125,6 +129,7 @@ private:
     std::int8_t m_prevBallContact = -1;
 
     friend class BilliardsSystem;
+    friend class BilliardsCollisionSystem;
 };
 
 class BulletDebug;

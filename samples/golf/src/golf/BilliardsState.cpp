@@ -407,6 +407,12 @@ void BilliardsState::render()
 {
     m_gameSceneTexture.clear(/*cro::Colour::AliceBlue*/);
     m_gameScene.render();
+    
+#ifdef CRO_DEBUG_
+    m_gameScene.getSystem<BilliardsCollisionSystem>()->renderDebug(
+        m_gameScene.getActiveCamera().getComponent<cro::Camera>().getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
+#endif
+    
     m_gameSceneTexture.display();
 
     m_uiScene.render();
@@ -597,6 +603,8 @@ void BilliardsState::buildScene()
                 && glm::dot(dir, e.getComponent<cro::Transform>().getForwardVector()) < 0.2f)
             {
                 setActiveCamera(CameraID::Overhead);
+                currTime = 0.f;
+                e.getComponent<cro::Callback>().active = false;
             }
         }
         else
@@ -793,6 +801,7 @@ void BilliardsState::spawnBall(const ActorInfo& info)
     entity.getComponent<cro::Transform>().setRotation(cro::Util::Net::decompressQuat(info.rotation));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<InterpolationComponent>(InterpolationPoint(info.position, cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).setID(info.serverID);
+    entity.addComponent<BilliardBall>().id = info.state;
 
     m_ballDefinition.createModel(entity);
     

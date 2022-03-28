@@ -122,6 +122,7 @@ struct BilliardBallEvent final
     {
         ShotTaken,
         BallPlaced,
+        Collision
     }type = ShotTaken;
     glm::vec3 position = glm::vec3(0.f);
 };

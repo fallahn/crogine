@@ -29,7 +29,15 @@ source distribution.
 
 #pragma once
 
+#include "DebugDraw.hpp"
+
 #include <crogine/ecs/System.hpp>
+#include <crogine/gui/GuiClient.hpp>
+
+#include <btBulletCollisionCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+
+#include <memory>
 
 /*
 NOTE since the introduction of Billiards the collision mesh
@@ -42,12 +50,39 @@ events for sound/particle effects and performs ray testing
 for UI feedback
 */
 
-class BilliardsCollisionSystem final : public cro::System
+class BilliardsCollisionSystem final : public cro::System, public cro::GuiClient
 {
 public:
     explicit BilliardsCollisionSystem(cro::MessageBus&);
 
+    ~BilliardsCollisionSystem();
+
+    BilliardsCollisionSystem(const BilliardsCollisionSystem&) = delete;
+    BilliardsCollisionSystem(BilliardsCollisionSystem&&) = delete;
+    BilliardsCollisionSystem& operator = (const BilliardsCollisionSystem&) = delete;
+    BilliardsCollisionSystem& operator = (BilliardsCollisionSystem&&) = delete;
+
     void process(float) override;
 
+    void renderDebug(const glm::mat4& viewProj, glm::uvec2 targetSize);
+
 private:
+    BulletDebug m_debugDrawer;
+
+    std::unique_ptr<btDefaultCollisionConfiguration> m_collisionCfg;
+    std::unique_ptr<btCollisionDispatcher> m_collisionDispatcher;
+    std::unique_ptr<btBroadphaseInterface> m_broadphaseInterface;
+    std::unique_ptr<btCollisionWorld> m_collisionWorld;
+
+    std::vector<std::unique_ptr<btPairCachingGhostObject>> m_ballObjects;
+    /*std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_groundShapes;
+    std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_groundVertices;
+
+    std::vector<float> m_vertexData;
+    std::vector<std::vector<std::uint32_t>> m_indexData;*/
+
+    std::unique_ptr<btSphereShape> m_ballShape;
+
+    void onEntityAdded(cro::Entity) override;
+    void onEntityRemoved(cro::Entity) override;
 };
