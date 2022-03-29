@@ -114,6 +114,9 @@
     <ClCompile Include="src\billiards\BilliardsSystem.cpp">
       <Filter>Source Files\billiards</Filter>
     </ClCompile>
+    <ClCompile Include="src\billiards\InterpolationSystem.cpp">
+      <Filter>Source Files\billiards</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -207,6 +210,9 @@
       <Filter>Header Files\billiards</Filter>
     </ClInclude>
     <ClInclude Include="src\billiards\BilliardsSystem.hpp">
+      <Filter>Header Files\billiards</Filter>
+    </ClInclude>
+    <ClInclude Include="src\billiards\InterpolationSystem.hpp">
       <Filter>Header Files\billiards</Filter>
     </ClInclude>
   </ItemGroup>

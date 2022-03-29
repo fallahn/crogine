@@ -29,6 +29,7 @@ source distribution.
 
 #include "BilliardsState.hpp"
 #include "BilliardsSystem.hpp"
+#include "InterpolationSystem.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 
@@ -125,6 +126,7 @@ void BilliardsState::render()
 void BilliardsState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_scene.addSystem<InterpolationSystem>(mb);
     m_scene.addSystem<BilliardsSystem>(mb, m_debugDrawer);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
@@ -268,6 +270,15 @@ void BilliardsState::buildScene()
 
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -25.f * cro::Util::Const::degToRad);
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -25.f * cro::Util::Const::degToRad);
+
+
+
+
+
+    //buns.
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<InterpolationComponent>();
 }
 
 void BilliardsState::addBall()
