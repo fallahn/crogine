@@ -115,6 +115,9 @@ private:
         enum
         {
             WireFrame,
+            Table,
+            Ball,
+            Cue,
 
             Count
         };

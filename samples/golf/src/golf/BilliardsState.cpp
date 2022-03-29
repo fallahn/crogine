@@ -72,6 +72,7 @@ source distribution.
 namespace
 {
 #include "WireframeShader.inl"
+#include "TerrainShader.inl"
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
@@ -114,7 +115,8 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     //    {
     //        if (ImGui::Begin("Buns"))
     //        {
-    //            ImGui::Text("Power %3.3f", m_inputParser.getPower());
+
+    //            //ImGui::Text("Power %3.3f", m_inputParser.getPower());
 
     //            /*auto pos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
     //            if (ImGui::SliderFloat("Height", &pos.y, 0.1f, 1.f))
@@ -442,6 +444,24 @@ void BilliardsState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
     m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]).blendMode = cro::Material::BlendMode::Alpha;
+
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
+    auto* shader = &m_resources.shaders.get(ShaderID::Course);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Table] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SUBRECT\n");
+    shader = &m_resources.shaders.get(ShaderID::CelTextured);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define SKINNED\n");
+    shader = &m_resources.shaders.get(ShaderID::CelSkinned);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Cue] = m_resources.materials.add(*shader);
 }
 
 void BilliardsState::addSystems()
@@ -471,6 +491,7 @@ void BilliardsState::addSystems()
 
 void BilliardsState::buildScene()
 {
+    //m_gameScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
     //TODO validate the table data (or should this be done by the menu?)
 
     std::string path = "assets/golf/tables/" + m_sharedData.mapDirectory + ".table";
@@ -483,6 +504,10 @@ void BilliardsState::buildScene()
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>();
             md.createModel(entity);
+
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Table]);
+            applyMaterialData(md, material);
+            entity.getComponent<cro::Model>().setMaterial(0, material);
         }
         m_gameMode = tableData.rules;
 
@@ -685,6 +710,10 @@ void BilliardsState::buildScene()
         md.createModel(entity);
         entity.getComponent<cro::Model>().setHidden(true);
         m_cameraController.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cue]);
+        applyMaterialData(md, material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
     }
     m_localCue = entity;
     controlEntities.cue = entity;
@@ -808,6 +837,9 @@ void BilliardsState::buildScene()
     //TODO this wants to be done after any loading animation
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete,
         m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    m_scaleBuffer.bind(0);
+    m_resolutionBuffer.bind(1);
 }
 
 void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
@@ -912,6 +944,9 @@ void BilliardsState::spawnBall(const ActorInfo& info)
     entity.addComponent<BilliardBall>().id = info.state;
 
     m_ballDefinition.createModel(entity);
+    auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+    applyMaterialData(m_ballDefinition, material);
+    entity.getComponent<cro::Model>().setMaterial(0, material);
     
     entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
     entity.addComponent<cro::Callback>().active = true;

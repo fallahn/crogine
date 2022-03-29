@@ -195,6 +195,8 @@ static const std::string CelVertexShader = R"(
     VARYING_OUT float v_ditherAmount;
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec4 v_colour;
+    VARYING_OUT vec3 v_cameraWorldPosition;
+    VARYING_OUT vec3 v_worldPosition;
 #if defined (TEXTURED)
     VARYING_OUT vec2 v_texCoord;
 #endif
@@ -236,6 +238,7 @@ static const std::string CelVertexShader = R"(
     #endif
 
         vec4 worldPosition = worldMatrix * position;
+        v_worldPosition = worldPosition.xyz;
         //gl_Position = u_projectionMatrix * worldViewMatrix * position;
 
         vec4 vertPos = u_projectionMatrix * worldViewMatrix * position;
@@ -248,7 +251,7 @@ static const std::string CelVertexShader = R"(
 
         float strength = u_windData.y;
         float totalScale = scale * strength * a_colour.b;
-
+//TODO um.. this should be in world space.
         vertPos.x += sin((u_windData.w * (xFreq)) + worldMatrix[3].x) * totalScale;
         vertPos.z += sin((u_windData.w * (yFreq)) + worldMatrix[3].z) * totalScale;
         vertPos.xz += (u_windData.xz * strength * 2.0) * totalScale;
@@ -267,7 +270,7 @@ static const std::string CelVertexShader = R"(
         normal = (skinMatrix * vec4(normal, 0.0)).xyz;
     #endif
         v_normal = normalMatrix * normal;
-
+        v_cameraWorldPosition = u_cameraWorldPosition;
         v_colour = a_colour;
 
 #if defined (TEXTURED)
@@ -325,6 +328,8 @@ static const std::string CelFragmentShader = R"(
     VARYING_IN vec3 v_normal;
     VARYING_IN vec4 v_colour;
     VARYING_IN float v_ditherAmount;
+    VARYING_IN vec3 v_cameraWorldPosition;
+    VARYING_IN vec3 v_worldPosition;
 
     OUTPUT
 
@@ -434,6 +439,32 @@ static const std::string CelFragmentShader = R"(
         }
         return 1.0;
     }
+    //https://gist.github.com/yiwenl/745bfea7f04c456e0101
+    vec3 rgb2hsv(vec3 c)
+    {
+        vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+        vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+        vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+        float d = q.x - min(q.w, q.y);
+        float e = 1.0e-10;
+        return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+    }
+
+    vec3 hsv2rgb(vec3 c)
+    {
+        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+    }
+
+    vec3 complementaryColour(vec3 c)
+    {
+        vec3 a = rgb2hsv(c);
+        a.x += 0.5;
+        c = hsv2rgb(a);
+        return c;
+    }
 
 
     const float Quantise = 10.0;
@@ -468,8 +499,8 @@ static const std::string CelFragmentShader = R"(
 #else
         vec3 normal = normalize(v_normal);
 #endif
-
-        float amount = dot(normal, normalize(-u_lightDirection));
+        vec3 lightDirection = normalize(-u_lightDirection);
+        float amount = dot(normal, lightDirection);
 
 #if defined (USER_COLOUR)
         //colour *= mix(u_darkColour, u_hairColour, step(0.5, amount));
@@ -485,13 +516,22 @@ static const std::string CelFragmentShader = R"(
 
         colour.rgb *= amount;
 
-#if !defined(NOCHEX)        
-        float check = mod(floor(gl_FragCoord.x / u_pixelScale) + floor(gl_FragCoord.y / u_pixelScale), 2.0) * checkAmount;
+#if !defined(NOCHEX)
+        float pixelScale = u_pixelScale;
+        //float pixelScale = 1.0;
+        float check = mod(floor(gl_FragCoord.x / pixelScale) + floor(gl_FragCoord.y / pixelScale), 2.0) * checkAmount;
         //float check = mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) * checkAmount;
         amount = (1.0 - check) + (check * amount);
-        colour.rgb *= amount;
+        //colour.rgb = complementaryColour(colour.rgb);
+        colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, amount);
+        //colour.rgb *= amount;
 #endif
-
+#if defined (SPECULAR)
+        vec3 viewDirection = v_cameraWorldPosition - v_worldPosition;
+        vec3 reflectDirection = reflect(-lightDirection, normal);
+        float spec = pow(max(dot(viewDirection, reflectDirection), 0.0), 32.0);
+        colour.rgb += vec3(spec);
+#endif
         FRAG_OUT = vec4(colour.rgb, 1.0);
 
 #if defined (RX_SHADOWS)

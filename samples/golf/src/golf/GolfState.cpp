@@ -114,7 +114,6 @@ namespace
 #include "WireframeShader.inl"
 #include "TransitionShader.inl"
 #include "BillboardShader.inl"
-#include "PostProcess.inl"
 
     std::int32_t debugFlags = 0;
     bool useFreeCam = false;
