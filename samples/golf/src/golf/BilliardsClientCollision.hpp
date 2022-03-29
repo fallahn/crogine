@@ -69,6 +69,14 @@ public:
     void toggleDebug();
     void renderDebug(const glm::mat4& viewProj, glm::uvec2 targetSize);
 
+    struct RaycastResult final
+    {
+        glm::vec3 hitPointWorld = glm::vec3(0.f);
+        glm::vec3 normalWorld = glm::vec3(0.f);
+        bool hasHit = false;
+    };
+    RaycastResult rayCast(glm::vec3 worldPos, glm::vec3 direction) const;
+
 private:
     BulletDebug m_debugDrawer;
 

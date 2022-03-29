@@ -47,6 +47,7 @@ struct ControlEntities final
     cro::Entity camera;
     cro::Entity cue;
     cro::Entity previewBall;
+    cro::Entity indicator;
 };
 
 class BilliardsInput final : public cro::GuiClient

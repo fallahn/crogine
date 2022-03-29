@@ -33,11 +33,13 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "MessageIDs.hpp"
 #include "GameConsts.hpp"
+#include "MenuConsts.hpp"
 #include "BilliardsSystem.hpp"
 #include "BilliardsClientCollision.hpp"
 #include "InterpolationSystem.hpp"
 #include "BilliardsSoundDirector.hpp"
 #include "server/ServerPacketData.hpp"
+#include "../ErrorCheck.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -60,6 +62,8 @@ source distribution.
 #include <crogine/ecs/systems/AudioSystem.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
+#include <crogine/graphics/DynamicMeshBuilder.hpp>
+
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Maths.hpp>
@@ -67,6 +71,8 @@ source distribution.
 
 namespace
 {
+#include "WireframeShader.inl"
+
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
     struct CueCallbackData final
@@ -160,6 +166,9 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_F3:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::StrikeBall), cro::NetFlag::Reliable);
+            break;
+        case SDLK_F4:
+            
             break;
         case SDLK_HOME:
             m_gameScene.getSystem<BilliardsCollisionSystem>()->toggleDebug();
@@ -426,6 +435,13 @@ void BilliardsState::render()
 void BilliardsState::loadAssets()
 {
     m_ballDefinition.loadFromFile("assets/golf/models/hole_19/billiard_ball.cmt");
+
+
+    std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
+
+    m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
+    m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
+    m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]).blendMode = cro::Material::BlendMode::Alpha;
 }
 
 void BilliardsState::addSystems()
@@ -695,8 +711,92 @@ void BilliardsState::buildScene()
         entity.getComponent<cro::Model>().setHidden(true);
     }
     controlEntities.previewBall = entity;
-    m_inputParser.setControlEntities(controlEntities);
+    
 
+
+    //direction indicator
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+    auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    entity.getComponent<cro::Model>().setHidden(true);
+
+    auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
+    meshData->boundingBox = { glm::vec3(3.f), glm::vec3(-3.f) };
+    std::vector<float> verts =
+    {
+        0.f, 0.f, 0.f,   1.f, 0.97f, 0.f, 1.f,
+        0.f, 0.f, -1.f,  1.f, 0.97f, 0.f, 1.f,
+        0.f, 0.f, -1.f,  1.f, 0.97f, 0.f, 1.f
+    };
+
+    auto vertStride = (meshData->vertexSize / sizeof(float));
+    meshData->vertexCount = verts.size() / vertStride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize* meshData->vertexCount, verts.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    std::vector<std::uint32_t> indices =
+    {
+        0,1
+    };
+
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, meshData](cro::Entity e, float)
+    {
+        static std::vector<float> vertexData;
+        static const auto c = TextGoldColour;
+        static constexpr float alpha = 0.7f;
+
+        auto position = m_localCue.getComponent<cro::Transform>().getWorldPosition();
+        auto direction = m_localCue.getComponent<cro::Transform>().getForwardVector();
+
+        auto rayResult = m_gameScene.getSystem<BilliardsCollisionSystem>()->rayCast(position, direction);
+
+        if (!rayResult.hasHit)
+        {
+            auto endpoint = position + direction;
+            vertexData =
+            {
+                position.x, position.y, position.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha,
+                endpoint.x, endpoint.y, endpoint.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha,
+                endpoint.x, endpoint.y, endpoint.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha
+            };
+        }
+        else
+        {
+            auto midpoint = rayResult.hitPointWorld;
+            auto endpoint = (position + direction) - midpoint;
+            endpoint = glm::reflect(endpoint, rayResult.normalWorld);
+            endpoint += midpoint;
+            vertexData =
+            {
+                position.x, position.y, position.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha,
+                midpoint.x, midpoint.y, midpoint.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha,
+                endpoint.x, endpoint.y, endpoint.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha
+            };
+        }
+
+        auto vertStride = (meshData->vertexSize / sizeof(float));
+        meshData->vertexCount = vertexData.size() / vertStride;
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, vertexData.data(), GL_DYNAMIC_DRAW));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+        e.getComponent<cro::Callback>().active = !e.getComponent<cro::Model>().isHidden();
+    };
+
+    controlEntities.indicator = entity;
+    m_inputParser.setControlEntities(controlEntities);
 
 
     //lights point straight down in billiards.
@@ -1097,8 +1197,8 @@ void BilliardsState::resizeBuffers()
     m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
     auto invScale = (maxScale + 1.f) - scale;
-    /*glCheck(glPointSize(invScale * BallPointSize));
-    glCheck(glLineWidth(invScale));*/
+    /*glCheck(glPointSize(invScale * BallPointSize));*/
+    glCheck(glLineWidth(invScale));
 
     m_scaleBuffer.setData(&invScale);
 

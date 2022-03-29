@@ -40,15 +40,7 @@ source distribution.
 
 namespace
 {
-    glm::vec3 btToGlm(btVector3 v)
-    {
-        return { v.getX(), v.getY(), v.getZ() };
-    }
 
-    btVector3 glmToBt(glm::vec3 v)
-    {
-        return { v.x, v.y, v.z };
-    }
 }
 
 const std::array<std::string, TableData::Rules::Count> TableData::RuleStrings =

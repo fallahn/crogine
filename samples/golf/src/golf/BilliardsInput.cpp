@@ -313,6 +313,9 @@ void BilliardsInput::setActive(bool active, bool placeBall)
     m_active = active;
     m_controlEntities.camera.getComponent<cro::Callback>().active = !active;
     m_controlEntities.camera.getComponent<cro::Callback>().getUserData<float>() = 0.f;
+    
+    m_controlEntities.indicator.getComponent<cro::Model>().setHidden(!active);
+    m_controlEntities.indicator.getComponent<cro::Callback>().active = active;
 
     if (active)
     {

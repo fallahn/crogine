@@ -110,6 +110,17 @@ private:
     cro::Entity m_remoteCue;
     std::uint8_t m_readyQuitFlags;
 
+    struct MaterialID final
+    {
+        enum
+        {
+            WireFrame,
+
+            Count
+        };
+    };
+    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
+
     void loadAssets();
     void addSystems();
     void buildScene();

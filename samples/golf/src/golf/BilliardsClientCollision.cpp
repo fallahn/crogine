@@ -38,6 +38,7 @@ source distribution.
 namespace
 {
     std::int32_t collisionCount = 0;
+    glm::vec3 rayForward = glm::vec3(0.f);
 }
 
 BilliardsCollisionSystem::BilliardsCollisionSystem(cro::MessageBus& mb)
@@ -73,6 +74,8 @@ BilliardsCollisionSystem::BilliardsCollisionSystem(cro::MessageBus& mb)
                 }
 
                 ImGui::Text("Manifold Count: %d", collisionCount);
+
+                ImGui::Text("Ray Forward %3.3f, %3.3f, %3.3f", rayForward.x, rayForward.y, rayForward.z);
             }
             ImGui::End();
         });
@@ -164,7 +167,7 @@ void BilliardsCollisionSystem::process(float)
     {
         if (body0->getUserIndex() == CollisionID::Ball)
         {
-            auto contactCount = std::min(1, manifold->getNumContacts());
+            auto contactCount = manifold->getNumContacts();// std::min(1, manifold->getNumContacts());
             for (auto j = 0; j < contactCount; ++j)
             {
                 auto ballA = static_cast<BilliardBall*>(body0->getUserPointer());
@@ -247,8 +250,8 @@ void BilliardsCollisionSystem::initTable(const TableData& tableData)
     }
 
     //create triggers for each pocket
-    static constexpr float PocketHeight = 0.1f;
-    const btVector3 PocketHalfSize({ 0.075f, 0.1f, 0.075f });
+    static constexpr float PocketHeight = 0.15f;
+    const btVector3 PocketHalfSize({ 0.075f, 0.025f, 0.075f });
     m_pocketShape = std::make_unique<btBoxShape>(PocketHalfSize);
 
     for (auto p : tableData.pockets)
@@ -271,6 +274,31 @@ void BilliardsCollisionSystem::toggleDebug()
 void BilliardsCollisionSystem::renderDebug(const glm::mat4& mat, glm::uvec2 targetSize)
 {
     m_debugDrawer.render(mat, targetSize);
+}
+
+BilliardsCollisionSystem::RaycastResult BilliardsCollisionSystem::rayCast(glm::vec3 pos, glm::vec3 direction) const
+{
+#ifdef CRO_DEBUG_
+    rayForward = direction;
+#endif
+
+    auto worldPos = glmToBt(pos);
+    auto rayLength = glmToBt(direction);
+
+    btCollisionWorld::ClosestRayResultCallback res(worldPos, worldPos + rayLength);
+    if (glm::length2(direction) != 0)
+    {
+        m_collisionWorld->rayTest(worldPos, worldPos + rayLength, res);
+    }
+
+    RaycastResult retval;
+    if (res.hasHit())
+    {
+        retval.hitPointWorld = btToGlm(res.m_hitPointWorld);
+        retval.normalWorld = btToGlm(res.m_hitNormalWorld);
+        retval.hasHit = true;
+    }
+    return retval;
 }
 
 //private
