@@ -36,14 +36,16 @@ source distribution.
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/System.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 struct InterpolationPoint final
 {
 	InterpolationPoint() = default;
-	InterpolationPoint(glm::vec3 p, glm::quat r, std::int32_t ts)
-		: position(p), rotation(r), timestamp(ts) {}
+	InterpolationPoint(glm::vec3 p, glm::vec3 v, glm::quat r, std::int32_t ts)
+		: position(p), velocity(v), rotation(r), timestamp(ts) {}
 
 	glm::vec3 position = glm::vec3(0.f);
+	glm::vec3 velocity = glm::vec3(0.f);
 	glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
 	std::int32_t timestamp = 0;
 };
@@ -57,7 +59,7 @@ struct InterpolationComponent final
 	std::int32_t getElapsedTime() const;
 
 
-	CircularBuffer<InterpolationPoint, 8u> buffer;
+	CircularBuffer<InterpolationPoint, 18u> buffer;
 	void addPoint(InterpolationPoint ip);
 	
 	std::size_t bufferSize = 3;
@@ -66,7 +68,7 @@ struct InterpolationComponent final
 	std::uint32_t id = std::numeric_limits<std::uint32_t>::max();
 };
 
-class InterpolationSystem final : public cro::System
+class InterpolationSystem final : public cro::System, public cro::GuiClient
 {
 public:
 	explicit InterpolationSystem(cro::MessageBus&);

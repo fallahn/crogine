@@ -44,6 +44,7 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 namespace
 {
@@ -297,7 +298,7 @@ void BilliardsState::buildScene()
     //but applying them with +- 0.2 sec jitter. 1 in 60 updates are also dropped.
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<InterpolationComponent>(InterpolationPoint(glm::vec3(0.f), glm::quat(1.f, 0.f ,0.f, 0.f), m_interpClock.elapsed().asMilliseconds()));
+    entity.addComponent<InterpolationComponent>(InterpolationPoint(glm::vec3(0.f), glm::vec3(0.f), glm::quat(1.f, 0.f ,0.f, 0.f), m_interpClock.elapsed().asMilliseconds()));
     interpEnt = entity;
 
     md.loadFromFile("assets/billiards/interp.cmt");
@@ -308,31 +309,45 @@ void BilliardsState::buildScene()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
-        static constexpr float TimeStep = 1.f;
+        static constexpr float TimeStep = 1.f / 20.f;
         static float nextTimeStep = TimeStep;
+        static const std::vector<float> TableX = cro::Util::Wavetable::sine(0.25f, 0.5f);
+        static std::size_t tableXIndex = 0;
+        static const std::vector<float> TableY = cro::Util::Wavetable::sine(0.125f, 0.8f);
+        static std::size_t tableYIndex = 0;
+
+        static glm::vec3 prevPos(0.f);
+        static glm::vec3 velocity(0.f);
+
+        glm::vec3 pos(TableX[tableXIndex], 0.5f, TableY[tableYIndex]);
+        velocity = (pos - prevPos) * (1.f / dt);
+        prevPos = pos;
 
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime += dt;
 
-        static std::int32_t ts = 1000;
+        static std::int32_t ts = 50;
 
         if (currTime > nextTimeStep)
         {
             currTime -= nextTimeStep;
-            nextTimeStep = TimeStep + cro::Util::Random::value(-0.2f, 0.2f);
+            nextTimeStep = TimeStep + cro::Util::Random::value(-0.01f, 0.01f);
 
-            if (cro::Util::Random::value(0, 60) != 0)
+            //if (cro::Util::Random::value(0, 60) != 0)
             {
-                interpEnt.getComponent<InterpolationComponent>().addPoint({ interpTargets[interpIndex], glm::quat(1.f, 0.f, 0.f, 0.f), ts });
+                interpEnt.getComponent<InterpolationComponent>().addPoint({ pos, velocity, glm::quat(1.f, 0.f, 0.f, 0.f), ts });
             }
-            else
+            /*else
             {
                 LogI << "skipped" << std::endl;
-            }
+            }*/
             interpIndex = (interpIndex + 1) % interpTargets.size();
 
-            ts += 1000;
+            ts += 50;
         }
+
+        tableXIndex = (tableXIndex + 1) % TableX.size();
+        tableYIndex = (tableYIndex + 1) % TableY.size();
     };
 }
 
