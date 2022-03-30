@@ -215,6 +215,9 @@
     <ClInclude Include="src\billiards\InterpolationSystem.hpp">
       <Filter>Header Files\billiards</Filter>
     </ClInclude>
+    <ClInclude Include="src\billiards\CircularBuffer.hpp">
+      <Filter>Header Files\billiards</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\voxels\Tables.inl">

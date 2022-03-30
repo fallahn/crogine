@@ -48,6 +48,21 @@ source distribution.
 namespace
 {
     bool showDebug = false;
+
+    cro::Entity interpEnt;
+
+    std::array interpTargets =
+    {
+        glm::vec3(0.5f, 0.5f, 0.f),
+        glm::vec3(0.5f, 0.5f, -0.5f),
+        glm::vec3(0.f, 0.5f, -0.5f),
+        glm::vec3(-0.5f, 0.5f, -0.5f),
+        glm::vec3(-0.5f, 0.5f, 0.f),
+        glm::vec3(-0.5f, 0.5f, 0.5f),
+        glm::vec3(0.f, 0.5f, 0.5f),
+        glm::vec3(0.5f, 0.5f, 0.5f)
+    };
+    std::size_t interpIndex = 0;
 }
 
 BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx)
@@ -95,6 +110,9 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_4:
             m_scene.setActiveCamera(m_cameras[4]);
+            break;
+        case SDLK_SPACE:
+            interpEnt.getComponent<cro::Callback>().active = !interpEnt.getComponent<cro::Callback>().active;
             break;
         }
     }
@@ -275,10 +293,47 @@ void BilliardsState::buildScene()
 
 
 
-    //buns.
+    //test interp component by sending updates with fixed space timestamps
+    //but applying them with +- 0.2 sec jitter. 1 in 60 updates are also dropped.
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<InterpolationComponent>();
+    entity.addComponent<InterpolationComponent>(InterpolationPoint(glm::vec3(0.f), glm::quat(1.f, 0.f ,0.f, 0.f), m_interpClock.elapsed().asMilliseconds()));
+    interpEnt = entity;
+
+    md.loadFromFile("assets/billiards/interp.cmt");
+    md.createModel(entity);
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        static constexpr float TimeStep = 1.f;
+        static float nextTimeStep = TimeStep;
+
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime += dt;
+
+        static std::int32_t ts = 1000;
+
+        if (currTime > nextTimeStep)
+        {
+            currTime -= nextTimeStep;
+            nextTimeStep = TimeStep + cro::Util::Random::value(-0.2f, 0.2f);
+
+            if (cro::Util::Random::value(0, 60) != 0)
+            {
+                interpEnt.getComponent<InterpolationComponent>().addPoint({ interpTargets[interpIndex], glm::quat(1.f, 0.f, 0.f, 0.f), ts });
+            }
+            else
+            {
+                LogI << "skipped" << std::endl;
+            }
+            interpIndex = (interpIndex + 1) % interpTargets.size();
+
+            ts += 1000;
+        }
+    };
 }
 
 void BilliardsState::addBall()

@@ -31,6 +31,52 @@ source distribution.
 
 #include <crogine/ecs/components/Transform.hpp>
 
+namespace
+{
+	//we're expecting ~ 50ms intervals so usually 250
+	//could be considered a 'large' gap.
+
+	//constexpr std::int32_t MaxTimeGap = 250;
+	constexpr std::int32_t MaxTimeGap = 5000;
+}
+
+InterpolationComponent::InterpolationComponent(InterpolationPoint ip)
+{
+	buffer.push_back(ip);
+	wantsBuffer = buffer.size() < bufferSize;
+}
+
+std::int32_t InterpolationComponent::getElapsedTime() const
+{
+	return overflow + timer.elapsed().asMilliseconds();
+}
+
+void InterpolationComponent::addPoint(InterpolationPoint ip)
+{
+	if (ip.timestamp > buffer.back().timestamp)
+	{
+		//makes sure timer doesn't start until finished buffering
+		if (wantsBuffer)
+		{
+			timer.restart();
+			overflow = 0;
+		}
+
+		buffer.push_back(ip);
+
+		//if theres a large time gap, pop the front
+		//so we can catch up a bit
+		if (buffer[1].timestamp - buffer[0].timestamp > MaxTimeGap)
+		{
+			buffer.pop_front();
+		}
+
+		wantsBuffer = buffer.size() < bufferSize;
+	}
+}
+
+//--------------------------------------//
+
 InterpolationSystem::InterpolationSystem(cro::MessageBus& mb)
 	: cro::System(mb, typeid(InterpolationSystem))
 {
@@ -55,11 +101,12 @@ void InterpolationSystem::process(float)
 				std::int32_t elapsed = interp.getElapsedTime();
 				while (elapsed > difference)
 				{
-					//TODO apply buffer[1] transform to entity
-
 					interp.overflow = elapsed - difference;
 					interp.timer.restart();
 					interp.buffer.pop_front();
+
+					entity.getComponent<cro::Transform>().setPosition(interp.buffer[0].position);
+					entity.getComponent<cro::Transform>().setRotation(interp.buffer[0].rotation);
 
 					elapsed = 0;
 
@@ -79,7 +126,13 @@ void InterpolationSystem::process(float)
 				{
 					float interpTime = static_cast<float>(elapsed) / difference;
 
-					//TODO apply interpolated transform to entity
+					//apply interpolated transform to entity
+					auto diff = interp.buffer[1].position - interp.buffer[0].position;
+					auto position = interp.buffer[0].position + (diff * interpTime);
+					auto rotation = glm::slerp(interp.buffer[0].rotation, interp.buffer[1].rotation, interpTime);
+
+					entity.getComponent<cro::Transform>().setPosition(position);
+					entity.getComponent<cro::Transform>().setRotation(rotation);
 				}
 			}
 		}

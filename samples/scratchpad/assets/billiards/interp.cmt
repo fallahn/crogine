@@ -1,0 +1,19 @@
+model interp
+{
+    mesh = sphere
+    size = 0.056, 0.056, 0.056
+    radius = 0.05
+    cast_shadows = false
+
+    material VertexLit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.0,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+
+    }
+}

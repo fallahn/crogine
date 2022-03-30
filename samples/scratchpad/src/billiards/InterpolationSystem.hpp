@@ -50,33 +50,20 @@ struct InterpolationPoint final
 
 struct InterpolationComponent final
 {
-	explicit InterpolationComponent(InterpolationPoint ip = {})
-	{
-		buffer.push_back(ip);
-	}
+	explicit InterpolationComponent(InterpolationPoint = {});
 	
 	cro::Clock timer;
 	std::int32_t overflow = 0;
+	std::int32_t getElapsedTime() const;
 
-	std::int32_t getElapsedTime() const
-	{
-		return overflow + timer.elapsed().asMilliseconds();
-	}
 
 	CircularBuffer<InterpolationPoint, 8u> buffer;
+	void addPoint(InterpolationPoint ip);
 	
-	void addPoint(InterpolationPoint ip)
-	{
-		if (buffer.back().timestamp < ip.timestamp)
-		{
-			buffer.push_back(ip);
-		}
-	}
-
-	std::uint32_t id = std::numeric_limits<std::uint32_t>::max();
-
 	std::size_t bufferSize = 3;
 	bool wantsBuffer = true;
+
+	std::uint32_t id = std::numeric_limits<std::uint32_t>::max();
 };
 
 class InterpolationSystem final : public cro::System
