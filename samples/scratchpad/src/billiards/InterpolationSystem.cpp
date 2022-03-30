@@ -145,7 +145,7 @@ void InterpolationSystem::process(float)
 				{
 					float t = static_cast<float>(elapsed) / difference;
 					float t2 = t * t;
-					float t3 = t;
+					float t3 = t2 * t;
 
 					//apply interpolated transform to entity
 

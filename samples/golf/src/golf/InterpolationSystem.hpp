@@ -160,14 +160,16 @@ public:
 					if (!interp.wantsBuffer)
 					{
 						float t = static_cast<float>(elapsed) / difference;
-						float t2 = t * t;
-						float t3 = t;
 
 						//apply interpolated transform to entity
 
 						if constexpr (Interpolation == InterpolationType::Hermite)
 						{
 							//hermite - https://stackoverflow.com/questions/55302066/implement-hermite-interpolation-multiplayer-game
+
+							float t2 = t * t;
+							float t3 = t2 * t;
+
 							auto startPos = interp.buffer[0].position;
 							auto startVel = interp.buffer[0].velocity;
 							auto endPos = interp.buffer[1].position;

@@ -394,7 +394,7 @@ btRigidBody::btRigidBodyConstructionInfo BilliardsSystem::createBodyDef(std::int
         info.m_friction = 0.26f;
         break;
     case CollisionID::Cushion:
-        info.m_restitution = 0.5f;
+        info.m_restitution = 1.f;// 0.5f;
         info.m_friction = 0.28f;
         break;
     case CollisionID::Ball:

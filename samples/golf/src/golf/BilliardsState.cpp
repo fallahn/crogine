@@ -492,7 +492,7 @@ void BilliardsState::addSystems()
 
 void BilliardsState::buildScene()
 {
-    //m_gameScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
+    m_gameScene.setCubemap("assets/golf/images/skybox/billiards/sky.ccm");
     //TODO validate the table data (or should this be done by the menu?)
 
     std::string path = "assets/golf/tables/" + m_sharedData.mapDirectory + ".table";
