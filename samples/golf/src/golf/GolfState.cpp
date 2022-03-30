@@ -1818,7 +1818,7 @@ void GolfState::addSystems()
 {
     auto& mb = m_gameScene.getMessageBus();
 
-    m_gameScene.addSystem<InterpolationSystem>(mb);
+    m_gameScene.addSystem<InterpolationSystem<InterpolationType::Linear>>(mb);
     m_gameScene.addSystem<CloudSystem>(mb);
     m_gameScene.addSystem<ClientCollisionSystem>(mb, m_holeData, m_collisionMesh);
     m_gameScene.addSystem<cro::CommandSystem>(mb);
@@ -2452,7 +2452,8 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Transform>().setPosition(info.position);
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.003f, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
-    entity.addComponent<InterpolationComponent>(InterpolationPoint(info.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).id = info.serverID;
+    entity.addComponent<InterpolationComponent<InterpolationType::Linear>>(
+        InterpolationPoint(info.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).id = info.serverID;
     entity.addComponent<ClientCollider>();
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.ballMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
@@ -2813,7 +2814,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             cmd.targetFlags = CommandID::Ball;
             cmd.action = [&,idx](cro::Entity e, float)
             {
-                if (e.getComponent<InterpolationComponent>().id == idx)
+                if (e.getComponent<InterpolationComponent<InterpolationType::Linear>>().id == idx)
                 {
                     m_gameScene.destroyEntity(e);
                     LOG("Packet removed ball entity", cro::Logger::Type::Warning);
@@ -3488,7 +3489,7 @@ void GolfState::updateActor(const ActorInfo& update)
     {
         if (e.isValid())
         {
-            auto& interp = e.getComponent<InterpolationComponent>();
+            auto& interp = e.getComponent<InterpolationComponent<InterpolationType::Linear>>();
             bool active = (interp.id == update.serverID);
             if (active)
             {

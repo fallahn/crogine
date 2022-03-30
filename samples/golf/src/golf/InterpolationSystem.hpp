@@ -36,7 +36,8 @@ source distribution.
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/System.hpp>
-#include <crogine/gui/GuiClient.hpp>
+#include <crogine/ecs/components/Transform.hpp>
+
 
 struct InterpolationPoint final
 {
@@ -50,30 +51,157 @@ struct InterpolationPoint final
 	std::int32_t timestamp = 0;
 };
 
+enum class InterpolationType
+{
+	Linear, Hermite
+};
+
+template <InterpolationType>
 struct InterpolationComponent final
 {
-	explicit InterpolationComponent(InterpolationPoint = {});
+	explicit InterpolationComponent(InterpolationPoint ip = {})
+	{
+		buffer.push_back(ip);
+		wantsBuffer = buffer.size() < bufferSize;
+	}
 	
 	cro::Clock timer;
 	std::int32_t overflow = 0;
-	std::int32_t getElapsedTime() const;
+	std::int32_t getElapsedTime() const
+	{
+		return overflow + timer.elapsed().asMilliseconds();
+	}
 
 
 	CircularBuffer<InterpolationPoint, 18u> buffer;
-	void addPoint(InterpolationPoint ip);
+	void addPoint(InterpolationPoint ip)
+	{
+		CRO_ASSERT(bufferSize > 1, "");
+		if (ip.timestamp > buffer.back().timestamp)
+		{
+			//makes sure timer doesn't start until finished buffering
+			if (wantsBuffer)
+			{
+				timer.restart();
+				overflow = 0;
+			}
+
+			buffer.push_back(ip);
+
+			//if theres a large time gap, pop the front
+			//so we can catch up a bit
+			if (buffer[1].timestamp - buffer[0].timestamp > MaxTimeGap
+				|| buffer.size() == buffer.capacity())
+			{
+				buffer.pop_front();
+			}
+
+			wantsBuffer = buffer.size() < bufferSize;
+		}
+	}
 	
 	std::size_t bufferSize = 3;
 	bool wantsBuffer = true;
 
 	std::uint32_t id = std::numeric_limits<std::uint32_t>::max();
+
+	static constexpr std::int32_t MaxTimeGap = 250;
 };
 
-class InterpolationSystem final : public cro::System, public cro::GuiClient
+template <InterpolationType Interpolation = InterpolationType::Linear>
+class InterpolationSystem final : public cro::System
 {
 public:
-	explicit InterpolationSystem(cro::MessageBus&);
+	explicit InterpolationSystem(cro::MessageBus& mb)
+		: cro::System(mb, typeid(InterpolationSystem<Interpolation>))
+	{
+		requireComponent<cro::Transform>();
+		requireComponent<InterpolationComponent<Interpolation>>();
+	}
 
-	void process(float) override;
+	void process(float) override
+	{
+		for (auto entity : getEntities())
+		{
+			auto& interp = entity.getComponent<InterpolationComponent<Interpolation>>();
+
+			if (interp.buffer.size() > 1)
+			{
+				//if the buffer is full enough...
+				if (!interp.wantsBuffer)
+				{
+					std::int32_t difference = interp.buffer[1].timestamp - interp.buffer[0].timestamp;
+					CRO_ASSERT(difference > 0, "");
+
+					std::int32_t elapsed = interp.getElapsedTime();
+					while (elapsed > difference)
+					{
+						interp.overflow = elapsed - difference;
+						interp.timer.restart();
+						interp.buffer.pop_front();
+
+						entity.getComponent<cro::Transform>().setPosition(interp.buffer[0].position);
+						entity.getComponent<cro::Transform>().setRotation(interp.buffer[0].rotation);
+
+						elapsed = interp.overflow;
+
+						if (interp.buffer.size() == 1)
+						{
+							//don't do anything until we buffered more input
+							interp.wantsBuffer = true;
+							break;
+						}
+						else
+						{
+							difference = interp.buffer[1].timestamp - interp.buffer[0].timestamp;
+						}
+					}
+
+					if (!interp.wantsBuffer)
+					{
+						float t = static_cast<float>(elapsed) / difference;
+						float t2 = t * t;
+						float t3 = t;
+
+						//apply interpolated transform to entity
+
+						if constexpr (Interpolation == InterpolationType::Hermite)
+						{
+							//hermite - https://stackoverflow.com/questions/55302066/implement-hermite-interpolation-multiplayer-game
+							auto startPos = interp.buffer[0].position;
+							auto startVel = interp.buffer[0].velocity;
+							auto endPos = interp.buffer[1].position;
+							auto endVel = interp.buffer[1].velocity;
+							float duration = static_cast<float>(difference) / 1000.f;
+
+							glm::vec3 position =
+								(2.f * t3 - 3.f * t2 + 1.f) * startPos +
+								(t3 - 2.f * t2 + t)         * duration * startVel +
+								(-2.f * t3 + 3.f * t2)      * endPos +
+								(t3 - t2)                   * duration * endVel;
+
+							entity.getComponent<cro::Transform>().setPosition(position);
+						}
+						else
+						{
+							//linear
+							auto diff = interp.buffer[1].position - interp.buffer[0].position;
+							auto position = interp.buffer[0].position + (diff * t);
+
+							entity.getComponent<cro::Transform>().setPosition(position);
+						}
+
+						auto rotation = glm::slerp(interp.buffer[0].rotation, interp.buffer[1].rotation, t);
+						entity.getComponent<cro::Transform>().setRotation(rotation);
+					}
+				}
+			}
+			else
+			{
+				interp.wantsBuffer = true;
+			}
+		}
+	}
 
 private:
 

@@ -98,6 +98,7 @@ struct BallUpdate final
 struct BilliardsUpdate final
 {
     std::array<std::int16_t, 3u> position = {};
+    std::array<std::int16_t, 3u> velocity = {};
     std::array<std::int16_t, 4u> rotation = {};
     std::uint32_t serverID = 0;
     std::int32_t timestamp = 0;

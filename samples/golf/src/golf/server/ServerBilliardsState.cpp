@@ -202,10 +202,11 @@ void BilliardsState::netBroadcast()
             {
                 BilliardsUpdate info;
                 info.position = cro::Util::Net::compressVec3(entity.getComponent<cro::Transform>().getPosition(), ConstVal::PositionCompressionRange);
+                info.velocity = cro::Util::Net::compressVec3(ball.getVelocity(), ConstVal::VelocityCompressionRange);
                 info.rotation = cro::Util::Net::compressQuat(entity.getComponent<cro::Transform>().getRotation());
                 info.serverID = entity.getIndex();
                 info.timestamp = timestamp;
-
+                
                 m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Unreliable);
 
                 ball.hadUpdate = false;

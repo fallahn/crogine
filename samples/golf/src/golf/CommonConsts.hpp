@@ -52,6 +52,7 @@ namespace ConstVal
     static constexpr uint8_t NetChannelStrings = 2;
 
     static constexpr std::uint16_t PositionCompressionRange = 4;
+    static constexpr std::uint16_t VelocityCompressionRange = 8;
 
     //rather than tag each player input with the same
     //value and sending over the network, assume this

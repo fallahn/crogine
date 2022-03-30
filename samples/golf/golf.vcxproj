@@ -327,7 +327,6 @@
     <ClCompile Include="src\golf\GolfState.cpp" />
     <ClCompile Include="src\golf\InputParser.cpp" />
     <ClCompile Include="src\golf\GolfStateUI.cpp" />
-    <ClCompile Include="src\golf\InterpolationSystem.cpp" />
     <ClCompile Include="src\golf\KeyboardState.cpp" />
     <ClCompile Include="src\golf\LeaderboardTexture.cpp" />
     <ClCompile Include="src\golf\MenuCallbacks.cpp" />

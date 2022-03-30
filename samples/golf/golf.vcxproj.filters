@@ -105,9 +105,6 @@
     <ClCompile Include="src\golf\BallSystem.cpp">
       <Filter>Source Files\golf\server\systems</Filter>
     </ClCompile>
-    <ClCompile Include="src\golf\InterpolationSystem.cpp">
-      <Filter>Source Files\golf\client\systems</Filter>
-    </ClCompile>
     <ClCompile Include="src\golf\InputParser.cpp">
       <Filter>Source Files\golf\client</Filter>
     </ClCompile>

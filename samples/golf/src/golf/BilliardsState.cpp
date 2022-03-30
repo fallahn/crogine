@@ -468,10 +468,11 @@ void BilliardsState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
+    m_gameScene.addSystem<InterpolationSystem<InterpolationType::Hermite>>(mb);
+    m_gameScene.addSystem<InterpolationSystem<InterpolationType::Linear>>(mb); //updates the ghost cue
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
-    m_gameScene.addSystem<InterpolationSystem>(mb);
     m_gameScene.addSystem<BilliardsCollisionSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
@@ -720,7 +721,7 @@ void BilliardsState::buildScene()
 
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<InterpolationComponent>();
+    entity.addComponent<InterpolationComponent<InterpolationType::Linear>>();
     entity.addComponent<cro::Callback>().setUserData<CueCallbackData>();
     entity.getComponent<cro::Callback>().function = cueScaleCallback;
     if (md.loadFromFile("assets/golf/models/hole_19/remote_cue.cmt"))
@@ -884,7 +885,7 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
             cmd.targetFlags = CommandID::Ball;
             cmd.action = [&, id](cro::Entity e, float)
             {
-                if (e.getComponent<InterpolationComponent>().id == id)
+                if (e.getComponent<InterpolationComponent<InterpolationType::Hermite>>().id == id)
                 {
                     m_gameScene.destroyEntity(e);
                 }
@@ -940,7 +941,8 @@ void BilliardsState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Transform>().setPosition(info.position);
     entity.getComponent<cro::Transform>().setRotation(cro::Util::Net::decompressQuat(info.rotation));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
-    entity.addComponent<InterpolationComponent>(InterpolationPoint(info.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).id = info.serverID;
+    entity.addComponent<InterpolationComponent<InterpolationType::Hermite>>(
+        InterpolationPoint(info.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).id = info.serverID;
     entity.addComponent<BilliardBall>().id = info.state;
 
     m_ballDefinition.createModel(entity);
@@ -1012,10 +1014,16 @@ void BilliardsState::updateBall(const BilliardsUpdate& info)
     cmd.targetFlags = CommandID::Ball;
     cmd.action = [info](cro::Entity e, float)
     {
-        auto& interp = e.getComponent<InterpolationComponent>();
+        auto& interp = e.getComponent<InterpolationComponent<InterpolationType::Hermite>>();
         if (interp.id == info.serverID)
         {
-            interp.addPoint({ cro::Util::Net::decompressVec3(info.position, ConstVal::PositionCompressionRange), glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
+            interp.addPoint(
+                {
+                    cro::Util::Net::decompressVec3(info.position, ConstVal::PositionCompressionRange),
+                    cro::Util::Net::decompressVec3(info.velocity, ConstVal::VelocityCompressionRange),
+                    cro::Util::Net::decompressQuat(info.rotation),
+                    info.timestamp
+                });
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -1023,7 +1031,13 @@ void BilliardsState::updateBall(const BilliardsUpdate& info)
 
 void BilliardsState::updateGhost(const BilliardsUpdate& info)
 {
-    m_remoteCue.getComponent<InterpolationComponent>().addPoint({ cro::Util::Net::decompressVec3(info.position, ConstVal::PositionCompressionRange), glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
+    m_remoteCue.getComponent<InterpolationComponent<InterpolationType::Linear>>().addPoint(
+        { 
+            cro::Util::Net::decompressVec3(info.position, ConstVal::PositionCompressionRange),
+            glm::vec3(0.f),
+            cro::Util::Net::decompressQuat(info.rotation),
+            info.timestamp 
+        });
 }
 
 void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
@@ -1057,11 +1071,11 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
     glm::vec3 lookAtPosition(0.f); //default to table centre
     if (m_cueball.isValid())
     {
-        const auto& balls = m_gameScene.getSystem<InterpolationSystem>()->getEntities();
+        const auto& balls = m_gameScene.getSystem<InterpolationSystem<InterpolationType::Hermite>>()->getEntities();
         auto result = std::find_if(balls.begin(), balls.end(),
             [playerInfo](const cro::Entity& e)
             {
-                return e.getComponent<InterpolationComponent>().id == playerInfo.targetID;
+                return e.getComponent<InterpolationComponent<InterpolationType::Hermite>>().id == playerInfo.targetID;
             });
         if (result != balls.end())
         {

@@ -128,6 +128,11 @@ void BilliardBall::setWorldTransform(const btTransform& src)
     hadUpdate = true;
 }
 
+glm::vec3 BilliardBall::getVelocity() const
+{
+    return btToGlm(m_physicsBody->getLinearVelocity());
+}
+
 const std::array<std::string, CollisionID::Count> CollisionID::Labels =
 {
     "Table", "Cushion", "Ball", "Pocket"

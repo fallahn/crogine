@@ -110,6 +110,7 @@ struct BilliardBall final : public btMotionState, public cro::Detail::NonResizea
     BilliardBall() : m_physicsBody(nullptr) {}
     void getWorldTransform(btTransform& worldTrans) const override;
     void setWorldTransform(const btTransform& worldTrans) override;
+    glm::vec3 getVelocity() const;
 
     /*
     In pool:
