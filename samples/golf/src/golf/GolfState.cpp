@@ -2452,7 +2452,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Transform>().setPosition(info.position);
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.003f, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
-    entity.addComponent<InterpolationComponent>(InterpolationPoint(info.position, cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).setID(info.serverID);
+    entity.addComponent<InterpolationComponent>(InterpolationPoint(info.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).id = info.serverID;
     entity.addComponent<ClientCollider>();
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.ballMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
@@ -2813,7 +2813,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             cmd.targetFlags = CommandID::Ball;
             cmd.action = [&,idx](cro::Entity e, float)
             {
-                if (e.getComponent<InterpolationComponent>().getID() == idx)
+                if (e.getComponent<InterpolationComponent>().id == idx)
                 {
                     m_gameScene.destroyEntity(e);
                     LOG("Packet removed ball entity", cro::Logger::Type::Warning);
@@ -3489,10 +3489,10 @@ void GolfState::updateActor(const ActorInfo& update)
         if (e.isValid())
         {
             auto& interp = e.getComponent<InterpolationComponent>();
-            bool active = (interp.getID() == update.serverID);
+            bool active = (interp.id == update.serverID);
             if (active)
             {
-                interp.addTarget({ update.position, cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
+                interp.addPoint({ update.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
 
                 //update spectator camera
                 cro::Command cmd2;

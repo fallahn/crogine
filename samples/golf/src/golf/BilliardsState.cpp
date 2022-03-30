@@ -884,7 +884,7 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
             cmd.targetFlags = CommandID::Ball;
             cmd.action = [&, id](cro::Entity e, float)
             {
-                if (e.getComponent<InterpolationComponent>().getID() == id)
+                if (e.getComponent<InterpolationComponent>().id == id)
                 {
                     m_gameScene.destroyEntity(e);
                 }
@@ -940,7 +940,7 @@ void BilliardsState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Transform>().setPosition(info.position);
     entity.getComponent<cro::Transform>().setRotation(cro::Util::Net::decompressQuat(info.rotation));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
-    entity.addComponent<InterpolationComponent>(InterpolationPoint(info.position, cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).setID(info.serverID);
+    entity.addComponent<InterpolationComponent>(InterpolationPoint(info.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).id = info.serverID;
     entity.addComponent<BilliardBall>().id = info.state;
 
     m_ballDefinition.createModel(entity);
@@ -1013,9 +1013,9 @@ void BilliardsState::updateBall(const BilliardsUpdate& info)
     cmd.action = [info](cro::Entity e, float)
     {
         auto& interp = e.getComponent<InterpolationComponent>();
-        if (interp.getID() == info.serverID)
+        if (interp.id == info.serverID)
         {
-            interp.addTarget({ info.position, cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
+            interp.addPoint({ info.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -1023,7 +1023,7 @@ void BilliardsState::updateBall(const BilliardsUpdate& info)
 
 void BilliardsState::updateGhost(const BilliardsUpdate& info)
 {
-    m_remoteCue.getComponent<InterpolationComponent>().addTarget({ info.position, cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
+    m_remoteCue.getComponent<InterpolationComponent>().addPoint({ info.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
 }
 
 void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
@@ -1061,7 +1061,7 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
         auto result = std::find_if(balls.begin(), balls.end(),
             [playerInfo](const cro::Entity& e)
             {
-                return e.getComponent<InterpolationComponent>().getID() == playerInfo.targetID;
+                return e.getComponent<InterpolationComponent>().id == playerInfo.targetID;
             });
         if (result != balls.end())
         {

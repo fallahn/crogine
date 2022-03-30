@@ -25,7 +25,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/GolfState.cpp
   ${PROJECT_DIR}/golf/GolfStateUI.cpp
   ${PROJECT_DIR}/golf/InputParser.cpp  
-  ${PROJECT_DIR}/golf/InterpolationComponent.cpp
+#  ${PROJECT_DIR}/golf/InterpolationComponent.cpp
   ${PROJECT_DIR}/golf/InterpolationSystem.cpp
   ${PROJECT_DIR}/golf/KeyboardState.cpp
   ${PROJECT_DIR}/golf/LeaderboardTexture.cpp

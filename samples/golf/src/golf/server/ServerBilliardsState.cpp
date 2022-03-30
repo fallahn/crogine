@@ -198,7 +198,7 @@ void BilliardsState::netBroadcast()
         for (auto entity : balls)
         {
             auto& ball = entity.getComponent<BilliardBall>();
-            //if (ball.hadUpdate) //sending updates, even non-moving ones, provides smoother client side interpolation
+            if (ball.hadUpdate) //sending updates, even non-moving ones, provides smoother client side interpolation
             {
                 BilliardsUpdate info;
                 info.position = entity.getComponent<cro::Transform>().getPosition();

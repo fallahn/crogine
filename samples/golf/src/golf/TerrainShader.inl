@@ -395,7 +395,6 @@ static const std::string CelFragmentShader = R"(
 
 #if defined (ADD_NOISE)
     uniform vec4 u_noiseColour = vec4(0.0,0.0,0.0,1.0);
-    VARYING_IN vec3 v_worldPosition;
 
     const float NoisePerMetre = 10.0;
     float rand(float n){return fract(sin(n) * 43758.5453123);}

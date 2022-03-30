@@ -35,7 +35,7 @@ source distribution.
 /*!
 \brief Simple, fixed size, circular buffer
 */
-template <typename T, std::size_t s>
+template <typename T, std::size_t Capacity>
 class CircularBuffer final
 {
 public:
@@ -97,7 +97,7 @@ public:
 
     constexpr std::size_t capacity() const
     {
-        return s;
+        return Capacity;
     }
 
     bool empty() const
@@ -105,10 +105,22 @@ public:
         return m_size == 0;
     }
 
+    T& operator [] (std::size_t i)
+    {
+        CRO_ASSERT(i < m_size, "Index out of range");
+        return m_data[(m_front + i) % Capacity];
+    }
+
+    const T& operator [] (std::size_t i) const
+    {
+        CRO_ASSERT(i < m_size, "Index out of range");
+        return m_data[(m_front + i) % Capacity];
+    }
+
 private:
     std::size_t m_front;
     std::size_t m_back;
     std::size_t m_nextFree;
     std::size_t m_size;
-    std::array<T, s> m_data;
+    std::array<T, Capacity> m_data;
 };

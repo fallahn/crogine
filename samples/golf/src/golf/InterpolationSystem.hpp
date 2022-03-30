@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -31,119 +31,49 @@ source distribution.
 
 #include "CircularBuffer.hpp"
 
-#include <crogine/core/Clock.hpp>
-#include <crogine/ecs/System.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
+#include <crogine/core/Clock.hpp>
+#include <crogine/ecs/System.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
-/*!
-\brief Contains information required for a inperpolation to occur
-*/
 struct InterpolationPoint final
 {
-    InterpolationPoint(glm::vec3 pos = glm::vec3(0.f), glm::quat rot = glm::quat(1.f,0.f,0.f,0.f), std::int32_t ts = 0)
-        : position(pos), rotation(rot), timestamp(ts){}
+	InterpolationPoint() = default;
+	InterpolationPoint(glm::vec3 p, glm::vec3 v, glm::quat r, std::int32_t ts)
+		: position(p), velocity(v), rotation(r), timestamp(ts) {}
 
-    glm::vec3 position = glm::vec3(0.f);
-    glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
-    std::int32_t timestamp = 0;
+	glm::vec3 position = glm::vec3(0.f);
+	glm::vec3 velocity = glm::vec3(0.f);
+	glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
+	std::int32_t timestamp = 0;
 };
 
-/*!
-\brief Interpolates position and rotation received from a server.
-When receiving infrequent (say 100ms or so) position updates from
-a remote server entities can have their position interpolated via
-this component. The component, when coupled with an InterpolationSystem
-will travel towards the given target position using the given timestamp
-to linearly interpolate movement. This component is not limited to
-networked entities, and can be used anywhere linear interpolation of
-movement is desired, for example path finding.
-
-Requires:
-    CircularBuffer.hpp
-    InterpolationSystem.hpp
-    InterpolationSystem.cpp
-    InterpolationComponent.cpp
-*/
-class InterpolationComponent final
+struct InterpolationComponent final
 {
-public:
-    /*!
-    \brief Constructor
-    Interpolation components should be passed an interpolation
-    point containing the initial transform and server time of the
-    actor to prevent large lags between the default timestamp (0)
-    and the first server update
-    */
-    explicit InterpolationComponent(InterpolationPoint = {});
+	explicit InterpolationComponent(InterpolationPoint = {});
+	
+	cro::Clock timer;
+	std::int32_t overflow = 0;
+	std::int32_t getElapsedTime() const;
 
-    /*!
-    \brief Adds a target interpolation point.
-    The timestamp is used in conjunction with the previous timestamp
-    to decide how quickly motion should be integrated between positions.
-    The timestamp would usually be in server time, and arrive in the packet
-    data with the destination postion, in milliseconds. Targets are buffered
-    only if the new target has a newer timestamp than the last queued target
-    */
-    void addTarget(const InterpolationPoint&);
 
-    /*!
-    \brief Sets whether or not this component is enabled
-    */
-    void setEnabled(bool);
+	CircularBuffer<InterpolationPoint, 18u> buffer;
+	void addPoint(InterpolationPoint ip);
+	
+	std::size_t bufferSize = 3;
+	bool wantsBuffer = true;
 
-    /*!
-    \brief Returns whether or not this component is enabled
-    */
-    bool getEnabled() const;
-
-    /*!
-    \brief Overrides the current position with the given position
-    */
-    void resetPosition(glm::vec3);
-
-    /*!
-    \brief Overrides the rotation with the given rotation
-    */
-    void resetRotation(glm::quat);
-
-    void setID(std::uint32_t id) { m_id = id; }
-    std::uint32_t getID() const { return m_id; }
-
-private:
-    bool m_enabled;
-    InterpolationPoint m_targetPoint;
-    InterpolationPoint m_previousPoint;
-
-    cro::Clock m_elapsedTimer;
-    std::int32_t m_timeDifference;
-    std::int32_t m_currentTime;
-
-    CircularBuffer<InterpolationPoint, 8u> m_buffer;
-
-    std::uint32_t m_id;
-
-    friend class InterpolationSystem;
-
-    /*
-    Searches for the next available target by discarding interpolations points
-    from the buffer until one with a later timestamp is found.
-    */
-    void applyNextTarget();
+	std::uint32_t id = std::numeric_limits<std::uint32_t>::max();
 };
 
-/*!
-\brief Uses the InterpolationComponent to linearly
-interpolate a transform component between two points.
-\see InterpolationComponent
-*/
-class InterpolationSystem : public cro::System
+class InterpolationSystem final : public cro::System, public cro::GuiClient
 {
 public:
-    explicit InterpolationSystem(cro::MessageBus&);
+	explicit InterpolationSystem(cro::MessageBus&);
 
-    void process(float) override;
+	void process(float) override;
 
 private:
 
