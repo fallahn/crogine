@@ -51,6 +51,8 @@ namespace ConstVal
     static constexpr uint8_t NetChannelReliable = 1;
     static constexpr uint8_t NetChannelStrings = 2;
 
+    static constexpr std::uint16_t PositionCompressionRange = 4;
+
     //rather than tag each player input with the same
     //value and sending over the network, assume this
     //is the delta between updates (as the engine is

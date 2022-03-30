@@ -198,10 +198,10 @@ void BilliardsState::netBroadcast()
         for (auto entity : balls)
         {
             auto& ball = entity.getComponent<BilliardBall>();
-            if (ball.hadUpdate) //sending updates, even non-moving ones, provides smoother client side interpolation
+            if (ball.hadUpdate) //sending all updates, even non-moving ones, provides smoother client side interpolation (??)
             {
                 BilliardsUpdate info;
-                info.position = entity.getComponent<cro::Transform>().getPosition();
+                info.position = cro::Util::Net::compressVec3(entity.getComponent<cro::Transform>().getPosition(), ConstVal::PositionCompressionRange);
                 info.rotation = cro::Util::Net::compressQuat(entity.getComponent<cro::Transform>().getRotation());
                 info.serverID = entity.getIndex();
                 info.timestamp = timestamp;

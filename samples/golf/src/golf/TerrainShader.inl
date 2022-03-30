@@ -506,13 +506,15 @@ static const std::string CelFragmentShader = R"(
         colour *= u_hairColour;
 #endif
 
-        float checkAmount = step(0.3, 1.0 - amount);
+        //float checkAmount = step(0.3, 1.0 - amount);
+        float checkAmount = smoothstep(0.3, 0.9, 1.0 - amount);
 
         amount *= 2.0;
         amount = round(amount);
         amount /= 2.0;
-        amount = 0.8 + (amount * 0.2);
+        //colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, (amount * 0.4) + 0.6);
 
+        amount = 0.8 + (amount * 0.2);
         colour.rgb *= amount;
 
 #if !defined(NOCHEX)
@@ -522,13 +524,13 @@ static const std::string CelFragmentShader = R"(
         //float check = mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) * checkAmount;
         amount = (1.0 - check) + (check * amount);
         //colour.rgb = complementaryColour(colour.rgb);
-        colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, amount);
-        //colour.rgb *= amount;
+        //colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, amount);
+        colour.rgb *= amount;
 #endif
 #if defined (SPECULAR)
         vec3 viewDirection = v_cameraWorldPosition - v_worldPosition;
         vec3 reflectDirection = reflect(-lightDirection, normal);
-        float spec = pow(max(dot(viewDirection, reflectDirection), 0.0), 32.0);
+        float spec = pow(max(dot(viewDirection, reflectDirection), 0.50), 256.0);
         colour.rgb += vec3(spec);
 #endif
         FRAG_OUT = vec4(colour.rgb, 1.0);

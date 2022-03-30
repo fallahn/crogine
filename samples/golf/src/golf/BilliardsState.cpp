@@ -400,7 +400,7 @@ bool BilliardsState::simulate(float dt)
             auto timestamp = m_readyClock.elapsed().asMilliseconds(); //re-use this clock: timestamps are just used for ordering.
 
             BilliardsUpdate info;
-            info.position = position;
+            info.position = cro::Util::Net::compressVec3(position, 4);
             info.rotation = cro::Util::Net::compressQuat(rotation);
             info.timestamp = timestamp;
 
@@ -451,7 +451,7 @@ void BilliardsState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Table] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SUBRECT\n");
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define NOCHEX\n#define TEXTURED\n#define SUBRECT\n");
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1015,7 +1015,7 @@ void BilliardsState::updateBall(const BilliardsUpdate& info)
         auto& interp = e.getComponent<InterpolationComponent>();
         if (interp.id == info.serverID)
         {
-            interp.addPoint({ info.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
+            interp.addPoint({ cro::Util::Net::decompressVec3(info.position, ConstVal::PositionCompressionRange), glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -1023,7 +1023,7 @@ void BilliardsState::updateBall(const BilliardsUpdate& info)
 
 void BilliardsState::updateGhost(const BilliardsUpdate& info)
 {
-    m_remoteCue.getComponent<InterpolationComponent>().addPoint({ info.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
+    m_remoteCue.getComponent<InterpolationComponent>().addPoint({ cro::Util::Net::decompressVec3(info.position, ConstVal::PositionCompressionRange), glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp });
 }
 
 void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
