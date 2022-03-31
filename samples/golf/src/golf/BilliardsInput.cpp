@@ -474,9 +474,11 @@ void BilliardsInput::checkController(float dt)
 
 void BilliardsInput::updatePlay(float dt)
 {
+    bool playerCamActive = *m_controlEntities.camera.getComponent<ControllerRotation>().activeCamera;
+
     if (hasMouseMotion())
     {
-        if (*m_controlEntities.camera.getComponent<ControllerRotation>().activeCamera)
+        if (playerCamActive)
         {
             //this is the cue view
             if (m_inputFlags & InputFlag::CamModifier)
@@ -495,7 +497,7 @@ void BilliardsInput::updatePlay(float dt)
         else
         {
             //some other view so just rotate the camera
-            m_controlEntities.camera.getComponent<ControllerRotation>().rotation += CamRotationSpeedFast * m_mouseMove.x * m_analogueAmountLeft * dt;
+            //m_controlEntities.camera.getComponent<ControllerRotation>().rotation += CamRotationSpeedFast * m_mouseMove.x * m_analogueAmountLeft * dt;
         }
     }
 
@@ -533,7 +535,8 @@ void BilliardsInput::updatePlay(float dt)
     }
 
     auto diff = m_prevFlags ^ m_inputFlags;
-    if ((diff & m_inputFlags & InputFlag::Action) != 0)
+    if ((diff & m_inputFlags & InputFlag::Action) != 0
+        && playerCamActive)
     {
         m_controlEntities.cue.getComponent<cro::Skeleton>().play(1);
         setActive(false, false);

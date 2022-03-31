@@ -126,6 +126,10 @@ void BilliardsState::netEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::ActorAnimation:
+            //only animation is remote cue (at the moment)
+            m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, evt.packet.as<std::uint8_t>(), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            break;
         case PacketID::CueUpdate:
             //just forward this to other client
             m_sharedData.host.broadcastPacket(PacketID::CueUpdate, evt.packet.as<BilliardsUpdate>(), cro::NetFlag::Unreliable);

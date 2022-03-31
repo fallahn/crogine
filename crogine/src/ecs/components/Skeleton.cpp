@@ -53,6 +53,12 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
 {
     CRO_ASSERT(idx < m_animations.size(), "Index out of range");
     CRO_ASSERT(rate >= 0, "");
+
+    if (idx >= m_animations.size())
+    {
+        return;
+    }
+
     m_playbackRate = rate;
     if (idx != m_currentAnimation)
     {

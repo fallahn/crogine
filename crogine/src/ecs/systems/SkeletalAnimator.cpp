@@ -107,6 +107,10 @@ void SkeletalAnimator::process(float dt)
                     if (!anim.looped)
                     {
                         anim.playbackRate = 0.f;
+                        
+                        auto* msg = postMessage<Message::SkeletalAnimationEvent>(Message::SkeletalAnimationMessage);
+                        msg->userType = Message::SkeletalAnimationEvent::Stopped;
+                        msg->entity = entity;
                     }
                 }
 
@@ -118,7 +122,7 @@ void SkeletalAnimator::process(float dt)
                         (worldTransform * skel.m_rootTransform *
                         skel.m_frames[(anim.currentFrame * skel.m_frameSize) + joint].worldMatrix)[3];// *glm::vec4(0.f, 0.f, 0.f, 1.f);
 
-                    auto* msg = postMessage<cro::Message::SkeletalAnimationEvent>(cro::Message::SkeletalAnimationMessage);
+                    auto* msg = postMessage<Message::SkeletalAnimationEvent>(Message::SkeletalAnimationMessage);
                     msg->position = position;
                     msg->userType = uid;
                     msg->entity = entity;

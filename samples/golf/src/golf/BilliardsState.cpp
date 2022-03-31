@@ -302,7 +302,8 @@ void BilliardsState::handleMessage(const cro::Message& msg)
     case cro::Message::SkeletalAnimationMessage:
     {
         const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
-        if (data.userType == 0)
+        if (data.userType == 0
+            && data.entity == m_localCue)
         {
             BilliardBallInput input;
             auto [impulse, offset] = m_inputParser.getImpulse();
@@ -312,6 +313,15 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             input.player = m_currentPlayer.player;
 
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+        else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
+        {
+            //hide the cues
+            m_localCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::Out;
+            m_localCue.getComponent<cro::Callback>().active = true;
+
+            m_remoteCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::Out;
+            m_remoteCue.getComponent<cro::Callback>().active = true;
         }
     }
     break;
@@ -327,17 +337,19 @@ void BilliardsState::handleMessage(const cro::Message& msg)
 
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::BallPlaced, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
-        /*else if (data.type == BilliardBallEvent::ShotTaken)
+        else if (data.type == BilliardBallEvent::ShotTaken)
         {
-            BilliardBallInput input;
+            /*BilliardBallInput input;
             auto [impulse, offset] = m_inputParser.getImpulse();
             input.impulse = impulse;
             input.offset = offset;
             input.client = m_sharedData.localConnectionData.connectionID;
             input.player = m_currentPlayer.player;
 
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        }*/
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);*/
+
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ActorAnimation, std::uint8_t(1), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
     }
         break;
     }
@@ -566,6 +578,7 @@ void BilliardsState::buildScene()
     m_cameras[CameraID::Side] = camEnt;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = setPerspective;
+    cam.renderFlags = ~RenderFlags::Cue;
     setPerspective(cam);
 
     static constexpr std::uint32_t ShadowMapSize = 2048u;
@@ -578,6 +591,7 @@ void BilliardsState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
     camEnt.getComponent<CameraProperties>().farPlane = 7.f;
     camEnt.addComponent<cro::AudioListener>();
@@ -592,6 +606,7 @@ void BilliardsState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.75f;
     camEnt.getComponent<CameraProperties>().farPlane = 6.f;
     camEnt.addComponent<cro::AudioListener>();
@@ -604,6 +619,7 @@ void BilliardsState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
     camEnt.addComponent<CameraProperties>().farPlane = 5.f;
     camEnt.addComponent<cro::AudioListener>();
     m_cameras[CameraID::Transition] = camEnt;
@@ -720,6 +736,7 @@ void BilliardsState::buildScene()
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cue]);
         applyMaterialData(md, material);
         entity.getComponent<cro::Model>().setMaterial(0, material);
+        entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Cue);
     }
     m_localCue = entity;
     controlEntities.cue = entity;
@@ -757,6 +774,7 @@ void BilliardsState::buildScene()
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     entity.getComponent<cro::Model>().setHidden(true);
+    entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Cue);
 
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
     meshData->boundingBox = { glm::vec3(3.f), glm::vec3(-3.f) };
@@ -855,6 +873,12 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::ActorAnimation:
+            if (!m_remoteCue.getComponent<cro::Model>().isHidden())
+            {
+                m_remoteCue.getComponent<cro::Skeleton>().play(1);
+            }
+            break;
         case PacketID::TurnReady:
         {
             //remove message from UI
@@ -998,19 +1022,6 @@ void BilliardsState::spawnBall(const ActorInfo& info)
 
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", rect);
     }
-
-    /*std::array points =
-    {
-        InterpolationPoint(glm::vec3(0.f, 0.1f, 0.f), glm::quat(1.f,0.f,0.f,0.f), 1000 + info.timestamp),
-        InterpolationPoint(glm::vec3(1.f, 0.1f, 1.f), glm::quat(1.f,0.f,0.f,0.f), 2000 + info.timestamp),
-        InterpolationPoint(glm::vec3(1.f, 0.1f, 0.f), glm::quat(1.f,0.f,0.f,0.f), 3000 + info.timestamp),
-        InterpolationPoint(glm::vec3(0.f, 0.1f, -1.f), glm::quat(1.f,0.f,0.f,0.f), 4000 + info.timestamp),
-        InterpolationPoint(glm::vec3(0.f, 0.1f, 0.f), glm::quat(1.f,0.f,0.f,0.f), 5000 + info.timestamp),
-    };
-    for (const auto& p : points)
-    {
-        entity.getComponent<InterpolationComponent>().setTarget(p);
-    }*/
 }
 
 void BilliardsState::updateBall(const BilliardsUpdate& info)
@@ -1052,11 +1063,11 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
 
 
     //hide the cue model(s)
-    m_localCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::Out;
-    m_localCue.getComponent<cro::Callback>().active = true;
+    /*m_localCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::Out;
+    m_localCue.getComponent<cro::Callback>().active = true;*/
 
-    m_remoteCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::Out;
-    m_remoteCue.getComponent<cro::Callback>().active = true;
+    /*m_remoteCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::Out;
+    m_remoteCue.getComponent<cro::Callback>().active = true;*/
 
     struct TargetData final
     {
