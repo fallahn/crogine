@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
@@ -67,6 +68,8 @@ private:
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
+
+    cro::CubemapTexture m_reflectionMap;
 
     BilliardsInput m_inputParser;
     ActivePlayer m_currentPlayer;

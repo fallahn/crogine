@@ -310,6 +310,10 @@ static const std::string CelFragmentShader = R"(
     uniform vec4 u_darkColour = vec4(0.5);
 #endif
 
+#if defined(REFLECTIONS)
+    uniform samplerCube u_reflectMap;
+#endif
+
 #if defined (SUBRECT)
     uniform vec4 u_subrect = vec4(0.0, 0.0, 1.0, 1.0);
 #endif
@@ -527,12 +531,17 @@ static const std::string CelFragmentShader = R"(
         //colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, amount);
         colour.rgb *= amount;
 #endif
+        vec3 viewDirection = normalize(v_cameraWorldPosition - v_worldPosition);
 #if defined (SPECULAR)
-        vec3 viewDirection = v_cameraWorldPosition - v_worldPosition;
         vec3 reflectDirection = reflect(-lightDirection, normal);
         float spec = pow(max(dot(viewDirection, reflectDirection), 0.50), 256.0);
         colour.rgb += vec3(spec);
 #endif
+
+#if defined(REFLECTIONS)
+        colour.rgb += TEXTURE_CUBE(u_reflectMap, reflect(-viewDirection, normal)).rgb * 0.25;
+#endif
+
         FRAG_OUT = vec4(colour.rgb, 1.0);
 
 #if defined (RX_SHADOWS)

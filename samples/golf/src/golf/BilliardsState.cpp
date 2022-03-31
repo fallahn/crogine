@@ -451,11 +451,16 @@ void BilliardsState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Table] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define NOCHEX\n#define TEXTURED\n#define SUBRECT\n");
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define REFLECTIONS\n#define NOCHEX\n#define TEXTURED\n#define SUBRECT\n");
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
+
+    if (m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/sky.ccm"))
+    {
+        m_resources.materials.get(m_materialIDs[MaterialID::Ball]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+    }
 
     m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define SKINNED\n");
     shader = &m_resources.shaders.get(ShaderID::CelSkinned);
@@ -492,7 +497,7 @@ void BilliardsState::addSystems()
 
 void BilliardsState::buildScene()
 {
-    m_gameScene.setCubemap("assets/golf/images/skybox/billiards/sky.ccm");
+    //m_gameScene.setCubemap("assets/golf/images/skybox/billiards/sky.ccm");
     //TODO validate the table data (or should this be done by the menu?)
 
     std::string path = "assets/golf/tables/" + m_sharedData.mapDirectory + ".table";

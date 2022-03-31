@@ -91,6 +91,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/BoundingBox.cpp
   ${PROJECT_DIR}/graphics/CircleMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/Colour.cpp
+  ${PROJECT_DIR}/graphics/CubemapTexture.cpp
   ${PROJECT_DIR}/graphics/DepthTexture.cpp
   ${PROJECT_DIR}/graphics/DynamicMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/EnvironmentMap.cpp

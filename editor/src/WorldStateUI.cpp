@@ -171,7 +171,15 @@ void WorldState::drawMenuBar()
                 requestStackPush(States::SpriteEditor);
                 unregisterWindows();
             }
-
+            ImGui::Separator();
+            if (ImGui::MenuItem("Set Skybox", nullptr, nullptr))
+            {
+                auto path = cro::FileSystem::openFileDialogue("", "ccm");
+                if (!path.empty())
+                {
+                    m_scene.setCubemap(path);
+                }
+            }
             ImGui::EndMenu();
         }
 
