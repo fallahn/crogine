@@ -29,6 +29,7 @@ source distribution.
 
 #include "BilliardsClientCollision.hpp"
 #include "BilliardsSystem.hpp"
+#include "InterpolationSystem.hpp"
 #include "MessageIDs.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -57,7 +58,9 @@ BilliardsCollisionSystem::BilliardsCollisionSystem(cro::MessageBus& mb)
     m_collisionWorld->setDebugDrawer(&m_debugDrawer);
     m_debugDrawer.setDebugMode(/*BulletDebug::DebugFlags*/0);
 
-    m_ballShape = std::make_unique<btSphereShape>(BilliardBall::Radius * 1.1f);
+    //make this slightly larger as interp means sharp reflections may
+    //never actually overlap
+    m_ballShape = std::make_unique<btSphereShape>(BilliardBall::Radius * 1.2f);
 
 #ifdef CRO_DEBUG_
     registerWindow([&]() 
@@ -98,22 +101,21 @@ BilliardsCollisionSystem::~BilliardsCollisionSystem()
 //public
 void BilliardsCollisionSystem::process(float)
 {
-    const auto raiseMessage = [&](glm::vec3 position, std::int32_t collisionID)
+    const auto raiseMessage = [&](glm::vec3 position, float volume, std::int32_t collisionID)
     {
-        //hmmmm would be nice to include some guestimated velocity
-        //which could affect sounds more subtly
-
         auto* msg = postMessage<BilliardBallEvent>(MessageID::BilliardsMessage);
         msg->type = BilliardBallEvent::Collision;
         msg->position = position;
         msg->data = collisionID;
-        //LogI << CollisionID::Labels[collisionID] << std::endl;
+        msg->volume = volume;
     };
 
     btTransform transform;
 
     for (auto entity : getEntities())
     {
+        static constexpr float MaxVel = 0.5f;
+
         //these are a frame late - if there's noticable lag
         //then reiterate below instead
         auto& ball = entity.getComponent<BilliardBall>();
@@ -122,19 +124,22 @@ void BilliardsCollisionSystem::process(float)
             //note this is contact begin
             if (ball.m_ballContact != -1)
             {
-                raiseMessage(entity.getComponent<cro::Transform>().getPosition(), CollisionID::Ball);
+                float volume = glm::length(entity.getComponent<InterpolationComponent<InterpolationType::Hermite>>().getVelocity()) / MaxVel;
+                raiseMessage(entity.getComponent<cro::Transform>().getPosition(), volume, CollisionID::Ball);
             }
         }
         ball.m_prevBallContact = ball.m_ballContact;
         ball.m_ballContact = -1;
 
+        
         //pocket collision
         if (ball.m_pocketContact != ball.m_prevPocketContact)
         {
             //this is contact begin
             if (ball.m_pocketContact == 1)
             {
-                raiseMessage(entity.getComponent<cro::Transform>().getPosition(), CollisionID::Pocket);
+                float volume = glm::length(entity.getComponent<InterpolationComponent<InterpolationType::Hermite>>().getVelocity()) / MaxVel;
+                raiseMessage(entity.getComponent<cro::Transform>().getPosition(), volume, CollisionID::Pocket);
             }
         }
 
@@ -147,7 +152,8 @@ void BilliardsCollisionSystem::process(float)
         {
             if (ball.m_cushionContact == 1)
             {
-                raiseMessage(entity.getComponent<cro::Transform>().getPosition(), CollisionID::Cushion);
+                float volume = glm::length(entity.getComponent<InterpolationComponent<InterpolationType::Hermite>>().getVelocity()) / MaxVel;
+                raiseMessage(entity.getComponent<cro::Transform>().getPosition(), volume, CollisionID::Cushion);
             }
         }
 

@@ -77,13 +77,13 @@ void BilliardsSoundDirector::handleMessage(const cro::Message& msg)
             default: break;
             case CollisionID::Cushion:
             {
-                auto ent = playSound(AudioID::CushionHit, data.position);
+                auto ent = playSound(AudioID::CushionHit, data.position, std::min(1.f, data.volume));
                 ent.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.15f));
             }
                 break;
             case CollisionID::Ball:
             {
-                auto ent = playSound(AudioID::BallHit, data.position);
+                auto ent = playSound(AudioID::BallHit, data.position, std::min(1.f, data.volume));
                 ent.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.15f));
             }
                 break;
@@ -112,7 +112,8 @@ cro::Entity BilliardsSoundDirector::playSound(std::int32_t id, glm::vec3 positio
         auto ent = getNextEntity();
         ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
         ent.getComponent<cro::AudioEmitter>().setVolume(volume);
-        ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+        ent.getComponent<cro::AudioEmitter>().setPitch(1.f);
+        ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
         ent.getComponent<cro::AudioEmitter>().play();
         ent.getComponent<cro::Transform>().setPosition(position);
         return ent;

@@ -56,56 +56,70 @@ enum class InterpolationType
 	Linear, Hermite
 };
 
-template <InterpolationType>
-struct InterpolationComponent final
+template <InterpolationType interpolationType>
+class InterpolationComponent final
 {
+public:
 	explicit InterpolationComponent(InterpolationPoint ip = {})
 	{
-		buffer.push_back(ip);
-		wantsBuffer = buffer.size() < bufferSize;
+		m_buffer.push_back(ip);
+		m_wantsBuffer = m_buffer.size() < m_bufferSize;
 	}
 	
-	cro::Clock timer;
-	std::int32_t overflow = 0;
 	std::int32_t getElapsedTime() const
 	{
-		return overflow + timer.elapsed().asMilliseconds();
+		return m_overflow + m_timer.elapsed().asMilliseconds();
 	}
 
-
-	CircularBuffer<InterpolationPoint, 18u> buffer;
 	void addPoint(InterpolationPoint ip)
 	{
-		CRO_ASSERT(bufferSize > 1, "");
-		if (ip.timestamp > buffer.back().timestamp)
+		CRO_ASSERT(m_bufferSize > 1, "");
+		if (ip.timestamp > m_buffer.back().timestamp)
 		{
 			//makes sure timer doesn't start until finished buffering
-			if (wantsBuffer)
+			if (m_wantsBuffer)
 			{
-				timer.restart();
-				overflow = 0;
+				m_timer.restart();
+				m_overflow = 0;
 			}
 
-			buffer.push_back(ip);
+			m_buffer.push_back(ip);
 
 			//if theres a large time gap, pop the front
 			//so we can catch up a bit
-			if (buffer[1].timestamp - buffer[0].timestamp > MaxTimeGap
-				|| buffer.size() == buffer.capacity())
+			if (m_buffer[1].timestamp - m_buffer[0].timestamp > MaxTimeGap
+				|| m_buffer.size() == m_buffer.capacity())
 			{
-				buffer.pop_front();
+				m_buffer.pop_front();
 			}
 
-			wantsBuffer = buffer.size() < bufferSize;
+			m_wantsBuffer = m_buffer.size() < m_bufferSize;
 		}
 	}
-	
-	std::size_t bufferSize = 3;
-	bool wantsBuffer = true;
+
+	//returns interpolated velocity if using Hermite type
+	glm::vec3 getVelocity() const
+	{
+		return m_interpVelocity;
+	}
 
 	std::uint32_t id = std::numeric_limits<std::uint32_t>::max();
 
+private:
+	cro::Clock m_timer;
+	std::int32_t m_overflow = 0;
+
+	CircularBuffer<InterpolationPoint, 18u> m_buffer;
+
+	std::size_t m_bufferSize = 3;
+	bool m_wantsBuffer = true;
+
+	glm::vec3 m_interpVelocity = glm::vec3(0.f);
+
 	static constexpr std::int32_t MaxTimeGap = 250;
+
+	template <InterpolationType>
+	friend class InterpolationSystem;
 };
 
 template <InterpolationType Interpolation = InterpolationType::Linear>
@@ -125,39 +139,39 @@ public:
 		{
 			auto& interp = entity.getComponent<InterpolationComponent<Interpolation>>();
 
-			if (interp.buffer.size() > 1)
+			if (interp.m_buffer.size() > 1)
 			{
 				//if the buffer is full enough...
-				if (!interp.wantsBuffer)
+				if (!interp.m_wantsBuffer)
 				{
-					std::int32_t difference = interp.buffer[1].timestamp - interp.buffer[0].timestamp;
+					std::int32_t difference = interp.m_buffer[1].timestamp - interp.m_buffer[0].timestamp;
 					CRO_ASSERT(difference > 0, "");
 
 					std::int32_t elapsed = interp.getElapsedTime();
 					while (elapsed > difference)
 					{
-						interp.overflow = elapsed - difference;
-						interp.timer.restart();
-						interp.buffer.pop_front();
+						interp.m_overflow = elapsed - difference;
+						interp.m_timer.restart();
+						interp.m_buffer.pop_front();
 
-						entity.getComponent<cro::Transform>().setPosition(interp.buffer[0].position);
-						entity.getComponent<cro::Transform>().setRotation(interp.buffer[0].rotation);
+						entity.getComponent<cro::Transform>().setPosition(interp.m_buffer[0].position);
+						entity.getComponent<cro::Transform>().setRotation(interp.m_buffer[0].rotation);
 
-						elapsed = interp.overflow;
+						elapsed = interp.m_overflow;
 
-						if (interp.buffer.size() == 1)
+						if (interp.m_buffer.size() == 1)
 						{
 							//don't do anything until we buffered more input
-							interp.wantsBuffer = true;
+							interp.m_wantsBuffer = true;
 							break;
 						}
 						else
 						{
-							difference = interp.buffer[1].timestamp - interp.buffer[0].timestamp;
+							difference = interp.m_buffer[1].timestamp - interp.m_buffer[0].timestamp;
 						}
 					}
 
-					if (!interp.wantsBuffer)
+					if (!interp.m_wantsBuffer)
 					{
 						float t = static_cast<float>(elapsed) / difference;
 
@@ -170,10 +184,10 @@ public:
 							float t2 = t * t;
 							float t3 = t2 * t;
 
-							auto startPos = interp.buffer[0].position;
-							auto startVel = interp.buffer[0].velocity;
-							auto endPos = interp.buffer[1].position;
-							auto endVel = interp.buffer[1].velocity;
+							auto startPos = interp.m_buffer[0].position;
+							auto startVel = interp.m_buffer[0].velocity;
+							auto endPos = interp.m_buffer[1].position;
+							auto endVel = interp.m_buffer[1].velocity;
 							float duration = static_cast<float>(difference) / 1000.f;
 
 							glm::vec3 position =
@@ -183,24 +197,30 @@ public:
 								(t3 - t2)                   * duration * endVel;
 
 							entity.getComponent<cro::Transform>().setPosition(position);
+
+							interp.m_interpVelocity = 1.f / duration * (
+								(6.f * t2 - 6.f * t)       * startPos +
+								(3.f * t2 - 4.f * t + 1.f) * duration * startVel +
+								(-6.f * t2 + 6.f * t)      * endPos +
+								(3.f * t2 - 2.f * t)       * duration * endVel);
 						}
 						else
 						{
 							//linear
-							auto diff = interp.buffer[1].position - interp.buffer[0].position;
-							auto position = interp.buffer[0].position + (diff * t);
+							auto diff = interp.m_buffer[1].position - interp.m_buffer[0].position;
+							auto position = interp.m_buffer[0].position + (diff * t);
 
 							entity.getComponent<cro::Transform>().setPosition(position);
 						}
 
-						auto rotation = glm::slerp(interp.buffer[0].rotation, interp.buffer[1].rotation, t);
+						auto rotation = glm::slerp(interp.m_buffer[0].rotation, interp.m_buffer[1].rotation, t);
 						entity.getComponent<cro::Transform>().setRotation(rotation);
 					}
 				}
 			}
 			else
 			{
-				interp.wantsBuffer = true;
+				interp.m_wantsBuffer = true;
 			}
 		}
 	}

@@ -125,5 +125,6 @@ struct BilliardBallEvent final
         Collision
     }type = ShotTaken;
     std::int32_t data = -1; //collision ID
+    float volume = 1.f;
     glm::vec3 position = glm::vec3(0.f);
 };
