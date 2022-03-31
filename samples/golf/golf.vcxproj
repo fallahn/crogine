@@ -350,6 +350,7 @@
     <ClCompile Include="src\golf\SharedStateData.cpp" />
     <ClCompile Include="src\golf\SoundEffectsDirector.cpp" />
     <ClCompile Include="src\golf\spooky2.cpp" />
+    <ClCompile Include="src\golf\StudioCameraSystem.cpp" />
     <ClCompile Include="src\golf\TerrainBuilder.cpp" />
     <ClCompile Include="src\golf\TrophyDisplaySystem.cpp" />
     <ClCompile Include="src\golf\TutorialDirector.cpp" />
@@ -428,6 +429,7 @@
     <ClInclude Include="src\golf\SharedStateData.hpp" />
     <ClInclude Include="src\golf\SoundEffectsDirector.hpp" />
     <ClInclude Include="src\golf\spooky2.hpp" />
+    <ClInclude Include="src\golf\StudioCameraSystem.hpp" />
     <ClInclude Include="src\golf\Terrain.hpp" />
     <ClInclude Include="src\golf\TerrainBuilder.hpp" />
     <ClInclude Include="src\golf\TextAnimCallback.hpp" />

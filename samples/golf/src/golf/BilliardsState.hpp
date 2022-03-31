@@ -97,6 +97,7 @@ private:
             Front,
             Overhead,
             Player,
+            Follower,
             Transition,
 
             Count
