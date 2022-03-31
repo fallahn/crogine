@@ -85,10 +85,15 @@ public:
 
 			m_buffer.push_back(ip);
 
-			//if theres a large time gap, pop the front
+			//if theres a large time gap, shrink the front
 			//so we can catch up a bit
-			if (m_buffer[1].timestamp - m_buffer[0].timestamp > MaxTimeGap
-				|| m_buffer.size() == m_buffer.capacity())
+			if (m_buffer[1].timestamp - m_buffer[0].timestamp > MaxTimeGap)
+			{
+				m_buffer.front().timestamp = ip.timestamp - 10;
+			}
+
+			//this shouldn't happen, but as precaution...
+			if (m_buffer.size() == m_buffer.capacity())
 			{
 				m_buffer.pop_front();
 			}

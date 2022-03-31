@@ -342,7 +342,7 @@ void Scene::disableSkybox()
 void Scene::setCubemap(const std::string& path)
 {
     //TODO replace this with the CubemapTexture class
-    //once I can be bother to implement move operators for it :3
+    //once I can be bothered to implement move operators for it :3
 
     //open the file, check it's valid
     cro::ConfigFile cfg;

@@ -50,4 +50,24 @@ private:
     std::vector<BallInfo> m_ballLayout;
     glm::vec3 m_cubeballPosition;
     std::size_t m_currentPlayer;
+
+    struct PlayerStatus final
+    {
+        enum
+        {
+            Spots, Stripes, Eightball, None
+        };
+        std::int32_t target = None;
+        std::int32_t score = 0;
+    };
+    std::array<PlayerStatus, 2u> m_playerStatus = {};
+    //we only track spots/stripes but pad this out to prevent out
+    //of range access when the player status is Eightball or None
+    std::array<std::int32_t, 4u> m_potCount = {}; 
+
+    std::vector<std::int8_t> m_pocketsThisTurn;
+    std::int8_t m_firstCollision;
+
+    std::int32_t getStatusType(std::int8_t ballID) const;
+    void summariseTurn();
 };

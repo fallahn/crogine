@@ -397,6 +397,12 @@ void BilliardsState::doServerCommand(const cro::NetEvent& evt)
 
 void BilliardsState::setNextPlayer(bool waitForAck)
 {
+    //if there's only one player left then the other must have quit
+    if (m_playerInfo.size() < 2)
+    {
+        return;
+    }
+
     auto packetID = waitForAck ? PacketID::NotifyPlayer : PacketID::SetPlayer;
 
     auto info = m_playerInfo[m_activeDirector->getCurrentPlayer()];
