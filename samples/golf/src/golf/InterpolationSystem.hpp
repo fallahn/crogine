@@ -89,7 +89,7 @@ public:
 			//so we can catch up a bit
 			if (m_buffer[1].timestamp - m_buffer[0].timestamp > MaxTimeGap)
 			{
-				m_buffer.front().timestamp = ip.timestamp - 10;
+				m_buffer.front().timestamp = m_buffer[1].timestamp - 10;
 			}
 
 			//this shouldn't happen, but as precaution...
