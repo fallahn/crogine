@@ -86,8 +86,18 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             setNextPlayer(true);
             break;
         case BilliardsEvent::GameEnded:
-            auto winner = m_playerInfo[m_activeDirector->getCurrentPlayer()];
-            endGame(winner);
+            //raise forfeit message if necessary
+            if (data.first == BilliardsEvent::Forfeit)
+            {
+                m_sharedData.host.broadcastPacket(PacketID::FoulEvent, std::int8_t(BilliardsEvent::Forfeit), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            {
+                auto winner = m_playerInfo[m_activeDirector->getCurrentPlayer()];
+                endGame(winner);
+            }
+            break;
+        case BilliardsEvent::Foul:
+            m_sharedData.host.broadcastPacket(PacketID::FoulEvent, data.first, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
         }        
     }

@@ -230,6 +230,8 @@ void BilliardsSystem::process(float dt)
             auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
             msg->type = BilliardsEvent::OutOfBounds;
             msg->first = ball.id;
+            //if not in radius then we mostly likely (ugh is that reliable enough?) got knocked off the table
+            msg->second = ball.m_inPocketRadius ? 1 : 0;
         }
 
         if (ball.m_physicsBody->isActive())

@@ -68,6 +68,7 @@ namespace PacketID
         SetPlayer, //< ActivePlayer struct in golf, BilliardsPlayer in billiards
         SetHole, //< uint8 hole
         ScoreUpdate, //< ScoreUpdate struct
+        FoulEvent, //< int8 BilliardsEvent foul reason - tells client to display a foul message
         GameEnd, //< uint8 seconds. tells clients to show scoreboard/countdown to lobby, or BilliardsPlayer of winner in billiards
 
         ActorAnimation, //< Tell player sprite to play the given anim with uint8 ID

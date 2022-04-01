@@ -75,6 +75,14 @@ namespace
 #include "WireframeShader.inl"
 #include "TerrainShader.inl"
 
+    const std::array FoulStrings =
+    {
+        std::string("Wrong Ball Hit"),
+        std::string("Wrong Ball Pot"),
+        std::string("Off Table"),
+        std::string("Forfeit")
+    };
+
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
     struct CueCallbackData final
@@ -895,6 +903,9 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::FoulEvent:
+            LogI << "Foul! " << FoulStrings[evt.packet.as<std::int8_t>()] << std::endl;
+            break;
         case PacketID::ActorAnimation:
             if (!m_remoteCue.getComponent<cro::Model>().isHidden())
             {

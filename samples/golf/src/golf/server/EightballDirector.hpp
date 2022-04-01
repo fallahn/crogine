@@ -68,6 +68,17 @@ private:
     std::vector<std::int8_t> m_pocketsThisTurn;
     std::int8_t m_firstCollision;
 
+    struct TurnFlags final
+    {
+        enum
+        {
+            Foul      = 0x01,
+            Forfeit   = 0x02,
+            Eightball = 0x04
+        };
+    };
+    std::uint8_t m_turnFlags;
+
     std::int32_t getStatusType(std::int8_t ballID) const;
     void summariseTurn();
 };

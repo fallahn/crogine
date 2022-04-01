@@ -43,7 +43,8 @@ namespace
 EightballDirector::EightballDirector()
     : m_cubeballPosition(0.f, BallHeight, 0.57f),
     m_currentPlayer     (cro::Util::Random::value(0,1)),
-    m_firstCollision    (0)
+    m_firstCollision    (0),
+    m_turnFlags         (0)
 {
     static constexpr glm::vec3 Offset(0.f, BallHeight, 0.0935f - 0.465f); //distance to 8 ball minus distance to spot
 
@@ -104,6 +105,47 @@ void EightballDirector::handleMessage(const cro::Message& msg)
                 m_firstCollision = data.second;
             }
         }
+        else if (data.type == BilliardsEvent::OutOfBounds)
+        {
+            if (data.second == 0)
+            {
+                //we weren't in a pocket so must have gone off the table
+
+                auto* msg2 = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+                msg2->type = BilliardsEvent::Foul;
+                msg2->first = BilliardsEvent::OffTable;
+
+                switch (data.first)
+                {
+                default:
+                    m_turnFlags |= TurnFlags::Foul;
+                    break;
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                    m_turnFlags |= TurnFlags::Foul;
+                    m_potCount[PlayerStatus::Stripes]++;
+                    break;
+                case 8:
+                    m_turnFlags |= TurnFlags::Forfeit;
+                    break;
+                case 9:
+                case 10:
+                case 11:
+                case 12:
+                case 13:
+                case 14:
+                case 15:
+                    m_turnFlags |= TurnFlags::Foul;
+                    m_potCount[PlayerStatus::Spots]++;
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -162,16 +204,24 @@ std::int32_t EightballDirector::getStatusType(std::int8_t ballID) const
 
 void EightballDirector::summariseTurn()
 {
-    bool foulTurn = false;
-    bool forfeit = false; //potted the black too soon
-    bool eightball = false;
+    std::int8_t foulType = 127;
 
     //look at what was first hit
-    if (m_firstCollision == CueBall
-        || getStatusType(m_firstCollision) != m_playerStatus[m_currentPlayer].target)
+    if (m_firstCollision == CueBall)
     {
-        //either missed or hit the wrong ball first
-        foulTurn = m_playerStatus[m_currentPlayer].target != PlayerStatus::None;
+        m_turnFlags |= TurnFlags::Foul;
+
+        foulType = BilliardsEvent::WrongBallHit;
+    }
+    else if (getStatusType(m_firstCollision) != m_playerStatus[m_currentPlayer].target)
+    {
+        //hit the wrong ball first
+        if (m_playerStatus[m_currentPlayer].target != PlayerStatus::None)
+        {
+            m_turnFlags |= TurnFlags::Foul;
+
+            foulType = BilliardsEvent::WrongBallHit;
+        }
     }
 
 
@@ -180,19 +230,35 @@ void EightballDirector::summariseTurn()
     {
         if (id == CueBall)
         {
-            foulTurn = true;
+            m_turnFlags |= TurnFlags::Foul;
+            foulType = BilliardsEvent::WrongBallPot;
             continue;
         }
 
         auto status = getStatusType(id);
         if (status != PlayerStatus::Eightball)
         {
-            CRO_ASSERT(status != PlayerStatus::None, "");
             m_potCount[status]++;
+
+            //if player has a target but it doesn't match, foul
+            if (m_playerStatus[m_currentPlayer].target != PlayerStatus::None
+                && m_playerStatus[m_currentPlayer].target != status)
+            {
+                m_turnFlags |= TurnFlags::Foul;
+                foulType = BilliardsEvent::WrongBallPot;
+            }
         }
         else
         {
-            eightball = true;
+            if (m_playerStatus[m_currentPlayer].target == status)
+            {
+                m_turnFlags |= TurnFlags::Eightball;
+            }
+            else
+            {
+                m_turnFlags |= TurnFlags::Forfeit;
+                foulType = BilliardsEvent::Forfeit;
+            }
         }
     }
 
@@ -222,8 +288,8 @@ void EightballDirector::summariseTurn()
         m_playerStatus[m_currentPlayer].score = m_potCount[m_playerStatus[m_currentPlayer].target];
     }
 
-    //check if someone one or lost
-    if (forfeit)
+    //check if someone won or lost
+    if (m_turnFlags & TurnFlags::Forfeit)
     {
         //set this to other player so handling game
         //end in server state reads correct winner ID
@@ -231,8 +297,9 @@ void EightballDirector::summariseTurn()
 
         auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
         msg->type = BilliardsEvent::GameEnded;
+        msg->first = BilliardsEvent::Forfeit;
     }
-    else if (eightball && !foulTurn)
+    else if ((m_turnFlags & (TurnFlags::Eightball | TurnFlags::Foul)) == TurnFlags::Eightball)
     {
         //make sure 8 ball was last to win
         if (m_playerStatus[m_currentPlayer].target == PlayerStatus::Eightball
@@ -247,13 +314,13 @@ void EightballDirector::summariseTurn()
     else
     {
         //check if we should move to next player
-        if (foulTurn || m_pocketsThisTurn.empty())
+        if ((m_turnFlags & TurnFlags::Foul) || m_pocketsThisTurn.empty())
         {
             m_currentPlayer = (m_currentPlayer + 1) % 2;
         }
 
         //delete cueball if a foul so player resets
-        if (foulTurn)
+        if (m_turnFlags & TurnFlags::Foul)
         {
             getScene().destroyEntity(getCueball());
         }
@@ -279,4 +346,13 @@ void EightballDirector::summariseTurn()
             }
         };
     }
+
+    if (m_turnFlags & TurnFlags::Foul)
+    {
+        auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+        msg->type = BilliardsEvent::Foul;
+        msg->first = foulType;
+    }
+
+    m_turnFlags = 0;
 }

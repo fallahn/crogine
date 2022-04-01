@@ -74,8 +74,19 @@ struct BilliardsEvent final
         TurnBegan,
         TurnEnded,
         PlayerSwitched,
-        GameEnded
+        GameEnded,
+        Foul
     }type = Collision;
-    std::int8_t first = -1; //ballA
+
+    enum
+    {
+        //foul reasons
+        WrongBallHit,
+        WrongBallPot,
+        OffTable,
+        Forfeit
+    };
+
+    std::int8_t first = -1; //ballA or foul reason
     std::int8_t second = -1; //ballB or pocketID
 };
