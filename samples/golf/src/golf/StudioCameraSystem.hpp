@@ -38,9 +38,24 @@ as it's fundamentally different in structure from the golf equivalent, CameraFol
 
 struct StudioCamera final
 {
+public:
+    void setTarget(cro::Entity e)
+    {
+        if (switchTime < 0)
+        {
+            target = e;
+            switchTime = 5.f;
+        }
+    }
+
+private:
     cro::Entity target;
     glm::vec3 cameraTarget = glm::vec3(0.f);
     float zoom = 1.f;
+
+    float switchTime = 5.f;
+
+    friend class StudioCameraSystem;
 };
 
 class StudioCameraSystem final : public cro::System

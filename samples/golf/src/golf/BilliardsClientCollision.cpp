@@ -63,7 +63,7 @@ BilliardsCollisionSystem::BilliardsCollisionSystem(cro::MessageBus& mb)
     m_ballShape = std::make_unique<btSphereShape>(BilliardBall::Radius * 1.2f);
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]() 
+    /*registerWindow([&]() 
         {
             if (ImGui::Begin("Client Collision"))
             {
@@ -81,7 +81,7 @@ BilliardsCollisionSystem::BilliardsCollisionSystem(cro::MessageBus& mb)
                 ImGui::Text("Ray Forward %3.3f, %3.3f, %3.3f", rayForward.x, rayForward.y, rayForward.z);
             }
             ImGui::End();
-        });
+        });*/
 #endif
 }
 
@@ -99,6 +99,11 @@ BilliardsCollisionSystem::~BilliardsCollisionSystem()
 }
 
 //public
+void BilliardsCollisionSystem::handleMessage(const cro::Message&)
+{
+
+}
+
 void BilliardsCollisionSystem::process(float)
 {
     const auto raiseMessage = [&](glm::vec3 position, float volume, std::int32_t collisionID)
@@ -126,6 +131,13 @@ void BilliardsCollisionSystem::process(float)
             {
                 float volume = glm::length(entity.getComponent<InterpolationComponent<InterpolationType::Hermite>>().getVelocity()) / MaxVel;
                 raiseMessage(entity.getComponent<cro::Transform>().getPosition(), volume, CollisionID::Ball);
+
+                if (ball.m_ballContact == CueBall)
+                {
+                    //this is the first collision this turn
+                    auto* msg = postMessage<BilliardsCameraEvent>(MessageID::BilliardsCameraMessage);
+                    msg->target = entity;
+                }
             }
         }
         ball.m_prevBallContact = ball.m_ballContact;

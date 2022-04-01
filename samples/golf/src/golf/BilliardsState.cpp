@@ -112,7 +112,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_gameMode          (TableData::Void),
     m_readyQuitFlags    (0)
 {
-    ctx.mainWindow.loadResources([&]() 
+    ctx.mainWindow.loadResources([&]()
         {
             loadAssets();
             addSystems();
@@ -148,6 +148,16 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     //        }
     //        ImGui::End();
     //    });
+
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Window"))
+            {
+                auto size = glm::vec2(m_debugBuffer.getSize() / 2u);
+                ImGui::Image(m_debugBuffer.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
+            }
+            ImGui::End();
+        });
 #endif
 }
 
@@ -365,6 +375,15 @@ void BilliardsState::handleMessage(const cro::Message& msg)
         }
     }
         break;
+    case MessageID::BilliardsCameraMessage:
+    {
+        const auto& data = msg.getData<BilliardsCameraEvent>();
+        if (data.type == BilliardsCameraEvent::NewTarget)
+        {
+            m_cameras[CameraID::Follower].getComponent<StudioCamera>().setTarget(data.target);
+        }
+    }
+        break;
     }
 
     m_gameScene.forwardMessage(msg);
@@ -456,6 +475,16 @@ void BilliardsState::render()
     m_gameSceneTexture.display();
 
     m_uiScene.render();
+
+#ifdef CRO_DEBUG_
+    auto oldCam = m_gameScene.getActiveCamera();
+    m_gameScene.setActiveCamera(m_cameras[CameraID::Follower]);
+    m_debugBuffer.clear();
+    m_gameScene.render();
+    m_debugBuffer.display();
+    m_gameScene.setActiveCamera(oldCam);
+#endif // CRO_DEBUG_
+
 }
 
 //private
@@ -629,14 +658,12 @@ void BilliardsState::buildScene()
 
     //follower cam
     camEnt = m_gameScene.createEntity();
-    camEnt.addComponent<cro::Transform>();// .setPosition({ 0.f, 2.f, 0.f });
-    //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -90.f * cro::Util::Const::degToRad);
+    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.6f, 1.3f });
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
-    camEnt.getComponent<cro::Camera>().active = false;
+    //camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
-    camEnt.addComponent<CameraProperties>().FOVAdjust = 0.75f;
+    camEnt.addComponent<CameraProperties>().FOVAdjust = 0.5f;
     camEnt.getComponent<CameraProperties>().farPlane = 6.f;
     camEnt.addComponent<StudioCamera>();
     camEnt.addComponent<cro::AudioListener>();
@@ -675,7 +702,7 @@ void BilliardsState::buildScene()
 
     m_cameraController.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
     m_cameraController.getComponent<ControllerRotation>().activeCamera = &camEnt.getComponent<cro::Camera>().active;
-    m_cameraController.addComponent<cro::Callback>().active = true;
+    m_cameraController.addComponent<cro::Callback>();// .active = true;
     m_cameraController.getComponent<cro::Callback>().setUserData<float>(0.f);
     m_cameraController.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
@@ -701,7 +728,8 @@ void BilliardsState::buildScene()
             currTime += dt;
 
             if (currTime > 3
-                && glm::dot(dir, e.getComponent<cro::Transform>().getForwardVector()) < 0.2f)
+                && glm::dot(dir, e.getComponent<cro::Transform>().getForwardVector()) < 0.2f
+                && m_activeCamera == CameraID::Player)
             {
                 setActiveCamera(CameraID::Overhead);
                 currTime = 0.f;
@@ -1036,8 +1064,6 @@ void BilliardsState::spawnBall(const ActorInfo& info)
         if (info.state == 0)
         {
             m_cueball = entity;
-
-            m_cameras[CameraID::Follower].getComponent<StudioCamera>().target = entity;
         }
 
         static constexpr float Width = 0.5f;
@@ -1096,13 +1122,6 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
     m_cameraController.getComponent<cro::Callback>().active = false;
     m_cameraController.getComponent<cro::Callback>().setUserData<float>(0.f);
 
-
-    //hide the cue model(s)
-    /*m_localCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::Out;
-    m_localCue.getComponent<cro::Callback>().active = true;*/
-
-    /*m_remoteCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::Out;
-    m_remoteCue.getComponent<cro::Callback>().active = true;*/
 
     struct TargetData final
     {
@@ -1195,6 +1214,10 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
             m_gameScene.destroyEntity(e);
         }
     };
+
+    auto* msg = getContext().appInstance.getMessageBus().post<BilliardBallEvent>(MessageID::BilliardsMessage);
+    msg->type = BilliardBallEvent::TurnStarted;
+    //TODO - include anything else in this message?
 }
 
 void BilliardsState::sendReadyNotify()
@@ -1295,6 +1318,12 @@ void BilliardsState::resizeBuffers()
     float scale = m_sharedData.pixelScale ? maxScale : 1.f;
     auto texSize = winSize / scale;
     m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+
+#ifdef CRO_DEBUG_
+    auto size = m_gameSceneTexture.getSize() / 2u;
+    m_debugBuffer.create(size.x, size.y);
+#endif // CRO_DEBUG_
+
 
     auto invScale = (maxScale + 1.f) - scale;
     /*glCheck(glPointSize(invScale * BallPointSize));*/

@@ -107,6 +107,10 @@ private:
     cro::Entity m_cameraController; //player cam is parented to this
     std::int32_t m_activeCamera;
 
+#ifdef CRO_DEBUG_
+    cro::RenderTexture m_debugBuffer;
+#endif
+
     std::int32_t m_gameMode;
     TableInfo m_tableInfo;
     cro::Entity m_cueball;

@@ -45,6 +45,7 @@ namespace MessageID
         SystemMessage,
         AchievementMessage,
         BilliardsMessage,
+        BilliardsCameraMessage,
 
         Count
     };
@@ -122,9 +123,19 @@ struct BilliardBallEvent final
     {
         ShotTaken,
         BallPlaced,
-        Collision
+        Collision,
+        TurnStarted
     }type = ShotTaken;
     std::int32_t data = -1; //collision ID
     float volume = 1.f;
     glm::vec3 position = glm::vec3(0.f);
+};
+
+struct BilliardsCameraEvent final
+{
+    enum
+    {
+        NewTarget
+    }type = NewTarget;
+    cro::Entity target;
 };

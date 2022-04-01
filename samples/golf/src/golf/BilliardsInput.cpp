@@ -279,7 +279,7 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
 
 void BilliardsInput::update(float dt)
 {
-    if (m_active)
+    //if (m_active)
     {
         checkController(dt);
 
@@ -311,8 +311,8 @@ void BilliardsInput::update(float dt)
 void BilliardsInput::setActive(bool active, bool placeBall)
 {
     m_active = active;
-    m_controlEntities.camera.getComponent<cro::Callback>().active = !active;
-    m_controlEntities.camera.getComponent<cro::Callback>().getUserData<float>() = 0.f;
+    //m_controlEntities.camera.getComponent<cro::Callback>().active = !active;
+    //m_controlEntities.camera.getComponent<cro::Callback>().getUserData<float>() = 0.f;
     
     m_controlEntities.indicator.getComponent<cro::Model>().setHidden(!active);
     m_controlEntities.indicator.getComponent<cro::Callback>().active = active;
@@ -501,49 +501,52 @@ void BilliardsInput::updatePlay(float dt)
         }
     }
 
-    //side/top/back spin
-    if (m_inputFlags & InputFlag::Left)
+    if (m_active)
     {
-        m_sideSpin = std::max(-MaxSpin, m_sideSpin - (dt * m_analogueAmountRight));
-    }
-    if (m_inputFlags & InputFlag::Right)
-    {
-        m_sideSpin = std::min(MaxSpin, m_sideSpin + (dt * m_analogueAmountRight));
-    }
-    if (m_inputFlags & InputFlag::Up)
-    {
-        m_topSpin = std::max(-MaxSpin, m_topSpin - (dt * m_analogueAmountRight));
-    }
-    if (m_inputFlags & InputFlag::Down)
-    {
-        m_topSpin = std::min(MaxSpin, m_topSpin + (dt * m_analogueAmountRight));
-    }
-    if (m_inputFlags & (InputFlag::Up | InputFlag::Down | InputFlag::Left | InputFlag::Right))
-    {
-        m_spinOffset = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), m_topSpin, cro::Transform::X_AXIS);
-        m_spinOffset = glm::rotate(m_spinOffset, m_sideSpin, cro::Transform::Y_AXIS);
-    }
+        //side/top/back spin
+        if (m_inputFlags & InputFlag::Left)
+        {
+            m_sideSpin = std::max(-MaxSpin, m_sideSpin - (dt * m_analogueAmountRight));
+        }
+        if (m_inputFlags & InputFlag::Right)
+        {
+            m_sideSpin = std::min(MaxSpin, m_sideSpin + (dt * m_analogueAmountRight));
+        }
+        if (m_inputFlags & InputFlag::Up)
+        {
+            m_topSpin = std::max(-MaxSpin, m_topSpin - (dt * m_analogueAmountRight));
+        }
+        if (m_inputFlags & InputFlag::Down)
+        {
+            m_topSpin = std::min(MaxSpin, m_topSpin + (dt * m_analogueAmountRight));
+        }
+        if (m_inputFlags & (InputFlag::Up | InputFlag::Down | InputFlag::Left | InputFlag::Right))
+        {
+            m_spinOffset = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), m_topSpin, cro::Transform::X_AXIS);
+            m_spinOffset = glm::rotate(m_spinOffset, m_sideSpin, cro::Transform::Y_AXIS);
+        }
 
-    //power
-    if (m_inputFlags & InputFlag::PrevClub)
-    {
-        m_power = std::max(PowerStep, m_power - dt);
-    }
-    if(m_inputFlags & InputFlag::NextClub)
-    {
-        m_power = std::min(1.f, m_power + dt);
-    }
+        //power
+        if (m_inputFlags & InputFlag::PrevClub)
+        {
+            m_power = std::max(PowerStep, m_power - dt);
+        }
+        if (m_inputFlags & InputFlag::NextClub)
+        {
+            m_power = std::min(1.f, m_power + dt);
+        }
 
-    auto diff = m_prevFlags ^ m_inputFlags;
-    if ((diff & m_inputFlags & InputFlag::Action) != 0
-        && playerCamActive)
-    {
-        m_controlEntities.cue.getComponent<cro::Skeleton>().play(1);
-        setActive(false, false);
+        auto diff = m_prevFlags ^ m_inputFlags;
+        if ((diff & m_inputFlags & InputFlag::Action) != 0
+            && playerCamActive)
+        {
+            m_controlEntities.cue.getComponent<cro::Skeleton>().play(1);
+            setActive(false, false);
 
-        auto* msg = m_messageBus.post<BilliardBallEvent>(MessageID::BilliardsMessage);
-        msg->type = BilliardBallEvent::ShotTaken;
-        msg->position = m_controlEntities.camera.getComponent<cro::Transform>().getPosition();
+            auto* msg = m_messageBus.post<BilliardBallEvent>(MessageID::BilliardsMessage);
+            msg->type = BilliardBallEvent::ShotTaken;
+            msg->position = m_controlEntities.camera.getComponent<cro::Transform>().getPosition();
+        }
     }
 }
 

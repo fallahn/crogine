@@ -62,6 +62,7 @@ public:
     BilliardsCollisionSystem& operator = (const BilliardsCollisionSystem&) = delete;
     BilliardsCollisionSystem& operator = (BilliardsCollisionSystem&&) = delete;
 
+    void handleMessage(const cro::Message&) override;
     void process(float) override;
 
     void initTable(const struct TableData&);
