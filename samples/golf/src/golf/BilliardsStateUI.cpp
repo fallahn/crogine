@@ -66,7 +66,7 @@ void BilliardsState::createUI()
         e.getComponent<cro::Transform>().setOrigin(texSize / 2.f);
         e.getComponent<cro::Callback>().active = false;
     };
-    auto courseEnt = entity;
+    auto backgroundEnt = entity;
 
     /*if (m_gameSceneShader.loadFromString(PaletteSwapVertex, PaletteSwapFragment)
         && m_lutTexture.loadFromFile("assets/golf/images/lut.png"))
@@ -80,10 +80,55 @@ void BilliardsState::createUI()
         }
     }*/
 
+    //attach UI elements to this so they scale to their parent
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, 0.1f});
+    auto rootNode = entity;
+
+
+    //player names
+    auto& menuFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    
+    auto createText = [&](const std::string& str, glm::vec2 relPos)
+    {
+        auto ent = m_uiScene.createEntity();
+        ent.addComponent<cro::Transform>();
+        ent.addComponent<cro::Drawable2D>();
+        ent.addComponent<cro::Text>(menuFont).setString(str);
+        ent.getComponent<cro::Text>().setCharacterSize(UITextSize);
+        ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        ent.addComponent<UIElement>().relativePosition = relPos;
+        ent.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+
+        centreText(ent);
+        rootNode.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+
+        return ent;
+    };
+
+    static constexpr float NameVertPos = 0.95f;
+    static constexpr float NameHorPos = 0.13f;
+    createText(m_sharedData.connectionData[0].playerData[0].name, glm::vec2(NameHorPos, NameVertPos));
+
+    if (m_sharedData.connectionData[0].playerCount == 2)
+    {
+        createText(m_sharedData.connectionData[0].playerData[1].name, glm::vec2(1.f - NameHorPos, NameVertPos));
+    }
+    else
+    {
+        createText(m_sharedData.connectionData[1].playerData[0].name, glm::vec2(1.f - NameHorPos, NameVertPos));
+    }
+
+
+
+
+    CommandID::UI::StrengthMeter;
+    //also mouse cursor for rotating
+
 
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
-    auto updateView = [&, /*rootNode,*/ courseEnt](cro::Camera& cam) mutable
+    auto updateView = [&, rootNode, backgroundEnt](cro::Camera& cam) mutable
     {
         auto windowSize = GolfGame::getActiveTarget()->getSize();
         glm::vec2 size(windowSize);
@@ -94,17 +139,16 @@ void BilliardsState::createUI()
         auto vpSize = calcVPSize();
 
         m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
-        //rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
-        //rootNode.getComponent<cro::Transform>().setPosition(m_menuPositions[m_currentMenu] * m_viewScale);
+        rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
 
         glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);
-        courseEnt.getComponent<cro::Transform>().setScale(courseScale);
-        courseEnt.getComponent<cro::Callback>().active = true; //makes sure to delay so updating the texture size is complete first
-        courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -1.f));
+        backgroundEnt.getComponent<cro::Transform>().setScale(courseScale);
+        backgroundEnt.getComponent<cro::Callback>().active = true; //makes sure to delay so updating the texture size is complete first
+        backgroundEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -1.f));
 
         //updates any text objects / buttons with a relative position
         cro::Command cmd;
-        cmd.targetFlags = CommandID::Menu::UIElement;
+        cmd.targetFlags = CommandID::UI::UIElement;
         cmd.action =
             [&, size](cro::Entity e, float)
         {

@@ -50,7 +50,8 @@ SpriteState::SpriteState(cro::StateStack& stack, cro::State::Context ctx, Shared
 	m_sharedData		(sd),
 	m_scene				(ctx.appInstance.getMessageBus()),
 	m_activeSprite		(nullptr),
-	m_showPreferences	(false)
+	m_showPreferences	(false),
+	m_showNewSprite		(false)
 {
 	ctx.mainWindow.loadResources([this]()
 		{

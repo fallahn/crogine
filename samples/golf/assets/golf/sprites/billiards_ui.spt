@@ -1,0 +1,19 @@
+billiards_ui 
+{
+    src = "assets/golf/images/billiards/ui.png"
+    smooth = false
+    repeat = false
+
+    sprite rotate
+    {
+        bounds = 0.000000,0.000000,32.000000,32.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite cue
+    {
+        bounds = 31.000000,0.000000,8.000000,82.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+}

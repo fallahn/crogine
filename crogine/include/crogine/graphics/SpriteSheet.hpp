@@ -97,6 +97,19 @@ namespace cro
         */
         const cro::Texture* getTexture() const { return m_texture; }
 
+        /*!
+        \brief Sets the new texture and texture path of the SpriteSheet overwriting the
+        existing one.
+        \param path Relative path to the texture to use
+        \param textureResource Reference to an active texture resource
+        */
+        void setTexture(const std::string& path, TextureResource& textureResource, const std::string& workingDirectory = "");
+
+        /*!
+        \brief Adds the sprite with the given name, or does nothing if it already exists
+        */
+        void addSprite(const std::string& spriteName);
+
     private:
         mutable std::unordered_map<std::string, Sprite> m_sprites;
         mutable std::unordered_map<std::string, std::vector<std::string>> m_animations;

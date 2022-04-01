@@ -126,6 +126,7 @@ void SpriteState::createUI()
             drawInspector();
             drawSpriteWindow();
             drawPreferences();
+            drawNewSprite();
 		});
     
     getContext().mainWindow.setTitle("Sprite Editor");
@@ -138,6 +139,32 @@ void SpriteState::drawMenuBar()
         //file menu
         if (ImGui::BeginMenu("File##sprite"))
         {
+            if (ImGui::MenuItem("New##sprite"))
+            {
+                if (m_spriteSheet.getTexture()
+                    && cro::FileSystem::showMessageBox("Save?", "Save Current Sprite Sheet?", cro::FileSystem::YesNo))
+                {
+                    save();
+                }
+
+                auto path = cro::FileSystem::openFileDialogue("", "png,jpg");
+                if (!path.empty())
+                {
+                    std::replace(path.begin(), path.end(), '\\', '/');
+                    if (auto pathPos = path.find(m_sharedData.workingDirectory); pathPos == std::string::npos)
+                    {
+                        cro::FileSystem::showMessageBox("Error", "Texture not opened from working directory");
+                    }
+                    else
+                    {
+                        m_spriteSheet = {};
+                        m_spriteSheet.setTexture(path.substr(m_sharedData.workingDirectory.length() + 1), m_textures, m_sharedData.workingDirectory + "/");
+
+                        auto* texture = m_spriteSheet.getTexture();
+                        m_entities[EntityID::Root].getComponent<cro::Sprite>().setTexture(*texture);
+                    }
+                }
+            }
             if (ImGui::MenuItem("Open##sprite", nullptr, nullptr))
             {
                 auto path = cro::FileSystem::openFileDialogue("", "spt");
@@ -201,10 +228,15 @@ void SpriteState::drawInspector()
     ImGui::SetNextWindowSize({ 480.f, 700.f });
     ImGui::Begin("Inspector##sprite", nullptr, ImGuiWindowFlags_NoCollapse);
 
-    if (ImGui::Button("Add##sprite"))
+    if (m_spriteSheet.getTexture())
     {
-        m_activeSprite = nullptr;
-        updateBoundsEntity();
+        if (ImGui::Button("Add##sprite"))
+        {
+            m_activeSprite = nullptr;
+            updateBoundsEntity();
+
+            m_showNewSprite = true;
+        }
     }
     if (m_activeSprite)
     {
@@ -226,7 +258,22 @@ void SpriteState::drawInspector()
         ImGui::SameLine();
         if (ImGui::Button("Browse##texPath"))
         {
+            auto path = cro::FileSystem::openFileDialogue("", "png,jpg");
+            if (!path.empty())
+            {
+                std::replace(path.begin(), path.end(), '\\', '/');
+                if (auto pathPos = path.find(m_sharedData.workingDirectory); pathPos == std::string::npos)
+                {
+                    cro::FileSystem::showMessageBox("Error", "Texture not opened from working directory");
+                }
+                else
+                {
+                    m_spriteSheet.setTexture(path.substr(m_sharedData.workingDirectory.length() + 1), m_textures, m_sharedData.workingDirectory + "/");
 
+                    auto* texture = m_spriteSheet.getTexture();
+                    m_entities[EntityID::Root].getComponent<cro::Sprite>().setTexture(*texture);
+                }
+            }
         }
         ImGui::Text("Texture Size: %d, %d", texture->getSize().x, texture->getSize().y);
         ImGui::NewLine();
@@ -482,6 +529,26 @@ void SpriteState::drawPreferences()
                 msg->type = UIEvent::WrotePreferences;
 
                 m_showPreferences = false;
+            }
+        }
+        ImGui::End();
+    }
+}
+
+void SpriteState::drawNewSprite()
+{
+    if (m_showNewSprite)
+    {
+        ImGui::SetNextWindowSize({ 240.f, 60.f });
+        if (ImGui::Begin("Add Sprite", &m_showNewSprite, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
+        {
+            static std::string nameBuffer;
+            ImGui::InputText("Name", &nameBuffer);
+            ImGui::SameLine();
+            if (ImGui::Button("Add"))
+            {
+                m_spriteSheet.addSprite(nameBuffer);
+                nameBuffer.clear();
             }
         }
         ImGui::End();

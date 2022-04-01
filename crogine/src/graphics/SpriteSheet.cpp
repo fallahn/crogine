@@ -191,7 +191,10 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
 
 bool SpriteSheet::saveToFile(const std::string& path)
 {
-    ConfigFile sheetFile;
+    auto sheetName = FileSystem::getFileName(path);
+    sheetName = sheetName.substr(0, sheetName.find_last_of('.'));
+
+    ConfigFile sheetFile("spritesheet", sheetName);
     sheetFile.addProperty("src", "\"" + m_texturePath + "\"");
 
     if (m_texture)
@@ -273,4 +276,36 @@ bool SpriteSheet::hasAnimation(const std::string& name, const std::string& sprit
         return result != anims.cend();
     }
     return false;
+}
+
+void SpriteSheet::setTexture(const std::string& path, TextureResource& tr, const std::string& workingDir)
+{
+    m_texturePath = path;
+    m_texture = &tr.get(workingDir + path);
+
+    for (auto& sprite : m_sprites)
+    {
+        sprite.second.setTexture(*m_texture);
+    }
+}
+
+void SpriteSheet::addSprite(const std::string& name)
+{
+    if (name.empty())
+    {
+        LogE << "Could not add sprite: name cannot be empty" << std::endl;
+        return;
+    }
+
+    if (!m_texture)
+    {
+        LogE << "Failed adding " << name << ": no texture is set." << std::endl;
+        return;
+    }
+
+    if (m_sprites.count(name) == 0)
+    {
+        m_sprites.insert(std::make_pair(name, Sprite()));
+        m_sprites[name].setTexture(*m_texture);
+    }
 }

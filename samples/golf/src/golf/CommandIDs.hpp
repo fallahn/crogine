@@ -67,7 +67,8 @@ struct CommandID final
             MiniBall             = 0x4000,
             MessageBoard         = 0x8000,
             MiniGreen            = 0x10000,
-            DrivingBoard         = 0x20000
+            DrivingBoard         = 0x20000,
+            StrengthMeter        = 0x40000
         };
     };
 
