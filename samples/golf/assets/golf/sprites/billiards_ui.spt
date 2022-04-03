@@ -1,18 +1,48 @@
-billiards_ui 
+spritesheet billiards_ui
 {
     src = "assets/golf/images/billiards/ui.png"
     smooth = false
     repeat = false
 
+    sprite arrow_left
+    {
+        bounds = 3.000000,36.000000,10.000000,15.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
     sprite rotate
     {
         bounds = 0.000000,0.000000,32.000000,32.000000
         colour = 1.000000,1.000000,1.000000,1.000000
 
     }
+    sprite close_button
+    {
+        bounds = 48.000000,31.000000,48.000000,18.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
     sprite cue
     {
         bounds = 31.000000,0.000000,8.000000,82.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite arrow_right
+    {
+        bounds = 19.000000,36.000000,10.000000,15.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite trophy_background
+    {
+        bounds = 2.000000,83.000000,194.000000,300.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite close_highlight
+    {
+        bounds = 48.000000,52.000000,48.000000,18.000000
         colour = 1.000000,1.000000,1.000000,1.000000
 
     }

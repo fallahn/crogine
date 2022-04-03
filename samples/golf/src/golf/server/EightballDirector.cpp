@@ -190,7 +190,6 @@ std::int32_t EightballDirector::getStatusType(std::int8_t ballID) const
         return PlayerStatus::Stripes;
     case 8:
         return PlayerStatus::Eightball;
-        break;
     case 9:
     case 10:
     case 11:
@@ -210,7 +209,7 @@ void EightballDirector::summariseTurn()
     if (m_firstCollision == CueBall)
     {
         m_turnFlags |= TurnFlags::Foul;
-
+        LogI << "no ball hit" << std::endl;
         foulType = BilliardsEvent::WrongBallHit;
     }
     else if (getStatusType(m_firstCollision) != m_playerStatus[m_currentPlayer].target)
@@ -223,7 +222,7 @@ void EightballDirector::summariseTurn()
             foulType = BilliardsEvent::WrongBallHit;
         }
     }
-
+    m_firstCollision = 0;
 
     //look at what was pocketed
     for (auto id : m_pocketsThisTurn)

@@ -149,7 +149,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     //        ImGui::End();
     //    });
 
-    registerWindow([&]()
+    /*registerWindow([&]()
         {
             if (ImGui::Begin("Window"))
             {
@@ -157,7 +157,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
                 ImGui::Image(m_debugBuffer.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
             }
             ImGui::End();
-        });
+        });*/
 #endif
 }
 

@@ -1,0 +1,9 @@
+cubemap trophy
+{
+    up = "assets/golf/images/skybox/billiards/py.png"
+    down = "assets/golf/images/skybox/billiards/side.png"
+    left = "assets/golf/images/skybox/billiards/py.png"
+    right = "assets/golf/images/skybox/billiards/py.png"
+    front = "assets/golf/images/skybox/billiards/side.png"
+    back = "assets/golf/images/skybox/billiards/side.png"
+}
