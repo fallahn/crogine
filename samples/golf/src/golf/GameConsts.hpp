@@ -126,7 +126,8 @@ struct ShaderID final
         Wireframe,
         WireframeCulled,
         Weather,
-        Transition
+        Transition,
+        Trophy
     };
 };
 

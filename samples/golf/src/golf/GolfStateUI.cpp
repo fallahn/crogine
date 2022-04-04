@@ -1775,9 +1775,14 @@ void GolfState::buildTrophyScene()
             entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
             md.createModel(entity);
 
-            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]); //doesn't pixel fade like Cel does.
+            //TODO there's no gaurantee that the materials are in this order...
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
             applyMaterialData(md, material);
             entity.getComponent<cro::Model>().setMaterial(0, material);
+
+            material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]); //doesn't pixel fade like Cel does.
+            applyMaterialData(md, material);
+            entity.getComponent<cro::Model>().setMaterial(1, material);
 
             entity.addComponent<TrophyDisplay>().delay = static_cast<float>(i) / 2.f;
             entity.addComponent<cro::ParticleEmitter>().settings = emitterSettings;

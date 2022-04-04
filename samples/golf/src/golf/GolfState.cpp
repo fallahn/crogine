@@ -278,6 +278,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_2:
             //setActiveCamera(2);
+            showCountdown(10);
             break;
         case SDLK_PAGEUP:
         {
@@ -893,6 +894,8 @@ void GolfState::render()
 //private
 void GolfState::loadAssets()
 {
+    m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
+
     //load materials
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
 
@@ -914,6 +917,13 @@ void GolfState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n");
+    shader = &m_resources.shaders.get(ShaderID::Trophy);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Trophy] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
 
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n");
     shader = &m_resources.shaders.get(ShaderID::CelTextured);

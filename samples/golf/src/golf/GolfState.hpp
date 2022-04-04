@@ -49,6 +49,7 @@ source distribution.
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
+#include <crogine/graphics/CubemapTexture.hpp>
 
 #include <array>
 #include <unordered_map>
@@ -114,6 +115,7 @@ private:
 
     cro::RenderTexture m_gameSceneTexture;
     cro::RenderTexture m_trophySceneTexture;
+    cro::CubemapTexture m_reflectionMap;
 
     cro::UniformBuffer m_scaleBuffer;
     cro::UniformBuffer m_resolutionBuffer;
@@ -151,6 +153,7 @@ private:
             Course,
             Ball,
             Billboard,
+            Trophy,
 
             Count
         };
