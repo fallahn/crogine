@@ -36,6 +36,8 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/UniformBuffer.hpp>
+#include <crogine/graphics/CubemapTexture.hpp>
 
 struct SharedStateData;
 
@@ -74,6 +76,11 @@ private:
 
     std::size_t m_trophyIndex;
     cro::RenderTexture m_trophyTexture;
+    cro::CubemapTexture m_reflectionMap;
+    std::vector<cro::Entity> m_trophyEnts;
+
+    cro::UniformBuffer m_scaleBuffer;
+    cro::UniformBuffer m_resolutionBuffer;
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;

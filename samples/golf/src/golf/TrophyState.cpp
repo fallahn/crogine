@@ -51,6 +51,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
@@ -62,25 +63,30 @@ source distribution.
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
+#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/util/Easings.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace
 {
-
+#include "TerrainShader.inl"
+    constexpr glm::vec2 TrophyTextureSize(140.f, 184.f);
 }
 
 TrophyState::TrophyState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State    (ss, ctx),
-    m_scene         (ctx.appInstance.getMessageBus()),
-    m_trophyScene   (ctx.appInstance.getMessageBus()),
-    m_sharedData    (sd),
-    m_trophyIndex   (1),
-    m_viewScale     (2.f)
+    : cro::State        (ss, ctx),
+    m_scene             (ctx.appInstance.getMessageBus()),
+    m_trophyScene       (ctx.appInstance.getMessageBus()),
+    m_sharedData        (sd),
+    m_trophyIndex       (1),
+    m_scaleBuffer       ("PixelScale", sizeof(float)),
+    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_viewScale         (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -148,7 +154,7 @@ bool TrophyState::simulate(float dt)
 
 void TrophyState::render()
 {
-    m_trophyTexture.clear(cro::Colour::AliceBlue);
+    m_trophyTexture.clear(cro::Colour::Transparent/*cro::Colour::Red*/);
     m_trophyScene.render();
     m_trophyTexture.display();
 
@@ -386,6 +392,15 @@ void TrophyState::buildScene()
                 {
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
+                    //hide model
+                    if (!m_trophyEnts.empty())
+                    {
+                        auto modelIndex = m_trophyIndex % m_trophyEnts.size();
+                        m_trophyEnts[modelIndex].getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 0;
+                        m_trophyEnts[modelIndex].getComponent<cro::Callback>().active = true;
+                    }
+
+
                     m_trophyIndex = ((m_trophyIndex + (AchievementID::Count - 1)) % AchievementID::Count);
                     if (m_trophyIndex == 0)
                     {
@@ -449,6 +464,15 @@ void TrophyState::buildScene()
                 {
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
+                    //hide model
+                    if (!m_trophyEnts.empty())
+                    {
+                        auto modelIndex = m_trophyIndex % m_trophyEnts.size();
+                        m_trophyEnts[modelIndex].getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 0;
+                        m_trophyEnts[modelIndex].getComponent<cro::Callback>().active = true;
+                    }
+
+
                     m_trophyIndex = ((m_trophyIndex + 1) % AchievementID::Count);
                     
                     //there's probably a smart way to do this, but brain.
@@ -467,13 +491,14 @@ void TrophyState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ bgBounds.width / 2.f, 138.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>().setTexture(m_trophyTexture.getTexture());
+    entity.addComponent<cro::Sprite>();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     backgroundEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    auto trophyEnt = entity;
 
-    auto updateView = [&, rootNode](cro::Camera& cam) mutable
+    auto updateView = [&, rootNode, trophyEnt](cro::Camera& cam) mutable
     {
         glm::vec2 size(GolfGame::getActiveTarget()->getSize());
 
@@ -502,6 +527,30 @@ void TrophyState::buildScene()
             e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
         };
         m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+        //resize the trophy texture and rescale sprite
+        glm::uvec2 textureSize(TrophyTextureSize);
+        float invScale = 1.f;
+        if (m_sharedData.pixelScale)
+        {
+            trophyEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        }
+        else
+        {
+            invScale = m_viewScale.x;
+            textureSize *= static_cast<std::uint32_t>(m_viewScale.x);
+            trophyEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f) / m_viewScale);
+        }
+
+        m_trophyTexture.create(textureSize.x, textureSize.y);
+        trophyEnt.getComponent<cro::Sprite>().setTexture(m_trophyTexture.getTexture());
+        trophyEnt.getComponent<cro::Transform>().setOrigin({ textureSize.x / 2.f, textureSize.y / 2.f });
+
+        m_scaleBuffer.setData(&invScale);
+
+        glm::vec2 scaledRes = glm::vec2(textureSize) / invScale;
+        m_resolutionBuffer.setData(&scaledRes);
     };
 
     entity = m_scene.createEntity();
@@ -513,9 +562,144 @@ void TrophyState::buildScene()
 
 void TrophyState::buildTrophyScene()
 {
+    auto& mb = getContext().appInstance.getMessageBus();
+
+    m_trophyScene.addSystem<cro::CallbackSystem>(mb);
+    m_trophyScene.addSystem<cro::CameraSystem>(mb);
+    m_trophyScene.addSystem<cro::ModelRenderer>(mb);
+   
+    m_scaleBuffer.bind(0);
+    m_resolutionBuffer.bind(1);
+    m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
+
+    //TODO we need to cache the material IDs else we create a new material
+    //every time this state is loaded...
+    if (!m_sharedData.sharedResources->shaders.hasShader(ShaderID::Ball))
+    {
+        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
+    }
+
+    auto* shader = &m_sharedData.sharedResources->shaders.get(ShaderID::Ball);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    auto materialID = m_sharedData.sharedResources->materials.add(*shader);
+    auto flatMaterial = m_sharedData.sharedResources->materials.get(materialID);
+
+    if (!m_sharedData.sharedResources->shaders.hasShader(ShaderID::Trophy))
+    {
+        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n");
+    }
+    shader = &m_sharedData.sharedResources->shaders.get(ShaderID::Trophy);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    materialID = m_sharedData.sharedResources->materials.add(*shader);
+    auto shinyMaterial = m_sharedData.sharedResources->materials.get(materialID);
+    shinyMaterial.setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
 
 
-    m_trophyTexture.create(200, 154);
+    auto rotateEnt = m_trophyScene.createEntity();
+    rotateEnt.addComponent<cro::Transform>();
+    rotateEnt.addComponent<cro::Callback>().active = true;
+    rotateEnt.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+    };
+
+    cro::ModelDefinition md(*m_sharedData.sharedResources);
+
+    const std::array<std::string, 7> paths =
+    {
+        std::string("assets/golf/models/trophies/trophy01.cmt"),
+        "assets/golf/models/trophies/trophy02.cmt",
+        "assets/golf/models/trophies/trophy03.cmt",
+        "assets/golf/models/trophies/trophy04.cmt",
+        "assets/golf/models/trophies/trophy05.cmt",
+        "assets/golf/models/trophies/trophy06.cmt",
+        "assets/golf/models/trophies/trophy07.cmt",
+    };
+
+    auto trophyCallback =
+        [&](cro::Entity e, float dt) mutable
+    {
+        auto& [currTime, direction] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+        const float updateTime = dt * 3.f;
+
+        if (direction == 0)
+        {
+            //shrink
+            currTime = std::max(0.f, currTime - updateTime);
+            if (currTime == 0)
+            {
+                direction = 1;
+                e.getComponent<cro::Callback>().active = false;
+                e.getComponent<cro::Model>().setHidden(true);
+
+                //start next trophy growing
+                if (Achievements::getAchievement(AchievementStrings[m_trophyIndex])->achieved)
+                {
+                    auto idx = m_trophyIndex % m_trophyEnts.size();
+                    m_trophyEnts[idx].getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
+                    m_trophyEnts[idx].getComponent<cro::Callback>().active = true;
+                    m_trophyEnts[idx].getComponent<cro::Model>().setHidden(false);
+                }
+            }
+        }
+        else
+        {
+            //grow
+            currTime = std::min(1.f, currTime + updateTime);
+
+            if (currTime == 1)
+            {
+                direction = 0;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+
+        float scale = cro::Util::Easing::easeOutBack(currTime);
+        e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+    };
+
+    //TODO map these to achievements in some meaningful way
+    for (const auto& path : paths)
+    {
+        if (md.loadFromFile(path))
+        {
+            auto entity = m_trophyScene.createEntity();
+            entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
+            md.createModel(entity);
+            rotateEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+            entity.getComponent<cro::Model>().setMaterial(0, shinyMaterial);
+            entity.getComponent<cro::Model>().setMaterial(1, flatMaterial);
+            entity.getComponent<cro::Model>().setHidden(true);
+
+            entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
+            entity.getComponent<cro::Callback>().function = trophyCallback;
+
+            m_trophyEnts.push_back(entity);
+        }
+    }
+
+    if (!m_trophyEnts.empty())
+    {
+        m_trophyEnts[0].getComponent<cro::Callback>().active = true;
+    }
+
+    auto resizeCallback = [](cro::Camera& cam)
+    {
+        auto ratio = TrophyTextureSize.x / TrophyTextureSize.y;
+        cam.setPerspective(64.f * cro::Util::Const::degToRad, ratio, 0.1f, 2.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+    resizeCallback(m_trophyScene.getActiveCamera().getComponent<cro::Camera>());
+    m_trophyScene.getActiveCamera().getComponent<cro::Camera>().resizeCallback = resizeCallback;
+    m_trophyScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.27f, 0.55f });
+
+    auto sunEnt = m_trophyScene.getSunlight();
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -15.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -10.f * cro::Util::Const::degToRad);
 }
 
 void TrophyState::quitState()
