@@ -45,11 +45,12 @@ struct StatData final
 struct AchievementData final
 {
     AchievementData() {}
-    AchievementData(const std::string& str, std::int32_t idx = -1, bool b = false)
-        :name(str), achieved(b), id(idx) {}
+    AchievementData(const std::string& str, std::int32_t idx = -1, bool b = false, std::uint64_t ts = 0)
+        : name(str), achieved(b), id(idx), timestamp(ts) {}
     std::string name;
     bool achieved = false;
     std::int32_t id = -1;
+    std::uint64_t timestamp = 0;
 };
 
 //base class for different implementations

@@ -33,6 +33,7 @@ source distribution.
 #include "golf/MessageIDs.hpp"
 
 #include <crogine/core/App.hpp>
+#include <crogine/core/SysTime.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/util/Random.hpp>
 
@@ -65,7 +66,7 @@ void DefaultAchievements::init()
 
     for (auto i = 1; i < AchievementID::Count; ++i)
     {
-        m_achievements.insert(std::make_pair(AchievementStrings[i], AchievementData(AchievementLabels[i], i, readBit(i))));
+        m_achievements.insert(std::make_pair(AchievementStrings[i], AchievementData(AchievementLabels[i], i, readBit(i), m_timeStamps[i])));
     }
 
     for (auto i = 0; i < StatID::Count; ++i)
@@ -127,6 +128,8 @@ void DefaultAchievements::awardAchievement(const std::string& name)
         LOG("Awarded achievement " + name, cro::Logger::Type::Info);
         m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[name], *this));
         m_achievements[name].achieved = true;
+
+        m_timeStamps[m_achievements[name].id] = cro::SysTime::epoch();
 
         writeBit(m_achievements[name].id);
         writeFile();
@@ -265,9 +268,12 @@ void DefaultAchievements::readFile()
 {
     std::fill(m_bitArray.begin(), m_bitArray.end(), 0);
     std::fill(m_statArray.begin(), m_statArray.end(), 0.f);
+    std::fill(m_timeStamps.begin(), m_timeStamps.end(), 0);
 
     std::size_t bitsize = sizeof(std::uint32_t) * m_bitArray.size();
     std::size_t statsize = sizeof(std::int32_t) * m_statArray.size();
+    std::size_t timesize = sizeof(std::uint64_t) * m_timeStamps.size();
+
     const std::string filePath = cro::App::getInstance().getPreferencePath() + FileName;
 
     if (cro::FileSystem::fileExists(filePath))
@@ -276,7 +282,7 @@ void DefaultAchievements::readFile()
         stat(filePath.c_str(), &st);
 
         FILE* inFile = fopen(filePath.c_str(), "rb");
-        if (inFile && st.st_size == (bitsize + statsize))
+        if (inFile && st.st_size >= (bitsize + statsize)) //needs to be >= for backwards compat
         {
             auto read = fread(m_bitArray.data(), bitsize, 1, inFile);
             if (read != 1)
@@ -289,6 +295,8 @@ void DefaultAchievements::readFile()
             {
                 LogW << "Failed reading stats" << std::endl;
             }
+
+            read = fread(m_timeStamps.data(), timesize, 1, inFile);
 
             fclose(inFile);
         }
@@ -303,6 +311,7 @@ void DefaultAchievements::writeFile()
 {
     std::size_t bitsize = sizeof(std::uint32_t) * m_bitArray.size();
     std::size_t statsize = sizeof(std::int32_t) * m_statArray.size();
+    std::size_t timesize = sizeof(std::uint64_t) * m_timeStamps.size();
     const std::string filePath = cro::App::getInstance().getPreferencePath() + FileName;
 
     FILE* outFile = fopen(filePath.c_str(), "wb");
@@ -310,6 +319,7 @@ void DefaultAchievements::writeFile()
     {
         fwrite(m_bitArray.data(), bitsize, 1, outFile);
         fwrite(m_statArray.data(), statsize, 1, outFile);
+        fwrite(m_timeStamps.data(), timesize, 1, outFile);
         fclose(outFile);
     }
     else

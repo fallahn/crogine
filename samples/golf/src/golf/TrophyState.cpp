@@ -339,7 +339,15 @@ void TrophyState::buildScene()
         }
         descEnt.getComponent<cro::Text>().setString(descString);
 
-        dateEnt.getComponent<cro::Text>().setString("Achieved: " + cro::SysTime::dateString());
+        auto timestamp = Achievements::getAchievement(AchievementStrings[m_trophyIndex])->timestamp;
+        if (timestamp != 0)
+        {
+            dateEnt.getComponent<cro::Text>().setString("Achieved: " + cro::SysTime::dateString(timestamp));
+        }
+        else
+        {
+            dateEnt.getComponent<cro::Text>().setString(" ");
+        }
         centreText(dateEnt);
 
         static constexpr std::size_t RowCount = 5;

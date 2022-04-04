@@ -81,10 +81,22 @@ namespace cro
         static std::string dateString();
 
         /*!
+        \brief Returns the given time since epoch formatted
+        as a string in local time
+        */
+        static std::string dateString(std::uint64_t epoch);
+
+        /*!
         \brief Returns the current system time as a HH:MM:ss
         formatted string
         */
         static std::string timeString();
+
+        /*!
+        \brief Returns the given time since epoch as HH:MM::ss
+        formatted string
+        */
+        static std::string timeString(std::uint64_t epoch);
     private:
         
     };
