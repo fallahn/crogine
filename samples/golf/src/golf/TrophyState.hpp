@@ -35,6 +35,8 @@ source distribution.
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 
+#include <crogine/graphics/RenderTexture.hpp>
+
 struct SharedStateData;
 
 class TrophyState final : public cro::State
@@ -55,6 +57,7 @@ public:
 private:
 
     cro::Scene m_scene;
+    cro::Scene m_trophyScene;
     SharedStateData& m_sharedData;
 
     cro::AudioScape m_menuSounds;
@@ -70,10 +73,12 @@ private:
     std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
     std::size_t m_trophyIndex;
+    cro::RenderTexture m_trophyTexture;
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     void buildScene();
+    void buildTrophyScene();
 
     void quitState();
 };

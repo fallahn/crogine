@@ -39,6 +39,7 @@ source distribution.
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/SysTime.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -76,12 +77,14 @@ namespace
 TrophyState::TrophyState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State    (ss, ctx),
     m_scene         (ctx.appInstance.getMessageBus()),
+    m_trophyScene   (ctx.appInstance.getMessageBus()),
     m_sharedData    (sd),
     m_trophyIndex   (1),
     m_viewScale     (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
+    buildTrophyScene();
     buildScene();
 }
 
@@ -126,22 +129,29 @@ bool TrophyState::handleEvent(const cro::Event& evt)
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
     m_scene.forwardEvent(evt);
+    m_trophyScene.forwardEvent(evt);
     return false;
 }
 
 void TrophyState::handleMessage(const cro::Message& msg)
 {
     m_scene.forwardMessage(msg);
+    m_trophyScene.forwardMessage(msg);
 }
 
 bool TrophyState::simulate(float dt)
 {
     m_scene.simulate(dt);
+    m_trophyScene.simulate(dt);
     return true;
 }
 
 void TrophyState::render()
 {
+    m_trophyTexture.clear(cro::Colour::AliceBlue);
+    m_trophyScene.render();
+    m_trophyTexture.display();
+
     m_scene.render();
 }
 
@@ -283,20 +293,27 @@ void TrophyState::buildScene()
     backgroundEnt.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
 
     auto descEnt = m_scene.createEntity();
-    descEnt.addComponent<cro::Transform>().setPosition({ 58.f, 266.f, 0.1f });
+    descEnt.addComponent<cro::Transform>().setPosition({ 72.f, 266.f, 0.1f });
     descEnt.addComponent<cro::Drawable2D>();
     descEnt.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
     descEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     backgroundEnt.getComponent<cro::Transform>().addChild(descEnt.getComponent<cro::Transform>());
 
+    auto dateEnt = m_scene.createEntity();
+    dateEnt.addComponent<cro::Transform>().setPosition({ bgBounds.width / 2.f, 56.f, 0.2f });
+    dateEnt.addComponent<cro::Drawable2D>();
+    dateEnt.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
+    dateEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    backgroundEnt.getComponent<cro::Transform>().addChild(dateEnt.getComponent<cro::Transform>());
+
     auto iconEnt = m_scene.createEntity();
-    iconEnt.addComponent<cro::Transform>().setPosition({ 18.f, 238.f, 0.1f });
+    iconEnt.addComponent<cro::Transform>().setPosition({ 30.f, 238.f, 0.1f });
     iconEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
     iconEnt.addComponent<cro::Drawable2D>();
     iconEnt.addComponent<cro::Sprite>().setTexture(m_sharedData.sharedResources->textures.get("assets/images/achievements.png"));
     backgroundEnt.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
 
-    auto updateText = [&, titleEnt, descEnt, iconEnt]() mutable
+    auto updateText = [&, titleEnt, descEnt, dateEnt, iconEnt]() mutable
     {
         titleEnt.getComponent<cro::Text>().setString(AchievementLabels[m_trophyIndex]);
         centreText(titleEnt);
@@ -304,11 +321,16 @@ void TrophyState::buildScene()
         auto [descString, hidden] = AchievementDesc[m_trophyIndex];
         if (!hidden || Achievements::getAchievement(AchievementStrings[m_trophyIndex])->achieved)
         {
-            auto end = std::min(descString.length() - 1, std::size_t(26));
-            auto pos = descString.substr(0, end).find_last_of(' ');
-            if (pos != std::string::npos)
+            static constexpr std::size_t MaxLength = 32;
+
+            if (descString.length() >= MaxLength)
             {
-                descString[pos] = '\n';
+                auto end = std::min(descString.length() - 1, MaxLength);
+                auto pos = descString.substr(0, end).find_last_of(' ');
+                if (pos != std::string::npos)
+                {
+                    descString[pos] = '\n';
+                }
             }
         }
         else
@@ -316,6 +338,9 @@ void TrophyState::buildScene()
             descString = "????";
         }
         descEnt.getComponent<cro::Text>().setString(descString);
+
+        dateEnt.getComponent<cro::Text>().setString("Achieved: " + cro::SysTime::dateString());
+        centreText(dateEnt);
 
         static constexpr std::size_t RowCount = 5;
         auto x = m_trophyIndex % RowCount;
@@ -400,7 +425,7 @@ void TrophyState::buildScene()
 
     //arrow right
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 168.f, 19.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 244.f, 19.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_right");
@@ -427,6 +452,16 @@ void TrophyState::buildScene()
                     updateText();
                 }
             });
+    backgroundEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //displays trophy render texture
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bgBounds.width / 2.f, 138.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>().setTexture(m_trophyTexture.getTexture());
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     backgroundEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -466,6 +501,13 @@ void TrophyState::buildScene()
     entity.addComponent<cro::Camera>().resizeCallback = updateView;
     m_scene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
+}
+
+void TrophyState::buildTrophyScene()
+{
+
+
+    m_trophyTexture.create(200, 154);
 }
 
 void TrophyState::quitState()

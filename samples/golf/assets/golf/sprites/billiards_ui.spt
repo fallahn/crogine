@@ -36,7 +36,7 @@ spritesheet billiards_ui
     }
     sprite trophy_background
     {
-        bounds = 2.000000,83.000000,194.000000,300.000000
+        bounds = 2.000000,83.000000,270.000000,300.000000
         colour = 1.000000,1.000000,1.000000,1.000000
 
     }
