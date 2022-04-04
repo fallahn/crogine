@@ -249,6 +249,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
     if (m_meshID == 0)
     {
         Logger::log(path + ": preloading mesh failed", Logger::Type::Error);
+        Logger::log("Check model path in model definition file?", Logger::Type::Error);
         return false;
     }
 

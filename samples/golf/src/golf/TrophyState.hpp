@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,23 +29,51 @@ source distribution.
 
 #pragma once
 
-struct StateID final
+#include "../StateIDs.hpp"
+
+#include <crogine/core/State.hpp>
+#include <crogine/audio/AudioScape.hpp>
+#include <crogine/ecs/Scene.hpp>
+
+struct SharedStateData;
+
+class TrophyState final : public cro::State
 {
-    enum
+public:
+    TrophyState(cro::StateStack&, cro::State::Context, SharedStateData&);
+
+    bool handleEvent(const cro::Event&) override;
+
+    void handleMessage(const cro::Message&) override;
+
+    bool simulate(float) override;
+
+    void render() override;
+
+    cro::StateID getStateID() const override { return StateID::Pause; }
+
+private:
+
+    cro::Scene m_scene;
+    SharedStateData& m_sharedData;
+
+    cro::AudioScape m_menuSounds;
+    struct AudioID final
     {
-        Menu,
-        Golf,
-        Options,
-        Pause,
-        Error,
-        SplashScreen,
-        Tutorial,
-        Keyboard,
-        Practice,
-        DrivingRange,
-        PuttingRange,
-        Clubhouse,
-        Billiards,
-        Trophy
+        enum
+        {
+            Accept, Back,
+
+            Count
+        };
     };
+    std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
+
+    std::size_t m_trophyIndex;
+
+    glm::vec2 m_viewScale;
+    cro::Entity m_rootNode;
+    void buildScene();
+
+    void quitState();
 };

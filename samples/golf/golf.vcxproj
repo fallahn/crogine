@@ -353,6 +353,7 @@
     <ClCompile Include="src\golf\StudioCameraSystem.cpp" />
     <ClCompile Include="src\golf\TerrainBuilder.cpp" />
     <ClCompile Include="src\golf\TrophyDisplaySystem.cpp" />
+    <ClCompile Include="src\golf\TrophyState.cpp" />
     <ClCompile Include="src\golf\TutorialDirector.cpp" />
     <ClCompile Include="src\golf\TutorialState.cpp" />
     <ClCompile Include="src\golf\Weather.cpp" />
@@ -434,6 +435,7 @@
     <ClInclude Include="src\golf\TerrainBuilder.hpp" />
     <ClInclude Include="src\golf\TextAnimCallback.hpp" />
     <ClInclude Include="src\golf\TrophyDisplaySystem.hpp" />
+    <ClInclude Include="src\golf\TrophyState.hpp" />
     <ClInclude Include="src\golf\TutorialDirector.hpp" />
     <ClInclude Include="src\golf\TutorialState.hpp" />
     <ClInclude Include="src\golf\Utility.hpp" />

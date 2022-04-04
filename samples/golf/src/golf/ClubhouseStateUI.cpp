@@ -279,7 +279,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
             {
                 if (activated(evt))
                 {
-
+                    requestStackPush(StateID::Trophy);
                 }
             });
 

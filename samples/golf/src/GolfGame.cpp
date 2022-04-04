@@ -40,6 +40,7 @@ source distribution.
 #include "golf/DrivingState.hpp"
 #include "golf/PuttingState.hpp"
 #include "golf/ClubhouseState.hpp"
+#include "golf/TrophyState.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
@@ -112,6 +113,7 @@ GolfGame::GolfGame()
     //m_stateStack.registerState<PuttingState>(StateID::PuttingRange, m_sharedData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
+    m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
 }
 
 //public
@@ -464,6 +466,14 @@ bool GolfGame::initialise()
     s.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/tutorial.spt", m_sharedData.sharedResources->textures);
 
+    cro::ModelDefinition md(*m_sharedData.sharedResources);
+    md.loadFromFile("assets/golf/models/trophies/trophy01.cmt");
+    md.loadFromFile("assets/golf/models/trophies/trophy02.cmt");
+    md.loadFromFile("assets/golf/models/trophies/trophy03.cmt");
+    md.loadFromFile("assets/golf/models/trophies/trophy04.cmt");
+    md.loadFromFile("assets/golf/models/trophies/trophy05.cmt");
+    md.loadFromFile("assets/golf/models/trophies/trophy06.cmt");
+    md.loadFromFile("assets/golf/models/trophies/trophy07.cmt");
 
     //set up the post process
     auto windowSize = cro::App::getWindow().getSize();

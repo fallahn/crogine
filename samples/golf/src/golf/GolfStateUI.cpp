@@ -1748,9 +1748,9 @@ void GolfState::buildTrophyScene()
 
     const std::array<std::pair<std::string, glm::vec3>, 3u> Paths =
     {
-        std::make_pair("assets/golf/models/trophy01.cmt", glm::vec3(0.f, -0.3f, -1.f)),
-        std::make_pair("assets/golf/models/trophy02.cmt", glm::vec3(-0.5f, -0.35f, -1.f)),
-        std::make_pair("assets/golf/models/trophy03.cmt", glm::vec3(0.5f, -0.4f, -1.f))        
+        std::make_pair("assets/golf/models/trophies/trophy01.cmt", glm::vec3(0.f, -0.3f, -1.f)),
+        std::make_pair("assets/golf/models/trophies/trophy02.cmt", glm::vec3(-0.5f, -0.35f, -1.f)),
+        std::make_pair("assets/golf/models/trophies/trophy03.cmt", glm::vec3(0.5f, -0.4f, -1.f))        
     };
 
     cro::EmitterSettings emitterSettings;
