@@ -64,6 +64,7 @@ source distribution.
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
@@ -76,6 +77,20 @@ namespace
 {
 #include "TerrainShader.inl"
     constexpr glm::vec2 TrophyTextureSize(140.f, 184.f);
+
+    //use static material IDs as we're reading materials from
+    //shared resources and we want to recycle them each time
+    //this state is created
+
+    struct MaterialID final
+    {
+        enum
+        {
+            Shiny, Flat, Shelf,
+            Count
+        };
+    };
+    std::array<std::int32_t, MaterialID::Count> materialIDs = { 0,0,0 };
 }
 
 TrophyState::TrophyState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -92,6 +107,17 @@ TrophyState::TrophyState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
 
     buildTrophyScene();
     buildScene();
+
+#ifdef CRO_DEBUG_
+    /*registerWindow([&]() 
+        {
+            if (ImGui::Begin("buns"))
+            {
+                ImGui::Image(m_trophyScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();
+        });*/
+#endif
 }
 
 //public
@@ -566,36 +592,65 @@ void TrophyState::buildTrophyScene()
 
     m_trophyScene.addSystem<cro::CallbackSystem>(mb);
     m_trophyScene.addSystem<cro::CameraSystem>(mb);
+    m_trophyScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_trophyScene.addSystem<cro::ModelRenderer>(mb);
    
     m_scaleBuffer.bind(0);
     m_resolutionBuffer.bind(1);
     m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
 
-    //TODO we need to cache the material IDs else we create a new material
-    //every time this state is loaded...
-    if (!m_sharedData.sharedResources->shaders.hasShader(ShaderID::Ball))
+    if (!m_sharedData.sharedResources->shaders.hasShader(ShaderID::Course))
     {
-        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
+        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define RX_SHADOWS\n#define TEXTURED\n");
     }
 
-    auto* shader = &m_sharedData.sharedResources->shaders.get(ShaderID::Ball);
+    auto* shader = &m_sharedData.sharedResources->shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
-    auto materialID = m_sharedData.sharedResources->materials.add(*shader);
-    auto flatMaterial = m_sharedData.sharedResources->materials.get(materialID);
+    if (materialIDs[MaterialID::Shelf] == 0)
+    {
+        materialIDs[MaterialID::Shelf] = m_sharedData.sharedResources->materials.add(*shader);
+    }
+    auto shelfMaterial = m_sharedData.sharedResources->materials.get(materialIDs[MaterialID::Shelf]);
+
+
+    if (!m_sharedData.sharedResources->shaders.hasShader(ShaderID::Ball))
+    {
+        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define VERTEX_COLOURED\n");
+    }
+
+    shader = &m_sharedData.sharedResources->shaders.get(ShaderID::Ball);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    if (materialIDs[MaterialID::Flat] == 0)
+    {
+        materialIDs[MaterialID::Flat] = m_sharedData.sharedResources->materials.add(*shader);
+    }
+    auto flatMaterial = m_sharedData.sharedResources->materials.get(materialIDs[MaterialID::Flat]);
 
     if (!m_sharedData.sharedResources->shaders.hasShader(ShaderID::Trophy))
     {
-        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n");
+        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define VERTEX_COLOURED\n#define REFLECTIONS\n");
     }
     shader = &m_sharedData.sharedResources->shaders.get(ShaderID::Trophy);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
-    materialID = m_sharedData.sharedResources->materials.add(*shader);
-    auto shinyMaterial = m_sharedData.sharedResources->materials.get(materialID);
+    if (materialIDs[MaterialID::Shiny] == 0)
+    {
+        materialIDs[MaterialID::Shiny] = m_sharedData.sharedResources->materials.add(*shader);
+    }
+    auto shinyMaterial = m_sharedData.sharedResources->materials.get(materialIDs[MaterialID::Shiny]);
     shinyMaterial.setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
 
+    cro::ModelDefinition md(*m_sharedData.sharedResources);
+    if (md.loadFromFile("assets/golf/models/trophies/shelf.cmt"))
+    {
+        auto entity = m_trophyScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+        applyMaterialData(md, shelfMaterial);
+        entity.getComponent<cro::Model>().setMaterial(0, shelfMaterial);
+    }
 
     auto rotateEnt = m_trophyScene.createEntity();
     rotateEnt.addComponent<cro::Transform>();
@@ -606,7 +661,7 @@ void TrophyState::buildTrophyScene()
         e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
     };
 
-    cro::ModelDefinition md(*m_sharedData.sharedResources);
+
 
     const std::array<std::string, 7> paths =
     {
@@ -695,11 +750,12 @@ void TrophyState::buildTrophyScene()
     };
     resizeCallback(m_trophyScene.getActiveCamera().getComponent<cro::Camera>());
     m_trophyScene.getActiveCamera().getComponent<cro::Camera>().resizeCallback = resizeCallback;
+    m_trophyScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.create(1024, 1024);
     m_trophyScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.27f, 0.55f });
 
     auto sunEnt = m_trophyScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -15.f * cro::Util::Const::degToRad);
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -10.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -35.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -40.f * cro::Util::Const::degToRad);
 }
 
 void TrophyState::quitState()

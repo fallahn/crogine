@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
@@ -41,7 +42,7 @@ source distribution.
 
 struct SharedStateData;
 
-class TrophyState final : public cro::State
+class TrophyState final : public cro::State, public cro::GuiClient
 {
 public:
     TrophyState(cro::StateStack&, cro::State::Context, SharedStateData&);

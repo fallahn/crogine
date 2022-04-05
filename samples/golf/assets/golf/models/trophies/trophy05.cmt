@@ -1,7 +1,7 @@
 model trophy05
 {
     mesh = assets/golf/models/trophies/trophy05.cmb
-    cast_shadows = false
+    cast_shadows = true
 
     material VertexLit
     {
