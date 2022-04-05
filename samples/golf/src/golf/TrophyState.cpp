@@ -108,6 +108,25 @@ TrophyState::TrophyState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     buildTrophyScene();
     buildScene();
 
+    //delays animation
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.5f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt) mutable
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime -= dt;
+
+        if (currTime < 0)
+        {
+            m_rootNode.getComponent<cro::Callback>().active = true;
+
+            e.getComponent<cro::Callback>().active = false;
+            m_scene.destroyEntity(e);
+        }
+    };
+
 #ifdef CRO_DEBUG_
     /*registerWindow([&]() 
         {
@@ -209,6 +228,89 @@ void TrophyState::buildScene()
 
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
+
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/billiards_ui.spt", m_sharedData.sharedResources->textures);
+
+    struct DoorData final
+    {
+        explicit DoorData(float d = 1.f)
+            : direction(d) 
+        {
+            facing = direction > 0 ? cro::Drawable2D::Facing::Back : cro::Drawable2D::Facing::Front;
+        }
+
+        float progress = 0.f;
+        cro::Drawable2D::Facing facing = cro::Drawable2D::Facing::Front;
+        const float direction = 1.f;
+    };
+
+    auto doorRect = spriteSheet.getSprite("door").getTextureRectNormalised();
+    auto doorSize = spriteSheet.getSprite("door").getSize();
+    auto doorCallback = [&, doorSize](cro::Entity e, float dt)
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<DoorData>();
+        auto oldProgress = data.progress;
+        data.progress = std::min(1.f, data.progress + (dt * 2.f));
+
+        float xScale = ((cro::Util::Easing::easeOutCirc(data.progress) * 2.f) - 1.f) * -data.direction;
+        e.getComponent<cro::Transform>().setScale({ xScale, 1.f, 0.f });
+
+        static constexpr float OffsetSize = 20.f;
+        auto sinProgress = std::sin(data.progress * cro::Util::Const::PI);
+        auto offset = OffsetSize * sinProgress;
+
+        auto colour = std::min(1.f, 0.5f + (0.5f * (1.f - sinProgress)));
+        auto c = cro::Colour(colour, colour, colour);
+
+        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+        verts[0].colour = c;
+        verts[1].colour = c;
+        verts[2].position.y = doorSize.y + offset;
+        verts[3].position.y = -offset;
+
+        if (oldProgress <= 0.5f && data.progress > 0.5f)
+        {
+            e.getComponent<cro::Drawable2D>().setFacing(data.facing);
+        }
+
+        if (data.progress == 1)
+        {
+            verts[2].position.y = doorSize.y;
+            verts[3].position.y = 0.f;
+            
+            e.getComponent<cro::Callback>().active = false;
+            if (!m_trophyEnts.empty())
+            {
+                m_trophyEnts[0].getComponent<cro::Callback>().active = true;
+            }
+        }
+    };
+
+    std::vector<cro::Vertex2D> doorVerts =
+    {
+        cro::Vertex2D(glm::vec2(0.f, doorSize.y), glm::vec2(doorRect.left, doorRect.bottom + doorRect.height)),
+        cro::Vertex2D(glm::vec2(0.f), glm::vec2(doorRect.left, doorRect.bottom)),
+        cro::Vertex2D(doorSize, glm::vec2(doorRect.left + doorRect.width, doorRect.bottom + doorRect.height)),
+        cro::Vertex2D(glm::vec2(doorSize.x, 0.f), glm::vec2(doorRect.left + doorRect.width, doorRect.bottom))
+    };
+
+    auto leftDoor = m_scene.createEntity();
+    leftDoor.addComponent<cro::Transform>().setPosition({14.f, 38.f, 0.3f});
+    leftDoor.addComponent<cro::Drawable2D>().setTexture(spriteSheet.getSprite("door").getTexture());
+    leftDoor.getComponent<cro::Drawable2D>().setVertexData(doorVerts);
+    leftDoor.addComponent<cro::Callback>().function = doorCallback;
+    leftDoor.getComponent<cro::Callback>().setUserData<DoorData>();
+
+    auto rightDoor = m_scene.createEntity();
+    rightDoor.addComponent<cro::Transform>().setPosition({ 256.f, 38.f, 0.3f });
+    rightDoor.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
+    rightDoor.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    rightDoor.getComponent<cro::Drawable2D>().setTexture(spriteSheet.getSprite("door").getTexture());
+    rightDoor.getComponent<cro::Drawable2D>().setVertexData(doorVerts);
+    rightDoor.addComponent<cro::Callback>().function = doorCallback;
+    rightDoor.getComponent<cro::Callback>().setUserData<DoorData>(-1.f);
+
     struct RootCallbackData final
     {
         enum
@@ -219,11 +321,11 @@ void TrophyState::buildScene()
     };
 
     auto rootNode = m_scene.createEntity();
-    rootNode.addComponent<cro::Transform>();
-    rootNode.addComponent<cro::Callback>().active = true;
+    rootNode.addComponent<cro::Transform>().setScale({0.f, 0.f});
+    rootNode.addComponent<cro::Callback>();// .active = true;
     rootNode.getComponent<cro::Callback>().setUserData<RootCallbackData>();
     rootNode.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, leftDoor, rightDoor](cro::Entity e, float dt) mutable
     {
         auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<RootCallbackData>();
 
@@ -237,6 +339,9 @@ void TrophyState::buildScene()
             {
                 state = RootCallbackData::FadeOut;
                 e.getComponent<cro::Callback>().active = false;
+
+                leftDoor.getComponent<cro::Callback>().active = true;
+                rightDoor.getComponent<cro::Callback>().active = true;
             }
             break;
         case RootCallbackData::FadeOut:
@@ -285,9 +390,6 @@ void TrophyState::buildScene()
 
    
     //background
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/billiards_ui.spt", m_sharedData.sharedResources->textures);
-
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
     entity.addComponent<cro::Drawable2D>();
@@ -297,6 +399,8 @@ void TrophyState::buildScene()
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
 
     auto backgroundEnt = entity;
+    backgroundEnt.getComponent<cro::Transform>().addChild(leftDoor.getComponent<cro::Transform>());
+    backgroundEnt.getComponent<cro::Transform>().addChild(rightDoor.getComponent<cro::Transform>());
 
     auto& uiFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& infoFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
@@ -534,7 +638,12 @@ void TrophyState::buildScene()
         auto vpSize = calcVPSize();
 
         m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
-        rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
+
+        //don't do this unless the fade in callback is complete.
+        if (rootNode.getComponent<cro::Callback>().getUserData<RootCallbackData>().state == RootCallbackData::FadeOut)
+        {
+            rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
+        }
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
 
         //updates any text objects / buttons with a relative position
@@ -737,10 +846,10 @@ void TrophyState::buildTrophyScene()
         }
     }
 
-    if (!m_trophyEnts.empty())
+    /*if (!m_trophyEnts.empty())
     {
         m_trophyEnts[0].getComponent<cro::Callback>().active = true;
-    }
+    }*/
 
     auto resizeCallback = [](cro::Camera& cam)
     {

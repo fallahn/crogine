@@ -71,6 +71,21 @@ void Sprite::setColour(Colour colour)
     m_dirtyFlags |= DirtyFlags::Colour;
 }
 
+FloatRect Sprite::getTextureRectNormalised() const
+{
+    FloatRect retVal;
+
+    if (m_texture)
+    {
+        retVal.left = m_textureRect.left / m_texture->getSize().x;
+        retVal.width = m_textureRect.width / m_texture->getSize().x;
+
+        retVal.bottom = m_textureRect.bottom / m_texture->getSize().y;
+        retVal.height = m_textureRect.height / m_texture->getSize().y;
+    }
+    return retVal;
+}
+
 Colour Sprite::getColour() const
 {
     return  m_colour;
