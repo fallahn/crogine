@@ -126,6 +126,42 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Make it to the 19th Hole", false)
 };
 
+//assuming tropies load correctly they are
+/*
+Gold, silver, bronze cup
+Gold, silver, bronze mannequin
+Pool
+*/
+
+struct TrophyID final
+{
+    enum
+    {
+        GoldCup, SilverCup, BronzeCup,
+        GoldFigure, SilverFigure, BronzeFigure,
+        Pool
+    };
+};
+
+static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophies =
+{
+    TrophyID::Pool,
+    TrophyID::GoldCup,
+    TrophyID::SilverFigure,
+    TrophyID::GoldFigure,
+    TrophyID::BronzeFigure,
+    TrophyID::GoldCup,
+    TrophyID::SilverFigure,
+    TrophyID::GoldFigure,
+    TrophyID::BronzeCup,
+    TrophyID::SilverCup,
+    TrophyID::BronzeFigure,
+    TrophyID::SilverFigure,
+    TrophyID::GoldFigure,
+    TrophyID::SilverCup,
+    TrophyID::GoldCup
+};
+
 namespace StatID
 {
     enum

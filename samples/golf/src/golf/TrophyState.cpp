@@ -282,7 +282,8 @@ void TrophyState::buildScene()
             e.getComponent<cro::Callback>().active = false;
             if (!m_trophyEnts.empty())
             {
-                m_trophyEnts[0].getComponent<cro::Callback>().active = true;
+                auto modelIndex = std::min(m_trophyEnts.size() - 1, AchievementTrophies[m_trophyIndex]);
+                m_trophyEnts[AchievementTrophies[modelIndex]].getComponent<cro::Callback>().active = true;
             }
         }
     };
@@ -525,7 +526,7 @@ void TrophyState::buildScene()
                     //hide model
                     if (!m_trophyEnts.empty())
                     {
-                        auto modelIndex = m_trophyIndex % m_trophyEnts.size();
+                        auto modelIndex = std::min(m_trophyEnts.size() - 1, AchievementTrophies[m_trophyIndex]);
                         m_trophyEnts[modelIndex].getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 0;
                         m_trophyEnts[modelIndex].getComponent<cro::Callback>().active = true;
                     }
@@ -597,7 +598,7 @@ void TrophyState::buildScene()
                     //hide model
                     if (!m_trophyEnts.empty())
                     {
-                        auto modelIndex = m_trophyIndex % m_trophyEnts.size();
+                        auto modelIndex = std::min(m_trophyEnts.size() - 1, AchievementTrophies[m_trophyIndex]);
                         m_trophyEnts[modelIndex].getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 0;
                         m_trophyEnts[modelIndex].getComponent<cro::Callback>().active = true;
                     }
@@ -725,7 +726,7 @@ void TrophyState::buildTrophyScene()
 
     if (!m_sharedData.sharedResources->shaders.hasShader(ShaderID::Ball))
     {
-        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define VERTEX_COLOURED\n");
+        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define TINT\n#define RX_SHADOWS\n#define VERTEX_COLOURED\n");
     }
 
     shader = &m_sharedData.sharedResources->shaders.get(ShaderID::Ball);
@@ -739,7 +740,7 @@ void TrophyState::buildTrophyScene()
 
     if (!m_sharedData.sharedResources->shaders.hasShader(ShaderID::Trophy))
     {
-        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define VERTEX_COLOURED\n#define REFLECTIONS\n");
+        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define TINT\n#define RX_SHADOWS\n#define VERTEX_COLOURED\n#define REFLECTIONS\n");
     }
     shader = &m_sharedData.sharedResources->shaders.get(ShaderID::Trophy);
     m_scaleBuffer.addShader(*shader);
@@ -771,7 +772,8 @@ void TrophyState::buildTrophyScene()
     };
 
 
-
+    //these ought to be loaded in the same order
+    //as TrophyID in AchievementStrings.hpp
     const std::array<std::string, 7> paths =
     {
         std::string("assets/golf/models/trophies/trophy01.cmt"),
@@ -800,12 +802,23 @@ void TrophyState::buildTrophyScene()
                 e.getComponent<cro::Model>().setHidden(true);
 
                 //start next trophy growing
-                if (Achievements::getAchievement(AchievementStrings[m_trophyIndex])->achieved)
+                if (!m_trophyEnts.empty())
                 {
-                    auto idx = m_trophyIndex % m_trophyEnts.size();
+                    auto idx = std::min(m_trophyEnts.size() - 1, AchievementTrophies[m_trophyIndex]);
                     m_trophyEnts[idx].getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
                     m_trophyEnts[idx].getComponent<cro::Callback>().active = true;
                     m_trophyEnts[idx].getComponent<cro::Model>().setHidden(false);
+
+                    if (Achievements::getAchievement(AchievementStrings[m_trophyIndex])->achieved)
+                    {
+                        m_trophyEnts[idx].getComponent<cro::Model>().setMaterialProperty(0, "u_tintColour", glm::vec4(1.f));
+                        m_trophyEnts[idx].getComponent<cro::Model>().setMaterialProperty(1, "u_tintColour", glm::vec4(1.f));
+                    }
+                    else
+                    {
+                        m_trophyEnts[idx].getComponent<cro::Model>().setMaterialProperty(0, "u_tintColour", glm::vec4(glm::vec3(0.f), 1.f));
+                        m_trophyEnts[idx].getComponent<cro::Model>().setMaterialProperty(1, "u_tintColour", glm::vec4(glm::vec3(0.f), 1.f));
+                    }
                 }
             }
         }
@@ -846,10 +859,6 @@ void TrophyState::buildTrophyScene()
         }
     }
 
-    /*if (!m_trophyEnts.empty())
-    {
-        m_trophyEnts[0].getComponent<cro::Callback>().active = true;
-    }*/
 
     auto resizeCallback = [](cro::Camera& cam)
     {

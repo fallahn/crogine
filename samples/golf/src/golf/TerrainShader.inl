@@ -305,6 +305,10 @@ static const std::string CelFragmentShader = R"(
     uniform sampler2D u_shadowMap;
 #endif
 
+#if defined (TINT)
+    uniform vec4 u_tintColour = vec4(1.0);
+#endif
+
 #if defined (USER_COLOUR)
     uniform vec4 u_hairColour = vec4(1.0, 0.0, 0.0, 1.0);
     uniform vec4 u_darkColour = vec4(0.5);
@@ -560,6 +564,10 @@ static const std::string CelFragmentShader = R"(
         //FRAG_OUT.rgb *= (1.0 - noiseVal);
         FRAG_OUT.rgb = mix(FRAG_OUT.rgb, u_noiseColour.rgb, noiseVal);
 #endif
+
+#if defined (TINT)
+        FRAG_OUT *= u_tintColour;
+#endif 
 
 #if defined(DITHERED)
         vec2 xy = gl_FragCoord.xy / u_pixelScale;
