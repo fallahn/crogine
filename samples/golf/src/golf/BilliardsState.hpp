@@ -75,8 +75,8 @@ private:
     ActivePlayer m_currentPlayer;
 
     cro::RenderTexture m_gameSceneTexture;
-    cro::Shader m_gameSceneShader;
-    cro::Texture m_lutTexture;
+    //cro::Shader m_gameSceneShader;
+    //cro::Texture m_lutTexture;
     cro::UniformBuffer m_scaleBuffer;
     cro::UniformBuffer m_resolutionBuffer;
     glm::vec2 m_viewScale;
@@ -93,11 +93,9 @@ private:
     {
         enum
         {
-            Side,
-            Front,
+            Spectate,
             Overhead,
             Player,
-            Follower,
             Transition,
 
             Count
@@ -144,6 +142,7 @@ private:
     void sendReadyNotify();
 
     void setActiveCamera(std::int32_t);
+    void toggleOverhead();
     void resizeBuffers();
 
     //**BilliardsStateUI.cpp**//

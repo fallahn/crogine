@@ -45,9 +45,11 @@ struct ControllerRotation final
 struct ControlEntities final
 {
     cro::Entity camera;
+    cro::Entity cameraTilt;
     cro::Entity cue;
     cro::Entity previewBall;
     cro::Entity indicator;
+    cro::Entity spectator;
 };
 
 class BilliardsInput final : public cro::GuiClient

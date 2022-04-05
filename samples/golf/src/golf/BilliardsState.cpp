@@ -38,7 +38,6 @@ source distribution.
 #include "BilliardsClientCollision.hpp"
 #include "InterpolationSystem.hpp"
 #include "BilliardsSoundDirector.hpp"
-#include "StudioCameraSystem.hpp"
 #include "server/ServerPacketData.hpp"
 #include "../ErrorCheck.hpp"
 
@@ -108,7 +107,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_wantsGameState    (true),
     m_wantsNotify       (false),
     m_gameEnded         (false),
-    m_activeCamera      (CameraID::Side),
+    m_activeCamera      (CameraID::Spectate),
     m_gameMode          (TableData::Void),
     m_readyQuitFlags    (0)
 {
@@ -118,6 +117,8 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
             addSystems();
             buildScene();
         });
+
+    ctx.mainWindow.setMouseCaptured(true);
 
 #ifdef CRO_DEBUG_
     //registerWindow([&]() 
@@ -212,13 +213,14 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE:
             toggleQuitReady();
             break;
+#ifdef CRO_DEBUG_
         case SDLK_KP_1:
         case SDLK_1:
             setActiveCamera(CameraID::Player);
             break;
         case SDLK_KP_2:
         case SDLK_2:
-            setActiveCamera(CameraID::Front);
+            setActiveCamera(CameraID::Spectate);
             break;
         case SDLK_KP_3:
         case SDLK_3:
@@ -226,11 +228,18 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_4:
         case SDLK_4:
-            setActiveCamera(CameraID::Side);
+            toggleOverhead();
             break;
+#else
+        case SDLK_KP_1:
+        case SDLK_1:
+            toggleOverhead();
+            break;
+#endif
+        
         case SDLK_KP_5:
         case SDLK_5:
-            setActiveCamera(CameraID::Follower);
+            //setActiveCamera(CameraID::Follower);
             break;
 #ifdef CRO_DEBUG_
         case SDLK_TAB:
@@ -257,11 +266,8 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             toggleQuitReady();
             sendReadyNotify();
             break;
-        /*case cro::GameController::ButtonLeftShoulder:
-            setActiveCamera((m_activeCamera + (CameraID::Count - 1)) % CameraID::Count);
-            break;*/
         case cro::GameController::ButtonY:
-            setActiveCamera((m_activeCamera + 1) % CameraID::Count);
+            toggleOverhead();
             break;
         }
     }
@@ -336,6 +342,11 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             input.player = m_currentPlayer.player;
 
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+            if (m_activeCamera != CameraID::Overhead)
+            {
+                setActiveCamera(CameraID::Spectate);
+            }
         }
         else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
         {
@@ -345,6 +356,8 @@ void BilliardsState::handleMessage(const cro::Message& msg)
 
             m_remoteCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::Out;
             m_remoteCue.getComponent<cro::Callback>().active = true;
+
+            //setActiveCamera(CameraID::Spectate);
         }
     }
     break;
@@ -380,7 +393,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<BilliardsCameraEvent>();
         if (data.type == BilliardsCameraEvent::NewTarget)
         {
-            m_cameras[CameraID::Follower].getComponent<StudioCamera>().setTarget(data.target);
+            //m_cameras[CameraID::Follower].getComponent<StudioCamera>().setTarget(data.target);
         }
     }
         break;
@@ -422,7 +435,8 @@ bool BilliardsState::simulate(float dt)
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 
-    if (m_inputParser.getActive())
+    if (m_inputParser.getActive()
+        && getStateCount() == 1)
     {
         if (!cro::App::getWindow().getMouseCaptured())
         {
@@ -437,7 +451,8 @@ bool BilliardsState::simulate(float dt)
         static int32_t netCounter = 0;
         netCounter = (netCounter + 1) % 3;
 
-        if (netCounter == 0)
+        if (netCounter == 0
+            && m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
         {
             auto position = m_localCue.getComponent<cro::Transform>().getWorldPosition();
             auto rotation = glm::quat_cast(m_localCue.getComponent<cro::Transform>().getWorldTransform());
@@ -451,13 +466,13 @@ bool BilliardsState::simulate(float dt)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::CueUpdate, info, cro::NetFlag::Unreliable);
         }
     }
-    else
+    /*else
     {
         if (cro::App::getWindow().getMouseCaptured())
         {
             cro::App::getWindow().setMouseCaptured(false);
         }
-    }
+    }*/
 
     return false;
 }
@@ -478,7 +493,7 @@ void BilliardsState::render()
 
 #ifdef CRO_DEBUG_
     auto oldCam = m_gameScene.getActiveCamera();
-    m_gameScene.setActiveCamera(m_cameras[CameraID::Follower]);
+    m_gameScene.setActiveCamera(m_cameras[CameraID::Spectate]);
     m_debugBuffer.clear();
     m_gameScene.render();
     m_debugBuffer.display();
@@ -533,7 +548,7 @@ void BilliardsState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<BilliardsCollisionSystem>(mb);
-    m_gameScene.addSystem<StudioCameraSystem>(mb);
+    //m_gameScene.addSystem<StudioCameraSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
@@ -612,13 +627,12 @@ void BilliardsState::buildScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
-    //side cam
+    //spectate cam
     auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({ -1.5f, 0.8f, 0.f });
-    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 1.7f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
-    camEnt.addComponent<CameraProperties>();
-    m_cameras[CameraID::Side] = camEnt;
+    camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
+    m_cameras[CameraID::Spectate] = camEnt;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = setPerspective;
     cam.renderFlags = ~RenderFlags::Cue;
@@ -627,19 +641,21 @@ void BilliardsState::buildScene()
     static constexpr std::uint32_t ShadowMapSize = 2048u;
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
 
-    //front cam
-    camEnt = m_gameScene.createEntity();
-    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 1.8f });
-    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
-    camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
-    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
-    camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
-    camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
-    camEnt.getComponent<CameraProperties>().farPlane = 7.f;
-    camEnt.addComponent<cro::AudioListener>();
-    m_cameras[CameraID::Front] = camEnt;
-    setPerspective(camEnt.getComponent<cro::Camera>());
+    auto spectateController = m_gameScene.createEntity();
+    spectateController.addComponent<cro::Transform>();
+    spectateController.addComponent<ControllerRotation>().activeCamera = &cam.active;
+    spectateController.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
+
+    spectateController.addComponent<cro::Callback>().active = true;
+    spectateController.getComponent<cro::Callback>().function =
+        [&, camEnt](cro::Entity e, float)
+    {
+        if(m_gameScene.getActiveCamera() == m_cameras[CameraID::Player])
+        {
+            auto rotation = m_cameraController.getComponent<ControllerRotation>().rotation;
+            e.getComponent<ControllerRotation>().rotation = rotation;
+        }
+    };
 
     //overhead cam
     camEnt = m_gameScene.createEntity();
@@ -649,26 +665,13 @@ void BilliardsState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
+    //camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.75f;
     camEnt.getComponent<CameraProperties>().farPlane = 6.f;
     camEnt.addComponent<cro::AudioListener>();
     m_cameras[CameraID::Overhead] = camEnt;
     setPerspective(camEnt.getComponent<cro::Camera>());
 
-    //follower cam
-    camEnt = m_gameScene.createEntity();
-    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.6f, 1.3f });
-    camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
-    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
-    //camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
-    camEnt.addComponent<CameraProperties>().FOVAdjust = 0.5f;
-    camEnt.getComponent<CameraProperties>().farPlane = 6.f;
-    camEnt.addComponent<StudioCamera>();
-    camEnt.addComponent<cro::AudioListener>();
-    m_cameras[CameraID::Follower] = camEnt;
-    setPerspective(camEnt.getComponent<cro::Camera>());
 
     //transition cam
     camEnt = m_gameScene.createEntity();
@@ -678,6 +681,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
     camEnt.addComponent<CameraProperties>().farPlane = 5.f;
+    camEnt.getComponent<CameraProperties>().FOVAdjust = 0.8f; //needs to match spectate cam initial value to prevent popping
     camEnt.addComponent<cro::AudioListener>();
     m_cameras[CameraID::Transition] = camEnt;
     setPerspective(camEnt.getComponent<cro::Camera>());
@@ -688,8 +692,13 @@ void BilliardsState::buildScene()
     m_cameraController.addComponent<cro::Transform>();
     m_cameraController.addComponent<ControllerRotation>();
 
+    auto camTilt = m_gameScene.createEntity();
+    camTilt.addComponent<cro::Transform>().setPosition({ 0.f, 0.367f, 0.f });
+    camTilt.addComponent<ControllerRotation>();
+    m_cameraController.getComponent<cro::Transform>().addChild(camTilt.getComponent<cro::Transform>());
+
     camEnt = m_gameScene.createEntity();
-    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.367f, 0.423f });
+    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.423f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -26.7f * cro::Util::Const::degToRad);
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
@@ -700,7 +709,8 @@ void BilliardsState::buildScene()
     m_cameras[CameraID::Player] = camEnt;
     setPerspective(camEnt.getComponent<cro::Camera>());
 
-    m_cameraController.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
+    camTilt.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
+
     m_cameraController.getComponent<ControllerRotation>().activeCamera = &camEnt.getComponent<cro::Camera>().active;
     m_cameraController.addComponent<cro::Callback>();// .active = true;
     m_cameraController.getComponent<cro::Callback>().setUserData<float>(0.f);
@@ -744,6 +754,8 @@ void BilliardsState::buildScene()
 
     ControlEntities controlEntities;
     controlEntities.camera = m_cameraController;
+    controlEntities.cameraTilt = camTilt;
+    controlEntities.spectator = spectateController;
 
     auto cueScaleCallback = [](cro::Entity e, float dt)
     {
@@ -1190,13 +1202,14 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
             m_cameraController.getComponent<ControllerRotation>().rotation = data.rotationTarget;
             m_cameraController.getComponent<cro::Transform>().setPosition(data.camTarget);
 
+            m_currentPlayer.player = playerInfo.player;
+            m_currentPlayer.client = playerInfo.client;
+
             //wait for animation to finish first
             if (playerInfo.client == m_sharedData.localConnectionData.connectionID)
             {
                 m_inputParser.setActive(true, !m_cueball.isValid());
                 m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[playerInfo.player];
-                m_currentPlayer.player = playerInfo.player;
-                m_currentPlayer.client = playerInfo.client;
 
                 m_localCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::In;
                 m_localCue.getComponent<cro::Callback>().active = true;
@@ -1208,6 +1221,8 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
                 //show the remote 'ghost' cue
                 m_remoteCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::In;
                 m_remoteCue.getComponent<cro::Callback>().active = true;
+
+                setActiveCamera(CameraID::Spectate);
             }
 
             e.getComponent<cro::Callback>().active = false;
@@ -1260,8 +1275,8 @@ void BilliardsState::setActiveCamera(std::int32_t camID)
     transitionData.startRot = glm::quat_cast(m_cameras[m_activeCamera].getComponent<cro::Transform>().getWorldTransform());
 
     transitionData.endFOV = m_cameras[camID].getComponent<cro::Camera>().getFOV();
-    transitionData.endPos = m_cameras[camID].getComponent<cro::Transform>().getWorldPosition();
-    transitionData.endRot = glm::quat_cast(m_cameras[camID].getComponent<cro::Transform>().getWorldTransform());
+    /*transitionData.endPos = m_cameras[camID].getComponent<cro::Transform>().getWorldPosition();
+    transitionData.endRot = glm::quat_cast(m_cameras[camID].getComponent<cro::Transform>().getWorldTransform());*/
 
     //set the current cam to the transition one
     m_gameScene.getActiveCamera().getComponent<cro::Camera>().active = false;
@@ -1277,7 +1292,15 @@ void BilliardsState::setActiveCamera(std::int32_t camID)
     entity.getComponent<cro::Callback>().function =
         [&, transitionData, camID](cro::Entity e, float dt) mutable
     {
-        transitionData.currentTime = std::min(1.f, transitionData.currentTime + (dt * 2.f));
+        static constexpr std::array<float, CameraID::Count> TransitionSpeeds =
+        {
+            0.7f, 2.f, 2.f, 1.f
+        };
+
+        transitionData.currentTime = std::min(1.f, transitionData.currentTime + (dt * TransitionSpeeds[camID]));
+
+        transitionData.endPos = m_cameras[camID].getComponent<cro::Transform>().getWorldPosition();
+        transitionData.endRot = glm::quat_cast(m_cameras[camID].getComponent<cro::Transform>().getWorldTransform());
 
         auto t = cro::Util::Easing::easeInOutCubic(transitionData.currentTime);
 
@@ -1307,6 +1330,14 @@ void BilliardsState::setActiveCamera(std::int32_t camID)
     };
 
 
+}
+
+void BilliardsState::toggleOverhead()
+{
+    auto target = m_activeCamera == CameraID::Overhead ?
+        m_inputParser.getActive() ? CameraID::Player : CameraID::Spectate :
+        CameraID::Overhead;
+    setActiveCamera(target);
 }
 
 void BilliardsState::resizeBuffers()

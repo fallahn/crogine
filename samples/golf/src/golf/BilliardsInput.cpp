@@ -47,6 +47,8 @@ source distribution.
 
 namespace
 {
+    constexpr float MaxTilt = 10.f * cro::Util::Const::degToRad;
+    constexpr float MinTilt = -30.f * cro::Util::Const::degToRad;
     constexpr float CamRotationSpeed = 2.f;
     constexpr float CamRotationSpeedFast = CamRotationSpeed * 2.f;
     constexpr float CueRotationSpeed = 1.f;
@@ -301,11 +303,20 @@ void BilliardsInput::update(float dt)
     m_prevMouseMove = m_mouseMove;
     m_mouseMove = glm::vec2(0.f);
 
+    //player cam
     auto rotation = m_controlEntities.camera.getComponent<ControllerRotation>().rotation;
     m_controlEntities.camera.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
 
+    rotation = m_controlEntities.cameraTilt.getComponent<ControllerRotation>().rotation;
+    m_controlEntities.cameraTilt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rotation);
+
+    //cue
     rotation = m_controlEntities.cue.getComponent<ControllerRotation>().rotation;
     m_controlEntities.cue.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+
+    //spectate cam
+    rotation = m_controlEntities.spectator.getComponent<ControllerRotation>().rotation;
+    m_controlEntities.spectator.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
 }
 
 void BilliardsInput::setActive(bool active, bool placeBall)
@@ -475,6 +486,7 @@ void BilliardsInput::checkController(float dt)
 void BilliardsInput::updatePlay(float dt)
 {
     bool playerCamActive = *m_controlEntities.camera.getComponent<ControllerRotation>().activeCamera;
+    bool spectateCamActive = *m_controlEntities.spectator.getComponent<ControllerRotation>().activeCamera;
 
     if (hasMouseMotion())
     {
@@ -485,6 +497,11 @@ void BilliardsInput::updatePlay(float dt)
             {
                 //move cam
                 m_controlEntities.camera.getComponent<ControllerRotation>().rotation -= CamRotationSpeed * m_mouseMove.x * m_analogueAmountLeft * dt;
+
+                auto tilt = m_controlEntities.cameraTilt.getComponent<ControllerRotation>().rotation;
+                tilt -= CamRotationSpeed * -m_mouseMove.y * m_analogueAmountLeft * dt;
+                tilt = std::min(MaxTilt, std::max(MinTilt, tilt));
+                m_controlEntities.cameraTilt.getComponent<ControllerRotation>().rotation = tilt;
             }
             else
             {
@@ -494,10 +511,15 @@ void BilliardsInput::updatePlay(float dt)
                 m_controlEntities.cue.getComponent<ControllerRotation>().rotation = rotation;
             }
         }
+        else if (spectateCamActive)
+        {
+            //rotate spectator cam
+            m_controlEntities.spectator.getComponent<ControllerRotation>().rotation -= /*CamRotationSpeed **/ m_mouseMove.x * m_analogueAmountLeft * dt;
+        }
         else
         {
-            //some other view so just rotate the camera
-            //m_controlEntities.camera.getComponent<ControllerRotation>().rotation += CamRotationSpeedFast * m_mouseMove.x * m_analogueAmountLeft * dt;
+            //top down view so just rotate the camera (because the cue is attached)
+            m_controlEntities.camera.getComponent<ControllerRotation>().rotation += CamRotationSpeedFast * m_mouseMove.x * m_analogueAmountLeft * dt;
         }
     }
 
@@ -538,7 +560,7 @@ void BilliardsInput::updatePlay(float dt)
 
         auto diff = m_prevFlags ^ m_inputFlags;
         if ((diff & m_inputFlags & InputFlag::Action) != 0
-            && playerCamActive)
+            /*&& playerCamActive*/)
         {
             m_controlEntities.cue.getComponent<cro::Skeleton>().play(1);
             setActive(false, false);

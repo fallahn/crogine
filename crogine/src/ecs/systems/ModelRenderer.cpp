@@ -144,6 +144,14 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
     const auto& visibleEntities = std::any_cast<const MaterialList&>(pass.drawList.at(getType()));
     for (const auto& [entity, sortData] : visibleEntities)
     {
+        //may have been marked for deletion - OK to draw but will trigger assert
+#ifdef CRO_DEBUG_
+        if (!entity.isValid())
+        {
+            continue;
+        }
+#endif
+
         //foreach submesh / material:
         const auto& model = entity.getComponent<Model>();
 
@@ -267,14 +275,6 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
     //TODO add an option to cull this list based on AABB tree
     for (auto& entity : entities)
     {
-        if (!entity.isValid())
-        {
-            //may have been marked for destruction
-            //but not yet removed (technically OK to add
-            //but will throw an assert in debug)
-            continue;
-        }
-
         auto& model = entity.getComponent<Model>();
         if (model.isHidden())
         {

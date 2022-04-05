@@ -1399,7 +1399,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             centreText(infoEnt);
         });
 
-    //TODO - unnfortunate effect of adding these last is that
+    //TODO - unfortunate effect of adding these last is that
     //the selection order using keyboard/controller is now unintuitive
     if (m_sharedData.baseState == StateID::Clubhouse)
     {
@@ -1519,7 +1519,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        entity.getComponent<cro::Text>().setString("Num 1-4");
+        entity.getComponent<cro::Text>().setString("Num 1");
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 }
