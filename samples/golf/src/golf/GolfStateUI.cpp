@@ -828,6 +828,20 @@ void GolfState::showCountdown(std::uint8_t seconds)
         {
             //remember this is auto-disabled if the player is not the only one on the client
             Achievements::awardAchievement(AchievementStrings[AchievementID::LeaderOfThePack]);
+
+            switch (m_sharedData.scoreType)
+            {
+            default:
+            case ScoreType::Stroke:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::StrokeOfGenius]);
+                break;
+            case ScoreType::Match:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::NoMatch]);
+                break;
+            case ScoreType::Skins:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
+                break;
+            }
         }
     }
     Achievements::incrementStat(StatStrings[StatID::TotalRounds]);
