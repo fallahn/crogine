@@ -97,6 +97,13 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
             }
         }
             break;
+        case PacketID::ScoreType:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.scoreType = evt.packet.as<std::uint8_t>();
+                m_sharedData.host.broadcastPacket(PacketID::ScoreType, m_sharedData.scoreType, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
         case PacketID::RequestGameStart:
             if (evt.peer.getID() == m_sharedData.hostID)
             {
@@ -190,5 +197,7 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
 
         auto mapDir = serialiseString(m_sharedData.mapDir);
         m_sharedData.host.broadcastPacket(PacketID::MapInfo, mapDir.data(), mapDir.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+        m_sharedData.host.broadcastPacket(PacketID::ScoreType, m_sharedData.scoreType, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 }

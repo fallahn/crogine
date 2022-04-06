@@ -53,9 +53,12 @@ struct PlayerData final
     std::uint32_t skinID = 0; //as loaded from the avatar data file
     bool flipped = false; //whether or not avatar flipped
 
+    //these aren't included in serialise/deserialise
     std::vector<std::uint8_t> holeScores;
     std::uint8_t score = 0;
-    glm::vec3 currentTarget = glm::vec3(0.f); //TODO we don't really want to include this here as it's not needed for sync
+    std::uint8_t matchScore = 0;
+    std::uint8_t skinScore = 0;
+    glm::vec3 currentTarget = glm::vec3(0.f);
 };
 
 struct ConnectionData final
@@ -130,6 +133,7 @@ struct SharedStateData final
     //for brevity this only contains a directory name
     //within which a file named data.course is sought
     cro::String mapDirectory = "course_01";
+    std::uint8_t scoreType = 0;
 
     //printed by the error state
     std::string errorMessage;

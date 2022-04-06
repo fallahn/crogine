@@ -62,7 +62,8 @@ GolfState::GolfState(SharedData& sd)
     m_scene         (sd.messageBus, 512),
     m_gameStarted   (false),
     m_allMapsLoaded (false),
-    m_currentHole   (0)
+    m_currentHole   (0),
+    m_skinsPot      (1)
 {
     if (m_mapDataValid = validateMap(); m_mapDataValid)
     {
@@ -440,6 +441,8 @@ void GolfState::setNextPlayer()
     su.player = m_playerInfo[0].player;
     su.score = m_playerInfo[0].totalScore;
     su.stroke = m_playerInfo[0].holeScore[m_currentHole];
+    su.matchScore = m_playerInfo[0].matchWins;
+    su.skinsScore = m_playerInfo[0].skins;
     su.hole = m_currentHole;
     m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
@@ -472,6 +475,38 @@ void GolfState::setNextPlayer()
 
 void GolfState::setNextHole()
 {
+    //update player skins/match scores
+    if (m_playerInfo.size() > 1)
+    {
+        auto sortData = m_playerInfo;
+        std::sort(sortData.begin(), sortData.end(),
+            [&](const PlayerStatus& a, const PlayerStatus& b)
+            {
+                return a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
+            });
+
+        //only score if no player tied
+        if (sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
+        {
+            auto player = std::find_if(m_playerInfo.begin(), m_playerInfo.end(), [&sortData](const PlayerStatus& p)
+                {
+                    return p.client == sortData[0].client && p.player == sortData[0].player;
+                });
+
+            player->matchWins++;
+            player->skins += m_skinsPot;
+            m_skinsPot = 1;
+
+            //send notification packet to clients that player won the hole
+            std::uint16_t data = (player->client << 8) | player->player;
+            m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+        else
+        {
+            m_skinsPot++;
+        }
+    }
+
     //broadcast all scores to make sure everyone is up to date
     for (auto& player : m_playerInfo)
     {
@@ -482,6 +517,8 @@ void GolfState::setNextHole()
         su.player = player.player;
         su.hole = m_currentHole;
         su.score = player.totalScore;
+        su.matchScore = player.matchWins;
+        su.skinsScore = player.skins;
         su.stroke = player.holeScore[m_currentHole];
 
         m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);

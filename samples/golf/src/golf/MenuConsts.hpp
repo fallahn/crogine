@@ -49,6 +49,11 @@ struct FontID final
     };
 };
 
+static const std::array<std::string, 3u> ScoreTypes =
+{
+    "Stroke Play", "Match Play", "Skins"
+};
+
 static constexpr std::uint32_t LargeTextSize = 64;
 static constexpr std::uint32_t MediumTextSize = 32;
 static constexpr std::uint32_t SmallTextSize = 16;
@@ -94,7 +99,8 @@ static constexpr std::uint32_t BallPreviewSize = 64u;
 static constexpr glm::uvec2 AvatarPreviewSize(70, 90);
 static constexpr glm::uvec2 AvatarThumbSize(60, 77);
 
-static constexpr glm::vec2 CourseDescPos(0.5f, 0.24f); //relative
+static constexpr glm::vec2 LobbyBackgroundPosition(0.5f, 0.62f); //relative
+static constexpr glm::vec2 CourseDescPosition(0.5f, 0.24f); //relative
 static constexpr glm::vec2 ClubTextPosition(0.01f, 1.f); //relative
 static constexpr glm::vec2 WindIndicatorPosition(-48.f, 40.f); //absolute from edge of the screen
 

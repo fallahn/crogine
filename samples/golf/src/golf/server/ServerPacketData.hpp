@@ -59,7 +59,8 @@ struct PlayerStatus final : public ActivePlayer
     float distanceToHole = 0.f; //used for sorting
     std::vector<std::uint8_t> holeScore;
     std::uint8_t totalScore = 0;
-
+    std::uint8_t skins = 0;
+    std::uint8_t matchWins = 0;
     bool readyQuit = false; //used at round end to see if all players want to skip scores
 };
 
@@ -86,7 +87,10 @@ struct ScoreUpdate final
     std::uint8_t player = 0;
     std::uint8_t stroke = 0;
     std::uint8_t hole = 0;
-    std::uint8_t score = 0;
+    std::uint8_t score = 0; //running stroke player score
+    std::uint8_t matchScore = 0;
+    std::uint8_t skinsScore = 0;
+    std::uint8_t padding = 0;
 };
 
 struct BallUpdate final

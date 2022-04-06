@@ -1053,6 +1053,19 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             }
         }
             break;
+        case PacketID::ScoreType:
+            m_sharedData.scoreType = evt.packet.as<std::uint8_t>();
+            {
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Menu::ScoreType;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
+                    centreText(e);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
+            break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())
             {

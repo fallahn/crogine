@@ -64,6 +64,7 @@ namespace sv
         bool m_allMapsLoaded;
         std::uint8_t m_currentHole;
         std::vector<PlayerStatus> m_playerInfo; //active players. Sorted by distance so the front position is active player
+        std::uint8_t m_skinsPot;
 
         cro::Clock m_turnTimer;
 

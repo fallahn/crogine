@@ -134,7 +134,7 @@ void Server::run()
                 if (m_currentState->stateID() == sv::StateID::Lobby)
                 {
                     m_pendingConnections.emplace_back().peer = evt.peer;
-                    m_sharedData.host.sendPacket(evt.peer, PacketID::ClientVersion, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.host.sendPacket(evt.peer, PacketID::ClientVersion, std::uint16_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
                 else
                 {

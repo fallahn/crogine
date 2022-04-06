@@ -126,7 +126,15 @@ private:
     cro::Entity m_avatarMenu; //root of the avatar menu to which each player avatar is attached
     std::vector<cro::Entity> m_avatarListEntities;
     std::pair<std::uint32_t, std::uint32_t> m_avatarCallbacks;
-    std::tuple<std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t> m_courseSelectCallbacks;
+    struct HostOptionCallbacks final
+    {
+        std::uint32_t prevRules = 0;
+        std::uint32_t nextRules = 0;
+        std::uint32_t prevCourse = 0;
+        std::uint32_t nextCourse = 0;
+        std::uint32_t mouseEnter = 0;
+        std::uint32_t mouseExit = 0;
+    }m_courseSelectCallbacks;
     std::array<std::uint32_t, 4u> m_avatarEditCallbacks = {};
 
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
