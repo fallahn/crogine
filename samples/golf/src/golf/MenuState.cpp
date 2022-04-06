@@ -365,7 +365,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_9:
         {
-
+            requestStackPush(StateID::Trophy);
         }
             break;
 #endif
