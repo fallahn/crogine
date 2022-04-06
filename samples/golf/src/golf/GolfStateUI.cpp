@@ -1110,19 +1110,52 @@ void GolfState::updateScoreboard()
             {
                 auto& entry = scores.emplace_back();
                 entry.name = client.playerData[i].name;
+
                 for (auto j = 0u; j < client.playerData[i].holeScores.size(); ++j)
                 {
                     entry.holes.push_back(client.playerData[i].holeScores[j]);
                     if (j < 9)
                     {
-                        entry.frontNine += client.playerData[i].holeScores[j];
+                        if (m_sharedData.scoreType == ScoreType::Stroke)
+                        {
+                            entry.frontNine += client.playerData[i].holeScores[j];
+                        }
+                        else if (m_sharedData.scoreType == ScoreType::Match)
+                        {
+                            entry.frontNine = client.playerData[i].matchScore;
+                        }
+                        else
+                        {
+                            entry.frontNine = client.playerData[i].skinScore;
+                        }
                     }
                     else
                     {
-                        entry.backNine += client.playerData[i].holeScores[j];
+                        if (m_sharedData.scoreType == ScoreType::Stroke)
+                        {
+                            entry.backNine += client.playerData[i].holeScores[j];
+                        }
+                        else if (m_sharedData.scoreType == ScoreType::Match)
+                        {
+                            entry.backNine = client.playerData[i].matchScore;
+                        }
+                        else
+                        {
+                            entry.backNine = client.playerData[i].skinScore;
+                        }
                     }
                 }
-                entry.total = entry.frontNine + entry.backNine;
+                switch (m_sharedData.scoreType)
+                {
+                default:
+                case ScoreType::Stroke:
+                    entry.total = entry.frontNine + entry.backNine;
+                    break;
+                case ScoreType::Skins:
+                case ScoreType::Match:
+                    entry.total = entry.frontNine;
+                    break;
+                }
 
                 //for stat/achievment tracking
                 auto& leaderboardEntry = m_statBoardScores.emplace_back();
@@ -1140,26 +1173,19 @@ void GolfState::updateScoreboard()
             });
 
 
-        //auto playerCount = 16u;
-        //auto holeCount = 18u;
-
-        ////dummy data for layout testing
-        //for (auto i = 0u; i < playerCount; ++i)
-        //{
-        //    auto& entry = scores.emplace_back();
-        //    entry.name = "Player " + std::to_string(i);
-        //    for (auto j = 0u; j < holeCount; ++j)
-        //    {
-        //        entry.holes.push_back(j);
-        //    }
-        //}
-
-
         auto& ents = e.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
         std::sort(scores.begin(), scores.end(),
-            [](const ScoreEntry& a, const ScoreEntry& b)
+            [&](const ScoreEntry& a, const ScoreEntry& b)
             {
-                return a.total < b.total;
+                switch (m_sharedData.scoreType)
+                {
+                default:
+                case ScoreType::Stroke:
+                    return a.total < b.total;
+                case ScoreType::Skins:
+                case ScoreType::Match:
+                    return a.total > b.total;
+                }
             });
 
 
@@ -1240,6 +1266,19 @@ void GolfState::updateScoreboard()
         for (auto i = 0u; i < playerCount; ++i)
         {
             totalString += "\n" + std::to_string(scores[i].frontNine);
+
+            switch (m_sharedData.scoreType)
+            {
+            default:
+            case ScoreType::Stroke:
+                break;
+            case ScoreType::Match:
+                totalString += " (POINTS)";
+                break;
+            case ScoreType::Skins:
+                totalString += " (SKINS)";
+                break;
+            }
         }
 
         //pad out for page 2
@@ -1275,7 +1314,21 @@ void GolfState::updateScoreboard()
             for (auto i = 0u; i < playerCount; ++i)
             {
                 separator = getSeparator(scores[i].backNine);
-                totalString += "\n" + std::to_string(scores[i].backNine) + separator + std::to_string(scores[i].total);
+                totalString += "\n" + std::to_string(scores[i].backNine);
+                
+                switch (m_sharedData.scoreType)
+                {
+                default:
+                case ScoreType::Stroke:
+                    totalString += separator + std::to_string(scores[i].total);
+                    break;
+                case ScoreType::Match:
+                    totalString += " (POINTS)";
+                    break;
+                case ScoreType::Skins:
+                    totalString += " (SKINS)";
+                    break;
+                }
             }
         }
 
@@ -1702,7 +1755,7 @@ void GolfState::notifyAchievement(const std::array<std::uint8_t, 2u>& data)
     }
 }
 
-void GolfState::showNotification(const std::string& msg)
+void GolfState::showNotification(const cro::String& msg)
 {
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 4.f, UIBarHeight * m_viewScale.y * 2.f });

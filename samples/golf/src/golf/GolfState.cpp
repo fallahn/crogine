@@ -2809,6 +2809,18 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             }
         }
             break;
+        case PacketID::HoleWon:
+        if(m_sharedData.scoreType != ScoreType::Stroke)
+        {
+            std::uint16_t data = evt.packet.as<std::uint16_t>();
+            auto client = (data & 0xff00) >> 8;
+            auto player = (data & 0x00ff);
+
+            auto msg = m_sharedData.connectionData[client].playerData[player].name;
+            msg += " has won the hole!";
+            showNotification(msg);
+        }
+        break;
         case PacketID::GameEnd:
             showCountdown(evt.packet.as<std::uint8_t>());
             break;

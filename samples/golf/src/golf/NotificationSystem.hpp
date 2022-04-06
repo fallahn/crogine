@@ -30,10 +30,11 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/core/String.hpp>
 
 struct Notification final
 {
-    std::string message;
+    cro::String message;
     std::size_t charPosition = 0;
 
     enum

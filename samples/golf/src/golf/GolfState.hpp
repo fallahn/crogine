@@ -286,7 +286,7 @@ private:
     void floatingMessage(const std::string&);
     void createTransition();
     void notifyAchievement(const std::array<std::uint8_t, 2u>&);
-    void showNotification(const std::string&);
+    void showNotification(const cro::String&);
     void toggleQuitReady();
 
     void buildTrophyScene();
