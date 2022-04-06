@@ -102,6 +102,7 @@ private:
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
     std::vector<HoleData> m_holeData;
+    std::int32_t m_targetIndex;
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
     std::unordered_map<std::int32_t, std::unique_ptr<cro::ModelDefinition>> m_ballModels;
 

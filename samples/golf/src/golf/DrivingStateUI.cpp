@@ -651,10 +651,10 @@ void DrivingState::createGameOptions()
     infoText.getComponent<cro::Text>().setFillColour(TextNormalColour);
     const std::string helpString =
         R"(
-Pick the number of strokes you wish to take. For each stroke you will
-be given a new target. Hit the ball as close as possible to the target
-by selecting the appropriate club. When all your strokes are taken
-you will be given a score based on your overall accuracy. Good Luck!
+Pick the number of strokes you wish to take. Hit the ball as close
+as possible to the target by selecting the appropriate club. When 
+all of your strokes are taken you will be given a score based on 
+your overall accuracy. Good Luck!
     )";
 
     infoText.getComponent<cro::Text>().setString(helpString);
@@ -680,7 +680,7 @@ you will be given a score based on your overall accuracy. Good Luck!
 
     //hole count
     auto countEnt = m_uiScene.createEntity();
-    countEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 74.f, 0.1f });
+    countEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 6.f, 74.f, 0.1f });
     countEnt.addComponent<cro::Drawable2D>();
     countEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("stroke_select");
     auto strokeBounds = spriteSheet.getSprite("stroke_select").getTextureBounds();
@@ -688,11 +688,12 @@ you will be given a score based on your overall accuracy. Good Luck!
     bgEntity.getComponent<cro::Transform>().addChild(countEnt.getComponent<cro::Transform>());
 
     auto strokeTextEnt = m_uiScene.createEntity();
-    strokeTextEnt.addComponent<cro::Transform>().setPosition({ strokeBounds.width / 2.f, strokeBounds.height + 13.f });
+    strokeTextEnt.addComponent<cro::Transform>().setPosition({ strokeBounds.width / 2.f, strokeBounds.height + 22.f });
     strokeTextEnt.addComponent<cro::Drawable2D>();
-    strokeTextEnt.addComponent<cro::Text>(largeFont).setString("Strokes To Play");
+    strokeTextEnt.addComponent<cro::Text>(largeFont).setString("Strokes\nTo Play");
     strokeTextEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     strokeTextEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    strokeTextEnt.getComponent<cro::Text>().setVerticalSpacing(2.f);
     centreText(strokeTextEnt);
     countEnt.getComponent<cro::Transform>().addChild(strokeTextEnt.getComponent<cro::Transform>());
 
@@ -709,7 +710,7 @@ you will be given a score based on your overall accuracy. Good Luck!
 
     //high score text
     auto textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 32.f, 0.02f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 23.f, 0.02f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -726,7 +727,7 @@ you will be given a score based on your overall accuracy. Good Luck!
 
 
 
-
+    //hole count buttons
     auto buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f));
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
@@ -788,11 +789,95 @@ you will be given a score based on your overall accuracy. Good Luck!
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
+
+    //minimap for targets
+    auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
+    m_mapTexture.clear(TextNormalColour);
+    m_gameScene.render();
+    m_mapTexture.display();
+    m_gameScene.setActiveCamera(oldCam);
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().rotate(90.f * cro::Util::Const::degToRad);
+    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 110.f, 0.1f });
+    entity.getComponent<cro::Transform>().setOrigin(RangeSize / 4.f);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_mapTexture.getTexture());
+    bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //target select
+    countEnt = m_uiScene.createEntity();
+    countEnt.addComponent<cro::Transform>().setPosition({ bounds.width - (bounds.width / 6.f), 74.f, 0.1f });
+    countEnt.addComponent<cro::Drawable2D>();
+    countEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("stroke_select");
+    strokeBounds = spriteSheet.getSprite("stroke_select").getTextureBounds();
+    countEnt.getComponent<cro::Transform>().setOrigin({ strokeBounds.width / 2.f, 0.f });
+    bgEntity.getComponent<cro::Transform>().addChild(countEnt.getComponent<cro::Transform>());
+
+    strokeTextEnt = m_uiScene.createEntity();
+    strokeTextEnt.addComponent<cro::Transform>().setPosition({ strokeBounds.width / 2.f, strokeBounds.height + 22.f });
+    strokeTextEnt.addComponent<cro::Drawable2D>();
+    strokeTextEnt.addComponent<cro::Text>(largeFont).setString("Select\nTarget");
+    strokeTextEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    strokeTextEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    strokeTextEnt.getComponent<cro::Text>().setVerticalSpacing(2.f);
+    centreText(strokeTextEnt);
+    countEnt.getComponent<cro::Transform>().addChild(strokeTextEnt.getComponent<cro::Transform>());
+
+    numberEnt = m_uiScene.createEntity();
+    numberEnt.addComponent<cro::Transform>().setPosition({ strokeBounds.width / 2.f, std::floor(strokeBounds.height / 2.f) + 4.f, 0.02f });
+    numberEnt.addComponent<cro::Drawable2D>();
+    numberEnt.addComponent<cro::Text>(largeFont);
+    numberEnt.getComponent<cro::Text>().setString("?");
+    numberEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    numberEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    centreText(numberEnt);
+    countEnt.getComponent<cro::Transform>().addChild(numberEnt.getComponent<cro::Transform>());
+
+
+    //target select buttons
+    buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f));
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [&, numberEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_targetIndex = (m_targetIndex + m_holeData.size()) % (m_holeData.size() + 1);
+                    std::string str = (m_targetIndex - 1) < 0 ? "?" : std::to_string(m_targetIndex);
+                    numberEnt.getComponent<cro::Text>().setString(str);
+                    centreText(numberEnt);
+
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+    buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f));
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [&, numberEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_targetIndex = (m_targetIndex + 1) % (m_holeData.size() + 1);
+                    std::string str = (m_targetIndex - 1) < 0 ? "?" : std::to_string(m_targetIndex);
+                    numberEnt.getComponent<cro::Text>().setString(str);
+                    centreText(numberEnt);
+
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+
+
     //start button
     auto selectedBounds = spriteSheet.getSprite("start_highlight").getTextureRect();
     auto unselectedBounds = spriteSheet.getSprite("start_button").getTextureRect();
     auto startButton = m_uiScene.createEntity();
-    startButton.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 48.f, 0.2f });
+    startButton.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 34.f, 0.2f });
     startButton.addComponent<cro::Drawable2D>();
     startButton.addComponent<cro::Sprite>() = spriteSheet.getSprite("start_button");
     startButton.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
@@ -824,7 +909,7 @@ you will be given a score based on your overall accuracy. Good Luck!
                     state = MessageAnim::Close;
                     timeout = 1.f;
                     uiSystem->setActiveGroup(MenuID::Dummy);
-                    m_gameScene.getDirector<DrivingRangeDirector>()->setHoleCount(m_strokeCounts[m_strokeCountIndex]);
+                    m_gameScene.getDirector<DrivingRangeDirector>()->setHoleCount(m_strokeCounts[m_strokeCountIndex], m_targetIndex - 1);
 
                     setHole(m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole());
 

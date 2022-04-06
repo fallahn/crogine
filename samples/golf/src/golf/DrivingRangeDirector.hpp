@@ -46,7 +46,7 @@ public:
 
     void process(float) override;
 
-    void setHoleCount(std::int32_t count);
+    void setHoleCount(std::int32_t count, std::int32_t holeIndex = -1);
 
     //note that this does not necessarily
     //end when it reaches zero as the hole count
@@ -69,6 +69,7 @@ private:
     std::vector<HoleData>& m_holeData;
     std::int32_t m_holeCount;
     std::int32_t m_totalHoleCount;
+    std::int32_t m_holeIndex;
 
     std::array<float, MaxHoles> m_scores = {};
 };

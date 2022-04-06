@@ -167,6 +167,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_windBuffer        ("WindValues", sizeof(WindData)),
     m_mouseVisible      (true),
+    m_targetIndex       (0),
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
 {
