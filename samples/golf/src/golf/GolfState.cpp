@@ -2816,9 +2816,23 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             auto client = (data & 0xff00) >> 8;
             auto player = (data & 0x00ff);
 
-            auto msg = m_sharedData.connectionData[client].playerData[player].name;
-            msg += " has won the hole!";
-            showNotification(msg);
+            if (client == 255)
+            {
+                if (m_sharedData.scoreType == ScoreType::Skins)
+                {
+                    showNotification("Skins pot increased to " + std::to_string(player));
+                }
+                else
+                {
+                    showNotification("Hole was drawn");
+                }
+            }
+            else
+            {
+                auto msg = m_sharedData.connectionData[client].playerData[player].name;
+                msg += " has won the hole!";
+                showNotification(msg);
+            }
         }
         break;
         case PacketID::GameEnd:

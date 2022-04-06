@@ -475,6 +475,8 @@ void GolfState::setNextPlayer()
 
 void GolfState::setNextHole()
 {
+    bool gameFinished = false;
+
     //update player skins/match scores
     if (m_playerInfo.size() > 1)
     {
@@ -497,6 +499,24 @@ void GolfState::setNextHole()
             player->skins += m_skinsPot;
             m_skinsPot = 1;
 
+            //check the match score and end the game if this is the mode we're in
+            if (m_sharedData.scoreType == ScoreType::Match)
+            {
+                sortData[0].matchWins++;
+                std::sort(sortData.begin(), sortData.end(),
+                    [&](const PlayerStatus& a, const PlayerStatus& b)
+                    {
+                        return a.matchWins > b.matchWins;
+                    });
+
+                std::uint32_t scoreDiff = sortData[0].matchWins - sortData[1].matchWins;
+                auto remainingHoles = m_holeData.size() - (m_currentHole + 1);
+                if (scoreDiff > remainingHoles)
+                {
+                    gameFinished = true;
+                }
+            }
+
             //send notification packet to clients that player won the hole
             std::uint16_t data = (player->client << 8) | player->player;
             m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -504,6 +524,9 @@ void GolfState::setNextHole()
         else
         {
             m_skinsPot++;
+
+            std::uint16_t data = 0xff00 | m_skinsPot;
+            m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
     }
 
@@ -532,7 +555,8 @@ void GolfState::setNextHole()
     m_allMapsLoaded = false;
 
     m_currentHole++;
-    if (m_currentHole < m_holeData.size())
+    if (m_currentHole < m_holeData.size()
+        && !gameFinished)
     {
         //tell the local ball system which hole we're on
         auto ballSystem = m_scene.getSystem<BallSystem>();
