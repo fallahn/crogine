@@ -2472,7 +2472,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         [](cro::Entity e, float dt)
     {
         auto scale = e.getComponent<cro::Transform>().getScale().x;
-        scale = std::min(1.f, scale + dt);
+        scale = std::min(1.f, scale + (dt * 3.f));
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
         if (scale == 1)
@@ -3805,15 +3805,9 @@ void GolfState::startFlyBy()
         [&, SpeedMultiplier](cro::Entity e, float dt)
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<FlyByTarget>();
-        data.progress = std::min(data.progress + (dt / data.speeds[data.currentTarget]), 1.f);
+        data.progress = /*std::min*/(data.progress + (dt / data.speeds[data.currentTarget])/*, 1.f*/);
 
         auto& camTx = m_cameras[CameraID::Transition].getComponent<cro::Transform>();
-
-        auto rot = glm::slerp(glm::quat_cast(data.targets[data.currentTarget]), glm::quat_cast(data.targets[data.currentTarget + 1]), data.progress);
-        camTx.setRotation(rot);
-
-        auto pos = interpolate(glm::vec3(data.targets[data.currentTarget][3]), glm::vec3(data.targets[data.currentTarget + 1][3]), data.ease(data.progress));
-        camTx.setPosition(pos);
 
         //find out 'lookat' point as it would appear on the water plane and set the water there
         glm::vec3 intersection(0.f);
@@ -3823,11 +3817,11 @@ void GolfState::startFlyBy()
             m_cameras[CameraID::Transition].getComponent<TargetInfo>().waterPlane.getComponent<cro::Transform>().setPosition(intersection);
         }
 
-        if (data.progress == 1)
+        if (data.progress >= 1)
         {
-            data.progress = 0.f;
+            data.progress -= 1.f;
             data.currentTarget++;
-            camTx.setLocalTransform(data.targets[data.currentTarget]);
+            //camTx.setLocalTransform(data.targets[data.currentTarget]);
 
             switch (data.currentTarget)
             {
@@ -3853,6 +3847,8 @@ void GolfState::startFlyBy()
                 break;
             case 3:
                 //we're done here
+                camTx.setLocalTransform(data.targets[data.currentTarget]);
+
                 m_gameScene.getSystem<CameraFollowSystem>()->resetCamera();
                 setActiveCamera(CameraID::Player);
             {
@@ -3890,6 +3886,15 @@ void GolfState::startFlyBy()
             }
                 break;
             }
+        }
+
+        if (data.currentTarget < 3)
+        {
+            auto rot = glm::slerp(glm::quat_cast(data.targets[data.currentTarget]), glm::quat_cast(data.targets[data.currentTarget + 1]), data.progress);
+            camTx.setRotation(rot);
+
+            auto pos = interpolate(glm::vec3(data.targets[data.currentTarget][3]), glm::vec3(data.targets[data.currentTarget + 1][3]), data.ease(data.progress));
+            camTx.setPosition(pos);
         }
     };
 
