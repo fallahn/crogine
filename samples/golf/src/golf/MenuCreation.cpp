@@ -36,6 +36,7 @@ source distribution.
 #include "Utility.hpp"
 #include "CommandIDs.hpp"
 #include "spooky2.hpp"
+#include "../AchievementStrings.hpp"
 #include "../ErrorCheck.hpp"
 #include "server/ServerPacketData.hpp"
 
@@ -477,7 +478,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         }
     };
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    auto cartEnt = entity;
 
     //banner header
     bounds = spriteSheet.getSprite("header").getTextureBounds();
@@ -504,6 +505,31 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     };
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //banner footer
+    bounds = spriteSheet.getSprite("footer").getTextureBounds();
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ textureRect.width / 2.f, 0.f, -0.3f });
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("footer");
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [bannerEnt, bounds](cro::Entity e, float dt)
+    {
+        float width = bannerEnt.getComponent<cro::Sprite>().getTextureRect().width;
+        auto position = e.getComponent<cro::Transform>().getPosition();
+        position.x = width / 2.f;
+
+        if (!bannerEnt.getComponent<cro::Callback>().active)
+        {
+            float diff = -bounds.height - position.y;
+            position.y += diff * (dt * 2.f);
+        }
+
+        e.getComponent<cro::Transform>().setPosition(position);
+    };
+    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto footerEnt = entity;
 
     //cursor
     entity = m_uiScene.createEntity();
@@ -648,6 +674,55 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     cro::App::quit();
                 }
             });
+
+
+    //if the 19th hole unlocked add a sneaky button to the footer
+    if (Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.addComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+        bounds = footerEnt.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f), 0.1f });
+
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback([](cro::Entity e)
+                {
+                    e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+                });
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback([](cro::Entity e)
+                {
+                    e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+                });
+
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback([&, cartEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+                {
+                    if (activated(evt))
+                    {
+                        cartEnt.getComponent<cro::Callback>().function = 
+                            [&](cro::Entity e, float dt)
+                        {
+                            e.getComponent<cro::Transform>().move({ -400.f * dt, 0.f, 0.f });
+                            if (e.getComponent<cro::Transform>().getPosition().x < -100.f)
+                            {
+                                requestStackClear();
+                                requestStackPush(StateID::Clubhouse);
+                            }
+                        };
+                    }
+                });
+
+        footerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
 }
 
 void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
