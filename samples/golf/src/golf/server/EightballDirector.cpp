@@ -33,6 +33,7 @@ source distribution.
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Random.hpp>
 
 namespace
@@ -41,7 +42,7 @@ namespace
 }
 
 EightballDirector::EightballDirector()
-    : m_cubeballPosition(0.f, BallHeight, 0.57f),
+    : m_cueballPosition (0.f, BallHeight, 0.57f),
     m_currentPlayer     (cro::Util::Random::value(0,1)),
     m_firstCollision    (0),
     m_turnFlags         (0)
@@ -156,22 +157,30 @@ const std::vector<BallInfo>& EightballDirector::getBallLayout() const
 
 glm::vec3 EightballDirector::getCueballPosition() const
 {
-    return m_cubeballPosition;
+    return m_cueballPosition;
 }
 
 std::uint32_t EightballDirector::getTargetID() const
 {
+    float dist = std::numeric_limits<float>::max();
+    std::uint32_t retVal = std::numeric_limits<std::uint32_t>::max();
+
     const auto& balls = getScene().getSystem<BilliardsSystem>()->getEntities();
     for (const auto& ball : balls)
     {
-        //hmmmm would be nice to get physically closest ball of this type
         if (getStatusType(ball.getComponent<BilliardBall>().id) == m_playerStatus[m_currentPlayer].target)
         {
-            return ball.getIndex();
+            //TODO get the actual cueball position
+            auto d2 = glm::length2(m_cueballPosition - ball.getComponent<cro::Transform>().getPosition());
+            if (d2 < dist)
+            {
+                dist = d2;
+                retVal = ball.getIndex();
+            }
         }
     }
 
-    return std::numeric_limits<std::uint32_t>::max();
+    return retVal;
 }
 
 //private
