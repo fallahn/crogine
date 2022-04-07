@@ -489,15 +489,21 @@ void BilliardsState::render()
     
     m_gameSceneTexture.display();
 
+    auto oldCam = m_gameScene.setActiveCamera(m_topspinCamera);
+    m_topspinTexture.clear(cro::Colour::Transparent);
+    m_gameScene.render();
+    m_topspinTexture.display();
+    m_gameScene.setActiveCamera(oldCam);
+
     m_uiScene.render();
 
 #ifdef CRO_DEBUG_
-    auto oldCam = m_gameScene.getActiveCamera();
+    /*oldCam = m_gameScene.getActiveCamera();
     m_gameScene.setActiveCamera(m_cameras[CameraID::Spectate]);
     m_debugBuffer.clear();
     m_gameScene.render();
     m_debugBuffer.display();
-    m_gameScene.setActiveCamera(oldCam);
+    m_gameScene.setActiveCamera(oldCam);*/
 #endif // CRO_DEBUG_
 
 }
@@ -1078,21 +1084,7 @@ void BilliardsState::spawnBall(const ActorInfo& info)
             m_cueball = entity;
         }
 
-        static constexpr float Width = 0.5f;
-        static constexpr float Height = 1 / 8.f;
-        static constexpr std::uint8_t RowCount = 8;
-        static constexpr float Border = 0.001f;
-
-        float left = Width * (info.state / RowCount);
-        float bottom = Height * (info.state % RowCount);
-
-        //despite being 'glsl compatible' vec4 is xyzw and glm::vec4 is wxyz
-        glm::vec4 rect;
-        rect.x = left + Border;
-        rect.y = bottom;
-        rect.z = Width - (Border * 2.f);
-        rect.w = Height;
-
+        auto rect = getSubrect(info.state);
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", rect);
     }
 }
@@ -1131,6 +1123,8 @@ void BilliardsState::updateGhost(const BilliardsUpdate& info)
 
 void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
 {
+    m_localPlayerInfo[playerInfo.client][playerInfo.player].score = playerInfo.score;
+
     m_cameraController.getComponent<cro::Callback>().active = false;
     m_cameraController.getComponent<cro::Callback>().setUserData<float>(0.f);
 
@@ -1151,14 +1145,19 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
     data.rotationStart = m_cameraController.getComponent<ControllerRotation>().rotation;
 
     glm::vec3 lookAtPosition(0.f); //default to table centre
+    const auto& balls = m_gameScene.getSystem<InterpolationSystem<InterpolationType::Hermite>>()->getEntities();
+    auto result = std::find_if(balls.begin(), balls.end(),
+        [playerInfo](const cro::Entity& e)
+        {
+            return e.getComponent<InterpolationComponent<InterpolationType::Hermite>>().id == playerInfo.targetID;
+        });
+    if (result != balls.end())
+    {
+        m_localPlayerInfo[playerInfo.client][playerInfo.player].targetBall = result->getComponent<BilliardBall>().id;
+    }
+
     if (m_cueball.isValid())
     {
-        const auto& balls = m_gameScene.getSystem<InterpolationSystem<InterpolationType::Hermite>>()->getEntities();
-        auto result = std::find_if(balls.begin(), balls.end(),
-            [playerInfo](const cro::Entity& e)
-            {
-                return e.getComponent<InterpolationComponent<InterpolationType::Hermite>>().id == playerInfo.targetID;
-            });
         if (result != balls.end())
         {
             lookAtPosition = result->getComponent<cro::Transform>().getPosition();
@@ -1204,6 +1203,8 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
 
             m_currentPlayer.player = playerInfo.player;
             m_currentPlayer.client = playerInfo.client;
+
+            updateTargetTexture((playerInfo.client | playerInfo.player), m_localPlayerInfo[playerInfo.client][playerInfo.player].targetBall);
 
             //wait for animation to finish first
             if (playerInfo.client == m_sharedData.localConnectionData.connectionID)
@@ -1355,7 +1356,6 @@ void BilliardsState::resizeBuffers()
     m_debugBuffer.create(size.x, size.y);
 #endif // CRO_DEBUG_
 
-
     auto invScale = (maxScale + 1.f) - scale;
     /*glCheck(glPointSize(invScale * BallPointSize));*/
     glCheck(glLineWidth(invScale));
@@ -1364,4 +1364,62 @@ void BilliardsState::resizeBuffers()
 
     glm::vec2 scaledRes = texSize / invScale;
     m_resolutionBuffer.setData(&scaledRes);
+
+
+
+    //update the topspin texture size
+    constexpr float TopspinSize = 32.f;
+    texSize = { TopspinSize, TopspinSize };
+    texSize *= maxScale;
+    texSize /= scale;
+    m_topspinTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+
+    constexpr float TargetSize = 22.f;
+    texSize = { TargetSize, TargetSize };
+    texSize *= maxScale;
+    texSize /= scale;
+
+    std::array<std::pair<std::int32_t, std::int32_t>, 2u> indices = 
+    {
+        std::make_pair(0, 0),
+        std::make_pair(1, 1),
+    };
+
+    //nnnnngg
+    if (m_sharedData.connectionData[0].playerCount == 1)
+    {
+        indices[1].second = 0;
+    }
+    else
+    {
+        indices[1].first = 0;
+    }
+
+    for (auto i = 0; i < 2; ++i)
+    {
+        m_targetTextures[i].create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+
+        auto [client, player] = indices[i];
+        updateTargetTexture(i, m_localPlayerInfo[client][player].targetBall);
+    }
+}
+
+glm::vec4 BilliardsState::getSubrect(std::int8_t id) const
+{
+    static constexpr float Width = 0.5f;
+    static constexpr float Height = 1.f / 8.f;
+    static constexpr std::uint8_t RowCount = 8;
+    static constexpr float Border = 0.001f;
+
+    float left = Width * (id / RowCount);
+    float bottom = Height * (id % RowCount);
+
+    //despite being 'glsl compatible' vec4 is xyzw and glm::vec4 is wxyz
+    glm::vec4 rect;
+    rect.x = left + Border;
+    rect.y = bottom;
+    rect.z = Width - (Border * 2.f);
+    rect.w = Height;
+
+    return rect;
 }

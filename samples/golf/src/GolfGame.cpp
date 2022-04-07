@@ -544,8 +544,8 @@ bool GolfGame::initialise()
         });
 
     //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
-    m_stateStack.pushState(StateID::Menu);
-    //m_stateStack.pushState(StateID::Clubhouse);
+    //m_stateStack.pushState(StateID::Menu);
+    m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
 #else
     m_stateStack.pushState(StateID::SplashScreen);

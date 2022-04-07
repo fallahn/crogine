@@ -169,11 +169,17 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     Achievements::setActive(sd.localConnectionData.playerCount == 1);
     
     std::int32_t clientCount = 0;
-    for (const auto& c : sd.connectionData)
+    for (auto& c : sd.connectionData)
     {
         if (c.playerCount != 0)
         {
             clientCount++;
+
+            for (auto i = 0u; i < c.playerCount; ++i)
+            {
+                c.playerData[i].matchScore = 0;
+                c.playerData[i].skinScore = 0;
+            }
         }
     }
     if (clientCount == 4)

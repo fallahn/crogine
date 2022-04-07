@@ -1788,7 +1788,7 @@ void GolfState::notifyAchievement(const std::array<std::uint8_t, 2u>& data)
 void GolfState::showNotification(const cro::String& msg)
 {
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, UIBarHeight * m_viewScale.y * 2.f });
+    entity.addComponent<cro::Transform>().setPosition({ 8.f, UIBarHeight * m_viewScale.y * 2.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI));
     entity.getComponent<cro::Text>().setCharacterSize(8u * static_cast<std::uint32_t>(m_viewScale.y));

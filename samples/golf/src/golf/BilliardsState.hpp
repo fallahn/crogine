@@ -71,10 +71,22 @@ private:
 
     cro::CubemapTexture m_reflectionMap;
 
+    struct LocalPlayerInfo final
+    {
+        std::int32_t score = 0;
+        std::int8_t targetBall = -1;
+    };
+    std::array<std::array<LocalPlayerInfo, 2u>, 2u> m_localPlayerInfo = {};
+
     BilliardsInput m_inputParser;
     ActivePlayer m_currentPlayer;
 
     cro::RenderTexture m_gameSceneTexture;
+    cro::RenderTexture m_topspinTexture;
+    std::array<cro::RenderTexture, 2u> m_targetTextures;
+    cro::Entity m_topspinCamera;
+    cro::Entity m_targetCamera;
+    cro::Entity m_targetBall;
     //cro::Shader m_gameSceneShader;
     //cro::Texture m_lutTexture;
     cro::UniformBuffer m_scaleBuffer;
@@ -145,9 +157,13 @@ private:
     void toggleOverhead();
     void resizeBuffers();
 
+    glm::vec4 getSubrect(std::int8_t) const;
+
     //**BilliardsStateUI.cpp**//
     void createUI();
     void showReadyNotify(const BilliardsPlayer&);
     void showGameEnd(const BilliardsPlayer&);
     void toggleQuitReady();
+    void createMiniballScenes();
+    void updateTargetTexture(std::int32_t targetIndex, std::int8_t);
 };
