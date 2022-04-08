@@ -75,6 +75,7 @@ BilliardsInput::BilliardsInput(const InputBinding& ip, cro::MessageBus& mb)
     m_analogueAmountLeft    (1.f),
     m_analogueAmountRight   (1.f),
     m_active                (false),
+    m_clampRotation         (true),
     m_power                 (0.5f),
     m_topSpin               (0.f),
     m_sideSpin              (0.f),
@@ -323,7 +324,8 @@ void BilliardsInput::update(float dt)
 void BilliardsInput::setActive(bool active, bool placeBall)
 {
     m_active = active;
-    
+    m_clampRotation = placeBall;
+
     m_controlEntities.indicator.getComponent<cro::Model>().setHidden(!active);
     m_controlEntities.indicator.getComponent<cro::Callback>().active = active;
 
@@ -496,7 +498,15 @@ void BilliardsInput::updatePlay(float dt)
             if (m_inputFlags & InputFlag::CamModifier)
             {
                 //move cam
-                m_controlEntities.camera.getComponent<ControllerRotation>().rotation -= CamRotationSpeed * m_mouseMove.x * m_analogueAmountLeft * dt;
+                auto rotation = m_controlEntities.camera.getComponent<ControllerRotation>().rotation - CamRotationSpeed * m_mouseMove.x * m_analogueAmountLeft * dt;
+                if (m_clampRotation)
+                {
+                    //TODO this should be the rotation of the vector between the ball
+                    //and the cue line
+                    static constexpr float MaxRotation = (cro::Util::Const::PI / 2.f) - MaxCueRotation;
+                    rotation = std::max(-MaxRotation, std::min(MaxRotation, rotation));
+                }
+                m_controlEntities.camera.getComponent<ControllerRotation>().rotation = rotation;
 
                 auto tilt = m_controlEntities.cameraTilt.getComponent<ControllerRotation>().rotation;
                 tilt -= CamRotationSpeed * -m_mouseMove.y * m_analogueAmountLeft * dt;

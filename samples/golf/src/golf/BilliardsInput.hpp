@@ -90,6 +90,7 @@ private:
     float m_analogueAmountRight;
 
     bool m_active;
+    bool m_clampRotation;
 
     float m_power;
     float m_topSpin;

@@ -104,3 +104,13 @@ void NotificationSystem::process(float dt)
         }
     }
 }
+
+void NotificationSystem::clearCurrent()
+{
+    if (!getEntities().empty())
+    {
+        auto& notification = getEntities()[0].getComponent<Notification>();
+        notification.state = Notification::Out;
+        notification.currentTime = 0.f;
+    }
+}

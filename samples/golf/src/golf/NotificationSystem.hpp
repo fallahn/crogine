@@ -51,6 +51,8 @@ public:
 
     void process(float) override;
 
+    void clearCurrent();
+
 private:
 
 };

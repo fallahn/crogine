@@ -1269,6 +1269,8 @@ void BilliardsState::sendReadyNotify()
 {
     if (m_wantsNotify)
     {
+        m_uiScene.getSystem<NotificationSystem>()->clearCurrent();
+
         m_wantsNotify = false;
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::TurnReady, m_sharedData.localConnectionData.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
