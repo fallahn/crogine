@@ -377,6 +377,15 @@ void BilliardsSystem::applyImpulse(glm::vec3 dir, glm::vec3 offset)
     }
 }
 
+glm::vec3 BilliardsSystem::getCueballPosition() const
+{
+    if (m_cueball)
+    {
+        return btToGlm(m_cueball->getWorldTransform().getOrigin());
+    }
+    return glm::vec3(0.f);
+}
+
 //private
 btRigidBody::btRigidBodyConstructionInfo BilliardsSystem::createBodyDef(std::int32_t collisionID, float mass, btCollisionShape* shape, btMotionState* motionState)
 {

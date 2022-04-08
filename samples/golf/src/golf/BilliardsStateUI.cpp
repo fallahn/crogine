@@ -35,6 +35,8 @@ source distribution.
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
 
+#include <crogine/core/Mouse.hpp>
+
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -43,6 +45,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
 
 namespace
 {
@@ -125,13 +128,16 @@ void BilliardsState::createUI()
 
     //attach UI elements to this so they scale to their parent
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, 0.1f});
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
     auto rootNode = entity;
 
 
-    //player names
+    //player details
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/billiards_ui.spt", m_resources.textures);
+
     auto& menuFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
-    
+
     auto createText = [&](const std::string& str, glm::vec2 relPos)
     {
         auto ent = m_uiScene.createEntity();
@@ -149,26 +155,125 @@ void BilliardsState::createUI()
         return ent;
     };
 
+    auto createPowerBar = [&](std::int32_t playerIndex)
+    {
+        static constexpr std::array Positions = { glm::vec2(0.13f, 0.9f), glm::vec2(1.f - 0.13f, 0.9f) };
+
+        auto ent = m_uiScene.createEntity();
+        ent.addComponent<cro::Transform>().setRotation((-90.f * cro::Util::Const::degToRad) + ((180.f * playerIndex) * cro::Util::Const::degToRad));
+        ent.addComponent<UIElement>().relativePosition = Positions[playerIndex];
+        ent.getComponent<UIElement>().depth = 0.1f;
+        ent.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+
+        //using negative scale on y to hide when inactive
+        auto cueEnt = m_uiScene.createEntity();
+        cueEnt.addComponent<cro::Transform>();
+        cueEnt.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing(playerIndex));
+        cueEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("cue");
+        auto bounds = cueEnt.getComponent<cro::Sprite>().getTextureBounds();
+        cueEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        cueEnt.getComponent<cro::Transform>().setScale({ 1.f - (2.f * playerIndex), -1.f });
+        cueEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::StrengthMeter;
+        cueEnt.addComponent<cro::Callback>().setUserData<const std::int32_t>(playerIndex);
+        cueEnt.getComponent<cro::Callback>().function =
+            [&, bounds](cro::Entity e, float)
+        {
+            auto power = 1.f - m_inputParser.getPower();
+            auto yPos = (power * bounds.height) - bounds.height;
+            e.getComponent<cro::Transform>().setPosition({ 0.f, yPos });
+        };
+        ent.getComponent<cro::Transform>().addChild(cueEnt.getComponent<cro::Transform>());
+
+        rootNode.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+
+        ent = m_uiScene.createEntity();
+        ent.addComponent<cro::Transform>().setScale({1.f, -1.f});
+        ent.addComponent<UIElement>().relativePosition = Positions[playerIndex];
+        ent.getComponent<UIElement>().absolutePosition = { 0.f, -6.f };
+        ent.getComponent<UIElement>().depth = 0.1f;
+        ent.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::StrengthMeter;
+        ent.addComponent<cro::Callback>().setUserData<const std::int32_t>(playerIndex);
+        ent.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+        {
+            auto red = m_inputParser.getPower();
+            auto green = 1.f - red;
+            cro::Colour c(red, green, 0.f);
+
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            for (auto& v : verts)
+            {
+                v.colour = c;
+            }
+        };
+
+        std::vector<cro::Vertex2D> verts = 
+        {
+            cro::Vertex2D(glm::vec2(-bounds.height / 2.f, bounds.width / 4.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(-bounds.height / 2.f, -bounds.width / 4.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(bounds.height / 2.f, bounds.width / 4.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(bounds.height / 2.f, -bounds.width / 4.f), cro::Colour::White)
+        };
+        ent.addComponent<cro::Drawable2D>().setVertexData(verts);
+
+        rootNode.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    };
+
     static constexpr float NameVertPos = 0.95f;
     static constexpr float NameHorPos = 0.13f;
     createText(m_sharedData.connectionData[0].playerData[0].name, glm::vec2(NameHorPos, NameVertPos));
+    if (m_sharedData.clientConnection.connectionID == 0)
+    {
+        createPowerBar(0);
+    }
 
     if (m_sharedData.connectionData[0].playerCount == 2)
     {
         createText(m_sharedData.connectionData[0].playerData[1].name, glm::vec2(1.f - NameHorPos, NameVertPos));
+        createPowerBar(1);
     }
     else
     {
         createText(m_sharedData.connectionData[1].playerData[0].name, glm::vec2(1.f - NameHorPos, NameVertPos));
+
+        if (m_sharedData.clientConnection.connectionID == 1)
+        {
+            createPowerBar(1);
+        }
     }
 
-    CommandID::UI::StrengthMeter;
-    //also mouse cursor for rotating
 
+    //mouse cursor for rotating
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("rotate");
+    entity.getComponent<cro::Transform>().setOrigin({ -4.f, -4.f });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        if (m_inputParser.getActive() && 
+            (cro::Mouse::isButtonPressed(cro::Mouse::Button::Right)
+                || cro::GameController::isButtonPressed(m_sharedData.inputBinding.controllerID, m_sharedData.inputBinding.buttons[InputBinding::CamModifier])))
+        {
+            auto pos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+            pos.x = std::round(pos.x);
+            pos.y = std::round(pos.y);
+            pos.z = 0.1f;
+            e.getComponent<cro::Transform>().setPosition(pos);
+            e.getComponent<cro::Transform>().setScale(m_viewScale);
+        }
+        else
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+    };
+    auto rotateEnt = entity;
 
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
-    auto updateView = [&, rootNode, backgroundEnt, topspinEnt, targetEnt0, targetEnt1](cro::Camera& cam) mutable
+    auto updateView = [&, rootNode, backgroundEnt, topspinEnt, targetEnt0, targetEnt1, rotateEnt](cro::Camera& cam) mutable
     {
         auto windowSize = GolfGame::getActiveTarget()->getSize();
         glm::vec2 size(windowSize);
@@ -197,6 +302,8 @@ void BilliardsState::createUI()
         targetEnt1.getComponent<cro::Transform>().setScale(courseScale);
         targetEnt1.getComponent<cro::Callback>().active = true;
         targetEnt1.getComponent<cro::Transform>().setPosition({ size.x * 0.575f, size.y * NameVertPos, -0.3f });
+
+        rotateEnt.getComponent<cro::Transform>().setScale(m_viewScale);
 
         //updates any text objects / buttons with a relative position
         cro::Command cmd;

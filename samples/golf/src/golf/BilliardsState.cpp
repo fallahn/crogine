@@ -1196,6 +1196,8 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
 
         if (data.elapsedTime == 1)
         {
+            //wait for animation to finish first
+
             m_localCue.getComponent<ControllerRotation>().rotation = 0.f;
 
             m_cameraController.getComponent<ControllerRotation>().rotation = data.rotationTarget;
@@ -1204,9 +1206,31 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
             m_currentPlayer.player = playerInfo.player;
             m_currentPlayer.client = playerInfo.client;
 
-            updateTargetTexture((playerInfo.client | playerInfo.player), m_localPlayerInfo[playerInfo.client][playerInfo.player].targetBall);
+            auto playerIndex = (playerInfo.client | playerInfo.player);
+            
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::StrengthMeter;
+            cmd.action = [playerIndex](cro::Entity e, float)
+            {
+                if (e.getComponent<cro::Callback>().getUserData<const std::int32_t>() == playerIndex)
+                {
+                    auto scale = e.getComponent<cro::Transform>().getScale();
+                    scale.y = 1.f;
+                    e.getComponent<cro::Transform>().setScale(scale);
+                    e.getComponent<cro::Callback>().active = true;
+                }
+                else
+                {
+                    auto scale = e.getComponent<cro::Transform>().getScale();
+                    scale.y = -1.f;
+                    e.getComponent<cro::Transform>().setScale(scale);
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-            //wait for animation to finish first
+            updateTargetTexture(playerIndex, m_localPlayerInfo[playerInfo.client][playerInfo.player].targetBall);
+                        
             if (playerInfo.client == m_sharedData.localConnectionData.connectionID)
             {
                 m_inputParser.setActive(true, !m_cueball.isValid());

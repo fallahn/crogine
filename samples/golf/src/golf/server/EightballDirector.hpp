@@ -44,7 +44,7 @@ public:
 
     std::size_t getCurrentPlayer() const override { return m_currentPlayer; }
 
-    std::uint32_t getTargetID() const override;
+    std::uint32_t getTargetID(glm::vec3) const override;
 
 private:
     std::vector<BallInfo> m_ballLayout;

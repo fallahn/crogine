@@ -59,7 +59,7 @@ public:
 
     virtual void setCueball(cro::Entity e) { m_cueball = e; }
 
-    virtual std::uint32_t getTargetID() const = 0; //server ID of look-at target
+    virtual std::uint32_t getTargetID(glm::vec3 position) const = 0; //server ID of look-at target
 
 protected:
     cro::Entity getCueball() const { return m_cueball; }

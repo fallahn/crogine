@@ -419,8 +419,12 @@ void BilliardsState::setNextPlayer(bool waitForAck)
 
     auto packetID = waitForAck ? PacketID::NotifyPlayer : PacketID::SetPlayer;
 
+    auto playerPos = m_scene.getSystem<BilliardsSystem>()->hasCueball() ?
+        m_scene.getSystem<BilliardsSystem>()->getCueballPosition() :
+        m_activeDirector->getCueballPosition();
+
     auto info = m_playerInfo[m_activeDirector->getCurrentPlayer()];
-    info.targetID = m_activeDirector->getTargetID();
+    info.targetID = m_activeDirector->getTargetID(playerPos);
     m_sharedData.host.broadcastPacket(packetID, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_turnTimer.restart();

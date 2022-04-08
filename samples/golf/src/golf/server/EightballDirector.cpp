@@ -160,7 +160,7 @@ glm::vec3 EightballDirector::getCueballPosition() const
     return m_cueballPosition;
 }
 
-std::uint32_t EightballDirector::getTargetID() const
+std::uint32_t EightballDirector::getTargetID(glm::vec3 playerPos) const
 {
     float dist = std::numeric_limits<float>::max();
     std::uint32_t retVal = std::numeric_limits<std::uint32_t>::max();
@@ -171,7 +171,7 @@ std::uint32_t EightballDirector::getTargetID() const
         if (getStatusType(ball.getComponent<BilliardBall>().id) == m_playerStatus[m_currentPlayer].target)
         {
             //TODO get the actual cueball position
-            auto d2 = glm::length2(m_cueballPosition - ball.getComponent<cro::Transform>().getPosition());
+            auto d2 = glm::length2(playerPos - ball.getComponent<cro::Transform>().getPosition());
             if (d2 < dist)
             {
                 dist = d2;
@@ -307,15 +307,25 @@ void EightballDirector::summariseTurn()
         msg->type = BilliardsEvent::GameEnded;
         msg->first = BilliardsEvent::Forfeit;
     }
-    else if ((m_turnFlags & (TurnFlags::Eightball | TurnFlags::Foul)) == TurnFlags::Eightball)
+    else if ((m_turnFlags & TurnFlags::Eightball))
     {
-        //make sure 8 ball was last to win
-        if (m_playerStatus[m_currentPlayer].target == PlayerStatus::Eightball
-            && m_pocketsThisTurn.back() == 8)
+        if (m_playerStatus[m_currentPlayer].target == PlayerStatus::Eightball)
         {
-            //player wins!
-            auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
-            msg->type = BilliardsEvent::GameEnded;
+            if ((m_turnFlags & TurnFlags::Foul)
+                || m_pocketsThisTurn.back() == 8)
+            {
+                //potted cue or another ball last
+                auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+                msg->type = BilliardsEvent::GameEnded;
+                msg->first = BilliardsEvent::Forfeit;
+            }
+            //make sure 8 ball was last to win
+            else
+            {
+                //player wins!
+                auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+                msg->type = BilliardsEvent::GameEnded;
+            }
         }
     }
     //else move to next turn
