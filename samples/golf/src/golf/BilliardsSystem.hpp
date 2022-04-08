@@ -126,6 +126,8 @@ struct BilliardBall final : public btMotionState, public cro::Detail::NonResizea
     static constexpr float Mass = 0.156f;
     static constexpr float Radius = 0.0255f;
 
+    std::int8_t getContact() const { return m_ballContact; }
+
 private:
     cro::Entity m_parent;
     union

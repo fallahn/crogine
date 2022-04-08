@@ -47,6 +47,7 @@ BilliardsCollisionSystem::BilliardsCollisionSystem(cro::MessageBus& mb)
 {
     requireComponent<cro::Transform>();
     requireComponent<BilliardBall>();
+    requireComponent<InterpolationComponent<InterpolationType::Hermite>>();
 
 
     m_collisionCfg = std::make_unique<btDefaultCollisionConfiguration>();

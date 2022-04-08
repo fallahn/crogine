@@ -29,6 +29,7 @@ source distribution.
 
 #include "BilliardsInput.hpp"
 #include "MessageIDs.hpp"
+#include "BilliardsSystem.hpp"
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/MessageBus.hpp>
@@ -322,8 +323,6 @@ void BilliardsInput::update(float dt)
 void BilliardsInput::setActive(bool active, bool placeBall)
 {
     m_active = active;
-    //m_controlEntities.camera.getComponent<cro::Callback>().active = !active;
-    //m_controlEntities.camera.getComponent<cro::Callback>().getUserData<float>() = 0.f;
     
     m_controlEntities.indicator.getComponent<cro::Model>().setHidden(!active);
     m_controlEntities.indicator.getComponent<cro::Callback>().active = active;
@@ -348,6 +347,7 @@ void BilliardsInput::setActive(bool active, bool placeBall)
     {
         m_state = Play;
         m_controlEntities.previewBall.getComponent<cro::Model>().setHidden(true);
+        m_controlEntities.previewBall.getComponent<cro::Transform>().setPosition(glm::vec3(50.f)); //move out the way to prevent spurious collisions
     }
 }
 
@@ -506,7 +506,7 @@ void BilliardsInput::updatePlay(float dt)
             else
             {
                 //move cue
-                auto rotation = m_controlEntities.cue.getComponent<ControllerRotation>().rotation + CueRotationSpeed * m_mouseMove.x * m_analogueAmountLeft * dt;
+                auto rotation = m_controlEntities.cue.getComponent<ControllerRotation>().rotation - CueRotationSpeed * m_mouseMove.x * m_analogueAmountLeft * dt;
                 rotation = std::max(-MaxCueRotation, std::min(MaxCueRotation, rotation));
                 m_controlEntities.cue.getComponent<ControllerRotation>().rotation = rotation;
             }
@@ -633,12 +633,19 @@ void BilliardsInput::updatePlaceBall(float dt)
         auto flagDiff = m_prevFlags ^ m_inputFlags;
         if ((flagDiff & m_inputFlags & InputFlag::Action) != 0)
         {
-            auto* msg = m_messageBus.post<BilliardBallEvent>(MessageID::BilliardsMessage);
-            msg->type = BilliardBallEvent::BallPlaced;
-            msg->position = m_controlEntities.previewBall.getComponent<cro::Transform>().getPosition();
+            //don't place if overlapping an existing ball
+            const auto& ball = m_controlEntities.previewBall.getComponent<BilliardBall>();
+            if (ball.getContact() < 1)
+            {
+                auto* msg = m_messageBus.post<BilliardBallEvent>(MessageID::BilliardsMessage);
+                msg->type = BilliardBallEvent::BallPlaced;
+                msg->position = m_controlEntities.previewBall.getComponent<cro::Transform>().getPosition();
 
-            m_state = Play;
-            m_controlEntities.previewBall.getComponent<cro::Model>().setHidden(true);
+                m_state = Play;
+                m_controlEntities.previewBall.getComponent<cro::Model>().setHidden(true);
+
+                m_controlEntities.previewBall.getComponent<cro::Transform>().setPosition(glm::vec3(50.f));
+            }
         }
     }
 }

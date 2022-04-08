@@ -839,6 +839,9 @@ void BilliardsState::buildScene()
     {
         md.createModel(entity);
         entity.getComponent<cro::Model>().setHidden(true);
+        entity.addComponent<BilliardBall>().id = 100;
+        //need this to work with client collision system
+        entity.addComponent<InterpolationComponent<InterpolationType::Hermite>>();
     }
     controlEntities.previewBall = entity;
     
