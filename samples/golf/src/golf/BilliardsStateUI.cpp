@@ -32,6 +32,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "CommandIDs.hpp"
 #include "PacketIDs.hpp"
+#include "NotificationSystem.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
 
@@ -257,7 +258,12 @@ void BilliardsState::createUI()
             (cro::Mouse::isButtonPressed(cro::Mouse::Button::Right)
                 || cro::GameController::isButtonPressed(m_sharedData.inputBinding.controllerID, m_sharedData.inputBinding.buttons[InputBinding::CamModifier])))
         {
-            auto pos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+            auto camPos = m_cameraController.getComponent<cro::Transform>().getPosition();
+            auto size = m_gameSceneTexture.getSize();
+            auto screenPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(camPos, size);
+            screenPos.y = size.y - screenPos.y; //expecting mouse coords which start at the top...
+
+            auto pos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(screenPos);
             pos.x = std::round(pos.x);
             pos.y = std::round(pos.y);
             pos.z = 0.1f;
@@ -334,23 +340,31 @@ void BilliardsState::showReadyNotify(const BilliardsPlayer& player)
 {
     m_wantsNotify = (player.client == m_sharedData.localConnectionData.connectionID);
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 400.f, 300.f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString(m_sharedData.connectionData[player.client].playerData[player.player].name + "'s Turn");
-    entity.addComponent<UIElement>().relativePosition= glm::vec2(0.5f);
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard | CommandID::UI::UIElement;
+    cro::String msg = m_sharedData.connectionData[player.client].playerData[player.player].name + "'s Turn";
 
     if (m_wantsNotify)
     {
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 400.f, 200.f });
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString("Press Button"); //TODO read controller/keyboard status for more meaningful string
-        entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 0.33f);
-        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MessageBoard | CommandID::UI::UIElement;
+        if (cro::GameController::getControllerCount() > 0)
+        {
+            msg += " (Press A Button)";
+        }
+        else
+        {
+            msg += " (Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + ")";
+        }
     }
+    showNotification(msg);
+}
+
+void BilliardsState::showNotification(const cro::String& msg)
+{
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 8.f, 10.f * m_viewScale.y });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI));
+    entity.getComponent<cro::Text>().setCharacterSize(8u * static_cast<std::uint32_t>(m_viewScale.y));
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+    entity.addComponent<Notification>().message = msg;
 }
 
 void BilliardsState::showGameEnd(const BilliardsPlayer& player)

@@ -37,6 +37,7 @@ source distribution.
 #include "BilliardsSystem.hpp"
 #include "BilliardsClientCollision.hpp"
 #include "InterpolationSystem.hpp"
+#include "NotificationSystem.hpp"
 #include "BilliardsSoundDirector.hpp"
 #include "server/ServerPacketData.hpp"
 #include "../ErrorCheck.hpp"
@@ -77,8 +78,8 @@ namespace
     const std::array FoulStrings =
     {
         std::string("Wrong Ball Hit"),
-        std::string("Wrong Ball Pot"),
-        std::string("Off Table"),
+        std::string("Wrong Ball Potted"),
+        std::string("Off the Table!"),
         std::string("Forfeit")
     };
 
@@ -564,6 +565,7 @@ void BilliardsState::addSystems()
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
+    m_uiScene.addSystem<NotificationSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
@@ -635,7 +637,7 @@ void BilliardsState::buildScene()
 
     //spectate cam
     auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 1.7f });
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 1.6f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
     m_cameras[CameraID::Spectate] = camEnt;
@@ -648,7 +650,7 @@ void BilliardsState::buildScene()
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
 
     auto spectateController = m_gameScene.createEntity();
-    spectateController.addComponent<cro::Transform>();
+    spectateController.addComponent<cro::Transform>().setPosition({0.f, 0.2f, 0.f});
     spectateController.addComponent<ControllerRotation>().activeCamera = &cam.active;
     spectateController.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
 
@@ -950,7 +952,7 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         {
         default: break;
         case PacketID::FoulEvent:
-            LogI << "Foul! " << FoulStrings[evt.packet.as<std::int8_t>()] << std::endl;
+            showNotification("Foul! " + FoulStrings[evt.packet.as<std::int8_t>()]);
             break;
         case PacketID::ActorAnimation:
             if (!m_remoteCue.getComponent<cro::Model>().isHidden())

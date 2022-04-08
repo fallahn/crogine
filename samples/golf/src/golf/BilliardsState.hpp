@@ -162,6 +162,7 @@ private:
     //**BilliardsStateUI.cpp**//
     void createUI();
     void showReadyNotify(const BilliardsPlayer&);
+    void showNotification(const cro::String&);
     void showGameEnd(const BilliardsPlayer&);
     void toggleQuitReady();
     void createMiniballScenes();
