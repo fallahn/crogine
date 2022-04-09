@@ -8,35 +8,47 @@ table
     {
         position = 0.47,-0.93
         value = 0
+        radius = 0.06
     }
 
     pocket
     {
         position = 0.54, 0
         value = 0
+        radius = 0.06
     }
 
     pocket
     {
         position = 0.47, 0.93
         value = 0
+        radius = 0.06
     }
 
     pocket
     {
         position = -0.47,-0.93
         value = 0
+        radius = 0.06
     }
 
     pocket
     {
         position = -0.54, 0
         value = 0
+        radius = 0.06
     }
 
     pocket
     {
         position = -0.47, 0.93
         value = 0
+        radius = 0.06
+    }
+
+    spawn
+    {
+        position = 0,-0.7
+        size = 0.45, 0.2
     }
 }

@@ -76,6 +76,8 @@ bool TableData::loadFromFile(const std::string& path)
             }
         }
 
+        //note that the cfg file gives x/y position
+        //which should be converted to x/-z
         const auto& objs = tableConfig.getObjects();
         for (const auto& obj : objs)
         {
@@ -324,7 +326,7 @@ void BilliardsSystem::initTable(const TableData& tableData)
 
     for (auto p : tableData.pockets)
     {
-        glm::vec3 pocketPos(p.position.x, -WallHeight, p.position.y);
+        glm::vec3 pocketPos(p.position.x, -WallHeight, -p.position.y);
         if (p.radius <= 0)
         {
             p.radius = Pocket::DefaultRadius;

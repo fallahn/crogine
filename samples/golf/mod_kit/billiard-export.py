@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export billiard table data",
     "author": "Bald Guy",
-    "version": (2022, 3, 14),
+    "version": (2022, 4, 9),
     "blender": (2, 80, 0),
     "location": "File > Export > Billiard Table",
     "description": "Export pocket position and model data",
@@ -31,11 +31,16 @@ def WriteProperty(file, name, value):
 
 def WritePocket(file, location, value, radius):
     file.write("    pocket\n    {\n")
-    file.write("        position = %f,%f\n" % (location[0], -location[1]))
-    file.write("        value = %f\n" % value)
+    file.write("        position = %f,%f\n" % (location[0], location[1]))
+    file.write("        value = %d\n" % value)
     file.write("        radius = %f\n" % radius)
     file.write("    }\n\n")
 
+def WriteSpawn(file, location, halfWidth, halfHeight):
+    file.write("    spawn\n    {\n")
+    file.write("        position = %f,%f\n" % (location[0], location[1]))
+    file.write("        size = %f,%f\n" % (halfWidth, halfHeight))
+    file.write("    }\n\n")    
 
 class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
     '''Export object position and rotation info'''
@@ -63,7 +68,7 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 
         for ob in bpy.context.selected_objects:
 
-            if ob.type == 'EMPTY' and ob.empty_display_type == 'CIRCLE':
+            if ob.type == 'EMPTY':
 
                 worldLocation = None
 
@@ -72,14 +77,26 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                 else:
                     worldLocation = ob.matrix_world @ ob.location
 
-                pocketValue = 0
 
-                if ob.get('value') is not None:
-                    pocketValue = ob['value']
 
-                pocketRadius = ob.empty_display_size
-                
-                WritePocket(file, worldLocation, pocketValue, pocketRadius)
+                if ob.empty_display_type == 'CIRCLE':
+
+                    pocketValue = 0
+
+                    if ob.get('value') is not None:
+                        pocketValue = ob['value']
+
+                    pocketRadius = ob.empty_display_size
+                    
+                    WritePocket(file, worldLocation, pocketValue, pocketRadius)
+
+                elif ob.empty_display_type == 'CUBE':
+
+                    halfWidth = ob.empty_display_size * ob.scale[0]
+                    halfHeight = ob.empty_display_size * ob.scale[1]
+
+                    WriteSpawn(file, worldLocation, halfWidth, halfHeight)
+
 
 
 
