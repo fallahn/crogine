@@ -100,7 +100,7 @@ namespace
 BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State        (ss, ctx),
     m_sharedData        (sd),
-    m_gameScene         (ctx.appInstance.getMessageBus()),
+    m_gameScene         (ctx.appInstance.getMessageBus(), 512),
     m_uiScene           (ctx.appInstance.getMessageBus()),
     m_inputParser       (sd.inputBinding, ctx.appInstance.getMessageBus()),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
