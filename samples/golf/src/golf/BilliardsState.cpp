@@ -80,7 +80,9 @@ namespace
         std::string("Wrong Ball Hit"),
         std::string("Wrong Ball Potted"),
         std::string("Off the Table!"),
-        std::string("Forfeit")
+        std::string("Forfeit"),
+        std::string("No Ball Hit"),
+        std::string("Cue Ball Potted")
     };
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
@@ -640,6 +642,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 1.6f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
+    camEnt.getComponent<CameraProperties>().farPlane = 7.f;
     m_cameras[CameraID::Spectate] = camEnt;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = setPerspective;
@@ -688,7 +691,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
-    camEnt.addComponent<CameraProperties>().farPlane = 5.f;
+    camEnt.addComponent<CameraProperties>().farPlane = 7.f;
     camEnt.getComponent<CameraProperties>().FOVAdjust = 0.8f; //needs to match spectate cam initial value to prevent popping
     camEnt.addComponent<cro::AudioListener>();
     m_cameras[CameraID::Transition] = camEnt;
@@ -955,7 +958,13 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         {
         default: break;
         case PacketID::FoulEvent:
-            showNotification("Foul! " + FoulStrings[evt.packet.as<std::int8_t>()]);
+        {
+            auto id = evt.packet.as<std::int8_t>();
+            if (id < FoulStrings.size())
+            {
+                showNotification("Foul! " + FoulStrings[id]);
+            }
+        }
             break;
         case PacketID::ActorAnimation:
             if (!m_remoteCue.getComponent<cro::Model>().isHidden())

@@ -41,6 +41,11 @@ namespace
     constexpr float BallHeight = 0.03f;
 }
 
+const std::array<std::string, EightballDirector::PlayerStatus::Count> EightballDirector::PlayerStatus::Strings =
+{
+    "Spots" , "Stripes", "Eightball", "None"
+};
+
 EightballDirector::EightballDirector()
     : m_cueballPosition (0.f, BallHeight, 0.57f),
     m_currentPlayer     (cro::Util::Random::value(0,1)),
@@ -89,10 +94,13 @@ void EightballDirector::handleMessage(const cro::Message& msg)
         {
             m_pocketsThisTurn.clear();
             m_firstCollision = CueBall;
+            //LogI << "/------Start-------" << std::endl;
         }
         else if (data.type == BilliardsEvent::TurnEnded)
         {
             summariseTurn();
+
+            //LogI << "/-------End-------\n\n" << std::endl;
         }
         else if (data.type == BilliardsEvent::Pocket)
         {
@@ -100,10 +108,17 @@ void EightballDirector::handleMessage(const cro::Message& msg)
         }
         else if (data.type == BilliardsEvent::Collision)
         {
-            if (data.first == CueBall
-                && m_firstCollision == CueBall)
+            
+            if (m_firstCollision == CueBall)
             {
-                m_firstCollision = data.second;
+                if (data.first == CueBall)
+                {
+                    m_firstCollision = data.second;
+                }
+                else if (data.second == CueBall)
+                {
+                    m_firstCollision = data.first;
+                }
             }
         }
         else if (data.type == BilliardsEvent::OutOfBounds)
@@ -218,8 +233,8 @@ void EightballDirector::summariseTurn()
     if (m_firstCollision == CueBall)
     {
         m_turnFlags |= TurnFlags::Foul;
-        LogI << "no ball hit" << std::endl;
-        foulType = BilliardsEvent::WrongBallHit;
+        //LogI << "no ball hit" << std::endl;
+        foulType = BilliardsEvent::NoBallHit;
     }
     else if (getStatusType(m_firstCollision) != m_playerStatus[m_currentPlayer].target)
     {
@@ -239,7 +254,7 @@ void EightballDirector::summariseTurn()
         if (id == CueBall)
         {
             m_turnFlags |= TurnFlags::Foul;
-            foulType = BilliardsEvent::WrongBallPot;
+            foulType = BilliardsEvent::CueBallPot;
             continue;
         }
 
@@ -312,7 +327,7 @@ void EightballDirector::summariseTurn()
         if (m_playerStatus[m_currentPlayer].target == PlayerStatus::Eightball)
         {
             if ((m_turnFlags & TurnFlags::Foul)
-                || m_pocketsThisTurn.back() == 8)
+                || m_pocketsThisTurn.back() != 8)
             {
                 //potted cue or another ball last
                 auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);

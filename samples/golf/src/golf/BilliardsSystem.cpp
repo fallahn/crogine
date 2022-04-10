@@ -204,7 +204,16 @@ BilliardsSystem::~BilliardsSystem()
 //public
 void BilliardsSystem::process(float dt)
 {
-    m_collisionWorld->stepSimulation(dt, 10, 1.f/120.f);
+    /*
+    Increasing the number of steps means there's a chance of
+    missing contacts when only checking at game loop speed.
+    It also messes with friction values (so requires changing
+    the body creation values to be changed). Seems OK like this
+    anyway, else we need to look at caching contacts (?) or a more
+    frequently called callback in which we can update the ball
+    contact IDs
+    */
+    m_collisionWorld->stepSimulation(dt, 10/*, 1.f/120.f*/);
 
 #ifdef CRO_DEBUG_
     m_collisionWorld->debugDrawWorld();
@@ -426,8 +435,10 @@ btRigidBody::btRigidBodyConstructionInfo BilliardsSystem::createBodyDef(std::int
         break;
     case CollisionID::Ball:
         info.m_restitution = 0.5f;
-        info.m_rollingFriction = 0.0013f;
-        info.m_spinningFriction = 0.0013f;
+        //info.m_rollingFriction = 0.0013f;
+        info.m_rollingFriction = 0.0026f;
+        //info.m_spinningFriction = 0.0013f;
+        info.m_spinningFriction = 0.0026f;
         info.m_friction = 0.15f;
         info.m_linearSleepingThreshold = 0.001f; //if this is 0 then we never sleep...
         info.m_angularSleepingThreshold = 0.001f;
@@ -449,14 +460,15 @@ void BilliardsSystem::doBallCollision() const
         if (body0->getUserIndex() == CollisionID::Ball
             && body1->getUserIndex() == CollisionID::Ball)
         {
-            auto contactCount = std::min(1, manifold->getNumContacts());
+            auto contactCount = manifold->getNumContacts();
             for (auto j = 0; j < contactCount; ++j)
             {
                 auto ballA = static_cast<BilliardBall*>(body0->getUserPointer());
                 auto ballB = static_cast<BilliardBall*>(body1->getUserPointer());
 
-                ballA->m_ballContact = ballB->id;
-                ballB->m_ballContact = ballA->id;
+                //don't overwrite any existing collision this frame
+                ballA->m_ballContact = ballA->m_ballContact == -1 ? ballB->id : ballA->m_ballContact;
+                ballB->m_ballContact = ballB->m_ballContact == -1 ? ballA->id : ballB->m_ballContact;
             }
         }
     }

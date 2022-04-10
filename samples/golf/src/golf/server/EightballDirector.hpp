@@ -55,10 +55,13 @@ private:
     {
         enum
         {
-            Spots, Stripes, Eightball, None
+            Spots, Stripes, Eightball, None,
+            Count
         };
         std::int32_t target = None;
         std::int32_t score = 0;
+
+        static const std::array<std::string, Count> Strings;
     };
     std::array<PlayerStatus, 2u> m_playerStatus = {};
     //we only track spots/stripes but pad this out to prevent out

@@ -71,6 +71,8 @@ public:
 
     const glm::quat& getSpinOffset() const { return m_spinOffset; }
 
+    bool canRotate() const { return m_active && m_state == 0; }
+
 private:
     const InputBinding& m_inputBinding;
     cro::MessageBus& m_messageBus;

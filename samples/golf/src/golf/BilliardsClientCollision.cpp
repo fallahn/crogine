@@ -197,8 +197,8 @@ void BilliardsCollisionSystem::process(float)
                 case CollisionID::Ball:
                 {
                     auto ballB = static_cast<BilliardBall*>(body1->getUserPointer());
-                    ballA->m_ballContact = ballB->id;
-                    ballB->m_ballContact = ballA->id;
+                    ballA->m_ballContact = ballA->m_ballContact == -1 ? ballB->id : ballA->m_ballContact;
+                    ballB->m_ballContact = ballB->m_ballContact == -1 ? ballA->id : ballB->m_ballContact;
                 }
                 break;
                 case CollisionID::Pocket:

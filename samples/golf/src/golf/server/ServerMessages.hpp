@@ -84,7 +84,9 @@ struct BilliardsEvent final
         WrongBallHit,
         WrongBallPot,
         OffTable,
-        Forfeit
+        Forfeit,
+        NoBallHit,
+        CueBallPot
     };
 
     std::int8_t first = -1; //ballA or foul reason

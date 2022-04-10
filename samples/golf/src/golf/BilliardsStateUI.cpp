@@ -254,7 +254,7 @@ void BilliardsState::createUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        if (m_inputParser.getActive() && 
+        if (m_inputParser.canRotate() && 
             (cro::Mouse::isButtonPressed(cro::Mouse::Button::Right)
                 || cro::GameController::isButtonPressed(m_sharedData.inputBinding.controllerID, m_sharedData.inputBinding.buttons[InputBinding::CamModifier])))
         {
