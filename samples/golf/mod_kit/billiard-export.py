@@ -55,15 +55,21 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 
         file.write("table %s\n{\n" % Path(self.properties.filepath).stem)
 
+        if scene.get('model_path') is not None:
+            file.write("    model=\"%s\"\n" % scene['model_path'])
+        else:
+            file.write("    model=\"assets/golf/models/hole_19/%s.cmt\"\n\n" % Path(self.properties.filepath).stem)
+
+
         if scene.get('collision_path') is not None:
             file.write("    collision=\"%s\"\n" % scene['collision_path'])
         else:
             file.write("    collision=\"assets/golf/models/hole_19/%s_collision.cmt\"\n" % Path(self.properties.filepath).stem)
 
-        if scene.get('model_path') is not None:
-            file.write("    model=\"%s\"\n" % scene['model_path'])
+        if scene.get('ruleset') is not None:
+            file.write("    ruleset=\"%s\"\n\n" % scene['ruleset'])
         else:
-            file.write("    model=\"assets/golf/models/hole_19/%s.cmt\"\n\n" % Path(self.properties.filepath).stem)
+            file.write("    ruleset=\"8_ball\"\n\n")
         
 
         for ob in bpy.context.selected_objects:
@@ -78,7 +84,7 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                     worldLocation = ob.matrix_world @ ob.location
 
 
-
+                #pockets
                 if ob.empty_display_type == 'CIRCLE':
 
                     pocketValue = 0
@@ -90,6 +96,7 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                     
                     WritePocket(file, worldLocation, pocketValue, pocketRadius)
 
+                #spawn area
                 elif ob.empty_display_type == 'CUBE':
 
                     halfWidth = ob.empty_display_size * ob.scale[0]

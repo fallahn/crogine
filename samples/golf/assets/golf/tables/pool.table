@@ -1,54 +1,55 @@
-table
+table pool
 {
-    model = "assets/golf/models/hole_19/pool_model.cmt"
-    collision = "assets/golf/models/hole_19/pool_collision.cmb"
-    ruleset = "8_ball"
-
-    pocket
-    {
-        position = 0.47,-0.93
-        value = 0
-        radius = 0.06
-    }
-
-    pocket
-    {
-        position = 0.54, 0
-        value = 0
-        radius = 0.06
-    }
-
-    pocket
-    {
-        position = 0.47, 0.93
-        value = 0
-        radius = 0.06
-    }
-
-    pocket
-    {
-        position = -0.47,-0.93
-        value = 0
-        radius = 0.06
-    }
-
-    pocket
-    {
-        position = -0.54, 0
-        value = 0
-        radius = 0.06
-    }
-
-    pocket
-    {
-        position = -0.47, 0.93
-        value = 0
-        radius = 0.06
-    }
+    model="assets/golf/models/hole_19/pool_model.cmt"
+    collision="assets/golf/models/hole_19/pool_collision.cmb"
+    ruleset="8_ball"
 
     spawn
     {
-        position = 0,-0.7
-        size = 0.45, 0.2
+        position = 0.000000,-0.700000
+        size = 0.450000,0.200000
     }
+
+    pocket
+    {
+        position = 0.470000,-0.930000
+        value = 0
+        radius = 0.060000
+    }
+
+    pocket
+    {
+        position = -0.470000,-0.930000
+        value = 0
+        radius = 0.060000
+    }
+
+    pocket
+    {
+        position = 0.470000,0.930000
+        value = 0
+        radius = 0.060000
+    }
+
+    pocket
+    {
+        position = -0.470000,0.930000
+        value = 0
+        radius = 0.060000
+    }
+
+    pocket
+    {
+        position = 0.540000,0.000000
+        value = 0
+        radius = 0.060000
+    }
+
+    pocket
+    {
+        position = -0.540000,0.000000
+        value = 0
+        radius = 0.060000
+    }
+
 }

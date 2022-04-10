@@ -73,7 +73,21 @@ bool TableData::loadFromFile(const std::string& path)
                 {
                     rules = static_cast<TableData::Rules>(std::distance(TableData::RuleStrings.begin(), result));
                 }
+                else
+                {
+                    LogE << "No valid rule set data found" << std::endl;
+                }
             }
+        }
+
+        if (viewModel.empty() || cro::FileSystem::getFileExtension(viewModel) != ".cmt")
+        {
+            LogE << "Invalid path to table view model" << std::endl;
+        }
+
+        if (collisionModel.empty() || cro::FileSystem::getFileExtension(collisionModel) != ".cmb")
+        {
+            LogE << "Invalid path to table collision model" << std::endl;
         }
 
         //note that the cfg file gives x/y position
