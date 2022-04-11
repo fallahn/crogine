@@ -847,8 +847,8 @@ void OptionsState::buildScene()
     createTab(statsButtonEnt, 2, MenuID::Stats);
 
 
-    /*buildAVMenu(videoEnt, spriteSheet);
-    buildControlMenu(controlEnt, spriteSheet);
+    buildAVMenu(videoEnt, spriteSheet);
+    /*buildControlMenu(controlEnt, spriteSheet);
     buildAchievementsMenu(bgEnt, spriteSheet);*/
 
 
@@ -894,6 +894,7 @@ void OptionsState::buildScene()
     m_tooltips[ToolTipID::Volume] = createToolTip("Vol: 100");
     m_tooltips[ToolTipID::FOV] = createToolTip("FOV: 60");
     m_tooltips[ToolTipID::Pixel] = createToolTip("Scale up pixels to match\nthe current resolution.");
+    m_tooltips[ToolTipID::VertSnap] = createToolTip("Snaps vertices to the nearest\nwhole pixel for a retro \'wobble\'.");
     m_tooltips[ToolTipID::Achievements] = createToolTip("Show or Hide Achievements");
     m_tooltips[ToolTipID::Stats] = createToolTip("Show Stats");
 
@@ -950,23 +951,23 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         return entity;
     };
 
-    //audio label
-    auto audioLabel = createLabel(glm::vec2(bgBounds.width / 2.f, 98.f), "Music Volume");
+    //audio label //98
+    auto audioLabel = createLabel(glm::vec2(bgBounds.width / 2.f, 129.f), "Music Volume");
     centreText(audioLabel);
 
     //FOV label
-    auto fovLabel = createLabel(glm::vec2(6.f, 59.f), "FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
+    auto fovLabel = createLabel(glm::vec2(106.f, 90.f), "FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
 
     //resolution label
-    auto resLabel = createLabel(glm::vec2(6.f, 45.f), "Resolution");
+    auto resLabel = createLabel(glm::vec2(106.f, 76.f), "Resolution");
     //centreText(resLabel);
 
     //resolution value text
-    resLabel = createLabel(glm::vec2(130.f, 45.f), m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
+    resLabel = createLabel(glm::vec2(230.f, 76.f), m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
     centreText(resLabel);
 
     //pixel scale label
-    auto pixelLabel = createLabel(glm::vec2(6.f, 31.f), "Pixel Scaling");
+    auto pixelLabel = createLabel(glm::vec2(106.f, 62.f), "Pixel Scaling");
     pixelLabel.addComponent<cro::Callback>().active = true;
     pixelLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float) mutable
@@ -974,8 +975,17 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         updateToolTip(e, ToolTipID::Pixel);
     };
 
+    //vertex snap label
+    auto vertLabel = createLabel(glm::vec2(106.f, 47.f), "Vertex Snap      (requires restart)");
+    vertLabel.addComponent<cro::Callback>().active = true;
+    vertLabel.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float) mutable
+    {
+        updateToolTip(e, ToolTipID::VertSnap);
+    };
+
     //full screen label
-    createLabel(glm::vec2(6.f, 15.f), "Full Screen");
+    createLabel(glm::vec2(106.f, 31.f), "Full Screen");
 
 
 
@@ -1006,7 +1016,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     };
 
     //volume slider
-    auto volSlider = createSlider(glm::vec2(25.f, 80.f));
+    auto volSlider = createSlider(glm::vec2(125.f, 111.f));
     auto tipEnt = m_scene.createEntity();
     tipEnt.addComponent<cro::Transform>();
     tipEnt.addComponent<cro::Callback>().active = true;
@@ -1039,7 +1049,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //fov slider
-    auto fovPos = glm::vec2(93.f, 56.f);
+    auto fovPos = glm::vec2(193.f, 87.f);
     auto fovSlider = createSlider(fovPos);
     auto userData = SliderData(fovPos, 76.f);
     userData.onActivate = 
@@ -1137,7 +1147,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     };
 
     //channel select down
-    auto entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 56.f, 89.f));
+    auto entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 56.f, 120.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&,audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
         {
@@ -1151,7 +1161,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         });
 
     //channel select up
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) + 45.f, 89.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) + 45.f, 120.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&,audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
         {
@@ -1166,15 +1176,15 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //audio down
-    entity = createHighlight(glm::vec2(7.f, 74.f));
+    entity = createHighlight(glm::vec2(107.f, 105.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(m_audioEnts[AudioID::Accept]));
 
     //audio up
-    entity = createHighlight(glm::vec2(174.f, 74.f));
+    entity = createHighlight(glm::vec2(274.f, 105.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(m_audioEnts[AudioID::Back]));
 
     //FOV down
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 21.f, 50.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 21.f, 81.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback(
             [&, fovLabel](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -1202,7 +1212,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         });
 
     //FOV up
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) + 80.f, 50.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) + 80.f, 81.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback(
             [&, fovLabel](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -1231,7 +1241,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //res down
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 21.f, 36.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 21.f, 67.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback(
             [&, resLabel](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -1246,7 +1256,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         });
 
     //res up
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) + 80.f, 36.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) + 80.f, 67.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback(
             [&, resLabel](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -1262,7 +1272,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //pixel scale check box
-    entity = createHighlight(glm::vec2(75.f, 22.f));
+    entity = createHighlight(glm::vec2(175.f, 53.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -1275,7 +1285,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //pixel scale checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(77.f, 24.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(177.f, 55.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -1293,9 +1303,41 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //vertex snap checkbox
+    entity = createHighlight(glm::vec2(175.f, 37.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    LogI << "Implement me!" << std::endl;
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    //vertex snap centre
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(177.f, 39.f, HighlightOffset));
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        /*float scale = m_videoSettings.fullScreen ? 1.f : 0.f;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));*/
+    };
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
 
     //full screen check box
-    entity = createHighlight(glm::vec2(75.f, 6.f));
+    entity = createHighlight(glm::vec2(175.f, 21.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -1308,7 +1350,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //full screen checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(77.f, 8.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(177.f, 23.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
