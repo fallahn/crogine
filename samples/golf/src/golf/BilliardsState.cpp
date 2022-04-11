@@ -516,6 +516,11 @@ void BilliardsState::loadAssets()
 {
     m_ballDefinition.loadFromFile("assets/golf/models/hole_19/billiard_ball.cmt");
 
+    std::string wobble;
+    if (m_sharedData.vertexSnap)
+    {
+        wobble = "#define WOBBLE\n";
+    }
 
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
 
@@ -523,13 +528,13 @@ void BilliardsState::loadAssets()
     m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]).blendMode = cro::Material::BlendMode::Alpha;
 
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     auto* shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Table] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define REFLECTIONS\n#define NOCHEX\n#define TEXTURED\n#define SUBRECT\n");
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define REFLECTIONS\n#define NOCHEX\n#define TEXTURED\n#define SUBRECT\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -540,7 +545,7 @@ void BilliardsState::loadAssets()
         m_resources.materials.get(m_materialIDs[MaterialID::Ball]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
     }
 
-    m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define SKINNED\n");
+    m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define SKINNED\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelSkinned);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);

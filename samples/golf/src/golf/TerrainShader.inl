@@ -256,12 +256,14 @@ static const std::string CelVertexShader = R"(
         vertPos.z += sin((u_windData.w * (yFreq)) + worldMatrix[3].z) * totalScale;
         vertPos.xz += (u_windData.xz * strength * 2.0) * totalScale;
 #else
+#if defined(WOBBLE)
         //snapping kinda ruins the wind movement
-        //vertPos.xyz /= vertPos.w;
-        //vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
-        //vertPos.xy = floor(vertPos.xy);
-        //vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
-        //vertPos.xyz *= vertPos.w;
+        vertPos.xyz /= vertPos.w;
+        vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
+        vertPos.xy = floor(vertPos.xy);
+        vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
+        vertPos.xyz *= vertPos.w;
+#endif
 #endif
         gl_Position = vertPos;
 
