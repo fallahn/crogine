@@ -90,7 +90,7 @@ private:
     std::int32_t m_bindingIndex;
     void updateKeybind(SDL_Keycode);
 
-    std::array<std::function<void()>, 2u> m_tabFunctions = {};
+    std::array<std::function<void()>, 4u> m_tabFunctions = {};
     std::size_t m_currentTabFunction;
     std::size_t m_previousMenuID;
 
@@ -104,6 +104,9 @@ private:
         };
     };
     std::array<std::function<void(cro::Entity, cro::ButtonEvent)>, ScrollID::Count> m_scrollFunctions = {};
+
+    cro::RenderTexture m_achievementBuffer;
+    cro::RenderTexture m_statsBuffer;
 
     struct ToolTipID final
     {
