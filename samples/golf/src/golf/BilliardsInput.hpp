@@ -29,12 +29,12 @@ source distribution.
 
 #pragma once
 
-#include "InputBinding.hpp"
-
 #include <crogine/core/Window.hpp>
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
+
+struct SharedStateData;
 
 struct ControllerRotation final
 {
@@ -55,7 +55,7 @@ struct ControlEntities final
 class BilliardsInput final : public cro::GuiClient
 {
 public:
-    BilliardsInput(const InputBinding&, cro::MessageBus&);
+    BilliardsInput(const SharedStateData&, cro::MessageBus&);
 
     void handleEvent(const cro::Event&);
     void update(float);
@@ -74,7 +74,7 @@ public:
     bool canRotate() const { return m_active && m_state == 0; }
 
 private:
-    const InputBinding& m_inputBinding;
+    const SharedStateData& m_sharedData;
     cro::MessageBus& m_messageBus;
 
     enum

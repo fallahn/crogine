@@ -30,6 +30,7 @@ source distribution.
 #include "BilliardsInput.hpp"
 #include "MessageIDs.hpp"
 #include "BilliardsSystem.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/MessageBus.hpp>
@@ -64,8 +65,8 @@ namespace
     glm::vec2 mouseMove(0.f);
 }
 
-BilliardsInput::BilliardsInput(const InputBinding& ip, cro::MessageBus& mb)
-    : m_inputBinding        (ip),
+BilliardsInput::BilliardsInput(const SharedStateData& sd, cro::MessageBus& mb)
+    : m_sharedData          (sd),
     m_messageBus            (mb),
     m_inputFlags            (0),
     m_prevFlags             (0),
@@ -98,64 +99,65 @@ BilliardsInput::BilliardsInput(const InputBinding& ip, cro::MessageBus& mb)
 //public
 void BilliardsInput::handleEvent(const cro::Event& evt)
 {
+    const auto& inputBinding = m_sharedData.inputBinding;
     if (evt.type == SDL_KEYDOWN)
     {
-        if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
+        if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Up])
         {
             m_inputFlags |= InputFlag::Up;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
+        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Left])
         {
             m_inputFlags |= InputFlag::Left;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
+        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Right])
         {
             m_inputFlags |= InputFlag::Right;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
+        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Down])
         {
             m_inputFlags |= InputFlag::Down;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Action])
         {
             m_inputFlags |= InputFlag::Action;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::NextClub])
         {
             m_inputFlags |= InputFlag::NextClub;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::PrevClub])
         {
             m_inputFlags |= InputFlag::PrevClub;
         }
     }
     else if (evt.type == SDL_KEYUP)
     {
-        if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
+        if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Up])
         {
             m_inputFlags &= ~InputFlag::Up;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
+        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Left])
         {
             m_inputFlags &= ~InputFlag::Left;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
+        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Right])
         {
             m_inputFlags &= ~InputFlag::Right;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
+        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Down])
         {
             m_inputFlags &= ~InputFlag::Down;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::Action])
         {
             m_inputFlags &= ~InputFlag::Action;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::NextClub])
         {
             m_inputFlags &= ~InputFlag::NextClub;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.keysym.sym == inputBinding.keys[InputBinding::PrevClub])
         {
             m_inputFlags &= ~InputFlag::PrevClub;
         }
@@ -163,21 +165,21 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
     
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
+        if (evt.cbutton.which == cro::GameController::deviceID(inputBinding.controllerID))
         {
-            if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
+            if (evt.cbutton.button == inputBinding.buttons[InputBinding::Action])
             {
                 m_inputFlags |= InputFlag::Action;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::NextClub])
+            else if (evt.cbutton.button == inputBinding.buttons[InputBinding::NextClub])
             {
                 m_inputFlags |= InputFlag::NextClub;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::PrevClub])
+            else if (evt.cbutton.button == inputBinding.buttons[InputBinding::PrevClub])
             {
                 m_inputFlags |= InputFlag::PrevClub;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CamModifier])
+            else if (evt.cbutton.button == inputBinding.buttons[InputBinding::CamModifier])
             {
                 m_inputFlags |= InputFlag::CamModifier;
             }
@@ -202,21 +204,21 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
+        if (evt.cbutton.which == cro::GameController::deviceID(inputBinding.controllerID))
         {
-            if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
+            if (evt.cbutton.button == inputBinding.buttons[InputBinding::Action])
             {
                 m_inputFlags &= ~InputFlag::Action;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::NextClub])
+            else if (evt.cbutton.button == inputBinding.buttons[InputBinding::NextClub])
             {
                 m_inputFlags &= ~InputFlag::NextClub;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::PrevClub])
+            else if (evt.cbutton.button == inputBinding.buttons[InputBinding::PrevClub])
             {
                 m_inputFlags &= ~InputFlag::PrevClub;
             }
-            else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CamModifier])
+            else if (evt.cbutton.button == inputBinding.buttons[InputBinding::CamModifier])
             {
                 m_inputFlags &= ~InputFlag::CamModifier;
             }
@@ -388,19 +390,20 @@ void BilliardsInput::checkController(float dt)
     m_analogueAmountLeft = 1.f;
     m_analogueAmountRight = 1.f;
 
-    if (!cro::GameController::isConnected(m_inputBinding.controllerID))
+    const auto& inputBinding = m_sharedData.inputBinding;
+    if (!cro::GameController::isConnected(inputBinding.controllerID))
     {
         return;
     }
 
     //triggers to set power
-    float powerUp = static_cast<float>(cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::TriggerRight)) / cro::GameController::AxisMax;
+    float powerUp = static_cast<float>(cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::TriggerRight)) / cro::GameController::AxisMax;
     if (powerUp > AnalogueDeadZone)
     {
         m_power = std::min(MaxPower, m_power + (powerUp * dt));
     }
 
-    float powerDown = static_cast<float>(cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::TriggerLeft)) / cro::GameController::AxisMax;
+    float powerDown = static_cast<float>(cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::TriggerLeft)) / cro::GameController::AxisMax;
     if (powerDown > AnalogueDeadZone)
     {
         m_power = std::max(MinPower, m_power - (powerDown * dt));
@@ -408,7 +411,7 @@ void BilliardsInput::checkController(float dt)
 
     //left stick to adjust spin
     auto startInput = m_inputFlags;
-    float xPos = cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::AxisRightX);
+    float xPos = cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::AxisRightX);
     if (xPos < -DeadZone)
     {
         m_inputFlags |= InputFlag::Left;
@@ -427,7 +430,7 @@ void BilliardsInput::checkController(float dt)
         m_inputFlags &= ~InputFlag::Right;
     }
 
-    float yPos = cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::AxisRightY);
+    float yPos = cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::AxisRightY);
     if (yPos > (DeadZone))
     {
         m_inputFlags |= InputFlag::Down;
@@ -464,14 +467,14 @@ void BilliardsInput::checkController(float dt)
     //right stick emulates mouse movement (but shouldn't overwrite it)
     if (!hasMouseMotion())
     {
-        float xMove = static_cast<float>(cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::AxisLeftX)) / cro::GameController::AxisMax;
+        float xMove = static_cast<float>(cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::AxisLeftX)) / cro::GameController::AxisMax;
 
         if (xMove > AnalogueDeadZone || xMove < -AnalogueDeadZone)
         {
             m_mouseMove.x = xMove;
         }
 
-        float yMove = static_cast<float>(cro::GameController::getAxisPosition(m_inputBinding.controllerID, cro::GameController::AxisLeftY)) / cro::GameController::AxisMax;
+        float yMove = static_cast<float>(cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::AxisLeftY)) / cro::GameController::AxisMax;
 
         if (yMove > AnalogueDeadZone || yMove < -AnalogueDeadZone)
         {
@@ -498,7 +501,9 @@ void BilliardsInput::updatePlay(float dt)
             if (m_inputFlags & InputFlag::CamModifier)
             {
                 //move cam
-                auto rotation = m_controlEntities.camera.getComponent<ControllerRotation>().rotation - CamRotationSpeed * m_mouseMove.x * m_analogueAmountLeft * dt;
+                float direction = m_sharedData.invertX ? -m_sharedData.mouseSpeed : m_sharedData.mouseSpeed;
+                auto rotation = m_controlEntities.camera.getComponent<ControllerRotation>().rotation - (CamRotationSpeed * direction * m_mouseMove.x * m_analogueAmountLeft * dt);
+                
                 if (m_clampRotation)
                 {
                     //TODO this should be the rotation of the vector between the ball
@@ -508,15 +513,19 @@ void BilliardsInput::updatePlay(float dt)
                 }
                 m_controlEntities.camera.getComponent<ControllerRotation>().rotation = rotation;
 
+                direction = m_sharedData.invertY ? -m_sharedData.mouseSpeed : m_sharedData.mouseSpeed;
+
                 auto tilt = m_controlEntities.cameraTilt.getComponent<ControllerRotation>().rotation;
-                tilt -= CamRotationSpeed * -m_mouseMove.y * m_analogueAmountLeft * dt;
+                tilt -= CamRotationSpeed * direction * -m_mouseMove.y * m_analogueAmountLeft * dt;
                 tilt = std::min(MaxTilt, std::max(MinTilt, tilt));
                 m_controlEntities.cameraTilt.getComponent<ControllerRotation>().rotation = tilt;
             }
             else
             {
                 //move cue
-                auto rotation = m_controlEntities.cue.getComponent<ControllerRotation>().rotation - CueRotationSpeed * m_mouseMove.x * m_analogueAmountLeft * dt;
+                float direction = m_sharedData.invertX ? -m_sharedData.mouseSpeed : m_sharedData.mouseSpeed;
+
+                auto rotation = m_controlEntities.cue.getComponent<ControllerRotation>().rotation - (CueRotationSpeed * direction * m_mouseMove.x * m_analogueAmountLeft * dt);
                 rotation = std::max(-MaxCueRotation, std::min(MaxCueRotation, rotation));
                 m_controlEntities.cue.getComponent<ControllerRotation>().rotation = rotation;
             }
@@ -524,12 +533,14 @@ void BilliardsInput::updatePlay(float dt)
         else if (spectateCamActive)
         {
             //rotate spectator cam
-            m_controlEntities.spectator.getComponent<ControllerRotation>().rotation -= /*CamRotationSpeed **/ m_mouseMove.x * m_analogueAmountLeft * dt;
+            float direction = m_sharedData.invertX ? -m_sharedData.mouseSpeed : m_sharedData.mouseSpeed;
+            m_controlEntities.spectator.getComponent<ControllerRotation>().rotation -= /*CamRotationSpeed **/ direction * m_mouseMove.x * m_analogueAmountLeft * dt;
         }
         else
         {
             //top down view so just rotate the camera (because the cue is attached)
-            m_controlEntities.camera.getComponent<ControllerRotation>().rotation += CamRotationSpeedFast * m_mouseMove.x * m_analogueAmountLeft * dt;
+            float direction = m_sharedData.invertX ? -m_sharedData.mouseSpeed : m_sharedData.mouseSpeed;
+            m_controlEntities.camera.getComponent<ControllerRotation>().rotation += direction * CamRotationSpeed * m_mouseMove.x * m_analogueAmountLeft * dt;
         }
     }
 

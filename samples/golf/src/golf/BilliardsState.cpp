@@ -102,7 +102,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_sharedData        (sd),
     m_gameScene         (ctx.appInstance.getMessageBus(), 512),
     m_uiScene           (ctx.appInstance.getMessageBus()),
-    m_inputParser       (sd.inputBinding, ctx.appInstance.getMessageBus()),
+    m_inputParser       (sd, ctx.appInstance.getMessageBus()),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_viewScale         (2.f),
