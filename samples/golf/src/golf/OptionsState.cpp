@@ -78,6 +78,8 @@ namespace
     constexpr float TabWindowDepth = 0.1f;
     constexpr float TabBarDepth = 0.15f;
 
+    constexpr glm::vec3 PanelPosition(4.f, 20.f, TabWindowDepth);
+
     constexpr float HighlightOffset = 0.2f;
     constexpr float TextOffset = 0.1f;
 
@@ -593,7 +595,7 @@ void OptionsState::buildScene()
 
     //video options
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, 20.f, TabWindowDepth });
+    entity.addComponent<cro::Transform>().setPosition(PanelPosition);
     entity.getComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("audio_video");
@@ -608,19 +610,18 @@ void OptionsState::buildScene()
 
     auto hideVideo = [videoEnt, videoButtonEnt]() mutable
     {
-        videoEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        videoButtonEnt.getComponent<cro::Transform>().move(glm::vec2(-10000.f));
+        videoEnt.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
+        videoButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
     };
     auto showVideo = [videoEnt, videoButtonEnt]() mutable
     {
-        videoEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        videoEnt.getComponent<cro::Transform>().setPosition(PanelPosition);
         videoButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
     };
 
     //control options
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, 20.f, TabWindowDepth });
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("input");
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -643,12 +644,12 @@ void OptionsState::buildScene()
 
     auto hideControls = [controlEnt, controlButtonEnt]() mutable
     {
-        controlEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        controlEnt.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
         controlButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
     };
     auto showControls = [controlEnt, controlButtonEnt]() mutable
     {
-        controlEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        controlEnt.getComponent<cro::Transform>().setPosition(PanelPosition);
         controlButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
     };
 
@@ -661,8 +662,7 @@ void OptionsState::buildScene()
     m_achievementBuffer.display();
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, 20.f, TabWindowDepth });
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_achievementBuffer.getTexture());
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -685,12 +685,12 @@ void OptionsState::buildScene()
 
     auto hideAchievements = [achEnt, achButtonEnt]() mutable
     {
-        achEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        achEnt.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
         achButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
     };
     auto showAchievements = [achEnt, achButtonEnt]() mutable
     {
-        achEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        achEnt.getComponent<cro::Transform>().setPosition(PanelPosition);
         achButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
     };
 
@@ -700,8 +700,7 @@ void OptionsState::buildScene()
     m_statsBuffer.display();
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, 20.f, TabWindowDepth });
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_statsBuffer.getTexture());
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -724,12 +723,12 @@ void OptionsState::buildScene()
 
     auto hideStats = [statsEnt, statsButtonEnt]() mutable
     {
-        statsEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        statsEnt.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
         statsButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
     };
     auto showStats = [statsEnt, statsButtonEnt]() mutable
     {
-        statsEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        statsEnt.getComponent<cro::Transform>().setPosition(PanelPosition);
         statsButtonEnt.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
     };
 
