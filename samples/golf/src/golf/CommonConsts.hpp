@@ -39,6 +39,9 @@ source distribution.
 
 namespace ConstVal
 {
+    static constexpr float MinMouseSpeed = 0.5f;
+    static constexpr float MaxMouseSpeed = 2.f;
+
     //max string vars for name/limiting packet size
     static constexpr std::size_t MaxStringChars = 24;
     static constexpr std::size_t MaxNameChars = 12;

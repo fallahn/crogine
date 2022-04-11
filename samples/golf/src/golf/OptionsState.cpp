@@ -67,6 +67,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 #include <sstream>
+#include <iomanip>
 
 namespace
 {
@@ -919,6 +920,7 @@ void OptionsState::buildScene()
     m_tooltips[ToolTipID::FOV] = createToolTip("FOV: 60");
     m_tooltips[ToolTipID::Pixel] = createToolTip("Scale up pixels to match\nthe current resolution.");
     m_tooltips[ToolTipID::VertSnap] = createToolTip("Snaps vertices to the nearest\nwhole pixel for a retro \'wobble\'.");
+    m_tooltips[ToolTipID::MouseSpeed] = createToolTip("1.00");
     m_tooltips[ToolTipID::Video] = createToolTip("Sound & Video Settings");
     m_tooltips[ToolTipID::Controls] = createToolTip("Controls");
     m_tooltips[ToolTipID::Achievements] = createToolTip("Achievements");
@@ -1336,7 +1338,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             {
                 if (activated(evt))
                 {
-                    LogI << "Implement me!" << std::endl;
+                    m_sharedData.vertexSnap = !m_sharedData.vertexSnap;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -1355,8 +1357,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        /*float scale = m_videoSettings.fullScreen ? 1.f : 0.f;
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));*/
+        float scale = m_sharedData.vertexSnap ? 1.f : 0.f;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -1755,20 +1757,19 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
         entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), /*std::floor*/(bounds.height / 2.f), -TextOffset });
 
-        static float test = 0.f;
         auto userData = SliderData(position);
-        userData.onActivate = [](float distance)
+        userData.onActivate = [&](float distance)
         {
             //distance = 0-1
-            test = distance;
+            m_sharedData.mouseSpeed = ConstVal::MinMouseSpeed + ((ConstVal::MaxMouseSpeed - ConstVal::MinMouseSpeed) * distance);
         };
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<SliderData>(userData);
         entity.getComponent<cro::Callback>().function =
-            [](cro::Entity e, float)
+            [&](cro::Entity e, float)
         {
             const auto& [pos, width, _] = e.getComponent<cro::Callback>().getUserData<SliderData>();
-            float amount = test;
+            float amount = (m_sharedData.mouseSpeed - ConstVal::MinMouseSpeed) / (ConstVal::MaxMouseSpeed - ConstVal::MinMouseSpeed);
 
             e.getComponent<cro::Transform>().setPosition({ pos.x + (width * amount), pos.y });
         };
@@ -1779,7 +1780,38 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         return entity;
     };
 
-    createSlider(glm::vec2(35.f, 77.f));
+    auto mouseSlider = createSlider(glm::vec2(35.f, 77.f));
+
+    auto tipEnt = m_scene.createEntity();
+    tipEnt.addComponent<cro::Transform>();
+    tipEnt.addComponent<cro::Callback>().active = true;
+    tipEnt.getComponent<cro::Callback>().function =
+        [&, mouseSlider](cro::Entity, float)
+    {
+        auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+        auto bounds = mouseSlider.getComponent<cro::Drawable2D>().getLocalBounds();
+        bounds = mouseSlider.getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+        if (bounds.contains(mousePos))
+        {
+            mousePos.x = std::floor(mousePos.x);
+            mousePos.y = std::floor(mousePos.y);
+            mousePos.z = ToolTipDepth;
+
+            m_tooltips[ToolTipID::MouseSpeed].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
+            m_tooltips[ToolTipID::MouseSpeed].getComponent<cro::Transform>().setScale(m_viewScale);
+
+            std::stringstream ss;
+            ss.precision(2);
+            ss << std::setw(2) << m_sharedData.mouseSpeed;
+            m_tooltips[ToolTipID::MouseSpeed].getComponent<cro::Text>().setString(ss.str());
+        }
+        else
+        {
+            m_tooltips[ToolTipID::MouseSpeed].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+    };
+    mouseSlider.getComponent<cro::Transform>().addChild(tipEnt.getComponent<cro::Transform>());
 
 
     auto createSquareHighlight = [&](glm::vec2 pos)
@@ -1813,7 +1845,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             if (activated(evt))
             {
-                
+                m_sharedData.mouseSpeed = std::max(ConstVal::MinMouseSpeed, m_sharedData.mouseSpeed - 0.1f);
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
@@ -1825,6 +1857,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             if (activated(evt))
             {
+                m_sharedData.mouseSpeed = std::min(ConstVal::MaxMouseSpeed, m_sharedData.mouseSpeed + 0.1f);
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         });
@@ -1836,6 +1869,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             if (activated(evt))
             {
+                m_sharedData.invertX = !m_sharedData.invertX;
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         });
@@ -1855,8 +1889,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        /*float scale = m_videoSettings.fullScreen ? 1.f : 0.f;
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));*/
+        float scale = m_sharedData.invertX ? 1.f : 0.f;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -1867,6 +1901,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             if (activated(evt))
             {
+                m_sharedData.invertY = !m_sharedData.invertY;
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         });
@@ -1885,8 +1920,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        /*float scale = m_videoSettings.fullScreen ? 1.f : 0.f;
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));*/
+        float scale = m_sharedData.invertY ? 1.f : 0.f;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }

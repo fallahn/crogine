@@ -631,6 +631,22 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.fov = std::max(MinFOV, std::min(MaxFOV, prop.getValue<float>()));
                 }
+                else if (name == "vertex_snap")
+                {
+                    m_sharedData.vertexSnap = prop.getValue<bool>();
+                }
+                else if (name == "mouse_speed")
+                {
+                    m_sharedData.mouseSpeed = std::max(ConstVal::MinMouseSpeed, std::min(ConstVal::MaxMouseSpeed, prop.getValue<float>()));
+                }
+                else if (name == "invert_x")
+                {
+                    m_sharedData.invertX = prop.getValue<bool>();
+                }
+                else if (name == "invert_y")
+                {
+                    m_sharedData.invertY = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -679,6 +695,10 @@ void GolfGame::savePreferences()
     cfg.addProperty("last_ip").setValue(m_sharedData.targetIP.toAnsiString());
     cfg.addProperty("pixel_scale").setValue(m_sharedData.pixelScale);
     cfg.addProperty("fov").setValue(m_sharedData.fov);
+    cfg.addProperty("vertex_snap").setValue(m_sharedData.vertexSnap);
+    cfg.addProperty("mouse_speed").setValue(m_sharedData.mouseSpeed);
+    cfg.addProperty("invert_x").setValue(m_sharedData.invertX);
+    cfg.addProperty("invert_y").setValue(m_sharedData.invertY);
     cfg.save(path);
 
 

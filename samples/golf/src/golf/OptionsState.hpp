@@ -113,7 +113,8 @@ private:
         enum
         {
             Volume, FOV, Pixel,
-            VertSnap, Video, Controls,
+            VertSnap, MouseSpeed,
+            Video, Controls,
             Achievements, Stats,
             Count
         };
