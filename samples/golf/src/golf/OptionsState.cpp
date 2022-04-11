@@ -178,7 +178,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_updatingKeybind   (false),
     m_lastMousePos      (0.f),
     m_bindingIndex      (-1),
-    m_currentTabFunction(1),
+    m_currentTabFunction(0),
     m_previousMenuID    (MenuID::Controls),
     m_viewScale         (2.f)
 {
@@ -259,34 +259,46 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         if (evt.cbutton.which == cro::GameController::deviceID(0))
         {
         
-        switch (evt.cbutton.button)
-        {
-        case cro::GameController::ButtonB:
-            if (!m_updatingKeybind)
+            switch (evt.cbutton.button)
             {
-                quitState();
+            default: break;
+            case cro::GameController::ButtonB:
+                if (!m_updatingKeybind)
+                {
+                    quitState();
+                }
+                else
+                {
+                    updateKeybind(SDLK_ESCAPE);
+                }
+                return false;
             }
-            else
-            {
-                updateKeybind(SDLK_ESCAPE);
-            }
-            return false;
-        case cro::GameController::ButtonLeftShoulder:
-            if (!m_updatingKeybind)
-            {
-                m_currentTabFunction = (m_currentTabFunction + (m_tabFunctions.size() - 1)) % m_tabFunctions.size();
-                m_tabFunctions[m_currentTabFunction]();
-            }
-            break;
-        case cro::GameController::ButtonRightShoulder:
-            if (!m_updatingKeybind)
-            {
-                m_currentTabFunction = (m_currentTabFunction + 1) % m_tabFunctions.size();
-                m_tabFunctions[m_currentTabFunction]();
-            }
-            break;
         }
     }
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    {
+        if (evt.cbutton.which == cro::GameController::deviceID(0))
+        {
+
+            switch (evt.cbutton.button)
+            {
+            default: break;
+            case cro::GameController::ButtonLeftShoulder:
+                if (!m_updatingKeybind)
+                {
+                    m_currentTabFunction = (m_currentTabFunction + (m_tabFunctions.size() - 1)) % m_tabFunctions.size();
+                    m_tabFunctions[m_currentTabFunction]();
+                }
+                break;
+            case cro::GameController::ButtonRightShoulder:
+                if (!m_updatingKeybind)
+                {
+                    m_currentTabFunction = (m_currentTabFunction + 1) % m_tabFunctions.size();
+                    m_tabFunctions[m_currentTabFunction]();
+                }
+                break;
+            }
+        }
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
@@ -758,8 +770,7 @@ void OptionsState::buildScene()
         showVideo();
         uiSystem.setActiveGroup(MenuID::Video);
 
-        m_currentTabFunction = 1;
-        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+        m_currentTabFunction = 0;
     };
 
     m_tabFunctions[1] = [&, hideVideo, showControls, hideAchievements, hideStats]() mutable
@@ -774,8 +785,7 @@ void OptionsState::buildScene()
 
         uiSystem.setActiveGroup(MenuID::Controls);
 
-        m_currentTabFunction = 0;
-        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        m_currentTabFunction = 1;
     };
 
     m_tabFunctions[2] = [&, hideVideo, hideControls, showAchievements, hideStats]() mutable
@@ -790,7 +800,6 @@ void OptionsState::buildScene()
         uiSystem.setActiveGroup(MenuID::Achievements);
 
         m_currentTabFunction = 2;
-        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
     };
 
     m_tabFunctions[3] = [&, hideVideo, hideControls, hideAchievements, showStats]() mutable
@@ -805,7 +814,6 @@ void OptionsState::buildScene()
         uiSystem.setActiveGroup(MenuID::Stats);
 
         m_currentTabFunction = 3;
-        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
     };
 
 
