@@ -171,6 +171,29 @@ namespace
         }
         cro::Entity audioEnt;
     };
+
+    struct ScrollCallback final
+    {
+        void operator() (cro::Entity e, float dt)
+        {
+            float target = e.getComponent<cro::Callback>().getUserData<float>();
+
+            auto rect = e.getComponent<cro::Sprite>().getTextureRect();
+            auto move = target - rect.bottom;
+
+            
+            if (std::abs(move) > 0.1f)
+            {
+                rect.bottom += move * 15.f * dt;
+            }
+            else
+            {
+                rect.bottom = target;
+                e.getComponent<cro::Callback>().active = false;
+            }
+            e.getComponent<cro::Sprite>().setTextureRect(rect);
+        }
+    };
 }
 
 OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -2044,16 +2067,22 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     m_achievementBuffer.display();
 
 
+    //set up scroll callback
+    parent.addComponent<cro::Callback>().setUserData<float>(textureRect.bottom);
+    parent.getComponent<cro::Callback>().function = ScrollCallback();
+
+
     //scroll functions (kept here to hook mouse scroll callback)
     m_scrollFunctions[ScrollID::AchUp] = [&, parent, bufferSize](cro::Entity, const cro::ButtonEvent evt) mutable
     {
         if (activated(evt))
         {
             auto rect = parent.getComponent<cro::Sprite>().getTextureRect();
-            if (rect.bottom < (bufferSize.y - rect.height))
+            auto& target = parent.getComponent<cro::Callback>().getUserData<float>();
+            if (target < (bufferSize.y - rect.height))
             {
-                rect.bottom += VerticalSpacing;
-                parent.getComponent<cro::Sprite>().setTextureRect(rect);
+                target += VerticalSpacing;
+                parent.getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         }
@@ -2063,11 +2092,12 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     {
         if (activated(evt))
         {
-            auto rect = parent.getComponent<cro::Sprite>().getTextureRect();
-            if (rect.bottom > (VerticalSpacing))
+            auto& target = parent.getComponent<cro::Callback>().getUserData<float>();
+
+            if (target > VerticalSpacing)
             {
-                rect.bottom -= VerticalSpacing;
-                parent.getComponent<cro::Sprite>().setTextureRect(rect);
+                target -= VerticalSpacing;
+                parent.getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         }
@@ -2221,16 +2251,21 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
     m_statsBuffer.display();
 
 
+    //set up scroll callback
+    parent.addComponent<cro::Callback>().setUserData<float>(textureRect.bottom);
+    parent.getComponent<cro::Callback>().function = ScrollCallback();
+
     //scroll functions (kept here to hook mouse scroll callback)
     m_scrollFunctions[ScrollID::StatUp] = [&, parent, bufferSize](cro::Entity, const cro::ButtonEvent evt) mutable
     {
         if (activated(evt))
         {
             auto rect = parent.getComponent<cro::Sprite>().getTextureRect();
-            if (rect.bottom < (bufferSize.y - rect.height))
+            auto& target = parent.getComponent<cro::Callback>().getUserData<float>();
+            if (target < (bufferSize.y - rect.height))
             {
-                rect.bottom += VerticalSpacing;
-                parent.getComponent<cro::Sprite>().setTextureRect(rect);
+                target += VerticalSpacing;
+                parent.getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         }
@@ -2240,11 +2275,12 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
     {
         if (activated(evt))
         {
-            auto rect = parent.getComponent<cro::Sprite>().getTextureRect();
-            if (rect.bottom > (VerticalSpacing))
+            auto& target = parent.getComponent<cro::Callback>().getUserData<float>();
+
+            if (target > VerticalSpacing)
             {
-                rect.bottom -= VerticalSpacing;
-                parent.getComponent<cro::Sprite>().setTextureRect(rect);
+                target -= VerticalSpacing;
+                parent.getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         }
