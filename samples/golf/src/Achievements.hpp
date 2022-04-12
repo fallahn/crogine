@@ -29,7 +29,14 @@ source distribution.
 
 #pragma once
 
+#include <crogine/graphics/Rectangle.hpp>
+
 #include <string>
+
+namespace cro
+{
+    class Texture;
+}
 
 struct StatData final
 {
@@ -53,6 +60,12 @@ struct AchievementData final
     std::uint64_t timestamp = 0;
 };
 
+struct AchievementImage final
+{
+    const cro::Texture* texture = nullptr;
+    cro::FloatRect textureRect;
+};
+
 //base class for different implementations
 class AchievementImpl
 {
@@ -66,6 +79,7 @@ public:
     virtual void awardAchievement(const std::string&) = 0;
 
     virtual const AchievementData* getAchievement(const std::string&) const { return nullptr; }
+    virtual AchievementImage getIcon(const std::string&) const = 0;
 
     virtual void setStat(const std::string&, float) {}
     virtual void setStat(const std::string&, std::int32_t) {}
@@ -89,6 +103,8 @@ public:
     static void awardAchievement(const std::string&);
 
     static const AchievementData* getAchievement(const std::string&);
+
+    static AchievementImage getIcon(const std::string&);
 
     static void setStat(const std::string&, float);
 

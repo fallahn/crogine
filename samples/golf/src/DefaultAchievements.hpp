@@ -60,6 +60,7 @@ public:
     void registerAchievement(const std::string&) override;
     void awardAchievement(const std::string&) override;
     const AchievementData* getAchievement(const std::string&) const override;
+    AchievementImage getIcon(const std::string&) const override;
     void setStat(const std::string&, std::int32_t) override;
     float incrementStat(const std::string&, std::int32_t) override;
     float incrementStat(const std::string&, float) override;

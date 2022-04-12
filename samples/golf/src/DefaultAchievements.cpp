@@ -46,6 +46,7 @@ namespace
     const cro::Time UpdateTime = cro::seconds(5.f);
 
     static constexpr glm::vec2 IconSize(242.f, 92.f);
+    static constexpr float ImageSize = 64.f;
 }
 
 DefaultAchievements::DefaultAchievements(cro::MessageBus& mb)
@@ -146,6 +147,29 @@ const AchievementData* DefaultAchievements::getAchievement(const std::string& na
         return &m_achievements.at(name);
     }
     return nullptr;
+}
+
+AchievementImage DefaultAchievements::getIcon(const std::string& name) const
+{
+    if (m_achievements.count(name) != 0)
+    {
+        std::int32_t xCount = m_texture.getSize().x / ImageSize;
+        if (xCount != 0)
+        {
+            std::int32_t idx = m_achievements.at(name).achieved ? std::max(0, m_achievements.at(name).id) : 0;
+            auto x = idx % xCount;
+            auto y = idx / xCount;
+
+            float widthNorm = ImageSize / (xCount * ImageSize);
+
+            AchievementImage icon;
+            icon.texture = &m_texture;
+            icon.textureRect = { x * widthNorm, y * widthNorm, widthNorm, widthNorm };
+
+            return icon;
+        }
+    }
+    return {};
 }
 
 void DefaultAchievements::setStat(const std::string& name, std::int32_t value)
@@ -396,7 +420,7 @@ DefaultAchievements::AchievementIcon::AchievementIcon(const AchievementData& dat
 
     m_sprite.setPosition({ 12.f, 16.f });
     m_sprite.setTexture(da.m_texture);
-    m_sprite.setTextureRect({ x * 64.f, y * 64.f, 64.f, 64.f });
+    m_sprite.setTextureRect({ x * ImageSize, y * ImageSize, ImageSize, ImageSize });
 
     setPosition({ 0.f, -IconSize.y });
 }

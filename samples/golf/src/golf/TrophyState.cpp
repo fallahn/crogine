@@ -447,7 +447,6 @@ void TrophyState::buildScene()
     iconEnt.addComponent<cro::Transform>().setPosition({ 30.f, 238.f, 0.1f });
     iconEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
     iconEnt.addComponent<cro::Drawable2D>();
-    iconEnt.addComponent<cro::Sprite>().setTexture(m_sharedData.sharedResources->textures.get("assets/images/achievements.png"));
     backgroundEnt.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
 
     auto updateText = [&, titleEnt, descEnt, dateEnt, iconEnt]() mutable
@@ -487,21 +486,17 @@ void TrophyState::buildScene()
         }
         centreText(dateEnt);
 
-        static constexpr std::size_t RowCount = 5;
-        auto x = m_trophyIndex % RowCount;
-        auto y = m_trophyIndex / RowCount;
-
-        if (hidden ||
-            !Achievements::getAchievement(AchievementStrings[m_trophyIndex])->achieved)
-        {
-            x = y = 0;
-        }
-
         static constexpr float IconWidth = 64.f;
-        glm::vec2 texSize(iconEnt.getComponent<cro::Sprite>().getTexture()->getSize());
-        cro::FloatRect textureRect(x * IconWidth, y * IconWidth, IconWidth, IconWidth);
-
-        iconEnt.getComponent<cro::Sprite>().setTextureRect(textureRect);
+        auto icon = Achievements::getIcon(AchievementStrings[m_trophyIndex]);
+        iconEnt.getComponent<cro::Drawable2D>().setTexture(icon.texture);
+        std::vector<cro::Vertex2D> verts =
+        {
+            cro::Vertex2D(glm::vec2(0.f, IconWidth), glm::vec2(icon.textureRect.left, icon.textureRect.bottom + icon.textureRect.height)),
+            cro::Vertex2D(glm::vec2(0.f), glm::vec2(icon.textureRect.left, icon.textureRect.bottom)),
+            cro::Vertex2D(glm::vec2(IconWidth), glm::vec2(icon.textureRect.left + icon.textureRect.width, icon.textureRect.bottom + icon.textureRect.height)),
+            cro::Vertex2D(glm::vec2(IconWidth, 0.f), glm::vec2(icon.textureRect.left + icon.textureRect.width, icon.textureRect.bottom))
+        };
+        iconEnt.getComponent<cro::Drawable2D>().setVertexData(verts);
     };
     updateText();
 

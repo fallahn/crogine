@@ -67,6 +67,12 @@ const AchievementData* Achievements::getAchievement(const std::string& name)
     return m_impl->getAchievement(name);
 }
 
+AchievementImage Achievements::getIcon(const std::string& name)
+{
+    CRO_ASSERT(m_impl, "Achievements have not been initialised!");
+    return m_impl->getIcon(name);
+}
+
 void Achievements::setStat(const std::string& name, float value)
 {
     CRO_ASSERT(m_impl, "Achievements have not been initialised!");
