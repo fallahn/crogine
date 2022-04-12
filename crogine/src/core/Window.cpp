@@ -94,7 +94,7 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
 
     if (!m_window)
     {
-        LogE << SDL_GetError() << std::endl;
+        cro::Logger::log(SDL_GetError(), Logger::Type::Error, Logger::Output::All);
         return false;
     }
     else
@@ -110,8 +110,8 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
 
         if (maj != 4 || min != 1)
         {
-            Logger::log("Unable to create requested context version");
-            Logger::log("Returned version was: " + std::to_string(maj) + "." + std::to_string(min));
+            Logger::log("Unable to create requested context version", Logger::Type::Error, Logger::Output::All);
+            Logger::log("Returned version was: " + std::to_string(maj) + "." + std::to_string(min), Logger::Type::Error, cro::Logger::Output::All);
 
             return false; //because our shaders will fail to compile.
         }
