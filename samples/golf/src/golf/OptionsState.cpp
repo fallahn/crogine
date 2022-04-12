@@ -898,7 +898,7 @@ void OptionsState::buildScene()
     buildAVMenu(videoEnt, spriteSheet);
     buildControlMenu(controlEnt, spriteSheet);
     buildAchievementsMenu(achEnt, spriteSheet);
-    //buildStatsMenu(statEnt, spriteSheet);
+    buildStatsMenu(statsEnt, spriteSheet);
 
     //dummy input to consume events during animation
     entity = m_scene.createEntity();
@@ -1951,6 +1951,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
 void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
 {
+    //render details to buffer
     auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     cro::SimpleText title(largeFont);
     title.setFillColour(TextNormalColour);
@@ -1967,6 +1968,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
 
     cro::SimpleQuad icon;
     icon.setScale({ 0.5f, 0.5f });
+
 
     static constexpr float VerticalSpacing = 42.f;
 
@@ -1986,9 +1988,23 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     const glm::vec2 DescOffset(40.f, 13.f);
     const glm::vec2 TSOffset(40.f, 2.f);
 
+    static constexpr float Border = 0.f;
+    const std::array Colours = { cro::Colour(std::uint8_t(107), 111, 114, 120), cro::Colour(std::uint8_t(58), 57, 65, 120) };
+    cro::SimpleVertexArray background;
+    std::vector<cro::Vertex2D> verts;
+    for (auto i = 0; i < AchievementID::Count + 1; ++i)
+    {
+        verts.emplace_back(glm::vec2(Border, VerticalSpacing * i), Colours[i % 2]);
+        verts.emplace_back(glm::vec2(bufferSize.x - Border, VerticalSpacing * i), Colours[i % 2]);
+        verts.emplace_back(glm::vec2(Border, VerticalSpacing * (i + 1)), Colours[i % 2]);
+        verts.emplace_back(glm::vec2(bufferSize.x - Border, VerticalSpacing * (i + 1)), Colours[i % 2]);
+    }
+
+    background.setVertexData(verts);
+    background.setPosition({ 0.f, -6.f });
 
     m_achievementBuffer.clear(cro::Colour::Transparent);
-
+    background.draw();
     for (auto i = 1; i < AchievementID::Count; ++i)
     {
         auto iconData = Achievements::getIcon(AchievementStrings[i]);
@@ -2025,10 +2041,10 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
 
         position.y -= VerticalSpacing;
     }
-
     m_achievementBuffer.display();
 
 
+    //scroll functions (kept here to hook mouse scroll callback)
     m_scrollFunctions[ScrollID::AchUp] = [&, parent, bufferSize](cro::Entity, const cro::ButtonEvent evt) mutable
     {
         if (activated(evt))
@@ -2058,6 +2074,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     };
 
 
+    //scroll button sprites
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ cropping.width - 18.f, cropping.height - 18.f, TextOffset });
     entity.addComponent<cro::Drawable2D>();
@@ -2115,88 +2132,58 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
 
 void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
 {
-    auto rootEnt = m_scene.createEntity();
-    rootEnt.addComponent<cro::Transform>().setPosition({ BackgroundSize.x, 0.f, 0.9f });
-    rootEnt.getComponent<cro::Transform>().setScale({ 0.f, 1.f });
-    rootEnt.addComponent<cro::Drawable2D>().setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(-BackgroundSize.x, BackgroundSize.y), BackgroundColour),
-            cro::Vertex2D(glm::vec2(-BackgroundSize.x, 0.f), BackgroundColour),
-            cro::Vertex2D(glm::vec2(0.f, BackgroundSize.y), BackgroundColour),
-            cro::Vertex2D(glm::vec2(0.f), BackgroundColour)
-        });
+    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    cro::SimpleText title(largeFont);
+    title.setFillColour(TextNormalColour);
+    title.setCharacterSize(UITextSize);
 
-    struct CallbackData final
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    cro::SimpleText desc(smallFont);
+    desc.setFillColour(TextNormalColour);
+    desc.setCharacterSize(InfoTextSize);
+
+
+    static constexpr float VerticalSpacing = 32.f;
+
+    auto bufferSize = m_statsBuffer.getSize();
+    cro::FloatRect cropping(0.f, 0.f, static_cast<float>(bufferSize.x), static_cast<float>(bufferSize.y));
+
+    bufferSize.y = static_cast<std::uint32_t>(VerticalSpacing) * (StatID::Count+ 1);
+    bufferSize.y += 4;
+    m_statsBuffer.create(bufferSize.x, bufferSize.y, false);
+
+    auto textureRect = cropping;
+    textureRect.bottom = bufferSize.y - cropping.height;
+    parent.getComponent<cro::Sprite>().setTextureRect(textureRect);
+
+    glm::vec2 position(30.f, bufferSize.y - (4 + VerticalSpacing));
+    const glm::vec2 TitleOffset(40.f, 24.f);
+    const glm::vec2 DescOffset(40.f, 13.f);
+
+
+    static constexpr float Border = 0.f;
+    const std::array Colours = { cro::Colour(std::uint8_t(107), 111, 114, 120), cro::Colour(std::uint8_t(58), 57, 65, 120) };
+    cro::SimpleVertexArray background;
+    std::vector<cro::Vertex2D> verts;
+    for (auto i = 0; i < AchievementID::Count; ++i)
     {
-        float scale = 0.f;
-        std::int32_t direction = 0;
-    };
-    rootEnt.addComponent<cro::Callback>().setUserData<CallbackData>();
-    rootEnt.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        auto& data = e.getComponent<cro::Callback>().getUserData<CallbackData>();
-        float moveTime = dt * 2.f;
-        if (data.direction == 0)
-        {
-            data.scale = std::min(1.f, data.scale + moveTime);
+        verts.emplace_back(glm::vec2(Border, VerticalSpacing * i), Colours[i % 2]);
+        verts.emplace_back(glm::vec2(bufferSize.x - Border, VerticalSpacing * i), Colours[i % 2]);
+        verts.emplace_back(glm::vec2(Border, VerticalSpacing * (i + 1)), Colours[i % 2]);
+        verts.emplace_back(glm::vec2(bufferSize.x - Border, VerticalSpacing * (i + 1)), Colours[i % 2]);
+    }
 
-            if (data.scale == 1)
-            {
-                m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Stats);
-                data.direction = 1;
-                e.getComponent<cro::Callback>().active = false;
-            }
-        }
-        else
-        {
-            data.scale = std::max(0.f, data.scale - moveTime);
+    background.setVertexData(verts);
+    background.setPosition({ 0.f, 4.f });
 
-            if (data.scale == 0)
-            {
-                m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Achievements);
-                data.direction = 0;
-                e.getComponent<cro::Callback>().active = false;
-            }
-        }
-        e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeOutCubic(data.scale), 1.f });
-    };
-
-    auto scrollNode = m_scene.createEntity();
-    scrollNode.addComponent<cro::Transform>();
-    rootEnt.getComponent<cro::Transform>().addChild(scrollNode.getComponent<cro::Transform>());
-
-    static constexpr glm::vec3 EntryPos(-194.f, 74.f, 0.1f);
-    static constexpr glm::vec3 TitleOffset(10.f, 30.f, 0.f);
-    static constexpr glm::vec3 DescOffset(10.f, 20.f, 0.f);
-    static constexpr float Spacing = 26.f;
-
-    //auto& titleFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
-    auto& descFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-
-    auto titleEnt = m_scene.createEntity();
-    titleEnt.addComponent<cro::Transform>().setPosition(EntryPos + TitleOffset);
-    titleEnt.addComponent<cro::Drawable2D>();
-    titleEnt.addComponent<cro::Text>(descFont).setCharacterSize(InfoTextSize);
-    titleEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    titleEnt.getComponent<cro::Text>().setVerticalSpacing(Spacing - InfoTextSize);
-    scrollNode.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
-    std::string titleString;
-
-    auto descEnt = m_scene.createEntity();
-    descEnt.addComponent<cro::Transform>().setPosition(EntryPos + DescOffset);
-    descEnt.addComponent<cro::Drawable2D>();
-    descEnt.addComponent<cro::Text>(descFont).setCharacterSize(InfoTextSize);
-    descEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    descEnt.getComponent<cro::Text>().setVerticalSpacing(Spacing - InfoTextSize);
-    scrollNode.getComponent<cro::Transform>().addChild(descEnt.getComponent<cro::Transform>());
-    std::string descString;
-
-    std::vector<cro::Entity> croppedEnts = { titleEnt, descEnt };
+    m_statsBuffer.clear(cro::Colour::Transparent);
+    background.draw();
     for (auto i = 0u; i < StatID::Count; ++i)
     {
         //title
-        titleString += StatLabels[i] + "\n";
+        title.setPosition(position + TitleOffset);
+        title.setString(StatLabels[i]);
+        title.draw();
 
         //value
         std::string value;
@@ -2225,155 +2212,99 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
             break;
         }
 
-        descString += value + "\n";
+        desc.setPosition(position + DescOffset);
+        desc.setString(value);
+        desc.draw();
+
+        position.y -= VerticalSpacing;
     }
-    titleEnt.getComponent<cro::Text>().setString(titleString);
-    descEnt.getComponent<cro::Text>().setString(descString);
+    m_statsBuffer.display();
 
-    auto updateCropping = [croppedEnts, scrollNode]()
+
+    //scroll functions (kept here to hook mouse scroll callback)
+    m_scrollFunctions[ScrollID::StatUp] = [&, parent, bufferSize](cro::Entity, const cro::ButtonEvent evt) mutable
     {
-        for (auto ent : croppedEnts)
+        if (activated(evt))
         {
-            cro::FloatRect crop
-            (
-                glm::vec2(-BackgroundSize.x, 0.f) - glm::vec2(ent.getComponent<cro::Transform>().getPosition()) - glm::vec2(scrollNode.getComponent<cro::Transform>().getPosition()),
-                BackgroundSize
-            );
-
-            auto scale = glm::vec2(1.f) / glm::vec2(ent.getComponent<cro::Transform>().getScale());
-            crop.left *= scale.x;
-            crop.bottom *= scale.y;
-            crop.width *= scale.x;
-            crop.height *= scale.y;
-
-            ent.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+            auto rect = parent.getComponent<cro::Sprite>().getTextureRect();
+            if (rect.bottom < (bufferSize.y - rect.height))
+            {
+                rect.bottom += VerticalSpacing;
+                parent.getComponent<cro::Sprite>().setTextureRect(rect);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
         }
     };
-    updateCropping();
 
-
-
-    //highlight
-    auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("square_highlight");
-    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-    rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    auto* uiSystem = m_scene.getSystem<cro::UISystem>();
-    auto selected = uiSystem->addCallback(
-        [entity](cro::Entity e)mutable
+    m_scrollFunctions[ScrollID::StatDown] = [&, parent](cro::Entity, const cro::ButtonEvent evt) mutable
+    {
+        if (activated(evt))
         {
-            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
-            entity.getComponent<cro::AudioEmitter>().play();
-        });
-    auto unselected = uiSystem->addCallback([entity](cro::Entity)mutable {entity.getComponent<cro::Transform>().setPosition(glm::vec3(10000.f)); });
+            auto rect = parent.getComponent<cro::Sprite>().getTextureRect();
+            if (rect.bottom > (VerticalSpacing))
+            {
+                rect.bottom -= VerticalSpacing;
+                parent.getComponent<cro::Sprite>().setTextureRect(rect);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        }
+    };
 
-    static constexpr float ScrollOffset = (Spacing + 2.f);
 
-    //scroll up
-    entity = m_scene.createEntity();
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -12.f, 92.f, 0.2f });
+    //scroll button sprites
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ cropping.width - 18.f, cropping.height - 18.f, TextOffset });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_up");
-    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Stats);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
-   
-    m_scrollFunctions[ScrollID::StatUp] = [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
-    {
-        if (activated(evt))
-        {
-            auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
-            pos.y = std::max(0.f, pos.y - ScrollOffset);
-            scrollNode.getComponent<cro::Transform>().setPosition(pos);
-
-            updateCropping();
-
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-        }
-    };
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(m_scrollFunctions[ScrollID::StatUp]);
-    rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("highlight_large");
-    rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    auto arrowSelected = uiSystem->addCallback([entity](cro::Entity e)mutable
-        {
-            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() - glm::vec3(1.f, 1.f, 0.f));
-        });
-    auto arrowUnselected = uiSystem->addCallback([entity](cro::Entity e)mutable
-        {
-            entity.getComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
-        });
-
-
-    //close
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({-206.f, 46.f, 0.2f});
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_right");
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Stats);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelected;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselected;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(
-        [rootEnt, uiSystem](cro::Entity e, const cro::ButtonEvent& evt) mutable
-        {
-            if (activated(evt))
-            {
-                uiSystem->setActiveGroup(MenuID::Dummy);
-                rootEnt.getComponent<cro::Callback>().active = true;
-            }
-        });
-    
-    /*entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        m_tooltips[ToolTipID::Stats].getComponent<cro::Text>().setString("Hide Stats");
-        updateToolTip(e, ToolTipID::Stats);
-    };*/
-    rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //scroll down
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -12.f, 4.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ cropping.width - 18.f, 8.f, TextOffset });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_down");
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Stats);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    
-    m_scrollFunctions[ScrollID::StatDown] = [&, scrollNode, updateCropping](cro::Entity, const cro::ButtonEvent evt) mutable
-    {
-        if (activated(evt))
+
+    auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
+    auto selectedID = uiSystem.addCallback([](cro::Entity e)
         {
-            static constexpr float MaxScroll = ScrollOffset * (StatID::Count - 4);
-            auto pos = scrollNode.getComponent<cro::Transform>().getPosition();
-            pos.y = std::min(MaxScroll, pos.y + ScrollOffset);
-            scrollNode.getComponent<cro::Transform>().setPosition(pos);
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+            e.getComponent<cro::Callback>().active = true;
+        });
+    auto unselectedID = uiSystem.addCallback([](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
 
-            updateCropping();
+    auto createHighlight = [&](glm::vec2 pos)
+    {
+        auto ent = m_scene.createEntity();
+        ent.addComponent<cro::Transform>().setPosition(pos);
+        ent.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        ent.addComponent<cro::Drawable2D>();
+        ent.addComponent<cro::Sprite>() = spriteSheet.getSprite("square_highlight");
+        ent.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        ent.addComponent<cro::UIInput>().setGroup(MenuID::Stats);
+        auto bounds = ent.getComponent<cro::Sprite>().getTextureBounds();
+        ent.getComponent<cro::UIInput>().area = bounds;
+        ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+        ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
 
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-        }
+        ent.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+        ent.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -HighlightOffset });
+        ent.getComponent<cro::Transform>().move({ bounds.width / 2.f, bounds.height / 2.f });
+
+        parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+
+        return ent;
     };
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem->addCallback(m_scrollFunctions[ScrollID::StatDown]);
-    rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto upHighlight = createHighlight({ cropping.width - 19.f, cropping.height - 19.f });
+    upHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(m_scrollFunctions[ScrollID::StatUp]);
+
+    auto downHighlight = createHighlight({ cropping.width - 19.f, 7.f });
+    downHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(m_scrollFunctions[ScrollID::StatDown]);
 }
 
 void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::uint32_t selectedID, std::uint32_t unselectedID, const cro::SpriteSheet& spriteSheet)
