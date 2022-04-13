@@ -847,7 +847,7 @@ void BilliardsState::buildScene()
     {
         md.createModel(entity);
         entity.getComponent<cro::Model>().setHidden(true);
-        entity.addComponent<BilliardBall>().id = 100;
+        entity.addComponent<BilliardBall>().id = -1;
         //need this to work with client collision system
         entity.addComponent<InterpolationComponent<InterpolationType::Hermite>>();
     }
@@ -962,6 +962,17 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::TargetID:
+        {
+            auto data = evt.packet.as<std::uint16_t>();
+            auto playerID = (data & 0xff00) >> 8;
+            auto ballID = (data & 0x00ff);
+            if (playerID < 2)
+            {
+                updateTargetTexture(playerID, ballID);
+            }
+        }
+            break;
         case PacketID::FoulEvent:
         {
             auto id = evt.packet.as<std::int8_t>();

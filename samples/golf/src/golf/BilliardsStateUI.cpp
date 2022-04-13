@@ -139,7 +139,7 @@ void BilliardsState::createUI()
 
     auto& menuFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
-    auto createText = [&](const std::string& str, glm::vec2 relPos)
+    auto createText = [&](const std::string& str, glm::vec2 relPos, glm::vec2 absPos)
     {
         auto ent = m_uiScene.createEntity();
         ent.addComponent<cro::Transform>();
@@ -148,6 +148,7 @@ void BilliardsState::createUI()
         ent.getComponent<cro::Text>().setCharacterSize(UITextSize);
         ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
         ent.addComponent<UIElement>().relativePosition = relPos;
+        ent.getComponent<UIElement>().absolutePosition = absPos;
         ent.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
 
         centreText(ent);
@@ -158,11 +159,12 @@ void BilliardsState::createUI()
 
     auto createPowerBar = [&](std::int32_t playerIndex)
     {
-        static constexpr std::array Positions = { glm::vec2(0.13f, 0.9f), glm::vec2(1.f - 0.13f, 0.9f) };
+        static constexpr std::array Positions = { glm::vec2(0.13f, 1.f), glm::vec2(1.f - 0.13f, 1.f) };
 
         auto ent = m_uiScene.createEntity();
         ent.addComponent<cro::Transform>().setRotation((-90.f * cro::Util::Const::degToRad) + ((180.f * playerIndex) * cro::Util::Const::degToRad));
         ent.addComponent<UIElement>().relativePosition = Positions[playerIndex];
+        ent.getComponent<UIElement>().absolutePosition = { 0.f, -22.f };
         ent.getComponent<UIElement>().depth = 0.1f;
         ent.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
 
@@ -190,7 +192,7 @@ void BilliardsState::createUI()
         ent = m_uiScene.createEntity();
         ent.addComponent<cro::Transform>().setScale({1.f, -1.f});
         ent.addComponent<UIElement>().relativePosition = Positions[playerIndex];
-        ent.getComponent<UIElement>().absolutePosition = { 0.f, -6.f };
+        ent.getComponent<UIElement>().absolutePosition = { 0.f, -30.f };
         ent.getComponent<UIElement>().depth = 0.1f;
         ent.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::StrengthMeter;
         ent.addComponent<cro::Callback>().setUserData<const std::int32_t>(playerIndex);
@@ -221,8 +223,9 @@ void BilliardsState::createUI()
     };
 
     static constexpr float NameVertPos = 0.95f;
+    static constexpr float NameVertOffset = -4.f;
     static constexpr float NameHorPos = 0.13f;
-    createText(m_sharedData.connectionData[0].playerData[0].name, glm::vec2(NameHorPos, NameVertPos));
+    createText(m_sharedData.connectionData[0].playerData[0].name, glm::vec2(NameHorPos, 1.f), glm::vec2(0.f, NameVertOffset));
     if (m_sharedData.clientConnection.connectionID == 0)
     {
         createPowerBar(0);
@@ -230,12 +233,12 @@ void BilliardsState::createUI()
 
     if (m_sharedData.connectionData[0].playerCount == 2)
     {
-        createText(m_sharedData.connectionData[0].playerData[1].name, glm::vec2(1.f - NameHorPos, NameVertPos));
+        createText(m_sharedData.connectionData[0].playerData[1].name, glm::vec2(1.f - NameHorPos, 1.f), glm::vec2(0.f, NameVertOffset));
         createPowerBar(1);
     }
     else
     {
-        createText(m_sharedData.connectionData[1].playerData[0].name, glm::vec2(1.f - NameHorPos, NameVertPos));
+        createText(m_sharedData.connectionData[1].playerData[0].name, glm::vec2(1.f - NameHorPos, 1.f), glm::vec2(0.f, NameVertOffset));
 
         if (m_sharedData.clientConnection.connectionID == 1)
         {
@@ -277,9 +280,15 @@ void BilliardsState::createUI()
     };
     auto rotateEnt = entity;
 
+    //shaded window bars - updated by callback below
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.5f });
+    entity.addComponent<cro::Drawable2D>();
+    auto infoEnt = entity;
+
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
-    auto updateView = [&, rootNode, backgroundEnt, topspinEnt, targetEnt0, targetEnt1, rotateEnt](cro::Camera& cam) mutable
+    auto updateView = [&, rootNode, backgroundEnt, infoEnt, topspinEnt, targetEnt0, targetEnt1, rotateEnt](cro::Camera& cam) mutable
     {
         auto windowSize = GolfGame::getActiveTarget()->getSize();
         glm::vec2 size(windowSize);
@@ -327,6 +336,29 @@ void BilliardsState::createUI()
             e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+        //update the overlay (top/bottom bar)
+        const auto uiSize = size / m_viewScale;
+        auto colour = cro::Colour(0.f, 0.f, 0.f, 0.25f);
+        infoEnt.getComponent<cro::Drawable2D>().getVertexData() =
+        {
+            //bottom bar
+            cro::Vertex2D(glm::vec2(0.f, UIBarHeight), colour),
+            cro::Vertex2D(glm::vec2(0.f), colour),
+            cro::Vertex2D(glm::vec2(uiSize.x, UIBarHeight), colour),
+            cro::Vertex2D(glm::vec2(uiSize.x, 0.f), colour),
+            //degen
+            cro::Vertex2D(glm::vec2(uiSize.x, 0.f), cro::Colour::Transparent),
+            cro::Vertex2D(glm::vec2(0.f, uiSize.y), cro::Colour::Transparent),
+            //top bar
+            cro::Vertex2D(glm::vec2(0.f, uiSize.y), colour),
+            cro::Vertex2D(glm::vec2(0.f, uiSize.y - UIBarHeight), colour),
+            cro::Vertex2D(uiSize, colour),
+            cro::Vertex2D(glm::vec2(uiSize.x, uiSize.y - UIBarHeight), colour),
+        };
+        infoEnt.getComponent<cro::Drawable2D>().updateLocalBounds();
+        infoEnt.getComponent<cro::Transform>().setScale(m_viewScale);
     };
 
     entity = m_uiScene.createEntity();
@@ -359,7 +391,7 @@ void BilliardsState::showReadyNotify(const BilliardsPlayer& player)
 void BilliardsState::showNotification(const cro::String& msg)
 {
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 8.f, 10.f * m_viewScale.y });
+    entity.addComponent<cro::Transform>().setPosition({ 8.f, 12.f * m_viewScale.y });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI));
     entity.getComponent<cro::Text>().setCharacterSize(8u * static_cast<std::uint32_t>(m_viewScale.y));

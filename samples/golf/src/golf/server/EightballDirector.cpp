@@ -211,7 +211,7 @@ std::int32_t EightballDirector::getStatusType(std::int8_t ballID) const
     case 5:
     case 6:
     case 7:
-        return PlayerStatus::Stripes;
+        return PlayerStatus::Spots;
     case 8:
         return PlayerStatus::Eightball;
     case 9:
@@ -221,7 +221,7 @@ std::int32_t EightballDirector::getStatusType(std::int8_t ballID) const
     case 13:
     case 14:
     case 15:
-        return PlayerStatus::Spots;
+        return PlayerStatus::Stripes;
     }
 }
 
@@ -299,6 +299,16 @@ void EightballDirector::summariseTurn()
             m_playerStatus[m_currentPlayer].target = PlayerStatus::Spots;
             m_playerStatus[(m_currentPlayer + 1) % 2].target = PlayerStatus::Stripes;
         }
+
+        auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+        msg->type = BilliardsEvent::TargetAssigned;
+        msg->first = 0;
+        msg->second = (9 * m_playerStatus[0].target) + 1;
+
+        msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+        msg->type = BilliardsEvent::TargetAssigned;
+        msg->first = 1;
+        msg->second = (9 * m_playerStatus[1].target) + 1;
     }
     //else check if the score bumps us up to eightball target
     else if (m_playerStatus[m_currentPlayer].target != PlayerStatus::Eightball)

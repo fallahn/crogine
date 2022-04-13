@@ -75,7 +75,8 @@ struct BilliardsEvent final
         TurnEnded,
         PlayerSwitched,
         GameEnded,
-        Foul
+        Foul,
+        TargetAssigned
     }type = Collision;
 
     enum

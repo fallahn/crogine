@@ -82,6 +82,12 @@ void BilliardsState::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case BilliardsEvent::TargetAssigned:
+        {
+            std::uint16_t packetData = (data.first << 8) | data.second;
+            m_sharedData.host.broadcastPacket(PacketID::TargetID, packetData, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+            break;
         case BilliardsEvent::PlayerSwitched:
             setNextPlayer(true);
             break;

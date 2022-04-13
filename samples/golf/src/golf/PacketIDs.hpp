@@ -87,6 +87,7 @@ namespace PacketID
         WindDirection, //< compressed vec3
         BallLanded, //< BallUpdate struct
         TableInfo, //< TableInfo struct
+        TargetID, //< uint16 billiards player OR'd ball ID to update the UI
 
         EntityRemoved, //< uint32 entity ID
         ReadyQuitStatus, //< uint8 flags containing status of ready/quit at round end

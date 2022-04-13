@@ -772,35 +772,6 @@ void GolfState::buildUI()
     cam.resizeCallback = updateView;
     updateView(cam);
     m_uiScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 5.f });
-
-    //camera for rendering player reflection
-    //wow all this effort I went to now unused... >.<
-    //imma just leave it here as a tribute.
-
-    //auto reflectionResize = [&](cro::Camera& cam)
-    //{
-    //    auto s = glm::vec2(m_gameSceneTexture.getSize());
-    //    auto s2 = glm::vec2(GolfGame::getActiveTarget()->getSize());
-    //    auto diff = (s - s2) / 2.f;
-    //    auto diffScaled = ((s - (s2 / m_viewScale)) / 2.f) * m_viewScale.y;
-
-    //    cam.setOrthographic(-diff.x, s.x - diff.x, -diffScaled.y, s.y - diffScaled.y, -2.f, 10.f);
-
-    //    float vpW = 1.f / m_viewScale.x;
-    //    float vpH = 1.f / m_viewScale.y;
-    //    cam.viewport = { (1.f - vpW) / 2.f, 0.f, vpW, vpH };
-    //};
-    ////we'll manually set the drawlist for this cam to prevent unnecessary
-    ////sorting at run-time.
-    //entity = m_uiScene.createEntity();
-    //entity.addComponent<cro::Transform>();
-    //auto& uiCam = entity.addComponent<cro::Camera>();
-    //uiCam.resizeCallback = reflectionResize;
-    //uiCam.renderFlags = RenderFlags::Reflection;
-    //uiCam.active = false;
-    //uiCam.getDrawList(cro::Camera::Pass::Final)[m_uiScene.getSystem<cro::RenderSystem2D>()->getType()] = std::make_any<std::vector<cro::Entity>>(reflectionList);
-    //reflectionResize(uiCam);
-    //m_uiReflectionCam = entity;
 }
 
 void GolfState::showCountdown(std::uint8_t seconds)
