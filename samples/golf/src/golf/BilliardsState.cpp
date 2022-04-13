@@ -1188,11 +1188,16 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
 
     if (m_cueball.isValid())
     {
+        data.camTarget = m_cueball.getComponent<cro::Transform>().getPosition();
+        
         if (result != balls.end())
         {
-            lookAtPosition = result->getComponent<cro::Transform>().getPosition();
+            //don't look at cueball or ghost ball
+            if (result->getComponent<BilliardBall>().id > 0)
+            {
+                lookAtPosition = result->getComponent<cro::Transform>().getPosition();
+            }
         }
-        data.camTarget = m_cueball.getComponent<cro::Transform>().getPosition();
     }
     else
     {
