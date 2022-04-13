@@ -397,6 +397,7 @@ void BilliardsState::showNotification(const cro::String& msg)
     entity.getComponent<cro::Text>().setCharacterSize(8u * static_cast<std::uint32_t>(m_viewScale.y));
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<Notification>().message = msg;
+    entity.getComponent<Notification>().speed = 2.f;
 }
 
 void BilliardsState::showGameEnd(const BilliardsPlayer& player)

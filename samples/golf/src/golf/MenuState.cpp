@@ -125,6 +125,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     std::fill(m_avatarIndices.begin(), m_avatarIndices.end(), 0);    
     std::fill(m_hairIndices.begin(), m_hairIndices.end(), 0);    
 
+    Achievements::setActive(true);
     
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {

@@ -438,7 +438,7 @@ btRigidBody::btRigidBodyConstructionInfo BilliardsSystem::createBodyDef(std::int
         //info.m_rollingFriction = 0.0013f;
         info.m_rollingFriction = 0.0025f;
         //info.m_spinningFriction = 0.0013f;
-        info.m_spinningFriction = 0.0026f;
+        info.m_spinningFriction = 0.00066f;
         //info.m_friction = 0.15f;
         info.m_friction = 0.25f;
         info.m_linearSleepingThreshold = 0.001f; //if this is 0 then we never sleep...

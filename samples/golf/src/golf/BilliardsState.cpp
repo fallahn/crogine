@@ -77,12 +77,13 @@ namespace
 
     const std::array FoulStrings =
     {
-        std::string("Wrong Ball Hit"),
-        std::string("Wrong Ball Potted"),
-        std::string("Off the Table!"),
-        std::string("Forfeit"),
-        std::string("No Ball Hit"),
-        std::string("Cue Ball Potted")
+        std::string("Foul! Wrong Ball Hit"),
+        std::string("Foul! Wrong Ball Potted"),
+        std::string("Foul! Off the Table!"),
+        std::string("Game Forfeit"),
+        std::string("Foul! No Ball Hit"),
+        std::string("Cue Ball Potted"),
+        std::string("Free Table")
     };
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
@@ -122,6 +123,8 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
         });
 
     ctx.mainWindow.setMouseCaptured(true);
+
+    Achievements::setActive(sd.localConnectionData.playerCount == 1);
 
 #ifdef CRO_DEBUG_
     //registerWindow([&]() 
@@ -978,7 +981,7 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
             auto id = evt.packet.as<std::int8_t>();
             if (id < FoulStrings.size())
             {
-                showNotification("Foul! " + FoulStrings[id]);
+                showNotification(FoulStrings[id]);
             }
         }
             break;
@@ -1269,6 +1272,7 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
             if (playerInfo.client == m_sharedData.localConnectionData.connectionID)
             {
                 m_inputParser.setActive(true, !m_cueball.isValid());
+                m_uiScene.getSystem<NotificationSystem>()->clearCurrent();
                 m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[playerInfo.player];
 
                 m_localCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::In;
@@ -1297,10 +1301,10 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
 
 void BilliardsState::sendReadyNotify()
 {
+    m_uiScene.getSystem<NotificationSystem>()->clearCurrent();
+
     if (m_wantsNotify)
     {
-        m_uiScene.getSystem<NotificationSystem>()->clearCurrent();
-
         m_wantsNotify = false;
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::TurnReady, m_sharedData.localConnectionData.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }

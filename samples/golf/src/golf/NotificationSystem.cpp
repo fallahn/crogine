@@ -60,7 +60,9 @@ void NotificationSystem::process(float dt)
         default: break;
         case Notification::In:
         {
-            notification.currentTime += dt;
+            CRO_ASSERT(notification.speed > 0, "");
+            notification.currentTime += (dt * notification.speed);
+
             if (notification.currentTime > CharTime)
             {
                 notification.currentTime -= CharTime;
@@ -86,7 +88,9 @@ void NotificationSystem::process(float dt)
             break;
         case Notification::Out:
         {
-            notification.currentTime += dt;
+            CRO_ASSERT(notification.speed > 0, "");
+            notification.currentTime += (dt * notification.speed);
+
             if (notification.currentTime > CharTime)
             {
                 notification.currentTime -= CharTime;
@@ -110,7 +114,10 @@ void NotificationSystem::clearCurrent()
     if (!getEntities().empty())
     {
         auto& notification = getEntities()[0].getComponent<Notification>();
-        notification.state = Notification::Out;
-        notification.currentTime = 0.f;
+        if (notification.state != Notification::In)
+        {
+            notification.state = Notification::Out;
+            notification.currentTime = 0.f;
+        }
     }
 }

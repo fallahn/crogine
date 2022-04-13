@@ -77,7 +77,8 @@ private:
         {
             Foul      = 0x01,
             Forfeit   = 0x02,
-            Eightball = 0x04
+            Eightball = 0x04,
+            FreeTable = 0x08
         };
     };
     std::uint8_t m_turnFlags;

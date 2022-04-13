@@ -36,6 +36,7 @@ struct Notification final
 {
     cro::String message;
     std::size_t charPosition = 0;
+    float speed = 1.f;
 
     enum
     {

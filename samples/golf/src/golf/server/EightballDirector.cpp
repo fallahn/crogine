@@ -239,7 +239,8 @@ void EightballDirector::summariseTurn()
     else if (getStatusType(m_firstCollision) != m_playerStatus[m_currentPlayer].target)
     {
         //hit the wrong ball first
-        if (m_playerStatus[m_currentPlayer].target != PlayerStatus::None)
+        if (m_playerStatus[m_currentPlayer].target != PlayerStatus::None
+            && ((m_turnFlags & TurnFlags::FreeTable) == 0))
         {
             m_turnFlags |= TurnFlags::Foul;
 
@@ -264,8 +265,9 @@ void EightballDirector::summariseTurn()
             m_potCount[status]++;
 
             //if player has a target but it doesn't match, foul
-            if (m_playerStatus[m_currentPlayer].target != PlayerStatus::None
+            if ((m_playerStatus[m_currentPlayer].target != PlayerStatus::None
                 && m_playerStatus[m_currentPlayer].target != status)
+                && (m_turnFlags & TurnFlags::FreeTable) == 0)
             {
                 m_turnFlags |= TurnFlags::Foul;
                 foulType = BilliardsEvent::WrongBallPot;
@@ -357,12 +359,15 @@ void EightballDirector::summariseTurn()
     else
     {
         //check if we should move to next player
-        if ((m_turnFlags & TurnFlags::Foul) || m_pocketsThisTurn.empty())
+        if ((m_turnFlags & TurnFlags::Foul) 
+            ||( m_pocketsThisTurn.empty()
+              && (m_turnFlags & TurnFlags::FreeTable) == 0))
         {
             m_currentPlayer = (m_currentPlayer + 1) % 2;
         }
 
         //delete cueball if a foul so player resets
+        //TODO this should be a player choice...
         if (m_turnFlags & TurnFlags::Foul)
         {
             getScene().destroyEntity(getCueball());
@@ -386,16 +391,28 @@ void EightballDirector::summariseTurn()
 
                 e.getComponent<cro::Callback>().active = false;
                 getScene().destroyEntity(e);
+
+                //this should notify clients
+                if (m_turnFlags == TurnFlags::FreeTable)
+                {
+                    auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+                    msg->type = BilliardsEvent::Foul;
+                    msg->first = BilliardsEvent::FreeTable;
+                }
             }
         };
     }
+
+    std::uint8_t nextFlags = 0;
 
     if (m_turnFlags & TurnFlags::Foul)
     {
         auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
         msg->type = BilliardsEvent::Foul;
         msg->first = foulType;
+
+        nextFlags = TurnFlags::FreeTable;
     }
 
-    m_turnFlags = 0;
+    m_turnFlags = nextFlags;
 }
