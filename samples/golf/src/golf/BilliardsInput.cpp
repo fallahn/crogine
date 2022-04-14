@@ -77,11 +77,11 @@ BilliardsInput::BilliardsInput(const SharedStateData& sd, cro::MessageBus& mb)
     m_analogueAmountRight   (1.f),
     m_active                (false),
     m_clampRotation         (true),
+    m_maxRotation           (cro::Util::Const::PI / 2.f),
     m_power                 (0.5f),
     m_topSpin               (0.f),
     m_sideSpin              (0.f),
-    m_spinOffset            (1.f, 0.f, 0.f, 0.f),
-    m_basePosition          (0.f)
+    m_spinOffset            (1.f, 0.f, 0.f, 0.f)
 {
 #ifdef CRO_DEBUG_
     /*registerWindow([&]()
@@ -342,10 +342,9 @@ void BilliardsInput::setActive(bool active, bool placeBall)
     if (placeBall)
     {
         m_state = PlaceBall;
-        m_basePosition = m_controlEntities.camera.getComponent<cro::Transform>().getPosition();
 
         m_controlEntities.previewBall.getComponent<cro::Model>().setHidden(false);
-        m_controlEntities.previewBall.getComponent<cro::Transform>().setPosition(m_basePosition);
+        m_controlEntities.previewBall.getComponent<cro::Transform>().setPosition(m_controlEntities.camera.getComponent<cro::Transform>().getPosition());
     }
     else
     {
@@ -508,8 +507,8 @@ void BilliardsInput::updatePlay(float dt)
                 {
                     //TODO this should be the rotation of the vector between the ball
                     //and the cue line
-                    static constexpr float MaxRotation = (cro::Util::Const::PI / 2.f) - MaxCueRotation;
-                    rotation = std::max(-MaxRotation, std::min(MaxRotation, rotation));
+                    //static constexpr float MaxRotation = (cro::Util::Const::PI / 2.f) - MaxCueRotation;
+                    rotation = std::max(-m_maxRotation, std::min(m_maxRotation, rotation));
                 }
                 m_controlEntities.camera.getComponent<ControllerRotation>().rotation = rotation;
 
@@ -638,17 +637,12 @@ void BilliardsInput::updatePlaceBall(float dt)
         m_controlEntities.previewBall.getComponent<cro::Transform>().move(movement * 0.3f * dt);
         auto newPos = m_controlEntities.previewBall.getComponent<cro::Transform>().getPosition();
 
-        //clamp to radius
-        static constexpr float Radius = 0.07f;
-        static constexpr float MaxRadius = Radius * Radius;
-        auto diff = m_basePosition - newPos;
-        if (float len2 = glm::length2(diff); len2 > MaxRadius)
-        {
-            diff /= std::sqrt(len2);
-            diff *= Radius;
-            newPos = m_basePosition - diff;
-            m_controlEntities.previewBall.getComponent<cro::Transform>().setPosition(newPos);
-        }
+        //clamp to spawn
+        CRO_ASSERT(m_spawnArea.width > 0 && m_spawnArea.height > 0, "");
+        newPos.x = std::max(m_spawnArea.left, std::min(newPos.x, m_spawnArea.left + m_spawnArea.width));
+        newPos.z = std::max(-m_spawnArea.bottom - m_spawnArea.height, std::min(newPos.z, -m_spawnArea.bottom));
+
+        m_controlEntities.previewBall.getComponent<cro::Transform>().setPosition(newPos);
         m_controlEntities.camera.getComponent<cro::Transform>().setPosition(newPos);
 
         auto flagDiff = m_prevFlags ^ m_inputFlags;
@@ -664,8 +658,15 @@ void BilliardsInput::updatePlaceBall(float dt)
 
                 m_state = Play;
                 m_controlEntities.previewBall.getComponent<cro::Model>().setHidden(true);
-
                 m_controlEntities.previewBall.getComponent<cro::Transform>().setPosition(glm::vec3(50.f));
+
+
+                //calc the max rotation so we can't shoot behind the line
+                glm::vec2 ballVec(msg->position.x, msg->position.z);
+                glm::vec2 lineVec(m_spawnArea.left + m_spawnArea.width, -m_spawnArea.bottom - m_spawnArea.height);
+                glm::vec2 direction = lineVec - ballVec;
+
+                m_maxRotation = (cro::Util::Const::PI / 2.f) + std::atan2(direction.y, direction.x) - MaxCueRotation;
             }
         }
     }

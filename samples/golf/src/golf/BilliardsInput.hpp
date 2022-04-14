@@ -63,6 +63,7 @@ public:
     void setActive(bool active, bool placeCueball);
     bool getActive() const { return m_active; }
     void setControlEntities(ControlEntities);
+    void setSpawnArea(cro::FloatRect area) { m_spawnArea = area; }
 
     std::pair<glm::vec3, glm::vec3> getImpulse() const;
 
@@ -93,6 +94,7 @@ private:
 
     bool m_active;
     bool m_clampRotation;
+    float m_maxRotation;
 
     float m_power;
     float m_topSpin;
@@ -100,7 +102,7 @@ private:
     glm::quat m_spinOffset;
 
     ControlEntities m_controlEntities;
-    glm::vec3 m_basePosition;
+    cro::FloatRect m_spawnArea;
 
     bool hasMouseMotion() const;
 

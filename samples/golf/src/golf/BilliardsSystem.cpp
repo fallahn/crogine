@@ -118,8 +118,32 @@ bool TableData::loadFromFile(const std::string& path)
                     }
                 }
             }
+            else if (name == "spawn")
+            {
+                glm::vec2 size = glm::vec2(0.f);
+                glm::vec2 position = glm::vec2(0.f);
+
+                const auto& spawnProps = obj.getProperties();
+                for (const auto& prop : spawnProps)
+                {
+                    const auto& name = prop.getName();
+                    if (name == "position")
+                    {
+                        position = prop.getValue<glm::vec2>();
+                    }
+                    else if (name == "size")
+                    {
+                        size = prop.getValue<glm::vec2>();
+                    }
+                }
+
+                spawnArea.left = position.x - size.x;
+                spawnArea.bottom = position.y - size.y;
+                spawnArea.width = size.x * 2.f;
+                spawnArea.height = size.y * 2.f;
+            }
         }
-        return !viewModel.empty() && !collisionModel.empty() && !pockets.empty() && rules != TableData::Void;
+        return !viewModel.empty() && !collisionModel.empty() && !pockets.empty() && rules != TableData::Void && spawnArea.width > 0 && spawnArea.height > 0;
     }
     return false;
 }

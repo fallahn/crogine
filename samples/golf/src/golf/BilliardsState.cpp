@@ -606,6 +606,7 @@ void BilliardsState::buildScene()
         m_gameMode = tableData.rules;
 
         m_gameScene.getSystem<BilliardsCollisionSystem>()->initTable(tableData);
+        m_inputParser.setSpawnArea(tableData.spawnArea);
     }
     else
     {

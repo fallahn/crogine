@@ -88,6 +88,7 @@ struct TableData final
     std::string collisionModel;
     std::string viewModel;
     std::vector<PocketInfo> pockets;
+    cro::FloatRect spawnArea;
 
     enum Rules
     {
