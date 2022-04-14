@@ -2838,6 +2838,9 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                 {
                     showNotification("Hole was drawn");
                 }
+
+                auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                msg->type = GolfEvent::HoleDrawn;
             }
             else
             {

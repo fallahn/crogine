@@ -85,6 +85,10 @@ private:
             ScoreHole,
             ScorePar,
             ScoreHIO,
+            ScoreInOne,
+
+            Draw01,
+            Draw02,
 
             Applause,
             ApplausePlus,

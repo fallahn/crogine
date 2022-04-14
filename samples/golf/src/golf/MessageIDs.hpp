@@ -66,7 +66,8 @@ struct GolfEvent final
         Scored,
         NiceShot,
         DriveComplete,
-        HoleInOne
+        HoleInOne,
+        HoleDrawn
     }type = HitBall;
 
     glm::vec3 position = glm::vec3(0.f);

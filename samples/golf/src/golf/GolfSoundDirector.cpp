@@ -80,6 +80,10 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/holes/hole.wav",
         "assets/golf/sound/holes/par.wav",
         "assets/golf/sound/holes/hio.wav",
+        "assets/golf/sound/holes/in_one.wav",
+
+        "assets/golf/sound/holes/draw01.wav",
+        "assets/golf/sound/holes/draw02.wav",
 
         "assets/golf/sound/ball/applause.wav",
         "assets/golf/sound/ball/applause_plus.wav",
@@ -160,6 +164,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case GolfEvent::HoleDrawn:
+            playSoundDelayed(cro::Util::Random::value(AudioID::Draw01, AudioID::Draw02), glm::vec3(0.f), 0.2f, 1.f, MixerChannel::Voice);
+            break;
         case GolfEvent::HoleInOne:
             playSound(AudioID::ScoreHIO, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             break;
@@ -225,6 +232,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 //TODO this is probably way over par so play some sad sound
                 playSoundDelayed(AudioID::ScoreHole, glm::vec3(0.f), VoiceDelay, 1.f, MixerChannel::Voice);
                 break; 
+            case ScoreID::HIO:
+                playSoundDelayed(AudioID::ScoreInOne, glm::vec3(0.f), VoiceDelay, 1.f, MixerChannel::Voice);
+                break;
             case ScoreID::Albatross:
                 playSoundDelayed(AudioID::ScoreAlbatross, glm::vec3(0.f), VoiceDelay, 1.f, MixerChannel::Voice);
                 break;
