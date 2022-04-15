@@ -42,6 +42,8 @@ source distribution.
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
@@ -262,6 +264,9 @@ void ClubhouseState::render()
 void ClubhouseState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
+    m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
+    m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
 
@@ -287,6 +292,46 @@ void ClubhouseState::loadResources()
 
 void ClubhouseState::buildScene()
 {
+    m_backgroundScene.setCubemap("assets/golf/images/skybox/mountain_spring/sky.ccm");
+
+
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/golf/models/clubhouse_menu.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+    }
+
+    if (md.loadFromFile("assets/golf/models/menu_ground.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+    }
+
+    if (md.loadFromFile("assets/golf/models/trophies/cabinet.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({14.3f, 1.2f, -1.6f});
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+    }
+
+    if (md.loadFromFile("assets/golf/models/hole_19/snooker_model.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 18.6f, 0.5f, -1.8f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+    }
+
+    if (md.loadFromFile("assets/golf/models/table_legs.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 18.6f, 0.f, -1.8f });
+        md.createModel(entity);
+    }
 
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
@@ -306,14 +351,23 @@ void ClubhouseState::buildScene()
 
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 30.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
     auto camEnt = m_backgroundScene.getActiveCamera();
+    camEnt.getComponent<cro::Transform>().setPosition({ 24.f, 1.6f, -4.3f });
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 127.f * cro::Util::Const::degToRad);
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.8f * cro::Util::Const::degToRad);
+    camEnt.getComponent<cro::Transform>().move(camEnt.getComponent<cro::Transform>().getForwardVector());
+    //camEnt.addComponent<cro::Callback>():
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
+    cam.shadowMapBuffer.create(2048, 2048);
     updateView(cam);
+
+    auto sunEnt = m_backgroundScene.getSunlight();
+    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -130.56f * cro::Util::Const::degToRad);
 
     createUI();
 }
