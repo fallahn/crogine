@@ -131,6 +131,19 @@ VideoPlayer::~VideoPlayer()
 
 bool VideoPlayer::loadFromFile(const std::string& path)
 {
+	//remove existing file first
+	if (m_state == State::Playing)
+	{
+		stop();
+	}	
+	
+	if (m_plm)
+	{
+		plm_destroy(m_plm);
+		m_plm = nullptr;
+	}	
+	
+	
 	if (m_shader.getGLHandle() == 0)
 	{
 		LogE << "Unable to open file " << cro::FileSystem::getFileName(path) << ": shader not loaded";
@@ -143,17 +156,8 @@ bool VideoPlayer::loadFromFile(const std::string& path)
 		return false;
 	}
 
-	if (m_state == State::Playing)
-	{
-		stop();
-	}
 
-	if (m_plm)
-	{
-		plm_destroy(m_plm);
-		m_plm = nullptr;
-	}
-
+	//load the file
 	m_plm = plm_create_with_filename(path.c_str());
 
 	if (!m_plm)
@@ -162,11 +166,22 @@ bool VideoPlayer::loadFromFile(const std::string& path)
 		return false;
 	}
 
-	plm_set_video_decode_callback(m_plm, videoCallback, this);
-	m_frameTime = 1.f / plm_get_framerate(m_plm);
 
 	auto width = plm_get_width(m_plm);
 	auto height = plm_get_height(m_plm);
+	auto frameRate = plm_get_framerate(m_plm);
+
+	if (width == 0 || height == 0 || frameRate == 0)
+	{
+		LogE << cro::FileSystem::getFileName(path) << ": invalid file properties" << std::endl;
+		plm_destroy(m_plm);
+		m_plm = nullptr;
+
+		return false;
+	}
+
+	
+	m_frameTime = 1.f / frameRate;
 
 	m_y.create(width, height, cro::ImageFormat::A); //creates a single channel tex, but this is overwritten by out custom update anyway.
 	m_cr.create(width, height, cro::ImageFormat::A);
@@ -175,6 +190,8 @@ bool VideoPlayer::loadFromFile(const std::string& path)
 
 	m_quad.setTexture(m_y);
 	m_quad.setShader(m_shader);
+
+	plm_set_video_decode_callback(m_plm, videoCallback, this);
 
 	//TODO enable audio
 	plm_set_audio_enabled(m_plm, FALSE);
@@ -236,16 +253,29 @@ void VideoPlayer::play()
 	m_state = State::Playing;
 }
 
+void VideoPlayer::pause()
+{
+	if (m_state == State::Playing)
+	{
+		m_state = State::Paused;
+	}
+}
+
 void VideoPlayer::stop()
 {
-	CRO_ASSERT(m_plm != nullptr, "");
-
-	if (m_state == State::Playing)
+	if (m_state != State::Stopped)
 	{
 		m_state = State::Stopped;
 
-		//rewind the file
-		plm_seek(m_plm, 0, FALSE);
+		if (m_plm)
+		{
+			//rewind the file
+			plm_seek(m_plm, 0, FALSE);
+
+			//clear the buffer else we repeat the last frame
+			m_outputBuffer.clear();
+			m_outputBuffer.display();
+		}
 	}
 }
 

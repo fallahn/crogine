@@ -31,6 +31,7 @@ source distribution.
 
 #include "pl_mpeg.h"
 
+#include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
@@ -42,7 +43,7 @@ Video player class, which renders MPEG1 video to a texture using
 pl_mpeg: https://github.com/phoboslab/pl_mpeg
 */
 
-class VideoPlayer final
+class VideoPlayer final : public cro::Detail::SDLResource
 {
 public:
 	VideoPlayer();
@@ -81,8 +82,14 @@ public:
 	void play();
 
 	/*!
-	\brief Stops the current playback if the file is playing, else
-	does nothing.
+	\brief Pauses the current playback if it is playing
+	else does nothing.
+	*/
+	void pause();
+
+	/*!
+	\brief Stops the current playback if the file is playing, and
+	returns the playback position to 0, else does nothing.
 	*/
 	void stop();
 
@@ -101,7 +108,7 @@ private:
 
 	enum class State
 	{
-		Stopped, Playing
+		Stopped, Playing, Paused
 	}m_state;
 
 	cro::Shader m_shader;

@@ -93,7 +93,42 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
         {
             if (ImGui::Begin("Window of Woo"))
             {
+                static std::string label("No file open");
+                ImGui::Text("%s", label.c_str());
+                ImGui::SameLine();
+                if (ImGui::Button("Open video"))
+                {
+                    auto path = cro::FileSystem::openFileDialogue("", "mpg");
+                    if (!path.empty())
+                    {
+                        if (!m_video.loadFromFile(path))
+                        {
+                            cro::FileSystem::showMessageBox("Error", "Could not open file");
+                            label = "No file open";
+                        }
+                        else
+                        {
+                            label = cro::FileSystem::getFileName(path);
+                        }
+                    }
+                }
+
                 ImGui::Image(m_video.getTexture(), { 352.f, 288.f }, { 0.f, 0.f }, { 1.f, 1.f });
+
+                if (ImGui::Button("Play"))
+                {
+                    m_video.play();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Pause"))
+                {
+                    m_video.pause();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Stop"))
+                {
+                    m_video.stop();
+                }
             }
             ImGui::End();
         });
@@ -146,10 +181,6 @@ void MenuState::addSystems()
 void MenuState::loadAssets()
 {
     m_font.loadFromFile("assets/fonts/VeraMono.ttf");
-
-
-    m_video.loadFromFile("assets/intro.mpg");
-    m_video.play();
 }
 
 void MenuState::createScene()
