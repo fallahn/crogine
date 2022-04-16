@@ -30,14 +30,16 @@ source distribution.
 #pragma once
 
 #include "StateIDs.hpp"
+#include "video_player/VideoPlayer.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/Font.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 namespace sp
 {
-    class MenuState final : public cro::State
+    class MenuState final : public cro::State, public cro::GuiClient
     {
     public:
         MenuState(cro::StateStack&, cro::State::Context);
@@ -54,6 +56,8 @@ namespace sp
 
         cro::Scene m_scene;
         cro::Font m_font;
+
+        VideoPlayer m_video;
 
         void addSystems();
         void loadAssets();

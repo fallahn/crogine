@@ -87,6 +87,17 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
         //create some entities
         createScene();
     });
+
+#ifdef CRO_DEBUG_
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Window of Woo"))
+            {
+                ImGui::Image(m_video.getTexture(), { 352.f, 288.f }, { 0.f, 0.f }, { 1.f, 1.f });
+            }
+            ImGui::End();
+        });
+#endif
 }
 
 //public
@@ -110,6 +121,8 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
+    m_video.update(dt);
+
     m_scene.simulate(dt);
     return true;
 }
@@ -133,6 +146,10 @@ void MenuState::addSystems()
 void MenuState::loadAssets()
 {
     m_font.loadFromFile("assets/fonts/VeraMono.ttf");
+
+
+    m_video.loadFromFile("assets/intro.mpg");
+    m_video.play();
 }
 
 void MenuState::createScene()
