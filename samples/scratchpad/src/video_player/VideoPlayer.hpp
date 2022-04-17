@@ -31,6 +31,7 @@ source distribution.
 
 #include "pl_mpeg.h"
 
+#include <crogine/audio/sound_system/SoundStream.hpp>
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
@@ -46,82 +47,99 @@ pl_mpeg: https://github.com/phoboslab/pl_mpeg
 class VideoPlayer final : public cro::Detail::SDLResource
 {
 public:
-	VideoPlayer();
-	~VideoPlayer();
+    VideoPlayer();
+    ~VideoPlayer();
 
-	VideoPlayer(const VideoPlayer&) = delete;
-	VideoPlayer(VideoPlayer&&) noexcept = delete;
-	//VideoPlayer(VideoPlayer&&) noexcept; //need to move plm pointer if we want to implement this
+    VideoPlayer(const VideoPlayer&) = delete;
+    VideoPlayer(VideoPlayer&&) noexcept = delete;
+    //VideoPlayer(VideoPlayer&&) noexcept; //need to move plm pointer if we want to implement this
 
-	VideoPlayer& operator = (const VideoPlayer&) = delete;
-	VideoPlayer& operator = (VideoPlayer&&) noexcept = delete;
-	//VideoPlayer& operator = (VideoPlayer&&) noexcept;
+    VideoPlayer& operator = (const VideoPlayer&) = delete;
+    VideoPlayer& operator = (VideoPlayer&&) noexcept = delete;
+    //VideoPlayer& operator = (VideoPlayer&&) noexcept;
 
-	/*!
-	\brief Attempts to open an MPEG1 file.
-	\returns true on success or false if the file doesn't
-	exist or is not a valid MPEG1 file.
-	*/
-	bool loadFromFile(const std::string& path);
+    /*!
+    \brief Attempts to open an MPEG1 file.
+    \returns true on success or false if the file doesn't
+    exist or is not a valid MPEG1 file.
+    */
+    bool loadFromFile(const std::string& path);
 
-	/*!
-	\brief Updates the decoding of the file, if a file is open.
-	This is automatically locked to the frame rate of the video
-	up to the maximum rate at which this is called, at which point
-	frames will be skipped.
-	\param dt The time since this function was last called
+    /*!
+    \brief Updates the decoding of the file, if a file is open.
+    This is automatically locked to the frame rate of the video
+    up to the maximum rate at which this is called, at which point
+    frames will be skipped.
+    \param dt The time since this function was last called
 
-	hmmmmm - shame we can't spin this off into a thread, but OpenGL.
-	*/
-	void update(float dt);
+    hmmmmm - shame we can't spin this off into a thread, but OpenGL.
+    */
+    void update(float dt);
 
-	/*!
-	\brief Starts the playback of the loaded file if available
-	else does nothing.
-	*/
-	void play();
+    /*!
+    \brief Starts the playback of the loaded file if available
+    else does nothing.
+    */
+    void play();
 
-	/*!
-	\brief Pauses the current playback if it is playing
-	else does nothing.
-	*/
-	void pause();
+    /*!
+    \brief Pauses the current playback if it is playing
+    else does nothing.
+    */
+    void pause();
 
-	/*!
-	\brief Stops the current playback if the file is playing, and
-	returns the playback position to 0, else does nothing.
-	*/
-	void stop();
+    /*!
+    \brief Stops the current playback if the file is playing, and
+    returns the playback position to 0, else does nothing.
+    */
+    void stop();
 
-	/*!
-	\brief Returns a reference to the texture to which the video is
-	rendered.
-	*/
-	const cro::Texture& getTexture() const { return m_outputBuffer.getTexture(); }
+    /*!
+    \brief Returns a reference to the texture to which the video is
+    rendered.
+    */
+    const cro::Texture& getTexture() const { return m_outputBuffer.getTexture(); }
 
 private:
 
-	plm_t* m_plm;
+    plm_t* m_plm;
 
-	float m_timeAccumulator;
-	float m_frameTime;
+    float m_timeAccumulator;
+    float m_frameTime;
 
-	enum class State
-	{
-		Stopped, Playing, Paused
-	}m_state;
+    enum class State
+    {
+        Stopped, Playing, Paused
+    }m_state;
 
-	cro::Shader m_shader;
+    cro::Shader m_shader;
 
-	cro::Texture m_y;
-	cro::Texture m_cb;
-	cro::Texture m_cr;
-	cro::SimpleQuad m_quad;
-	cro::RenderTexture m_outputBuffer;
+    cro::Texture m_y;
+    cro::Texture m_cb;
+    cro::Texture m_cr;
+    cro::SimpleQuad m_quad;
+    cro::RenderTexture m_outputBuffer;
 
-	void updateTexture(std::uint32_t, plm_plane_t*);
-	void updateBuffer();
+    void updateTexture(std::uint32_t, plm_plane_t*);
+    void updateBuffer();
 
-	//because function pointers
-	friend void videoCallback(plm_t*, plm_frame_t*, void*);
+    //this has to be sub-classed because it has
+    //play()/pause() etc which clash with the video class
+    class AudioStream final : public cro::SoundStream
+    {
+    public:
+        bool hasAudio = false;
+
+        bool onGetData(cro::SoundStream::Chunk&) override;
+        void onSeek(std::int32_t) override {}
+
+        void init(std::uint32_t channels, std::uint32_t sampleRate)
+        {
+            initialise(channels, sampleRate);
+        }
+    }m_audioStream;
+
+    //because function pointers
+    friend void videoCallback(plm_t*, plm_frame_t*, void*);
+    friend void audioCallback(plm_t*, plm_samples_t*, void*);
 };

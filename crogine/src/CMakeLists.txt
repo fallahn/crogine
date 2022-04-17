@@ -9,6 +9,9 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/audio/stb_vorbis.c
   ${PROJECT_DIR}/audio/VorbisLoader.cpp
   ${PROJECT_DIR}/audio/WavLoader.cpp
+
+  ${PROJECT_DIR}/audio/sound_system/SoundSource.cpp
+  ${PROJECT_DIR}/audio/sound_system/SoundStream.cpp
   
   ${PROJECT_DIR}/core/App.cpp
   ${PROJECT_DIR}/core/Clock.cpp

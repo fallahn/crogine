@@ -42,6 +42,8 @@
     <ClInclude Include="..\crogine\include\crogine\audio\AudioMixer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioStream.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundSource.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundStream.hpp" />
     <ClInclude Include="..\crogine\include\crogine\Config.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\App.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Clock.hpp" />
@@ -234,6 +236,8 @@
     <ClCompile Include="..\crogine\src\audio\AudioScape.cpp" />
     <ClCompile Include="..\crogine\src\audio\AudioStream.cpp" />
     <ClCompile Include="..\crogine\src\audio\OpenALImpl.cpp" />
+    <ClCompile Include="..\crogine\src\audio\sound_system\SoundSource.cpp" />
+    <ClCompile Include="..\crogine\src\audio\sound_system\SoundStream.cpp" />
     <ClCompile Include="..\crogine\src\audio\stb_vorbis.c" />
     <ClCompile Include="..\crogine\src\audio\VorbisLoader.cpp" />
     <ClCompile Include="..\crogine\src\audio\WavLoader.cpp" />

@@ -38,7 +38,7 @@ source distribution.
 
 namespace
 {
-	const std::string ShaderVertex =
+    const std::string ShaderVertex =
 R"(
 ATTRIBUTE vec2 a_position;
 ATTRIBUTE vec2 a_texCoord0;
@@ -58,9 +58,9 @@ void main()
 })";
 
 
-	//shader based on example at https://github.com/phoboslab/pl_mpeg
-	const std::string ShaderFragment =
-		R"(
+    //shader based on example at https://github.com/phoboslab/pl_mpeg
+    const std::string ShaderFragment =
+        R"(
 uniform sampler2D u_texture; //Y component but renamed to match SimpleQuad expectations
 uniform sampler2D u_textureCB;
 uniform sampler2D u_textureCR;
@@ -70,21 +70,21 @@ VARYING_IN vec4 v_colour;
 
 OUTPUT
 
-	const mat4 rec601 = 
-		mat4(
-			1.16438,  0.00000,  1.59603, -0.87079,
-			1.16438, -0.39176, -0.81297,  0.52959,
-			1.16438,  2.01723,  0.00000, -1.08139,
-			0.0, 0.0, 0.0, 1.0
-			);
+    const mat4 rec601 = 
+        mat4(
+            1.16438,  0.00000,  1.59603, -0.87079,
+            1.16438, -0.39176, -0.81297,  0.52959,
+            1.16438,  2.01723,  0.00000, -1.08139,
+            0.0, 0.0, 0.0, 1.0
+            );
 
 void main()
 {
-	float y = TEXTURE(u_texture, v_texCoord).r;
-	float cb = TEXTURE(u_textureCB, v_texCoord).r;
-	float cr = TEXTURE(u_textureCR, v_texCoord).r;
+    float y = TEXTURE(u_texture, v_texCoord).r;
+    float cb = TEXTURE(u_textureCB, v_texCoord).r;
+    float cr = TEXTURE(u_textureCR, v_texCoord).r;
 
-	FRAG_OUT = vec4(y, cb, cr, 1.0) * rec601 * v_colour;
+    FRAG_OUT = vec4(y, cb, cr, 1.0) * rec601 * v_colour;
 })";
 
 }
@@ -92,210 +92,241 @@ void main()
 //C senor.
 void videoCallback(plm_t* mpg, plm_frame_t* frame, void* user)
 {
-	auto* videoPlayer = static_cast<VideoPlayer*>(user);
-	videoPlayer->updateTexture(videoPlayer->m_y.getGLHandle(), &frame->y);
-	videoPlayer->updateTexture(videoPlayer->m_cb.getGLHandle(), &frame->cb);
-	videoPlayer->updateTexture(videoPlayer->m_cr.getGLHandle(), &frame->cr);
+    auto* videoPlayer = static_cast<VideoPlayer*>(user);
+    videoPlayer->updateTexture(videoPlayer->m_y.getGLHandle(), &frame->y);
+    videoPlayer->updateTexture(videoPlayer->m_cb.getGLHandle(), &frame->cb);
+    videoPlayer->updateTexture(videoPlayer->m_cr.getGLHandle(), &frame->cr);
 }
 
+void audioCallback(plm_t*, plm_samples_t* samples, void* user)
+{
+    auto* videoPlayer = static_cast<VideoPlayer*>(user);
+    LogI << "boop" << std::endl;
+    samples->count;
+}
 
 VideoPlayer::VideoPlayer()
-	: m_plm				(nullptr),
-	m_timeAccumulator	(0.f),
-	m_frameTime			(0.f),
-	m_state				(State::Stopped)
+    : m_plm				(nullptr),
+    m_timeAccumulator	(0.f),
+    m_frameTime			(0.f),
+    m_state				(State::Stopped)
 {
-	if (!m_shader.loadFromString(ShaderVertex, ShaderFragment))
-	{
-		LogW << "Failed creating shader for video renderer" << std::endl;
-	}
-	else
-	{
-		//only need to set these once as we fix the layout (see update buffer)
-		glUseProgram(m_shader.getGLHandle());
-		glUniform1i(m_shader.getUniformID("u_texture"), 0);
-		glUniform1i(m_shader.getUniformID("u_textureCR"), 1);
-		glUniform1i(m_shader.getUniformID("u_textureCB"), 2);
-	}
+    if (!m_shader.loadFromString(ShaderVertex, ShaderFragment))
+    {
+        LogW << "Failed creating shader for video renderer" << std::endl;
+    }
+    else
+    {
+        //only need to set these once as we fix the layout (see update buffer)
+        glUseProgram(m_shader.getGLHandle());
+        glUniform1i(m_shader.getUniformID("u_texture"), 0);
+        glUniform1i(m_shader.getUniformID("u_textureCR"), 1);
+        glUniform1i(m_shader.getUniformID("u_textureCB"), 2);
+    }
 }
 
 VideoPlayer::~VideoPlayer()
 {
-	if (m_plm)
-	{
-		stop();
+    if (m_plm)
+    {
+        stop();
 
-		plm_destroy(m_plm);
-	}
+        plm_destroy(m_plm);
+    }
 }
 
 bool VideoPlayer::loadFromFile(const std::string& path)
 {
-	//remove existing file first
-	if (m_state == State::Playing)
-	{
-		stop();
-	}	
-	
-	if (m_plm)
-	{
-		plm_destroy(m_plm);
-		m_plm = nullptr;
-	}	
-	
-	
-	if (m_shader.getGLHandle() == 0)
-	{
-		LogE << "Unable to open file " << cro::FileSystem::getFileName(path) << ": shader not loaded";
-		return false;
-	}
+    //remove existing file first
+    if (m_state == State::Playing)
+    {
+        stop();
+    }	
+    
+    if (m_plm)
+    {
+        plm_destroy(m_plm);
+        m_plm = nullptr;
+    }	
+    
+    
+    if (m_shader.getGLHandle() == 0)
+    {
+        LogE << "Unable to open file " << cro::FileSystem::getFileName(path) << ": shader not loaded";
+        return false;
+    }
 
-	if (!cro::FileSystem::fileExists(path))
-	{
-		LogE << "Unable to open file " << path << ": file not found" << std::endl;
-		return false;
-	}
-
-
-	//load the file
-	m_plm = plm_create_with_filename(path.c_str());
-
-	if (!m_plm)
-	{
-		LogE << "Failed creating video player instance (incompatible file?)" << cro::FileSystem::getFileName(path) << std::endl;
-		return false;
-	}
+    if (!cro::FileSystem::fileExists(path))
+    {
+        LogE << "Unable to open file " << path << ": file not found" << std::endl;
+        return false;
+    }
 
 
-	auto width = plm_get_width(m_plm);
-	auto height = plm_get_height(m_plm);
-	auto frameRate = plm_get_framerate(m_plm);
+    //load the file
+    m_plm = plm_create_with_filename(path.c_str());
 
-	if (width == 0 || height == 0 || frameRate == 0)
-	{
-		LogE << cro::FileSystem::getFileName(path) << ": invalid file properties" << std::endl;
-		plm_destroy(m_plm);
-		m_plm = nullptr;
+    if (!m_plm)
+    {
+        LogE << "Failed creating video player instance (incompatible file?)" << cro::FileSystem::getFileName(path) << std::endl;
+        return false;
+    }
 
-		return false;
-	}
 
-	
-	m_frameTime = 1.f / frameRate;
+    auto width = plm_get_width(m_plm);
+    auto height = plm_get_height(m_plm);
+    auto frameRate = plm_get_framerate(m_plm);
 
-	m_y.create(width, height, cro::ImageFormat::A); //creates a single channel tex, but this is overwritten by out custom update anyway.
-	m_cr.create(width, height, cro::ImageFormat::A);
-	m_cb.create(width, height, cro::ImageFormat::A);
-	m_outputBuffer.create(width, height, false);
+    if (width == 0 || height == 0 || frameRate == 0)
+    {
+        LogE << cro::FileSystem::getFileName(path) << ": invalid file properties" << std::endl;
+        plm_destroy(m_plm);
+        m_plm = nullptr;
 
-	m_quad.setTexture(m_y);
-	m_quad.setShader(m_shader);
+        return false;
+    }
 
-	plm_set_video_decode_callback(m_plm, videoCallback, this);
+    
+    m_frameTime = 1.f / frameRate;
 
-	//TODO enable audio
-	plm_set_audio_enabled(m_plm, FALSE);
+    m_y.create(width, height, cro::ImageFormat::A);
+    m_cr.create(width, height, cro::ImageFormat::A);
+    m_cb.create(width, height, cro::ImageFormat::A);
+    m_outputBuffer.create(width, height, false);
 
-	return true;
+    m_quad.setTexture(m_y);
+    m_quad.setShader(m_shader);
+
+    plm_set_video_decode_callback(m_plm, videoCallback, this);
+
+    //enable audio
+    plm_set_audio_decode_callback(m_plm, audioCallback, this);
+
+    if (plm_get_num_audio_streams(m_plm) > 0)
+    {
+        auto sampleRate = plm_get_samplerate(m_plm);
+        m_audioStream.init(2, sampleRate);
+        m_audioStream.hasAudio = true;
+    }
+    else
+    {
+        m_audioStream.hasAudio = false;
+    }
+
+
+    return true;
 }
 
 void VideoPlayer::update(float dt)
 {
-	m_timeAccumulator += dt;
+    m_timeAccumulator += dt;
 
-	static constexpr float MaxTime = 1.f;
-	if (m_timeAccumulator > MaxTime)
-	{
-		m_timeAccumulator = 0.f;
-	}
+    static constexpr float MaxTime = 1.f;
+    if (m_timeAccumulator > MaxTime)
+    {
+        m_timeAccumulator = 0.f;
+    }
 
-	if (m_plm)
-	{
-		CRO_ASSERT(m_frameTime > 0, "");
-		while (m_timeAccumulator > m_frameTime)
-		{
-			m_timeAccumulator -= m_frameTime;
+    if (m_plm)
+    {
+        CRO_ASSERT(m_frameTime > 0, "");
+        while (m_timeAccumulator > m_frameTime)
+        {
+            m_timeAccumulator -= m_frameTime;
 
-			if (m_state == State::Playing)
-			{
-				plm_decode(m_plm, m_frameTime);
+            if (m_state == State::Playing)
+            {
+                plm_decode(m_plm, m_frameTime);
 
-				updateBuffer();
+                updateBuffer();
 
-				if (plm_has_ended(m_plm))
-				{
-					stop();
-				}
-			}
-		}
-	}
+                if (plm_has_ended(m_plm))
+                {
+                    stop();
+                }
+            }
+        }
+    }
 }
 
 void VideoPlayer::play()
 {
-	if (m_plm == nullptr)
-	{
-		LogE << "No video file loaded " << std::endl;
-		return;
-	}
+    if (m_plm == nullptr)
+    {
+        LogE << "No video file loaded " << std::endl;
+        return;
+    }
 
-	if (m_frameTime == 0)
-	{
-		return;
-	}
+    if (m_frameTime == 0)
+    {
+        return;
+    }
 
-	if (m_state == State::Playing)
-	{
-		return;
-	}
+    if (m_state == State::Playing)
+    {
+        return;
+    }
 
-	m_timeAccumulator = 0.f;
-	m_state = State::Playing;
+    m_timeAccumulator = 0.f;
+    m_state = State::Playing;
+    
+    if (m_audioStream.hasAudio)
+    {
+        m_audioStream.play();
+    }
 }
 
 void VideoPlayer::pause()
 {
-	if (m_state == State::Playing)
-	{
-		m_state = State::Paused;
-	}
+    if (m_state == State::Playing)
+    {
+        m_state = State::Paused;
+        m_audioStream.pause();
+    }
 }
 
 void VideoPlayer::stop()
 {
-	if (m_state != State::Stopped)
-	{
-		m_state = State::Stopped;
+    if (m_state != State::Stopped)
+    {
+        m_state = State::Stopped;
+        m_audioStream.stop();
 
-		if (m_plm)
-		{
-			//rewind the file
-			plm_seek(m_plm, 0, FALSE);
+        if (m_plm)
+        {
+            //rewind the file
+            plm_seek(m_plm, 0, FALSE);
 
-			//clear the buffer else we repeat the last frame
-			m_outputBuffer.clear();
-			m_outputBuffer.display();
-		}
-	}
+            //clear the buffer else we repeat the last frame
+            m_outputBuffer.clear();
+            m_outputBuffer.display();
+        }
+    }
 }
 
 //private
 void VideoPlayer::updateTexture(std::uint32_t textureID, plm_plane_t* plane)
 {
-	CRO_ASSERT(textureID != 0, "");
-	glBindTexture(GL_TEXTURE_2D, textureID);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, plane->width, plane->height, 0, GL_RED, GL_UNSIGNED_BYTE, plane->data);
+    CRO_ASSERT(textureID != 0, "");
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, plane->width, plane->height, 0, GL_RED, GL_UNSIGNED_BYTE, plane->data);
 }
 
 void VideoPlayer::updateBuffer()
 {
-	//remaining shader setup is handled by SimpleQuad
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, m_cr.getGLHandle());
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, m_cb.getGLHandle());
+    //remaining shader setup is handled by SimpleQuad
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, m_cr.getGLHandle());
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, m_cb.getGLHandle());
 
-	m_outputBuffer.clear();
-	m_quad.draw();
-	m_outputBuffer.display();
+    m_outputBuffer.clear();
+    m_quad.draw();
+    m_outputBuffer.display();
+}
+
+bool VideoPlayer::AudioStream::onGetData(cro::SoundStream::Chunk& chunk)
+{
+
+    return true;
 }
