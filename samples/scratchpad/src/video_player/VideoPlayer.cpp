@@ -115,6 +115,9 @@ VideoPlayer::VideoPlayer()
     m_frameTime			(0.f),
     m_state				(State::Stopped)
 {
+    //TODO we don't really want to create a shader for EVERY instance
+    //but on the other hand why would I play a lot of videos at once?
+
     if (!m_shader.loadFromString(ShaderVertex, ShaderFragment))
     {
         LogW << "Failed creating shader for video renderer" << std::endl;
@@ -128,6 +131,16 @@ VideoPlayer::VideoPlayer()
         glUniform1i(m_shader.getUniformID("u_textureCB"), 2);
     }
 }
+
+//VideoPlayer::VideoPlayer(VideoPlayer&& other)
+//    : m_plm             (other.m_plm),
+//    m_looped            (other.m_looped),
+//    m_timeAccumulator   (0.f),
+//    m_frameTime         (other.m_frameTime),
+//    m_state             (other.m_state)
+//{
+// ehhhhhhh.... might not be worth doing
+//}
 
 VideoPlayer::~VideoPlayer()
 {
@@ -193,6 +206,10 @@ bool VideoPlayer::loadFromFile(const std::string& path)
     
     m_frameTime = 1.f / frameRate;
 
+    //the plane sizes aren't actually the same
+    //but this sets the texture property used
+    //by the output sprite so that it matches
+    //the render buffer size (which is this value)
     m_y.create(width, height, cro::ImageFormat::A);
     m_cr.create(width, height, cro::ImageFormat::A);
     m_cb.create(width, height, cro::ImageFormat::A);

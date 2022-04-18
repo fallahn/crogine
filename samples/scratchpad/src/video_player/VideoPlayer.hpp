@@ -54,7 +54,11 @@ public:
 
     VideoPlayer(const VideoPlayer&) = delete;
     VideoPlayer(VideoPlayer&&) noexcept = delete;
-    //VideoPlayer(VideoPlayer&&) noexcept; //need to move plm pointer if we want to implement this
+
+    //hmm...need to move plm pointer if we want to implement this
+    //at the very least, not to mention what happens if you
+    //try to move an instance which is currently playing...
+    //VideoPlayer(VideoPlayer&&) noexcept; 
 
     VideoPlayer& operator = (const VideoPlayer&) = delete;
     VideoPlayer& operator = (VideoPlayer&&) noexcept = delete;
