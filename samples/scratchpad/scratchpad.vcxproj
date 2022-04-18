@@ -334,7 +334,6 @@
     <ClInclude Include="src\batcat\TerrainSystem.hpp" />
     <ClInclude Include="src\billiards\BilliardsState.hpp" />
     <ClInclude Include="src\billiards\BilliardsSystem.hpp" />
-    <ClInclude Include="src\billiards\CircularBuffer.hpp" />
     <ClInclude Include="src\billiards\InterpolationSystem.hpp" />
     <ClInclude Include="src\bsp\BspState.hpp" />
     <ClInclude Include="src\bsp\FpsCameraSystem.hpp" />
@@ -342,6 +341,7 @@
     <ClInclude Include="src\bsp\Patch.hpp" />
     <ClInclude Include="src\bsp\Q3Bsp.hpp" />
     <ClInclude Include="src\bsp\Q3BspSystem.hpp" />
+    <ClInclude Include="src\CircularBuffer.hpp" />
     <ClInclude Include="src\collision\BallSystem.hpp" />
     <ClInclude Include="src\collision\CollisionState.hpp" />
     <ClInclude Include="src\collision\DebugDraw.hpp" />

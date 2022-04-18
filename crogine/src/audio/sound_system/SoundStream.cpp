@@ -218,6 +218,8 @@ std::int64_t SoundStream::onLoop()
 //private
 void SoundStream::threadFunc()
 {
+    std::this_thread::sleep_for(std::chrono::milliseconds(m_processingInterval));
+
     bool requestStop = false;
 
     {
@@ -254,13 +256,18 @@ void SoundStream::threadFunc()
         {
             std::scoped_lock lock(m_mutex);
 
-            if (m_isStreaming)
+            if (!m_isStreaming)
             {
                 break;
             }
         }
 
-        if (SoundSource::getStatus() == Status::Stopped)
+        //sleep a bit
+        if (SoundSource::getStatus() != Status::Stopped)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(m_processingInterval));
+        }
+        else
         {
             if (!requestStop)
             {
@@ -282,7 +289,7 @@ void SoundStream::threadFunc()
             ALuint buffer = 0;
             alCheck(alSourceUnqueueBuffers(m_alSource, 1, &buffer));
 
-            std::size_t bufferIndex = 0;
+            std::uint32_t bufferIndex = 0;
             for (auto i = 0u; i < BufferCount; ++i)
             {
                 if (m_buffers[i] == buffer)
@@ -307,7 +314,7 @@ void SoundStream::threadFunc()
 
                 if (bits == 0)
                 {
-                    LogE << "Bits in sounds steram are 0. MAke sure audio is not corrupt and initialise() was called correctly" << std::endl;
+                    LogE << "Bits in sound stream are 0. Make sure audio is not corrupt and initialise() was called correctly" << std::endl;
 
                     std::scoped_lock lock(m_mutex);
                     m_isStreaming = false;
@@ -322,19 +329,12 @@ void SoundStream::threadFunc()
 
             if (!requestStop)
             {
-                if (fillAndPushBuffer(buffer))
+                if (fillAndPushBuffer(bufferIndex))
                 {
                     requestStop = true;
                 }
             }
-        }
-
-        //sleep a bit
-        if (SoundSource::getStatus() != Status::Stopped)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(m_processingInterval));
-        }
-        
+        }        
     }
 
     alCheck(alSourceStop(m_alSource));
@@ -390,7 +390,7 @@ bool SoundStream::fillAndPushBuffer(std::uint32_t bufferID, bool loopImmediate)
     }
     else
     {
-        //we have no data so all we can reasonable do is stop
+        //we have no data so all we can reasonably do is stop
         requestStop = true;
     }
 

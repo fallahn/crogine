@@ -33,6 +33,7 @@ source distribution.
 
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/gui/Gui.hpp>
 
 #include <string>
 
@@ -87,6 +88,9 @@ void main()
     FRAG_OUT = vec4(y, cb, cr, 1.0) * rec601 * v_colour;
 })";
 
+    //this is always 2, according to PLM.
+    static constexpr std::uint32_t ChannelCount = 2;
+    static constexpr std::uint32_t AudioBufferSize = PLM_AUDIO_SAMPLES_PER_FRAME * ChannelCount;
 }
 
 //C senor.
@@ -101,8 +105,7 @@ void videoCallback(plm_t* mpg, plm_frame_t* frame, void* user)
 void audioCallback(plm_t*, plm_samples_t* samples, void* user)
 {
     auto* videoPlayer = static_cast<VideoPlayer*>(user);
-    LogI << "boop" << std::endl;
-    samples->count;
+    videoPlayer->m_audioStream.pushData(samples->interleaved);   
 }
 
 VideoPlayer::VideoPlayer()
@@ -205,8 +208,10 @@ bool VideoPlayer::loadFromFile(const std::string& path)
     if (plm_get_num_audio_streams(m_plm) > 0)
     {
         auto sampleRate = plm_get_samplerate(m_plm);
-        m_audioStream.init(2, sampleRate);
+        m_audioStream.init(ChannelCount, sampleRate);
         m_audioStream.hasAudio = true;
+
+        plm_set_audio_lead_time(m_plm, static_cast<double>(AudioBufferSize) / sampleRate);
     }
     else
     {
@@ -327,6 +332,58 @@ void VideoPlayer::updateBuffer()
 
 bool VideoPlayer::AudioStream::onGetData(cro::SoundStream::Chunk& chunk)
 {
+    const auto getChunkSize = [&]()
+    {
+        auto in = static_cast<std::int32_t>(m_bufferIn);
+        auto out = static_cast<std::int32_t>(m_bufferOut);
+        auto chunkSize = (in - out) + static_cast<std::int32_t>(m_inBuffer.size());
+        chunkSize %= m_inBuffer.size();
+
+        chunkSize = std::min(chunkSize, static_cast<std::int32_t>(m_outBuffer.size()));
+
+        return chunkSize;
+    };
+
+
+    auto chunkSize = getChunkSize();
+
+    //wait for the buffer to fill
+    while (chunkSize == 0
+        && getStatus() != AudioStream::Status::Stopped)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        chunkSize = getChunkSize();
+    }
+
+    for (auto i = 0; i < chunkSize; ++i)
+    {
+        auto idx = (m_bufferOut + i) % m_inBuffer.size();
+        m_outBuffer[i] = m_inBuffer[idx];
+    }
+
+    chunk.sampleCount = chunkSize;
+    chunk.samples = m_outBuffer.data();
+
+    m_bufferOut = (m_bufferOut + chunkSize) % m_inBuffer.size();
 
     return true;
+}
+
+void VideoPlayer::AudioStream::init(std::uint32_t channels, std::uint32_t sampleRate)
+{
+    stop();
+    initialise(channels, sampleRate);
+}
+
+void VideoPlayer::AudioStream::pushData(float* data)
+{
+    for (auto i = 0u; i < AudioBufferSize; ++i)
+    {
+        auto index = (m_bufferIn + i) % m_inBuffer.size();
+
+        std::int16_t sample = data[i] * std::numeric_limits<std::int16_t>::max();
+        m_inBuffer[index] = sample;
+    }
+
+    m_bufferIn = (m_bufferIn + AudioBufferSize) % m_inBuffer.size();
 }

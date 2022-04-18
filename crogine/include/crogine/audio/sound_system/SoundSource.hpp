@@ -39,9 +39,13 @@ namespace cro
     \brief Base class for sound sources in the Sound System
     The Sound System is distinct from Audio classes in that it can be
     used independently of the ECS. The Sound System classes are
-    heavily inspired by the audio module ofSFML 
+    heavily inspired by the audio module of SFML 
     Copyright (C) 2007-2021 Laurent Gomila (laurent@sfml-dev.org)
     which is licensed under the zlib license (outlined above)
+
+    NOTE that this *requires* OpenAL, so if the default AudioRenderer
+    is not being used then Sound System classes will not
+    work, unless a valid OpenAL context is manually created.
 
     This class groups common settings such as volume control, shared
     by all sound sources in the Sound System.
@@ -73,8 +77,9 @@ namespace cro
         \brief Sets the normalised volume in the range 0 - 1
         \param vol Volume of the sound source where 0 is silent
         and 1 is full volume. The volume is multiplied with the
-        global sound volume.
-        \see SoundListener::setGlobalVolume()
+        global sound volume, set with the Listener properties
+        of the AudioRenderer
+        \see AudioRenderer::setListenerVolume();
         */
         void setVolume(float vol);
 

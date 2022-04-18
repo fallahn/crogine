@@ -37,6 +37,8 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 
+#include <crogine/core/Clock.hpp>
+
 #include <vector>
 
 /*
@@ -123,8 +125,7 @@ private:
     void updateTexture(std::uint32_t, plm_plane_t*);
     void updateBuffer();
 
-    //this has to be sub-classed because it has
-    //play()/pause() etc which clash with the video class
+
     class AudioStream final : public cro::SoundStream
     {
     public:
@@ -133,10 +134,18 @@ private:
         bool onGetData(cro::SoundStream::Chunk&) override;
         void onSeek(std::int32_t) override {}
 
-        void init(std::uint32_t channels, std::uint32_t sampleRate)
-        {
-            initialise(channels, sampleRate);
-        }
+        void init(std::uint32_t channels, std::uint32_t sampleRate);
+
+        void pushData(float*);
+
+    private:
+        
+        std::array<std::int16_t, PLM_AUDIO_SAMPLES_PER_FRAME * 8> m_inBuffer = {};
+        std::array<std::int16_t, PLM_AUDIO_SAMPLES_PER_FRAME * 2> m_outBuffer = {};
+
+        std::uint32_t m_bufferIn = PLM_AUDIO_SAMPLES_PER_FRAME * 6;
+        std::uint32_t m_bufferOut = 2;
+
     }m_audioStream;
 
     //because function pointers

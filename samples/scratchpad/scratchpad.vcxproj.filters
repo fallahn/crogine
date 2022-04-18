@@ -224,14 +224,14 @@
     <ClInclude Include="src\billiards\InterpolationSystem.hpp">
       <Filter>Header Files\billiards</Filter>
     </ClInclude>
-    <ClInclude Include="src\billiards\CircularBuffer.hpp">
-      <Filter>Header Files\billiards</Filter>
-    </ClInclude>
     <ClInclude Include="src\video_player\pl_mpeg.h">
       <Filter>Header Files\video player</Filter>
     </ClInclude>
     <ClInclude Include="src\video_player\VideoPlayer.hpp">
       <Filter>Header Files\video player</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CircularBuffer.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

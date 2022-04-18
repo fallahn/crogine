@@ -29,7 +29,7 @@ source distribution.
 
 #pragma once
 
-#include "CircularBuffer.hpp"
+#include "../CircularBuffer.hpp"
 
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>

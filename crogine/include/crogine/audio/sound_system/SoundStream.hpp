@@ -121,11 +121,12 @@ namespace cro
         \break Request a new chunk of audio data from the stream
 
         This must be implemented by derived classes to provide the audio
-        data to the stream. It is call continuously by the stream thread.
+        data to the stream. It is called continuously by the stream thread.
 
         Returning false from this function will stop the current playback,
         else return true to continue playing. When returning true the
-        Chunk MUST point to some valid data.
+        Chunk MUST point to some valid data. OpenAL automatically stops
+        playing any sources with an empty buffer.
 
         \param chunk The chunk of data to fill
         \return true to continue streaming, else false to stop
