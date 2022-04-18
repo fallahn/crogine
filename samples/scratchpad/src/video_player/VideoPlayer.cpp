@@ -110,6 +110,7 @@ void audioCallback(plm_t*, plm_samples_t* samples, void* user)
 
 VideoPlayer::VideoPlayer()
     : m_plm				(nullptr),
+    m_looped            (false),
     m_timeAccumulator	(0.f),
     m_frameTime			(0.f),
     m_state				(State::Stopped)
@@ -218,6 +219,7 @@ bool VideoPlayer::loadFromFile(const std::string& path)
         m_audioStream.hasAudio = false;
     }
 
+    plm_set_loop(m_plm, m_looped ? 1 : 0);
 
     return true;
 }
@@ -309,6 +311,47 @@ void VideoPlayer::stop()
     }
 }
 
+void VideoPlayer::seek(float position)
+{
+    if (m_plm)
+    {
+        plm_seek(m_plm, position, FALSE);
+
+        if (m_state != State::Playing)
+        {
+            updateBuffer();
+        }
+    }
+}
+
+float VideoPlayer::getDuration() const
+{
+    if (m_plm)
+    {
+        return static_cast<float>(plm_get_duration(m_plm));
+    }
+    return 0.f;
+}
+
+float VideoPlayer::getPosition() const
+{
+    if (m_plm)
+    {
+        return static_cast<float>(plm_get_time(m_plm));
+    }
+    return 0.f;
+}
+
+void VideoPlayer::setLooped(bool looped)
+{
+    m_looped = looped;
+
+    if (m_plm)
+    {
+        plm_set_loop(m_plm, looped ? 1 : 0);
+    }
+}
+
 //private
 void VideoPlayer::updateTexture(std::uint32_t textureID, plm_plane_t* plane)
 {
@@ -349,7 +392,7 @@ bool VideoPlayer::AudioStream::onGetData(cro::SoundStream::Chunk& chunk)
 
     //wait for the buffer to fill
     while (chunkSize == 0
-        && getStatus() != AudioStream::Status::Stopped)
+        && getStatus() == AudioStream::Status::Playing)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         chunkSize = getChunkSize();

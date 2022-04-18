@@ -96,6 +96,38 @@ public:
     */
     void stop();
 
+    /*
+    \brief Attempts to seek to the given time in the video file,
+    if one is open. If the given time is out of range, or no file
+    is loaded then it does nothing.
+    \param position - Time in seconds to which to seek.
+    */
+    void seek(float position);
+
+    /*!
+    \brief Returns the duration of a loaded file in seconds, or zero
+    if no file is currently loaded.
+    */
+    float getDuration() const;
+
+    /*!
+    \brief Return the current position, in seconds, within the loaded
+    file, or zero if no file is loaded.
+    */
+    float getPosition() const;
+
+    /*!
+    \brief Set looped playback enabled
+    \param looped - True to loop playback, or false to stop when
+    playback reaches the end of the file.
+    */
+    void setLooped(bool looped);
+
+    /*!
+    \brief Gets whether or not playback is currently set to looped
+    */
+    bool getLooped() const { return m_looped; };
+
     /*!
     \brief Returns a reference to the texture to which the video is
     rendered.
@@ -105,6 +137,7 @@ public:
 private:
 
     plm_t* m_plm;
+    bool m_looped;
 
     float m_timeAccumulator;
     float m_frameTime;

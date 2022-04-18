@@ -129,6 +129,20 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
                 {
                     m_video.stop();
                 }
+                ImGui::SameLine();
+                auto looped = m_video.getLooped();
+                if (ImGui::Checkbox("Loop", &looped))
+                {
+                    m_video.setLooped(looped);
+                }
+
+                ImGui::Text("%3.3f / %3.3f", m_video.getPosition(), m_video.getDuration());
+
+                ImGui::SameLine();
+                if (ImGui::Button("Jump"))
+                {
+                    m_video.seek(100.f);
+                }
             }
             ImGui::End();
         });
