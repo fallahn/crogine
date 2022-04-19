@@ -40,6 +40,7 @@ source distribution.
 
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
@@ -205,8 +206,6 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         }
         m_sharedData.hosting = false;
     }
-
-    Achievements::awardAchievement("socialiser");
 }
 
 //public
@@ -285,6 +284,7 @@ void ClubhouseState::addSystems()
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
+    m_uiScene.addSystem<cro::SpriteAnimator>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);

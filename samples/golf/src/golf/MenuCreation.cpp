@@ -718,6 +718,8 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                                 requestStackPush(StateID::Clubhouse);
                             }
                         };
+
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::Socialiser]);
                     }
                 });
 
@@ -848,7 +850,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     menuTransform.addChild(entity.getComponent<cro::Transform>());
     auto cursorEnt = entity;
 
-    //this callback is overriden for the avatar previews
+    //this callback is overridden for the avatar previews
     mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity, avatarEnt](cro::Entity e) mutable
         {
