@@ -291,20 +291,28 @@ void ClubhouseState::addSystems()
 
 void ClubhouseState::loadResources()
 {
-    std::string wobble;
-    if (m_sharedData.vertexSnap)
-    {
-        wobble = "#define WOBBLE\n";
-    }
+    m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
 
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
 
-
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
     auto* shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::Leaderboard, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define TEXTURED\n#define RX_SHADOWS\n");
+    shader = &m_resources.shaders.get(ShaderID::Leaderboard);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Shelf] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define RX_SHADOWS\n#define REFLECTIONS\n");
+    shader = &m_resources.shaders.get(ShaderID::Trophy);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Trophy] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
 
 
     m_menuSounds.loadFromFile("assets/golf/sound/billiards/menu.xas", m_resources.audio);
@@ -321,9 +329,9 @@ void ClubhouseState::buildScene()
 
     cro::ModelDefinition md(m_resources);
 
-    auto applyMaterial = [&](cro::Entity entity)
+    auto applyMaterial = [&](cro::Entity entity, std::int32_t id)
     {
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+        auto material = m_resources.materials.get(m_materialIDs[id]);
         applyMaterialData(md, material);
         entity.getComponent<cro::Model>().setMaterial(0, material);
     };
@@ -334,7 +342,7 @@ void ClubhouseState::buildScene()
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
 
-        applyMaterial(entity);
+        applyMaterial(entity, MaterialID::Cel);
     }
 
     if (md.loadFromFile("assets/golf/models/menu_ground.cmt"))
@@ -343,7 +351,7 @@ void ClubhouseState::buildScene()
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
 
-        applyMaterial(entity);
+        applyMaterial(entity, MaterialID::Cel);
     }
 
     if (md.loadFromFile("assets/golf/models/trophies/cabinet.cmt"))
@@ -353,7 +361,101 @@ void ClubhouseState::buildScene()
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        applyMaterial(entity);
+        applyMaterial(entity, MaterialID::Cel);
+    }
+
+    if (md.loadFromFile("assets/golf/models/trophies/shelf.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.25f, 1.2f, -1.6f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Shelf);
+
+        entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.25f, 1.8f, -1.6f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Shelf);
+    }
+
+    if (md.loadFromFile("assets/golf/models/trophies/trophy05.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.25f, 1.2f, -0.9f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Trophy);
+    }
+
+    if (md.loadFromFile("assets/golf/models/trophies/trophy03.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.25f, 1.2f, -1.2f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Trophy);
+    }
+
+    if (md.loadFromFile("assets/golf/models/trophies/trophy04.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.25f, 1.2f, -2.3f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Trophy);
+    }
+
+    if (md.loadFromFile("assets/golf/models/trophies/trophy07.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.25f, 1.8f, -1.3f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 91.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Trophy);
+
+        entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.25f, 1.2f, -2.05f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 89.5f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Trophy);
+    }
+
+    if (md.loadFromFile("assets/golf/models/trophies/trophy06.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.25f, 1.8f, -1.9f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Trophy);
+    }
+
+    if (md.loadFromFile("assets/golf/models/trophies/trophy02.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.25f, 1.8f, -2.15f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Trophy);
+    }
+
+    if (md.loadFromFile("assets/golf/models/trophies/trophy01.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.25f, 1.8f, -1.f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Trophy);
     }
 
     if (md.loadFromFile("assets/golf/models/hole_19/snooker_model.cmt"))
@@ -363,7 +465,7 @@ void ClubhouseState::buildScene()
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        applyMaterial(entity);
+        applyMaterial(entity, MaterialID::Cel);
     }
 
     if (md.loadFromFile("assets/golf/models/table_legs.cmt"))
@@ -372,8 +474,15 @@ void ClubhouseState::buildScene()
         entity.addComponent<cro::Transform>().setPosition({ 18.6f, 0.f, -1.8f });
         md.createModel(entity);
 
-        applyMaterial(entity);
+        applyMaterial(entity, MaterialID::Cel);
     }
+
+
+
+    //TODO bar stools
+    //TODO sofa
+
+
 
     //ambience 01
     auto entity = m_backgroundScene.createEntity();
@@ -446,7 +555,8 @@ void ClubhouseState::buildScene()
     updateView(cam);
 
     auto sunEnt = m_backgroundScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -130.56f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -130.56f * cro::Util::Const::degToRad);
 
     createUI();
 }

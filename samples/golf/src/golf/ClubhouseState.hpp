@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
@@ -106,6 +107,7 @@ private:
         {
             Cel,
             Trophy,
+            Shelf,
 
             Count
         };
@@ -116,6 +118,7 @@ private:
     cro::RenderTexture m_backgroundTexture;
     cro::UniformBuffer m_scaleBuffer;
     cro::UniformBuffer m_resolutionBuffer;
+    cro::CubemapTexture m_reflectionMap;
 
     glm::vec2 m_viewScale;
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions; //I've forgotten why this is static...

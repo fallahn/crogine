@@ -704,6 +704,13 @@ void TrophyState::buildTrophyScene()
     m_resolutionBuffer.bind(1);
     m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
 
+
+    std::string wobble;
+    if (m_sharedData.vertexSnap)
+    {
+        wobble = "#define WOBBLE\n";
+    }
+
     if (!m_sharedData.sharedResources->shaders.hasShader(ShaderID::Course))
     {
         m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define RX_SHADOWS\n#define TEXTURED\n");
