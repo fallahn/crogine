@@ -33,12 +33,11 @@ source distribution.
 
 #ifdef __APPLE__
 #include <al.h>
-#include <alc.h>
+
 //silence deprecated openal warnings
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #else
 #include <AL/al.h>
-#include <AL/alc.h>
 #endif
 
 using namespace cro;

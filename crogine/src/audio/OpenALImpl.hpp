@@ -40,7 +40,6 @@ source distribution.
 #include <AL/alc.h>
 #endif
 
-
 #include <atomic>
 #include <array>
 #include <thread>
