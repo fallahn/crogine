@@ -113,7 +113,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
                     }
                 }
 
-                ImGui::Image(m_video.getTexture(), { 352.f, 288.f }, { 0.f, 0.f }, { 1.f, 1.f });
+                ImGui::Image(m_video.getTexture(), { 352.f, 288.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                 if (ImGui::Button("Play"))
                 {

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -135,6 +135,8 @@ namespace
     constexpr float ScanlineCount = 6500.f;
     constexpr float FadeTime = 1.f;
     constexpr float HoldTime = 3.5f;
+
+    constexpr glm::vec2 DisplaySize(1920.f, 1080.f);
 }
 
 SplashState::SplashState(cro::StateStack& stack, cro::State::Context context)
@@ -148,6 +150,9 @@ SplashState::SplashState(cro::StateStack& stack, cro::State::Context context)
     addSystems();
     loadAssets();
     createUI();
+
+
+    m_video.play();
 }
 
 //public
@@ -186,6 +191,15 @@ bool SplashState::simulate(float dt)
     glCheck(glUniform1f(m_timeUniform, accum * (1.0f * m_windowRatio)));
 
     m_uiScene.simulate(dt);
+    m_video.update(dt);
+
+    if (m_video.getDuration() != 0 &&
+        m_video.getPosition() / m_video.getDuration() == 1)
+    {
+        requestStackClear();
+        requestStackPush(StateID::Menu);
+    }
+
     return false;
 }
 
@@ -214,115 +228,131 @@ void SplashState::loadAssets()
     m_timeUniform = m_noiseShader.getUniformID("u_time");
     m_scanlineUniform = m_noiseShader.getUniformID("u_lineCount");
 
-    if (!m_texture.loadFromFile("assets/images/startup.png"))
+    if (m_video.loadFromFile("assets/intro.mpg"))
     {
-        cro::Image img;
-        img.create(128, 128, cro::Colour::Magenta);
-        m_texture.loadFromImage(img);
-    }
+        glm::vec2 size(m_video.getTexture().getSize());
+        
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ DisplaySize.x / 2.f, DisplaySize.y / 2.f, -0.2f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>(m_video.getTexture());
 
-    //static image
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
-    entity.addComponent<cro::Drawable2D>().setShader(&m_noiseShader);
-    entity.addComponent<cro::Sprite>(m_texture);
-    
-    //audio
-    if (auto id = m_audioResource.load("assets/sound/startup.wav"); id > 0)
+        auto scale = DisplaySize.x / size.x;
+        entity.getComponent<cro::Transform>().setScale({ scale, scale });
+        entity.getComponent<cro::Transform>().setOrigin(size / 2.f);
+    }
+    else
     {
+        if (!m_texture.loadFromFile("assets/images/startup.png"))
+        {
+            cro::Image img;
+            img.create(128, 128, cro::Colour::Magenta);
+            m_texture.loadFromImage(img);
+        }
+
+        //static image
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
+        entity.addComponent<cro::Drawable2D>().setShader(&m_noiseShader);
+        entity.addComponent<cro::Sprite>(m_texture);
+
+        //audio
+        if (auto id = m_audioResource.load("assets/sound/startup.wav"); id > 0)
+        {
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::AudioEmitter>(m_audioResource.get(id));
+            entity.getComponent<cro::AudioEmitter>().setMixerChannel(2);
+            entity.getComponent<cro::AudioEmitter>().play();
+        }
+
+
+        //flickering image
         entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<cro::AudioEmitter>(m_audioResource.get(id));
-        entity.getComponent<cro::AudioEmitter>().setMixerChannel(2);
-        entity.getComponent<cro::AudioEmitter>().play();
-    }
-
-
-    //flickering image
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 9.f, 7.f, -0.2f });
-    entity.addComponent<cro::Drawable2D>().setShader(&m_scanlineShader);
-    entity.addComponent<cro::Sprite>(m_texture);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float)
-    {
-        if (cro::Util::Random::value(0, 10) == 10)
+        entity.addComponent<cro::Transform>().setPosition({ 9.f, 7.f, -0.2f });
+        entity.addComponent<cro::Drawable2D>().setShader(&m_scanlineShader);
+        entity.addComponent<cro::Sprite>(m_texture);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float)
         {
-            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-        }
-        else
-        {
-            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-        }
-    };
-
-    //black fade
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>().getVertexData() =
-    {
-        cro::Vertex2D(glm::vec2(0.f, 1080.f), cro::Colour::Black),
-        cro::Vertex2D(glm::vec2(0.f), cro::Colour::Black),
-        cro::Vertex2D(glm::vec2(1920.f, 1080.f), cro::Colour::Black),
-        cro::Vertex2D(glm::vec2(1920.f, 0.f), cro::Colour::Black)
-    };
-    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        auto& [currTime, state] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
-        switch (state)
-        {
-        default: break;
-        case 0:
-            currTime = std::min(FadeTime, currTime + dt);
+            if (cro::Util::Random::value(0, 10) == 10)
             {
-                float alpha = 1.f - (currTime / FadeTime);
-                auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-                for (auto& v : verts)
-                {
-                    v.colour.setAlpha(alpha);
-                }
+                e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            }
+            else
+            {
+                e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+            }
+        };
 
-                if (currTime == FadeTime)
+        //black fade
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>().getVertexData() =
+        {
+            cro::Vertex2D(glm::vec2(0.f, 1080.f), cro::Colour::Black),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Black),
+            cro::Vertex2D(glm::vec2(1920.f, 1080.f), cro::Colour::Black),
+            cro::Vertex2D(glm::vec2(1920.f, 0.f), cro::Colour::Black)
+        };
+        entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            auto& [currTime, state] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+            switch (state)
+            {
+            default: break;
+            case 0:
+                currTime = std::min(FadeTime, currTime + dt);
                 {
-                    state = 1;
+                    float alpha = 1.f - (currTime / FadeTime);
+                    auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+                    for (auto& v : verts)
+                    {
+                        v.colour.setAlpha(alpha);
+                    }
+
+                    if (currTime == FadeTime)
+                    {
+                        state = 1;
+                        currTime = 0.f;
+                    }
+                }
+                break;
+            case 1:
+                currTime = std::min(HoldTime, currTime + dt);
+                if (currTime == HoldTime)
+                {
                     currTime = 0.f;
+                    state = 2;
                 }
-            }
-            break;
-        case 1:
-            currTime = std::min(HoldTime, currTime + dt);
-            if (currTime == HoldTime)
-            {
-                currTime = 0.f;
-                state = 2;
-            }
-            break;
-        case 2:
-            currTime = std::min(FadeTime, currTime + dt);
-            {
-                float alpha = currTime / FadeTime;
-                auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-                for (auto& v : verts)
+                break;
+            case 2:
+                currTime = std::min(FadeTime, currTime + dt);
                 {
-                    v.colour.setAlpha(alpha);
-                }
+                    float alpha = currTime / FadeTime;
+                    auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+                    for (auto& v : verts)
+                    {
+                        v.colour.setAlpha(alpha);
+                    }
 
-                if (currTime == FadeTime)
-                {
-                    e.getComponent<cro::Callback>().active = false;
-                    requestStackClear();
-                    requestStackPush(StateID::Menu);
+                    if (currTime == FadeTime)
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                        requestStackClear();
+                        requestStackPush(StateID::Menu);
+                    }
                 }
+                break;
             }
-            break;
-        }
-    };
+        };
+    }
 }
 
 void SplashState::createUI()
@@ -331,7 +361,6 @@ void SplashState::createUI()
     auto camEnt = m_uiScene.getActiveCamera();
     updateView(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&SplashState::updateView, this, std::placeholders::_1);
-    updateView(camEnt.getComponent<cro::Camera>());
 }
 
 void SplashState::updateView(cro::Camera& cam)
@@ -340,7 +369,7 @@ void SplashState::updateView(cro::Camera& cam)
     glm::vec2 size(cro::App::getWindow().getSize());
 
     float windowRatio = size.x / size.y;
-    static constexpr float viewRatio = 16.f/9.f;
+    static constexpr float viewRatio = DisplaySize.x / DisplaySize.y;
     cro::FloatRect vp = { 0.f, 0.f, 1.f, 1.f };
 
     if (windowRatio > viewRatio)
@@ -354,10 +383,10 @@ void SplashState::updateView(cro::Camera& cam)
         vp.bottom = (1.f - vp.height) / 2.f;
     }
 
-    cam.setOrthographic(0.f, 1920.f, 0.f, 1080.f, -2.f, 10.f);
+    cam.setOrthographic(0.f, DisplaySize.x, 0.f, DisplaySize.y, -2.f, 10.f);
     cam.viewport = vp;
 
-    m_windowRatio = size.y / 1080.f;
+    m_windowRatio = size.y / DisplaySize.y;
 
     glCheck(glUseProgram(m_noiseShader.getGLHandle()));
     glCheck(glUniform1f(m_scanlineUniform, m_windowRatio * ScanlineCount));
