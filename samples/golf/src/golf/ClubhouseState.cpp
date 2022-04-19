@@ -483,20 +483,22 @@ void ClubhouseState::buildScene()
 
     //TODO bar stools
     //TODO sofa
-
+    //TODO arcade machine (animated / video texture?)
 
 
     //ambience 01
     auto entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 19.6f, 2.f, -0.8f });
+    entity.addComponent<cro::Transform>().setPosition({ 23.6f, 2.f, -1.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("01");
     entity.getComponent<cro::AudioEmitter>().play();
+    entity.getComponent<cro::AudioEmitter>().setPitch(1.1f);
 
     //ambience 02
     entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 17.6f, 1.6f, -2.8f });
+    entity.addComponent<cro::Transform>().setPosition({ 17.6f, 1.6f, -1.8f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("02");
     entity.getComponent<cro::AudioEmitter>().play();
+    entity.getComponent<cro::AudioEmitter>().setPitch(0.91f);
 
     //music
     entity = m_backgroundScene.createEntity();
@@ -512,7 +514,7 @@ void ClubhouseState::buildScene()
         [](cro::Entity e, float dt)
     {
         auto& [currTime, target] = e.getComponent<cro::Callback>().getUserData<std::pair<float, const float>>();
-        currTime = std::min(1.f, currTime + dt);
+        currTime = std::min(1.f, currTime + (dt * 0.5f));
 
         e.getComponent<cro::AudioEmitter>().setVolume(cro::Util::Easing::easeOutQuint(currTime) * target);
 
@@ -541,7 +543,7 @@ void ClubhouseState::buildScene()
 
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 30.f);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 35.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 

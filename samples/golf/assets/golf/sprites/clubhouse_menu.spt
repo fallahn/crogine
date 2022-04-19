@@ -1,0 +1,19 @@
+spritesheet clubhouse_menu
+{
+    src = "assets/golf/images/clubhouse_menu.png"
+    smooth = false
+    repeat = false
+
+    sprite menu_background
+    {
+        bounds = 0.000000,0.000000,152.000000,85.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite title
+    {
+        bounds = 0.000000,93.000000,232.000000,64.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+}

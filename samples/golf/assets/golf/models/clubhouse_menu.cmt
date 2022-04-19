@@ -13,7 +13,7 @@ model clubhouse_menu
         double_sided = false
         rx_shadows = true
         blendmode = none
-        diffuse = "assets/golf/images/pavilion.png"
+        diffuse = "assets/golf/images/clubhouse.png"
 
     }
 }

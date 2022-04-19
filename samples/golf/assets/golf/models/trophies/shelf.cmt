@@ -1,7 +1,7 @@
 model shelf
 {
     mesh = assets/golf/models/trophies/shelf.cmb
-    cast_shadows = false
+    cast_shadows = true
 
     material VertexLit
     {

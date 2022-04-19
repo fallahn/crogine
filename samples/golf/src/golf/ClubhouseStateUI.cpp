@@ -265,7 +265,6 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
                 if (activated(evt))
                 {
                     m_sharedData.hosting = true;
-                    LogW << "this should select host or join" << std::endl;
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                     menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::PlayerSelect;
                     menuEntity.getComponent<cro::Callback>().active = true;
@@ -275,7 +274,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
             });
 
     //arcade
-    entity = createButton("Arcade (Coming Soon!)");
+    entity = createButton("Arcade (Soon!)");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
