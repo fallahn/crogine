@@ -205,6 +205,8 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         }
         m_sharedData.hosting = false;
     }
+
+    Achievements::awardAchievement("socialiser");
 }
 
 //public

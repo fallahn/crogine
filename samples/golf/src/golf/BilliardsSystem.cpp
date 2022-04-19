@@ -307,6 +307,8 @@ void BilliardsSystem::process(float dt)
 
 void BilliardsSystem::initTable(const TableData& tableData)
 {
+    m_spawnArea = tableData.spawnArea;
+
     auto meshData = cro::Detail::ModelBinary::read(tableData.collisionModel, m_vertexData, m_indexData);
 
     if (m_vertexData.empty() || m_indexData.empty())
@@ -433,6 +435,12 @@ glm::vec3 BilliardsSystem::getCueballPosition() const
         return btToGlm(m_cueball->getWorldTransform().getOrigin());
     }
     return glm::vec3(0.f);
+}
+
+bool BilliardsSystem::isValidSpawnPosition(glm::vec3 position) const
+{
+    glm::vec2 ballPos(position.x, -position.z);
+    return m_spawnArea.contains(ballPos);
 }
 
 //private

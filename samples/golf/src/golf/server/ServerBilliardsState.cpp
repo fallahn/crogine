@@ -445,6 +445,12 @@ cro::Entity BilliardsState::addBall(glm::vec3 position, std::uint8_t id)
     if (id == CueBall)
     {
         m_activeDirector->setCueball(entity);
+
+        //make sure the ball is in a valid spawn area
+        if (!m_scene.getSystem<BilliardsSystem>()->isValidSpawnPosition(position))
+        {
+            entity.getComponent<cro::Transform>().setPosition(m_activeDirector->getCueballPosition());
+        }
     }
 
     return entity;
@@ -452,21 +458,6 @@ cro::Entity BilliardsState::addBall(glm::vec3 position, std::uint8_t id)
 
 void BilliardsState::spawnBall(cro::Entity entity)
 {
-    /*auto position = entity.getComponent<cro::Transform>().getPosition();
-    auto id = entity.getComponent<BilliardBall>().id;
-
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, position, id](cro::Entity e, float)
-    {
-        if (e.getComponent<cro::Transform>().getPosition().y < -1.f)
-        {
-            m_scene.destroyEntity(e);
-
-            spawnBall(addBall(position, id));
-        }
-    };*/
-
     //notify client
     ActorInfo info;
     info.serverID = entity.getIndex();

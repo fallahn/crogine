@@ -173,6 +173,8 @@ public:
     bool hasCueball() const { return m_cueball != nullptr; }
     glm::vec3 getCueballPosition() const;
 
+    bool isValidSpawnPosition(glm::vec3) const;
+
 private:
 
     std::int32_t m_awakeCount;
@@ -218,6 +220,8 @@ private:
         glm::vec2 position = glm::vec2(0.f);
     };
     std::vector<Pocket> m_pockets;
+
+    cro::FloatRect m_spawnArea;
 
 #ifdef CRO_DEBUG_
     std::unique_ptr<btCylinderShape> m_pocketShape;

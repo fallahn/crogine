@@ -66,6 +66,8 @@ namespace AchievementID
         NoMatch,
         SkinOfYourTeeth,
 
+        Socialiser,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
@@ -90,7 +92,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "join_the_club",
     "stroke_of_genius",
     "no_match",
-    "skin_teeth"
+    "skin_teeth",
+    "socialiser"
 };
 
 //appears on the notification
@@ -113,7 +116,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Join The Club",
     "Stroke of Genius",
     "No Match for You",
-    "Skin of Your Teeth"
+    "Skin of Your Teeth",
+    "Socialiser"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -136,7 +140,8 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Make it to the 19th Hole", false),
     std::make_pair("Win a round of Stroke Play", false),
     std::make_pair("Win a round of Match Play", false),
-    std::make_pair("Win a round of Skins", false)
+    std::make_pair("Win a round of Skins", false),
+    std::make_pair("Enter the Clubhouse at least once", false),
 };
 
 //assuming tropies load correctly they are
@@ -175,7 +180,8 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldCup,
     TrophyID::GoldFigure,
     TrophyID::GoldFigure,
-    TrophyID::GoldFigure
+    TrophyID::GoldFigure,
+    TrophyID::SilverCup
 };
 
 namespace StatID

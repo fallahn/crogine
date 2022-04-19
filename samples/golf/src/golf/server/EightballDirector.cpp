@@ -198,6 +198,7 @@ std::uint32_t EightballDirector::getTargetID(glm::vec3 playerPos) const
     return retVal;
 }
 
+
 //private
 std::int32_t EightballDirector::getStatusType(std::int8_t ballID) const
 {

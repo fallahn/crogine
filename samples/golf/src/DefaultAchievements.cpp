@@ -153,7 +153,7 @@ AchievementImage DefaultAchievements::getIcon(const std::string& name) const
 {
     if (m_achievements.count(name) != 0)
     {
-        std::int32_t xCount = m_texture.getSize().x / ImageSize;
+        std::int32_t xCount = static_cast<std::int32_t>(m_texture.getSize().x / ImageSize);
         if (xCount != 0)
         {
             std::int32_t idx = m_achievements.at(name).achieved ? std::max(0, m_achievements.at(name).id) : 0;
