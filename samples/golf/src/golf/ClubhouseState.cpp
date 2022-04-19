@@ -53,6 +53,11 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/gui/Gui.hpp>
 
+namespace
+{
+#include "TerrainShader.inl"
+}
+
 ClubhouseContext::ClubhouseContext(ClubhouseState* state)
 {
     uiScene = &state->m_uiScene;
@@ -253,6 +258,9 @@ bool ClubhouseState::simulate(float dt)
 
 void ClubhouseState::render()
 {
+    m_scaleBuffer.bind(0);
+    m_resolutionBuffer.bind(1);
+
     m_backgroundTexture.clear(cro::Colour::CornflowerBlue);
     m_backgroundScene.render();
     m_backgroundTexture.display();
@@ -283,7 +291,23 @@ void ClubhouseState::addSystems()
 
 void ClubhouseState::loadResources()
 {
-    m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
+    std::string wobble;
+    if (m_sharedData.vertexSnap)
+    {
+        wobble = "#define WOBBLE\n";
+    }
+
+    std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
+
+
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    auto* shader = &m_resources.shaders.get(ShaderID::Course);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+
+
+    m_menuSounds.loadFromFile("assets/golf/sound/billiards/menu.xas", m_resources.audio);
     m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_uiScene.createEntity();
@@ -296,11 +320,21 @@ void ClubhouseState::buildScene()
 
 
     cro::ModelDefinition md(m_resources);
+
+    auto applyMaterial = [&](cro::Entity entity)
+    {
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+        applyMaterialData(md, material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+    };
+
     if (md.loadFromFile("assets/golf/models/clubhouse_menu.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
+
+        applyMaterial(entity);
     }
 
     if (md.loadFromFile("assets/golf/models/menu_ground.cmt"))
@@ -308,6 +342,8 @@ void ClubhouseState::buildScene()
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
+
+        applyMaterial(entity);
     }
 
     if (md.loadFromFile("assets/golf/models/trophies/cabinet.cmt"))
@@ -316,6 +352,8 @@ void ClubhouseState::buildScene()
         entity.addComponent<cro::Transform>().setPosition({14.3f, 1.2f, -1.6f});
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
+
+        applyMaterial(entity);
     }
 
     if (md.loadFromFile("assets/golf/models/hole_19/snooker_model.cmt"))
@@ -324,6 +362,8 @@ void ClubhouseState::buildScene()
         entity.addComponent<cro::Transform>().setPosition({ 18.6f, 0.5f, -1.8f });
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
+
+        applyMaterial(entity);
     }
 
     if (md.loadFromFile("assets/golf/models/table_legs.cmt"))
@@ -331,7 +371,46 @@ void ClubhouseState::buildScene()
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 18.6f, 0.f, -1.8f });
         md.createModel(entity);
+
+        applyMaterial(entity);
     }
+
+    //ambience 01
+    auto entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 19.6f, 2.f, -0.8f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("01");
+    entity.getComponent<cro::AudioEmitter>().play();
+
+    //ambience 02
+    entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 17.6f, 1.6f, -2.8f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("02");
+    entity.getComponent<cro::AudioEmitter>().play();
+
+    //music
+    entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("music");
+    entity.getComponent<cro::AudioEmitter>().play();
+
+    auto targetVol = entity.getComponent<cro::AudioEmitter>().getVolume();
+    entity.getComponent<cro::AudioEmitter>().setVolume(0.f);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::pair<float, const float>>(0.f, targetVol);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& [currTime, target] = e.getComponent<cro::Callback>().getUserData<std::pair<float, const float>>();
+        currTime = std::min(1.f, currTime + dt);
+
+        e.getComponent<cro::AudioEmitter>().setVolume(cro::Util::Easing::easeOutQuint(currTime) * target);
+
+        if (currTime == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
+
 
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)

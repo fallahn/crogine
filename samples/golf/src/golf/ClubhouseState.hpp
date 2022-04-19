@@ -100,6 +100,18 @@ private:
     };
     std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
+    struct MaterialID final
+    {
+        enum
+        {
+            Cel,
+            Trophy,
+
+            Count
+        };
+    };
+    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
+
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_backgroundTexture;
     cro::UniformBuffer m_scaleBuffer;
