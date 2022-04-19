@@ -681,6 +681,9 @@
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundStream.hpp">
       <Filter>Header Files\audio\sound system</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\VideoPlayer.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1129,6 +1132,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\audio\sound_system\SoundStream.cpp">
       <Filter>Source Files\audio\sound system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\VideoPlayer.cpp">
+      <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

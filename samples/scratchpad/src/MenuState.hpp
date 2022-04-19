@@ -30,7 +30,7 @@ source distribution.
 #pragma once
 
 #include "StateIDs.hpp"
-#include "video_player/VideoPlayer.hpp"
+#include <crogine/graphics/VideoPlayer.hpp>
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -57,7 +57,7 @@ namespace sp
         cro::Scene m_scene;
         cro::Font m_font;
 
-        VideoPlayer m_video;
+        cro::VideoPlayer m_video;
 
         void addSystems();
         void loadAssets();

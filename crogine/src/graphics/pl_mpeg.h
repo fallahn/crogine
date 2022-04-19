@@ -206,7 +206,7 @@ typedef struct {
 // displayed frame. The sizes of planes are always rounded up to the nearest
 // macroblock (16px).
 
-typedef struct {
+typedef struct plm_plane_t {
     unsigned int width;
     unsigned int height;
     uint8_t *data;
@@ -217,7 +217,7 @@ typedef struct {
 // width and height denote the desired display size of the frame. This may be
 // different from the internal size of the 3 planes.
 
-typedef struct {
+typedef struct plm_frame_t {
     double time;
     unsigned int width;
     unsigned int height;
@@ -242,7 +242,7 @@ typedef void(*plm_video_decode_callback)
 
 #define PLM_AUDIO_SAMPLES_PER_FRAME 1152
 
-typedef struct {
+typedef struct plm_samples_t {
     double time;
     unsigned int count;
     #ifdef PLM_AUDIO_SEPARATE_CHANNELS

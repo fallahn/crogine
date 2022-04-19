@@ -43,12 +43,6 @@
     <Filter Include="Source Files\billiards">
       <UniqueIdentifier>{d965ca6c-b462-403b-a56e-e9a26c2818dc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\video player">
-      <UniqueIdentifier>{521ddf1a-91cc-4607-afd2-c4b92af77ba2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\video player">
-      <UniqueIdentifier>{2caf817d-030c-4b8e-b2ae-572464677269}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -122,9 +116,6 @@
     </ClCompile>
     <ClCompile Include="src\billiards\InterpolationSystem.cpp">
       <Filter>Source Files\billiards</Filter>
-    </ClCompile>
-    <ClCompile Include="src\video_player\VideoPlayer.cpp">
-      <Filter>Source Files\video player</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -223,12 +214,6 @@
     </ClInclude>
     <ClInclude Include="src\billiards\InterpolationSystem.hpp">
       <Filter>Header Files\billiards</Filter>
-    </ClInclude>
-    <ClInclude Include="src\video_player\pl_mpeg.h">
-      <Filter>Header Files\video player</Filter>
-    </ClInclude>
-    <ClInclude Include="src\video_player\VideoPlayer.hpp">
-      <Filter>Header Files\video player</Filter>
     </ClInclude>
     <ClInclude Include="src\CircularBuffer.hpp">
       <Filter>Header Files</Filter>

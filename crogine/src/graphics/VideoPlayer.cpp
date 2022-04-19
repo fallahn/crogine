@@ -27,12 +27,14 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#define PL_MPEG_IMPLEMENTATION
+#include <crogine/graphics/VideoPlayer.hpp>
 
-#include "VideoPlayer.hpp"
+#define PL_MPEG_IMPLEMENTATION
+#include "pl_mpeg.h"
+
+#include "../detail/GLCheck.hpp"
 
 #include <crogine/core/FileSystem.hpp>
-#include <crogine/detail/OpenGL.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include <string>
@@ -93,8 +95,10 @@ void main()
     static constexpr std::uint32_t AudioBufferSize = PLM_AUDIO_SAMPLES_PER_FRAME * ChannelCount;
 }
 
+using namespace cro;
+
 //C senor.
-void videoCallback(plm_t* mpg, plm_frame_t* frame, void* user)
+void cro::videoCallback(plm_t* mpg, plm_frame_t* frame, void* user)
 {
     auto* videoPlayer = static_cast<VideoPlayer*>(user);
     videoPlayer->updateTexture(videoPlayer->m_y.getGLHandle(), &frame->y);
@@ -102,7 +106,7 @@ void videoCallback(plm_t* mpg, plm_frame_t* frame, void* user)
     videoPlayer->updateTexture(videoPlayer->m_cr.getGLHandle(), &frame->cr);
 }
 
-void audioCallback(plm_t*, plm_samples_t* samples, void* user)
+void cro::audioCallback(plm_t*, plm_samples_t* samples, void* user)
 {
     auto* videoPlayer = static_cast<VideoPlayer*>(user);
     videoPlayer->m_audioStream.pushData(samples->interleaved);   

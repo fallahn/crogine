@@ -168,6 +168,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\Transformable2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\UniformBuffer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Vertex2D.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\VideoPlayer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\GraphEditor.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImCurveEdit.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGradient.h" />
@@ -353,6 +354,7 @@
     <ClCompile Include="..\crogine\src\graphics\TextureResource.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Transformable2D.cpp" />
     <ClCompile Include="..\crogine\src\graphics\UniformBuffer.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\VideoPlayer.cpp" />
     <ClCompile Include="..\crogine\src\imgui\GraphEditor.cpp" />
     <ClCompile Include="..\crogine\src\imgui\Gui.cpp" />
     <ClCompile Include="..\crogine\src\imgui\GuiClient.cpp" />
