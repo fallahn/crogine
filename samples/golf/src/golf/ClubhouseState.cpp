@@ -95,7 +95,8 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_windBuffer        ("WindValues", sizeof(WindData)),
     m_viewScale         (2.f),
     m_currentMenu       (MenuID::Main),
-    m_prevMenu          (MenuID::Main)
+    m_prevMenu          (MenuID::Main),
+    m_tableIndex        (0)
 {
     std::fill(m_readyState.begin(), m_readyState.end(), false);
 
@@ -362,6 +363,30 @@ void ClubhouseState::loadResources()
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+
+
+    validateTables();
+}
+
+void ClubhouseState::validateTables()
+{
+    const std::string tablePath("assets/golf/tables/");
+
+    auto fileList = cro::FileSystem::listFiles(tablePath);
+    for (const auto& file : fileList)
+    {
+        TableData data;
+        if (data.loadFromFile(tablePath + file) //validates properties but not file existence
+            && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + data.viewModel))
+        {
+            m_tableData.push_back(data);
+        }
+    }
+
+    if (m_tableData.empty())
+    {
+        m_sharedData.mapDirectory = m_tableData[0].name;
+    }
 }
 
 void ClubhouseState::buildScene()

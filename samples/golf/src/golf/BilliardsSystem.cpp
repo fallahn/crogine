@@ -53,6 +53,9 @@ bool TableData::loadFromFile(const std::string& path)
     cro::ConfigFile tableConfig;
     if (tableConfig.loadFromFile(path))
     {
+        name = cro::FileSystem::getFileName(path);
+        name = name.substr(0, name.find_last_of('.'));
+
         const auto& props = tableConfig.getProperties();
         for (const auto& p : props)
         {

@@ -33,6 +33,7 @@ source distribution.
 #include "MenuCallbacks.hpp"
 #include "CommonConsts.hpp"
 #include "Billboard.hpp"
+#include "BilliardsSystem.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/State.hpp>
@@ -42,6 +43,8 @@ source distribution.
 #include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/detail/glm/vec2.hpp>
+
+#include <vector>
 
 namespace cro
 {
@@ -140,8 +143,12 @@ private:
 
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
+    std::vector<TableData> m_tableData;
+    std::size_t m_tableIndex;
+
     void addSystems();
     void loadResources();
+    void validateTables();
     void buildScene();
     void createUI();
 

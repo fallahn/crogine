@@ -289,7 +289,7 @@ void BilliardsState::initScene()
     //add director based on rule set
     switch (m_tableData.rules)
     {
-    default: break;
+    default: //break; //TODO implement other rule sets
     case TableData::Eightball:
         m_activeDirector = m_scene.addDirector<EightballDirector>();
         break;

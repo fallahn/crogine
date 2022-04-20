@@ -292,20 +292,27 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     };
 
     //billiards
-    entity = createButton("Billiards");
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
-            {
-                if (activated(evt))
+    if (!m_tableData.empty())
+    {
+        entity = createButton("Billiards");
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
-                    m_sharedData.hosting = true;
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-                    menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::PlayerSelect;
-                    menuEntity.getComponent<cro::Callback>().active = true;
+                    if (activated(evt))
+                    {
+                        m_sharedData.hosting = true;
+                        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+                        menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::PlayerSelect;
+                        menuEntity.getComponent<cro::Callback>().active = true;
 
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                }
-            });
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    }
+                });
+    }
+    else
+    {
+        entity = createButton("No Tables Found");
+    }
 
     //arcade
     /*entity = createButton("Arcade (Soon!)");

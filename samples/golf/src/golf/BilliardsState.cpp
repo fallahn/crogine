@@ -585,8 +585,8 @@ void BilliardsState::addSystems()
 
 void BilliardsState::buildScene()
 {
-    //m_gameScene.setCubemap("assets/golf/images/skybox/billiards/sky.ccm");
-    //TODO validate the table data (or should this be done by the menu?)
+    //table data should have already been validated by the menu state
+    //so we assume here that it's safe to load.
 
     std::string path = "assets/golf/tables/" + m_sharedData.mapDirectory + ".table";
     TableData tableData;
@@ -610,7 +610,9 @@ void BilliardsState::buildScene()
     }
     else
     {
-        //TODO push error for missing data.
+        //push error for missing data.
+        m_sharedData.errorMessage = "Unable to load table data";
+        requestStackPush(StateID::Error);
     }
 
     //update the 3D view

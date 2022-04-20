@@ -85,6 +85,7 @@ struct PocketInfo final
 
 struct TableData final
 {
+    std::string name;
     std::string collisionModel;
     std::string viewModel;
     std::vector<PocketInfo> pockets;
