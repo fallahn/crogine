@@ -587,7 +587,7 @@ void BilliardsState::buildScene()
 {
     //table data should have already been validated by the menu state
     //so we assume here that it's safe to load.
-
+    
     std::string path = "assets/golf/tables/" + m_sharedData.mapDirectory + ".table";
     TableData tableData;
     if (tableData.loadFromFile(path))

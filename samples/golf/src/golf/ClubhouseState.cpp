@@ -39,6 +39,7 @@ source distribution.
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
@@ -63,6 +64,15 @@ namespace
 {
 #include "TerrainShader.inl"
 #include "BillboardShader.inl"
+
+    const std::array<cro::String, TableData::Rules::Count> TableStrings =
+    {
+        cro::String("Eight Ball"),
+        cro::String("Nine Ball"),
+        cro::String("Bar Billiards"),
+        cro::String("Snooker"),
+        cro::String("Void")
+    };
 }
 
 ClubhouseContext::ClubhouseContext(ClubhouseState* state)
@@ -159,7 +169,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
 
             //set the course selection menu
-            //addTableSelectButtons();
+            addTableSelectButtons();
 
             //send a UI refresh to correctly place buttons
             glm::vec2 size(GolfGame::getActiveTarget()->getSize());
@@ -795,20 +805,36 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
             //check we have the local data (or at least something with the same name)
             auto table = deserialiseString(evt.packet);
 
-            /*if (auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
-                [&course](const CourseData& cd)
+            if (auto data = std::find_if(m_tableData.cbegin(), m_tableData.cend(),
+                [&table](const TableData& td)
                 {
-                    return cd.directory == course;
-                }); data != m_courseData.cend())*/
+                    return td.name == table;
+                }); data != m_tableData.cend())
             {
                 m_sharedData.mapDirectory = table;
+                m_tableIndex = std::distance(m_tableData.cbegin(), data);
 
                 //update UI
-                
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Menu::CourseTitle;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(TableStrings[m_tableData[m_tableIndex].rules]);
+                    centreText(e);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
-            //else
+            else
             {
                 //print to UI course is missing
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Menu::CourseTitle;
+                cmd.action = [table](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(table + ": not found.");
+                    centreText(e);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
         }
         break;

@@ -100,7 +100,9 @@ struct SpriteID final
         StartGame,
         Connect,
         PrevCourse,
+        PrevCourseHighlight,
         NextCourse,
+        NextCourseHighlight,
 
         Count
     };

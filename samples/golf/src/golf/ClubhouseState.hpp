@@ -146,6 +146,14 @@ private:
     std::vector<TableData> m_tableData;
     std::size_t m_tableIndex;
 
+    struct HostOptionCallbacks final
+    {
+        std::uint32_t prevTable = 0;
+        std::uint32_t nextTable = 0;
+        std::uint32_t mouseEnter = 0;
+        std::uint32_t mouseExit = 0;
+    }m_tableSelectCallbacks;
+
     void addSystems();
     void loadResources();
     void validateTables();
@@ -163,6 +171,7 @@ private:
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);
     bool applyTextEdit(); //returns true if this consumed event
+    void addTableSelectButtons();
 
     void handleNetEvent(const cro::NetEvent&);
 
