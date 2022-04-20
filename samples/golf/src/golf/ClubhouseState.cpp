@@ -105,8 +105,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_windBuffer        ("WindValues", sizeof(WindData)),
     m_viewScale         (2.f),
     m_currentMenu       (MenuID::Main),
-    m_prevMenu          (MenuID::Main),
-    m_tableIndex        (0)
+    m_prevMenu          (MenuID::Main)
 {
     std::fill(m_readyState.begin(), m_readyState.end(), false);
 
@@ -812,14 +811,14 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
                 }); data != m_tableData.cend())
             {
                 m_sharedData.mapDirectory = table;
-                m_tableIndex = std::distance(m_tableData.cbegin(), data);
+                m_sharedData.courseIndex = std::distance(m_tableData.cbegin(), data);
 
                 //update UI
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Menu::CourseTitle;
                 cmd.action = [&](cro::Entity e, float)
                 {
-                    e.getComponent<cro::Text>().setString(TableStrings[m_tableData[m_tableIndex].rules]);
+                    e.getComponent<cro::Text>().setString(TableStrings[m_tableData[m_sharedData.courseIndex].rules]);
                     centreText(e);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

@@ -359,6 +359,9 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
                 {
                     quitLobby();
 
+                    //reset this else we might put course data out of range
+                    m_sharedData.courseIndex = 0;
+
                     requestStackClear();
                     requestStackPush(StateID::Menu);
                 }
@@ -748,10 +751,9 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
         {
             if (activated(evt))
             {
-                //m_sharedData.courseIndex = (m_sharedData.courseIndex + (m_tableData.size() - 1)) % m_tableData.size();
-                m_tableIndex = (m_tableIndex + (m_tableData.size() - 1)) % m_tableData.size();
+                m_sharedData.courseIndex = (m_sharedData.courseIndex + (m_tableData.size() - 1)) % m_tableData.size();
 
-                m_sharedData.mapDirectory = m_tableData[m_tableIndex].name;
+                m_sharedData.mapDirectory = m_tableData[m_sharedData.courseIndex].name;
                 auto data = serialiseString(m_sharedData.mapDirectory);
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
@@ -763,10 +765,9 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
         {
             if (activated(evt))
             {
-                //m_sharedData.courseIndex = (m_sharedData.courseIndex + 1) % m_tableData.size();
-                m_tableIndex = (m_tableIndex + 1) % m_tableData.size();
+                m_sharedData.courseIndex = (m_sharedData.courseIndex + 1) % m_tableData.size();
 
-                m_sharedData.mapDirectory = m_tableData[m_tableIndex].name;
+                m_sharedData.mapDirectory = m_tableData[m_sharedData.courseIndex].name;
                 auto data = serialiseString(m_sharedData.mapDirectory);
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
 

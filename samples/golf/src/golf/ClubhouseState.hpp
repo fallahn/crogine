@@ -144,7 +144,6 @@ private:
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
     std::vector<TableData> m_tableData;
-    std::size_t m_tableIndex;
 
     struct HostOptionCallbacks final
     {
