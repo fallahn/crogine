@@ -1,49 +1,73 @@
 spritesheet player_menu
 {
     src = "assets/golf/images/player_menu.png"
-
-    sprite background
-    {
-        bounds = 0,0,370,208
-    }
-
-    sprite keyboard
-    {
-        bounds = 0,214,83,31
-    }
-
-    sprite controller
-    {
-        bounds = 87,214,50,33
-    }
-
-    sprite arrow_l_h
-    {
-        bounds = 143,214,17,19
-    }
-
-    sprite arrow_r_h
-    {
-        bounds = 163,214,17,19
-    }
+    smooth = false
+    repeat = false
 
     sprite arrow_l
     {
-        bounds = 183,214,17,19
-    }
+        bounds = 183.000000,214.000000,17.000000,19.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
-    sprite arrow_r
+    }
+    sprite background
     {
-        bounds = 203,214,17,19
-    }
+        bounds = 0.000000,0.000000,370.000000,208.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
+    }
+    sprite arrow_r_h
+    {
+        bounds = 163.000000,214.000000,17.000000,19.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite keyboard
+    {
+        bounds = 0.000000,214.000000,83.000000,31.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
     sprite title
     {
-        bounds = 0, 259 ,190, 51
-    }
+        bounds = 0.000000,259.000000,190.000000,51.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
+    }
+    sprite controller
+    {
+        bounds = 87.000000,214.000000,50.000000,33.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite arrow_l_h
+    {
+        bounds = 143.000000,214.000000,17.000000,19.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite arrow_r
+    {
+        bounds = 203.000000,214.000000,17.000000,19.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
     sprite thumb_bg
     {
-        bounds = 224, 214, 58,72
+        bounds = 224.000000,214.000000,58.000000,72.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite versus
+    {
+        bounds = 308.000000,214.000000,40.000000,48.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite billards_panel
+    {
+        bounds = 376.000000,0.000000,120.000000,129.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
     }
 }

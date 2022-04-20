@@ -714,6 +714,10 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                             e.getComponent<cro::Transform>().move({ -400.f * dt, 0.f, 0.f });
                             if (e.getComponent<cro::Transform>().getPosition().x < -100.f)
                             {
+                                //also used as table index so reset this in case
+                                //the current value is greater than the number of tables...
+                                m_sharedData.courseIndex = 0;
+
                                 requestStackClear();
                                 requestStackPush(StateID::Clubhouse);
                             }
