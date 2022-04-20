@@ -34,6 +34,8 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "CommandIDs.hpp"
 #include "Utility.hpp"
+#include "PoissonDisk.hpp"
+#include "GolfCartSystem.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -42,6 +44,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/systems/BillboardSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
@@ -52,11 +55,14 @@ source distribution.
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Random.hpp>
 #include <crogine/gui/Gui.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
 
 namespace
 {
 #include "TerrainShader.inl"
+#include "BillboardShader.inl"
 }
 
 ClubhouseContext::ClubhouseContext(ClubhouseState* state)
@@ -86,6 +92,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_uiScene           (ctx.appInstance.getMessageBus()),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_windBuffer        ("WindValues", sizeof(WindData)),
     m_viewScale         (2.f),
     m_currentMenu       (MenuID::Main),
     m_prevMenu          (MenuID::Main)
@@ -251,6 +258,16 @@ bool ClubhouseState::simulate(float dt)
         }
     }
 
+    static float accumTime = 0.f;
+    accumTime += dt;
+
+    WindData wind;
+    wind.direction[0] = 0.5f;
+    wind.direction[1] = 0.5f;
+    wind.direction[2] = 0.5f;
+    wind.elapsedTime = accumTime;
+    m_windBuffer.setData(&wind);
+
     m_backgroundScene.simulate(dt);
     m_uiScene.simulate(dt);
 
@@ -261,6 +278,7 @@ void ClubhouseState::render()
 {
     m_scaleBuffer.bind(0);
     m_resolutionBuffer.bind(1);
+    m_windBuffer.bind(2);
 
     m_backgroundTexture.clear(cro::Colour::CornflowerBlue);
     m_backgroundScene.render();
@@ -273,9 +291,11 @@ void ClubhouseState::render()
 void ClubhouseState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_backgroundScene.addSystem<GolfCartSystem>(mb);
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
     m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
+    m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
 
@@ -316,8 +336,28 @@ void ClubhouseState::loadResources()
     m_materialIDs[MaterialID::Trophy] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
 
+    m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
+    shader = &m_resources.shaders.get(ShaderID::Billboard);
+    m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
 
-    m_menuSounds.loadFromFile("assets/golf/sound/billiards/menu.xas", m_resources.audio);
+    //load the billboard rects from a sprite sheet and convert to templates
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", m_resources.textures);
+    m_billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
+    m_billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
+    m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("flowers01"));
+    m_billboardTemplates[BillboardID::Flowers02] = spriteToBillboard(spriteSheet.getSprite("flowers02"));
+    m_billboardTemplates[BillboardID::Flowers03] = spriteToBillboard(spriteSheet.getSprite("flowers03"));
+    m_billboardTemplates[BillboardID::Tree01] = spriteToBillboard(spriteSheet.getSprite("tree01"));
+    m_billboardTemplates[BillboardID::Tree02] = spriteToBillboard(spriteSheet.getSprite("tree02"));
+    m_billboardTemplates[BillboardID::Tree03] = spriteToBillboard(spriteSheet.getSprite("tree03"));
+
+
+
+    m_menuSounds.loadFromFile("assets/golf/sound/billiards/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_uiScene.createEntity();
@@ -351,6 +391,16 @@ void ClubhouseState::buildScene()
     {
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Cel);
+    }
+
+    if (md.loadFromFile("assets/golf/models/phone_box.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 8.2f, 0.f, 15.8f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
         applyMaterial(entity, MaterialID::Cel);
@@ -486,6 +536,56 @@ void ClubhouseState::buildScene()
     //TODO arcade machine (animated / video texture?)
 
 
+
+    //billboards
+    if (md.loadFromFile("assets/golf/models/shrubbery.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+
+        auto billboardMat = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+        applyMaterialData(md, billboardMat);
+        entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
+
+        if (entity.hasComponent<cro::BillboardCollection>())
+        {
+            constexpr std::array minBounds = { 0.f, 20.f };
+            constexpr std::array maxBounds = { 60.f, 30.f };
+
+            auto& collection = entity.getComponent<cro::BillboardCollection>();
+
+            auto trees = pd::PoissonDiskSampling(2.8f, minBounds, maxBounds);
+            for (auto [x, y] : trees)
+            {
+                float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+
+                auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)];
+                bb.position = { x - (maxBounds[0] / 2.f), 0.f, y + 10.f };
+                bb.size *= scale;
+                collection.addBillboard(bb);
+            }
+        }
+    }
+
+    //golf carts
+    if (md.loadFromFile("assets/golf/models/cart.cmt"))
+    {
+        for (auto i = 0u; i < 2u; ++i)
+        {
+            auto entity = m_backgroundScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec3(-10000.f));
+            entity.addComponent<GolfCart>();
+            md.createModel(entity);
+            applyMaterial(entity, MaterialID::Cel);
+
+            entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("cart");
+            entity.getComponent<cro::AudioEmitter>().play();
+        }
+    }
+
+
+
     //ambience 01
     auto entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 23.6f, 2.f, -1.1f });
@@ -543,7 +643,7 @@ void ClubhouseState::buildScene()
 
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 35.f);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 85.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -552,7 +652,7 @@ void ClubhouseState::buildScene()
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 127.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.8f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().move(camEnt.getComponent<cro::Transform>().getForwardVector());
-    //camEnt.addComponent<cro::Callback>():
+
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     cam.shadowMapBuffer.create(2048, 2048);

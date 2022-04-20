@@ -725,8 +725,6 @@ void MenuState::createScene()
         }
     }
 
-    cro::AudioScape as;
-    as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
 
     //golf carts
     if (md.loadFromFile("assets/golf/models/cart.cmt"))
@@ -749,7 +747,7 @@ void MenuState::createScene()
             md.createModel(entity);
             entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
-            entity.addComponent<cro::AudioEmitter>() = as.getEmitter("cart");
+            entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("cart");
             entity.getComponent<cro::AudioEmitter>().play();
         }
     }
@@ -758,7 +756,7 @@ void MenuState::createScene()
 
     //music
     auto entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("music");
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("music");
     entity.getComponent<cro::AudioEmitter>().play();
 
     //update the 3D view
@@ -794,7 +792,7 @@ void MenuState::createScene()
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
 
     //add the ambience to the cam cos why not
-    camEnt.addComponent<cro::AudioEmitter>() = as.getEmitter("01");
+    camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("01");
     camEnt.getComponent<cro::AudioEmitter>().play();
 
     auto sunEnt = m_backgroundScene.getSunlight();

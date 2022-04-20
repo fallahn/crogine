@@ -32,11 +32,11 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "MenuCallbacks.hpp"
 #include "CommonConsts.hpp"
+#include "Billboard.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
-#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
@@ -108,16 +108,19 @@ private:
             Cel,
             Trophy,
             Shelf,
+            Billboard,
 
             Count
         };
     };
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
+    std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
 
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_backgroundTexture;
     cro::UniformBuffer m_scaleBuffer;
     cro::UniformBuffer m_resolutionBuffer;
+    cro::UniformBuffer m_windBuffer;
     cro::CubemapTexture m_reflectionMap;
 
     glm::vec2 m_viewScale;
