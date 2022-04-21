@@ -801,7 +801,7 @@ void ClubhouseState::createTableScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
-    auto camEnt = m_backgroundScene.getActiveCamera();
+    auto camEnt = m_tableScene.getActiveCamera();
     //camEnt.getComponent<cro::Transform>().setPosition({ 24.f, 1.6f, -4.3f });
     //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 127.f * cro::Util::Const::degToRad);
     //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.8f * cro::Util::Const::degToRad);

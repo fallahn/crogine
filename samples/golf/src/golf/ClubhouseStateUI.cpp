@@ -1343,7 +1343,7 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
 
 
     //table preview
-    entity = m_uiScene.createEntity();
+    /*entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_tableTexture.getTexture());
@@ -1352,7 +1352,7 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.4f };
     entity.getComponent<UIElement>().depth = 0.2f;
-    menuTransform.addChild(entity.getComponent<cro::Transform>());
+    menuTransform.addChild(entity.getComponent<cro::Transform>());*/
 
 
     //banner
