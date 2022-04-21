@@ -100,6 +100,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_sharedData        (sd),
     m_backgroundScene   (ctx.appInstance.getMessageBus()),
     m_uiScene           (ctx.appInstance.getMessageBus()),
+    m_tableScene        (ctx.appInstance.getMessageBus()),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_windBuffer        ("WindValues", sizeof(WindData)),
@@ -304,6 +305,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
 
     m_backgroundScene.forwardEvent(evt);
+    m_tableScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
 
     return false;
@@ -312,6 +314,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
 void ClubhouseState::handleMessage(const cro::Message& msg)
 {
     m_backgroundScene.forwardMessage(msg);
+    m_tableScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
 
@@ -338,6 +341,7 @@ bool ClubhouseState::simulate(float dt)
     m_windBuffer.setData(&wind);
 
     m_backgroundScene.simulate(dt);
+    m_tableScene.simulate(dt);
     m_uiScene.simulate(dt);
 
     return false;
@@ -352,6 +356,10 @@ void ClubhouseState::render()
     m_backgroundTexture.clear(cro::Colour::CornflowerBlue);
     m_backgroundScene.render();
     m_backgroundTexture.display();
+
+    m_tableTexture.clear(cro::Colour::Magenta);
+    m_tableScene.render();
+    m_tableTexture.display();
 
     m_uiScene.render();
 }
@@ -368,6 +376,9 @@ void ClubhouseState::addSystems()
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
 
+    m_tableScene.addSystem<cro::ShadowMapRenderer>(mb);
+    m_tableScene.addSystem<cro::ModelRenderer>(mb);
+    m_tableScene.addSystem<cro::CameraSystem>(mb);
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
@@ -382,8 +393,6 @@ void ClubhouseState::addSystems()
 
 void ClubhouseState::loadResources()
 {
-    m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
-
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
 
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
@@ -403,7 +412,10 @@ void ClubhouseState::loadResources()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Trophy] = m_resources.materials.add(*shader);
-    m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+    if (m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm"))
+    {
+        m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+    }
 
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
     shader = &m_resources.shaders.get(ShaderID::Billboard);
@@ -411,6 +423,20 @@ void ClubhouseState::loadResources()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
+
+
+    //ball material in table preview
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define REFLECTIONS\n#define NOCHEX\n#define TEXTURED\n#define SUBRECT\n");
+    shader = &m_resources.shaders.get(ShaderID::CelTextured);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
+
+    if (m_tableCubemap.loadFromFile("assets/golf/images/skybox/billiards/sky.ccm"))
+    {
+        m_resources.materials.get(m_materialIDs[MaterialID::Ball]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+    }
+
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
@@ -755,7 +781,36 @@ void ClubhouseState::buildScene()
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -130.56f * cro::Util::Const::degToRad);
 
+    createTableScene();
     createUI();
+}
+
+void ClubhouseState::createTableScene()
+{
+
+
+
+    //camera
+    auto updateView = [&](cro::Camera& cam)
+    {
+        static constexpr glm::uvec2 texSize(260, 260);
+
+        m_tableTexture.create(texSize.x, texSize.y);
+        LogI << "Apply pixel scale to table texture!!" << std::endl;
+        cam.setPerspective(60.f * cro::Util::Const::degToRad, static_cast<float>(texSize.x) / texSize.y, 0.1f, 15.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+
+    auto camEnt = m_backgroundScene.getActiveCamera();
+    //camEnt.getComponent<cro::Transform>().setPosition({ 24.f, 1.6f, -4.3f });
+    //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 127.f * cro::Util::Const::degToRad);
+    //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.8f * cro::Util::Const::degToRad);
+    //camEnt.getComponent<cro::Transform>().move(camEnt.getComponent<cro::Transform>().getForwardVector());
+
+    auto& cam = camEnt.getComponent<cro::Camera>();
+    cam.resizeCallback = updateView;
+    cam.shadowMapBuffer.create(1024, 1024);
+    updateView(cam);
 }
 
 void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)

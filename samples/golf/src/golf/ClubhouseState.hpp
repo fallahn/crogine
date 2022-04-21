@@ -91,6 +91,7 @@ private:
 
     cro::Scene m_backgroundScene;
     cro::Scene m_uiScene;
+    cro::Scene m_tableScene;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final
@@ -112,6 +113,7 @@ private:
             Trophy,
             Shelf,
             Billboard,
+            Ball,
 
             Count
         };
@@ -125,6 +127,9 @@ private:
     cro::UniformBuffer m_resolutionBuffer;
     cro::UniformBuffer m_windBuffer;
     cro::CubemapTexture m_reflectionMap;
+
+    cro::RenderTexture m_tableTexture;
+    cro::CubemapTexture m_tableCubemap;
 
     glm::vec2 m_viewScale;
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions; //I've forgotten why this is static...
@@ -157,6 +162,7 @@ private:
     void loadResources();
     void validateTables();
     void buildScene();
+    void createTableScene();
     void createUI();
 
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
