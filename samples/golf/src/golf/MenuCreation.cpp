@@ -2773,17 +2773,23 @@ void MenuState::updateLobbyAvatars()
                 cro::Colour colour = m_readyState[h] ? TextGreenColour : LeaderboardTextDark;
 
                 auto& verts = e2.getComponent<cro::Drawable2D>().getVertexData();
-                verts =
+                for (auto& v : verts)
                 {
-                    cro::Vertex2D(glm::vec2(0.f), colour),
-                    cro::Vertex2D(glm::vec2(8.f, 0.f), colour),
-                    cro::Vertex2D(glm::vec2(0.f, 8.f), colour),
-                    cro::Vertex2D(glm::vec2(8.f), colour)
-                };
-                e2.getComponent<cro::Drawable2D>().updateLocalBounds();
+                    v.colour = colour;
+                }
             };
             e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             children.push_back(entity);
+
+            auto& verts = entity.getComponent<cro::Drawable2D>().getVertexData();
+            verts =
+            {
+                cro::Vertex2D(glm::vec2(0.f)),
+                cro::Vertex2D(glm::vec2(8.f, 0.f)),
+                cro::Vertex2D(glm::vec2(0.f, 8.f)),
+                cro::Vertex2D(glm::vec2(8.f))
+            };
+            entity.getComponent<cro::Drawable2D>().updateLocalBounds();
 
             h++;
         }

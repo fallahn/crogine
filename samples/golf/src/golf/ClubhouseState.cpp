@@ -139,7 +139,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     //we returned from a previous game
     if (sd.clientConnection.connected)
     {
-        //updateLobbyAvatars();
+        updateLobbyAvatars();
 
         //switch to lobby view - send as a command
         //to ensure it's delayed by a frame
@@ -849,7 +849,7 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
             auto client = evt.packet.as<std::uint8_t>();
             m_sharedData.connectionData[client].playerCount = 0;
             m_readyState[client] = false;
-            //updateLobbyAvatars();
+            updateLobbyAvatars();
         }
         break;
         case PacketID::LobbyReady:

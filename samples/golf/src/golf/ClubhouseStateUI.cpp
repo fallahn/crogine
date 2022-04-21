@@ -457,6 +457,14 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
     editRoot.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     menuTransform.addChild(editRoot.getComponent<cro::Transform>());
 
+    auto vsEnt = m_uiScene.createEntity();
+    vsEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.4f });
+    vsEnt.addComponent<cro::Drawable2D>();
+    vsEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("versus");
+    bounds = vsEnt.getComponent<cro::Sprite>().getTextureBounds();
+    vsEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    editRoot.getComponent<cro::Transform>().addChild(vsEnt.getComponent<cro::Transform>());
+
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     auto createPlayerEdit = [&, arrowSelected, arrowUnselected](glm::vec2 position, std::int32_t playerIndex)
@@ -580,7 +588,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
         return editEnt;
     };
 
-    static constexpr float BackgroundOffset = 80.f;
+    static constexpr float BackgroundOffset = 110.f;
     struct EditCallbackData final
     {
         std::int32_t direction = 0;
@@ -628,7 +636,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
     entity = createPlayerEdit({ BackgroundOffset, 0.f }, 1);
     entity.addComponent<cro::Callback>().setUserData<EditCallbackData>();
     entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [vsEnt](cro::Entity e, float dt) mutable
     {
         auto& [direction, currTime] = e.getComponent<cro::Callback>().getUserData<EditCallbackData>();
         float ts = dt * 5.f;
@@ -658,6 +666,9 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
             }
         }
         e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeInOutCubic(currTime), 1.f });
+
+        cro::Colour c(1.f, 1.f, 1.f, currTime);
+        vsEnt.getComponent<cro::Sprite>().setColour(c);
     };
     auto playerTwo = entity;
 
@@ -1317,6 +1328,20 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
 
+    //player name node. Children are updated by updateLobbyAvatars()
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("versus");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::LobbyList | CommandID::Menu::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.75f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::Callback>().setUserData<std::vector<cro::Entity>>(); //use this to store child nodes updated with updateLobbyAvatars()
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+
     //banner
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, BannerPosition, -0.1f });
@@ -1336,7 +1361,7 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     auto bannerEnt = entity;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-    //course title
+    //table type
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
@@ -1475,7 +1500,7 @@ void ClubhouseState::updateLobbyData(const cro::NetEvent& evt)
         m_sharedData.connectionData[cd.connectionID] = cd;
     }
 
-    //updateLobbyAvatars();
+    updateLobbyAvatars();
 }
 
 void ClubhouseState::quitLobby()
@@ -1661,4 +1686,93 @@ void ClubhouseState::addTableSelectButtons()
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseSelect;
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+}
+
+void ClubhouseState::updateLobbyAvatars()
+{
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Menu::LobbyList;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        //remove old data
+        auto& children = e.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
+        for (auto c : children)
+        {
+            m_uiScene.destroyEntity(c);
+        }
+        children.clear();
+
+        auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+        auto createName = [&](const cro::String& name, float positionOffset)
+        {
+            auto entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({ positionOffset, 0.f });
+            entity.getComponent<cro::Transform>().move(e.getComponent<cro::Transform>().getOrigin());
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+            entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            entity.getComponent<cro::Text>().setString(name);
+            centreText(entity);
+            e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            children.push_back(entity);
+        };
+
+        static constexpr float PositionOffset = 80.f;
+        if (m_sharedData.localConnectionData.playerCount == 2)
+        {
+            //create both player names
+            for (auto i = 0u; i < 2u; ++i)
+            {
+                createName(m_sharedData.localConnectionData.playerData[i].name, -PositionOffset + (i * (PositionOffset * 2.f)));
+            }
+        }
+        else
+        {
+            //create separate names and add readiness indicator
+            for (auto i = 0u; i < 2u; ++i)
+            {
+                if (m_sharedData.connectionData[i].playerCount)
+                {
+                    const float x = -PositionOffset + (i * (PositionOffset * 2.f));
+                    createName(m_sharedData.connectionData[i].playerData[0].name, x);
+
+                    auto entity = m_uiScene.createEntity();
+                    entity.addComponent<cro::Transform>().setPosition({x, -10.f});
+                    entity.getComponent<cro::Transform>().move(e.getComponent<cro::Transform>().getOrigin());
+                    entity.addComponent<cro::Drawable2D>();
+                    entity.addComponent<cro::Callback>().active = true;
+                    entity.getComponent<cro::Callback>().function =
+                        [&, i](cro::Entity e2, float)
+                    {
+                        cro::Colour colour = m_readyState[i] ? TextGreenColour : LeaderboardTextDark;
+
+                        auto& verts = e2.getComponent<cro::Drawable2D>().getVertexData();
+                        for (auto& v : verts)
+                        {
+                            v.colour = colour;
+                        }
+                    };
+                    e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                    children.push_back(entity);
+
+                    auto& verts = entity.getComponent<cro::Drawable2D>().getVertexData();
+                    verts =
+                    {
+                        cro::Vertex2D(glm::vec2(-4.f, -4.f)),
+                        cro::Vertex2D(glm::vec2(4.f, -4.f)),
+                        cro::Vertex2D(glm::vec2(-4.f, 4.f)),
+                        cro::Vertex2D(glm::vec2(4.f))
+                    };
+                    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+                }
+                else
+                {
+                    createName("Waiting...", -PositionOffset + (i * (PositionOffset * 2.f)));
+                }
+            }
+        }
+
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

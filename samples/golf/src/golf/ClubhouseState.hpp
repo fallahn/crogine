@@ -171,6 +171,7 @@ private:
     void handleTextEdit(const cro::Event&);
     bool applyTextEdit(); //returns true if this consumed event
     void addTableSelectButtons();
+    void updateLobbyAvatars();
 
     void handleNetEvent(const cro::NetEvent&);
 
