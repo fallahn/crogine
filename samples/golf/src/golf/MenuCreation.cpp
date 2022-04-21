@@ -1085,7 +1085,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                 if (activated(evt))
                 {
                     applyTextEdit();
-                    saveAvatars();
+                    saveAvatars(m_sharedData);
                     
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 

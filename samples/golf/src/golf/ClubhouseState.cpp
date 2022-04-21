@@ -233,13 +233,72 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    auto quitMenu = []() {};
+
+    if (evt.type == SDL_KEYUP)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_RETURN:
+        case SDLK_RETURN2:
+        case SDLK_KP_ENTER:
+            if (m_textEdit.string)
+            {
+                applyTextEdit();
+            }
+            break;
+        case SDLK_ESCAPE:
+        case SDLK_BACKSPACE:
+            quitMenu();
+            break;
+        }
+    }
+    else if (evt.type == SDL_KEYDOWN)
     {
         handleTextEdit(evt);
     }
     else if (evt.type == SDL_TEXTINPUT)
     {
         handleTextEdit(evt);
+    }
+    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    {
+        //controller IDs are automatically reassigned
+        //so we just need to make sure no one is out of range
+        for (auto& c : m_sharedData.controllerIDs)
+        {
+            //be careful with this cast because we might assign - 1 as an ID...
+            //note that the controller count hasn't been updated yet...
+            c = std::min(static_cast<std::int32_t>(cro::GameController::getControllerCount() - 2), c);
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    {
+        switch (evt.cbutton.button)
+        {
+        default: break;
+            //leave the current menu when B is pressed.
+        case cro::GameController::ButtonB:
+            quitMenu();
+            break;
+        }
+    }
+    else if (evt.type == SDL_MOUSEBUTTONUP)
+    {
+        if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            quitMenu();
+        }
+        else if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            if (applyTextEdit())
+            {
+                //we applied a text edit so don't update the
+                //UISystem
+                return true;
+            }
+        }
     }
 
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);

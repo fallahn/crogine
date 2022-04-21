@@ -238,7 +238,6 @@ private:
     void quitLobby();
     void addCourseSelectButtons();
 
-    void saveAvatars();
     //loading moved to GolfGame.cpp
 
     void handleNetEvent(const cro::NetEvent&);
