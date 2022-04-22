@@ -697,11 +697,20 @@ void ClubhouseState::buildScene()
         applyMaterial(entity, MaterialID::Cel);
     }
 
+    if (md.loadFromFile("assets/golf/models/arcade_machine.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.4f, 0.f, -3.3f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+        //TODO (animated / video texture?)
+        applyMaterial(entity, MaterialID::Cel);
 
+    }
 
     //TODO bar stools
     //TODO sofa
-    //TODO arcade machine (animated / video texture?)
+
 
 
 
