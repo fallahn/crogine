@@ -1334,25 +1334,24 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("versus");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height- (bounds.height / 8.f))});
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::LobbyList | CommandID::Menu::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.75f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::Callback>().setUserData<std::vector<cro::Entity>>(); //use this to store child nodes updated with updateLobbyAvatars()
+    auto vsEnt = entity;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
 
     //table preview
-    /*entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 14.f, 20.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_tableTexture.getTexture());
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.4f };
-    entity.getComponent<UIElement>().depth = 0.2f;
-    menuTransform.addChild(entity.getComponent<cro::Transform>());*/
+    //entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height + 30.f, -0.1f });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseDesc;
+    vsEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //banner
@@ -1720,7 +1719,7 @@ void ClubhouseState::updateLobbyAvatars()
         auto createName = [&](const cro::String& name, float positionOffset)
         {
             auto entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition({ positionOffset, 0.f });
+            entity.addComponent<cro::Transform>().setPosition({ positionOffset, -4.f });
             entity.getComponent<cro::Transform>().move(e.getComponent<cro::Transform>().getOrigin());
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);

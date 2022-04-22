@@ -73,6 +73,15 @@ namespace
         cro::String("Snooker"),
         cro::String("Void")
     };
+
+    struct TableCallbackData final
+    {
+        float progress = 0.f;
+        std::int32_t direction = 1; //1 to show 0 to hide
+    };
+
+    //cro::Entity tableCamera;
+    //cro::Entity tableEnt;
 }
 
 ClubhouseContext::ClubhouseContext(ClubhouseState* state)
@@ -104,6 +113,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_windBuffer        ("WindValues", sizeof(WindData)),
+    m_tableIndex        (0),
     m_viewScale         (2.f),
     m_currentMenu       (MenuID::Main),
     m_prevMenu          (MenuID::Main)
@@ -224,6 +234,33 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         }
         m_sharedData.hosting = false;
     }
+
+#ifdef CRO_DEBUG_
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Buns"))
+            {
+                ImGui::Image(m_tableTexture.getTexture(), {480.f, 280.f}, {0.f, 1.f}, {1.f, 0.f});
+
+                /*static float rotation = 0.f;
+                if (ImGui::DragFloat("Rotation", &rotation, 0.1f, 0.f, cro::Util::Const::TAU))
+                {
+                    tableEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+                }*/
+
+                /*glm::vec3 position = tableCamera.getComponent<cro::Transform>().getPosition();
+                if (ImGui::DragFloat("X", &position.x, 0.01f, -2.f, 2.f))
+                {
+                    tableCamera.getComponent<cro::Transform>().setPosition(position);
+                }
+                if (ImGui::DragFloat("Z", &position.z, 0.01f, -0.f, 4.f))
+                {
+                    tableCamera.getComponent<cro::Transform>().setPosition(position);
+                }*/
+            }
+            ImGui::End();
+        });
+#endif
 }
 
 //public
@@ -357,9 +394,17 @@ void ClubhouseState::render()
     m_backgroundScene.render();
     m_backgroundTexture.display();
 
-    m_tableTexture.clear(cro::Colour::Magenta);
-    m_tableScene.render();
-    m_tableTexture.display();
+#ifndef CRO_DEBUG_
+    if (m_currentMenu == MenuID::Dummy
+        || m_currentMenu == MenuID::Lobby)
+    {
+#endif
+        m_tableTexture.clear(cro::Colour::Transparent);
+        m_tableScene.render();
+        m_tableTexture.display();
+#ifndef CRO_DEBUG_
+    }
+#endif
 
     m_uiScene.render();
 }
@@ -376,6 +421,7 @@ void ClubhouseState::addSystems()
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
 
+    m_tableScene.addSystem<cro::CallbackSystem>(mb);
     m_tableScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_tableScene.addSystem<cro::ModelRenderer>(mb);
     m_tableScene.addSystem<cro::CameraSystem>(mb);
@@ -469,7 +515,7 @@ void ClubhouseState::validateTables()
     auto fileList = cro::FileSystem::listFiles(tablePath);
     for (const auto& file : fileList)
     {
-        TableData data;
+        TableClientData data;
         if (data.loadFromFile(tablePath + file) //validates properties but not file existence
             && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + data.viewModel))
         {
@@ -787,30 +833,133 @@ void ClubhouseState::buildScene()
 
 void ClubhouseState::createTableScene()
 {
-
-
+    //set the camera / lighting first so we at least
+    //have a valid render texture even if the table data
+    //failed to load
 
     //camera
     auto updateView = [&](cro::Camera& cam)
     {
-        static constexpr glm::uvec2 texSize(260, 260);
+        static constexpr glm::uvec2 BaseSize(240, 140);
+        auto texSize = BaseSize;
+        
+        auto vpSize = calcVPSize();
+        auto winSize = glm::vec2(cro::App::getWindow().getSize());
+        float viewScale = winSize.y / vpSize.y;
 
+        if (!m_sharedData.pixelScale)
+        {
+            texSize *= viewScale;
+        }
         m_tableTexture.create(texSize.x, texSize.y);
-        LogI << "Apply pixel scale to table texture!!" << std::endl;
-        cam.setPerspective(60.f * cro::Util::Const::degToRad, static_cast<float>(texSize.x) / texSize.y, 0.1f, 15.f);
+        
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Menu::CourseDesc;
+        cmd.action = [&,viewScale](cro::Entity e, float)
+        {
+            e.getComponent<cro::Sprite>().setTexture(m_tableTexture.getTexture(), true);
+            
+            float scale = 1.f;
+            if (!m_sharedData.pixelScale)
+            {
+                scale = 1.f / viewScale;
+            }
+            e.getComponent<cro::Transform>().setScale({ scale, scale });
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        cam.setPerspective(55.f * cro::Util::Const::degToRad, static_cast<float>(BaseSize.x) / BaseSize.y, 0.1f, 15.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
     auto camEnt = m_tableScene.getActiveCamera();
-    //camEnt.getComponent<cro::Transform>().setPosition({ 24.f, 1.6f, -4.3f });
-    //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 127.f * cro::Util::Const::degToRad);
-    //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.8f * cro::Util::Const::degToRad);
-    //camEnt.getComponent<cro::Transform>().move(camEnt.getComponent<cro::Transform>().getForwardVector());
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -18.f * cro::Util::Const::degToRad);
 
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     cam.shadowMapBuffer.create(1024, 1024);
     updateView(cam);
+
+    auto sunEnt = m_tableScene.getSunlight();
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -130.56f * cro::Util::Const::degToRad);
+
+
+    //quit if there's nothing to do
+    if (m_tableData.empty())
+    {
+        return;
+    }
+
+    auto callbackFunc = [&](cro::Entity e, float dt)
+    {
+        auto& [progress, direction] = e.getComponent<cro::Callback>().getUserData<TableCallbackData>();
+        float scale = 0.f;
+        if (direction == 0)
+        {
+            progress = std::max(0.f, progress - (dt * 5.f));
+
+            scale = progress;
+
+            if (progress == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+
+                //show current selected table
+                m_tableIndex = m_sharedData.courseIndex;
+                m_tableData[m_sharedData.courseIndex].previewModel.getComponent<cro::Callback>().getUserData<TableCallbackData>().direction = 1;
+                m_tableData[m_sharedData.courseIndex].previewModel.getComponent<cro::Callback>().active = true;
+            }
+        }
+        else
+        {
+            progress = std::min(1.f, progress + (dt * 2.f));
+            scale = cro::Util::Easing::easeOutBounce(progress);
+
+            if (progress == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+    };
+
+    cro::ModelDefinition md(m_resources);
+
+    for (auto& td : m_tableData)
+    {
+        if (md.loadFromFile(td.viewModel))
+        {
+            auto entity = m_tableScene.createEntity();
+            entity.addComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 225.f * cro::Util::Const::degToRad);
+            entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+            md.createModel(entity);
+
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+            applyMaterialData(md, material);
+            entity.getComponent<cro::Model>().setMaterial(0, material);
+
+            //not conducive to custom tables, but my game, my rules :P
+            switch (td.rules)
+            {
+            default:
+            case TableData::Eightball:
+            case TableData::Nineball:
+                entity.getComponent<cro::Transform>().setPosition({ -0.2f, -0.5f, -1.7f });
+                break;
+            case TableData::Snooker:
+                entity.getComponent<cro::Transform>().setPosition({ -0.47f, -0.5f, -2.38f });
+                break;
+            }
+
+            entity.addComponent<cro::Callback>().function = callbackFunc;
+            entity.getComponent<cro::Callback>().setUserData<TableCallbackData>();
+
+            td.previewModel = entity;
+        }
+    }
+    m_tableIndex = m_sharedData.courseIndex = std::min(m_sharedData.courseIndex, m_tableData.size() - 1);
+    m_tableData[m_sharedData.courseIndex].previewModel.getComponent<cro::Callback>().active = true;
 }
 
 void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
@@ -924,6 +1073,10 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
                     return td.name == table;
                 }); data != m_tableData.cend())
             {
+                //hide current preview model (callback automatically shows new target)
+                m_tableData[m_tableIndex].previewModel.getComponent<cro::Callback>().getUserData<TableCallbackData>().direction = 0;
+                m_tableData[m_tableIndex].previewModel.getComponent<cro::Callback>().active = true;
+
                 m_sharedData.mapDirectory = table;
                 m_sharedData.courseIndex = std::distance(m_tableData.cbegin(), data);
 

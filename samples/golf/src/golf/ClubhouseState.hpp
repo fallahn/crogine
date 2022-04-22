@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
@@ -57,8 +58,15 @@ struct ClubhouseContext final : public MenuContext
     explicit ClubhouseContext(ClubhouseState*);
 };
 
+struct TableClientData final : public TableData
+{
+    cro::Entity previewModel;
+    std::int32_t tableSkinIndex = 0;
+    std::int32_t ballSkinIndex = 0;
+};
+
 struct SharedStateData;
-class ClubhouseState final : public cro::State
+class ClubhouseState final : public cro::State, public cro::GuiClient
 {
 public:
     ClubhouseState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -130,6 +138,8 @@ private:
 
     cro::RenderTexture m_tableTexture;
     cro::CubemapTexture m_tableCubemap;
+    std::vector<TableClientData> m_tableData;
+    std::size_t m_tableIndex; //this is separate for just the preview as the host will have update the course index before the preview is notified.
 
     glm::vec2 m_viewScale;
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions; //I've forgotten why this is static...
@@ -148,7 +158,6 @@ private:
 
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
-    std::vector<TableData> m_tableData;
 
     struct HostOptionCallbacks final
     {

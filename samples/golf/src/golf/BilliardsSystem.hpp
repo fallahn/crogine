@@ -83,7 +83,7 @@ struct PocketInfo final
     float radius = 0.06f;
 };
 
-struct TableData final
+struct TableData
 {
     std::string name;
     std::string collisionModel;
