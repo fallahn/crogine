@@ -140,6 +140,8 @@ private:
     cro::CubemapTexture m_tableCubemap;
     std::vector<TableClientData> m_tableData;
     std::size_t m_tableIndex; //this is separate for just the preview as the host will have update the course index before the preview is notified.
+    cro::Entity m_ballCam;
+    std::array<cro::Entity, 2u> m_previewBalls = {};
 
     glm::vec2 m_viewScale;
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions; //I've forgotten why this is static...
@@ -187,6 +189,7 @@ private:
     bool applyTextEdit(); //returns true if this consumed event
     void addTableSelectButtons();
     void updateLobbyAvatars();
+    void updateBallTexture();
 
     void handleNetEvent(const cro::NetEvent&);
 

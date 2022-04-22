@@ -81,6 +81,22 @@ bool TableData::loadFromFile(const std::string& path)
                     LogE << "No valid rule set data found" << std::endl;
                 }
             }
+            else if (name == "ball_skin")
+            {
+                std::string skin = p.getValue<std::string>();
+                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + skin))
+                {
+                    ballSkins.push_back(skin);
+                }
+            }
+            else if (name == "table_skin")
+            {
+                std::string skin = p.getValue<std::string>();
+                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + skin))
+                {
+                    tableSkins.push_back(skin);
+                }
+            }
         }
 
         if (viewModel.empty() || cro::FileSystem::getFileExtension(viewModel) != ".cmt")
@@ -146,7 +162,27 @@ bool TableData::loadFromFile(const std::string& path)
                 spawnArea.height = size.y * 2.f;
             }
         }
-        return !viewModel.empty() && !collisionModel.empty() && !pockets.empty() && rules != TableData::Void && spawnArea.width > 0 && spawnArea.height > 0;
+
+
+        //load the default table skin
+        if (!viewModel.empty())
+        {
+            cro::ConfigFile vm;
+            vm.loadFromFile(viewModel);
+            if (auto* skin = vm.findProperty("diffuse"); skin != nullptr)
+            {
+                auto skinPath = skin->getValue<std::string>();
+                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + skinPath))
+                {
+                    tableSkins.push_back(skinPath);
+                }
+            }
+        }
+
+        return !viewModel.empty() && !collisionModel.empty() 
+            && !pockets.empty() && rules != TableData::Void 
+            && spawnArea.width > 0 && spawnArea.height > 0
+            && !tableSkins.empty() && !ballSkins.empty();
     }
     return false;
 }

@@ -401,6 +401,9 @@ void ClubhouseState::render()
 #endif
         m_tableTexture.clear(cro::Colour::Transparent);
         m_tableScene.render();
+        auto oldCam = m_tableScene.setActiveCamera(m_ballCam);
+        m_tableScene.render();
+        m_tableScene.setActiveCamera(oldCam);
         m_tableTexture.display();
 #ifndef CRO_DEBUG_
     }
@@ -838,9 +841,10 @@ void ClubhouseState::createTableScene()
     //failed to load
 
     //camera
+    static constexpr glm::uvec2 BaseSize(240, 140);
+    static constexpr float Ratio = static_cast<float>(BaseSize.x) / BaseSize.y;
     auto updateView = [&](cro::Camera& cam)
     {
-        static constexpr glm::uvec2 BaseSize(240, 140);
         auto texSize = BaseSize;
         
         auto vpSize = calcVPSize();
@@ -868,7 +872,7 @@ void ClubhouseState::createTableScene()
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-        cam.setPerspective(55.f * cro::Util::Const::degToRad, static_cast<float>(BaseSize.x) / BaseSize.y, 0.1f, 15.f);
+        cam.setPerspective(55.f * cro::Util::Const::degToRad, Ratio, 0.1f, 15.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -885,12 +889,25 @@ void ClubhouseState::createTableScene()
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -130.56f * cro::Util::Const::degToRad);
 
 
+    m_ballCam = m_tableScene.createEntity();
+    m_ballCam.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 10.15f });
+    m_ballCam.addComponent<cro::Camera>().isStatic = true;
+    auto updateBallView = [](cro::Camera& cam)
+    {
+        cam.setPerspective(40.f * cro::Util::Const::degToRad, 1.f, 0.1f, 5.f);
+        cam.viewport = { 0.1f, 0.f, 0.2f, 0.2f * Ratio};
+    };
+    m_ballCam.getComponent<cro::Camera>().resizeCallback = updateBallView;
+    updateBallView(m_ballCam.getComponent<cro::Camera>());
+
+
     //quit if there's nothing to do
     if (m_tableData.empty())
     {
         return;
     }
 
+    //animates table models
     auto callbackFunc = [&](cro::Entity e, float dt)
     {
         auto& [progress, direction] = e.getComponent<cro::Callback>().getUserData<TableCallbackData>();
@@ -919,13 +936,45 @@ void ClubhouseState::createTableScene()
             if (progress == 1)
             {
                 e.getComponent<cro::Callback>().active = false;
+                updateBallTexture();
             }
         }
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
     };
 
     cro::ModelDefinition md(m_resources);
+    //ball skin preview
+    if (md.loadFromFile("assets/golf/models/hole_19/billiard_ball.cmt"))
+    {
+        auto entity = m_tableScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 9.973f, 0.f, 10.f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
 
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+        applyMaterialData(md, material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+
+        glm::vec4 rect;
+        rect.x = 0.f;
+        rect.y = 0.125f;
+        rect.z = 0.5f;
+        rect.w = 0.125f;
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", rect);
+        m_previewBalls[0] = entity;
+
+        entity = m_tableScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 10.027f, 0.f, 10.f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+
+        rect.x = 0.5f;
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", rect);
+        m_previewBalls[1] = entity;
+    }
+
+    //table models
     for (auto& td : m_tableData)
     {
         if (md.loadFromFile(td.viewModel))
@@ -957,9 +1006,17 @@ void ClubhouseState::createTableScene()
 
             td.previewModel = entity;
         }
+
+        //pre-load the ball textures
+        for (const auto& t : td.ballSkins)
+        {
+            m_resources.textures.get(t);
+        }
     }
     m_tableIndex = m_sharedData.courseIndex = std::min(m_sharedData.courseIndex, m_tableData.size() - 1);
     m_tableData[m_sharedData.courseIndex].previewModel.getComponent<cro::Callback>().active = true;
+
+    updateBallTexture();
 }
 
 void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)

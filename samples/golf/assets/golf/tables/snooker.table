@@ -3,6 +3,7 @@ table snooker
     model="assets/golf/models/hole_19/snooker_model.cmt"
     collision="assets/golf/models/hole_19/snooker_collision.cmb"
     ruleset="snooker"
+    ball_skin = "assets/golf/images/billiards/pool_blue.png"
 
     spawn
     {

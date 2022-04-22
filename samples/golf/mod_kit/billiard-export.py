@@ -70,6 +70,8 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
             file.write("    ruleset=\"%s\"\n\n" % scene['ruleset'])
         else:
             file.write("    ruleset=\"8_ball\"\n\n")
+
+        file.write("    ball_skin=\"assets/golf/images/billiards/pool_red.png\"\n\n")
         
 
         for ob in bpy.context.selected_objects:

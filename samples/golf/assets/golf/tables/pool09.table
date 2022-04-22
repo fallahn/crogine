@@ -3,6 +3,7 @@ table pool
     model="assets/golf/models/hole_19/pool_model.cmt"
     collision="assets/golf/models/hole_19/pool_collision.cmb"
     ruleset="9_ball"
+    ball_skin = "assets/golf/images/billiards/pool_spots.png"
 
     spawn
     {

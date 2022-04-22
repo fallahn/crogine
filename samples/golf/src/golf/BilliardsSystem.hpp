@@ -103,6 +103,9 @@ struct TableData
     }rules = Void;
     static const std::array<std::string, Rules::Count> RuleStrings;
 
+    std::vector<std::string> tableSkins;
+    std::vector<std::string> ballSkins;
+
     bool loadFromFile(const std::string&);
 };
 

@@ -1349,7 +1349,6 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_tableTexture.getTexture());
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    //entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height + 30.f, -0.1f });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseDesc;
     vsEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -1787,4 +1786,11 @@ void ClubhouseState::updateLobbyAvatars()
 
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+}
+
+void ClubhouseState::updateBallTexture()
+{
+    auto ballTex = cro::TextureID(m_resources.textures.get(m_tableData[m_tableIndex].ballSkins[m_tableData[m_tableIndex].ballSkinIndex]).getGLHandle());
+    m_previewBalls[0].getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", ballTex);
+    m_previewBalls[1].getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", ballTex);
 }
