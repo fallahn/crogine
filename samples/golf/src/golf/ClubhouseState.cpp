@@ -367,6 +367,52 @@ bool ClubhouseState::simulate(float dt)
         }
     }
 
+#ifdef CRO_DEBUG_
+    
+    glm::vec3 movement(0.f);
+    float rotation = 0.f;
+    auto& tx = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>();
+
+    if (cro::Keyboard::isKeyPressed(SDLK_d))
+    {
+        movement += tx.getRightVector();
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_a))
+    {
+        movement -= tx.getRightVector();
+    }
+
+    if (cro::Keyboard::isKeyPressed(SDLK_w))
+    {
+        movement += tx.getForwardVector();
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_s))
+    {
+        movement -= tx.getForwardVector();
+    }
+
+    if (cro::Keyboard::isKeyPressed(SDLK_q))
+    {
+        rotation -= dt;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_e))
+    {
+        rotation += dt;
+    }
+
+    if (glm::length2(movement) != 0)
+    {
+        movement = glm::normalize(movement);
+        tx.move(movement * dt);
+    }
+
+    if (rotation != 0)
+    {
+        tx.rotate(cro::Transform::Y_AXIS, rotation);
+    }
+
+#endif
+
     static float accumTime = 0.f;
     accumTime += dt;
 
@@ -376,6 +422,8 @@ bool ClubhouseState::simulate(float dt)
     wind.direction[2] = 0.5f;
     wind.elapsedTime = accumTime;
     m_windBuffer.setData(&wind);
+
+    m_arcadeVideo.update(dt);
 
     m_backgroundScene.simulate(dt);
     m_tableScene.simulate(dt);
@@ -703,9 +751,14 @@ void ClubhouseState::buildScene()
         entity.addComponent<cro::Transform>().setPosition({ 14.4f, 0.f, -3.3f });
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
-        //TODO (animated / video texture?)
+
         applyMaterial(entity, MaterialID::Cel);
 
+        m_arcadeVideo.loadFromFile("assets/golf/video/arcade.mpg");
+        m_arcadeVideo.setLooped(true);
+        m_arcadeVideo.play();
+
+        entity.getComponent<cro::Model>().setMaterialProperty(1, "u_diffuseMap", cro::TextureID(m_arcadeVideo.getTexture().getGLHandle()));
     }
 
     //TODO bar stools
@@ -825,10 +878,12 @@ void ClubhouseState::buildScene()
     };
 
     auto camEnt = m_backgroundScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({ 24.f, 1.6f, -4.3f });
+    /*camEnt.getComponent<cro::Transform>().setPosition({ 24.f, 1.6f, -4.3f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 127.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.8f * cro::Util::Const::degToRad);
-    camEnt.getComponent<cro::Transform>().move(camEnt.getComponent<cro::Transform>().getForwardVector());
+    camEnt.getComponent<cro::Transform>().move(camEnt.getComponent<cro::Transform>().getForwardVector());*/
+    camEnt.getComponent<cro::Transform>().setPosition({ 19.187f, 1.54f, -4.37f });
+    camEnt.getComponent<cro::Transform>().setRotation(glm::quat(-0.31f, 0.004f, -0.95f, 0.0057f));
 
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
@@ -836,8 +891,8 @@ void ClubhouseState::buildScene()
     updateView(cam);
 
     auto sunEnt = m_backgroundScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -130.56f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 120.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -40.f * cro::Util::Const::degToRad);
 
     createTableScene();
     createUI();

@@ -1,4 +1,4 @@
-model arcaade_machine
+model arcade_machine
 {
     mesh = assets/golf/models/arcade_machine.cmb
     cast_shadows = true
@@ -11,9 +11,22 @@ model arcaade_machine
         repeat = true
         depth_test = true
         double_sided = false
+        rx_shadows = true
         blendmode = none
         diffuse = "assets/golf/images/arcade_machine.png"
-        alpha_clip = 0.725000
+
+    }
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
         rx_shadows = true
+        blendmode = none
+        diffuse = "assets/golf/images/arcade_machine.png"
+
     }
 }

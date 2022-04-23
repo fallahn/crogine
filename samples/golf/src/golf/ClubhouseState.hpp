@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
+#include <crogine/graphics/VideoPlayer.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
 #include <vector>
@@ -135,6 +136,7 @@ private:
     cro::UniformBuffer m_resolutionBuffer;
     cro::UniformBuffer m_windBuffer;
     cro::CubemapTexture m_reflectionMap;
+    cro::VideoPlayer m_arcadeVideo;
 
     cro::RenderTexture m_tableTexture;
     cro::CubemapTexture m_tableCubemap;
