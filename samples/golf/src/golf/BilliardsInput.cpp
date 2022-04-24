@@ -408,61 +408,7 @@ void BilliardsInput::checkController(float dt)
         m_power = std::max(MinPower, m_power - (powerDown * dt));
     }
 
-    //right stick to adjust spin - TODO make this move camera.
-    /*auto startInput = m_inputFlags;
-    float xPos = cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::AxisRightX);
-    if (xPos < -DeadZone)
-    {
-        m_inputFlags |= InputFlag::Left;
-    }
-    else if (m_prevStick & InputFlag::Left)
-    {
-        m_inputFlags &= ~InputFlag::Left;
-    }
-
-    if (xPos > DeadZone)
-    {
-        m_inputFlags |= InputFlag::Right;
-    }
-    else if (m_prevStick & InputFlag::Right)
-    {
-        m_inputFlags &= ~InputFlag::Right;
-    }
-
-    float yPos = cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::AxisRightY);
-    if (yPos > (DeadZone))
-    {
-        m_inputFlags |= InputFlag::Down;
-        m_inputFlags &= ~InputFlag::Up;
-    }
-    else if (m_prevStick & InputFlag::Down)
-    {
-        m_inputFlags &= ~InputFlag::Down;
-    }
-
-    if (yPos < (-DeadZone))
-    {
-        m_inputFlags |= InputFlag::Up;
-        m_inputFlags &= ~InputFlag::Down;
-    }
-    else if (m_prevStick & InputFlag::Up)
-    {
-        m_inputFlags &= ~InputFlag::Up;
-    }*/
-
-    /*float len2 = (xPos * xPos) + (yPos * yPos);
-    static const float MinLen2 = (DeadZone * DeadZone);
-    if (len2 > MinLen2)
-    {
-        m_analogueAmountRight = std::sqrt(len2) / (cro::GameController::AxisMax - DeadZone);
-    }
-
-    if (startInput ^ m_inputFlags)
-    {
-        m_prevStick = m_inputFlags;
-    }*/
-
-
+    
     //left stick emulates mouse movement (but shouldn't overwrite it)
     if (!hasMouseMotion())
     {
@@ -483,6 +429,37 @@ void BilliardsInput::checkController(float dt)
         if (hasMouseMotion())
         {
             m_analogueAmountLeft = glm::length(m_mouseMove);
+        }
+        else
+        {
+            //right stick does the same but sets the cam look flag too.
+            xMove = static_cast<float>(cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::AxisRightX)) / cro::GameController::AxisMax;
+
+            if (xMove > AnalogueDeadZone || xMove < -AnalogueDeadZone)
+            {
+                m_mouseMove.x = xMove;
+            }
+
+            yMove = static_cast<float>(cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::AxisRightY)) / cro::GameController::AxisMax;
+
+            if (yMove > AnalogueDeadZone || yMove < -AnalogueDeadZone)
+            {
+                m_mouseMove.y = -yMove;
+            }
+
+            if (hasMouseMotion())
+            {
+                //hmmm technically not right but when the input
+                //is processed it only looks at left stick amount
+                //m_analogueAmountRight = glm::length(m_mouseMove);
+                m_analogueAmountLeft = glm::length(m_mouseMove);
+
+                m_inputFlags |= InputFlag::CamModifier;
+            }
+            else
+            {
+                m_inputFlags &= ~InputFlag::CamModifier;
+            }
         }
     }
 }
@@ -505,9 +482,6 @@ void BilliardsInput::updatePlay(float dt)
                 
                 if (m_clampRotation)
                 {
-                    //TODO this should be the rotation of the vector between the ball
-                    //and the cue line
-                    //static constexpr float MaxRotation = (cro::Util::Const::PI / 2.f) - MaxCueRotation;
                     rotation = std::max(-m_maxRotation, std::min(m_maxRotation, rotation));
                 }
                 m_controlEntities.camera.getComponent<ControllerRotation>().rotation = rotation;
@@ -607,7 +581,20 @@ void BilliardsInput::updatePlaceBall(float dt)
 
         if (hasMouseMotion())
         {
-            movement = glm::normalize(glm::vec3(m_mouseMove.x, 0.f, -m_mouseMove.y)) * m_analogueAmountLeft;
+            if ((m_inputFlags & InputFlag::CamModifier))
+            {
+                //still enable tilt (as we might need to reset it
+                auto direction = m_sharedData.invertY ? -m_sharedData.mouseSpeed : m_sharedData.mouseSpeed;
+
+                auto tilt = m_controlEntities.cameraTilt.getComponent<ControllerRotation>().rotation;
+                tilt -= CamRotationSpeed * direction * -m_mouseMove.y * m_analogueAmountLeft * dt;
+                tilt = std::min(MaxTilt, std::max(MinTilt, tilt));
+                m_controlEntities.cameraTilt.getComponent<ControllerRotation>().rotation = tilt;
+            }
+            else
+            {
+                movement = glm::normalize(glm::vec3(m_mouseMove.x, 0.f, -m_mouseMove.y)) * m_analogueAmountLeft;
+            }
         }
         else
         {
