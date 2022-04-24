@@ -408,8 +408,8 @@ void BilliardsInput::checkController(float dt)
         m_power = std::max(MinPower, m_power - (powerDown * dt));
     }
 
-    //left stick to adjust spin
-    auto startInput = m_inputFlags;
+    //right stick to adjust spin - TODO make this move camera.
+    /*auto startInput = m_inputFlags;
     float xPos = cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::AxisRightX);
     if (xPos < -DeadZone)
     {
@@ -448,9 +448,9 @@ void BilliardsInput::checkController(float dt)
     else if (m_prevStick & InputFlag::Up)
     {
         m_inputFlags &= ~InputFlag::Up;
-    }
+    }*/
 
-    float len2 = (xPos * xPos) + (yPos * yPos);
+    /*float len2 = (xPos * xPos) + (yPos * yPos);
     static const float MinLen2 = (DeadZone * DeadZone);
     if (len2 > MinLen2)
     {
@@ -460,10 +460,10 @@ void BilliardsInput::checkController(float dt)
     if (startInput ^ m_inputFlags)
     {
         m_prevStick = m_inputFlags;
-    }
+    }*/
 
 
-    //right stick emulates mouse movement (but shouldn't overwrite it)
+    //left stick emulates mouse movement (but shouldn't overwrite it)
     if (!hasMouseMotion())
     {
         float xMove = static_cast<float>(cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::AxisLeftX)) / cro::GameController::AxisMax;

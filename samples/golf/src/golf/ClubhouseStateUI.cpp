@@ -571,6 +571,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                         //TODO show controller number? or is this implied?
                     }
                 }
+                e.getComponent<cro::Sprite>() = sprite;
 
                 auto bounds = sprite.getTextureBounds();
                 e.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });

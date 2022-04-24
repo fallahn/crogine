@@ -350,6 +350,16 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
 
 void ClubhouseState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped
+            && data.id == StateID::Keyboard)
+        {
+            applyTextEdit();
+        }
+    }
+
     m_backgroundScene.forwardMessage(msg);
     m_tableScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
