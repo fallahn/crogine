@@ -229,6 +229,7 @@ void GolfState::netBroadcast()
             info.serverID = static_cast<std::uint32_t>(ball.getIndex());
             info.position = ball.getComponent<cro::Transform>().getPosition();
             info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
+            info.velocity = cro::Util::Net::compressVec3(ball.getComponent<Ball>().velocity);
             info.timestamp = timestamp;
             info.clientID = player.client;
             info.playerID = player.player;

@@ -67,6 +67,7 @@ struct PlayerStatus final : public ActivePlayer
 struct ActorInfo final
 {
     std::array<std::int16_t, 4u> rotation = {};
+    std::array<std::int16_t, 3u> velocity = {};
     std::uint32_t serverID = 0;
     glm::vec3 position = glm::vec3(0.f);
     std::int32_t timestamp = 0;

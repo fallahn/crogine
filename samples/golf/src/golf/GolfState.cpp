@@ -949,7 +949,7 @@ void GolfState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Leaderboard] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define NOCHEX\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define NOCHEX\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
