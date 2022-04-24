@@ -458,7 +458,11 @@ void BilliardsInput::checkController(float dt)
             }
             else
             {
-                m_inputFlags &= ~InputFlag::CamModifier;
+                //bit of a fudge but prevents overwriting the mouse state
+                if (!cro::Mouse::isButtonPressed(cro::Mouse::Button::Right))
+                {
+                    m_inputFlags &= ~InputFlag::CamModifier;
+                }
             }
         }
     }
