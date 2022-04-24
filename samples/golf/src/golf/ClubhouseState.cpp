@@ -466,7 +466,7 @@ void ClubhouseState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
     m_backgroundScene.addSystem<GolfCartSystem>(mb);
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
-    m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
+    m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(20.f);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
@@ -729,7 +729,7 @@ void ClubhouseState::buildScene()
     if (md.loadFromFile("assets/golf/models/hole_19/snooker_model.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 18.6f, 0.5f, -1.8f });
+        entity.addComponent<cro::Transform>().setPosition({ 17.1f, 0.5f, -1.8f });
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
@@ -739,10 +739,28 @@ void ClubhouseState::buildScene()
     if (md.loadFromFile("assets/golf/models/table_legs.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 18.6f, 0.f, -1.8f });
+        entity.addComponent<cro::Transform>().setPosition({ 17.1f, 0.f, -1.8f });
         md.createModel(entity);
 
         applyMaterial(entity, MaterialID::Cel);
+    }
+
+    if (md.loadFromFile("assets/golf/models/hole_19/cue.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 17.1f, 0.5f, -1.8f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -87.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Trophy);
+
+        entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 18.4f, 1.5f, -0.01f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -87.f * cro::Util::Const::degToRad);
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 180.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Trophy);
     }
 
     if (md.loadFromFile("assets/golf/models/arcade_machine.cmt"))
@@ -750,6 +768,7 @@ void ClubhouseState::buildScene()
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 14.4f, 0.f, -3.3f });
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        entity.getComponent<cro::Transform>().setScale({ 0.8f, 1.f, 1.f });
         md.createModel(entity);
 
         applyMaterial(entity, MaterialID::Cel);

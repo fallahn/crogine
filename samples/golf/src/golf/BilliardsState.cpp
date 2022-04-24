@@ -1112,15 +1112,22 @@ void BilliardsState::spawnBall(const ActorInfo& info)
         }
     };
 
-    //set colour/model based on type stored in info.state
-    if (m_gameMode == TableData::Eightball)
+    if (info.state == 0)
     {
-        if (info.state == 0)
-        {
-            m_cueball = entity;
-        }
+        m_cueball = entity;
+    }
 
-        auto rect = getSubrect(info.state);
+    //set colour/model based on type stored in info.state
+    if (m_gameMode == TableData::Eightball
+        || m_gameMode == TableData::Nineball)
+    {
+        auto rect = getSubrect(info.state % 15);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", rect);
+    }
+    else if (m_gameMode == TableData::Snooker)
+    {
+        auto rect = getSubrect(info.state % 7);
+        rect.z = 1.f;
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", rect);
     }
 }
