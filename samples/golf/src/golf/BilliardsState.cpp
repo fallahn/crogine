@@ -603,7 +603,17 @@ void BilliardsState::buildScene()
             applyMaterialData(md, material);
             entity.getComponent<cro::Model>().setMaterial(0, material);
         }
+        else
+        {
+            m_sharedData.errorMessage = "Unable to load table model";
+            requestStackPush(StateID::Error);
+        }
         m_gameMode = tableData.rules;
+        
+        if (tableData.ballSkins.size() > m_sharedData.ballSkinIndex)
+        {
+            m_ballTexture = m_resources.textures.get(tableData.ballSkins[m_sharedData.ballSkinIndex]);
+        }
 
         m_gameScene.getSystem<BilliardsCollisionSystem>()->initTable(tableData);
         m_inputParser.setSpawnArea(tableData.spawnArea);
@@ -1094,6 +1104,11 @@ void BilliardsState::spawnBall(const ActorInfo& info)
     applyMaterialData(m_ballDefinition, material);
     entity.getComponent<cro::Model>().setMaterial(0, material);
     
+    if (m_ballTexture.textureID)
+    {
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", m_ballTexture);
+    }
+
     entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1121,12 +1136,12 @@ void BilliardsState::spawnBall(const ActorInfo& info)
     if (m_gameMode == TableData::Eightball
         || m_gameMode == TableData::Nineball)
     {
-        auto rect = getSubrect(info.state % 15);
+        auto rect = getSubrect(info.state % 16);
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", rect);
     }
     else if (m_gameMode == TableData::Snooker)
     {
-        auto rect = getSubrect(info.state % 7);
+        auto rect = getSubrect(info.state % 8);
         rect.z = 1.f;
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", rect);
     }

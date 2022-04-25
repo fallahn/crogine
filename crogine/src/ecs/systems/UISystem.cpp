@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -290,7 +290,7 @@ void UISystem::process(float)
                 m_movementCallbacks[input.callbacks[UIInput::Enter]](e, m_movementDelta, m);
             }
 
-            //only fire thetse events if the selection actually changed.
+            //only fire these events if the selection actually changed.
             if (m_selectedIndex != currentIndex)
             {
                 unselect(m_selectedIndex);
@@ -471,8 +471,11 @@ void UISystem::selectPrev(std::size_t stride)
 void UISystem::unselect(std::size_t entIdx)
 {
     auto& entities = m_groups[m_activeGroup];
-    auto idx = entities[entIdx].getComponent<UIInput>().callbacks[UIInput::Unselected];
-    m_selectionCallbacks[idx](entities[entIdx]);
+    if (entIdx < entities.size())
+    {
+        auto idx = entities[entIdx].getComponent<UIInput>().callbacks[UIInput::Unselected];
+        m_selectionCallbacks[idx](entities[entIdx]);
+    }
 }
 
 void UISystem::select(std::size_t entIdx)
@@ -495,6 +498,12 @@ void UISystem::updateGroupAssignments()
             //only swap group if we changed - we may have only changed index order
             if (input.m_previousGroup != input.m_group)
             {
+                //if we're selected unselect first
+                if (m_selectedIndex >= m_groups[m_activeGroup].size())
+                {
+                    m_selectedIndex = 0;
+                }
+
                 //remove from old group first
                 m_groups[input.m_previousGroup].erase(std::remove_if(m_groups[input.m_previousGroup].begin(),
                     m_groups[input.m_previousGroup].end(),

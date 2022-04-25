@@ -43,41 +43,39 @@ source distribution.
 
 namespace cro
 {
+    class Texture;
+    class CubemapTexture;
+
     /*!
     \brief Allows assigning Texture handles directly to material properties
     */
-    struct TextureID final
+    struct CRO_EXPORT_API TextureID final
     {
         std::uint32_t textureID = 0;
 
         TextureID() = default;
         explicit TextureID(std::uint32_t id) : textureID(id) {}
+        explicit TextureID(const cro::Texture&);
 
-        TextureID& operator = (std::uint32_t id)
-        {
-            textureID = id;
-            return *this;
-        }
+        TextureID& operator = (std::uint32_t id);
+        TextureID& operator = (const Texture& t);
     };
 
     /*!
     \brief Allows assigning Cubemap handles directly to material properties
     */
-    struct CubemapID final
+    struct CRO_EXPORT_API CubemapID final
     {
         std::uint32_t textureID = 0;
 
         CubemapID() = default;
         explicit CubemapID(std::uint32_t id) : textureID(id) {}
+        explicit CubemapID(const cro::CubemapTexture&);
 
-        CubemapID& operator = (std::uint32_t id)
-        {
-            textureID = id;
-            return *this;
-        }
+        CubemapID& operator = (std::uint32_t id);
+        CubemapID& operator = (const CubemapTexture& t);
     };
 
-    class Texture;
     namespace Material
     {
         /*

@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
+#include <crogine/ecs/components/UIInput.hpp>
 
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
@@ -236,30 +237,30 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     }
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Buns"))
-            {
-                ImGui::Image(m_tableTexture.getTexture(), {480.f, 280.f}, {0.f, 1.f}, {1.f, 0.f});
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Buns"))
+    //        {
+    //            ImGui::Image(m_tableTexture.getTexture(), {480.f, 280.f}, {0.f, 1.f}, {1.f, 0.f});
 
-                /*static float rotation = 0.f;
-                if (ImGui::DragFloat("Rotation", &rotation, 0.1f, 0.f, cro::Util::Const::TAU))
-                {
-                    tableEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
-                }*/
+    //            /*static float rotation = 0.f;
+    //            if (ImGui::DragFloat("Rotation", &rotation, 0.1f, 0.f, cro::Util::Const::TAU))
+    //            {
+    //                tableEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+    //            }*/
 
-                /*glm::vec3 position = tableCamera.getComponent<cro::Transform>().getPosition();
-                if (ImGui::DragFloat("X", &position.x, 0.01f, -2.f, 2.f))
-                {
-                    tableCamera.getComponent<cro::Transform>().setPosition(position);
-                }
-                if (ImGui::DragFloat("Z", &position.z, 0.01f, -0.f, 4.f))
-                {
-                    tableCamera.getComponent<cro::Transform>().setPosition(position);
-                }*/
-            }
-            ImGui::End();
-        });
+    //            /*glm::vec3 position = tableCamera.getComponent<cro::Transform>().getPosition();
+    //            if (ImGui::DragFloat("X", &position.x, 0.01f, -2.f, 2.f))
+    //            {
+    //                tableCamera.getComponent<cro::Transform>().setPosition(position);
+    //            }
+    //            if (ImGui::DragFloat("Z", &position.z, 0.01f, -0.f, 4.f))
+    //            {
+    //                tableCamera.getComponent<cro::Transform>().setPosition(position);
+    //            }*/
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
@@ -1142,6 +1143,9 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
         case PacketID::StateChange:
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Billiards)
             {
+                m_sharedData.ballSkinIndex = m_tableData[m_tableIndex].ballSkinIndex;
+                m_sharedData.tableSkinIndex = m_tableData[m_tableIndex].tableSkinIndex;
+
                 requestStackClear();
                 requestStackPush(StateID::Billiards);
             }
@@ -1257,6 +1261,24 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
                 {
                     e.getComponent<cro::Text>().setString(TableStrings[m_tableData[m_sharedData.courseIndex].rules]);
                     centreText(e);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //show/hide the ball skin selection arrow
+                cmd.targetFlags = CommandID::Menu::CourseHoles;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    bool show = m_tableData[m_sharedData.courseIndex].ballSkins.size() > 1;
+                    if (show)
+                    {
+                        e.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    }
+                    else
+                    {
+                        e.getComponent<cro::UIInput>().setGroup(MenuID::Inactive);
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    }
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }

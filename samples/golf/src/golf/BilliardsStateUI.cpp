@@ -508,6 +508,11 @@ void BilliardsState::createMiniballScenes()
         applyMaterialData(md, material);
         entity.getComponent<cro::Model>().setMaterial(0, material);
 
+        if (m_ballTexture.textureID)
+        {
+            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", m_ballTexture);
+        }
+
         m_targetBall = entity;
     }
 

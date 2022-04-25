@@ -152,8 +152,7 @@ bool TrophyState::handleEvent(const cro::Event& evt)
     if (evt.type == SDL_KEYUP)
     {
         if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_p)
+            || evt.key.keysym.sym == SDLK_ESCAPE)
         {
             quitState();
             return false;
@@ -163,7 +162,7 @@ bool TrophyState::handleEvent(const cro::Event& evt)
         && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
     {
         if (evt.cbutton.button == cro::GameController::ButtonB
-            || evt.cbutton.button == cro::GameController::ButtonStart)
+            || evt.cbutton.button == cro::GameController::ButtonBack)
         {
             quitState();
             return false;
