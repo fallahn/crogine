@@ -37,6 +37,8 @@ source distribution.
 
 namespace cro
 {
+    class ConfigObject;
+
     /*!
     \brief Message class
 
@@ -127,13 +129,16 @@ namespace cro
             {
                 Opened,
                 Closed,
-                LinePrinted
+                LinePrinted,
+                ConvarSet
             }type = Opened;
             
             enum Level
             {
                 Info, Warning, Error
             }level = Info;
+
+            ConfigObject* convar = nullptr;
         };
 
         struct SkeletalAnimationEvent final
