@@ -271,7 +271,27 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    auto quitMenu = []() {};
+    auto quitMenu = [&]()
+    {
+        switch (m_currentMenu)
+        {
+        default: break;
+        case MenuID::PlayerSelect:
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+            m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
+            m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+            break;
+        case MenuID::Join:
+            applyTextEdit();
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+            m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::PlayerSelect;
+            m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+            break;
+        case MenuID::Lobby:
+            quitLobby();
+            break;
+        }
+    };
 
     if (evt.type == SDL_KEYUP)
     {
