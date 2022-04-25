@@ -94,6 +94,11 @@ namespace cro
             m_updateGroup = true;
         }
 
+        /*!
+        \brief Returns the current selection index assigned to the UIInput
+        */
+        std::size_t getSelectionIndex() const { return m_selectionIndex; }
+
     private:
         std::size_t m_previousGroup = 0;
         std::size_t m_group = 0;

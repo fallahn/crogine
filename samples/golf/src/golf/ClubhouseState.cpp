@@ -1274,7 +1274,7 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
                 cmd.targetFlags = CommandID::Menu::CourseHoles;
                 cmd.action = [&](cro::Entity e, float)
                 {
-                    bool show = m_tableData[m_sharedData.courseIndex].ballSkins.size() > 0;
+                    bool show = m_tableData[m_sharedData.courseIndex].ballSkins.size() > 1;
                     if (show)
                     {
                         e.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
