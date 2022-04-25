@@ -131,6 +131,7 @@ void CameraFollowSystem::process(float dt)
             diffMultiplier *= 4.f;
             follower.currentTarget += diff * (dt * (diffMultiplier + (4.f * follower.zoom.progress)));
 
+
             auto& tx = entity.getComponent<cro::Transform>();
             auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
             tx.setLocalTransform(glm::inverse(lookAt));

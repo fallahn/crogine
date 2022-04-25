@@ -97,6 +97,7 @@ struct SpriteID final
         AddPlayer,
         RemovePlayer,
         ReadyUp,
+        ReadyStatus,
         StartGame,
         Connect,
         PrevCourse,

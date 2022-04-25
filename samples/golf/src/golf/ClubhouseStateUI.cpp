@@ -1312,7 +1312,7 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_resources.textures);
-
+    m_sprites[SpriteID::ReadyStatus] = spriteSheet.getSprite("ready_status");
 
     //title
     auto entity = m_uiScene.createEntity();
@@ -1746,37 +1746,28 @@ void ClubhouseState::updateLobbyAvatars()
             {
                 if (m_sharedData.connectionData[i].playerCount)
                 {
-                    const float x = -PositionOffset + (i * (PositionOffset * 2.f));
+                    float x = -PositionOffset + (i * (PositionOffset * 2.f));
                     createName(m_sharedData.connectionData[i].playerData[0].name, x);
 
+                    static constexpr float IconOffset = 140.f;
+                    x = -IconOffset + (i * (IconOffset * 2.f));
+
                     auto entity = m_uiScene.createEntity();
-                    entity.addComponent<cro::Transform>().setPosition({x, -10.f});
+                    entity.addComponent<cro::Transform>().setPosition({x, -8.f});
                     entity.getComponent<cro::Transform>().move(e.getComponent<cro::Transform>().getOrigin());
                     entity.addComponent<cro::Drawable2D>();
+                    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyStatus];
+                    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+                    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
                     entity.addComponent<cro::Callback>().active = true;
                     entity.getComponent<cro::Callback>().function =
                         [&, i](cro::Entity e2, float)
                     {
                         cro::Colour colour = m_readyState[i] ? TextGreenColour : LeaderboardTextDark;
-
-                        auto& verts = e2.getComponent<cro::Drawable2D>().getVertexData();
-                        for (auto& v : verts)
-                        {
-                            v.colour = colour;
-                        }
+                        e2.getComponent<cro::Sprite>().setColour(colour);
                     };
                     e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                     children.push_back(entity);
-
-                    auto& verts = entity.getComponent<cro::Drawable2D>().getVertexData();
-                    verts =
-                    {
-                        cro::Vertex2D(glm::vec2(-4.f, -4.f)),
-                        cro::Vertex2D(glm::vec2(4.f, -4.f)),
-                        cro::Vertex2D(glm::vec2(-4.f, 4.f)),
-                        cro::Vertex2D(glm::vec2(4.f))
-                    };
-                    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
                 }
                 else
                 {
