@@ -602,6 +602,12 @@ void BilliardsState::buildScene()
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::Table]);
             applyMaterialData(md, material);
             entity.getComponent<cro::Model>().setMaterial(0, material);
+
+            if (tableData.tableSkins.size() > m_sharedData.tableSkinIndex)
+            {
+                entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", 
+                    cro::TextureID(m_resources.textures.get(tableData.tableSkins[m_sharedData.tableSkinIndex])));
+            }
         }
         else
         {

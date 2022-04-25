@@ -991,7 +991,7 @@ void ClubhouseState::createTableScene()
     };
 
     auto camEnt = m_tableScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -18.f * cro::Util::Const::degToRad);
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -28.f * cro::Util::Const::degToRad);
 
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
@@ -1123,6 +1123,12 @@ void ClubhouseState::createTableScene()
 
         //pre-load the ball textures
         for (const auto& t : td.ballSkins)
+        {
+            m_resources.textures.get(t);
+        }
+
+        //and table textures
+        for (const auto& t : td.tableSkins)
         {
             m_resources.textures.get(t);
         }
@@ -1268,7 +1274,25 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
                 cmd.targetFlags = CommandID::Menu::CourseHoles;
                 cmd.action = [&](cro::Entity e, float)
                 {
-                    bool show = m_tableData[m_sharedData.courseIndex].ballSkins.size() > 1;
+                    bool show = m_tableData[m_sharedData.courseIndex].ballSkins.size() > 0;
+                    if (show)
+                    {
+                        e.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    }
+                    else
+                    {
+                        e.getComponent<cro::UIInput>().setGroup(MenuID::Inactive);
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    }
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //and table skin selection
+                cmd.targetFlags = CommandID::Menu::ScoreType;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    bool show = m_tableData[m_sharedData.courseIndex].tableSkins.size() > 1;
                     if (show)
                     {
                         e.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);

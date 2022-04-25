@@ -7,6 +7,9 @@ table pool
     ball_skin = "assets/golf/images/billiards/pool_blue.png"
     ball_skin = "assets/golf/images/billiards/pool_spots.png"
 
+    table_skin = "assets/golf/images/billiards/pool_table_red.png"
+    table_skin = "assets/golf/images/billiards/pool_table_green.png"
+
     spawn
     {
         position = 0.000000,-0.680000

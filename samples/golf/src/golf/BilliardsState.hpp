@@ -123,7 +123,6 @@ private:
 
     std::int32_t m_gameMode;
     cro::TextureID m_ballTexture;
-    cro::TextureID m_tableTexture;
     TableInfo m_tableInfo;
     cro::Entity m_cueball;
     cro::Entity m_localCue;

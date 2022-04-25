@@ -1445,6 +1445,86 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     arrowEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
     entity.getComponent<cro::Transform>().addChild(arrowEnt.getComponent<cro::Transform>());
 
+
+
+
+
+    //selects table texture
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 38.f, 86.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourseHighlight];
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::ScoreType;
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_tableSelectCallbacks.mouseEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_tableSelectCallbacks.mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    auto& table = m_tableData[m_tableIndex];
+                    table.tableSkinIndex = (table.tableSkinIndex + static_cast<std::int32_t>(table.tableSkins.size() - 1)) % table.tableSkins.size();
+                    table.previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap",
+                        cro::TextureID(m_resources.textures.get(table.tableSkins[table.tableSkinIndex])));
+                }
+            });
+    vsEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    arrowEnt = m_uiScene.createEntity();
+    arrowEnt.addComponent<cro::Transform>();
+    arrowEnt.addComponent<cro::Drawable2D>();
+    arrowEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourse];
+    entity.getComponent<cro::Transform>().addChild(arrowEnt.getComponent<cro::Transform>());
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 248.f, 86.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourseHighlight];
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::ScoreType;
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_tableSelectCallbacks.mouseEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_tableSelectCallbacks.mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    auto& table = m_tableData[m_tableIndex];
+                    table.tableSkinIndex = (table.tableSkinIndex + 1) % table.tableSkins.size();
+                    table.previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap",
+                        cro::TextureID(m_resources.textures.get(table.tableSkins[table.tableSkinIndex])));
+                }
+            });
+    vsEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    arrowEnt = m_uiScene.createEntity();
+    arrowEnt.addComponent<cro::Transform>();
+    arrowEnt.addComponent<cro::Drawable2D>();
+    arrowEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
+    entity.getComponent<cro::Transform>().addChild(arrowEnt.getComponent<cro::Transform>());
+
+
+
+
+
+
+
+
+
     //banner
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, BannerPosition, -0.1f });
@@ -1873,7 +1953,7 @@ void ClubhouseState::updateLobbyAvatars()
 
 void ClubhouseState::updateBallTexture()
 {
-    auto ballTex = cro::TextureID(m_resources.textures.get(m_tableData[m_tableIndex].ballSkins[m_tableData[m_tableIndex].ballSkinIndex]).getGLHandle());
+    auto ballTex = cro::TextureID(m_resources.textures.get(m_tableData[m_tableIndex].ballSkins[m_tableData[m_tableIndex].ballSkinIndex]));
     m_previewBalls[0].getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", ballTex);
     m_previewBalls[1].getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", ballTex);
 }
