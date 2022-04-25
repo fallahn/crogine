@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -76,6 +76,12 @@ namespace cro
             m_group = group;
             m_updateGroup = true;
         }
+
+        /*!
+        \brief Returns the ID of the group to which the input is currently assigned
+        \see setGroup()
+        */
+        std::size_t getGroup() const { return m_group; }
 
         /*!
         \brief Defines the order in which components in a group are selected.

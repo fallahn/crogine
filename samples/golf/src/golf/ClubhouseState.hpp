@@ -89,6 +89,7 @@ public:
             Dummy,
             Main, PlayerSelect,
             Join, Lobby,
+            Inactive,
 
             Count
         };

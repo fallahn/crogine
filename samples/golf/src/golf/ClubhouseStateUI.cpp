@@ -542,6 +542,32 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
 
         editEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
+        //disables the input if inactive (needs to be separate because the callback is already assigned *sigh*)
+        if (playerIndex > 0)
+        {
+            auto callbackEnt = m_uiScene.createEntity();
+            callbackEnt.addComponent<cro::Callback>().active = true;
+            callbackEnt.getComponent<cro::Callback>().function =
+                [editEnt, buttonEnt](cro::Entity, float) mutable
+            {
+                auto scale = editEnt.getComponent<cro::Transform>().getScale();
+                if (scale.x * scale.y == 0)
+                {
+                    if (buttonEnt.getComponent<cro::UIInput>().getGroup() == MenuID::PlayerSelect)
+                    {
+                        buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Inactive);
+                    }
+                }
+                else
+                {
+                    if (buttonEnt.getComponent<cro::UIInput>().getGroup() == MenuID::Inactive)
+                    {
+                        buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::PlayerSelect);
+                    }
+                }
+            };
+        }        
+
         auto controllerEnt = m_uiScene.createEntity();
         controllerEnt.addComponent<cro::Transform>();
         controllerEnt.addComponent<cro::Drawable2D>();
@@ -779,7 +805,6 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
 
     //prev selection button
     entity = m_uiScene.createEntity();
-    entity.setLabel("Add Player");
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
@@ -818,7 +843,6 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
 
     //next selection button
     entity = m_uiScene.createEntity();
-    entity.setLabel("Remove Player");
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
