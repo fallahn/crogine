@@ -605,7 +605,43 @@ void ClubhouseState::validateTables()
         }
     }
 
-    if (m_tableData.empty())
+    //this assumes the file was previously saved in the correct order
+    //but it won't be terrible if it's a bit out as it'll be overwritten again.
+    cro::ConfigFile cfg;
+    cfg.loadFromFile(cro::App::getPreferencePath() + "table_data.cfg", false);
+    const auto& objs = cfg.getObjects();
+    for (auto i = 0u; i < objs.size(); ++i)
+    {
+        const auto& objName = objs[i].getName();
+        if (objName == "table")
+        {
+            const auto& objProps = objs[i].getProperties();
+            for (const auto& p : objProps)
+            {
+                const auto propName = p.getName();
+                if (propName == "ball")
+                {
+                    auto idx = p.getValue<std::int32_t>();
+                    if (i < m_tableData.size()
+                        && !m_tableData[i].ballSkins.empty())
+                    {
+                        m_tableData[i].ballSkinIndex = std::min(idx, static_cast<std::int32_t>(m_tableData[i].ballSkins.size()) - 1);
+                    }
+                }
+                else if (propName == "table")
+                {
+                    auto idx = p.getValue<std::int32_t>();
+                    if (i < m_tableData.size()
+                        && !m_tableData[i].tableSkins.empty())
+                    {
+                        m_tableData[i].tableSkinIndex = std::min(idx, static_cast<std::int32_t>(m_tableData[i].tableSkins.size()) - 1);
+                    }
+                }
+            }
+        }
+    }
+
+    if (!m_tableData.empty())
     {
         m_sharedData.mapDirectory = m_tableData[0].name;
     }
@@ -1101,6 +1137,7 @@ void ClubhouseState::createTableScene()
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
             applyMaterialData(md, material);
             entity.getComponent<cro::Model>().setMaterial(0, material);
+            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", cro::TextureID(m_resources.textures.get(td.tableSkins[td.tableSkinIndex])));
 
             //not conducive to custom tables, but my game, my rules :P
             switch (td.rules)
@@ -1151,6 +1188,16 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
             {
                 m_sharedData.ballSkinIndex = m_tableData[m_tableIndex].ballSkinIndex;
                 m_sharedData.tableSkinIndex = m_tableData[m_tableIndex].tableSkinIndex;
+
+                //save these for later
+                cro::ConfigFile cfg("table_skins");
+                for (const auto& table : m_tableData)
+                {
+                    auto* obj = cfg.addObject("table");
+                    obj->addProperty("ball").setValue(table.ballSkinIndex);
+                    obj->addProperty("table").setValue(table.tableSkinIndex);
+                }
+                cfg.save(cro::App::getPreferencePath() + "table_data.cfg");
 
                 requestStackClear();
                 requestStackPush(StateID::Billiards);

@@ -100,8 +100,9 @@ namespace cro
 
         /*!
         \brief Returns the path to the current platform's directory
-        for storing preference files. Before using this the application's
-        organisation name and app name should be set with setApplicationStrings()
+        for storing preference files (including the trailing '/').
+        Before using this the application's organisation name and app
+        name should be set with setApplicationStrings()
         \see setApplicationStrings()
         */
         static const std::string& getPreferencePath();
