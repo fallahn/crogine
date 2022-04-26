@@ -149,7 +149,8 @@ void BilliardsState::createUI()
         ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
         ent.addComponent<UIElement>().relativePosition = relPos;
         ent.getComponent<UIElement>().absolutePosition = absPos;
-        ent.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+        ent.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::PlayerName;
+        ent.addComponent<cro::Callback>().setUserData<std::int32_t>(-1);
 
         centreText(ent);
         rootNode.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
@@ -179,11 +180,15 @@ void BilliardsState::createUI()
         cueEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::StrengthMeter;
         cueEnt.addComponent<cro::Callback>().setUserData<const std::int32_t>(playerIndex);
         cueEnt.getComponent<cro::Callback>().function =
-            [&, bounds](cro::Entity e, float)
+            [&, bounds](cro::Entity e, float dt)
         {
             auto power = 1.f - m_inputParser.getPower();
             auto yPos = (power * bounds.height) - bounds.height;
-            e.getComponent<cro::Transform>().setPosition({ 0.f, yPos });
+
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+            pos.y += (yPos - pos.y) * (dt * 5.f);
+
+            e.getComponent<cro::Transform>().setPosition(pos);
         };
         ent.getComponent<cro::Transform>().addChild(cueEnt.getComponent<cro::Transform>());
 
@@ -226,6 +231,34 @@ void BilliardsState::createUI()
     static constexpr float NameVertOffset = -4.f;
     static constexpr float NameHorPos = 0.13f;
     createText(m_sharedData.connectionData[0].playerData[0].name, glm::vec2(NameHorPos, 1.f), glm::vec2(0.f, NameVertOffset));
+
+    struct NameAnimationCallback final
+    {
+        float currTime = 0.f;
+        void operator() (cro::Entity e, float dt)
+        {
+            currTime = std::min(1.f, currTime + (dt * 2.f));
+            float scale = 1.f + cro::Util::Easing::easeOutCirc(currTime);
+
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+            auto colour = TextNormalColour;
+            colour.setAlpha(1.f - currTime);
+
+            e.getComponent<cro::Text>().setFillColour(colour);
+
+            if (currTime == 1.f)
+            {
+                currTime = 0.f;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+    };
+
+    auto highlightText = createText(m_sharedData.connectionData[0].playerData[0].name, glm::vec2(NameHorPos, 1.f), glm::vec2(0.f, NameVertOffset));
+    highlightText.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
+    highlightText.getComponent<cro::Callback>().function = NameAnimationCallback();
+
     if (m_sharedData.clientConnection.connectionID == 0)
     {
         createPowerBar(0);
@@ -234,11 +267,21 @@ void BilliardsState::createUI()
     if (m_sharedData.connectionData[0].playerCount == 2)
     {
         createText(m_sharedData.connectionData[0].playerData[1].name, glm::vec2(1.f - NameHorPos, 1.f), glm::vec2(0.f, NameVertOffset));
+        highlightText = createText(m_sharedData.connectionData[0].playerData[1].name, glm::vec2(1.f - NameHorPos, 1.f), glm::vec2(0.f, NameVertOffset));
+
+        highlightText.getComponent<cro::Callback>().setUserData<std::int32_t>(1);
+        highlightText.getComponent<cro::Callback>().function = NameAnimationCallback();
+
+
         createPowerBar(1);
     }
     else
     {
         createText(m_sharedData.connectionData[1].playerData[0].name, glm::vec2(1.f - NameHorPos, 1.f), glm::vec2(0.f, NameVertOffset));
+        highlightText = createText(m_sharedData.connectionData[1].playerData[0].name, glm::vec2(1.f - NameHorPos, 1.f), glm::vec2(0.f, NameVertOffset));
+
+        highlightText.getComponent<cro::Callback>().setUserData<std::int32_t>(1);
+        highlightText.getComponent<cro::Callback>().function = NameAnimationCallback();
 
         if (m_sharedData.clientConnection.connectionID == 1)
         {
@@ -246,6 +289,27 @@ void BilliardsState::createUI()
         }
     }
 
+
+    //free table sign
+    auto ftEnt = createText("Free Table", { 0.5f, 1.f }, { 0.f, -UIBarHeight * 2.f });
+    ftEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    ftEnt.getComponent<cro::CommandTarget>().ID = CommandID::UI::WindSock | CommandID::UI::UIElement; //for the sake of recycling enum...
+    ftEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
+    ftEnt.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        static constexpr float FlashTime = 0.5f;
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime += dt;
+        if (currTime > FlashTime)
+        {
+            currTime -= FlashTime;
+
+            float scale = e.getComponent<cro::Transform>().getScale().x;
+            scale = (scale == 0) ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        }
+    };
 
     //mouse cursor for rotating
     entity = m_uiScene.createEntity();
@@ -386,6 +450,40 @@ void BilliardsState::showReadyNotify(const BilliardsPlayer& player)
         }
     }
     showNotification(msg);
+
+    auto playerIndex = player.client | player.player;
+
+    //show the active player's strength meter
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::StrengthMeter;
+    cmd.action = [playerIndex](cro::Entity e, float)
+    {
+        if (e.getComponent<cro::Callback>().getUserData<const std::int32_t>() == playerIndex)
+        {
+            auto scale = e.getComponent<cro::Transform>().getScale();
+            scale.y = 1.f;
+            e.getComponent<cro::Transform>().setScale(scale);
+            e.getComponent<cro::Callback>().active = true;
+        }
+        else
+        {
+            auto scale = e.getComponent<cro::Transform>().getScale();
+            scale.y = -1.f;
+            e.getComponent<cro::Transform>().setScale(scale);
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::UI::PlayerName;
+    cmd.action = [playerIndex](cro::Entity e, float)
+    {
+        if (e.getComponent<cro::Callback>().getUserData<const std::int32_t>() == playerIndex)
+        {
+            e.getComponent<cro::Callback>().active = true;
+        }
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void BilliardsState::showNotification(const cro::String& msg)

@@ -40,6 +40,7 @@ source distribution.
 #include "NotificationSystem.hpp"
 #include "BilliardsSoundDirector.hpp"
 #include "server/ServerPacketData.hpp"
+#include "server/ServerMessages.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <crogine/gui/Gui.hpp>
@@ -124,6 +125,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     ctx.mainWindow.setMouseCaptured(true);
 
+    sd.baseState = StateID::Billiards;
     Achievements::setActive(sd.localConnectionData.playerCount == 1);
 
 #ifdef CRO_DEBUG_
@@ -391,6 +393,16 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);*/
 
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ActorAnimation, std::uint8_t(1), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+            //hide free table sign if active
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::WindSock;
+            cmd.action = [](cro::Entity e, float)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
     }
         break;
@@ -1000,7 +1012,20 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
             auto id = evt.packet.as<std::int8_t>();
             if (id < FoulStrings.size())
             {
-                showNotification(FoulStrings[id]);
+                if (id == BilliardsEvent::FreeTable)
+                {
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::UI::WindSock;
+                    cmd.action = [](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Callback>().active = true;
+                    };
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                }
+                else
+                {
+                    showNotification(FoulStrings[id]);
+                }
             }
         }
             break;
@@ -1276,27 +1301,6 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
             m_currentPlayer.client = playerInfo.client;
 
             auto playerIndex = (playerInfo.client | playerInfo.player);
-            
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::UI::StrengthMeter;
-            cmd.action = [playerIndex](cro::Entity e, float)
-            {
-                if (e.getComponent<cro::Callback>().getUserData<const std::int32_t>() == playerIndex)
-                {
-                    auto scale = e.getComponent<cro::Transform>().getScale();
-                    scale.y = 1.f;
-                    e.getComponent<cro::Transform>().setScale(scale);
-                    e.getComponent<cro::Callback>().active = true;
-                }
-                else
-                {
-                    auto scale = e.getComponent<cro::Transform>().getScale();
-                    scale.y = -1.f;
-                    e.getComponent<cro::Transform>().setScale(scale);
-                    e.getComponent<cro::Callback>().active = false;
-                }
-            };
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             updateTargetTexture(playerIndex, m_localPlayerInfo[playerInfo.client][playerInfo.player].targetBall);
                         

@@ -121,11 +121,11 @@ namespace
 
 void GolfState::createWeather()
 {
-    cro::Clock clock;
+    //cro::Clock clock;
     auto points = pd::PoissonDiskSampling(2.3f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
 
-    auto t = static_cast<float>(clock.elapsed().asMilliseconds()) / 1000.f;
-    LogI << "Generated " << points.size() << " in " << t << " seconds" << std::endl;
+    //auto t = static_cast<float>(clock.elapsed().asMilliseconds()) / 1000.f;
+    //LogI << "Generated " << points.size() << " in " << t << " seconds" << std::endl;
 
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
 

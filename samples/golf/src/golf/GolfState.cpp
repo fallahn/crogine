@@ -725,7 +725,6 @@ bool GolfState::simulate(float dt)
 #endif
 
 
-
     if (m_sharedData.clientConnection.connected)
     {
         cro::NetEvent evt;
@@ -2245,9 +2244,13 @@ void GolfState::buildScene()
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -135.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -75.f * cro::Util::Const::degToRad);
 
-#ifdef CRO_DEBUG_
-    //createWeather();
-#endif
+//#ifdef CRO_DEBUG_
+    if (cro::SysTime::now().months() == 12
+        && cro::Util::Random::value(0, 50) == 0)
+    {
+        createWeather();
+    }
+//#endif
 }
 
 void GolfState::initAudio()

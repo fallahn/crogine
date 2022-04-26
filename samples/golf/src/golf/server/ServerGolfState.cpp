@@ -616,23 +616,40 @@ void GolfState::setNextHole()
     }
     else
     {
-        //end of game baby!
-        m_sharedData.host.broadcastPacket(PacketID::GameEnd, ConstVal::SummaryTimeout, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-        //create a timer ent which returns to lobby on time out
-        auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<float>(ConstVal::SummaryTimeout);
-        entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float dt)
+        //fudge in some delay and hope the final scores reach clients first...
+        auto timerEnt = m_scene.createEntity();
+        timerEnt.addComponent<cro::Callback>().active = true;
+        timerEnt.getComponent<cro::Callback>().setUserData<float>(2.f);
+        timerEnt.getComponent<cro::Callback>().function = [&](cro::Entity ent, float dt)
         {
-            auto& remain = e.getComponent<cro::Callback>().getUserData<float>();
-            remain -= dt;
-            if (remain < 0)
+            auto& ct = ent.getComponent<cro::Callback>().getUserData<float>();
+            ct -= dt;
+
+            if (ct < 0)
             {
-                m_returnValue = StateID::Lobby;
-                e.getComponent<cro::Callback>().active = false;
+                //end of game baby! TODO really this should include all final scores so
+                //clients will make sure to show correct trophy/podium
+                m_sharedData.host.broadcastPacket(PacketID::GameEnd, ConstVal::SummaryTimeout, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                //create a timer ent which returns to lobby on time out
+                auto entity = m_scene.createEntity();
+                entity.addComponent<cro::Transform>();
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(ConstVal::SummaryTimeout);
+                entity.getComponent<cro::Callback>().function =
+                    [&](cro::Entity e, float dt)
+                {
+                    auto& remain = e.getComponent<cro::Callback>().getUserData<float>();
+                    remain -= dt;
+                    if (remain < 0)
+                    {
+                        m_returnValue = StateID::Lobby;
+                        e.getComponent<cro::Callback>().active = false;
+                    }
+                };
+
+                ent.getComponent<cro::Callback>().active = false;
+                m_scene.destroyEntity(ent);
             }
         };
 
