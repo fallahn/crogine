@@ -411,6 +411,9 @@ void BilliardsState::doServerCommand(const cro::NetEvent& evt)
     case ServerCommand::StrikeBall:
         m_scene.getSystem<BilliardsSystem>()->applyImpulse({0.f, 0.f, -0.7f}, {0.f, 0.f, 0.f});
         break;
+    case ServerCommand::EndGame:
+        endGame(m_playerInfo[0]);
+        break;
     }
 #endif
 }

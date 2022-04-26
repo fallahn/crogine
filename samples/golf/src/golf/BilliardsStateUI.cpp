@@ -350,6 +350,84 @@ void BilliardsState::createUI()
     entity.addComponent<cro::Drawable2D>();
     auto infoEnt = entity;
 
+
+    //game over window
+    spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_resources.textures);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale({0.f, 0.01f});
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("versus");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
+    entity.getComponent<UIElement>().depth = 0.6f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::Scoreboard;
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + (dt * 2.f));
+
+        auto scale = e.getComponent<cro::Transform>().getScale();
+        if (scale.x < 1)
+        {
+            scale.x = cro::Util::Easing::easeOutBounce(currTime);
+
+            if (currTime == 1)
+            {
+                currTime = scale.y;
+            }
+        }
+        else
+        {
+            scale.y = cro::Util::Easing::easeOutBounce(currTime);
+
+            if (currTime == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        e.getComponent<cro::Transform>().setScale(scale);
+    };
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto scoreEnt = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -80.f, 77.f, 0.1f });
+    entity.getComponent<cro::Transform>().move(scoreEnt.getComponent<cro::Transform>().getOrigin());
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(menuFont).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setString(m_sharedData.connectionData[0].playerData[0].name);
+    centreText(entity);
+    scoreEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 80.f, 77.f, 0.1f });
+    entity.getComponent<cro::Transform>().move(scoreEnt.getComponent<cro::Transform>().getOrigin());
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(menuFont).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    if (m_sharedData.connectionData[0].playerCount == 2)
+    {
+        entity.getComponent<cro::Text>().setString(m_sharedData.connectionData[0].playerData[1].name);
+    }
+    else
+    {
+        entity.getComponent<cro::Text>().setString(m_sharedData.connectionData[1].playerData[0].name);
+    }
+    centreText(entity);
+    scoreEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //stash these for showing the summary
+    spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
+
+    m_sprites[SpriteID::QuitReady] = spriteSheet.getSprite("quit_ready");
+    m_sprites[SpriteID::QuitNotReady] = spriteSheet.getSprite("quit_not_ready");
+
+
+
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
     auto updateView = [&, rootNode, backgroundEnt, infoEnt, topspinEnt, targetEnt0, targetEnt1, rotateEnt](cro::Camera& cam) mutable
@@ -504,38 +582,99 @@ void BilliardsState::showGameEnd(const BilliardsPlayer& player)
     if (!m_gameEnded)
     {
         //show summary screen
-
-        auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
-        auto entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 400.f, 300.f });
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString("Game Ended");
-
-
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 200.f, 10.f, 0.23f });
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
-        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::uint8_t>>(1.f, ConstVal::SummaryTimeout);
-        entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float dt)
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::Scoreboard;
+        cmd.action = [&](cro::Entity ent, float)
         {
-            auto& [current, sec] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::uint8_t>>();
-            current -= dt;
-            if (current < 0)
+            auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+            auto entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({ ent.getComponent<cro::Transform>().getOrigin().x, 28.f, 0.23f});
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+            entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::uint8_t>>(1.f, ConstVal::SummaryTimeout);
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
             {
-                current += 1.f;
-                sec--;
-            }
+                auto& [current, sec] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::uint8_t>>();
+                current -= dt;
+                if (current < 0)
+                {
+                    current += 1.f;
+                    sec--;
+                }
 
-            e.getComponent<cro::Text>().setString("Returning to lobby in: " + std::to_string(sec));
+                e.getComponent<cro::Text>().setString("Returning to lobby in: " + std::to_string(sec));
 
-            auto bounds = cro::Text::getLocalBounds(e);
-            bounds.width = std::floor(bounds.width / 2.f);
-            e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+                auto bounds = cro::Text::getLocalBounds(e);
+                bounds.width = std::floor(bounds.width / 2.f);
+                e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+            };
+
+            ent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            ent.getComponent<cro::Callback>().active = true;
         };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+        //create status icons for each connected client
+        //to show vote to skip
+        auto unreadyRect = m_sprites[SpriteID::QuitNotReady].getTextureRect();
+        auto readyRect = m_sprites[SpriteID::QuitReady].getTextureRect();
+        const glm::vec2 texSize(m_sprites[SpriteID::QuitNotReady].getTexture()->getSize());
+        if (texSize.x != 0 && texSize.y != 0)
+        {
+            float posOffset = unreadyRect.width;
+
+            unreadyRect.left /= texSize.x;
+            unreadyRect.width /= texSize.x;
+            unreadyRect.bottom /= texSize.y;
+            unreadyRect.height /= texSize.y;
+
+            readyRect.left /= texSize.x;
+            readyRect.width /= texSize.x;
+            readyRect.bottom /= texSize.y;
+            readyRect.height /= texSize.y;
+
+            auto entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::Drawable2D>().setTexture(m_sprites[SpriteID::QuitNotReady].getTexture());
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&, readyRect, unreadyRect, posOffset](cro::Entity e, float)
+            {
+                auto& tx = e.getComponent<cro::Transform>();
+                tx.setPosition({ 13.f, (UIBarHeight * 2.f) + 10.f, 2.f });
+                tx.setScale(m_viewScale);
+
+                float basePos = 0.f;
+                std::vector<cro::Vertex2D> vertices;
+                for (auto i = 0u; i < 4u; ++i)
+                {
+                    if (m_sharedData.connectionData[i].playerCount)
+                    {
+                        //check status flags to choose rectangle
+                        auto rect = (m_readyQuitFlags & (1 << i)) ? readyRect : unreadyRect;
+
+
+                        vertices.emplace_back(glm::vec2(basePos, posOffset), glm::vec2(rect.left, rect.bottom + rect.height));
+                        vertices.emplace_back(glm::vec2(basePos, 0.f), glm::vec2(rect.left, rect.bottom));
+                        vertices.emplace_back(glm::vec2(basePos + posOffset, posOffset), glm::vec2(rect.left + rect.width, rect.bottom + rect.height));
+                        vertices.emplace_back(glm::vec2(basePos + posOffset, 0.f), glm::vec2(rect.left + rect.width, rect.bottom));
+
+                        vertices.emplace_back(glm::vec2(basePos + posOffset, posOffset), glm::vec2(rect.left + rect.width, rect.bottom + rect.height), cro::Colour::Transparent);
+                        vertices.emplace_back(glm::vec2(basePos + posOffset, 0.f), glm::vec2(rect.left + rect.width, rect.bottom), cro::Colour::Transparent);
+
+                        basePos += posOffset + 2.f;
+
+                        vertices.emplace_back(glm::vec2(basePos, posOffset), glm::vec2(rect.left, rect.bottom + rect.height), cro::Colour::Transparent);
+                        vertices.emplace_back(glm::vec2(basePos, 0.f), glm::vec2(rect.left, rect.bottom), cro::Colour::Transparent);
+                    }
+                }
+                e.getComponent<cro::Drawable2D>().setVertexData(vertices);
+            };
+        }
 
 
         m_gameEnded = true;

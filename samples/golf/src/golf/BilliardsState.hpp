@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
@@ -161,6 +162,17 @@ private:
     glm::vec4 getSubrect(std::int8_t) const;
 
     //**BilliardsStateUI.cpp**//
+    struct SpriteID final
+    {
+        enum
+        {
+            QuitReady, QuitNotReady,
+
+            Count
+        };
+    };
+    std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
+
     void createUI();
     void showReadyNotify(const BilliardsPlayer&);
     void showNotification(const cro::String&);

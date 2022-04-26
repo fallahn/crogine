@@ -238,6 +238,9 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         case SDLK_4:
             toggleOverhead();
             break;
+        case SDLK_F6:
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), cro::NetFlag::Reliable);
+            break;
 #else
         case SDLK_KP_1:
         case SDLK_1:
