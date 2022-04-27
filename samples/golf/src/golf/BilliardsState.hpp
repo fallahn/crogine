@@ -86,10 +86,12 @@ private:
     cro::RenderTexture m_gameSceneTexture;
     cro::RenderTexture m_topspinTexture;
     cro::RenderTexture m_trophyTexture;
+    cro::RenderTexture m_pocketedTexture;
     std::array<cro::RenderTexture, 2u> m_targetTextures;
     cro::Entity m_topspinCamera;
     cro::Entity m_targetCamera;
     cro::Entity m_trophyCamera;
+    cro::Entity m_pocketedCamera;
     cro::Entity m_targetBall;
     //cro::Shader m_gameSceneShader;
     //cro::Texture m_lutTexture;

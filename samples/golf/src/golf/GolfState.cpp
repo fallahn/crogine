@@ -133,7 +133,7 @@ namespace
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
-    m_gameScene         (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEM_TIME | cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_gameScene         (context.appInstance.getMessageBus(), 768/*, cro::INFO_FLAG_SYSTEM_TIME | cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_uiScene           (context.appInstance.getMessageBus(), 1024),
     m_trophyScene       (context.appInstance.getMessageBus()),
     m_mouseVisible      (true),

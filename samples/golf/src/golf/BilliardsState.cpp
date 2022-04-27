@@ -518,6 +518,13 @@ void BilliardsState::render()
     m_gameScene.render();
     m_topspinTexture.display();
 
+
+    m_gameScene.setActiveCamera(m_pocketedCamera);
+    m_pocketedTexture.clear(cro::Colour::Magenta);
+    //m_gameScene.render();
+    m_pocketedTexture.display();
+
+
     if (m_gameEnded)
     {
         m_gameScene.setActiveCamera(m_trophyCamera);
@@ -1543,6 +1550,13 @@ void BilliardsState::resizeBuffers()
     texSize *= maxScale;
     texSize /= scale;
     m_trophyTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+
+
+    //and texture to display pocketed balls
+    texSize = { 108.f, 14.f };
+    texSize *= maxScale;
+    texSize /= scale;
+    m_pocketedTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 }
 
 glm::vec4 BilliardsState::getSubrect(std::int8_t id) const

@@ -443,11 +443,24 @@ void BilliardsState::createUI()
     m_sprites[SpriteID::QuitReady] = spriteSheet.getSprite("quit_ready");
     m_sprites[SpriteID::QuitNotReady] = spriteSheet.getSprite("quit_not_ready");
 
-
+    //displays the balls which have been pocketed
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>().setTexture(m_pocketedTexture.getTexture());
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::Callback>().function = bufferUpdateCallback;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -std::floor(UIBarHeight * 3.f) };
+    entity.getComponent<UIElement>().depth = -0.1f;
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto pocketEnt = entity;
 
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
-    auto updateView = [&, rootNode, backgroundEnt, infoEnt, topspinEnt, targetEnt0, targetEnt1, trophyEnt, rotateEnt](cro::Camera& cam) mutable
+    auto updateView = [&, rootNode, backgroundEnt, infoEnt, topspinEnt, targetEnt0, targetEnt1, trophyEnt, pocketEnt, rotateEnt](cro::Camera& cam) mutable
     {
         auto windowSize = GolfGame::getActiveTarget()->getSize();
         glm::vec2 size(windowSize);
@@ -480,6 +493,8 @@ void BilliardsState::createUI()
         trophyEnt.getComponent<cro::Transform>().setScale(courseScale / m_viewScale.x);
         trophyEnt.getComponent<cro::Callback>().active = true;
 
+        pocketEnt.getComponent<cro::Transform>().setScale(courseScale);
+        pocketEnt.getComponent<cro::Callback>().active = true;
 
         rotateEnt.getComponent<cro::Transform>().setScale(m_viewScale);
 
@@ -861,6 +876,18 @@ void BilliardsState::createMiniballScenes()
     resizeCallback(cam3);
 
     m_trophyCamera = camEnt;
+
+
+    //displays balls pocketed at the top of the screen
+    //TODO this needs its own callback (probably ortho too)
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>().setPosition(TrophyPosition + glm::vec3(0.f, 0.125f, 0.32f));
+    auto& cam4 = camEnt.addComponent<cro::Camera>();
+    cam4.resizeCallback = resizeCallback;
+    //cam4.isStatic = true;
+    resizeCallback(cam4);
+
+    m_pocketedCamera = camEnt;
 }
 
 void BilliardsState::updateTargetTexture(std::int32_t playerIndex, std::int8_t ballID)
