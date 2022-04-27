@@ -1034,8 +1034,8 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         case PacketID::TargetID:
         {
             auto data = evt.packet.as<std::uint16_t>();
-            auto playerID = (data & 0xff00) >> 8;
-            auto ballID = (data & 0x00ff);
+            std::int8_t playerID = (data & 0xff00) >> 8;
+            std::int8_t ballID = (data & 0x00ff);
             if (playerID < 2)
             {
                 updateTargetTexture(playerID, ballID);
@@ -1045,22 +1045,20 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         case PacketID::FoulEvent:
         {
             auto id = evt.packet.as<std::int8_t>();
-            if (id < FoulStrings.size())
+            
+            if (id == BilliardsEvent::FreeTable)
             {
-                if (id == BilliardsEvent::FreeTable)
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::UI::WindSock;
+                cmd.action = [](cro::Entity e, float)
                 {
-                    cro::Command cmd;
-                    cmd.targetFlags = CommandID::UI::WindSock;
-                    cmd.action = [](cro::Entity e, float)
-                    {
-                        e.getComponent<cro::Callback>().active = true;
-                    };
-                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-                }
-                else
-                {
-                    showNotification(FoulStrings[id]);
-                }
+                    e.getComponent<cro::Callback>().active = true;
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
+            else if(id < FoulStrings.size())
+            {
+                showNotification(FoulStrings[id]);
             }
         }
             break;
@@ -1342,7 +1340,7 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
             if (playerInfo.client == m_sharedData.localConnectionData.connectionID)
             {
                 m_inputParser.setActive(true, !m_cueball.isValid());
-                m_uiScene.getSystem<NotificationSystem>()->clearCurrent();
+                //m_uiScene.getSystem<NotificationSystem>()->clearCurrent();
                 m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[playerInfo.player];
 
                 m_localCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::In;

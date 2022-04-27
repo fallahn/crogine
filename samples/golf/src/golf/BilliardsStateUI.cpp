@@ -296,7 +296,7 @@ void BilliardsState::createUI()
 
 
     //free table sign
-    auto ftEnt = createText("Free Table", { 0.5f, 1.f }, { 0.f, -UIBarHeight * 2.f });
+    auto ftEnt = createText("Free Table", { 0.5f, 0.f }, { 0.f, std::floor(UIBarHeight * 1.5f) + 2.f });
     ftEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     ftEnt.getComponent<cro::CommandTarget>().ID = CommandID::UI::WindSock | CommandID::UI::UIElement; //for the sake of recycling enum...
     ftEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
@@ -573,7 +573,7 @@ void BilliardsState::showReadyNotify(const BilliardsPlayer& player)
         }
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
+    //and highlight effect
     cmd.targetFlags = CommandID::UI::PlayerName;
     cmd.action = [playerIndex](cro::Entity e, float)
     {
@@ -733,6 +733,8 @@ void BilliardsState::showGameEnd(const BilliardsPlayer& player)
         }
         m_gameEnded = true;
     }
+
+    m_inputParser.setActive(false, false);
 }
 
 void BilliardsState::toggleQuitReady()

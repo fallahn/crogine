@@ -228,17 +228,17 @@ void EightballDirector::summariseTurn()
     if (m_firstCollision == CueBall)
     {
         m_turnFlags |= TurnFlags::Foul;
-        //LogI << "no ball hit" << std::endl;
         foulType = BilliardsEvent::NoBallHit;
     }
-    else if (getStatusType(m_firstCollision) != m_playerStatus[m_currentPlayer].target)
+    else if (auto status = getStatusType(m_firstCollision);
+        status != m_playerStatus[m_currentPlayer].target)
     {
         //hit the wrong ball first
-        if (m_playerStatus[m_currentPlayer].target != PlayerStatus::None
+        if ((m_playerStatus[m_currentPlayer].target != PlayerStatus::None
+            || status == PlayerStatus::Eightball)
             && ((m_turnFlags & TurnFlags::FreeTable) == 0))
         {
             m_turnFlags |= TurnFlags::Foul;
-
             foulType = BilliardsEvent::WrongBallHit;
         }
     }
@@ -284,7 +284,8 @@ void EightballDirector::summariseTurn()
 
     //if this was the first pot assign the ball type to players
     if (m_playerStatus[m_currentPlayer].target == PlayerStatus::None
-        && !m_pocketsThisTurn.empty())
+        && !m_pocketsThisTurn.empty()
+        && (m_turnFlags & TurnFlags::Foul) == 0)
     {
         if (m_potCount[PlayerStatus::Stripes] > m_potCount[PlayerStatus::Spots])
         {
