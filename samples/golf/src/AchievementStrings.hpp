@@ -197,6 +197,10 @@ namespace StatID
         BronzeAverage,
         TotalRounds,
 
+        EightballWon,
+        NineballWon,
+        SnookerWon,
+
         Count
     };
     static_assert(Count <= 64, "Count exceeds maximum number of stats");
@@ -212,7 +216,11 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "gold_average",
     "silver_average",
     "bronze_average",
-    "total_rounds"
+    "total_rounds",
+
+    "eightball_won",
+    "nineball_won",
+    "snooker_won"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -223,7 +231,10 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Average Gold Wins (multiplayer)",
     "Average Silver Wins (multiplayer)",
     "Average Bronze Wins (multiplayer)",
-    "Total Rounds Played"
+    "Total Rounds Played",
+    "Eightball Games Won (multiplayer)",
+    "Nineball Games Won (multiplayer)",
+    "Snooker Games Won (multiplayer)"
 };
 
 struct StatType final
@@ -242,6 +253,9 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Percent,
     StatType::Percent,
     StatType::Percent,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
     StatType::Integer
 };
 

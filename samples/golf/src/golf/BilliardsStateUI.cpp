@@ -33,6 +33,8 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "PacketIDs.hpp"
 #include "NotificationSystem.hpp"
+#include "BilliardsSystem.hpp"
+#include "../AchievementStrings.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
 
@@ -709,7 +711,23 @@ void BilliardsState::showGameEnd(const BilliardsPlayer& player)
             };
         }
 
-
+        //update stats (only active if in a net game so we only need check if this is our client)
+        if (player.client == m_sharedData.clientConnection.connectionID)
+        {
+            switch (m_gameMode)
+            {
+            default: break;
+            case TableData::Eightball:
+                Achievements::incrementStat(StatStrings[StatID::EightballWon]);
+                break;
+            case TableData::Nineball:
+                Achievements::incrementStat(StatStrings[StatID::NineballWon]);
+                break;
+            case TableData::Snooker:
+                Achievements::incrementStat(StatStrings[StatID::SnookerWon]);
+                break;
+            }
+        }
         m_gameEnded = true;
     }
 }
