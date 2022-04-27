@@ -371,7 +371,7 @@ Mesh::Data BinaryMeshBuilder::build() const
                 }
 
                 std::vector<glm::mat4> invBindMatrices(skelHeader.frameSize);
-                for (auto i = 0; i < inverseBindPose.size(); i += 16)
+                for (auto i = 0u; i < inverseBindPose.size(); i += 16)
                 {
                     std::memcpy(&invBindMatrices[i / 16][0][0], inverseBindPose.data() + i, sizeof(glm::mat4));
                 }

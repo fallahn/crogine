@@ -52,6 +52,7 @@ typedef plm_samples_t plm_samples_t;
 
 namespace cro
 {
+    void videoCallback(plm_t*, plm_frame_t*, void*);
     void audioCallback(plm_t*, plm_samples_t*, void*);
 
     /*
