@@ -252,6 +252,12 @@
     <ClCompile Include="src\golf\TrophyState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\server\NineballDirector.cpp">
+      <Filter>Source Files\golf\server\directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\server\SnookerDirector.cpp">
+      <Filter>Source Files\golf\server\directors</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -493,6 +499,12 @@
     </ClInclude>
     <ClInclude Include="src\golf\TrophyState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\NineballDirector.hpp">
+      <Filter>Header Files\golf\server\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\SnookerDirector.hpp">
+      <Filter>Header Files\golf\server\directors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

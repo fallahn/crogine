@@ -719,12 +719,15 @@ void BilliardsState::showGameEnd(const BilliardsPlayer& player)
             default: break;
             case TableData::Eightball:
                 Achievements::incrementStat(StatStrings[StatID::EightballWon]);
+                Achievements::awardAchievement(AchievementStrings[AchievementID::Spots]);
                 break;
             case TableData::Nineball:
                 Achievements::incrementStat(StatStrings[StatID::NineballWon]);
+                Achievements::awardAchievement(AchievementStrings[AchievementID::Stripes]);
                 break;
             case TableData::Snooker:
                 Achievements::incrementStat(StatStrings[StatID::SnookerWon]);
+                Achievements::awardAchievement(AchievementStrings[AchievementID::EasyPink]);
                 break;
             }
         }

@@ -67,6 +67,9 @@ namespace AchievementID
         SkinOfYourTeeth,
 
         Socialiser,
+        Spots,
+        Stripes,
+        EasyPink,
 
         Count
     };
@@ -93,7 +96,10 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "stroke_of_genius",
     "no_match",
     "skin_teeth",
-    "socialiser"
+    "socialiser",
+    "spots",
+    "stripes",
+    "easy_pink"
 };
 
 //appears on the notification
@@ -117,7 +123,10 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Stroke of Genius",
     "No Match for You",
     "Skin of Your Teeth",
-    "Socialiser"
+    "Socialiser",
+    "Spots",
+    "Stripes",
+    "Easy Pink"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -142,6 +151,9 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Win a round of Match Play", false),
     std::make_pair("Win a round of Skins", false),
     std::make_pair("Enter the Clubhouse at least once", false),
+    std::make_pair("Win a game of Eightball", false),
+    std::make_pair("Win a game of Nineball", false),
+    std::make_pair("Win a game of Snooker", false)
 };
 
 //assuming tropies load correctly they are
@@ -181,7 +193,10 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldFigure,
     TrophyID::GoldFigure,
     TrophyID::GoldFigure,
-    TrophyID::SilverCup
+    TrophyID::SilverCup,
+    TrophyID::Pool,
+    TrophyID::Pool,
+    TrophyID::Pool
 };
 
 namespace StatID

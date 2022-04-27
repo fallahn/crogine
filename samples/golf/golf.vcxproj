@@ -345,10 +345,12 @@
     <ClCompile Include="src\golf\PuttingState.cpp" />
     <ClCompile Include="src\golf\PuttingStateUI.cpp" />
     <ClCompile Include="src\golf\server\EightballDirector.cpp" />
+    <ClCompile Include="src\golf\server\NineballDirector.cpp" />
     <ClCompile Include="src\golf\server\Server.cpp" />
     <ClCompile Include="src\golf\server\ServerBilliardsState.cpp" />
     <ClCompile Include="src\golf\server\ServerGolfState.cpp" />
     <ClCompile Include="src\golf\server\ServerLobbyState.cpp" />
+    <ClCompile Include="src\golf\server\SnookerDirector.cpp" />
     <ClCompile Include="src\golf\SharedStateData.cpp" />
     <ClCompile Include="src\golf\SoundEffectsDirector.cpp" />
     <ClCompile Include="src\golf\spooky2.cpp" />
@@ -422,6 +424,7 @@
     <ClInclude Include="src\golf\ScoreStrings.hpp" />
     <ClInclude Include="src\golf\server\BilliardsDirector.hpp" />
     <ClInclude Include="src\golf\server\EightballDirector.hpp" />
+    <ClInclude Include="src\golf\server\NineballDirector.hpp" />
     <ClInclude Include="src\golf\server\Server.hpp" />
     <ClInclude Include="src\golf\server\ServerBilliardsState.hpp" />
     <ClInclude Include="src\golf\server\ServerGolfState.hpp" />
@@ -429,6 +432,7 @@
     <ClInclude Include="src\golf\server\ServerMessages.hpp" />
     <ClInclude Include="src\golf\server\ServerPacketData.hpp" />
     <ClInclude Include="src\golf\server\ServerState.hpp" />
+    <ClInclude Include="src\golf\server\SnookerDirector.hpp" />
     <ClInclude Include="src\golf\SharedStateData.hpp" />
     <ClInclude Include="src\golf\SoundEffectsDirector.hpp" />
     <ClInclude Include="src\golf\spooky2.hpp" />

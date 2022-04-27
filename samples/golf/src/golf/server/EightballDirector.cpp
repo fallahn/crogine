@@ -36,19 +36,13 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Random.hpp>
 
-namespace
-{
-    constexpr float BallHeight = 0.03f;
-}
-
 const std::array<std::string, EightballDirector::PlayerStatus::Count> EightballDirector::PlayerStatus::Strings =
 {
     "Spots" , "Stripes", "Eightball", "None"
 };
 
 EightballDirector::EightballDirector()
-    : m_cueballPosition (0.f, BallHeight, 0.57f),
-    m_currentPlayer     (cro::Util::Random::value(0,1)),
+    : m_currentPlayer     (cro::Util::Random::value(0,1)),
     m_firstCollision    (0),
     m_turnFlags         (0)
 {
@@ -172,7 +166,7 @@ const std::vector<BallInfo>& EightballDirector::getBallLayout() const
 
 glm::vec3 EightballDirector::getCueballPosition() const
 {
-    return m_cueballPosition;
+    return { 0.f, BallHeight, 0.57f };
 }
 
 std::uint32_t EightballDirector::getTargetID(glm::vec3 playerPos) const

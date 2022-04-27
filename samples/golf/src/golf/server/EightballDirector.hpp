@@ -48,7 +48,6 @@ public:
 
 private:
     std::vector<BallInfo> m_ballLayout;
-    glm::vec3 m_cueballPosition;
     std::size_t m_currentPlayer;
 
     struct PlayerStatus final

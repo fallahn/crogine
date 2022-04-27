@@ -631,6 +631,8 @@ void BilliardsState::buildScene()
     //table data should have already been validated by the menu state
     //so we assume here that it's safe to load.
     
+    float spectateOffset = 0.f; //spectator camera offset is based on the size of the table model
+
     std::string path = "assets/golf/tables/" + m_sharedData.mapDirectory + ".table";
     TableData tableData;
     if (tableData.loadFromFile(path))
@@ -641,6 +643,8 @@ void BilliardsState::buildScene()
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>();
             md.createModel(entity);
+
+            spectateOffset = entity.getComponent<cro::Model>().getMeshData().boundingBox[1].z * 1.5f;
 
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::Table]);
             applyMaterialData(md, material);
@@ -709,7 +713,7 @@ void BilliardsState::buildScene()
 
     //spectate cam
     auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 1.6f });
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, spectateOffset });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
     camEnt.getComponent<CameraProperties>().farPlane = 7.f;

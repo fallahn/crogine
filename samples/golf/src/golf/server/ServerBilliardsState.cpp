@@ -30,6 +30,8 @@ source distribution.
 #include "../PacketIDs.hpp"
 #include "ServerBilliardsState.hpp"
 #include "EightballDirector.hpp"
+#include "NineballDirector.hpp"
+#include "SnookerDirector.hpp"
 #include "ServerMessages.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -96,8 +98,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             if (data.first == BilliardsEvent::Forfeit)
             {
                 m_sharedData.host.broadcastPacket(PacketID::FoulEvent, std::int8_t(BilliardsEvent::Forfeit), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-            }
-            {
+
                 auto winner = m_playerInfo[m_activeDirector->getCurrentPlayer()];
                 endGame(winner);
             }
@@ -289,9 +290,15 @@ void BilliardsState::initScene()
     //add director based on rule set
     switch (m_tableData.rules)
     {
-    default: //break; //TODO implement other rule sets
+    default:
     case TableData::Eightball:
         m_activeDirector = m_scene.addDirector<EightballDirector>();
+        break;
+    case TableData::Nineball:
+        m_activeDirector = m_scene.addDirector<NineballDirector>();
+        break;
+    case TableData::Snooker:
+        m_activeDirector = m_scene.addDirector<SnookerDirector>();
         break;
     }
 

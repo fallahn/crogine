@@ -29,43 +29,26 @@ source distribution.
 
 #pragma once
 
-#include <crogine/detail/glm/vec3.hpp>
-#include <crogine/ecs/Director.hpp>
+#include "BilliardsDirector.hpp"
 
-#include <vector>
-
-struct BallInfo final
-{
-    glm::vec3 position = glm::vec3(0.f);
-    std::int8_t id = -1;
-
-    BallInfo() = default;
-    BallInfo(glm::vec3 p, std::int32_t i) : position(p), id(i) {}
-};
-
-static constexpr float BallHeight = 0.03f;
-
-class BilliardsDirector : public cro::Director
+class NineballDirector final : public BilliardsDirector
 {
 public:
+    NineballDirector();
 
-    virtual ~BilliardsDirector() = default;
+    void handleMessage(const cro::Message&) override;
 
-    virtual void handleMessage(const cro::Message&) override = 0;
+    const std::vector<BallInfo>& getBallLayout() const override;
 
-    virtual const std::vector<BallInfo>& getBallLayout() const = 0;
+    glm::vec3 getCueballPosition() const override;
 
-    virtual glm::vec3 getCueballPosition() const = 0;
+    std::size_t getCurrentPlayer() const override { return m_currentPlayer; }
 
-    virtual std::size_t getCurrentPlayer() const = 0;
-
-    virtual void setCueball(cro::Entity e) { m_cueball = e; }
-
-    virtual std::uint32_t getTargetID(glm::vec3 position) const = 0; //server ID of look-at target
-
-protected:
-    cro::Entity getCueball() const { return m_cueball; }
+    std::uint32_t getTargetID(glm::vec3) const override;
 
 private:
-    cro::Entity m_cueball;
+
+    std::vector<BallInfo> m_ballLayout;
+    std::size_t m_currentPlayer;
+
 };
