@@ -52,13 +52,15 @@ typedef plm_samples_t plm_samples_t;
 
 namespace cro
 {
+    void audioCallback(plm_t*, plm_samples_t*, void*);
+
     /*
     Video player class, which renders MPEG1 video to a texture using
     pl_mpeg: https://github.com/phoboslab/pl_mpeg
 
     Note that the audio is streamed separately to the ECS and so is
     not assignable to any mixer channels. The only volume channel which
-    affects audio playbacke is the Master control for all audio.
+    affects audio playback is the Master control for all audio.
 
     In testing VCD video files have been found to not present audio
     channels to the plm decoder, and need to be remuxed as MPG-PS.

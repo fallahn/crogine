@@ -165,8 +165,8 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
         {
             if (ImGui::Begin("Window"))
             {
-                auto size = glm::vec2(m_debugBuffer.getSize() / 2u);
-                ImGui::Image(m_debugBuffer.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
+                auto size = glm::vec2(m_trophyTexture.getSize());
+                ImGui::Image(m_trophyTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
             }
             ImGui::End();
         });*/
@@ -517,6 +517,14 @@ void BilliardsState::render()
     m_topspinTexture.clear(cro::Colour::Transparent);
     m_gameScene.render();
     m_topspinTexture.display();
+
+    if (m_gameEnded)
+    {
+        m_gameScene.setActiveCamera(m_trophyCamera);
+        m_trophyTexture.clear(cro::Colour::Transparent);
+        m_gameScene.render();
+        m_trophyTexture.display();
+    }
     m_gameScene.setActiveCamera(oldCam);
 
     m_uiScene.render();
@@ -560,6 +568,23 @@ void BilliardsState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n#define NOCHEX\n");
+    shader = &m_resources.shaders.get(ShaderID::Trophy);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Trophy] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
+    shader = &m_resources.shaders.get(ShaderID::Cel);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::TrophyBase] = m_resources.materials.add(*shader);
+
+    if (m_trophyReflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm"))
+    {
+        m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_trophyReflectionMap.getGLHandle()));
+    }
 
     if (m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/sky.ccm"))
     {
@@ -1480,6 +1505,7 @@ void BilliardsState::resizeBuffers()
     texSize /= scale;
     m_topspinTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
+    //target ball texture...
     constexpr float TargetSize = 22.f;
     texSize = { TargetSize, TargetSize };
     texSize *= maxScale;
@@ -1508,6 +1534,13 @@ void BilliardsState::resizeBuffers()
         auto [client, player] = indices[i];
         updateTargetTexture(i, m_localPlayerInfo[client][player].targetBall);
     }
+
+
+    //and trophy texture
+    texSize = { 128.f, 128.f };
+    texSize *= maxScale;
+    texSize /= scale;
+    m_trophyTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 }
 
 glm::vec4 BilliardsState::getSubrect(std::int8_t id) const

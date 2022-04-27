@@ -71,6 +71,7 @@ private:
     cro::ResourceCollection m_resources;
 
     cro::CubemapTexture m_reflectionMap;
+    cro::CubemapTexture m_trophyReflectionMap;
 
     struct LocalPlayerInfo final
     {
@@ -84,9 +85,11 @@ private:
 
     cro::RenderTexture m_gameSceneTexture;
     cro::RenderTexture m_topspinTexture;
+    cro::RenderTexture m_trophyTexture;
     std::array<cro::RenderTexture, 2u> m_targetTextures;
     cro::Entity m_topspinCamera;
     cro::Entity m_targetCamera;
+    cro::Entity m_trophyCamera;
     cro::Entity m_targetBall;
     //cro::Shader m_gameSceneShader;
     //cro::Texture m_lutTexture;
@@ -138,6 +141,8 @@ private:
             Table,
             Ball,
             Cue,
+            Trophy,
+            TrophyBase,
 
             Count
         };

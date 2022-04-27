@@ -48,12 +48,15 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
+#include <crogine/util/Wavetable.hpp>
+
 namespace
 {
 #include "PaletteSwap.inl"
 
     constexpr glm::vec3 TopSpinPosition(50.f, 0.f, 0.f);
     constexpr glm::vec3 TargetBallPosition(100.f, 0.f, 0.f);
+    constexpr glm::vec3 TrophyPosition(150.f, 0.f, 0.f);
     constexpr glm::vec3 CamOffset(0.f, 0.f, 0.06f);
 }
 
@@ -420,6 +423,18 @@ void BilliardsState::createUI()
     centreText(entity);
     scoreEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //dispays the trophy
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(scoreEnt.getComponent<cro::Transform>().getOrigin());
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>().setTexture(m_trophyTexture.getTexture());
+    entity.addComponent<cro::Callback>().function = bufferUpdateCallback;
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -0.1f });
+    scoreEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto trophyEnt = entity;
+
+
     //stash these for showing the summary
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
 
@@ -430,7 +445,7 @@ void BilliardsState::createUI()
 
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
-    auto updateView = [&, rootNode, backgroundEnt, infoEnt, topspinEnt, targetEnt0, targetEnt1, rotateEnt](cro::Camera& cam) mutable
+    auto updateView = [&, rootNode, backgroundEnt, infoEnt, topspinEnt, targetEnt0, targetEnt1, trophyEnt, rotateEnt](cro::Camera& cam) mutable
     {
         auto windowSize = GolfGame::getActiveTarget()->getSize();
         glm::vec2 size(windowSize);
@@ -459,6 +474,10 @@ void BilliardsState::createUI()
         targetEnt1.getComponent<cro::Transform>().setScale(courseScale);
         targetEnt1.getComponent<cro::Callback>().active = true;
         targetEnt1.getComponent<cro::Transform>().setPosition({ size.x * 0.575f, size.y * NameVertPos, -0.3f });
+
+        trophyEnt.getComponent<cro::Transform>().setScale(courseScale / m_viewScale.x);
+        trophyEnt.getComponent<cro::Callback>().active = true;
+
 
         rotateEnt.getComponent<cro::Transform>().setScale(m_viewScale);
 
@@ -584,9 +603,11 @@ void BilliardsState::showGameEnd(const BilliardsPlayer& player)
         //show summary screen
         cro::Command cmd;
         cmd.targetFlags = CommandID::UI::Scoreboard;
-        cmd.action = [&](cro::Entity ent, float)
+        cmd.action = [&, player](cro::Entity ent, float)
         {
             auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+            
+            //countdown
             auto entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition({ ent.getComponent<cro::Transform>().getOrigin().x, 28.f, 0.23f});
             entity.addComponent<cro::Drawable2D>();
@@ -613,6 +634,18 @@ void BilliardsState::showGameEnd(const BilliardsPlayer& player)
             };
 
             ent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+            //winner name
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({ ent.getComponent<cro::Transform>().getOrigin().x, 48.f, 0.23f });
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+            entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+            entity.getComponent<cro::Text>().setString(m_sharedData.connectionData[player.client].playerData[player.player].name + " Wins!");
+            centreText(entity);
+
+            ent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
             ent.getComponent<cro::Callback>().active = true;
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -761,6 +794,50 @@ void BilliardsState::createMiniballScenes()
     resizeCallback(cam2);
 
     m_targetCamera = camEnt;
+
+
+    if (md.loadFromFile("assets/golf/models/trophies/trophy07.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(TrophyPosition);
+
+        md.createModel(entity);
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+        applyMaterialData(md, material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+
+        material = m_resources.materials.get(m_materialIDs[MaterialID::TrophyBase]);
+        applyMaterialData(md, material);
+        entity.getComponent<cro::Model>().setMaterial(1, material);
+
+
+        struct TrophyCallback final
+        {
+            const std::vector<float> wavetable = cro::Util::Wavetable::sine(0.25f);
+            std::size_t index = 0;
+
+            void operator()(cro::Entity e, float)
+            {
+                float rotation = (cro::Util::Const::PI / 4.f) * wavetable[index];
+                index = (index + 1) % wavetable.size();
+
+                e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+            };
+        };
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function = TrophyCallback();
+    }
+
+    //displays trophy on round end panel
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>().setPosition(TrophyPosition + glm::vec3(0.f, 0.125f, 0.32f));
+    auto& cam3 = camEnt.addComponent<cro::Camera>();
+    cam3.resizeCallback = resizeCallback;
+    cam3.isStatic = true;
+    resizeCallback(cam3);
+
+    m_trophyCamera = camEnt;
 }
 
 void BilliardsState::updateTargetTexture(std::int32_t playerIndex, std::int8_t ballID)
