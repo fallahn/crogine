@@ -125,7 +125,10 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     ctx.mainWindow.setMouseCaptured(true);
 
-    sd.baseState = StateID::Billiards;
+    //this is already set to Clubhouse so the pause
+    //menu knows where to go when quitting.
+    //sd.baseState = StateID::Billiards;
+
     Achievements::setActive(sd.localConnectionData.playerCount == 1);
 
 #ifdef CRO_DEBUG_

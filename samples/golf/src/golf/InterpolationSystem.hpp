@@ -142,7 +142,7 @@ public:
 	{
 		for (auto entity : getEntities())
 		{
-			auto& interp = entity.getComponent<InterpolationComponent<Interpolation>>();
+			auto& interp = entity.template getComponent<InterpolationComponent<Interpolation>>();
 
 			if (interp.m_buffer.size() > 1)
 			{
@@ -159,8 +159,8 @@ public:
 						interp.m_timer.restart();
 						interp.m_buffer.pop_front();
 
-						entity.getComponent<cro::Transform>().setPosition(interp.m_buffer[0].position);
-						entity.getComponent<cro::Transform>().setRotation(interp.m_buffer[0].rotation);
+						entity.template getComponent<cro::Transform>().setPosition(interp.m_buffer[0].position);
+						entity.template getComponent<cro::Transform>().setRotation(interp.m_buffer[0].rotation);
 
 						elapsed = interp.m_overflow;
 
@@ -201,7 +201,7 @@ public:
 								(-2.f * t3 + 3.f * t2)      * endPos +
 								(t3 - t2)                   * duration * endVel;
 
-							entity.getComponent<cro::Transform>().setPosition(position);
+							entity.template getComponent<cro::Transform>().setPosition(position);
 
 							interp.m_interpVelocity = 1.f / duration * (
 								(6.f * t2 - 6.f * t)       * startPos +
@@ -215,11 +215,11 @@ public:
 							auto diff = interp.m_buffer[1].position - interp.m_buffer[0].position;
 							auto position = interp.m_buffer[0].position + (diff * t);
 
-							entity.getComponent<cro::Transform>().setPosition(position);
+							entity.template getComponent<cro::Transform>().setPosition(position);
 						}
 
 						auto rotation = glm::slerp(interp.m_buffer[0].rotation, interp.m_buffer[1].rotation, t);
-						entity.getComponent<cro::Transform>().setRotation(rotation);
+						entity.template getComponent<cro::Transform>().setRotation(rotation);
 					}
 				}
 			}

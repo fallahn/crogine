@@ -1403,6 +1403,8 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
                     auto& table = m_tableData[m_tableIndex];
                     table.ballSkinIndex = (table.ballSkinIndex + static_cast<std::int32_t>(table.ballSkins.size() - 1)) % table.ballSkins.size();
                     updateBallTexture();
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     vsEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1437,6 +1439,8 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
                     auto& table = m_tableData[m_tableIndex];
                     table.ballSkinIndex = (table.ballSkinIndex + 1) % table.ballSkins.size();
                     updateBallTexture();
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     vsEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1476,6 +1480,8 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
                     table.tableSkinIndex = (table.tableSkinIndex + static_cast<std::int32_t>(table.tableSkins.size() - 1)) % table.tableSkins.size();
                     table.previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap",
                         cro::TextureID(m_resources.textures.get(table.tableSkins[table.tableSkinIndex])));
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     vsEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1511,6 +1517,8 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
                     table.tableSkinIndex = (table.tableSkinIndex + 1) % table.tableSkins.size();
                     table.previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap",
                         cro::TextureID(m_resources.textures.get(table.tableSkins[table.tableSkinIndex])));
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     vsEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
