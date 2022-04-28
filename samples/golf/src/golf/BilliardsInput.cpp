@@ -49,8 +49,8 @@ source distribution.
 
 namespace
 {
-    constexpr float MaxTilt = 10.f * cro::Util::Const::degToRad;
-    constexpr float MinTilt = -30.f * cro::Util::Const::degToRad;
+    constexpr float MaxTilt = 18.f * cro::Util::Const::degToRad;
+    constexpr float MinTilt = -25.f * cro::Util::Const::degToRad;
     constexpr float CamRotationSpeed = 2.f;
     constexpr float CamRotationSpeedFast = CamRotationSpeed * 2.f;
     constexpr float CueRotationSpeed = 1.f;

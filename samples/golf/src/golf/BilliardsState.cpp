@@ -785,12 +785,12 @@ void BilliardsState::buildScene()
     m_cameraController.addComponent<ControllerRotation>();
 
     auto camTilt = m_gameScene.createEntity();
-    camTilt.addComponent<cro::Transform>().setPosition({ 0.f, 0.367f, 0.f });
+    camTilt.addComponent<cro::Transform>().setPosition({ 0.f, 0.34f, 0.f });
     camTilt.addComponent<ControllerRotation>();
     m_cameraController.getComponent<cro::Transform>().addChild(camTilt.getComponent<cro::Transform>());
 
     camEnt = m_gameScene.createEntity();
-    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.423f });
+    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.45f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -26.7f * cro::Util::Const::degToRad);
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
