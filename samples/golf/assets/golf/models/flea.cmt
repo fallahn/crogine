@@ -1,0 +1,12 @@
+model flea
+{
+    mesh = cube
+    size = 0.005,0.005,0.005
+
+    cast_shadows = true
+
+    material Unlit
+    {
+        colour = 0,0,0,1
+    }
+}

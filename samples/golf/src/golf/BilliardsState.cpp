@@ -71,6 +71,7 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Maths.hpp>
 #include <crogine/util/Network.hpp>
+#include <crogine/util/Random.hpp>
 
 namespace
 {
@@ -110,6 +111,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_viewScale         (2.f),
     m_ballDefinition    (m_resources),
+    m_fleaDefinition    (m_resources),
     m_wantsGameState    (true),
     m_wantsNotify       (false),
     m_gameEnded         (false),
@@ -247,13 +249,15 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_F7:
         {
-            static std::int8_t num = 0;
+            /*static std::int8_t num = 0;
             addPocketBall(num);
-            num = (num + 1) % 15;
+            num = (num + 1) % 15;*/
+
+            spawnFlea();
         }
             break;
         case SDLK_F8:
-            m_gameScene.getSystem<PocketBallSystem>()->removeBall(8);
+            //m_gameScene.getSystem<PocketBallSystem>()->removeBall(8);
             break;
 #else
         case SDLK_KP_1:
@@ -562,6 +566,7 @@ void BilliardsState::render()
 void BilliardsState::loadAssets()
 {
     m_ballDefinition.loadFromFile("assets/golf/models/hole_19/billiard_ball.cmt");
+    m_fleaDefinition.loadFromFile("assets/golf/models/flea.cmt");
 
     std::string wobble;
     if (m_sharedData.vertexSnap)
@@ -1620,4 +1625,84 @@ void BilliardsState::addPocketBall(std::int8_t id)
     {
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", m_ballTexture);
     }
+}
+
+void BilliardsState::spawnFlea()
+{
+    struct FleaCallback final
+    {
+        explicit FleaCallback(cro::Scene& s) : scene(s) {}
+
+        cro::Scene& scene;
+        glm::vec3 velocity = glm::vec3(0.f);
+        const glm::vec3 Gravity = glm::vec3(0.f, -9.8f, 0.f);
+        std::int32_t hops = 0;
+        const std::int32_t MaxHops = 8;
+
+        enum
+        {
+            Idle, Hop
+        }state = Idle;
+        float idleTime = cro::Util::Random::value(0.1f, 1.2f);
+
+        void operator()(cro::Entity e, float dt)
+        {
+            if (state == Idle)
+            {
+                idleTime -= dt;
+
+                if (idleTime < 0)
+                {
+                    if (hops < MaxHops)
+                    {
+                        hops++;
+
+                        glm::vec3 impulse(0.f);
+                        impulse.x = cro::Util::Random::value(-0.08f, 0.08f) + 0.0001f;
+                        impulse.y = cro::Util::Random::value(0.7f, 1.f) + 0.0001f;
+                        impulse.z = cro::Util::Random::value(-0.08f, 0.08f) + 0.0001f;
+
+                        velocity += impulse;
+
+                        state = Hop;
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                        scene.destroyEntity(e);
+                    }
+                }
+            }
+            else
+            {
+                velocity += Gravity * dt;
+                e.getComponent<cro::Transform>().move(velocity * dt);
+
+                auto pos = e.getComponent<cro::Transform>().getPosition();
+                if (pos.y < 0)
+                {
+                    pos.y = 0;
+                    e.getComponent<cro::Transform>().setPosition(pos);
+                    state = Idle;
+                    idleTime = cro::Util::Random::value(0.5f, 1.f);
+                }
+            }
+        }
+    };
+
+    static constexpr std::array Offsets =
+    {
+        glm::vec3(-BilliardBall::Radius, 0.f, BilliardBall::Radius),
+        glm::vec3(BilliardBall::Radius, 0.f, BilliardBall::Radius),
+        glm::vec3(-BilliardBall::Radius, 0.f, BilliardBall::Radius),
+        glm::vec3(BilliardBall::Radius, 0.f, -BilliardBall::Radius),
+        glm::vec3(-BilliardBall::Radius, 0.f, -BilliardBall::Radius),
+        glm::vec3(BilliardBall::Radius, 0.f, -BilliardBall::Radius)
+    };
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(m_cueball.getComponent<cro::Transform>().getPosition() + Offsets[cro::Util::Random::value(0u, Offsets.size() - 1)]);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = FleaCallback(m_gameScene);
+    m_fleaDefinition.createModel(entity);
 }

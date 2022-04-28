@@ -100,6 +100,7 @@ private:
     glm::vec2 m_viewScale;
 
     cro::ModelDefinition m_ballDefinition;
+    cro::ModelDefinition m_fleaDefinition;
 
     bool m_wantsGameState;
     bool m_wantsNotify;
@@ -168,6 +169,7 @@ private:
 
     glm::vec4 getSubrect(std::int8_t) const;
     void addPocketBall(std::int8_t);
+    void spawnFlea();
 
     //**BilliardsStateUI.cpp**//
     struct SpriteID final
