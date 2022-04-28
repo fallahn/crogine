@@ -74,6 +74,8 @@ public:
 
     bool canRotate() const { return m_active && m_state == 0; }
 
+    bool hasInput() const { return m_inputFlags != 0 || hasMouseMotion(); }
+
 private:
     const SharedStateData& m_sharedData;
     cro::MessageBus& m_messageBus;

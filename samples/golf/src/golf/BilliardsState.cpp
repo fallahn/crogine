@@ -1047,6 +1047,38 @@ void BilliardsState::buildScene()
 
     m_scaleBuffer.bind(0);
     m_resolutionBuffer.bind(1);
+
+
+
+    //entity to cause random events if player not moving
+    struct TimerCallbackData final
+    {
+        float currTime = 0.f;
+        const float Timeout = 30.f;
+    };
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<TimerCallbackData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& [currTime, Timeout] = e.getComponent<cro::Callback>().getUserData<TimerCallbackData>();
+        currTime += dt;
+
+        if (m_inputParser.hasInput())
+        {
+            currTime = 0;
+        }
+        else if (currTime > Timeout)
+        {
+            currTime = 0;
+
+            for (auto i = 0; i < 7; ++i)
+            {
+                spawnFlea();
+            }
+        }
+    };
 }
 
 void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
@@ -1701,7 +1733,7 @@ void BilliardsState::spawnFlea()
     };
 
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(m_cueball.getComponent<cro::Transform>().getPosition() + Offsets[cro::Util::Random::value(0u, Offsets.size() - 1)]);
+    entity.addComponent<cro::Transform>().setPosition(m_cameraController.getComponent<cro::Transform>().getPosition() + Offsets[cro::Util::Random::value(0u, Offsets.size() - 1)]);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = FleaCallback(m_gameScene);
     m_fleaDefinition.createModel(entity);
