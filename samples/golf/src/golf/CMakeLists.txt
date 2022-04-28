@@ -39,6 +39,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/PauseState.cpp
   ${PROJECT_DIR}/golf/ParticleDirector.cpp
   ${PROJECT_DIR}/golf/PlayerAvatar.cpp
+  ${PROJECT_DIR}/golf/PocketBallSystem.cpp
   ${PROJECT_DIR}/golf/PracticeState.cpp
   ${PROJECT_DIR}/golf/PuttingState.cpp
   ${PROJECT_DIR}/golf/PuttingStateUI.cpp

@@ -341,6 +341,7 @@
     <ClCompile Include="src\golf\ParticleDirector.cpp" />
     <ClCompile Include="src\golf\PauseState.cpp" />
     <ClCompile Include="src\golf\PlayerAvatar.cpp" />
+    <ClCompile Include="src\golf\PocketBallSystem.cpp" />
     <ClCompile Include="src\golf\PracticeState.cpp" />
     <ClCompile Include="src\golf\PuttingState.cpp" />
     <ClCompile Include="src\golf\PuttingStateUI.cpp" />
@@ -417,6 +418,7 @@
     <ClInclude Include="src\golf\PauseState.hpp" />
     <ClInclude Include="src\golf\PlayerAvatar.hpp" />
     <ClInclude Include="src\golf\PlayerColours.hpp" />
+    <ClInclude Include="src\golf\PocketBallSystem.hpp" />
     <ClInclude Include="src\golf\PoissonDisk.hpp" />
     <ClInclude Include="src\golf\PracticeState.hpp" />
     <ClInclude Include="src\golf\PuttingState.hpp" />

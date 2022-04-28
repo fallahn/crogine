@@ -167,6 +167,7 @@ private:
     void resizeBuffers();
 
     glm::vec4 getSubrect(std::int8_t) const;
+    void addPocketBall(std::int8_t);
 
     //**BilliardsStateUI.cpp**//
     struct SpriteID final

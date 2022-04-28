@@ -493,7 +493,7 @@ void BilliardsState::createUI()
         trophyEnt.getComponent<cro::Transform>().setScale(courseScale / m_viewScale.x);
         trophyEnt.getComponent<cro::Callback>().active = true;
 
-        pocketEnt.getComponent<cro::Transform>().setScale(courseScale);
+        pocketEnt.getComponent<cro::Transform>().setScale(courseScale / m_viewScale.x);
         pocketEnt.getComponent<cro::Callback>().active = true;
 
         rotateEnt.getComponent<cro::Transform>().setScale(m_viewScale);
@@ -879,13 +879,24 @@ void BilliardsState::createMiniballScenes()
 
 
     //displays balls pocketed at the top of the screen
-    //TODO this needs its own callback (probably ortho too)
+    
+    auto pocketCallback = [&](cro::Camera& cam)
+    {
+        auto size = glm::vec2(m_pocketedTexture.getSize());
+        auto ratio = (BilliardBall::Radius * 2.f) / size.y;
+        size *= ratio;
+        size /= 2.f;
+
+        cam.setOrthographic(-size.x, size.x, -size.y, size.y, 0.01f, 1.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+
     camEnt = m_gameScene.createEntity();
-    camEnt.addComponent<cro::Transform>().setPosition(TrophyPosition + glm::vec3(0.f, 0.125f, 0.32f));
+    camEnt.addComponent<cro::Transform>().setPosition(glm::vec3(-100.f, 0.f, 0.f) + CamOffset);
     auto& cam4 = camEnt.addComponent<cro::Camera>();
-    cam4.resizeCallback = resizeCallback;
-    //cam4.isStatic = true;
-    resizeCallback(cam4);
+    cam4.resizeCallback = pocketCallback;
+    //cam4.shadowMapBuffer.create(1024, 1024);
+    pocketCallback(cam4);
 
     m_pocketedCamera = camEnt;
 }

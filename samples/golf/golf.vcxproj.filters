@@ -258,6 +258,9 @@
     <ClCompile Include="src\golf\server\SnookerDirector.cpp">
       <Filter>Source Files\golf\server\directors</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\PocketBallSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -505,6 +508,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\server\SnookerDirector.hpp">
       <Filter>Header Files\golf\server\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PocketBallSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

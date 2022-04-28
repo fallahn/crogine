@@ -38,6 +38,7 @@ source distribution.
 #include "BilliardsClientCollision.hpp"
 #include "InterpolationSystem.hpp"
 #include "NotificationSystem.hpp"
+#include "PocketBallSystem.hpp"
 #include "BilliardsSoundDirector.hpp"
 #include "server/ServerPacketData.hpp"
 #include "server/ServerMessages.hpp"
@@ -243,6 +244,16 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_F6:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), cro::NetFlag::Reliable);
+            break;
+        case SDLK_F7:
+        {
+            static std::int8_t num = 0;
+            addPocketBall(num);
+            num = (num + 1) % 15;
+        }
+            break;
+        case SDLK_F8:
+            m_gameScene.getSystem<PocketBallSystem>()->removeBall(8);
             break;
 #else
         case SDLK_KP_1:
@@ -520,8 +531,8 @@ void BilliardsState::render()
 
 
     m_gameScene.setActiveCamera(m_pocketedCamera);
-    m_pocketedTexture.clear(cro::Colour::Magenta);
-    //m_gameScene.render();
+    m_pocketedTexture.clear(cro::Colour::Transparent);
+    m_gameScene.render();
     m_pocketedTexture.display();
 
 
@@ -615,9 +626,11 @@ void BilliardsState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<BilliardsCollisionSystem>(mb);
+    m_gameScene.addSystem<PocketBallSystem>(mb);
     //m_gameScene.addSystem<StudioCameraSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setNumCascades(1);
+    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(5.f);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
 
@@ -1112,6 +1125,12 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
             {
                 if (e.getComponent<InterpolationComponent<InterpolationType::Hermite>>().id == id)
                 {
+                    auto ballID = e.getComponent<BilliardBall>().id;
+                    if (ballID != 0)
+                    {
+                        addPocketBall(ballID);
+                    }
+
                     m_gameScene.destroyEntity(e);
                 }
             };
@@ -1216,6 +1235,9 @@ void BilliardsState::spawnBall(const ActorInfo& info)
         rect.z = 1.f;
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", rect);
     }
+
+    //remove it from the pocket display if it exists
+    m_gameScene.getSystem<PocketBallSystem>()->removeBall(info.state);
 }
 
 void BilliardsState::updateBall(const BilliardsUpdate& info)
@@ -1553,7 +1575,7 @@ void BilliardsState::resizeBuffers()
 
 
     //and texture to display pocketed balls
-    texSize = { 108.f, 14.f };
+    texSize = { 228.f, 14.f };
     texSize *= maxScale;
     texSize /= scale;
     m_pocketedTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
@@ -1577,4 +1599,25 @@ glm::vec4 BilliardsState::getSubrect(std::int8_t id) const
     rect.w = Height;
 
     return rect;
+}
+
+void BilliardsState::addPocketBall(std::int8_t id)
+{
+    static constexpr float startX = (-100.f + (BilliardBall::Radius * 16.f)) + BilliardBall::Radius;
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ startX, 0.f, 0.f });
+    entity.addComponent<PocketBall>().id = id;
+    m_ballDefinition.createModel(entity);
+
+    auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+    applyMaterialData(m_ballDefinition, material);
+
+    entity.getComponent<cro::Model>().setMaterial(0, material);
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", getSubrect(id));
+
+    if (m_ballTexture.textureID)
+    {
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", m_ballTexture);
+    }
 }

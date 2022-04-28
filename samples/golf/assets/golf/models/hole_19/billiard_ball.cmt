@@ -17,6 +17,5 @@ model billiard_ball
         subrect = 0.500000,0.000000,0.500000,0.125000
         blendmode = none
         diffuse = "assets/golf/images/billiards/pool_spots.png"
-
     }
 }
