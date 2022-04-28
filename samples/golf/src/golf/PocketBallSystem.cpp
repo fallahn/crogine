@@ -29,8 +29,10 @@ source distribution.
 
 #include "PocketBallSystem.hpp"
 #include "BilliardsSystem.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/Scene.hpp>
 
 namespace
@@ -44,6 +46,7 @@ PocketBallSystem::PocketBallSystem(cro::MessageBus& mb)
 {
     requireComponent<PocketBall>();
     requireComponent<cro::Transform>();
+    requireComponent<cro::AudioEmitter>();
 }
 
 //public
@@ -65,6 +68,8 @@ void PocketBallSystem::process(float dt)
             tx.move({ -ball.velocity * dt, 0.f, 0.f });
             tx.rotate(cro::Transform::Z_AXIS, angularVel * dt);
 
+            entity.getComponent<cro::AudioEmitter>().setPitch(0.3f + (0.1f * ball.velocity));
+
             //check neighbour
             if (previousEntity.isValid())
             {
@@ -73,18 +78,31 @@ void PocketBallSystem::process(float dt)
 
                 if (distance < MinDistance)
                 {
+                    auto* msg = postMessage<BilliardBallEvent>(MessageID::BilliardsMessage);
+                    msg->type = BilliardBallEvent::PocketEnd;
+                    msg->volume = 0.28f * ball.velocity;
+
                     auto diff = MinDistance - distance;
                     tx.move({ diff, 0.f, 0.f });
                     ball.velocity = 0.f;
                     ball.awake = false;
+
+                    entity.getComponent<cro::AudioEmitter>().stop();
                 }
             }
             //else check we're at the bottom
             else if (tx.getPosition().x < MaxXPos)
             {
+                auto* msg = postMessage<BilliardBallEvent>(MessageID::BilliardsMessage);
+                msg->type = BilliardBallEvent::PocketEnd;
+                msg->volume = 0.28f * ball.velocity;
+
+
                 tx.setPosition({ MaxXPos, 0.f, 0.f });
                 ball.awake = false;
                 ball.velocity = 0.f;
+
+                entity.getComponent<cro::AudioEmitter>().stop();
             }
         }
         else
@@ -96,6 +114,7 @@ void PocketBallSystem::process(float dt)
                 if (distance - MinDistance > 0.01f)
                 {
                     entity.getComponent<PocketBall>().awake = true;
+                    entity.getComponent<cro::AudioEmitter>().play();
                 }
             }
         }

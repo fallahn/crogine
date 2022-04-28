@@ -61,6 +61,9 @@ private:
             Pocket,
             Cue,
 
+            PocketStart,
+            PocketEnd,
+
             Count
         };
     };

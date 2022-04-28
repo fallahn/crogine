@@ -125,7 +125,9 @@ struct BilliardBallEvent final
         ShotTaken,
         BallPlaced,
         Collision,
-        TurnStarted
+        TurnStarted,
+        PocketStart,
+        PocketEnd
     }type = ShotTaken;
     std::int32_t data = -1; //collision ID
     float volume = 1.f;

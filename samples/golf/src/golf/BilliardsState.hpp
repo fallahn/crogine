@@ -33,6 +33,7 @@ source distribution.
 #include "BilliardsInput.hpp"
 #include "server/ServerPacketData.hpp"
 
+#include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -101,6 +102,7 @@ private:
 
     cro::ModelDefinition m_ballDefinition;
     cro::ModelDefinition m_fleaDefinition;
+    cro::AudioScape m_audioScape;
 
     bool m_wantsGameState;
     bool m_wantsNotify;

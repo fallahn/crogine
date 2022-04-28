@@ -565,6 +565,8 @@ void BilliardsState::render()
 //private
 void BilliardsState::loadAssets()
 {
+    m_audioScape.loadFromFile("assets/golf/sound/billiards/menu.xas", m_resources.audio);
+
     m_ballDefinition.loadFromFile("assets/golf/models/hole_19/billiard_ball.cmt");
     m_fleaDefinition.loadFromFile("assets/golf/models/flea.cmt");
 
@@ -1645,6 +1647,8 @@ void BilliardsState::addPocketBall(std::int8_t id)
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ startX, 0.f, 0.f });
     entity.addComponent<PocketBall>().id = id;
+    entity.addComponent<cro::AudioEmitter>() = m_audioScape.getEmitter("rolling");
+    entity.getComponent<cro::AudioEmitter>().play();
     m_ballDefinition.createModel(entity);
 
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
@@ -1657,6 +1661,10 @@ void BilliardsState::addPocketBall(std::int8_t id)
     {
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", m_ballTexture);
     }
+
+
+    auto* msg = getContext().appInstance.getMessageBus().post<BilliardBallEvent>(MessageID::BilliardsMessage);
+    msg->type = BilliardBallEvent::PocketStart;
 }
 
 void BilliardsState::spawnFlea()

@@ -84,4 +84,13 @@ audioscape menu
         mixer_channel = 2
         looped = false
     }
+
+    emitter rolling
+    {
+        path = "assets/golf/sound/billiards/rolling.wav"
+        streaming = false
+        volume = 0.5
+        mixer_channel = 2
+        looped = true
+    }
 }

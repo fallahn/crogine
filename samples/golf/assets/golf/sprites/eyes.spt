@@ -1,0 +1,67 @@
+spritesheet eyes
+{
+    src = "assets/golf/images/billiards/eyes.png"
+    smooth = false
+    repeat = false
+
+    sprite eyes
+    {
+        bounds = 0.000000,96.000000,32.000000,32.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+        animation open
+        {
+            frame = 0, 96, 32, 32
+            frame = 32, 96, 32, 32
+            frame = 64, 96, 32, 32
+            frame = 96, 96, 32, 32
+
+            frame = 0, 64, 32, 32
+            frame = 32, 64, 32, 32
+            frame = 64, 64, 32, 32
+            frame = 96, 64, 32, 32
+
+            frame = 0, 32, 32, 32
+            frame = 32, 32, 32, 32
+
+            loop = false
+            framerate = 12
+        }
+
+
+        animation blink
+        {
+            frame = 64, 32, 32, 32
+            frame = 96, 32, 32, 32
+            frame = 0, 0, 32, 32
+            frame = 96, 32, 32, 32
+            frame = 64, 32, 32, 32
+
+            frame = 32, 32, 32, 32
+
+            loop = false
+            framerate = 16
+        }
+
+        animation close
+        {
+
+            frame = 32, 32, 32, 32
+            frame = 0, 32, 32, 32
+
+            frame = 96, 64, 32, 32
+            frame = 64, 64, 32, 32
+            frame = 32, 64, 32, 32
+            frame = 0, 64, 32, 32
+
+            frame = 96, 96, 32, 32
+            frame = 64, 96, 32, 32
+            frame = 32, 96, 32, 32
+            frame = 0, 96, 32, 32
+
+            loop = false
+            framerate = 12
+
+        }
+    }
+}

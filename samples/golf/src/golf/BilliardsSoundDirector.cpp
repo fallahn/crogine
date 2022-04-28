@@ -44,6 +44,9 @@ BilliardsSoundDirector::BilliardsSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/billiards/cushion.wav",
         "assets/golf/sound/billiards/pot.wav",
         "assets/golf/sound/billiards/cue.wav",
+
+        "assets/golf/sound/billiards/pocket_start.wav",
+        "assets/golf/sound/billiards/pocket_end.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -91,6 +94,18 @@ void BilliardsSoundDirector::handleMessage(const cro::Message& msg)
                 playSound(AudioID::Pocket, data.position);
                 break;
             }
+            break;
+        case BilliardBallEvent::PocketStart:
+        {
+            auto ent = playSound(AudioID::PocketStart, glm::vec3(0.f), 0.6f);
+            ent.getComponent<cro::AudioEmitter>().setPitch(0.8f);
+        }
+            break;
+        case BilliardBallEvent::PocketEnd:
+        {
+            auto ent = playSound(AudioID::PocketEnd, glm::vec3(0.f), data.volume);
+            ent.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.15f));
+        }
             break;
         }
     }
