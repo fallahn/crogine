@@ -210,13 +210,25 @@ Model& Model::operator=(Model&& other) noexcept
 void Model::setMaterial(std::size_t idx, Material::Data data)
 {
     CRO_ASSERT(idx < m_materials[Mesh::IndexData::Final].size(), "Index out of range");
-    CRO_ASSERT(m_meshData.vbo != 0, "Can't set a material until mesh has been added");
-    bindMaterial(data);
-    m_materials[Mesh::IndexData::Final][idx] = data;
+    
+    if (m_meshData.vbo)
+    {
+        //CRO_ASSERT(m_meshData.vbo != 0, "Can't set a material until mesh has been added");
 
+        //the order in which this happens is important!
+        bindMaterial(data);
+        m_materials[Mesh::IndexData::Final][idx] = data;
 #ifdef PLATFORM_DESKTOP
-    updateVAO(idx, Mesh::IndexData::Final);
+        updateVAO(idx, Mesh::IndexData::Final);
 #endif //DESKTOP
+    }
+    else
+    {
+        //this is fine if we're planning on using Sprite3D with this component
+        //else the material will be ignored when the mesh is actually added.
+        LOG("Material applied to model with no mesh. Is this intentional?", Logger::Type::Warning);
+        m_materials[Mesh::IndexData::Final][idx] = data;
+    }
 }
 
 void Model::setDepthTestEnabled(std::size_t idx, bool enabled)
