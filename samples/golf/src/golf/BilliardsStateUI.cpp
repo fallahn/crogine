@@ -142,6 +142,20 @@ void BilliardsState::createUI()
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/billiards_ui.spt", m_resources.textures);
 
+
+    //rim around the potted balls
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("pocket_rim");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -0.1f });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -std::floor(UIBarHeight * 3.f) };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     auto& menuFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     auto createText = [&](const std::string& str, glm::vec2 relPos, glm::vec2 absPos)
@@ -436,12 +450,12 @@ void BilliardsState::createUI()
     scoreEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto trophyEnt = entity;
 
-
     //stash these for showing the summary
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
 
     m_sprites[SpriteID::QuitReady] = spriteSheet.getSprite("quit_ready");
     m_sprites[SpriteID::QuitNotReady] = spriteSheet.getSprite("quit_not_ready");
+
 
     //displays the balls which have been pocketed
     entity = m_uiScene.createEntity();
@@ -457,6 +471,8 @@ void BilliardsState::createUI()
     entity.getComponent<UIElement>().depth = -0.1f;
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto pocketEnt = entity;
+
+
 
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
