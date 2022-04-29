@@ -979,7 +979,10 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                                 //enable the game type selection in the lobby
-                                addTableSelectButtons();
+                                if (m_tableData.size() > 1)
+                                {
+                                    addTableSelectButtons();
+                                }
 
                                 //send a UI refresh to correctly place buttons
                                 glm::vec2 size(GolfGame::getActiveTarget()->getSize());
