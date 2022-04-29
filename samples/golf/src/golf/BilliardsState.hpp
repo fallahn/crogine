@@ -172,6 +172,7 @@ private:
     glm::vec4 getSubrect(std::int8_t) const;
     void addPocketBall(std::int8_t);
     void spawnFlea();
+    void spawnFace();
 
     //**BilliardsStateUI.cpp**//
     struct SpriteID final
@@ -179,6 +180,7 @@ private:
         enum
         {
             QuitReady, QuitNotReady,
+            Face,
 
             Count
         };

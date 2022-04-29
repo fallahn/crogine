@@ -52,6 +52,8 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/AudioListener.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
@@ -60,12 +62,15 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
@@ -258,6 +263,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_F8:
             //m_gameScene.getSystem<PocketBallSystem>()->removeBall(8);
+            spawnFace();
             break;
 #else
         case SDLK_KP_1:
@@ -621,6 +627,10 @@ void BilliardsState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cue] = m_resources.materials.add(*shader);
+
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/eyes.spt", m_resources.textures);
+    m_sprites[SpriteID::Face] = spriteSheet.getSprite("eyes");
 }
 
 void BilliardsState::addSystems()
@@ -635,9 +645,11 @@ void BilliardsState::addSystems()
     m_gameScene.addSystem<BilliardsCollisionSystem>(mb);
     m_gameScene.addSystem<PocketBallSystem>(mb);
     //m_gameScene.addSystem<StudioCameraSystem>(mb);
+    m_gameScene.addSystem<cro::SpriteSystem3D>(mb, 16.f / BilliardBall::Radius);
+    m_gameScene.addSystem<cro::SpriteAnimator>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setNumCascades(1);
-    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(5.f);
+    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(3.f);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
 
@@ -1075,9 +1087,26 @@ void BilliardsState::buildScene()
         {
             currTime = 0;
 
-            for (auto i = 0; i < 7; ++i)
+            if (!m_cueball.isValid())
             {
-                spawnFlea();
+                for (auto i = 0; i < 6; ++i)
+                {
+                    spawnFlea();
+                }
+            }
+            else
+            {
+                if (cro::Util::Random::value(0, 1) == 0)
+                {
+                    spawnFace();
+                }
+                else
+                {
+                    for (auto i = 0; i < 6; ++i)
+                    {
+                        spawnFlea();
+                    }
+                }
             }
         }
     };
@@ -1732,12 +1761,12 @@ void BilliardsState::spawnFlea()
 
     static constexpr std::array Offsets =
     {
-        glm::vec3(-BilliardBall::Radius, 0.f, BilliardBall::Radius),
-        glm::vec3(BilliardBall::Radius, 0.f, BilliardBall::Radius),
-        glm::vec3(-BilliardBall::Radius, 0.f, BilliardBall::Radius),
-        glm::vec3(BilliardBall::Radius, 0.f, -BilliardBall::Radius),
-        glm::vec3(-BilliardBall::Radius, 0.f, -BilliardBall::Radius),
-        glm::vec3(BilliardBall::Radius, 0.f, -BilliardBall::Radius)
+        glm::vec3(-BilliardBall::Radius, -BilliardBall::Radius, BilliardBall::Radius),
+        glm::vec3(BilliardBall::Radius,  -BilliardBall::Radius, BilliardBall::Radius),
+        glm::vec3(-BilliardBall::Radius, -BilliardBall::Radius, BilliardBall::Radius),
+        glm::vec3(BilliardBall::Radius,  -BilliardBall::Radius, -BilliardBall::Radius),
+        glm::vec3(-BilliardBall::Radius, -BilliardBall::Radius, -BilliardBall::Radius),
+        glm::vec3(BilliardBall::Radius,  -BilliardBall::Radius, -BilliardBall::Radius)
     };
 
     auto entity = m_gameScene.createEntity();
@@ -1745,4 +1774,76 @@ void BilliardsState::spawnFlea()
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = FleaCallback(m_gameScene);
     m_fleaDefinition.createModel(entity);
+}
+
+void BilliardsState::spawnFace()
+{
+    if (m_cueball.isValid())
+    {
+        auto cueballPos = m_cueball.getComponent<cro::Transform>().getPosition();
+        auto camPos = cueballPos - m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition();
+        float rotation = std::atan2(-camPos.z, camPos.x) - (cro::Util::Const::PI / 2.f);
+
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(cueballPos);
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rotation);
+        entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getForwardVector() * -BilliardBall::Radius);
+        entity.addComponent<cro::Model>();
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Face];
+
+        //TODO we probably want to map these indices somewhere on load
+        entity.addComponent<cro::SpriteAnimation>().play(0);
+
+        auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        bounds.width /= m_gameScene.getSystem<cro::SpriteSystem3D>()->getPixelsPerUnit();
+        bounds.height /= m_gameScene.getSystem<cro::SpriteSystem3D>()->getPixelsPerUnit();
+
+        entity.getComponent<cro::Transform>().setOrigin({bounds.width / 2.f, bounds.height / 2.f});
+
+        struct AnimationData final
+        {
+            float currentTime = 0.f;
+            const float BlinkTime = 3.f;
+            std::int32_t blinkCount = 0;
+            const std::int32_t MaxBlinks = 4;
+        };
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<AnimationData>();
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            if (m_inputParser.hasInput())
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+                //TODO raise some sort of particle effect?
+            }
+
+            auto& data = e.getComponent<cro::Callback>().getUserData<AnimationData>();
+            data.currentTime += dt;
+
+            if (data.currentTime > data.BlinkTime)
+            {
+                data.currentTime = cro::Util::Random::value(-1.f, 0.2f);
+                data.blinkCount++;
+
+                if (data.blinkCount < data.MaxBlinks)
+                {
+                    e.getComponent<cro::SpriteAnimation>().play(1); //TODO map these indices
+                }
+                else
+                {
+                    e.getComponent<cro::SpriteAnimation>().play(2);
+                }
+            }
+
+            if (data.blinkCount == data.MaxBlinks
+                && !e.getComponent<cro::SpriteAnimation>().playing)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+        };
+    }
 }

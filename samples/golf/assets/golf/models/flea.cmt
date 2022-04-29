@@ -1,7 +1,8 @@
 model flea
 {
-    mesh = cube
+    mesh = sphere
     size = 0.005,0.005,0.005
+    radius = 0.0025
 
     cast_shadows = true
 

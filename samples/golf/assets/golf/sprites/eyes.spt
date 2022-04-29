@@ -6,7 +6,7 @@ spritesheet eyes
 
     sprite eyes
     {
-        bounds = 0.000000,96.000000,32.000000,32.000000
+        bounds = 64.000000,0.000000,32.000000,32.000000
         colour = 1.000000,1.000000,1.000000,1.000000
 
         animation open

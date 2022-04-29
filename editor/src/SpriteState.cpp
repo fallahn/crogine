@@ -122,13 +122,13 @@ bool SpriteState::handleEvent(const cro::Event& evt)
 	}
 	else if (evt.type == SDL_MOUSEBUTTONDOWN)
 	{
-		auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+		/*auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
 		auto bounds = m_entities[EntityID::Bounds].getComponent<cro::Drawable2D>().getLocalBounds();
 		bounds = m_entities[EntityID::Bounds].getComponent<cro::Transform>().getWorldTransform() * bounds;
 		if (bounds.contains(mousePos))
 		{
 			dragEnabled = true;
-		}
+		}*/
 	}
 	else if (evt.type == SDL_MOUSEBUTTONUP)
 	{
