@@ -237,13 +237,9 @@ static const std::string CelVertexShader = R"(
         v_lightWorldPosition = u_lightViewProjectionMatrix * u_worldMatrix * position;
     #endif
 
-        vec4 worldPosition = worldMatrix * position;
-        v_worldPosition = worldPosition.xyz;
-        //gl_Position = u_projectionMatrix * worldViewMatrix * position;
-
-        vec4 vertPos = u_projectionMatrix * worldViewMatrix * position;
 
 #if defined(WIND_WARP)
+#if !defined(WOBBLE)
         const float xFreq = 0.6;
         //float xFreq = 0.6 + (3.4 * a_colour.r);
         const float yFreq = 0.8;
@@ -251,20 +247,26 @@ static const std::string CelVertexShader = R"(
 
         float strength = u_windData.y;
         float totalScale = scale * strength * a_colour.b;
-//TODO um.. this should be in world space.
-        vertPos.x += sin((u_windData.w * (xFreq)) + worldMatrix[3].x) * totalScale;
-        vertPos.z += sin((u_windData.w * (yFreq)) + worldMatrix[3].z) * totalScale;
-        vertPos.xz += (u_windData.xz * strength * 2.0) * totalScale;
-#else
+
+        position.x += sin((u_windData.w * (xFreq)) + worldMatrix[3].x) * totalScale;
+        position.z += sin((u_windData.w * (yFreq)) + worldMatrix[3].z) * totalScale;
+        position.xz += (u_windData.xz * strength * 2.0) * totalScale;
+#endif
+#endif
+        vec4 worldPosition = worldMatrix * position;
+        v_worldPosition = worldPosition.xyz;
+        //gl_Position = u_projectionMatrix * worldViewMatrix * position;
+
+        vec4 vertPos = u_projectionMatrix * worldViewMatrix * position;
+
 #if defined(WOBBLE)
-        //snapping kinda ruins the wind movement
         vertPos.xyz /= vertPos.w;
         vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
         vertPos.xy = floor(vertPos.xy);
         vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
         vertPos.xyz *= vertPos.w;
 #endif
-#endif
+
         gl_Position = vertPos;
 
         vec3 normal = a_normal;

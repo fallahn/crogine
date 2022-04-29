@@ -1777,7 +1777,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
     };
 
-    createText(glm::vec2(20.f, 92.f), "Mouse Speed");
+    createText(glm::vec2(20.f, 92.f), "Look Speed (Billiards)");
     createText(glm::vec2(32.f, 63.f), "Invert X");
     createText(glm::vec2(32.f, 47.f), "Invert Y");
 

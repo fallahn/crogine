@@ -512,7 +512,7 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
         default: break;
         case Material::Property::Texture:
             //TODO textures need to track which unit they're currently bound
-            //to so that they don't get bounds to multiple units
+            //to so that they don't get bound to multiple units
             glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
             glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));
             glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
