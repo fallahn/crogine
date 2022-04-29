@@ -62,6 +62,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/SpriteSystem3D.hpp>
@@ -572,6 +573,7 @@ void BilliardsState::render()
 void BilliardsState::loadAssets()
 {
     m_audioScape.loadFromFile("assets/golf/sound/billiards/menu.xas", m_resources.audio);
+    m_smokePuff.loadFromFile("assets/golf/particles/puff.cps", m_resources.textures);
 
     m_ballDefinition.loadFromFile("assets/golf/models/hole_19/billiard_ball.cmt");
     m_fleaDefinition.loadFromFile("assets/golf/models/flea.cmt");
@@ -652,6 +654,7 @@ void BilliardsState::addSystems()
     m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(3.f);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
+    m_gameScene.addSystem<cro::ParticleSystem>(mb);
 
     m_gameScene.addDirector<BilliardsSoundDirector>(m_resources.audio);
 
@@ -1197,6 +1200,10 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
                     if (ballID != 0)
                     {
                         addPocketBall(ballID);
+                    }
+                    else
+                    {
+                        spawnPuff(e.getComponent<cro::Transform>().getPosition());
                     }
 
                     m_gameScene.destroyEntity(e);
@@ -1817,7 +1824,8 @@ void BilliardsState::spawnFace()
             {
                 e.getComponent<cro::Callback>().active = false;
                 m_gameScene.destroyEntity(e);
-                //TODO raise some sort of particle effect?
+                
+                spawnPuff(e.getComponent<cro::Transform>().getPosition());
             }
 
             auto& data = e.getComponent<cro::Callback>().getUserData<AnimationData>();
@@ -1846,4 +1854,21 @@ void BilliardsState::spawnFace()
             }
         };
     }
+}
+
+void BilliardsState::spawnPuff(glm::vec3 position)
+{
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.addComponent<cro::ParticleEmitter>().settings = m_smokePuff;
+    entity.getComponent<cro::ParticleEmitter>().start();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        if (e.getComponent<cro::ParticleEmitter>().stopped())
+        {
+            m_gameScene.destroyEntity(e);
+        }
+    };
 }

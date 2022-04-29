@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
@@ -103,6 +104,7 @@ private:
     cro::ModelDefinition m_ballDefinition;
     cro::ModelDefinition m_fleaDefinition;
     cro::AudioScape m_audioScape;
+    cro::EmitterSettings m_smokePuff;
 
     bool m_wantsGameState;
     bool m_wantsNotify;
@@ -173,6 +175,7 @@ private:
     void addPocketBall(std::int8_t);
     void spawnFlea();
     void spawnFace();
+    void spawnPuff(glm::vec3);
 
     //**BilliardsStateUI.cpp**//
     struct SpriteID final
