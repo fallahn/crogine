@@ -25,7 +25,7 @@ spritesheet eyes
             frame = 32, 32, 32, 32
 
             loop = false
-            framerate = 12
+            framerate = 16
         }
 
 
@@ -60,7 +60,7 @@ spritesheet eyes
             frame = 0, 96, 32, 32
 
             loop = false
-            framerate = 12
+            framerate = 16
 
         }
     }

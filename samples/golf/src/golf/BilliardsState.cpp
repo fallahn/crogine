@@ -633,6 +633,10 @@ void BilliardsState::loadAssets()
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/eyes.spt", m_resources.textures);
     m_sprites[SpriteID::Face] = spriteSheet.getSprite("eyes");
+
+    m_animationIDs[AnimationID::Open] = spriteSheet.getAnimationIndex("open", "eyes");
+    m_animationIDs[AnimationID::Blink] = spriteSheet.getAnimationIndex("blink", "eyes");
+    m_animationIDs[AnimationID::Close] = spriteSheet.getAnimationIndex("close", "eyes");
 }
 
 void BilliardsState::addSystems()
@@ -1798,8 +1802,7 @@ void BilliardsState::spawnFace()
         entity.addComponent<cro::Model>();
         entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Face];
 
-        //TODO we probably want to map these indices somewhere on load
-        entity.addComponent<cro::SpriteAnimation>().play(0);
+        entity.addComponent<cro::SpriteAnimation>().play(m_animationIDs[AnimationID::Open]);
 
         auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
         bounds.width /= m_gameScene.getSystem<cro::SpriteSystem3D>()->getPixelsPerUnit();
@@ -1838,11 +1841,11 @@ void BilliardsState::spawnFace()
 
                 if (data.blinkCount < data.MaxBlinks)
                 {
-                    e.getComponent<cro::SpriteAnimation>().play(1); //TODO map these indices
+                    e.getComponent<cro::SpriteAnimation>().play(m_animationIDs[AnimationID::Blink]);
                 }
                 else
                 {
-                    e.getComponent<cro::SpriteAnimation>().play(2);
+                    e.getComponent<cro::SpriteAnimation>().play(m_animationIDs[AnimationID::Close]);
                 }
             }
 

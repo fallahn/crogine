@@ -189,6 +189,15 @@ private:
         };
     };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
+    struct AnimationID final
+    {
+        enum
+        {
+            Open, Blink, Close,
+            Count
+        };
+    };
+    std::array<std::size_t, AnimationID::Count> m_animationIDs = {};
 
     void createUI();
     void showReadyNotify(const BilliardsPlayer&);

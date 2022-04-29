@@ -642,7 +642,7 @@ void BilliardsState::showGameEnd(const BilliardsPlayer& player)
             
             //countdown
             auto entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition({ ent.getComponent<cro::Transform>().getOrigin().x, 28.f, 0.23f});
+            entity.addComponent<cro::Transform>().setPosition({ ent.getComponent<cro::Transform>().getOrigin().x, 31.f, 0.23f});
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
             entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
@@ -670,7 +670,7 @@ void BilliardsState::showGameEnd(const BilliardsPlayer& player)
 
             //winner name
             entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition({ ent.getComponent<cro::Transform>().getOrigin().x, 48.f, 0.23f });
+            entity.addComponent<cro::Transform>().setPosition({ ent.getComponent<cro::Transform>().getOrigin().x, 45.f, 0.23f });
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
             entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
