@@ -9,6 +9,8 @@ model 18
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
+        depth_test = true
+        double_sided = false
         blendmode = none
         diffuse = "assets/golf/images/fairway.png"
 
@@ -19,6 +21,8 @@ model 18
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
+        depth_test = true
+        double_sided = false
         blendmode = none
         diffuse = "assets/golf/images/green.png"
 
@@ -29,6 +33,8 @@ model 18
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
+        depth_test = true
+        double_sided = false
         blendmode = none
         diffuse = "assets/golf/images/rough.png"
 
@@ -39,6 +45,8 @@ model 18
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
+        depth_test = true
+        double_sided = false
         blendmode = none
         diffuse = "assets/golf/images/scrub.png"
 
