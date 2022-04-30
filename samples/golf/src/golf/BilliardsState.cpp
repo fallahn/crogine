@@ -266,6 +266,9 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             //m_gameScene.getSystem<PocketBallSystem>()->removeBall(8);
             spawnFace();
             break;
+        case SDLK_F9:
+            spawnSnail();
+            break;
 #else
         case SDLK_KP_1:
         case SDLK_1:
@@ -634,9 +637,16 @@ void BilliardsState::loadAssets()
     spriteSheet.loadFromFile("assets/golf/sprites/eyes.spt", m_resources.textures);
     m_sprites[SpriteID::Face] = spriteSheet.getSprite("eyes");
 
-    m_animationIDs[AnimationID::Open] = spriteSheet.getAnimationIndex("open", "eyes");
-    m_animationIDs[AnimationID::Blink] = spriteSheet.getAnimationIndex("blink", "eyes");
-    m_animationIDs[AnimationID::Close] = spriteSheet.getAnimationIndex("close", "eyes");
+    m_faceAnimationIDs[AnimationID::In] = spriteSheet.getAnimationIndex("open", "eyes");
+    m_faceAnimationIDs[AnimationID::Cycle] = spriteSheet.getAnimationIndex("blink", "eyes");
+    m_faceAnimationIDs[AnimationID::Out] = spriteSheet.getAnimationIndex("close", "eyes");
+
+    spriteSheet.loadFromFile("assets/golf/sprites/snail.spt", m_resources.textures);
+    m_sprites[SpriteID::Snail] = spriteSheet.getSprite("snail");
+
+    m_snailAnimationIDs[AnimationID::In] = spriteSheet.getAnimationIndex("dig_up", "snail");
+    m_snailAnimationIDs[AnimationID::Cycle] = spriteSheet.getAnimationIndex("walk", "snail");
+    m_snailAnimationIDs[AnimationID::Out] = spriteSheet.getAnimationIndex("dig_down", "snail");
 }
 
 void BilliardsState::addSystems()
@@ -1103,16 +1113,21 @@ void BilliardsState::buildScene()
             }
             else
             {
-                if (cro::Util::Random::value(0, 1) == 0)
+                switch  (cro::Util::Random::value(0, 2))
                 {
+                default:
+                case 0:
                     spawnFace();
-                }
-                else
-                {
+                    break;
+                case 1:
+                    spawnSnail();
+                    break;
+                case 2:
                     for (auto i = 0; i < 6; ++i)
                     {
                         spawnFlea();
                     }
+                    break;
                 }
             }
         }
@@ -1802,60 +1817,60 @@ void BilliardsState::spawnFace()
         entity.addComponent<cro::Model>();
         entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Face];
 
-        entity.addComponent<cro::SpriteAnimation>().play(m_animationIDs[AnimationID::Open]);
+        entity.addComponent<cro::SpriteAnimation>().play(m_faceAnimationIDs[AnimationID::In]);
 
-        auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-        bounds.width /= m_gameScene.getSystem<cro::SpriteSystem3D>()->getPixelsPerUnit();
-        bounds.height /= m_gameScene.getSystem<cro::SpriteSystem3D>()->getPixelsPerUnit();
+auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+bounds.width /= m_gameScene.getSystem<cro::SpriteSystem3D>()->getPixelsPerUnit();
+bounds.height /= m_gameScene.getSystem<cro::SpriteSystem3D>()->getPixelsPerUnit();
 
-        entity.getComponent<cro::Transform>().setOrigin({bounds.width / 2.f, bounds.height / 2.f});
+entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
 
-        struct AnimationData final
+struct AnimationData final
+{
+    float currentTime = 0.f;
+    const float BlinkTime = 3.f;
+    std::int32_t blinkCount = 0;
+    const std::int32_t MaxBlinks = 4;
+};
+
+entity.addComponent<cro::Callback>().active = true;
+entity.getComponent<cro::Callback>().setUserData<AnimationData>();
+entity.getComponent<cro::Callback>().function =
+[&](cro::Entity e, float dt)
+{
+    if (m_inputParser.hasInput())
+    {
+        e.getComponent<cro::Callback>().active = false;
+        m_gameScene.destroyEntity(e);
+
+        spawnPuff(e.getComponent<cro::Transform>().getPosition());
+    }
+
+    auto& data = e.getComponent<cro::Callback>().getUserData<AnimationData>();
+    data.currentTime += dt;
+
+    if (data.currentTime > data.BlinkTime)
+    {
+        data.currentTime = cro::Util::Random::value(-1.f, 0.2f);
+        data.blinkCount++;
+
+        if (data.blinkCount < data.MaxBlinks)
         {
-            float currentTime = 0.f;
-            const float BlinkTime = 3.f;
-            std::int32_t blinkCount = 0;
-            const std::int32_t MaxBlinks = 4;
-        };
-
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<AnimationData>();
-        entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float dt)
+            e.getComponent<cro::SpriteAnimation>().play(m_faceAnimationIDs[AnimationID::Cycle]);
+        }
+        else
         {
-            if (m_inputParser.hasInput())
-            {
-                e.getComponent<cro::Callback>().active = false;
-                m_gameScene.destroyEntity(e);
-                
-                spawnPuff(e.getComponent<cro::Transform>().getPosition());
-            }
+            e.getComponent<cro::SpriteAnimation>().play(m_faceAnimationIDs[AnimationID::Out]);
+        }
+    }
 
-            auto& data = e.getComponent<cro::Callback>().getUserData<AnimationData>();
-            data.currentTime += dt;
-
-            if (data.currentTime > data.BlinkTime)
-            {
-                data.currentTime = cro::Util::Random::value(-1.f, 0.2f);
-                data.blinkCount++;
-
-                if (data.blinkCount < data.MaxBlinks)
-                {
-                    e.getComponent<cro::SpriteAnimation>().play(m_animationIDs[AnimationID::Blink]);
-                }
-                else
-                {
-                    e.getComponent<cro::SpriteAnimation>().play(m_animationIDs[AnimationID::Close]);
-                }
-            }
-
-            if (data.blinkCount == data.MaxBlinks
-                && !e.getComponent<cro::SpriteAnimation>().playing)
-            {
-                e.getComponent<cro::Callback>().active = false;
-                m_gameScene.destroyEntity(e);
-            }
-        };
+    if (data.blinkCount == data.MaxBlinks
+        && !e.getComponent<cro::SpriteAnimation>().playing)
+    {
+        e.getComponent<cro::Callback>().active = false;
+        m_gameScene.destroyEntity(e);
+    }
+};
     }
 }
 
@@ -1872,6 +1887,68 @@ void BilliardsState::spawnPuff(glm::vec3 position)
         if (e.getComponent<cro::ParticleEmitter>().stopped())
         {
             m_gameScene.destroyEntity(e);
+        }
+    };
+}
+
+void BilliardsState::spawnSnail()
+{
+    auto cuePos = m_cameraController.getComponent<cro::Transform>().getPosition();
+    auto camPos = cuePos - m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition();
+    float rotation = std::atan2(-camPos.z, camPos.x) - (cro::Util::Const::PI / 2.f);
+
+    cuePos.y = 0.f;
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(cuePos);
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rotation);
+    entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getForwardVector() * -BilliardBall::Radius);
+    entity.addComponent<cro::Model>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Snail];
+    entity.addComponent<cro::SpriteAnimation>().play(m_snailAnimationIDs[AnimationID::In]);
+
+    struct AnimationData final
+    {
+        enum
+        {
+            In, Cycle, Out
+        }state = In;
+        float currentTime = 0.f;;
+    };
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<AnimationData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<AnimationData>();
+        switch (data.state)
+        {
+        default:
+        case AnimationData::In:
+            if (!e.getComponent<cro::SpriteAnimation>().playing)
+            {
+                e.getComponent<cro::SpriteAnimation>().play(m_snailAnimationIDs[AnimationID::Cycle]);
+                data.state = AnimationData::Cycle;
+            }
+            break;
+        case AnimationData::Cycle:
+            data.currentTime += dt;
+            e.getComponent<cro::Transform>().move(-e.getComponent<cro::Transform>().getRightVector() * BilliardBall::Radius * dt);
+
+            if (data.currentTime > 5.f)
+            {
+                e.getComponent<cro::SpriteAnimation>().play(m_snailAnimationIDs[AnimationID::Out]);
+                data.state = AnimationData::Out;
+            }
+            break;
+        case AnimationData::Out:
+            if (!e.getComponent<cro::SpriteAnimation>().playing)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+            break;
         }
     };
 }

@@ -176,6 +176,7 @@ private:
     void spawnFlea();
     void spawnFace();
     void spawnPuff(glm::vec3);
+    void spawnSnail();
 
     //**BilliardsStateUI.cpp**//
     struct SpriteID final
@@ -183,7 +184,7 @@ private:
         enum
         {
             QuitReady, QuitNotReady,
-            Face,
+            Face, Snail,
 
             Count
         };
@@ -193,11 +194,12 @@ private:
     {
         enum
         {
-            Open, Blink, Close,
+            In, Cycle, Out,
             Count
         };
     };
-    std::array<std::size_t, AnimationID::Count> m_animationIDs = {};
+    std::array<std::int32_t, AnimationID::Count> m_faceAnimationIDs = {};
+    std::array<std::int32_t, AnimationID::Count> m_snailAnimationIDs = {};
 
     void createUI();
     void showReadyNotify(const BilliardsPlayer&);

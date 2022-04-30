@@ -74,7 +74,7 @@ namespace cro
         \brief Returns the index of the animation with the given name
         on the given sprite if it exists, else returns 0
         */
-        std::size_t getAnimationIndex(const std::string& name, const std::string& sprite) const;
+        std::int32_t getAnimationIndex(const std::string& name, const std::string& sprite) const;
 
         /*!
         \brief Returns true if the given animation exists on the sprite with the give name

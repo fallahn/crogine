@@ -49,6 +49,7 @@ bool SpriteSheet::loadFromFile(const std::string& path, TextureResource& texture
     }
 
     m_sprites.clear();
+    m_animations.clear();
     m_texturePath.clear();
     m_texture = nullptr;
 
@@ -254,7 +255,7 @@ Sprite SpriteSheet::getSprite(const std::string& name) const
     return {};
 }
 
-std::size_t SpriteSheet::getAnimationIndex(const std::string& name, const std::string& spriteName) const
+std::int32_t SpriteSheet::getAnimationIndex(const std::string& name, const std::string& spriteName) const
 {
     if (m_animations.count(spriteName) != 0)
     {
@@ -262,7 +263,7 @@ std::size_t SpriteSheet::getAnimationIndex(const std::string& name, const std::s
         const auto& result = std::find(anims.cbegin(), anims.cend(), name);
         if (result == anims.cend()) return 0;
 
-        return std::distance(anims.cbegin(), result);
+        return static_cast<std::int32_t>(std::distance(anims.cbegin(), result));
     }
     return 0;
 }
