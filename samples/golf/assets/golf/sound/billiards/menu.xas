@@ -93,4 +93,13 @@ audioscape menu
         mixer_channel = 2
         looped = true
     }
+
+    emitter applause
+    {
+        path = "assets/golf/sound/ball/applause.wav"
+        streaming = false
+        volume = 1
+        mixer_channel = 2
+        looped = false
+    }
 }

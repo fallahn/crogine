@@ -763,6 +763,12 @@ void BilliardsState::showGameEnd(const BilliardsPlayer& player)
             }
         }
         m_gameEnded = true;
+
+        //plays an applause
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::AudioEmitter>() = m_audioScape.getEmitter("applause");
+        entity.getComponent<cro::AudioEmitter>().play();
     }
 
     m_inputParser.setActive(false, false);

@@ -539,12 +539,15 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::SpriteAnimation>().play(0);
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    auto cursorEnt = entity;
+
     mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity](cro::Entity e) mutable
         {
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
             e.getComponent<cro::AudioEmitter>().play();
             entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + glm::vec3(-20.f, -7.f, 0.f));
+            entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         });
 
     static constexpr float TextOffset = 26.f;
@@ -681,6 +684,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     {
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -693,9 +697,12 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
 
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
-            m_uiScene.getSystem<cro::UISystem>()->addCallback([](cro::Entity e)
+            m_uiScene.getSystem<cro::UISystem>()->addCallback([cursorEnt](cro::Entity e) mutable
                 {
                     e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+                    e.getComponent<cro::AudioEmitter>().play();
+
+                    cursorEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 });
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback([](cro::Entity e)
