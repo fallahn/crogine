@@ -131,6 +131,13 @@ void CameraFollowSystem::process(float dt)
             diffMultiplier *= 4.f;
             follower.currentTarget += diff * (dt * (diffMultiplier + (4.f * follower.zoom.progress)));
 
+            //snap to target if close to reduce stutter
+            //TODO make this velocity based so snapping is more agressive when the target is travellign at speed.
+            if (glm::length2(target - follower.currentTarget) < 0.0025f)
+            {
+                follower.currentTarget = target;
+            }
+
 
             auto& tx = entity.getComponent<cro::Transform>();
             auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
