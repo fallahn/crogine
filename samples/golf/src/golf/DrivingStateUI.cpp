@@ -380,7 +380,7 @@ void DrivingState::createUI()
     auto mapEnt = entity;
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, std::ceil(bounds.height / 2.f) + 1.f });
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, std::ceil(bounds.height / 2.f) + 1.f, 0.2f });
     entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_mapTexture.getTexture());

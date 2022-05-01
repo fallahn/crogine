@@ -1239,8 +1239,8 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
             setPlayer(evt.packet.as<BilliardsPlayer>());
             break;
         case PacketID::ClientDisconnected:
-            //TODO we should only have 2 clients max
-            //so if only one player locally then game is forfeited.
+            //TODO even though we win the game by foreit
+            //we still need to clean up client data from leavee
             break;
         case PacketID::AchievementGet:
             LogI << "TODO: Notify Achievement" << std::endl;

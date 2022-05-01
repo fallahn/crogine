@@ -1909,7 +1909,7 @@ void ClubhouseState::updateLobbyAvatars()
         auto createName = [&](const cro::String& name, float positionOffset)
         {
             auto entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition({ positionOffset, -4.f });
+            entity.addComponent<cro::Transform>().setPosition({ positionOffset, -4.f, 0.2f });
             entity.getComponent<cro::Transform>().move(e.getComponent<cro::Transform>().getOrigin());
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);

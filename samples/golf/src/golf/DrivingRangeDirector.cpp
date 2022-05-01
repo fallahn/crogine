@@ -101,7 +101,7 @@ void DrivingRangeDirector::setHoleCount(std::int32_t count, std::int32_t holeInd
 {
     m_totalHoleCount = m_holeCount = std::min(count, MaxHoles);
 
-    m_holeIndex = std::min(holeIndex, m_totalHoleCount - 1);
+    m_holeIndex = std::min(holeIndex, static_cast<std::int32_t>(m_holeData.size()) - 1);
 
     //check for random holes, or if we want to play the same over
     if (holeIndex == -1)
