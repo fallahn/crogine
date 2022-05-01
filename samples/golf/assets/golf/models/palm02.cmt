@@ -13,6 +13,7 @@ model palm02
         double_sided = false
         blendmode = none
         diffuse = "assets/golf/images/palm_tree02.png"
+        alpha_clip = 0.470000
 
     }
 }
