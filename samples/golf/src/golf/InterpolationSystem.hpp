@@ -74,7 +74,7 @@ public:
 	void addPoint(InterpolationPoint ip)
 	{
 		CRO_ASSERT(m_bufferSize > 1, "");
-		if (ip.timestamp > m_buffer.back().timestamp)
+		if (auto diff = ip.timestamp - m_buffer.back().timestamp; diff > 0)
 		{
 			//makes sure timer doesn't start until finished buffering
 			if (m_wantsBuffer)
@@ -83,14 +83,14 @@ public:
 				m_overflow = 0;
 			}
 
+			//shrink any large time gap
+			if (diff > MaxTimeGap)
+			{
+				m_buffer.back().timestamp = ip.timestamp - 10;
+			}
+
 			m_buffer.push_back(ip);
 
-			//if theres a large time gap, shrink the front
-			//so we can catch up a bit
-			if (m_buffer[1].timestamp - m_buffer[0].timestamp > MaxTimeGap)
-			{
-				m_buffer.front().timestamp = m_buffer[1].timestamp - 10;
-			}
 
 			//this shouldn't happen, but as precaution...
 			if (m_buffer.size() == m_buffer.capacity())
@@ -114,7 +114,7 @@ private:
 	cro::Clock m_timer;
 	std::int32_t m_overflow = 0;
 
-	CircularBuffer<InterpolationPoint, 18u> m_buffer;
+	CircularBuffer<InterpolationPoint, 8u> m_buffer;
 
 	std::size_t m_bufferSize = 3;
 	bool m_wantsBuffer = true;
