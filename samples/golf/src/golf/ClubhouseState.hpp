@@ -151,6 +151,7 @@ private:
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {};
     std::size_t m_currentMenu;
     std::size_t m_prevMenu;
+    std::size_t m_gameCreationIndex;
 
     struct TextEdit final
     {

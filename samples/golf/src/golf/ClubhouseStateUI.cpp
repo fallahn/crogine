@@ -54,7 +54,6 @@ namespace
 {
 #include "RandNames.hpp"
 
-    std::size_t gameCreationIndex = 0;
     constexpr std::size_t MaxGameIndices = 3;
 }
 
@@ -619,7 +618,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
     struct EditCallbackData final
     {
         std::int32_t direction = 0;
-        float currentTime = 0.f;
+        float currentTime = 1.f;
     };
 
     //player one
@@ -789,17 +788,44 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
         m_sharedData.hosting = true;
     };
 
-    //the index is static so we want to execute the last known index
+
+    //we may be returning from a previous game in which case we need to set the correct menu layout
+    //but not update  the playercount/host state because this is already set!
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&,gameCreateCallbacks](cro::Entity e, float)
+        [&, playerOne, playerTwo](cro::Entity e, float) mutable
     {
-        gameCreateCallbacks[gameCreationIndex]();
+        if (m_sharedData.localConnectionData.playerCount == 1)
+        {
+            if (m_sharedData.hosting)
+            {
+                m_gameCreationIndex = 2;
+            }
+            else
+            {
+                m_gameCreationIndex = 1;
+            }
+            playerOne.getComponent<cro::Callback>().getUserData<EditCallbackData>().direction = 0;
+            playerOne.getComponent<cro::Callback>().active = true;
+
+            playerTwo.getComponent<cro::Callback>().getUserData<EditCallbackData>().direction = 0;
+            playerTwo.getComponent<cro::Callback>().active = true;
+        }
+        else
+        {
+            m_gameCreationIndex = 0;
+
+            playerOne.getComponent<cro::Callback>().getUserData<EditCallbackData>().direction = 1;
+            playerOne.getComponent<cro::Callback>().active = true;
+
+            playerTwo.getComponent<cro::Callback>().getUserData<EditCallbackData>().direction = 1;
+            playerTwo.getComponent<cro::Callback>().active = true;
+        }
+
         e.getComponent<cro::Callback>().active = false;
         m_uiScene.destroyEntity(e);
     };
-
 
     spriteSheet.loadFromFile("assets/golf/sprites/billiards_ui.spt", m_resources.textures);
 
@@ -827,8 +853,8 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                 if (activated(evt))
                 {
                     applyTextEdit();
-                    gameCreationIndex = (gameCreationIndex + (MaxGameIndices - 1)) % MaxGameIndices;
-                    gameCreateCallbacks[gameCreationIndex]();
+                    m_gameCreationIndex = (m_gameCreationIndex + (MaxGameIndices - 1)) % MaxGameIndices;
+                    gameCreateCallbacks[m_gameCreationIndex]();
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -865,8 +891,8 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                 if (activated(evt))
                 {
                     applyTextEdit();
-                    gameCreationIndex = (gameCreationIndex + 1) % MaxGameIndices;
-                    gameCreateCallbacks[gameCreationIndex]();                    
+                    m_gameCreationIndex = (m_gameCreationIndex + 1) % MaxGameIndices;
+                    gameCreateCallbacks[m_gameCreationIndex]();                    
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });

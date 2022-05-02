@@ -117,7 +117,8 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_tableIndex        (0),
     m_viewScale         (2.f),
     m_currentMenu       (MenuID::Main),
-    m_prevMenu          (MenuID::Main)
+    m_prevMenu          (MenuID::Main),
+    m_gameCreationIndex (0)
 {
     std::fill(m_readyState.begin(), m_readyState.end(), false);
 
@@ -229,11 +230,14 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     else
     {
         //we ought to be resetting previous data here?
-        for (auto& cd : m_sharedData.connectionData)
+        for (auto& cd : sd.connectionData)
         {
             cd.playerCount = 0;
         }
-        m_sharedData.hosting = false;
+        sd.hosting = false;
+
+        //assume two players for a local game
+        sd.localConnectionData.playerCount = 2;
     }
 
 #ifdef CRO_DEBUG_
