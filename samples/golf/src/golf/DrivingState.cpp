@@ -727,7 +727,8 @@ void DrivingState::initAudio()
 
         //random incidental audio
         if (as.hasEmitter("incidental01")
-            && as.hasEmitter("incidental02"))
+            && as.hasEmitter("incidental02")
+            && as.hasEmitter("church"))
         {
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental01");
@@ -738,6 +739,11 @@ void DrivingState::initAudio()
             entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental02");
             entity.getComponent<cro::AudioEmitter>().setLooped(false);
             auto plane02 = entity;
+
+            entity = m_gameScene.createEntity();
+            entity.addComponent<cro::AudioEmitter>() = as.getEmitter("church");
+            entity.getComponent<cro::AudioEmitter>().setLooped(false);
+            auto church = entity;
 
             cro::ModelDefinition md(m_resources);
             cro::Entity planeEnt;
@@ -799,7 +805,7 @@ void DrivingState::initAudio()
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().setUserData<AudioData>();
             entity.getComponent<cro::Callback>().function =
-                [plane01, plane02, planeEnt](cro::Entity e, float dt) mutable
+                [plane01, plane02, church, planeEnt](cro::Entity e, float dt) mutable
             {
                 auto& [currTime, timeOut, activeEnt] = e.getComponent<cro::Callback>().getUserData<AudioData>();
 
@@ -813,7 +819,7 @@ void DrivingState::initAudio()
                         currTime = 0.f;
                         timeOut = static_cast<float>(cro::Util::Random::value(120, 240));
 
-                        auto id = cro::Util::Random::value(0, 2);
+                        auto id = cro::Util::Random::value(0, 3);
                         if (id == 0)
                         {
                             //fly the plane
@@ -824,9 +830,17 @@ void DrivingState::initAudio()
                                 activeEnt = planeEnt;
                             }
                         }
+                        else if (id == 1)
+                        {
+                            if (church.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                            {
+                                church.getComponent<cro::AudioEmitter>().play();
+                                activeEnt = church;
+                            }
+                        }
                         else
                         {
-                            auto ent = (id == 1) ? plane01 : plane02;
+                            auto ent = (id == 2) ? plane01 : plane02;
                             if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
                             {
                                 ent.getComponent<cro::AudioEmitter>().play();
