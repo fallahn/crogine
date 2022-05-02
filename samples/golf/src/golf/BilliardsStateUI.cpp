@@ -348,13 +348,15 @@ void BilliardsState::createUI()
             auto size = m_gameSceneTexture.getSize();
             auto screenPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(camPos, size);
             screenPos.y = size.y - screenPos.y; //expecting mouse coords which start at the top...
-
+#ifndef __APPLE__
+            //TODO pixelToCoords is broken on macOS :(
             auto pos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(screenPos);
             pos.x = std::round(pos.x);
             pos.y = std::round(pos.y);
             pos.z = 0.1f;
             e.getComponent<cro::Transform>().setPosition(pos);
             e.getComponent<cro::Transform>().setScale(m_viewScale);
+#endif
         }
         else
         {
