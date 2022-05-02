@@ -95,6 +95,14 @@ namespace
         std::string("Free Table")
     };
 
+    const std::array CameraStrings =
+    {
+        std::string("Spectate"),
+        std::string("Overhead"),
+        std::string("Player"),
+        std::string("Transition"),
+    };
+
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
     struct CueCallbackData final
@@ -174,12 +182,13 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
         {
             if (ImGui::Begin("Window"))
             {
-                auto size = glm::vec2(m_trophyTexture.getSize());
-                ImGui::Image(m_trophyTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
+                ImGui::Text("Camera: %s", CameraStrings[m_activeCamera].c_str());
             }
             ImGui::End();
         });*/
 #endif
+
+    m_inputParser.setActive(false, false); //activates spectator cam input on start up
 }
 
 //public
@@ -236,19 +245,16 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
 #ifdef CRO_DEBUG_
         case SDLK_KP_1:
         case SDLK_1:
+            toggleOverhead();
+            break;
+        case SDLK_KP_7:
             setActiveCamera(CameraID::Player);
             break;
-        case SDLK_KP_2:
-        case SDLK_2:
+        case SDLK_KP_8:
             setActiveCamera(CameraID::Spectate);
             break;
-        case SDLK_KP_3:
-        case SDLK_3:
+        case SDLK_KP_9:
             setActiveCamera(CameraID::Overhead);
-            break;
-        case SDLK_KP_4:
-        case SDLK_4:
-            toggleOverhead();
             break;
         case SDLK_F6:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), cro::NetFlag::Reliable);
@@ -1486,6 +1492,8 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
             }
             else
             {
+                m_inputParser.setActive(false, false);
+
                 //show the remote 'ghost' cue
                 m_remoteCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::In;
                 m_remoteCue.getComponent<cro::Callback>().active = true;
@@ -1604,8 +1612,8 @@ void BilliardsState::setActiveCamera(std::int32_t camID)
 
 void BilliardsState::toggleOverhead()
 {
-    auto target = m_activeCamera == CameraID::Overhead ?
-        m_inputParser.getActive() ? CameraID::Player : CameraID::Spectate :
+    auto target = (m_activeCamera == CameraID::Overhead) ?
+        /*m_inputParser.getActive()*/(m_currentPlayer.client == m_sharedData.localConnectionData.connectionID) ? CameraID::Player : CameraID::Spectate :
         CameraID::Overhead;
     setActiveCamera(target);
 }
