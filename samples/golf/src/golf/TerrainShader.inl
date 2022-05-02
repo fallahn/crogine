@@ -48,6 +48,7 @@ static const std::string TerrainVertexShader = R"(
 
     uniform vec4 u_clipPlane;
     uniform float u_morphTime;
+    uniform vec3 u_cameraWorldPosition;
 
     layout (std140) uniform ScaledResolution
     {
@@ -57,6 +58,7 @@ static const std::string TerrainVertexShader = R"(
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec4 v_colour;
     VARYING_OUT vec3 v_worldPosition;
+    VARYING_OUT vec3 v_cameraWorldPosition;
 
 #if defined(RX_SHADOWS)
     VARYING_OUT LOW vec4 v_lightWorldPosition;
@@ -69,6 +71,8 @@ static const std::string TerrainVertexShader = R"(
 
     void main()
     {
+        v_cameraWorldPosition = u_cameraWorldPosition;
+
         vec4 position = u_worldMatrix * vec4(lerp(a_position.xyz, a_tangent, u_morphTime), 1.0);
         //gl_Position = u_viewProjectionMatrix * position;
 
