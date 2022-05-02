@@ -161,6 +161,7 @@ private:
     void buildScene();
 
     void handleNetEvent(const cro::NetEvent&);
+    void removeClient(std::uint8_t);
     void spawnBall(const ActorInfo&);
     void updateBall(const BilliardsUpdate&);
     void updateGhost(const BilliardsUpdate&);

@@ -1239,8 +1239,7 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
             setPlayer(evt.packet.as<BilliardsPlayer>());
             break;
         case PacketID::ClientDisconnected:
-            //TODO even though we win the game by foreit
-            //we still need to clean up client data from leavee
+            removeClient(evt.packet.as<std::uint8_t>());
             break;
         case PacketID::AchievementGet:
             LogI << "TODO: Notify Achievement" << std::endl;
@@ -1271,6 +1270,20 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
         m_sharedData.errorMessage = "Disconnected From Server (Host Quit)";
         requestStackPush(StateID::Error);
     }
+}
+
+void BilliardsState::removeClient(std::uint8_t clientID)
+{
+    cro::String str = m_sharedData.connectionData[clientID].playerData[0].name;
+    for (auto i = 1u; i < m_sharedData.connectionData[clientID].playerCount; ++i)
+    {
+        str += ", " + m_sharedData.connectionData[clientID].playerData[i].name;
+    }
+    str += " left the game";
+
+    showNotification(str);
+
+    m_sharedData.connectionData[clientID].playerCount = 0;
 }
 
 void BilliardsState::spawnBall(const ActorInfo& info)

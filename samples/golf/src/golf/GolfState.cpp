@@ -2754,9 +2754,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
         }
             break;
         case PacketID::ClientDisconnected:
-        {
             removeClient(evt.packet.as<std::uint8_t>());
-        }
             break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())
