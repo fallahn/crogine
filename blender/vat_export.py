@@ -17,12 +17,13 @@ import mathutils
 import bpy_extras
 from pathlib import Path
 
-def export_mesh(obj, path, name):
+def export_mesh(obj, path, name, settings):
     bpy.context.collection.objects.link(obj)
     bpy.context.view_layer.objects.active = obj
+    bpy.context.view_layer.update()
     outpath = path + name + "_mesh.gltf"
 
-    bpy.ops.export_scene.gltf(use_selection = True, filepath = outpath)
+    bpy.ops.export_scene.gltf(use_selection = True, filepath = outpath, export_texcoords = True, export_yup = settings.yUp, export_colors = settings.colours, export_tangents = settings.tangents, will_save_settings = settings.save_settings)
 
 #writes UV coord for each vertex into the generated texture
 #and stores in a new UV channel on the given object
@@ -101,16 +102,15 @@ def object_from_frame(obj, frame):
     depsgraph = bpy.context.view_layer.depsgraph
     eval_obj = obj.evaluated_get(depsgraph)
     #retval = bpy.data.objects.new('frame_0', bpy.data.meshes.new_from_object(eval_obj))
-    retval = bpy.data.objects.new('frame_0', bpy.data.meshes.new_from_object(eval_obj, preserve_all_data_layers=True, depsgraph=depsgraph))
+    retval = bpy.data.objects.new('frame_0', bpy.data.meshes.new_from_object(eval_obj, preserve_all_data_layers = True, depsgraph = depsgraph))
 
     retval.matrix_world = obj.matrix_world
 
     return retval
 
 
-def export_textures(obj, frame_range, scale, path, yUp):
+def export_textures(obj, frame_range, scale, path, settings):
     filename = Path(path).stem
-    #filepath = bpy.path.dirname(bpy.path.abspath(path))
     filepath = os.path.dirname(os.path.abspath(path))
     filepath += "/"
 
@@ -123,7 +123,7 @@ def export_textures(obj, frame_range, scale, path, yUp):
     for i in range(frame_range[1] - frame_range[0]):
         frame = frame_range[0] + i
         curr_obj = object_from_frame(obj, frame)
-        pixel_data = data_from_frame(curr_obj, scale, yUp)
+        pixel_data = data_from_frame(curr_obj, scale, settings.yUp)
         width = len(pixel_data)
 
         for pixel in pixel_data:
@@ -135,23 +135,36 @@ def export_textures(obj, frame_range, scale, path, yUp):
 
     write_image(positions, filename + '_position', [width, height], filepath)
     write_image(normals, filename + '_normal', [width, height], filepath)
-    write_image(tangents, filename + '_tangent', [width, height], filepath)
+
+    if settings.tangents == True:
+        write_image(tangents, filename + '_tangent', [width, height], filepath)
 
     base_frame = object_from_frame(obj, 0)
     insert_UVs(base_frame)
-    export_mesh(base_frame, filepath, filename)
+    export_mesh(base_frame, filepath, filename, settings)
 
 
     #tidy up temp object
     bpy.data.objects.remove(base_frame)
 
 
+class ExportSettings:
+    def __init__(self):
+        self.yUp = True
+        self.tangents = False
+        self.colours = True
+        self.save_settings = True
+
+
 class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
     bl_idname = "export.vats"
     bl_label = 'Export Vertex Animation Texture'
     filename_ext = ".png"
-    position_scale: bpy.props.FloatProperty(name = "Scale", description = "Maximum range of movement", default=1.0, min=0.0001)
+    position_scale: bpy.props.FloatProperty(name = "Scale", description = "Maximum range of movement", default = 1.0, min = 0.0001)
     yUp: bpy.props.BoolProperty(name = "Y-Up", description = "Export with Y coordinates upwards", default = True)
+    export_tangents: bpy.props.BoolProperty(name = "Export Tangents", description = "Include tangent data", default = False)
+    export_colour: bpy.props.BoolProperty(name = "Export Vertex Colours", description = "Include vertex colour data", default = True)
+    keep_settings: bpy.props.BoolProperty(name = "Save Export Settings", description = "Save gltf export settings in the Blender file", default = True)
 
     def execute(self, context):
 
@@ -163,16 +176,22 @@ class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
             frame_1 = frame_0
 
 
+        settings = ExportSettings()
+        settings.yUp = self.yUp
+        settings.tangents = self.export_tangents
+        settings.colours = self.export_colour
+        settings.save_settings = self.keep_settings
+
         if bpy.context.selected_objects != None:
             obj = bpy.context.selected_objects[0]
-            export_textures(obj, [frame_0, frame_1], self.position_scale, self.properties.filepath, self.yUp)
+            export_textures(obj, [frame_0, frame_1], self.position_scale, self.properties.filepath, settings)
 
 
         return {'FINISHED'}
 
 
 def menu_func(self, context):
-    self.layout.operator(ExportVat.bl_idname, text="Vertex Animation Texture (.png)")
+    self.layout.operator(ExportVat.bl_idname, text = "Vertex Animation Texture (.png)")
 
 
 def register():
