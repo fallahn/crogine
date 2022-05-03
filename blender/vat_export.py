@@ -23,7 +23,14 @@ def export_mesh(obj, path, name, settings):
     bpy.context.view_layer.update()
     outpath = path + name + "_mesh.gltf"
 
-    bpy.ops.export_scene.gltf(use_selection = True, filepath = outpath, export_texcoords = True, export_yup = settings.yUp, export_colors = settings.colours, export_tangents = settings.tangents, will_save_settings = settings.save_settings)
+    bpy.ops.export_scene.gltf(
+        use_selection = True, 
+        filepath = outpath, 
+        export_texcoords = True, 
+        export_yup = settings.yUp, 
+        export_colors = settings.colours, 
+        export_tangents = settings.tangents, 
+        will_save_settings = settings.save_settings)
 
 #writes UV coord for each vertex into the generated texture
 #and stores in a new UV channel on the given object
@@ -164,7 +171,7 @@ class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
     yUp: bpy.props.BoolProperty(name = "Y-Up", description = "Export with Y coordinates upwards", default = True)
     export_tangents: bpy.props.BoolProperty(name = "Export Tangents", description = "Include tangent data", default = False)
     export_colour: bpy.props.BoolProperty(name = "Export Vertex Colours", description = "Include vertex colour data", default = True)
-    keep_settings: bpy.props.BoolProperty(name = "Save Export Settings", description = "Save gltf export settings in the Blender file", default = True)
+    save_settings: bpy.props.BoolProperty(name = "Save Export Settings", description = "Save gltf export settings in the Blender file", default = True)
 
     def execute(self, context):
 
@@ -180,7 +187,7 @@ class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
         settings.yUp = self.yUp
         settings.tangents = self.export_tangents
         settings.colours = self.export_colour
-        settings.save_settings = self.keep_settings
+        settings.save_settings = self.save_settings
 
         if bpy.context.selected_objects != None:
             obj = bpy.context.selected_objects[0]
