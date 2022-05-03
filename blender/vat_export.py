@@ -52,7 +52,13 @@ def write_image(pixels, filename, size, path):
     image.save_render(path + filename + ".png", scene = bpy.context.scene)
 
 
-def unsign_vector(vec):
+def unsign_vector(vec, yUp):
+
+    if yUp == True:
+        temp = vec[2]
+        vec[2] = -vec[1]
+        vec[1] = temp
+
     vec += mathutils.Vector((1.0, 1.0, 1.0))
     vec /= 2.0
 
@@ -60,11 +66,11 @@ def unsign_vector(vec):
 
 
 
-def data_from_frame(obj, scale):
+def data_from_frame(obj, scale, yUp):
     obj.data.calc_tangents()
     vertex_data = [None] * len(obj.data.vertices)
 
-    #TODO swap Y/-Z
+
     for face in obj.data.polygons:
         for vert in [obj.data.loops[i] for i in face.loop_indices]:
             index = vert.vertex_index
@@ -72,9 +78,10 @@ def data_from_frame(obj, scale):
             #updates the position if the animation includes transforms
             position = obj.data.vertices[index].co.copy()
             position = obj.matrix_world @ position
-            position = unsign_vector(position / scale)
-            normal = unsign_vector(vert.normal.copy())
-            tangent = unsign_vector(vert.tangent.copy())
+
+            position = unsign_vector(position / scale, yUp)
+            normal = unsign_vector(vert.normal.copy(), yUp)
+            tangent = unsign_vector(vert.tangent.copy(), yUp)
 
             #pack out to 4 float for pixel
             position.append(1.0)
@@ -96,13 +103,12 @@ def object_from_frame(obj, frame):
     #retval = bpy.data.objects.new('frame_0', bpy.data.meshes.new_from_object(eval_obj))
     retval = bpy.data.objects.new('frame_0', bpy.data.meshes.new_from_object(eval_obj, preserve_all_data_layers=True, depsgraph=depsgraph))
 
-    #TODO blender docs seems to suggest the new mesh needs to be removed once
-    #export is complete else we flood the file with duplicates.
+    retval.matrix_world = obj.matrix_world
 
     return retval
 
 
-def export_textures(obj, frame_range, scale, path):
+def export_textures(obj, frame_range, scale, path, yUp):
     filename = Path(path).stem
     #filepath = bpy.path.dirname(bpy.path.abspath(path))
     filepath = os.path.dirname(os.path.abspath(path))
@@ -117,7 +123,7 @@ def export_textures(obj, frame_range, scale, path):
     for i in range(frame_range[1] - frame_range[0]):
         frame = frame_range[0] + i
         curr_obj = object_from_frame(obj, frame)
-        pixel_data = data_from_frame(curr_obj, scale)
+        pixel_data = data_from_frame(curr_obj, scale, yUp)
         width = len(pixel_data)
 
         for pixel in pixel_data:
@@ -136,22 +142,21 @@ def export_textures(obj, frame_range, scale, path):
     export_mesh(base_frame, filepath, filename)
 
 
-    #TODO delete base frame object from scene
+    #tidy up temp object
+    bpy.data.objects.remove(base_frame)
 
 
 class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
     bl_idname = "export.vats"
     bl_label = 'Export Vertex Animation Texture'
     filename_ext = ".png"
-    position_scale: bpy.props.FloatProperty("Scale", default=1.0, min=0.0001)
-    frame_start: bpy.props.IntProperty("Start Frame", default=0)
-    frame_end: bpy.props.IntProperty("End Frame", default=100)
+    position_scale: bpy.props.FloatProperty(name = "Scale", description = "Maximum range of movement", default=1.0, min=0.0001)
+    yUp: bpy.props.BoolProperty(name = "Y-Up", description = "Export with Y coordinates upwards", default = True)
 
     def execute(self, context):
-        #TODO set default scale to longest edge of AABB if selected object is found
 
-        frame_0 = self.frame_start
-        frame_1 = self.frame_end
+        frame_0 = context.scene.frame_start
+        frame_1 = context.scene.frame_end
 
         #not sure how min/max work in bpy so let's do it old school
         if frame_1 < frame_0:
@@ -160,7 +165,7 @@ class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 
         if bpy.context.selected_objects != None:
             obj = bpy.context.selected_objects[0]
-            export_textures(obj, [frame_0, frame_1], self.position_scale, self.properties.filepath)
+            export_textures(obj, [frame_0, frame_1], self.position_scale, self.properties.filepath, self.yUp)
 
 
         return {'FINISHED'}
