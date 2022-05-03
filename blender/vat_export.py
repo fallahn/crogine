@@ -18,8 +18,12 @@ import bpy_extras
 from pathlib import Path
 
 def export_mesh(obj, path, name, settings):
+
+    bpy.ops.object.select_all(action='DESELECT')
+
     bpy.context.collection.objects.link(obj)
     bpy.context.view_layer.objects.active = obj
+    obj.select_set(True)
     bpy.context.view_layer.update()
     outpath = path + name + "_mesh.gltf"
 
@@ -31,6 +35,8 @@ def export_mesh(obj, path, name, settings):
         export_colors = settings.colours, 
         export_tangents = settings.tangents, 
         will_save_settings = settings.save_settings)
+
+
 
 #writes UV coord for each vertex into the generated texture
 #and stores in a new UV channel on the given object
@@ -47,6 +53,7 @@ def insert_UVs(obj):
         for l in v.link_loops:
             uv_data = l[uv_layer]
             uv_data.uv = mathutils.Vector((i * pixel_width, 0.0))
+            uv_data.select = True
             #TODO we can add the half pixel UV offset here
         i += 1
 
@@ -153,6 +160,11 @@ def export_textures(obj, frame_range, scale, path, settings):
 
     #tidy up temp object
     bpy.data.objects.remove(base_frame)
+
+    #restore original selection
+    bpy.ops.object.select_all(action='DESELECT')
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
 
 
 class ExportSettings:
