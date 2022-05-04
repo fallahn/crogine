@@ -186,13 +186,14 @@ class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
     '''Export glTF with vertex animation data stored in RGBA textures'''
     bl_idname = "export.vats"
     bl_label = 'Export Vertex Animation Texture'
+    bl_options = {'PRESET'}
     filename_ext = ".glb"
     position_scale: bpy.props.FloatProperty(name = "Scale", description = "Maximum range of movement", default = 4.0, min = 0.0001)
     frame_skip: bpy.props.IntProperty(name = "Frame Skip", description = "Render every Nth frame of animation", default = 1, min = 1)    
     yUp: bpy.props.BoolProperty(name = "Y-Up", description = "Export with Y coordinates upwards", default = True)
     export_tangents: bpy.props.BoolProperty(name = "Export Tangents", description = "Include tangent data", default = False)
     export_colour: bpy.props.BoolProperty(name = "Export Vertex Colours", description = "Include vertex colour data", default = True)
-    save_settings: bpy.props.BoolProperty(name = "Save Export Settings", description = "Save gltf export settings in the Blender file", default = True)
+    #save_settings: bpy.props.BoolProperty(name = "Save Export Settings", description = "Save gltf export settings in the Blender file", default = True)
     apply_modifiers: bpy.props.BoolProperty(name = "Apply Modifiers", description = "Apply modifiers (except armatures) when exporting", default = True)
 
 
@@ -209,7 +210,7 @@ class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
         settings.yUp = self.yUp
         settings.tangents = self.export_tangents
         settings.colours = self.export_colour
-        settings.save_settings = self.save_settings
+        settings.save_settings = False #self.save_settings
         settings.modifiers = self.apply_modifiers
         settings.frame_skip = self.frame_skip
 
@@ -223,6 +224,14 @@ class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 
 
         return {'FINISHED'}
+
+
+    def check(self, context):
+        filepath = bpy.path.ensure_ext(self.filepath, '.glb')
+        if filepath != self.filepath:
+            self.filepath = filepath
+            return True
+        return False        
 
 
 def menu_func(self, context):

@@ -1,0 +1,9 @@
+The VAT (Vertex Animation Texture) export script samples the active animation on the active selection and exports the animation data as a set of PNG images, for vertex position, vertex normal and optionall vertex tangents.
+
+The export script is based on a video by Martin Donald which can be found here:
+https://www.youtube.com/watch?v=NQ5Dllbxbz4
+
+and more information on the technique can be found here:
+https://medium.com/tech-at-wildlife-studios/texture-animation-techniques-1daecb316657
+
+There is a crogine specific implementation in the 'scratchpad' project.
