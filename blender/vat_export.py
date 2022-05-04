@@ -25,7 +25,7 @@ def export_mesh(obj, path, name, settings):
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
     bpy.context.view_layer.update()
-    outpath = path + name + "_mesh.gltf"
+    outpath = path + name + ".gltf"
 
     bpy.ops.export_scene.gltf(
         use_selection = True, 
@@ -34,7 +34,9 @@ def export_mesh(obj, path, name, settings):
         export_yup = settings.yUp, 
         export_colors = settings.colours, 
         export_tangents = settings.tangents, 
-        will_save_settings = settings.save_settings)
+        will_save_settings = settings.save_settings,
+        check_existing = True,
+        export_apply = settings.modifiers)
 
 
 
@@ -173,17 +175,20 @@ class ExportSettings:
         self.tangents = False
         self.colours = True
         self.save_settings = True
+        self.modifiers = True
 
 
 class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
+    '''Export glTF with vertex animation data stored in RGBA textures'''
     bl_idname = "export.vats"
     bl_label = 'Export Vertex Animation Texture'
-    filename_ext = ".png"
+    filename_ext = ".glb"
     position_scale: bpy.props.FloatProperty(name = "Scale", description = "Maximum range of movement", default = 1.0, min = 0.0001)
     yUp: bpy.props.BoolProperty(name = "Y-Up", description = "Export with Y coordinates upwards", default = True)
     export_tangents: bpy.props.BoolProperty(name = "Export Tangents", description = "Include tangent data", default = False)
     export_colour: bpy.props.BoolProperty(name = "Export Vertex Colours", description = "Include vertex colour data", default = True)
     save_settings: bpy.props.BoolProperty(name = "Save Export Settings", description = "Save gltf export settings in the Blender file", default = True)
+    apply_modifiers: bpy.props.BoolProperty(name = "Apply Modifiers", description = "Apply modifiers (except armatures) when exporting", default = True)
 
     def execute(self, context):
 
@@ -200,17 +205,21 @@ class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
         settings.tangents = self.export_tangents
         settings.colours = self.export_colour
         settings.save_settings = self.save_settings
+        settings.modifiers = self.apply_modifiers
+
+        current_frame = context.scene.frame_current
 
         if bpy.context.selected_objects != None:
             obj = bpy.context.selected_objects[0]
             export_textures(obj, [frame_0, frame_1], self.position_scale, self.properties.filepath, settings)
+            context.scene.frame_set(current_frame)
 
 
         return {'FINISHED'}
 
 
 def menu_func(self, context):
-    self.layout.operator(ExportVat.bl_idname, text = "Vertex Animation Texture (.png)")
+    self.layout.operator(ExportVat.bl_idname, text = "glTF with VAT (.glb)")
 
 
 def register():
