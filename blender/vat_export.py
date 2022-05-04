@@ -83,8 +83,13 @@ def unsign_vector(vec, yUp):
 
 
 
-def data_from_frame(obj, scale, yUp):
-    obj.data.calc_tangents()
+def data_from_frame(obj, scale, settings):
+
+    if settings.tangents:
+        obj.data.calc_tangents()
+    else:
+        obj.data.calc_normals_split()
+
     vertex_data = [None] * len(obj.data.vertices)
 
 
@@ -96,13 +101,17 @@ def data_from_frame(obj, scale, yUp):
             position = obj.data.vertices[index].co.copy()
             position = obj.matrix_world @ position
 
-            position = unsign_vector(position / scale, yUp)
-            normal = unsign_vector(vert.normal.copy(), yUp)
-            tangent = unsign_vector(vert.tangent.copy(), yUp)
-
-            #pack out to 4 float for pixel
+            position = unsign_vector(position / scale, settings.yUp)
             position.append(1.0)
-            normal.append(1.0)
+
+            normal = unsign_vector(vert.normal.copy(), settings.yUp)
+            normal.append(1.0)            
+
+            tangent = list((1.0, 1.0, 1.0))
+
+            if settings.tangents:
+                tangent = unsign_vector(vert.tangent.copy(), settings.yUp)
+
             tangent.append(1.0)
 
             vertex_data[index] = [position, normal, tangent]
@@ -142,13 +151,15 @@ def export_textures(obj, frame_range, scale, path, settings):
     for i in range(frame_count):
         frame = frame_range[0] + (i * settings.frame_skip)
         curr_obj = object_from_frame(obj, frame)
-        pixel_data = data_from_frame(curr_obj, scale, settings.yUp)
+        pixel_data = data_from_frame(curr_obj, scale, settings)
         width = len(pixel_data)
 
         for pixel in pixel_data:
             positions += pixel[0]
             normals += pixel[1]
-            tangents += pixel[2]
+
+            if settings.tangents:
+                tangents += pixel[2]
 
     height = frame_count
 
