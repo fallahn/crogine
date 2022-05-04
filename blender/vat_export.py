@@ -172,6 +172,14 @@ def export_textures(obj, frame_range, scale, path, settings):
     bpy.context.view_layer.objects.active = obj
 
 
+def show_message_box(message = "", title = "Message Box", icon = 'INFO'):
+
+    def draw(self, context):
+        self.layout.label(text = message)
+
+    bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
+
+
 class ExportSettings:
     def __init__(self):
         self.yUp = True
@@ -199,27 +207,32 @@ class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 
     def execute(self, context):
 
-        if context.mode != 'OBJECT':
-            bpy.ops.object.mode_set(mode = 'OBJECT')
+        if self.export_tangents and not context.object.data.uv_layers:
+            self.report({'ERROR'}, "No UV map found")
+            show_message_box("No UV map found, cannot export tangent data.", "Error", 'ERROR')
+        else:
 
-        frame_0 = context.scene.frame_start
-        frame_1 = context.scene.frame_end
+            if context.mode != 'OBJECT':
+                bpy.ops.object.mode_set(mode = 'OBJECT')
 
-
-        settings = ExportSettings()
-        settings.yUp = self.yUp
-        settings.tangents = self.export_tangents
-        settings.colours = self.export_colour
-        settings.save_settings = False #self.save_settings
-        settings.modifiers = self.apply_modifiers
-        settings.frame_skip = self.frame_skip
+            frame_0 = context.scene.frame_start
+            frame_1 = context.scene.frame_end
 
 
-        current_frame = context.scene.frame_current
+            settings = ExportSettings()
+            settings.yUp = self.yUp
+            settings.tangents = self.export_tangents
+            settings.colours = self.export_colour
+            settings.save_settings = False #self.save_settings
+            settings.modifiers = self.apply_modifiers
+            settings.frame_skip = self.frame_skip
 
-        if bpy.context.selected_objects != None:
-            obj = bpy.context.selected_objects[0]
-            export_textures(obj, [frame_0, frame_1], self.position_scale, self.properties.filepath, settings)
+
+            current_frame = context.scene.frame_current
+
+            if bpy.context.selected_objects != None:
+                obj = bpy.context.selected_objects[0]
+                export_textures(obj, [frame_0, frame_1], self.position_scale, self.properties.filepath, settings)
             context.scene.frame_set(current_frame)
 
 
