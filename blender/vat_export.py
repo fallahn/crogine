@@ -136,8 +136,11 @@ def export_textures(obj, frame_range, scale, path, settings):
     tangents = list()
     width = 0
 
-    for i in range(frame_range[1] - frame_range[0]):
-        frame = frame_range[0] + i
+    frame_count = frame_range[1] - frame_range[0]
+    frame_count //= settings.frame_skip
+
+    for i in range(frame_count):
+        frame = frame_range[0] + (i * settings.frame_skip)
         curr_obj = object_from_frame(obj, frame)
         pixel_data = data_from_frame(curr_obj, scale, settings.yUp)
         width = len(pixel_data)
@@ -147,7 +150,7 @@ def export_textures(obj, frame_range, scale, path, settings):
             normals += pixel[1]
             tangents += pixel[2]
 
-    height = frame_range[1] - frame_range[0]
+    height = frame_count
 
     write_image(positions, filename + '_position', [width, height], filepath)
     write_image(normals, filename + '_normal', [width, height], filepath)
@@ -176,6 +179,7 @@ class ExportSettings:
         self.colours = True
         self.save_settings = True
         self.modifiers = True
+        self.frame_skip = 1
 
 
 class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
@@ -183,21 +187,22 @@ class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
     bl_idname = "export.vats"
     bl_label = 'Export Vertex Animation Texture'
     filename_ext = ".glb"
-    position_scale: bpy.props.FloatProperty(name = "Scale", description = "Maximum range of movement", default = 1.0, min = 0.0001)
+    position_scale: bpy.props.FloatProperty(name = "Scale", description = "Maximum range of movement", default = 4.0, min = 0.0001)
+    frame_skip: bpy.props.IntProperty(name = "Frame Skip", description = "Render every Nth frame of animation", default = 1, min = 1)    
     yUp: bpy.props.BoolProperty(name = "Y-Up", description = "Export with Y coordinates upwards", default = True)
     export_tangents: bpy.props.BoolProperty(name = "Export Tangents", description = "Include tangent data", default = False)
     export_colour: bpy.props.BoolProperty(name = "Export Vertex Colours", description = "Include vertex colour data", default = True)
     save_settings: bpy.props.BoolProperty(name = "Save Export Settings", description = "Save gltf export settings in the Blender file", default = True)
     apply_modifiers: bpy.props.BoolProperty(name = "Apply Modifiers", description = "Apply modifiers (except armatures) when exporting", default = True)
 
+
     def execute(self, context):
+
+        if context.mode != 'OBJECT':
+            bpy.ops.object.mode_set(mode = 'OBJECT')
 
         frame_0 = context.scene.frame_start
         frame_1 = context.scene.frame_end
-
-        #not sure how min/max work in bpy so let's do it old school
-        if frame_1 < frame_0:
-            frame_1 = frame_0
 
 
         settings = ExportSettings()
@@ -206,6 +211,8 @@ class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
         settings.colours = self.export_colour
         settings.save_settings = self.save_settings
         settings.modifiers = self.apply_modifiers
+        settings.frame_skip = self.frame_skip
+
 
         current_frame = context.scene.frame_current
 
