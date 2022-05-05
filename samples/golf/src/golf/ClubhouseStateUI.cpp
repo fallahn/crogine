@@ -1420,7 +1420,6 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.addComponent<cro::Transform>().setPosition({ 28.f, 20.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_tableTexture.getTexture());
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseDesc;
     vsEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -1455,6 +1454,7 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
                 }
             });
     vsEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     auto arrowEnt = m_uiScene.createEntity();
     arrowEnt.addComponent<cro::Transform>();

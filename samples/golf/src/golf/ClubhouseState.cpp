@@ -1003,7 +1003,7 @@ void ClubhouseState::createTableScene()
         
         auto vpSize = calcVPSize();
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float viewScale = winSize.y / vpSize.y;
+        float viewScale = std::floor(winSize.y / vpSize.y);
 
         if (!m_sharedData.pixelScale)
         {
