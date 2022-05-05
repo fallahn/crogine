@@ -1,4 +1,6 @@
-The VAT (Vertex Animation Texture) export script samples the active animation on the active selection and exports the animation data as a set of PNG images, for vertex position, vertex normal and optionall vertex tangents.
+The VAT (Vertex Animation Texture) export script samples the active animation on the active selection and exports the animation data as a set of PNG images, for vertex position, vertex normal and optionally vertex tangents. NOTE that images produced are as wide in pixels as there are vertices in a model - so a model with 27K vertices will produce a text 27K pixels wide!! You have been warned ;) Images have one row of pixels for each sampled frame, so even a few hundred frames of animation should be OK. It's also possible to set the frame skip value in the export options to only sample every Nth frame.
+
+More complex models mean that the script may take longer to run, causing Blender to apparently hang - in these cases be patient and let it run until Blender becomes responsive again.
 
 The export script is based on a video by Martin Donald which can be found here:
 https://www.youtube.com/watch?v=NQ5Dllbxbz4

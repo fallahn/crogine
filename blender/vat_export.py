@@ -67,6 +67,7 @@ def write_image(pixels, filename, size, path):
     #bpy.context.scene.render.image_settings.color_depth = 16
     image.pixels = pixels
     image.save_render(path + filename + ".png", scene = bpy.context.scene)
+    bpy.data.images.remove(image)
 
 
 def unsign_vector(vec, yUp):
