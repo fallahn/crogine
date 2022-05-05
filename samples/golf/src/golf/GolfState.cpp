@@ -114,6 +114,7 @@ namespace
 #include "WireframeShader.inl"
 #include "TransitionShader.inl"
 #include "BillboardShader.inl"
+#include "ShadowMapping.inl"
 
     std::int32_t debugFlags = 0;
     bool useFreeCam = false;
@@ -943,6 +944,13 @@ void GolfState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
 
+
+    m_resources.shaders.loadFromString(ShaderID::ShadowMap, ShadowVertex, ShadowFragment, "#define WIND_WARP\n#define ALPHA_CLIP\n");
+    shader = &m_resources.shaders.get(ShaderID::ShadowMap);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::ShadowMap] = m_resources.materials.add(*shader);
+
+
     m_resources.shaders.loadFromString(ShaderID::Leaderboard, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define SUBRECT\n");
     shader = &m_resources.shaders.get(ShaderID::Leaderboard);
     m_resolutionBuffer.addShader(*shader);
@@ -1664,6 +1672,11 @@ void GolfState::loadAssets()
                                         auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
                                         applyMaterialData(modelDef, texturedMat, i);
                                         ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+
+                                        auto shadowMat = m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]);
+                                        applyMaterialData(modelDef, shadowMat);
+                                        shadowMat.setProperty("u_alphaClip", 0.5f);
+                                        ent.getComponent<cro::Model>().setShadowMaterial(i, shadowMat);
                                     }
                                 }
                                 ent.getComponent<cro::Model>().setHidden(true);

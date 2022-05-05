@@ -458,6 +458,7 @@
     <None Include="src\golf\MinimapShader.inl" />
     <None Include="src\golf\PaletteSwap.inl" />
     <None Include="src\golf\PostProcess.inl" />
+    <None Include="src\golf\ShadowMapping.inl" />
     <None Include="src\golf\TerrainShader.inl" />
     <None Include="src\golf\TransitionShader.inl" />
     <None Include="src\golf\TutorialShaders.inl" />
