@@ -204,11 +204,28 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     m_sprites[SpriteID::StartGame] = spriteSheet.getSprite("start_game");
     m_sprites[SpriteID::Connect] = spriteSheet.getSprite("connect");
 
+
+    //cursor
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -100.f, 0.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("cursor");
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    auto cursorEnt = entity;
+
+    mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [entity](cro::Entity e) mutable
+        {
+            e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+            e.getComponent<cro::AudioEmitter>().play();
+            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + glm::vec3(-20.f, -7.f, 0.f));
+            entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        });
     
     spriteSheet.loadFromFile("assets/golf/sprites/clubhouse_menu.spt", m_resources.textures);
 
     //title
-    auto entity = m_uiScene.createEntity();
+    entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
@@ -237,6 +254,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({12.f, 10.f, 0.f});
     entity.getComponent<cro::Transform>().setScale({ 0.f, 1.f });
+    entity.getComponent<cro::Transform>().addChild(cursorEnt.getComponent<cro::Transform>());
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("menu_background");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -266,7 +284,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
 
     auto boardEntity = entity;
 
-    static constexpr float TextOffset = 8.f;
+    static constexpr float TextOffset = 28.f;
     static constexpr float LineSpacing = 10.f;
     glm::vec3 textPos = { TextOffset, 62.f, 0.1f };
 
@@ -350,7 +368,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     textPos.y -= LineSpacing; //remove this when adding back arcade
 
     //leave button
-    entity = createButton("Leave Clubhouse");
+    entity = createButton("Leave");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
