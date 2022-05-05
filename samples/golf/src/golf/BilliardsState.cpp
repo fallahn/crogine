@@ -1333,6 +1333,29 @@ void BilliardsState::spawnBall(const ActorInfo& info)
     if (info.state == 0)
     {
         m_cueball = entity;
+
+        //if the ball was placed somewhere in which the server
+        //needed to clamp/correct position, we need to update
+        //the player camera position accordingly
+        auto correctionEnt = m_gameScene.createEntity();
+        correctionEnt.addComponent<cro::Callback>().active = true;
+        correctionEnt.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt) mutable
+        {
+            auto pos = m_cueball.getComponent<cro::Transform>().getPosition();
+            auto dir = pos - m_cameraController.getComponent<cro::Transform>().getPosition();
+
+            if (glm::length2(dir) > 0.0001f)
+            {
+                m_cameraController.getComponent<cro::Transform>().move(dir * (dt * 8.f));
+            }
+            else
+            {
+                m_cameraController.getComponent<cro::Transform>().setPosition(pos);
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+        };
     }
 
     //set colour/model based on type stored in info.state
