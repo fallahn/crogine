@@ -42,7 +42,7 @@ def export_mesh(obj, path, name, settings):
 
 #writes UV coord for each vertex into the generated texture
 #and stores in a new UV channel on the given object
-def insert_UVs(obj):
+def insert_UVs(obj, scale):
     bm = bmesh.new()
     bm.from_mesh(obj.data)
 
@@ -54,17 +54,20 @@ def insert_UVs(obj):
     for v in bm.verts:
         for l in v.link_loops:
             uv_data = l[uv_layer]
-            uv_data.uv = mathutils.Vector((i * pixel_width, 0.0))
+            uv_data.uv = mathutils.Vector((i * pixel_width, scale))
             uv_data.select = True
-            #TODO we can add the half pixel UV offset here
+            
+            #horizontally offset by half a pixel so we'll sample the centre in the shader
+            uv_data.uv[0] += (pixel_width / 2)
+
         i += 1
 
     bm.to_mesh(obj.data)
 
 
 def write_image(pixels, filename, size, path):
-    image = bpy.data.images.new(filename, width = size[0], height = size[1], is_data = True) #float_buffer = True)
-    #bpy.context.scene.render.image_settings.color_depth = 16
+    image = bpy.data.images.new(filename, width = size[0], height = size[1], is_data = True)#, float_buffer = True)
+    #bpy.context.scene.render.image_settings.color_depth = '16'
     image.pixels = pixels
     image.save_render(path + filename + ".png", scene = bpy.context.scene)
     bpy.data.images.remove(image)
@@ -105,13 +108,13 @@ def data_from_frame(obj, scale, settings):
             position = unsign_vector(position / scale, settings.yUp)
             position.append(1.0)
 
-            normal = unsign_vector(vert.normal.copy(), settings.yUp)
+            normal = unsign_vector(vert.normal.copy(), False)
             normal.append(1.0)            
 
             tangent = list((1.0, 1.0, 1.0))
 
             if settings.tangents:
-                tangent = unsign_vector(vert.tangent.copy(), settings.yUp)
+                tangent = unsign_vector(vert.tangent.copy(), False)
 
             tangent.append(1.0)
 
@@ -128,6 +131,7 @@ def object_from_frame(obj, frame):
     depsgraph = bpy.context.view_layer.depsgraph
     eval_obj = obj.evaluated_get(depsgraph)
     #retval = bpy.data.objects.new('frame_0', bpy.data.meshes.new_from_object(eval_obj))
+    #retval = bpy.data.objects.new('frame_0', obj.data.copy())
     retval = bpy.data.objects.new('frame_0', bpy.data.meshes.new_from_object(eval_obj, preserve_all_data_layers = True, depsgraph = depsgraph))
 
     retval.matrix_world = obj.matrix_world
@@ -171,7 +175,7 @@ def export_textures(obj, frame_range, scale, path, settings):
         write_image(tangents, filename + '_tangent', [width, height], filepath)
 
     base_frame = object_from_frame(obj, 0)
-    insert_UVs(base_frame)
+    insert_UVs(base_frame, scale)
     export_mesh(base_frame, filepath, filename, settings)
 
 

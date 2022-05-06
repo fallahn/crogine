@@ -34,17 +34,14 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
-namespace cro
-{
-    struct Camera;
-}
+#include <array>
 
-class VatsState final : public cro::State
+class VatsState final : public cro::State, public cro::GuiClient
 {
 public:
     VatsState(cro::StateStack&, cro::State::Context);
-    ~VatsState() = default;
 
     cro::StateID getStateID() const override { return States::ScratchPad::VATs; }
 
@@ -56,15 +53,43 @@ public:
 private:
 
     cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
+    cro::Entity m_model;
+    cro::Entity m_reference;
 
     cro::ResourceCollection m_resources;
+    cro::Texture m_positionTexture;
+    cro::Texture m_normalTexture;
+
+
+    struct ShaderID final
+    {
+        enum
+        {
+            NoVats,
+            Vats,
+            VatsInstanced,
+
+            Count
+        };
+    };
+
+    struct MaterialID final
+    {
+        enum
+        {
+            NoVats,
+            Vats,
+            VatsInstanced,
+
+            Count
+        };
+    };
+
+    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
     void addSystems();
     void loadAssets();
     void createScene();
-    void createUI();
 
-    //assigned to camera resize callback
-    void updateView(cro::Camera&);
+    void loadModel(const std::string&);
 };
