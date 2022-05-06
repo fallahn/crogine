@@ -1675,7 +1675,7 @@ void GolfState::loadAssets()
 
                                         auto shadowMat = m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]);
                                         applyMaterialData(modelDef, shadowMat);
-                                        shadowMat.setProperty("u_alphaClip", 0.5f);
+                                        //shadowMat.setProperty("u_alphaClip", 0.5f);
                                         ent.getComponent<cro::Model>().setShadowMaterial(i, shadowMat);
                                     }
                                 }

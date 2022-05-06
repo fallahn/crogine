@@ -134,7 +134,7 @@ const static std::string ShadowFragment = R"(
 
         void main()
         {
-            if(texture(u_diffuseMap, v_texCoord0).a < u_alphaClip) discard;
+            if(texture(u_diffuseMap, v_texCoord0).a < 0.5) discard;
         }
         #else
 

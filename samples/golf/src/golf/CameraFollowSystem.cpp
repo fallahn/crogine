@@ -32,6 +32,7 @@ source distribution.
 #include "Terrain.hpp"
 #include "ClientCollisionSystem.hpp"
 #include "BallSystem.hpp"
+#include "InterpolationSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -131,9 +132,21 @@ void CameraFollowSystem::process(float dt)
             diffMultiplier *= 4.f;
             follower.currentTarget += diff * (dt * (diffMultiplier + (4.f * follower.zoom.progress)));
 
+            float velocity = 0.f;
+            if (follower.target.hasComponent<Ball>())
+            {
+                //driving range
+                velocity = glm::length2(follower.target.getComponent<Ball>().velocity);
+            }
+            else
+            {
+                //net game
+                velocity = glm::length2(follower.target.getComponent<InterpolationComponent<InterpolationType::Linear>>().getVelocity());
+            }
+            float snapMultiplier = velocity / 1350.f;
+
             //snap to target if close to reduce stutter
-            //TODO make this velocity based so snapping is more agressive when the target is travelling at speed.
-            if (glm::length2(target - follower.currentTarget) < 0.0025f)
+            if (glm::length2(target - follower.currentTarget) < (0.005f * snapMultiplier))
             {
                 follower.currentTarget = target;
             }

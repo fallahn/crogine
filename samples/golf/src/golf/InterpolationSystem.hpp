@@ -215,7 +215,10 @@ public:
 							auto diff = interp.m_buffer[1].position - interp.m_buffer[0].position;
 							auto position = interp.m_buffer[0].position + (diff * t);
 
+							auto lastPos = entity.template getComponent<cro::Transform>().getPosition();
 							entity.template getComponent<cro::Transform>().setPosition(position);
+
+							interp.m_interpVelocity = (position - lastPos) * 60.f; //fixed step... sould be 1/dt?
 						}
 
 						auto rotation = glm::slerp(interp.m_buffer[0].rotation, interp.m_buffer[1].rotation, t);
