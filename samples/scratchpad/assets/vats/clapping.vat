@@ -1,0 +1,7 @@
+vat clapping
+{
+    model = "clapping.cmt"
+    scale = 2.000000
+    position = "clapping_position.png"
+    normal = "clapping_normal.png"
+}

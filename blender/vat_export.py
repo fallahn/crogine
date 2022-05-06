@@ -175,6 +175,19 @@ def export_textures(obj, frame_range, scale, path, settings):
     export_mesh(base_frame, filepath, filename, settings)
 
 
+    #write some meta-data for engine loading
+    file = open(filepath + filename + ".vat", 'w')
+    file.write("vat %s\n{\n" % filename)
+    file.write("    model = \"%s.cmt\"\n" % filename)
+    file.write("    scale = %f\n" % scale)
+    file.write("    position = \"%s_position.png\"\n" % filename)
+    file.write("    normal = \"%s_normal.png\"\n" % filename)
+    if settings.tangents:
+        file.write("    tangent = \"%s_tangent.png\"\n" % filename)
+    file.write("}")
+    file.close()
+
+
     #tidy up temp object
     bpy.data.objects.remove(base_frame)
 
