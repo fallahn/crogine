@@ -1571,6 +1571,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //prev club
     auto entity = createHighlight(glm::vec2(258.f, 96.f), InputBinding::PrevClub);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(5);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
@@ -1585,6 +1586,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //next club
     entity = createHighlight(glm::vec2(324.f, 96.f), InputBinding::NextClub);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(6);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
@@ -1598,6 +1600,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //aim left
     entity = createHighlight(glm::vec2(230.f, 58.f), InputBinding::Left);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(8);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
@@ -1611,6 +1614,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //aim right
     entity = createHighlight(glm::vec2(230.f, 43.f), InputBinding::Right);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(9);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
@@ -1624,6 +1628,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //swing
     entity = createHighlight(glm::vec2(352.f, 47.f), InputBinding::Action);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(11);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
@@ -1635,12 +1640,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
         });
 
-    //TODO - unfortunate effect of adding these last is that
-    //the selection order using keyboard/controller is now unintuitive
     if (m_sharedData.baseState == StateID::Clubhouse)
     {
         //top spin
         entity = createHighlight(glm::vec2(230.f, 73.f), InputBinding::Up);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(7);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
             [infoEnt, buttonChangeEnt](cro::Entity e) mutable
             {
@@ -1654,6 +1658,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
         //back spin
         entity = createHighlight(glm::vec2(230.f, 28.f), InputBinding::Down);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(10);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
             [infoEnt, buttonChangeEnt](cro::Entity e) mutable
             {
@@ -1667,6 +1672,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
         //switch view
         entity = createHighlight(glm::vec2(338.f, 84.f), InputBinding::SwitchView);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(12);
         entity.getComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight_white");
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0; //don't rebind this
@@ -1681,6 +1687,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
         //rotate cam
         entity = createHighlight(glm::vec2(292.f, 81.f), InputBinding::CamModifier);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(13);
         entity.getComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight_white");
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0; //don't rebind this
@@ -1886,6 +1893,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //mouse speed down
     entity = createSquareHighlight(glm::vec2(17.f, 71.f));
+    entity.getComponent<cro::UIInput>().setSelectionIndex(14);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt) mutable
         {
@@ -1898,6 +1906,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //mouse speed up
     entity = createSquareHighlight(glm::vec2(184.f, 71.f));
+    entity.getComponent<cro::UIInput>().setSelectionIndex(15);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt) mutable
         {
@@ -1910,6 +1919,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //invert X
     entity = createSquareHighlight(glm::vec2(17.f, 54.f));
+    entity.getComponent<cro::UIInput>().setSelectionIndex(16);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt) mutable
         {
@@ -1942,6 +1952,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //invert Y
     entity = createSquareHighlight(glm::vec2(17.f, 38.f));
+    entity.getComponent<cro::UIInput>().setSelectionIndex(17);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt) mutable
         {
@@ -2465,4 +2476,5 @@ void OptionsState::updateToolTip(cro::Entity e, std::int32_t tipID)
 void OptionsState::quitState()
 {
     m_rootNode.getComponent<cro::Callback>().active = true;
+    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }

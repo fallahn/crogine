@@ -545,6 +545,15 @@ void UISystem::onEntityAdded(Entity entity)
 {
     //add to group 0 by default, process() will move the entity if needed
     m_groups[0].push_back(entity);
+
+    //add a default sort order to items without a specific
+    //position if they're left in the main group.
+    auto& input = entity.getComponent<UIInput>();
+    if (input.m_group == 0
+        && input.m_selectionIndex == 0)
+    {
+        input.m_selectionIndex = m_groups[0].size();
+    }
 }
 
 void UISystem::onEntityRemoved(Entity entity)

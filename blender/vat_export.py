@@ -65,9 +65,14 @@ def insert_UVs(obj, scale):
     bm.to_mesh(obj.data)
 
 
-def write_image(pixels, filename, size, path):
-    image = bpy.data.images.new(filename, width = size[0], height = size[1], is_data = True)#, float_buffer = True)
-    #bpy.context.scene.render.image_settings.color_depth = '16'
+def write_image(pixels, filename, size, path, settings):
+    image = bpy.data.images.new(filename, width = size[0], height = size[1], is_data = True, float_buffer = settings.float_texture)
+
+    if settings.float_texture:
+        bpy.context.scene.render.image_settings.color_depth = '16'
+    else:
+        bpy.context.scene.render.image_settings.color_depth = '8'
+
     image.pixels = pixels
     image.save_render(path + filename + ".png", scene = bpy.context.scene)
     bpy.data.images.remove(image)
@@ -87,12 +92,17 @@ def unsign_vector(vec, yUp):
 
 
 
-def data_from_frame(obj, scale, settings):
+def data_from_frame(obj, settings):
+
+    #calc normals if custom data not set
+    #if obj.data.has_custom_normals == False:
 
     if settings.tangents:
         obj.data.calc_tangents()
     else:
         obj.data.calc_normals_split()
+
+
 
     vertex_data = [None] * len(obj.data.vertices)
 
@@ -105,7 +115,7 @@ def data_from_frame(obj, scale, settings):
             position = obj.data.vertices[index].co.copy()
             position = obj.matrix_world @ position
 
-            position = unsign_vector(position / scale, settings.yUp)
+            position = unsign_vector(position / settings.scale, settings.yUp)
             position.append(1.0)
 
             normal = unsign_vector(vert.normal.copy(), False)
@@ -135,11 +145,16 @@ def object_from_frame(obj, frame):
     retval = bpy.data.objects.new('frame_0', bpy.data.meshes.new_from_object(eval_obj, preserve_all_data_layers = True, depsgraph = depsgraph))
 
     retval.matrix_world = obj.matrix_world
+    retval.data.use_auto_smooth = obj.data.use_auto_smooth
+    retval.data.auto_smooth_angle = obj.data.auto_smooth_angle
+
+    #if obj.data.has_custom_normals:
+        #retval.data.custom_normals_set()
 
     return retval
 
 
-def export_textures(obj, frame_range, scale, path, settings):
+def export_textures(obj, frame_range, path, settings):
     filename = Path(path).stem
     filepath = os.path.dirname(os.path.abspath(path))
     filepath += "/"
@@ -156,7 +171,7 @@ def export_textures(obj, frame_range, scale, path, settings):
     for i in range(frame_count):
         frame = frame_range[0] + (i * settings.frame_skip)
         curr_obj = object_from_frame(obj, frame)
-        pixel_data = data_from_frame(curr_obj, scale, settings)
+        pixel_data = data_from_frame(curr_obj, settings)
         width = len(pixel_data)
 
         for pixel in pixel_data:
@@ -168,14 +183,14 @@ def export_textures(obj, frame_range, scale, path, settings):
 
     height = frame_count
 
-    write_image(positions, filename + '_position', [width, height], filepath)
-    write_image(normals, filename + '_normal', [width, height], filepath)
+    write_image(positions, filename + '_position', [width, height], filepath, settings)
+    write_image(normals, filename + '_normal', [width, height], filepath, settings)
 
     if settings.tangents == True:
-        write_image(tangents, filename + '_tangent', [width, height], filepath)
+        write_image(tangents, filename + '_tangent', [width, height], filepath, settings)
 
     base_frame = object_from_frame(obj, 0)
-    insert_UVs(base_frame, scale)
+    insert_UVs(base_frame, settings.scale)
     export_mesh(base_frame, filepath, filename, settings)
 
 
@@ -183,7 +198,9 @@ def export_textures(obj, frame_range, scale, path, settings):
     file = open(filepath + filename + ".vat", 'w')
     file.write("vat %s\n{\n" % filename)
     file.write("    model = \"%s.cmt\"\n" % filename)
-    file.write("    scale = %f\n" % scale)
+    file.write("    scale = %f\n" % settings.scale)
+    file.write("    frame_count = %d\n" % frame_count)
+    file.write("    frame_rate = %f\n" % (bpy.context.scene.render.fps / settings.frame_skip))
     file.write("    position = \"%s_position.png\"\n" % filename)
     file.write("    normal = \"%s_normal.png\"\n" % filename)
     if settings.tangents:
@@ -217,6 +234,8 @@ class ExportSettings:
         self.save_settings = True
         self.modifiers = True
         self.frame_skip = 1
+        self.scale = 1
+        self.float_texture = False
 
 
 class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
@@ -230,7 +249,7 @@ class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
     yUp: bpy.props.BoolProperty(name = "Y-Up", description = "Export with Y coordinates upwards", default = True)
     export_tangents: bpy.props.BoolProperty(name = "Export Tangents", description = "Include tangent data", default = False)
     export_colour: bpy.props.BoolProperty(name = "Export Vertex Colours", description = "Include vertex colour data", default = True)
-    #save_settings: bpy.props.BoolProperty(name = "Save Export Settings", description = "Save gltf export settings in the Blender file", default = True)
+    float_texture: bpy.props.BoolProperty(name = "Floating Point Textures", description = "Save textures as 16 bit floating point", default = False)
     apply_modifiers: bpy.props.BoolProperty(name = "Apply Modifiers", description = "Apply modifiers (except armatures) when exporting", default = True)
 
 
@@ -255,13 +274,15 @@ class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
             settings.save_settings = False #self.save_settings
             settings.modifiers = self.apply_modifiers
             settings.frame_skip = self.frame_skip
+            settings.scale = self.position_scale
+            settings.float_texture = self.float_texture
 
 
             current_frame = context.scene.frame_current
 
             if bpy.context.selected_objects != None:
                 obj = bpy.context.selected_objects[0]
-                export_textures(obj, [frame_0, frame_1], self.position_scale, self.properties.filepath, settings)
+                export_textures(obj, [frame_0, frame_1], self.properties.filepath, settings)
             context.scene.frame_set(current_frame)
 
 

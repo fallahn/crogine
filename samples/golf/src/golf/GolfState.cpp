@@ -3356,7 +3356,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         if (ballDist > 5)
         {
             distance = static_cast<std::int32_t>(ballDist);
-            e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
+            e.getComponent<cro::Text>().setString("Pin: " + std::to_string(distance) + "m");
         }
         else
         {
@@ -3606,7 +3606,7 @@ void GolfState::updateActor(const ActorInfo& update)
             if (ballDist > 7)
             {
                 distance = static_cast<std::int32_t>(ballDist);
-                e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
+                e.getComponent<cro::Text>().setString("Pin: " + std::to_string(distance) + "m");
             }
             else
             {

@@ -57,7 +57,6 @@ namespace
 
     uniform sampler2D u_positionMap;
     uniform sampler2D u_normalMap;
-    uniform float u_scale;
 
     VARYING_OUT vec4 v_colour;
     VARYING_OUT vec3 v_normal;
@@ -82,7 +81,7 @@ namespace
         float scale = texCoord.y;
         texCoord.y = 0.0; //TODO frame offset
 
-        vec4 position = vec4(decodeVector(u_positionMap, texCoord) * u_scale, 1.0);
+        vec4 position = vec4(decodeVector(u_positionMap, texCoord) * scale, 1.0);
         gl_Position = u_viewProjectionMatrix * u_worldMatrix * position;
         v_normal = u_normalMatrix * normalize(decodeVector(u_normalMap, texCoord));
         //v_normal = u_normalMatrix * a_normal;
@@ -268,7 +267,6 @@ void VatsState::loadModel(const std::string& path)
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Vats]);
         material.setProperty("u_positionMap", m_positionTexture);
         material.setProperty("u_normalMap", m_normalTexture);
-        material.setProperty("u_scale", file.getScale());
 
         m_model.getComponent<cro::Model>().setMaterial(0, material);
     }
