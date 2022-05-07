@@ -35,6 +35,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "GameConsts.hpp"
 #include "MenuConsts.hpp"
+#include "MenuCallbacks.hpp"
 #include "PoissonDisk.hpp"
 #include "GolfCartSystem.hpp"
 #include "CloudSystem.hpp"
@@ -92,6 +93,17 @@ namespace
     //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 }
 
+MainMenuContext::MainMenuContext(MenuState* state)
+{
+    uiScene = &state->m_uiScene;
+    currentMenu = &state->m_currentMenu;
+    menuEntities = state->m_menuEntities.data();
+
+    menuPositions = state->m_menuPositions.data();
+    viewScale = &state->m_viewScale;
+    sharedData = &state->m_sharedData;
+}
+
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
@@ -113,10 +125,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     std::fill(m_avatarIndices.begin(), m_avatarIndices.end(), 0);    
     std::fill(m_hairIndices.begin(), m_hairIndices.end(), 0);    
 
+    Achievements::setActive(true);
     
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
-        loadAvatars();
+        //loadAvatars();
 
         //add systems to scene
         addSystems();
@@ -130,6 +143,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     
     sd.inputBinding.controllerID = 0;
     sd.baseState = StateID::Menu;
+    sd.mapDirectory = "course_01";
 
     sd.clientConnection.ready = false;
 
@@ -352,7 +366,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_9:
         {
-
+            requestStackPush(StateID::Trophy);
         }
             break;
 #endif
@@ -532,8 +546,14 @@ void MenuState::loadAssets()
 {
     m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
 
-    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
+    std::string wobble;
+    if (m_sharedData.vertexSnap)
+    {
+        wobble = "#define WOBBLE\n";
+    }
+
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX");
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
@@ -705,8 +725,6 @@ void MenuState::createScene()
         }
     }
 
-    cro::AudioScape as;
-    as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
 
     //golf carts
     if (md.loadFromFile("assets/golf/models/cart.cmt"))
@@ -729,7 +747,7 @@ void MenuState::createScene()
             md.createModel(entity);
             entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
-            entity.addComponent<cro::AudioEmitter>() = as.getEmitter("cart");
+            entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("cart");
             entity.getComponent<cro::AudioEmitter>().play();
         }
     }
@@ -738,7 +756,7 @@ void MenuState::createScene()
 
     //music
     auto entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("music");
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("music");
     entity.getComponent<cro::AudioEmitter>().play();
 
     //update the 3D view
@@ -774,7 +792,7 @@ void MenuState::createScene()
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
 
     //add the ambience to the cam cos why not
-    camEnt.addComponent<cro::AudioEmitter>() = as.getEmitter("01");
+    camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("01");
     camEnt.getComponent<cro::AudioEmitter>().play();
 
     auto sunEnt = m_backgroundScene.getSunlight();
@@ -868,10 +886,10 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
         {
         default: break;
         case PacketID::StateChange:
-            if (evt.packet.as<std::uint8_t>() == sv::StateID::Game)
+            if (evt.packet.as<std::uint8_t>() == sv::StateID::Golf)
             {
                 requestStackClear();
-                requestStackPush(StateID::Game);
+                requestStackPush(StateID::Golf);
             }
             break;
         case PacketID::ConnectionAccepted:
@@ -887,7 +905,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
 
                 if (m_sharedData.tutorial)
                 {
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
                 else
                 {
@@ -1039,6 +1057,19 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                 }
             }
         }
+            break;
+        case PacketID::ScoreType:
+            m_sharedData.scoreType = evt.packet.as<std::uint8_t>();
+            {
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Menu::ScoreType;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
+                    centreText(e);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
             break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())

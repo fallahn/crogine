@@ -45,6 +45,7 @@ include(${PROJECT_DIR}/billiards/CMakeLists.txt)
 include(${PROJECT_DIR}/bsp/CMakeLists.txt)
 include(${PROJECT_DIR}/collision/CMakeLists.txt)
 include(${PROJECT_DIR}/voxels/CMakeLists.txt)
+include(${PROJECT_DIR}/vats/CMakeLists.txt)
 
 add_executable(${PROJECT_NAME}
                ${PROJECT_SRC}
@@ -52,7 +53,8 @@ add_executable(${PROJECT_NAME}
                ${BILLIARDS_SRC}
                ${BSP_SRC}
                ${COLLISION_SRC}
-               ${VOXEL_SRC})
+               ${VOXEL_SRC}
+               ${VATS_SRC})
 
 target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}

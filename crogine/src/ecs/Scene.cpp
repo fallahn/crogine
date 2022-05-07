@@ -341,7 +341,8 @@ void Scene::disableSkybox()
 
 void Scene::setCubemap(const std::string& path)
 {
-    enableSkybox();
+    //TODO replace this with the CubemapTexture class
+    //once I can be bothered to implement move operators for it :3
 
     //open the file, check it's valid
     cro::ConfigFile cfg;
@@ -350,6 +351,7 @@ void Scene::setCubemap(const std::string& path)
         cro::Logger::log("Failed to open cubemap " + path, cro::Logger::Type::Error);
         return;
     }
+    enableSkybox();
 
     std::array<std::string, CubemapDirection::Count> paths;
     const auto& properties = cfg.getProperties();

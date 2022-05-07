@@ -71,6 +71,7 @@ namespace sv
         std::array<sv::ClientConnection, ConstVal::MaxClients> clients;
         cro::MessageBus messageBus;
         cro::String mapDir;
+        std::uint8_t scoreType = 0;
 
         std::atomic_uint32_t hostID = 0;
     };
@@ -80,7 +81,10 @@ namespace sv
         enum
         {
             Lobby,
-            Game
+            Golf,
+            Billiards,
+
+            Count
         };
     }
 

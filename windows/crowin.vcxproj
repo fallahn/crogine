@@ -42,6 +42,8 @@
     <ClInclude Include="..\crogine\include\crogine\audio\AudioMixer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioStream.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundSource.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundStream.hpp" />
     <ClInclude Include="..\crogine\include\crogine\Config.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\App.hpp" />
     <ClInclude Include="..\crogine\include\crogine\core\Clock.hpp" />
@@ -125,6 +127,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\CircleMeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Colour.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\CubeBuilder.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\CubemapTexture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\DepthTexture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\DynamicMeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\EnvironmentMap.hpp" />
@@ -165,6 +168,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\Transformable2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\UniformBuffer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Vertex2D.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\VideoPlayer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\GraphEditor.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImCurveEdit.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGradient.h" />
@@ -233,6 +237,8 @@
     <ClCompile Include="..\crogine\src\audio\AudioScape.cpp" />
     <ClCompile Include="..\crogine\src\audio\AudioStream.cpp" />
     <ClCompile Include="..\crogine\src\audio\OpenALImpl.cpp" />
+    <ClCompile Include="..\crogine\src\audio\sound_system\SoundSource.cpp" />
+    <ClCompile Include="..\crogine\src\audio\sound_system\SoundStream.cpp" />
     <ClCompile Include="..\crogine\src\audio\stb_vorbis.c" />
     <ClCompile Include="..\crogine\src\audio\VorbisLoader.cpp" />
     <ClCompile Include="..\crogine\src\audio\WavLoader.cpp" />
@@ -312,6 +318,7 @@
     <ClCompile Include="..\crogine\src\graphics\BoundingBox.cpp" />
     <ClCompile Include="..\crogine\src\graphics\CircleMeshBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Colour.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\CubemapTexture.cpp" />
     <ClCompile Include="..\crogine\src\graphics\DepthTexture.cpp" />
     <ClCompile Include="..\crogine\src\graphics\DynamicMeshBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\EnvironmentMap.cpp" />
@@ -347,6 +354,7 @@
     <ClCompile Include="..\crogine\src\graphics\TextureResource.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Transformable2D.cpp" />
     <ClCompile Include="..\crogine\src\graphics\UniformBuffer.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\VideoPlayer.cpp" />
     <ClCompile Include="..\crogine\src\imgui\GraphEditor.cpp" />
     <ClCompile Include="..\crogine\src\imgui\Gui.cpp" />
     <ClCompile Include="..\crogine\src\imgui\GuiClient.cpp" />
@@ -582,6 +590,7 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ConformanceMode>true</ConformanceMode>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -656,6 +665,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

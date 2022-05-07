@@ -92,7 +92,7 @@ namespace cro
     \brief Represents a camera within the scene.
     Use Scene::setActiveCamera() to use an entity with
     a camera component as the current view. The default
-    output is a letterboxed perspecticve camera with a 16:9
+    output is a letterboxed perspective camera with a 16:9
     ratio. This can easily be overriden with a custom
     projection matrix and viewport - usually set via a
     callback applied to Camera::resizeCallback
@@ -405,6 +405,11 @@ namespace cro
         float getFOV() const { return m_verticalFOV; }
 
         /*!
+        \brief Returns the aspect ratio of the projection matrix
+        */
+        float getAspectRatio() const { return m_aspectRatio; }
+
+        /*!
         \brief Returns the near plane value of the projection matrix
         */
         float getNearPlane() const { return m_nearPlane; }
@@ -445,7 +450,7 @@ namespace cro
         \brief Returns the world coordinates currently projected onto
         the given screen coordinates.
         If this gives unusual results, particularly with orthographic projections,
-        makes sure that the camer'a viewport is set correctly.
+        makes sure that the camera's viewport is set correctly.
         */
         glm::vec3 pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize = cro::App::getWindow().getSize()) const;
 
@@ -467,6 +472,7 @@ namespace cro
         glm::vec3 depthPosition = glm::vec3(0.f);
 #endif
 
+
     private:
 
         std::array<Pass, 2u> m_passes = {}; //final pass and refraction pass share the same data
@@ -486,4 +492,20 @@ namespace cro
 
         friend class ShadowMapRenderer;
     };
+}
+
+/*!
+\brief Comparison operator
+Cameras are only moveable, so it only makes sense that comparing cameras returns whether
+or not we're comparing a reference to the same instance, particulary in sort/find cases
+*/
+
+static inline bool operator == (const cro::Camera& lhs, const cro::Camera& rhs)
+{
+    return &lhs == &rhs;
+}
+
+static inline bool operator != (const cro::Camera& lhs, const cro::Camera& rhs)
+{
+    return !(lhs == rhs);
 }

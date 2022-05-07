@@ -1,9 +1,17 @@
 
 set(GOLF_SRC
   ${PROJECT_DIR}/golf/BallSystem.cpp
+  ${PROJECT_DIR}/golf/BilliardsClientCollision.cpp
+  ${PROJECT_DIR}/golf/BilliardsInput.cpp
+  ${PROJECT_DIR}/golf/BilliardsSoundDirector.cpp
+  ${PROJECT_DIR}/golf/BilliardsState.cpp
+  ${PROJECT_DIR}/golf/BilliardsStateUI.cpp
+  ${PROJECT_DIR}/golf/BilliardsSystem.cpp
   ${PROJECT_DIR}/golf/CameraFollowSystem.cpp
   ${PROJECT_DIR}/golf/ClientCollisionSystem.cpp
   ${PROJECT_DIR}/golf/CloudSystem.cpp
+  ${PROJECT_DIR}/golf/ClubhouseState.cpp
+  ${PROJECT_DIR}/golf/ClubhouseStateUI.cpp
   ${PROJECT_DIR}/golf/CollisionMesh.cpp
   ${PROJECT_DIR}/golf/DebugDraw.cpp
   ${PROJECT_DIR}/golf/DrivingRangeDirector.cpp
@@ -17,10 +25,11 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/GolfState.cpp
   ${PROJECT_DIR}/golf/GolfStateUI.cpp
   ${PROJECT_DIR}/golf/InputParser.cpp  
-  ${PROJECT_DIR}/golf/InterpolationComponent.cpp
-  ${PROJECT_DIR}/golf/InterpolationSystem.cpp
+#  ${PROJECT_DIR}/golf/InterpolationComponent.cpp
+#  ${PROJECT_DIR}/golf/InterpolationSystem.cpp
   ${PROJECT_DIR}/golf/KeyboardState.cpp
   ${PROJECT_DIR}/golf/LeaderboardTexture.cpp
+  ${PROJECT_DIR}/golf/MenuCallbacks.cpp
   ${PROJECT_DIR}/golf/MenuCreation.cpp
   ${PROJECT_DIR}/golf/MenuCustomisation.cpp
   ${PROJECT_DIR}/golf/MenuSoundDirector.cpp
@@ -30,18 +39,25 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/PauseState.cpp
   ${PROJECT_DIR}/golf/ParticleDirector.cpp
   ${PROJECT_DIR}/golf/PlayerAvatar.cpp
+  ${PROJECT_DIR}/golf/PocketBallSystem.cpp
   ${PROJECT_DIR}/golf/PracticeState.cpp
   ${PROJECT_DIR}/golf/PuttingState.cpp
   ${PROJECT_DIR}/golf/PuttingStateUI.cpp
   ${PROJECT_DIR}/golf/SharedStateData.cpp
   ${PROJECT_DIR}/golf/SoundEffectsDirector.cpp
   ${PROJECT_DIR}/golf/spooky2.cpp
+  ${PROJECT_DIR}/golf/StudioCameraSystem.cpp
   ${PROJECT_DIR}/golf/TerrainBuilder.cpp
   ${PROJECT_DIR}/golf/TrophyDisplaySystem.cpp
+  ${PROJECT_DIR}/golf/TrophyState.cpp
   ${PROJECT_DIR}/golf/TutorialDirector.cpp
   ${PROJECT_DIR}/golf/TutorialState.cpp
   ${PROJECT_DIR}/golf/Weather.cpp
 
+  ${PROJECT_DIR}/golf/server/EightballDirector.cpp
+  ${PROJECT_DIR}/golf/server/NineballDirector.cpp
   ${PROJECT_DIR}/golf/server/Server.cpp
-  ${PROJECT_DIR}/golf/server/ServerGameState.cpp
-  ${PROJECT_DIR}/golf/server/ServerLobbyState.cpp)
+  ${PROJECT_DIR}/golf/server/ServerBilliardsState.cpp
+  ${PROJECT_DIR}/golf/server/ServerGolfState.cpp
+  ${PROJECT_DIR}/golf/server/ServerLobbyState.cpp
+  ${PROJECT_DIR}/golf/server/SnookerDirector.cpp)

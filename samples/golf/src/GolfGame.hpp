@@ -33,6 +33,7 @@ source distribution.
 #include "golf/SharedStateData.hpp"
 
 #include <crogine/core/App.hpp>
+#include <crogine/core/ConsoleClient.hpp>
 #include <crogine/core/StateStack.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
@@ -41,7 +42,7 @@ source distribution.
 
 #include <memory>
 
-class GolfGame final : public cro::App, public cro::GuiClient
+class GolfGame final : public cro::App, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
     GolfGame();
@@ -87,5 +88,6 @@ private:
 
     void loadPreferences();
     void savePreferences();
+    void loadAvatars();
     void recreatePostProcess();
 };

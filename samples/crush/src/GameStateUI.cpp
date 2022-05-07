@@ -59,7 +59,7 @@ void GameState::createUI()
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>(); //the game scene camera callback will also update this
+    entity.addComponent<cro::Camera>().setOrthographic(-1.f, 1.f, -1.f, 1.f, 0.1f, 1.f); //the game scene camera callback will also update this
     m_uiScene.setActiveCamera(entity);
 }
 

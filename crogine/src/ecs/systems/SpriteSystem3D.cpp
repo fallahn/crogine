@@ -192,22 +192,33 @@ void SpriteSystem3D::onEntityAdded(Entity entity)
 {
     CRO_ASSERT(entity.getComponent<Model>().getMeshData().vbo == 0, "Model data already exists!");
 
+    //TODO take a hash of the sprite and recycle mesh data if it already exists
     //init the Model component with the mesh and corresponding material.
     auto meshData = m_meshBuilder->build();
 
     //we want to make sure we copy this so it has
     //its own parameters
-    Material::Data material;
 
+    Material::Data material = entity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Final, 0);
     const auto& sprite = entity.getComponent<Sprite>();
-    if (sprite.getTexture())
+    bool attribsOK = //true; //TODO assert this
+
+    (material.attribs[Mesh::Position][1] == 2 &&
+    material.attribs[Mesh::Colour][1] == 4 &&
+    material.attribs[Mesh::UV0][1] == 2);
+
+    if (material.shader == 0 //no custom shader added to model
+        || !attribsOK) //or the vert attribs are wrong size for our data
     {
-        material = m_texturedMaterial;
-        material.setProperty("u_texture", *sprite.getTexture());
-    }
-    else
-    {
-        material = m_colouredMaterial;
+        if (sprite.getTexture())
+        {
+            material = m_texturedMaterial;
+            material.setProperty("u_texture", *sprite.getTexture());
+        }
+        else
+        {
+            material = m_colouredMaterial;
+        }
     }
 
     if (sprite.m_overrideBlendMode)

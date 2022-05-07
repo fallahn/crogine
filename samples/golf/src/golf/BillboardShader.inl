@@ -78,7 +78,7 @@ static const std::string BillboardVertexShader = R"(
         const float maxHeight = 12.0;
 
         //only animate above 3 metres
-        float height = max(0.0, position.y - minHeight);
+        float height = max(0.0, a_position.y - minHeight);
 
         float strength = u_windData.y;
         float totalScale = scale * (height / maxHeight) * strength;

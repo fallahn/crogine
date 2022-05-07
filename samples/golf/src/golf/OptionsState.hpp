@@ -90,9 +90,8 @@ private:
     std::int32_t m_bindingIndex;
     void updateKeybind(SDL_Keycode);
 
-    std::array<std::function<void()>, 2u> m_tabFunctions = {};
+    std::array<std::function<void()>, 4u> m_tabFunctions = {};
     std::size_t m_currentTabFunction;
-    std::size_t m_previousMenuID;
 
     struct ScrollID final
     {
@@ -105,11 +104,16 @@ private:
     };
     std::array<std::function<void(cro::Entity, cro::ButtonEvent)>, ScrollID::Count> m_scrollFunctions = {};
 
+    cro::RenderTexture m_achievementBuffer;
+    cro::RenderTexture m_statsBuffer;
+
     struct ToolTipID final
     {
         enum
         {
             Volume, FOV, Pixel,
+            VertSnap, MouseSpeed,
+            Video, Controls,
             Achievements, Stats,
             Count
         };
@@ -118,13 +122,12 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
-    cro::Entity m_achievementsNode;
     void buildScene();
 
     void buildAVMenu(cro::Entity, const cro::SpriteSheet&);
     void buildControlMenu(cro::Entity, const cro::SpriteSheet&);
     void buildAchievementsMenu(cro::Entity, const cro::SpriteSheet&);
-    cro::Entity buildStatsMenu(const cro::SpriteSheet&);
+    void buildStatsMenu(cro::Entity, const cro::SpriteSheet&);
 
     void createButtons(cro::Entity, std::int32_t, std::uint32_t, std::uint32_t, const cro::SpriteSheet&);
 

@@ -30,11 +30,13 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/core/String.hpp>
 
 struct Notification final
 {
-    std::string message;
+    cro::String message;
     std::size_t charPosition = 0;
+    float speed = 1.f;
 
     enum
     {
@@ -49,6 +51,8 @@ public:
     explicit NotificationSystem(cro::MessageBus&);
 
     void process(float) override;
+
+    void clearCurrent();
 
 private:
 

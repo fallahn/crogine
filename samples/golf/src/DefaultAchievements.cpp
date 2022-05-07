@@ -33,6 +33,7 @@ source distribution.
 #include "golf/MessageIDs.hpp"
 
 #include <crogine/core/App.hpp>
+#include <crogine/core/SysTime.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/util/Random.hpp>
 
@@ -45,6 +46,7 @@ namespace
     const cro::Time UpdateTime = cro::seconds(5.f);
 
     static constexpr glm::vec2 IconSize(242.f, 92.f);
+    static constexpr float ImageSize = 64.f;
 }
 
 DefaultAchievements::DefaultAchievements(cro::MessageBus& mb)
@@ -65,7 +67,7 @@ void DefaultAchievements::init()
 
     for (auto i = 1; i < AchievementID::Count; ++i)
     {
-        m_achievements.insert(std::make_pair(AchievementStrings[i], AchievementData(AchievementLabels[i], i, readBit(i))));
+        m_achievements.insert(std::make_pair(AchievementStrings[i], AchievementData(AchievementLabels[i], i, readBit(i), m_timeStamps[i])));
     }
 
     for (auto i = 0; i < StatID::Count; ++i)
@@ -128,6 +130,8 @@ void DefaultAchievements::awardAchievement(const std::string& name)
         m_icons.emplace_back(std::make_unique<AchievementIcon>(m_achievements[name], *this));
         m_achievements[name].achieved = true;
 
+        m_timeStamps[m_achievements[name].id] = cro::SysTime::epoch();
+
         writeBit(m_achievements[name].id);
         writeFile();
 
@@ -143,6 +147,29 @@ const AchievementData* DefaultAchievements::getAchievement(const std::string& na
         return &m_achievements.at(name);
     }
     return nullptr;
+}
+
+AchievementImage DefaultAchievements::getIcon(const std::string& name) const
+{
+    if (m_achievements.count(name) != 0)
+    {
+        std::int32_t xCount = static_cast<std::int32_t>(m_texture.getSize().x / ImageSize);
+        if (xCount != 0)
+        {
+            std::int32_t idx = m_achievements.at(name).achieved ? std::max(0, m_achievements.at(name).id) : 0;
+            auto x = idx % xCount;
+            auto y = idx / xCount;
+
+            float widthNorm = ImageSize / (xCount * ImageSize);
+
+            AchievementImage icon;
+            icon.texture = &m_texture;
+            icon.textureRect = { x * widthNorm, y * widthNorm, widthNorm, widthNorm };
+
+            return icon;
+        }
+    }
+    return {};
 }
 
 void DefaultAchievements::setStat(const std::string& name, std::int32_t value)
@@ -265,9 +292,12 @@ void DefaultAchievements::readFile()
 {
     std::fill(m_bitArray.begin(), m_bitArray.end(), 0);
     std::fill(m_statArray.begin(), m_statArray.end(), 0.f);
+    std::fill(m_timeStamps.begin(), m_timeStamps.end(), 0);
 
     std::size_t bitsize = sizeof(std::uint32_t) * m_bitArray.size();
     std::size_t statsize = sizeof(std::int32_t) * m_statArray.size();
+    std::size_t timesize = sizeof(std::uint64_t) * m_timeStamps.size();
+
     const std::string filePath = cro::App::getInstance().getPreferencePath() + FileName;
 
     if (cro::FileSystem::fileExists(filePath))
@@ -276,7 +306,7 @@ void DefaultAchievements::readFile()
         stat(filePath.c_str(), &st);
 
         FILE* inFile = fopen(filePath.c_str(), "rb");
-        if (inFile && st.st_size == (bitsize + statsize))
+        if (inFile && st.st_size >= (bitsize + statsize)) //needs to be >= for backwards compat
         {
             auto read = fread(m_bitArray.data(), bitsize, 1, inFile);
             if (read != 1)
@@ -289,6 +319,8 @@ void DefaultAchievements::readFile()
             {
                 LogW << "Failed reading stats" << std::endl;
             }
+
+            read = fread(m_timeStamps.data(), timesize, 1, inFile);
 
             fclose(inFile);
         }
@@ -303,6 +335,7 @@ void DefaultAchievements::writeFile()
 {
     std::size_t bitsize = sizeof(std::uint32_t) * m_bitArray.size();
     std::size_t statsize = sizeof(std::int32_t) * m_statArray.size();
+    std::size_t timesize = sizeof(std::uint64_t) * m_timeStamps.size();
     const std::string filePath = cro::App::getInstance().getPreferencePath() + FileName;
 
     FILE* outFile = fopen(filePath.c_str(), "wb");
@@ -310,6 +343,7 @@ void DefaultAchievements::writeFile()
     {
         fwrite(m_bitArray.data(), bitsize, 1, outFile);
         fwrite(m_statArray.data(), statsize, 1, outFile);
+        fwrite(m_timeStamps.data(), timesize, 1, outFile);
         fclose(outFile);
     }
     else
@@ -386,9 +420,8 @@ DefaultAchievements::AchievementIcon::AchievementIcon(const AchievementData& dat
 
     m_sprite.setPosition({ 12.f, 16.f });
     m_sprite.setTexture(da.m_texture);
-    m_sprite.setTextureRect({ x * 64.f, y * 64.f, 64.f, 64.f });
+    m_sprite.setTextureRect({ x * ImageSize, y * ImageSize, ImageSize, ImageSize });
 
-    glm::vec2 windowSize = cro::App::getWindow().getSize();
     setPosition({ 0.f, -IconSize.y });
 }
 

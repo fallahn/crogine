@@ -105,6 +105,12 @@ namespace cro
         const FloatRect& getTextureRect() const { return m_textureRect; }
 
         /*!
+        \brief Returns the normlised texture rect based on the current
+        texture, or and empty rectangle if not texture exists
+        */
+        FloatRect getTextureRectNormalised() const;
+
+        /*!
         \brief Returns the current colour of the sprite
         */
         Colour getColour() const;

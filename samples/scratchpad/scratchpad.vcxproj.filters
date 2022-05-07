@@ -43,6 +43,12 @@
     <Filter Include="Source Files\billiards">
       <UniqueIdentifier>{d965ca6c-b462-403b-a56e-e9a26c2818dc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\vats">
+      <UniqueIdentifier>{4604a6a8-c1e7-4b05-9846-410b22e4078f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vats">
+      <UniqueIdentifier>{d9fb1f13-e861-4d76-bbdd-c9a975c9392c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -113,6 +119,15 @@
     </ClCompile>
     <ClCompile Include="src\billiards\BilliardsSystem.cpp">
       <Filter>Source Files\billiards</Filter>
+    </ClCompile>
+    <ClCompile Include="src\billiards\InterpolationSystem.cpp">
+      <Filter>Source Files\billiards</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vats\VatsState.cpp">
+      <Filter>Source Files\vats</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vats\VatFile.cpp">
+      <Filter>Source Files\vats</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -208,6 +223,18 @@
     </ClInclude>
     <ClInclude Include="src\billiards\BilliardsSystem.hpp">
       <Filter>Header Files\billiards</Filter>
+    </ClInclude>
+    <ClInclude Include="src\billiards\InterpolationSystem.hpp">
+      <Filter>Header Files\billiards</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CircularBuffer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vats\VatsState.hpp">
+      <Filter>Header Files\vats</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vats\VatFile.hpp">
+      <Filter>Header Files\vats</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

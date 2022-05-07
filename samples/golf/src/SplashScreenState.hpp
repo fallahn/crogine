@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -38,6 +38,8 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/VideoPlayer.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 
 namespace cro
 {
@@ -72,6 +74,8 @@ private:
     cro::Texture m_texture;
     cro::Shader m_noiseShader;
     cro::Shader m_scanlineShader;
+
+    cro::VideoPlayer m_video;
 
     void addSystems();
     void loadAssets();

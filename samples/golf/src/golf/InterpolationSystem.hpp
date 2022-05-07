@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -31,122 +31,207 @@ source distribution.
 
 #include "CircularBuffer.hpp"
 
-#include <crogine/core/Clock.hpp>
-#include <crogine/ecs/System.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
-namespace cro
-{
-    class Transform;
-}
+#include <crogine/core/Clock.hpp>
+#include <crogine/ecs/System.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 
-/*!
-\brief Contains information required for a inperpolation to occur
-*/
+
 struct InterpolationPoint final
 {
-    InterpolationPoint(glm::vec3 pos = glm::vec3(0.f), glm::quat rot = glm::quat(1.f,0.f,0.f,0.f), std::int32_t ts = 0)
-        : position(pos), rotation(rot), timestamp(ts){}
+	InterpolationPoint() = default;
+	InterpolationPoint(glm::vec3 p, glm::vec3 v, glm::quat r, std::int32_t ts)
+		: position(p), velocity(v), rotation(r), timestamp(ts) {}
 
-    glm::vec3 position = glm::vec3(0.f);
-    glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
-    std::int32_t timestamp = 0;
+	glm::vec3 position = glm::vec3(0.f);
+	glm::vec3 velocity = glm::vec3(0.f);
+	glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
+	std::int32_t timestamp = 0;
 };
 
-/*!
-\brief Interpolates position and rotation received from a server.
-When receiving infrequent (say 100ms or so) position updates from
-a remote server entities can have their position interpolated via
-this component. The component, when coupled with an InterpolationSystem
-will travel towards the given target position using the given timestamp
-to linearly interpolate movement. This component is not limited to
-networked entities, and can be used anywhere linear interpolation of
-movement is desired, for example path finding.
+enum class InterpolationType
+{
+	Linear, Hermite
+};
 
-Requires:
-    CircularBuffer.hpp
-    InterpolationSystem.hpp
-    InterpolationSystem.cpp
-    InterpolationComponent.cpp
-*/
+template <InterpolationType interpolationType>
 class InterpolationComponent final
 {
 public:
-    /*!
-    \brief Constructor
-    Interpolation components should be passed an interpolation
-    point containing the initial transform and server time of the
-    actor to prevent large lags between the default timestamp (0)
-    and the first server update
-    */
-    explicit InterpolationComponent(InterpolationPoint = {});
+	explicit InterpolationComponent(InterpolationPoint ip = {})
+	{
+		m_buffer.push_back(ip);
+		m_wantsBuffer = m_buffer.size() < m_bufferSize;
+	}
+	
+	std::int32_t getElapsedTime() const
+	{
+		return m_overflow + m_timer.elapsed().asMilliseconds();
+	}
 
-    /*!
-    \brief Sets the target interpolation point.
-    The timestamp is used in conjunction with the previous timestamp
-    to decide how quickly motion should be integrated between positions.
-    The timestamp would usually be in server time, and arrive in the packet
-    data with the destination postion, in milliseconds.
-    */
-    void setTarget(const InterpolationPoint&);
+	void addPoint(InterpolationPoint ip)
+	{
+		CRO_ASSERT(m_bufferSize > 1, "");
+		if (auto diff = ip.timestamp - m_buffer.back().timestamp; diff > 0)
+		{
+			//makes sure timer doesn't start until finished buffering
+			if (m_wantsBuffer)
+			{
+				m_timer.restart();
+				m_overflow = 0;
+			}
 
-    /*!
-    \brief Sets whether or not this component is enabled
-    */
-    void setEnabled(bool);
+			//shrink any large time gap
+			if (diff > MaxTimeGap)
+			{
+				m_buffer.back().timestamp = ip.timestamp - 10;
+			}
 
-    /*!
-    \brief Returns whether or not this component is enabled
-    */
-    bool getEnabled() const;
+			m_buffer.push_back(ip);
 
-    /*!
-    \brief Overrides the current position with the given position
-    */
-    void resetPosition(glm::vec3);
 
-    /*!
-    \brief Overrides the rotation with the given rotation
-    */
-    void resetRotation(glm::quat);
+			//this shouldn't happen, but as precaution...
+			if (m_buffer.size() == m_buffer.capacity())
+			{
+				m_buffer.pop_front();
+			}
 
-    void setID(std::uint32_t id) { m_id = id; }
-    std::uint32_t getID() const { return m_id; }
+			m_wantsBuffer = m_buffer.size() < m_bufferSize;
+		}
+	}
+
+	//returns interpolated velocity if using Hermite type
+	glm::vec3 getVelocity() const
+	{
+		return m_interpVelocity;
+	}
+
+	std::uint32_t id = std::numeric_limits<std::uint32_t>::max();
 
 private:
-    bool m_enabled;
-    InterpolationPoint m_targetPoint;
-    InterpolationPoint m_previousPoint;
+	cro::Clock m_timer;
+	std::int32_t m_overflow = 0;
 
-    cro::Clock m_elapsedTimer;
-    std::int32_t m_timeDifference;
+	CircularBuffer<InterpolationPoint, 8u> m_buffer;
 
-    CircularBuffer<InterpolationPoint, 4u> m_buffer;
-    bool m_started;
+	std::size_t m_bufferSize = 3;
+	bool m_wantsBuffer = true;
 
-    std::uint32_t m_id;
+	glm::vec3 m_interpVelocity = glm::vec3(0.f);
 
-    friend class InterpolationSystem;
+	static constexpr std::int32_t MaxTimeGap = 250;
 
-    /*
-    Searches for the next available target by discarding interpolations points
-    from the buffer until one with a later timestamp is found.
-    */
-    void applyNextTarget(glm::vec3 currentPos, glm::quat currentRot, std::int32_t timestamp);
+	template <InterpolationType>
+	friend class InterpolationSystem;
 };
 
-/*!
-\brief Uses the InterpolationComponent to linearly
-interpolate a transform component between two points.
-\see InterpolationComponent
-*/
-class InterpolationSystem : public cro::System
+template <InterpolationType Interpolation = InterpolationType::Linear>
+class InterpolationSystem final : public cro::System
 {
 public:
-    explicit InterpolationSystem(cro::MessageBus&);
+	explicit InterpolationSystem(cro::MessageBus& mb)
+		: cro::System(mb, typeid(InterpolationSystem<Interpolation>))
+	{
+		requireComponent<cro::Transform>();
+		requireComponent<InterpolationComponent<Interpolation>>();
+	}
 
-    void process(float) override;
+	void process(float) override
+	{
+		for (auto entity : getEntities())
+		{
+			auto& interp = entity.template getComponent<InterpolationComponent<Interpolation>>();
+
+			if (interp.m_buffer.size() > 1)
+			{
+				//if the buffer is full enough...
+				if (!interp.m_wantsBuffer)
+				{
+					std::int32_t difference = interp.m_buffer[1].timestamp - interp.m_buffer[0].timestamp;
+					CRO_ASSERT(difference > 0, "");
+
+					std::int32_t elapsed = interp.getElapsedTime();
+					while (elapsed > difference)
+					{
+						interp.m_overflow = elapsed - difference;
+						interp.m_timer.restart();
+						interp.m_buffer.pop_front();
+
+						entity.template getComponent<cro::Transform>().setPosition(interp.m_buffer[0].position);
+						entity.template getComponent<cro::Transform>().setRotation(interp.m_buffer[0].rotation);
+
+						elapsed = interp.m_overflow;
+
+						if (interp.m_buffer.size() == 1)
+						{
+							//don't do anything until we buffered more input
+							interp.m_wantsBuffer = true;
+							break;
+						}
+						else
+						{
+							difference = interp.m_buffer[1].timestamp - interp.m_buffer[0].timestamp;
+						}
+					}
+
+					if (!interp.m_wantsBuffer)
+					{
+						float t = static_cast<float>(elapsed) / difference;
+
+						//apply interpolated transform to entity
+
+						if constexpr (Interpolation == InterpolationType::Hermite)
+						{
+							//hermite - https://stackoverflow.com/questions/55302066/implement-hermite-interpolation-multiplayer-game
+
+							float t2 = t * t;
+							float t3 = t2 * t;
+
+							auto startPos = interp.m_buffer[0].position;
+							auto startVel = interp.m_buffer[0].velocity;
+							auto endPos = interp.m_buffer[1].position;
+							auto endVel = interp.m_buffer[1].velocity;
+							float duration = static_cast<float>(difference) / 1000.f;
+
+							glm::vec3 position =
+								(2.f * t3 - 3.f * t2 + 1.f) * startPos +
+								(t3 - 2.f * t2 + t)         * duration * startVel +
+								(-2.f * t3 + 3.f * t2)      * endPos +
+								(t3 - t2)                   * duration * endVel;
+
+							entity.template getComponent<cro::Transform>().setPosition(position);
+
+							interp.m_interpVelocity = 1.f / duration * (
+								(6.f * t2 - 6.f * t)       * startPos +
+								(3.f * t2 - 4.f * t + 1.f) * duration * startVel +
+								(-6.f * t2 + 6.f * t)      * endPos +
+								(3.f * t2 - 2.f * t)       * duration * endVel);
+						}
+						else
+						{
+							//linear
+							auto diff = interp.m_buffer[1].position - interp.m_buffer[0].position;
+							auto position = interp.m_buffer[0].position + (diff * t);
+
+							auto lastPos = entity.template getComponent<cro::Transform>().getPosition();
+							entity.template getComponent<cro::Transform>().setPosition(position);
+
+							interp.m_interpVelocity = (position - lastPos) * 60.f; //fixed step... sould be 1/dt?
+						}
+
+						auto rotation = glm::slerp(interp.m_buffer[0].rotation, interp.m_buffer[1].rotation, t);
+						entity.template getComponent<cro::Transform>().setRotation(rotation);
+					}
+				}
+			}
+			else
+			{
+				interp.m_wantsBuffer = true;
+			}
+		}
+	}
 
 private:
 

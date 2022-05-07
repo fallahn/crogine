@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -44,6 +44,8 @@ namespace MessageID
         CollisionMessage,
         SystemMessage,
         AchievementMessage,
+        BilliardsMessage,
+        BilliardsCameraMessage,
 
         Count
     };
@@ -63,7 +65,9 @@ struct GolfEvent final
         BallLanded,
         Scored,
         NiceShot,
-        DriveComplete
+        DriveComplete,
+        HoleInOne,
+        HoleDrawn
     }type = HitBall;
 
     glm::vec3 position = glm::vec3(0.f);
@@ -112,4 +116,29 @@ struct SystemEvent final
 struct AchievementEvent final
 {
     std::uint8_t id = 0;
+};
+
+struct BilliardBallEvent final
+{
+    enum
+    {
+        ShotTaken,
+        BallPlaced,
+        Collision,
+        TurnStarted,
+        PocketStart,
+        PocketEnd
+    }type = ShotTaken;
+    std::int32_t data = -1; //collision ID
+    float volume = 1.f;
+    glm::vec3 position = glm::vec3(0.f);
+};
+
+struct BilliardsCameraEvent final
+{
+    enum
+    {
+        NewTarget
+    }type = NewTarget;
+    cro::Entity target;
 };

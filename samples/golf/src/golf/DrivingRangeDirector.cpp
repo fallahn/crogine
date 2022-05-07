@@ -42,7 +42,8 @@ source distribution.
 DrivingRangeDirector::DrivingRangeDirector(std::vector<HoleData>& hd)
     : m_holeData	(hd),
     m_holeCount		(18),
-    m_totalHoleCount(18)
+    m_totalHoleCount(18),
+    m_holeIndex     (-1)
 {
 
 }
@@ -63,10 +64,10 @@ void DrivingRangeDirector::handleMessage(const cro::Message& msg)
         }
     }
         break;
-    case sv::MessageID::BallMessage:
+    case sv::MessageID::GolfMessage:
     {
-        const auto& data = msg.getData<BallEvent>();
-        if (data.type == BallEvent::TurnEnded)
+        const auto& data = msg.getData<GolfBallEvent>();
+        if (data.type == GolfBallEvent::TurnEnded)
         {
             auto hole = getCurrentHole();
             auto idx = m_totalHoleCount - m_holeCount;
@@ -96,17 +97,21 @@ void DrivingRangeDirector::process(float)
 
 }
 
-void DrivingRangeDirector::setHoleCount(std::int32_t count)
+void DrivingRangeDirector::setHoleCount(std::int32_t count, std::int32_t holeIndex)
 {
     m_totalHoleCount = m_holeCount = std::min(count, MaxHoles);
-    std::shuffle(m_holeData.begin(), m_holeData.end(), cro::Util::Random::rndEngine);
 
+    m_holeIndex = std::min(holeIndex, static_cast<std::int32_t>(m_holeData.size()) - 1);
+
+    //check for random holes, or if we want to play the same over
+    if (holeIndex == -1)
+    {
+        std::shuffle(m_holeData.begin(), m_holeData.end(), cro::Util::Random::rndEngine);
+    }
     std::fill(m_scores.begin(), m_scores.end(), 0.f);
-
-    
 }
 
 std::int32_t DrivingRangeDirector::getCurrentHole() const
 {
-    return m_holeCount % m_holeData.size();
+    return m_holeIndex == -1 ? (m_holeCount % m_holeData.size()) : m_holeIndex;
 }

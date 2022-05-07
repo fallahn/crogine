@@ -261,22 +261,29 @@ void BilliardsSystem::applyImpulse()
 //private
 btRigidBody::btRigidBodyConstructionInfo BilliardsSystem::createBodyDef(std::int32_t collisionID, float mass, btCollisionShape* shape, btMotionState* motionState)
 {
-    btRigidBody::btRigidBodyConstructionInfo info(mass, motionState, shape);
+    btVector3 inertia(0.f, 0.f, 0.f);
+    if (mass > 0)
+    {
+        shape->calculateLocalInertia(mass, inertia);
+    }
+    
+    btRigidBody::btRigidBodyConstructionInfo info(mass, motionState, shape, inertia);
 
     switch (collisionID)
     {
     default: break;
     case CollisionID::Table:
-        
+        info.m_friction = 0.3f;
         break;
     case CollisionID::Cushion:
         info.m_restitution = 0.5f;
+        info.m_friction = 0.3f;
         break;
     case CollisionID::Ball:
         info.m_restitution = 0.5f;
-        info.m_rollingFriction = 0.1f;
-        info.m_spinningFriction = 0.1f;
-        info.m_friction = 0.01f;
+        info.m_rollingFriction = 0.0035f;
+        info.m_spinningFriction = 0.0005f;
+        info.m_friction = 0.3f;
         info.m_linearSleepingThreshold = 0.001f; //if this is 0 then we never sleep...
         info.m_angularSleepingThreshold = 0.001f;
         break;

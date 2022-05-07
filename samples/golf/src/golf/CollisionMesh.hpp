@@ -29,6 +29,12 @@ source distribution.
 
 #pragma once
 
+/*
+NOTE since the introduction of Billiards the collision mesh
+classes have become somewhat ambiguous in naming... this class
+deals specifically with golf terrain collision.
+*/
+
 #include "DebugDraw.hpp"
 #include "GameConsts.hpp"
 #include "Terrain.hpp"

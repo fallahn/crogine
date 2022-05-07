@@ -48,3 +48,9 @@ Scene& Director::getScene()
     CRO_ASSERT(m_scene, "Missing scene - are you using this correctly?");
     return *m_scene;
 }
+
+const Scene& Director::getScene() const
+{
+    CRO_ASSERT(m_scene, "Missing scene - are you using this correctly?");
+    return *m_scene;
+}

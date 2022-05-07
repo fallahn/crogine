@@ -9,6 +9,9 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/audio/stb_vorbis.c
   ${PROJECT_DIR}/audio/VorbisLoader.cpp
   ${PROJECT_DIR}/audio/WavLoader.cpp
+
+  ${PROJECT_DIR}/audio/sound_system/SoundSource.cpp
+  ${PROJECT_DIR}/audio/sound_system/SoundStream.cpp
   
   ${PROJECT_DIR}/core/App.cpp
   ${PROJECT_DIR}/core/Clock.cpp
@@ -91,6 +94,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/BoundingBox.cpp
   ${PROJECT_DIR}/graphics/CircleMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/Colour.cpp
+  ${PROJECT_DIR}/graphics/CubemapTexture.cpp
   ${PROJECT_DIR}/graphics/DepthTexture.cpp
   ${PROJECT_DIR}/graphics/DynamicMeshBuilder.cpp
   ${PROJECT_DIR}/graphics/EnvironmentMap.cpp
@@ -124,6 +128,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/TextureResource.cpp
   ${PROJECT_DIR}/graphics/Transformable2D.cpp
   ${PROJECT_DIR}/graphics/UniformBuffer.cpp
+  ${PROJECT_DIR}/graphics/VideoPlayer.cpp
   
   ${PROJECT_DIR}/graphics/postprocess/PostChromeAB.cpp
   ${PROJECT_DIR}/graphics/postprocess/PostProcess.cpp

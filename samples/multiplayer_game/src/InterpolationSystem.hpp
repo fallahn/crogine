@@ -36,10 +36,6 @@ source distribution.
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
-namespace cro
-{
-    class Transform;
-}
 
 /*!
 \brief Contains information required for a inperpolation to occur
@@ -121,9 +117,9 @@ private:
 
     cro::Clock m_elapsedTimer;
     std::int32_t m_timeDifference;
+    std::int32_t m_currentTime;
 
-    CircularBuffer<InterpolationPoint, 4u> m_buffer;
-    bool m_started;
+    CircularBuffer<InterpolationPoint, 8u> m_buffer;
 
     std::uint32_t m_id;
 
@@ -133,7 +129,7 @@ private:
     Searches for the next available target by discarding interpolations points
     from the buffer until one with a later timestamp is found.
     */
-    void applyNextTarget(glm::vec3 currentPos, glm::quat currentRot, std::int32_t timestamp);
+    void applyNextTarget();
 };
 
 /*!

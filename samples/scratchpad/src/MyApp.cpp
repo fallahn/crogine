@@ -34,6 +34,7 @@ source distribution.
 #include "bsp/BspState.hpp"
 #include "collision/CollisionState.hpp"
 #include "voxels/VoxelState.hpp"
+#include "vats/VatsState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -95,9 +96,10 @@ bool MyApp::initialise()
     m_stateStack.registerState<BspState>(States::ScratchPad::BSP);
     m_stateStack.registerState<CollisionState>(States::ScratchPad::MeshCollision);
     m_stateStack.registerState<VoxelState>(States::ScratchPad::Voxels);
+    m_stateStack.registerState<VatsState>(States::ScratchPad::VATs);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::Billiards);
+    m_stateStack.pushState(States::ScratchPad::VATs);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);

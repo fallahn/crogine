@@ -123,6 +123,9 @@
     <ClCompile Include="src\SpriteStateUI.cpp">
       <Filter>Source Files\sprite editor</Filter>
     </ClCompile>
+    <ClCompile Include="src\Palettiser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -205,6 +208,9 @@
     </ClInclude>
     <ClInclude Include="src\SpriteState.hpp">
       <Filter>Header Files\sprite editor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Palettiser.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -701,7 +701,6 @@ void GolfState::buildUI()
 
         auto vpSize = calcVPSize();
         m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
-        auto texSize = glm::vec2(m_gameSceneTexture.getSize());
 
         glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);
 
@@ -773,35 +772,6 @@ void GolfState::buildUI()
     cam.resizeCallback = updateView;
     updateView(cam);
     m_uiScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 5.f });
-
-    //camera for rendering player reflection
-    //wow all this effort I went to now unused... >.<
-    //imma just leave it here as a tribute.
-
-    //auto reflectionResize = [&](cro::Camera& cam)
-    //{
-    //    auto s = glm::vec2(m_gameSceneTexture.getSize());
-    //    auto s2 = glm::vec2(GolfGame::getActiveTarget()->getSize());
-    //    auto diff = (s - s2) / 2.f;
-    //    auto diffScaled = ((s - (s2 / m_viewScale)) / 2.f) * m_viewScale.y;
-
-    //    cam.setOrthographic(-diff.x, s.x - diff.x, -diffScaled.y, s.y - diffScaled.y, -2.f, 10.f);
-
-    //    float vpW = 1.f / m_viewScale.x;
-    //    float vpH = 1.f / m_viewScale.y;
-    //    cam.viewport = { (1.f - vpW) / 2.f, 0.f, vpW, vpH };
-    //};
-    ////we'll manually set the drawlist for this cam to prevent unnecessary
-    ////sorting at run-time.
-    //entity = m_uiScene.createEntity();
-    //entity.addComponent<cro::Transform>();
-    //auto& uiCam = entity.addComponent<cro::Camera>();
-    //uiCam.resizeCallback = reflectionResize;
-    //uiCam.renderFlags = RenderFlags::Reflection;
-    //uiCam.active = false;
-    //uiCam.getDrawList(cro::Camera::Pass::Final)[m_uiScene.getSystem<cro::RenderSystem2D>()->getType()] = std::make_any<std::vector<cro::Entity>>(reflectionList);
-    //reflectionResize(uiCam);
-    //m_uiReflectionCam = entity;
 }
 
 void GolfState::showCountdown(std::uint8_t seconds)
@@ -829,6 +799,20 @@ void GolfState::showCountdown(std::uint8_t seconds)
         {
             //remember this is auto-disabled if the player is not the only one on the client
             Achievements::awardAchievement(AchievementStrings[AchievementID::LeaderOfThePack]);
+
+            switch (m_sharedData.scoreType)
+            {
+            default:
+            case ScoreType::Stroke:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::StrokeOfGenius]);
+                break;
+            case ScoreType::Match:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::NoMatch]);
+                break;
+            case ScoreType::Skins:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
+                break;
+            }
         }
     }
     Achievements::incrementStat(StatStrings[StatID::TotalRounds]);
@@ -1111,19 +1095,52 @@ void GolfState::updateScoreboard()
             {
                 auto& entry = scores.emplace_back();
                 entry.name = client.playerData[i].name;
+
                 for (auto j = 0u; j < client.playerData[i].holeScores.size(); ++j)
                 {
                     entry.holes.push_back(client.playerData[i].holeScores[j]);
                     if (j < 9)
                     {
-                        entry.frontNine += client.playerData[i].holeScores[j];
+                        if (m_sharedData.scoreType == ScoreType::Stroke)
+                        {
+                            entry.frontNine += client.playerData[i].holeScores[j];
+                        }
+                        else if (m_sharedData.scoreType == ScoreType::Match)
+                        {
+                            entry.frontNine = client.playerData[i].matchScore;
+                        }
+                        else
+                        {
+                            entry.frontNine = client.playerData[i].skinScore;
+                        }
                     }
                     else
                     {
-                        entry.backNine += client.playerData[i].holeScores[j];
+                        if (m_sharedData.scoreType == ScoreType::Stroke)
+                        {
+                            entry.backNine += client.playerData[i].holeScores[j];
+                        }
+                        else if (m_sharedData.scoreType == ScoreType::Match)
+                        {
+                            entry.backNine = client.playerData[i].matchScore;
+                        }
+                        else
+                        {
+                            entry.backNine = client.playerData[i].skinScore;
+                        }
                     }
                 }
-                entry.total = entry.frontNine + entry.backNine;
+                switch (m_sharedData.scoreType)
+                {
+                default:
+                case ScoreType::Stroke:
+                    entry.total = entry.frontNine + entry.backNine;
+                    break;
+                case ScoreType::Skins:
+                case ScoreType::Match:
+                    entry.total = entry.frontNine;
+                    break;
+                }
 
                 //for stat/achievment tracking
                 auto& leaderboardEntry = m_statBoardScores.emplace_back();
@@ -1134,33 +1151,31 @@ void GolfState::updateScoreboard()
             clientID++;
         }
 
+        //tracks stats and decides on trophy layout on round end (see showCountdown())
         std::sort(m_statBoardScores.begin(), m_statBoardScores.end(),
-            [](const StatBoardEntry& a, const StatBoardEntry& b)
+            [&](const StatBoardEntry& a, const StatBoardEntry& b)
             {
-                return a.score < b.score;
+                if (m_sharedData.scoreType == ScoreType::Stroke)
+                {
+                    return a.score < b.score;
+                }
+                return a.score > b.score;
             });
-
-
-        //auto playerCount = 16u;
-        //auto holeCount = 18u;
-
-        ////dummy data for layout testing
-        //for (auto i = 0u; i < playerCount; ++i)
-        //{
-        //    auto& entry = scores.emplace_back();
-        //    entry.name = "Player " + std::to_string(i);
-        //    for (auto j = 0u; j < holeCount; ++j)
-        //    {
-        //        entry.holes.push_back(j);
-        //    }
-        //}
 
 
         auto& ents = e.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
         std::sort(scores.begin(), scores.end(),
-            [](const ScoreEntry& a, const ScoreEntry& b)
+            [&](const ScoreEntry& a, const ScoreEntry& b)
             {
-                return a.total < b.total;
+                switch (m_sharedData.scoreType)
+                {
+                default:
+                case ScoreType::Stroke:
+                    return a.total < b.total;
+                case ScoreType::Skins:
+                case ScoreType::Match:
+                    return a.total > b.total;
+                }
             });
 
 
@@ -1241,6 +1256,19 @@ void GolfState::updateScoreboard()
         for (auto i = 0u; i < playerCount; ++i)
         {
             totalString += "\n" + std::to_string(scores[i].frontNine);
+
+            switch (m_sharedData.scoreType)
+            {
+            default:
+            case ScoreType::Stroke:
+                break;
+            case ScoreType::Match:
+                totalString += " (POINTS)";
+                break;
+            case ScoreType::Skins:
+                totalString += " (SKINS)";
+                break;
+            }
         }
 
         //pad out for page 2
@@ -1276,7 +1304,21 @@ void GolfState::updateScoreboard()
             for (auto i = 0u; i < playerCount; ++i)
             {
                 separator = getSeparator(scores[i].backNine);
-                totalString += "\n" + std::to_string(scores[i].backNine) + separator + std::to_string(scores[i].total);
+                totalString += "\n" + std::to_string(scores[i].backNine);
+                
+                switch (m_sharedData.scoreType)
+                {
+                default:
+                case ScoreType::Stroke:
+                    totalString += separator + std::to_string(scores[i].total);
+                    break;
+                case ScoreType::Match:
+                    totalString += " (POINTS)";
+                    break;
+                case ScoreType::Skins:
+                    totalString += " (SKINS)";
+                    break;
+                }
             }
         }
 
@@ -1422,6 +1464,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
 
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
     auto textEnt = m_uiScene.createEntity();
     textEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 56.f, 0.02f });
     textEnt.addComponent<cro::Drawable2D>();
@@ -1433,6 +1476,12 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     textEnt2.addComponent<cro::Drawable2D>();
     textEnt2.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     textEnt2.getComponent<cro::Text>().setFillColour(TextNormalColour);
+
+    auto textEnt3 = m_uiScene.createEntity();
+    textEnt3.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 41.f, 0.02f });
+    textEnt3.addComponent<cro::Drawable2D>();
+    textEnt3.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    textEnt3.getComponent<cro::Text>().setFillColour(TextNormalColour);
 
     //add mini graphic depending on message type
     auto imgEnt = m_uiScene.createEntity();
@@ -1491,6 +1540,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     case MessageBoardID::PlayerName:
         textEnt.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name);
         textEnt2.getComponent<cro::Text>().setString("Stroke: " + std::to_string(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] + 1));
+        textEnt3.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
         break;
     case MessageBoardID::Scrub:
     case MessageBoardID::Water:
@@ -1504,9 +1554,11 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
 
     centreText(textEnt);
     centreText(textEnt2);
+    centreText(textEnt3);
     
     entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(textEnt2.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(textEnt3.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(imgEnt.getComponent<cro::Transform>());
 
     //callback for anim/self destruction
@@ -1521,7 +1573,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<MessageAnim>();
     entity.getComponent<cro::Callback>().function =
-        [&, textEnt, textEnt2, imgEnt, messageType](cro::Entity e, float dt)
+        [&, textEnt, textEnt2, textEnt3, imgEnt, messageType](cro::Entity e, float dt)
     {
         static constexpr float HoldTime = 2.f;
         auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
@@ -1563,6 +1615,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
                 e.getComponent<cro::Callback>().active = false;
                 m_uiScene.destroyEntity(textEnt);
                 m_uiScene.destroyEntity(textEnt2);
+                m_uiScene.destroyEntity(textEnt3);
                 m_uiScene.destroyEntity(imgEnt);
                 m_uiScene.destroyEntity(e);
 
@@ -1703,10 +1756,10 @@ void GolfState::notifyAchievement(const std::array<std::uint8_t, 2u>& data)
     }
 }
 
-void GolfState::showNotification(const std::string& msg)
+void GolfState::showNotification(const cro::String& msg)
 {
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, UIBarHeight * m_viewScale.y * 2.f });
+    entity.addComponent<cro::Transform>().setPosition({ 8.f, UIBarHeight * m_viewScale.y * 2.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI));
     entity.getComponent<cro::Text>().setCharacterSize(8u * static_cast<std::uint32_t>(m_viewScale.y));
@@ -1749,9 +1802,9 @@ void GolfState::buildTrophyScene()
 
     const std::array<std::pair<std::string, glm::vec3>, 3u> Paths =
     {
-        std::make_pair("assets/golf/models/trophy01.cmt", glm::vec3(0.f, -0.3f, -1.f)),
-        std::make_pair("assets/golf/models/trophy02.cmt", glm::vec3(-0.5f, -0.35f, -1.f)),
-        std::make_pair("assets/golf/models/trophy03.cmt", glm::vec3(0.5f, -0.4f, -1.f))        
+        std::make_pair("assets/golf/models/trophies/trophy01.cmt", glm::vec3(0.f, -0.3f, -1.f)),
+        std::make_pair("assets/golf/models/trophies/trophy02.cmt", glm::vec3(-0.5f, -0.35f, -1.f)),
+        std::make_pair("assets/golf/models/trophies/trophy03.cmt", glm::vec3(0.5f, -0.4f, -1.f))        
     };
 
     cro::EmitterSettings emitterSettings;
@@ -1776,9 +1829,14 @@ void GolfState::buildTrophyScene()
             entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
             md.createModel(entity);
 
-            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]); //doesn't pixel fade like Cel does.
+            //TODO there's no gaurantee that the materials are in this order...
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
             applyMaterialData(md, material);
             entity.getComponent<cro::Model>().setMaterial(0, material);
+
+            material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]); //doesn't pixel fade like Cel does.
+            applyMaterialData(md, material);
+            entity.getComponent<cro::Model>().setMaterial(1, material);
 
             entity.addComponent<TrophyDisplay>().delay = static_cast<float>(i) / 2.f;
             entity.addComponent<cro::ParticleEmitter>().settings = emitterSettings;

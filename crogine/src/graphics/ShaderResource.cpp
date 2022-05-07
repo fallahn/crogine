@@ -243,7 +243,7 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
     return -1;
 }
 
-cro::Shader& ShaderResource::get(std::int32_t ID)
+Shader& ShaderResource::get(std::int32_t ID)
 {
     if (m_shaders.count(ID) == 0)
     {
@@ -251,4 +251,9 @@ cro::Shader& ShaderResource::get(std::int32_t ID)
         return m_defaultShader;
     }
     return m_shaders.at(ID);// .second;
+}
+
+bool ShaderResource::hasShader(std::int32_t shaderID) const
+{
+    return m_shaders.count(shaderID) != 0;
 }

@@ -1,0 +1,21 @@
+model shelf
+{
+    mesh = assets/golf/models/trophies/shelf.cmb
+    cast_shadows = true
+
+    material VertexLit
+    {
+        mask_colour = 0.203922,0.000000,0.000000,1.000000
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        vertex_coloured = true
+        rx_shadows = true
+        blendmode = none
+        diffuse = "assets/golf/images/billiards/shelf.png"
+
+    }
+}

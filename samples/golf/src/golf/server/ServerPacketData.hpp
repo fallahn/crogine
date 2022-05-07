@@ -59,13 +59,15 @@ struct PlayerStatus final : public ActivePlayer
     float distanceToHole = 0.f; //used for sorting
     std::vector<std::uint8_t> holeScore;
     std::uint8_t totalScore = 0;
-
+    std::uint8_t skins = 0;
+    std::uint8_t matchWins = 0;
     bool readyQuit = false; //used at round end to see if all players want to skip scores
 };
 
 struct ActorInfo final
 {
     std::array<std::int16_t, 4u> rotation = {};
+    //std::array<std::int16_t, 3u> velocity = {};
     std::uint32_t serverID = 0;
     glm::vec3 position = glm::vec3(0.f);
     std::int32_t timestamp = 0;
@@ -86,11 +88,45 @@ struct ScoreUpdate final
     std::uint8_t player = 0;
     std::uint8_t stroke = 0;
     std::uint8_t hole = 0;
-    std::uint8_t score = 0;
+    std::uint8_t score = 0; //running stroke player score
+    std::uint8_t matchScore = 0;
+    std::uint8_t skinsScore = 0;
+    std::uint8_t padding = 0;
 };
 
 struct BallUpdate final
 {
     glm::vec3 position = glm::vec3(0.f);
     std::uint8_t terrain = 0;
+};
+
+struct BilliardsUpdate final
+{
+    std::array<std::int16_t, 3u> position = {};
+    std::array<std::int16_t, 3u> velocity = {};
+    std::array<std::int16_t, 4u> rotation = {};
+    std::uint32_t serverID = 0;
+    std::int32_t timestamp = 0;
+};
+
+struct BilliardBallInput final
+{
+    glm::vec3 impulse = glm::vec3(0.f);
+    glm::vec3 offset = glm::vec3(0.f);
+    std::uint8_t client = 0;
+    std::uint8_t player = 0;
+};
+
+struct BilliardsPlayer final
+{
+    std::uint8_t client = 0;
+    std::uint8_t player = 0;
+    std::int32_t score = 0;
+    std::uint32_t targetID = 0;
+    bool readyQuit = false;
+};
+
+struct TableInfo final
+{
+    glm::vec3 cueballPosition = glm::vec3(0.f);
 };

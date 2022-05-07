@@ -167,7 +167,7 @@ App::App(std::uint32_t styleFlags)
     if (SDL_Init(INIT_FLAGS) < 0)
     {
         const std::string err(SDL_GetError());
-        Logger::log("Failed init: " + err, Logger::Type::Error);
+        Logger::log("Failed init: " + err, Logger::Type::Error, cro::Logger::Output::All);
     }
     else
     {
@@ -294,7 +294,8 @@ void App::run()
     }
     else
     {
-        Logger::log("Failed creating main window", Logger::Type::Error);
+        FileSystem::showMessageBox("Failed Creating Window", "See output.log for error details.");
+        Logger::log("Failed creating main window", Logger::Type::Error, Logger::Output::All);
         return;
     }
     

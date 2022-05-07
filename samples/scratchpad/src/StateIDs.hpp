@@ -41,6 +41,7 @@ namespace States
             BSP,
             MeshCollision,
             Voxels,
+            VATs,
 
             Count
         };

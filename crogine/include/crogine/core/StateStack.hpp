@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -138,6 +138,12 @@ namespace cro
         \brief Returns the number of states currently on the stack
         */
         std::size_t getStackSize() const;
+
+        /*!
+        \brief Returns the ID of the current top-most state
+        */
+        std::int32_t getTopmostState() const;
+
     private:
 
         struct PendingChange final

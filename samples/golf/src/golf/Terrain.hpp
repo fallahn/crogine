@@ -41,6 +41,7 @@ struct RenderFlags final
         MiniGreen = 0x2,
         Reflection = 0x4,
         Refraction = 0x8,
+        Cue = 0x10,
 
         All = std::numeric_limits<std::uint64_t>::max()
     };

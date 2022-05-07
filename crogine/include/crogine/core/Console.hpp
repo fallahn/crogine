@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/core/ConfigFile.hpp>
 
 #include <functional>
 #include <string>
@@ -86,9 +87,38 @@ namespace cro
 
         /*!
         \brief Attempts to retrieve the current value of the given console variable
+        \returns Default constructed of type if the variable doesn't exist
         */
-        //template <typename T>
-        //static T getConvarValue(const std::string& convar);
+        template <typename T>
+        static T getConvarValue(const std::string& convar)
+        {
+            //TODO we want static assertion that T is valid for config files
+            if (auto* obj = getConvars().findObjectWithName(convar); obj != nullptr)
+            {
+                CRO_ASSERT(obj->findProperty("value"), "");
+                return obj->findProperty("value")->getValue<T>();
+            }
+            LogE << convar << ": variable doesn't exist" << std::endl;
+            return T();
+        }
+
+        /*!
+        \brief Attempts to set a convar value.
+        If the variable does not exist an error is printed to the console.
+        Variables should first be created with addConvar()
+        \param convar Name of the console variable to set
+        \param value Must be of type T compatible with cro::ConfigFile
+        */
+        template <typename T>
+        static void setConvarValue(const std::string& convar, T value)
+        {
+            if (auto* obj = getConvars().findObjectWithName(convar); obj != nullptr)
+            {
+                CRO_ASSERT(obj->findProperty("value"), "");
+                return obj->findProperty("value")->setValue(value);
+            }
+            LogE << convar << ": variable doesn't exist" << std::endl;
+        }
 
         /*!
         \brief Prints the given stat and value to the Stats tab in the console window
@@ -111,17 +141,19 @@ namespace cro
 
         static std::vector<std::string> m_debugLines;
 
-        static void init();
-        static void finalise();
+        static void addCommand(const std::string& name, const Command& cmd, const ConsoleClient* owner);
+        static void removeCommands(const ConsoleClient*); //removes all commands belonging to the given client
 
         static void addConsoleTab(const std::string&, const std::function<void()>&, const GuiClient*);
         static void removeConsoleTab(const GuiClient*);
 
-        static void addCommand(const std::string& name, const Command& cmd, const ConsoleClient* owner);
-        static void removeCommands(const ConsoleClient*); //removes all commands belonging to the given client
-
         static void newFrame();
         static void draw();
+
+        static void init();
+        static void finalise();
+
+        static cro::ConfigObject& getConvars();
     };
 
 //#include "Console.inl"

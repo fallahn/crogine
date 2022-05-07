@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "../collision/DebugDraw.hpp"
 
+#include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -52,6 +53,8 @@ public:
     cro::StateID getStateID() const override { return States::ScratchPad::Billiards; }
 
 private:
+
+    cro::Clock m_interpClock;
 
     cro::Scene m_scene;
     cro::ResourceCollection m_resources;

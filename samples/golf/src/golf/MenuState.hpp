@@ -34,6 +34,7 @@ source distribution.
 #include "PlayerAvatar.hpp"
 #include "Billboard.hpp"
 #include "SharedStateData.hpp"
+#include "MenuCallbacks.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/Cursor.hpp>
@@ -55,12 +56,9 @@ namespace cro
 }
 
 class MenuState;
-struct MenuCallback final
+struct MainMenuContext final : public MenuContext
 {
-    MenuState& menuState;
-    explicit MenuCallback(MenuState& m) : menuState(m) {}
-
-    void operator()(cro::Entity, float);
+    explicit MainMenuContext(MenuState*);
 };
 
 class MenuState final : public cro::State, public cro::GuiClient
@@ -128,37 +126,17 @@ private:
     cro::Entity m_avatarMenu; //root of the avatar menu to which each player avatar is attached
     std::vector<cro::Entity> m_avatarListEntities;
     std::pair<std::uint32_t, std::uint32_t> m_avatarCallbacks;
-    std::tuple<std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t> m_courseSelectCallbacks;
+    struct HostOptionCallbacks final
+    {
+        std::uint32_t prevRules = 0;
+        std::uint32_t nextRules = 0;
+        std::uint32_t prevCourse = 0;
+        std::uint32_t nextCourse = 0;
+        std::uint32_t mouseEnter = 0;
+        std::uint32_t mouseExit = 0;
+    }m_courseSelectCallbacks;
     std::array<std::uint32_t, 4u> m_avatarEditCallbacks = {};
 
-    struct SpriteID final
-    {
-        enum
-        {
-            Controller,
-            Keyboard,
-            ThumbBackground,
-            ArrowLeft,
-            ArrowRight,
-            ArrowLeftHighlight,
-            ArrowRightHighlight,
-
-            ButtonBanner,
-            Cursor,
-            Flag,
-            PrevMenu,
-            NextMenu,
-            AddPlayer,
-            RemovePlayer,
-            ReadyUp,
-            StartGame,
-            Connect,
-            PrevCourse,
-            NextCourse,
-
-            Count
-        };
-    };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
     std::size_t m_currentMenu; //used by view callback to reposition the root node on window resize
@@ -211,6 +189,12 @@ private:
     std::vector<CourseData> m_courseData;
     void parseCourseDirectory();
 
+    cro::Entity m_toolTip;
+    void createToolTip();
+    void showToolTip(const std::string&);
+    void hideToolTip();
+
+
     //----ball, avatar and hair funcs are in MenuCustomisation.cpp----//
     std::array<std::size_t, ConnectionData::MaxPlayers> m_ballIndices = {}; //index into the model list, not ballID
     cro::Entity m_ballCam;
@@ -254,22 +238,9 @@ private:
     void quitLobby();
     void addCourseSelectButtons();
 
-    void saveAvatars();
-    void loadAvatars();
+    //loading moved to GolfGame.cpp
 
     void handleNetEvent(const cro::NetEvent&);
 
-    friend struct MenuCallback;
-};
-
-//used in animation callback
-struct MenuData final
-{
-    enum
-    {
-        In, Out
-    }direction = In;
-    float currentTime = 0.f;
-
-    std::int32_t targetMenu = MenuState::MenuID::Main;
+    friend struct MainMenuContext;
 };

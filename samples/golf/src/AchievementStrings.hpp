@@ -60,6 +60,16 @@ namespace AchievementID
         GoldStar,
 
         CluedUp,
+        JoinTheClub,
+
+        StrokeOfGenius,
+        NoMatch,
+        SkinOfYourTeeth,
+
+        Socialiser,
+        Spots,
+        Stripes,
+        EasyPink,
 
         Count
     };
@@ -81,7 +91,15 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "bronze_star",
     "silver_star",
     "gold_star",
-    "clued_up"
+    "clued_up",
+    "join_the_club",
+    "stroke_of_genius",
+    "no_match",
+    "skin_teeth",
+    "socialiser",
+    "spots",
+    "stripes",
+    "easy_pink"
 };
 
 //appears on the notification
@@ -100,7 +118,15 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Bronze",
     "Silver",
     "Gold",
-    "Clued Up"
+    "Clued Up",
+    "Join The Club",
+    "Stroke of Genius",
+    "No Match for You",
+    "Skin of Your Teeth",
+    "Socialiser",
+    "Spots",
+    "Stripes",
+    "Easy Pink"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -119,7 +145,58 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Get a One Star rating on the driving range", false),
     std::make_pair("Get a Two Star rating on the driving range", false),
     std::make_pair("Get a Three Star rating on the driving range", false),
-    std::make_pair("Complete the Tutorial", false)
+    std::make_pair("Complete the Tutorial", false),
+    std::make_pair("Make it to the 19th Hole", false),
+    std::make_pair("Win a round of Stroke Play", false),
+    std::make_pair("Win a round of Match Play", false),
+    std::make_pair("Win a round of Skins", false),
+    std::make_pair("Enter the Clubhouse at least once", false),
+    std::make_pair("Win a game of Eightball", false),
+    std::make_pair("Win a game of Nineball", false),
+    std::make_pair("Win a game of Snooker", false)
+};
+
+//assuming tropies load correctly they are
+/*
+Gold, silver, bronze cup
+Gold, silver, bronze mannequin
+Pool
+*/
+
+struct TrophyID final
+{
+    enum
+    {
+        GoldCup, SilverCup, BronzeCup,
+        GoldFigure, SilverFigure, BronzeFigure,
+        Pool
+    };
+};
+
+static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophies =
+{
+    TrophyID::Pool,
+    TrophyID::GoldCup,
+    TrophyID::SilverFigure,
+    TrophyID::GoldFigure,
+    TrophyID::BronzeFigure,
+    TrophyID::GoldCup,
+    TrophyID::SilverFigure,
+    TrophyID::GoldFigure,
+    TrophyID::BronzeCup,
+    TrophyID::SilverCup,
+    TrophyID::BronzeFigure,
+    TrophyID::SilverFigure,
+    TrophyID::GoldFigure,
+    TrophyID::SilverCup,
+    TrophyID::GoldCup,
+    TrophyID::GoldFigure,
+    TrophyID::GoldFigure,
+    TrophyID::GoldFigure,
+    TrophyID::SilverCup,
+    TrophyID::Pool,
+    TrophyID::Pool,
+    TrophyID::Pool
 };
 
 namespace StatID
@@ -134,6 +211,10 @@ namespace StatID
         SilverAverage,
         BronzeAverage,
         TotalRounds,
+
+        EightballWon,
+        NineballWon,
+        SnookerWon,
 
         Count
     };
@@ -150,7 +231,11 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "gold_average",
     "silver_average",
     "bronze_average",
-    "total_rounds"
+    "total_rounds",
+
+    "eightball_won",
+    "nineball_won",
+    "snooker_won"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -161,7 +246,10 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Average Gold Wins (multiplayer)",
     "Average Silver Wins (multiplayer)",
     "Average Bronze Wins (multiplayer)",
-    "Total Rounds Played"
+    "Total Rounds Played",
+    "Eightball Games Won (multiplayer)",
+    "Nineball Games Won (multiplayer)",
+    "Snooker Games Won (multiplayer)"
 };
 
 struct StatType final
@@ -180,6 +268,9 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Percent,
     StatType::Percent,
     StatType::Percent,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
     StatType::Integer
 };
 

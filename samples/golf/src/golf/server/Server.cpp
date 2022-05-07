@@ -30,8 +30,9 @@ source distribution.
 #include "../PacketIDs.hpp"
 
 #include "Server.hpp"
-#include "ServerGameState.hpp"
+#include "ServerGolfState.hpp"
 #include "ServerLobbyState.hpp"
+#include "ServerBilliardsState.hpp"
 #include "ServerMessages.hpp"
 
 #include <crogine/core/Log.hpp>
@@ -41,7 +42,8 @@ source distribution.
 #include <functional>
 
 Server::Server()
-    : m_running(false)
+    : m_maxConnections  (ConstVal::MaxClients),
+    m_running           (false)
 {
 
 }
@@ -55,7 +57,7 @@ Server::~Server()
 }
 
 //public
-void Server::launch()
+void Server::launch(std::size_t maxConnections)
 {
     //stop any existing instance first
     stop();
@@ -65,6 +67,8 @@ void Server::launch()
     {
         m_sharedData.messageBus.poll();
     }
+
+    m_maxConnections = std::max(std::size_t(1u), std::min(ConstVal::MaxClients, maxConnections));
 
     m_running = true;
     m_thread = std::make_unique<std::thread>(&Server::run, this);
@@ -130,7 +134,7 @@ void Server::run()
                 if (m_currentState->stateID() == sv::StateID::Lobby)
                 {
                     m_pendingConnections.emplace_back().peer = evt.peer;
-                    m_sharedData.host.sendPacket(evt.peer, PacketID::ClientVersion, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.host.sendPacket(evt.peer, PacketID::ClientVersion, std::uint16_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
                 else
                 {
@@ -189,11 +193,14 @@ void Server::run()
             switch (nextState)
             {
             default: m_running = false; break;
-            case sv::StateID::Game:
-                m_currentState = std::make_unique<sv::GameState>(m_sharedData);
+            case sv::StateID::Golf:
+                m_currentState = std::make_unique<sv::GolfState>(m_sharedData);
                 break;
             case sv::StateID::Lobby:
                 m_currentState = std::make_unique<sv::LobbyState>(m_sharedData);
+                break;
+            case sv::StateID::Billiards:
+                m_currentState = std::make_unique<sv::BilliardsState>(m_sharedData);
                 break;
             }
 
@@ -248,7 +255,7 @@ void Server::validatePeer(cro::NetPeer& peer)
 
     if (result != m_pendingConnections.end())
     {
-        if (auto i = addClient(peer); i >= ConstVal::MaxClients)
+        if (auto i = addClient(peer); i >= /*ConstVal::MaxClients*/m_maxConnections)
         {
             //tell client server is full
             m_sharedData.host.sendPacket(peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerFull), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);

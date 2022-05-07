@@ -1,0 +1,18 @@
+model snooker_model
+{
+    mesh = assets/golf/models/hole_19/snooker_model.cmb
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+        diffuse = "assets/golf/images/billiards/pool_table_green.png"
+
+    }
+}

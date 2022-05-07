@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -124,6 +124,11 @@ namespace cro
         \brief Returns the shader with the given ID if it exists, else the default system shader.
         */
         Shader& get(std::int32_t ID);
+
+        /*!
+        \brief Returns true if a shader has already been assigned the given ID
+        */
+        bool hasShader(std::int32_t shaderID) const;
 
     private:
 

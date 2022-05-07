@@ -98,4 +98,14 @@ audioscape ambience
         mixer_channel = 0
         looped = false
     }
+
+    emitter church
+    {
+        path = "assets/golf/sound/ambience/church.ogg"
+        looped = false
+        streaming = true
+        volume = 1
+        attenuation = 0
+        mixer_channel = 1
+    }    
 }

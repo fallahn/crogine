@@ -109,6 +109,19 @@ std::string SysTime::dateString()
     return ss.str();
 }
 
+std::string SysTime::dateString(std::uint64_t epoch)
+{
+    std::time_t t = epoch;
+    auto tm = std::localtime(&t);
+
+    std::stringstream ss;
+    ss << std::setw(2) << std::setfill('0') << tm->tm_mday << "/"
+        << std::setw(2) << std::setfill('0') << tm->tm_mon + 1 << "/"
+        << tm->tm_year + 1900;
+
+    return ss.str();
+}
+
 std::string SysTime::timeString()
 {
     Data d;
@@ -116,6 +129,19 @@ std::string SysTime::timeString()
     ss << std::setw(2) << std::setfill('0') << d.hours() << ":"
         << std::setw(2) << std::setfill('0') << d.minutes() << ":"
         << std::setw(2) << std::setfill('0') << d.seconds();
+
+    return ss.str();
+}
+
+std::string SysTime::timeString(std::uint64_t epoch)
+{
+    std::time_t t = epoch;
+    auto tm = std::localtime(&t);
+
+    std::stringstream ss;
+    ss << std::setw(2) << std::setfill('0') << tm->tm_hour << ":"
+        << std::setw(2) << std::setfill('0') << tm->tm_min << ":"
+        << std::setw(2) << std::setfill('0') << tm->tm_sec;
 
     return ss.str();
 }

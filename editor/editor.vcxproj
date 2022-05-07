@@ -312,6 +312,7 @@
     <ClCompile Include="src\MyApp.cpp" />
     <ClCompile Include="src\NormalVisMeshBuilder.cpp" />
     <ClCompile Include="src\OriginIconBuilder.cpp" />
+    <ClCompile Include="src\Palettiser.cpp" />
     <ClCompile Include="src\ParticleState.cpp" />
     <ClCompile Include="src\ParticleStateUI.cpp" />
     <ClCompile Include="src\SpriteState.cpp" />
@@ -340,6 +341,7 @@
     <ClInclude Include="src\MyApp.hpp" />
     <ClInclude Include="src\NormalVisMeshBuilder.hpp" />
     <ClInclude Include="src\OriginIconBuilder.hpp" />
+    <ClInclude Include="src\Palettiser.hpp" />
     <ClInclude Include="src\ParticleState.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\SharedStateData.hpp" />

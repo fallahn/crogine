@@ -70,6 +70,13 @@ struct PocketInfo final
     float radius = 0.06f;
 };
 
+struct TableData final
+{
+    std::string collisionModel;
+    std::string viewModel;
+    std::vector<PocketInfo> pockets;
+};
+
 struct BilliardBall final : public btMotionState
 {
     void getWorldTransform(btTransform& worldTrans) const override;

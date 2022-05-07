@@ -53,9 +53,12 @@ struct PlayerData final
     std::uint32_t skinID = 0; //as loaded from the avatar data file
     bool flipped = false; //whether or not avatar flipped
 
+    //these aren't included in serialise/deserialise
     std::vector<std::uint8_t> holeScores;
     std::uint8_t score = 0;
-    glm::vec3 currentTarget = glm::vec3(0.f); //TODO we don't really want to include this here as it's not needed for sync
+    std::uint8_t matchScore = 0;
+    std::uint8_t skinScore = 0;
+    glm::vec3 currentTarget = glm::vec3(0.f);
 };
 
 struct ConnectionData final
@@ -130,6 +133,7 @@ struct SharedStateData final
     //for brevity this only contains a directory name
     //within which a file named data.course is sought
     cro::String mapDirectory = "course_01";
+    std::uint8_t scoreType = 0;
 
     //printed by the error state
     std::string errorMessage;
@@ -137,7 +141,9 @@ struct SharedStateData final
     bool hosting = false;
     bool tutorial = false;
     std::size_t tutorialIndex = 0; //set in tutorial mode to decide which part to display
-    std::size_t courseIndex = 0; //if hosting which course we last chose.
+    std::size_t courseIndex = 0; //if hosting which course/billiard table we last chose.
+    std::int32_t ballSkinIndex = 0; //billiards balls
+    std::int32_t tableSkinIndex = 0; //billiards table
 
     //client settings
     bool usePostProcess = false;
@@ -145,6 +151,10 @@ struct SharedStateData final
     InputBinding inputBinding;
     bool pixelScale = true;
     float fov = MinFOV;
+    bool vertexSnap = false;
+    float mouseSpeed = 1.f;
+    bool invertX = false;
+    bool invertY = false;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

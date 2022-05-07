@@ -1,0 +1,32 @@
+model trophy05
+{
+    mesh = assets/golf/models/trophies/trophy05.cmb
+    cast_shadows = true
+
+    material VertexLit
+    {
+        mask_colour = 1.000000,0.000000,0.000000,0.450980
+        name = "Untitled"
+        colour = 1.000000,0.999990,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        vertex_coloured = true
+        blendmode = none
+
+    }
+    material VertexLit
+    {
+        mask_colour = 1.000000,0.000000,0.000000,1.000000
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        vertex_coloured = true
+        blendmode = none
+
+    }
+}

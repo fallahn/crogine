@@ -1,0 +1,105 @@
+audioscape menu
+{
+    emitter music
+    {
+        path = "assets/golf/sound/billiards/menu.ogg"
+        streaming = true
+        volume = 0.5
+        mixer_channel = 0
+        looped = true
+    }
+
+    emitter cart
+    {
+        path = "assets/golf/sound/cart.wav"
+        streaming = false
+        mixer_channel = 1
+        looped = true
+        attenuation = 0.4
+        volume = 2.5
+        pitch = 0.8
+    }
+
+    emitter 01
+    {
+        path = "assets/golf/sound/billiards/ambience01.ogg"
+        streaming = true
+        volume = 0.4
+        mixer_channel = 1
+        attenuation = 0.1
+        looped = true
+    }
+
+    emitter 02
+    {
+        path = "assets/golf/sound/billiards/ambience02.ogg"
+        streaming = true
+        volume = 0.4
+        mixer_channel = 1
+        attenuation = 0.1
+        looped = true
+    }
+
+    emitter accept
+    {
+        path = "assets/golf/sound/menu/accept.wav"
+        streaming = false
+        volume = 1
+        mixer_channel = 2
+        looped = false
+    }
+
+    emitter back
+    {
+        path = "assets/golf/sound/menu/back.wav"
+        streaming = false
+        volume = 1
+        mixer_channel = 2
+        looped = false
+    }
+
+    emitter switch
+    {
+        path = "assets/golf/sound/menu/switch.wav"
+        streaming = false
+        volume = 1
+        mixer_channel = 2
+        looped = false
+    }
+
+    emitter star
+    {
+        path = "assets/golf/sound/menu/star.wav"
+        streaming = false
+        volume = 0.5
+        mixer_channel = 2
+        looped = false
+    }
+
+    emitter firework
+    {
+        path = "assets/golf/sound/menu/firework.wav"
+        streaming = false
+        volume = 0.5
+        mixer_channel = 2
+        looped = false
+    }
+
+    emitter rolling
+    {
+        path = "assets/golf/sound/billiards/rolling.wav"
+        streaming = false
+        volume = 0.5
+        mixer_channel = 2
+        looped = true
+    }
+
+    emitter applause
+    {
+        path = "assets/golf/sound/ball/applause.wav"
+        streaming = false
+        volume = 1
+        mixer_channel = 2
+        looped = false
+    }
+}

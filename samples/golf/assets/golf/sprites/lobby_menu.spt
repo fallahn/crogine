@@ -1,69 +1,91 @@
-spritesheet lobby
+spritesheet lobby_menu
 {
-    src="assets/golf/images/lobby_menu.png"
+    src = "assets/golf/images/lobby_menu.png"
+    smooth = false
+    repeat = false
 
     sprite background
     {
-        bounds = 0,56,246,156
-    }
+        bounds = 0.000000,56.000000,246.000000,156.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
+    }
     sprite course_desc
     {
-        bounds = 0,0,344,53
-    }
+        bounds = 0.000000,0.000000,344.000000,53.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
+    }
     sprite title
     {
-        bounds = 0,212,84,50
-    }
+        bounds = 254.000000,144.000000,84.000000,50.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
+    }
+    sprite ready_status
+    {
+        bounds = 323.000000,103.000000,10.000000,10.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite versus
+    {
+        bounds = 0.000000,218.000000,296.000000,218.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
     sprite arrow_left
     {
-        bounds = 256,110,24,8
+        bounds = 256.000000,110.000000,24.000000,8.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
         animation idle
         {
-            frame = 256,110,24,8
+            framerate = 30.000000
             loop = true
-            framerate = 30
-        }
+            loop_start = 0
+            frame = 256.000000,110.000000,24.000000,8.000000
 
+        }
         animation active
         {
-            frame = 256,110,24,8
-            frame = 256,102,24,8
-            frame = 256,94,24,8
-            frame = 256,86,24,8
-            frame = 256,78,24,8
-            frame = 256,70,24,8
-
+            framerate = 14.000000
             loop = true
-            framerate = 14
+            loop_start = 0
+            frame = 256.000000,110.000000,24.000000,8.000000
+            frame = 256.000000,102.000000,24.000000,8.000000
+            frame = 256.000000,94.000000,24.000000,8.000000
+            frame = 256.000000,86.000000,24.000000,8.000000
+            frame = 256.000000,78.000000,24.000000,8.000000
+            frame = 256.000000,70.000000,24.000000,8.000000
+
         }
     }
-
     sprite arrow_right
     {
-        bounds = 288,110,24,8
+        bounds = 288.000000,110.000000,24.000000,8.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
         animation idle
         {
-            frame = 288,110,24,8
+            framerate = 30.000000
             loop = true
-            framerate = 30
-        }
+            loop_start = 0
+            frame = 288.000000,110.000000,24.000000,8.000000
 
+        }
         animation active
         {
-            frame = 288,110,24,8
-            frame = 288,102,24,8
-            frame = 288,94,24,8
-            frame = 288,86,24,8
-            frame = 288,78,24,8
-            frame = 288,70,24,8
-
+            framerate = 14.000000
             loop = true
-            framerate = 14
+            loop_start = 0
+            frame = 288.000000,110.000000,24.000000,8.000000
+            frame = 288.000000,102.000000,24.000000,8.000000
+            frame = 288.000000,94.000000,24.000000,8.000000
+            frame = 288.000000,86.000000,24.000000,8.000000
+            frame = 288.000000,78.000000,24.000000,8.000000
+            frame = 288.000000,70.000000,24.000000,8.000000
+
         }
     }
 }

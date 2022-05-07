@@ -61,6 +61,12 @@
     <Filter Include="Source Files\golf\client\directors">
       <UniqueIdentifier>{ac49d76a-c9e3-46b1-8ee8-3b845a7951bc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf\server\directors">
+      <UniqueIdentifier>{9435f93f-32eb-4f29-b555-81dc58f0b4f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\server\directors">
+      <UniqueIdentifier>{f9b88068-78c7-43b5-ae2e-d550da45d78a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -75,7 +81,7 @@
     <ClCompile Include="src\golf\server\Server.cpp">
       <Filter>Source Files\golf\server</Filter>
     </ClCompile>
-    <ClCompile Include="src\golf\server\ServerGameState.cpp">
+    <ClCompile Include="src\golf\server\ServerGolfState.cpp">
       <Filter>Source Files\golf\server</Filter>
     </ClCompile>
     <ClCompile Include="src\golf\server\ServerLobbyState.cpp">
@@ -98,12 +104,6 @@
     </ClCompile>
     <ClCompile Include="src\golf\BallSystem.cpp">
       <Filter>Source Files\golf\server\systems</Filter>
-    </ClCompile>
-    <ClCompile Include="src\golf\InterpolationComponent.cpp">
-      <Filter>Source Files\golf\client\systems</Filter>
-    </ClCompile>
-    <ClCompile Include="src\golf\InterpolationSystem.cpp">
-      <Filter>Source Files\golf\client\systems</Filter>
     </ClCompile>
     <ClCompile Include="src\golf\InputParser.cpp">
       <Filter>Source Files\golf\client</Filter>
@@ -213,6 +213,54 @@
     <ClCompile Include="src\golf\CloudSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\ClubhouseState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ClubhouseStateUI.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\MenuCallbacks.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\server\ServerBilliardsState.cpp">
+      <Filter>Source Files\golf\server</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\BilliardsState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\BilliardsSystem.cpp">
+      <Filter>Source Files\golf\server\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\BilliardsStateUI.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\server\EightballDirector.cpp">
+      <Filter>Source Files\golf\server\directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\BilliardsInput.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\BilliardsClientCollision.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\BilliardsSoundDirector.cpp">
+      <Filter>Source Files\golf\client\directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\StudioCameraSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\TrophyState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\server\NineballDirector.cpp">
+      <Filter>Source Files\golf\server\directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\server\SnookerDirector.cpp">
+      <Filter>Source Files\golf\server\directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\PocketBallSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -230,7 +278,7 @@
     <ClInclude Include="src\golf\server\Server.hpp">
       <Filter>Header Files\golf\server</Filter>
     </ClInclude>
-    <ClInclude Include="src\golf\server\ServerGameState.hpp">
+    <ClInclude Include="src\golf\server\ServerGolfState.hpp">
       <Filter>Header Files\golf\server</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\server\ServerLobbyState.hpp">
@@ -419,6 +467,51 @@
     <ClInclude Include="src\golf\CloudSystem.hpp">
       <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\ClubhouseState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\MenuCallbacks.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\ServerBilliardsState.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BilliardsState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BilliardsSystem.hpp">
+      <Filter>Header Files\golf\server\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\BilliardsDirector.hpp">
+      <Filter>Header Files\golf\server\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\EightballDirector.hpp">
+      <Filter>Header Files\golf\server\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BilliardsInput.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BilliardsClientCollision.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BilliardsSoundDirector.hpp">
+      <Filter>Header Files\golf\client\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\StudioCameraSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\TrophyState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\NineballDirector.hpp">
+      <Filter>Header Files\golf\server\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\SnookerDirector.hpp">
+      <Filter>Header Files\golf\server\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PocketBallSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\WaterShader.inl">
@@ -446,6 +539,12 @@
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
     <None Include="src\golf\CloudShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\PaletteSwap.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\ShadowMapping.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
   </ItemGroup>

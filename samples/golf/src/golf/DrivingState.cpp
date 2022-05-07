@@ -161,12 +161,13 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_sharedData        (sd),
     m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
     m_gameScene         (context.appInstance.getMessageBus()),
-    m_uiScene           (context.appInstance.getMessageBus()),
+    m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_viewScale         (1.f),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_windBuffer        ("WindValues", sizeof(WindData)),
     m_mouseVisible      (true),
+    m_targetIndex       (0),
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
 {
@@ -319,10 +320,10 @@ void DrivingState::handleMessage(const cro::Message& msg)
         }
     }
     break;
-    case sv::MessageID::BallMessage:
+    case sv::MessageID::GolfMessage:
     {
-        const auto& data = msg.getData<BallEvent>();
-        if (data.type == BallEvent::TurnEnded)
+        const auto& data = msg.getData<GolfBallEvent>();
+        if (data.type == GolfBallEvent::TurnEnded)
         {
             //display a message with score
             showMessage(glm::length(PlayerPosition - data.position));
@@ -547,12 +548,18 @@ void DrivingState::loadAssets()
 {
     m_gameScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
 
+    std::string wobble;
+    if (m_sharedData.vertexSnap)
+    {
+        wobble = "#define WOBBLE\n";
+    }
+
     //models
-    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
-    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n");
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
 
     //scanline transition
@@ -720,7 +727,8 @@ void DrivingState::initAudio()
 
         //random incidental audio
         if (as.hasEmitter("incidental01")
-            && as.hasEmitter("incidental02"))
+            && as.hasEmitter("incidental02")
+            && as.hasEmitter("church"))
         {
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental01");
@@ -731,6 +739,11 @@ void DrivingState::initAudio()
             entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental02");
             entity.getComponent<cro::AudioEmitter>().setLooped(false);
             auto plane02 = entity;
+
+            entity = m_gameScene.createEntity();
+            entity.addComponent<cro::AudioEmitter>() = as.getEmitter("church");
+            entity.getComponent<cro::AudioEmitter>().setLooped(false);
+            auto church = entity;
 
             cro::ModelDefinition md(m_resources);
             cro::Entity planeEnt;
@@ -792,7 +805,7 @@ void DrivingState::initAudio()
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().setUserData<AudioData>();
             entity.getComponent<cro::Callback>().function =
-                [plane01, plane02, planeEnt](cro::Entity e, float dt) mutable
+                [plane01, plane02, church, planeEnt](cro::Entity e, float dt) mutable
             {
                 auto& [currTime, timeOut, activeEnt] = e.getComponent<cro::Callback>().getUserData<AudioData>();
 
@@ -806,7 +819,7 @@ void DrivingState::initAudio()
                         currTime = 0.f;
                         timeOut = static_cast<float>(cro::Util::Random::value(120, 240));
 
-                        auto id = cro::Util::Random::value(0, 2);
+                        auto id = cro::Util::Random::value(0, 3);
                         if (id == 0)
                         {
                             //fly the plane
@@ -817,9 +830,17 @@ void DrivingState::initAudio()
                                 activeEnt = planeEnt;
                             }
                         }
+                        else if (id == 1)
+                        {
+                            if (church.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                            {
+                                church.getComponent<cro::AudioEmitter>().play();
+                                activeEnt = church;
+                            }
+                        }
                         else
                         {
-                            auto ent = (id == 1) ? plane01 : plane02;
+                            auto ent = (id == 2) ? plane01 : plane02;
                             if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
                             {
                                 ent.getComponent<cro::AudioEmitter>().play();
@@ -1986,12 +2007,12 @@ void DrivingState::createFlag()
     {
         0.f, 2.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
         0.f, 0.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
-        0.f,  0.001f,  0.f,    0.f, 0.f, 0.f, 0.5f, //shadow
-        1.4f, 0.001f, 1.4f,    0.f, 0.f, 0.f, 0.01f,
+        //0.f,  0.001f,  0.f,    0.f, 0.f, 0.f, 0.5f, //shadow
+        //1.4f, 0.001f, 1.4f,    0.f, 0.f, 0.f, 0.01f,
     };
     std::vector<std::uint32_t> indices =
     {
-        0,1,2,3
+        0,1//,2,3
     };
     meshData->vertexCount = verts.size() / vertStride;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));

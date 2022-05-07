@@ -86,11 +86,11 @@ namespace cro
 
         /*!
         \brief Attempts to retrieve the value as the requested type.
-        Valid types are : std::string, std::int32_t, float, bool, glm::vec2,
+        Valid types are: std::string, std::int32_t, std::uint32_t, float, bool, glm::vec2,
         glm::vec3, glm::vec4, cro::FloatRect, cro::Colour
         */
         template <typename T>
-        T getValue() const;// = delete;
+        T getValue() const;
 
         //sets the property's value
         void setValue(const std::string& v);
@@ -234,5 +234,4 @@ namespace cro
     };
 
     using ConfigFile = cro::ConfigObject;
-    
 }

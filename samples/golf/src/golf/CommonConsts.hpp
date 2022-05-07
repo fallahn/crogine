@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 -2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -39,6 +39,9 @@ source distribution.
 
 namespace ConstVal
 {
+    static constexpr float MinMouseSpeed = 0.5f;
+    static constexpr float MaxMouseSpeed = 2.f;
+
     //max string vars for name/limiting packet size
     static constexpr std::size_t MaxStringChars = 24;
     static constexpr std::size_t MaxNameChars = 12;
@@ -51,6 +54,9 @@ namespace ConstVal
     static constexpr uint8_t NetChannelReliable = 1;
     static constexpr uint8_t NetChannelStrings = 2;
 
+    static constexpr std::uint16_t PositionCompressionRange = 4;
+    static constexpr std::uint16_t VelocityCompressionRange = 8;
+
     //rather than tag each player input with the same
     //value and sending over the network, assume this
     //is the delta between updates (as the engine is
@@ -60,4 +66,6 @@ namespace ConstVal
     //root dir for course files prepended to directory
     //received from the hosting client
     static const std::string MapPath("assets/golf/courses/");
+
+    static const std::uint8_t SummaryTimeout = 30;
 }

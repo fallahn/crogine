@@ -67,7 +67,8 @@ struct CommandID final
             MiniBall             = 0x4000,
             MessageBoard         = 0x8000,
             MiniGreen            = 0x10000,
-            DrivingBoard         = 0x20000
+            DrivingBoard         = 0x20000,
+            StrengthMeter        = 0x40000
         };
     };
 
@@ -88,7 +89,8 @@ struct CommandID final
             CourseDesc   = 0x400,
             CourseHoles  = 0x800,
             CourseSelect = 0x1000,
-            TitleText    = 0x2000
+            TitleText    = 0x2000,
+            ScoreType    = 0x4000
         };
     };
 };

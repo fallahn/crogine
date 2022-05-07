@@ -144,6 +144,14 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
     const auto& visibleEntities = std::any_cast<const MaterialList&>(pass.drawList.at(getType()));
     for (const auto& [entity, sortData] : visibleEntities)
     {
+        //may have been marked for deletion - OK to draw but will trigger assert
+#ifdef CRO_DEBUG_
+        if (!entity.isValid())
+        {
+            continue;
+        }
+#endif
+
         //foreach submesh / material:
         const auto& model = entity.getComponent<Model>();
 
@@ -504,7 +512,7 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
         default: break;
         case Material::Property::Texture:
             //TODO textures need to track which unit they're currently bound
-            //to so that they don't get bounds to multiple units
+            //to so that they don't get bound to multiple units
             glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
             glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));
             glCheck(glUniform1i(prop.second.first, currentTextureUnit++));

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -46,7 +46,7 @@ public:
     Server& operator = (const Server&) = delete;
     Server& operator = (Server&&) = delete;
 
-    void launch();
+    void launch(std::size_t);
     bool running() const { return m_running; }
     void stop();
 
@@ -57,6 +57,7 @@ public:
     const std::string& getPreferredIP() const { return m_preferredIP; }
 
 private:
+    std::size_t m_maxConnections;
     std::string m_preferredIP;
     std::atomic_bool m_running;
     std::unique_ptr<std::thread> m_thread;

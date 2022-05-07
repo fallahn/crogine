@@ -32,6 +32,7 @@ source distribution.
 #include "Terrain.hpp"
 #include "ClientCollisionSystem.hpp"
 #include "BallSystem.hpp"
+#include "InterpolationSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -130,6 +131,26 @@ void CameraFollowSystem::process(float dt)
             float diffMultiplier = std::min(1.f, std::max(0.f, glm::length2(diff) / MaxTargetDiff));
             diffMultiplier *= 4.f;
             follower.currentTarget += diff * (dt * (diffMultiplier + (4.f * follower.zoom.progress)));
+
+            float velocity = 0.f;
+            if (follower.target.hasComponent<Ball>())
+            {
+                //driving range
+                velocity = glm::length2(follower.target.getComponent<Ball>().velocity);
+            }
+            else
+            {
+                //net game
+                velocity = glm::length2(follower.target.getComponent<InterpolationComponent<InterpolationType::Linear>>().getVelocity());
+            }
+            float snapMultiplier = velocity / 1350.f;
+
+            //snap to target if close to reduce stutter
+            if (glm::length2(target - follower.currentTarget) < (0.005f * snapMultiplier))
+            {
+                follower.currentTarget = target;
+            }
+
 
             auto& tx = entity.getComponent<cro::Transform>();
             auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);

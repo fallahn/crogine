@@ -47,6 +47,6 @@ struct UIEvent final
     enum
     {
         Invalid = -1,
-        WrotePreferences //< sub-mode sych as model viewer wrote preferences, so global prefs should be saved too.
+        WrotePreferences //< sub-mode such as model viewer wrote preferences, so global prefs should be saved too.
     }type = Invalid;
 };

@@ -72,6 +72,8 @@ static const std::string WireframeFragment = R"(
 
     void main()
     {
-        FRAG_OUT = v_colour * u_colour;
+        vec4 colour = v_colour * u_colour;
+        colour.rgb += (1.0 - colour.a) * colour.rgb;
+        FRAG_OUT = colour;
     }
 )";

@@ -49,6 +49,7 @@ source distribution.
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
+#include <crogine/graphics/CubemapTexture.hpp>
 
 #include <array>
 #include <unordered_map>
@@ -94,7 +95,7 @@ public:
 
     void render() override;
 
-    cro::StateID getStateID() const override { return StateID::Game; }
+    cro::StateID getStateID() const override { return StateID::Golf; }
 
 private:
     cro::ResourceCollection m_resources;    
@@ -114,6 +115,7 @@ private:
 
     cro::RenderTexture m_gameSceneTexture;
     cro::RenderTexture m_trophySceneTexture;
+    cro::CubemapTexture m_reflectionMap;
 
     cro::UniformBuffer m_scaleBuffer;
     cro::UniformBuffer m_resolutionBuffer;
@@ -145,12 +147,14 @@ private:
             CelSkinned,
             CelTextured,
             CelTexturedSkinned,
+            ShadowMap,
             Leaderboard,
             Player,
             Hair,
             Course,
             Ball,
             Billboard,
+            Trophy,
 
             Count
         };
@@ -245,6 +249,7 @@ private:
         cro::Entity model;
         cro::Attachment* hands = nullptr;
         std::array<std::size_t, AnimationID::Count> animationIDs = {};
+        cro::Entity ballModel;
     };
     std::array<std::array<Avatar, ConnectionData::MaxPlayers>, ConstVal::MaxClients> m_avatars;
     Avatar* m_activeAvatar;
@@ -282,7 +287,7 @@ private:
     void floatingMessage(const std::string&);
     void createTransition();
     void notifyAchievement(const std::array<std::uint8_t, 2u>&);
-    void showNotification(const std::string&);
+    void showNotification(const cro::String&);
     void toggleQuitReady();
 
     void buildTrophyScene();

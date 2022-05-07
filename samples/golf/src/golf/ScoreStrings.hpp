@@ -36,6 +36,7 @@ struct ScoreID final
 {
     enum
     {
+        HIO,
         Albatross,
         Eagle,
         Birdie,
@@ -47,10 +48,10 @@ struct ScoreID final
         Count
     };
 
-    static constexpr std::int32_t ScoreOffset = 3;
+    static constexpr std::int32_t ScoreOffset = 4;
 };
 
 static const std::array<std::string, ScoreID::Count> ScoreStrings =
 {
-    "Albatross", "Eagle", "Birdie", "Par", "Bogey", "Double Bogey", "Triple Bogey"
+    "Hole In One", "Albatross", "Eagle", "Birdie", "Par", "Bogey", "Double Bogey", "Triple Bogey"
 };

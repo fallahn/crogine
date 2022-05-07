@@ -83,6 +83,7 @@ private:
     SpritePair* m_activeSprite;
 
     bool m_showPreferences;
+    bool m_showNewSprite;
 
     void initScene();
 
@@ -96,4 +97,5 @@ private:
     void drawInspector();
     void drawSpriteWindow();
     void drawPreferences();
+    void drawNewSprite();
 };

@@ -37,6 +37,8 @@ source distribution.
 
 namespace cro
 {
+    class ConfigObject;
+
     /*!
     \brief Message class
 
@@ -99,11 +101,11 @@ namespace cro
             {
                 EntityDestroyed
             }event = EntityDestroyed;
-            std::int32_t entityID = -1;
+            std::uint32_t entityID = std::numeric_limits<std::uint32_t>::max();
         };
 
         /*!
-        \brief Raised when ther is a State
+        \brief Raised when there is a State
         change in the StateStack
         */
         struct StateEvent final
@@ -127,13 +129,16 @@ namespace cro
             {
                 Opened,
                 Closed,
-                LinePrinted
+                LinePrinted,
+                ConvarSet
             }type = Opened;
             
             enum Level
             {
                 Info, Warning, Error
             }level = Info;
+
+            ConfigObject* convar = nullptr;
         };
 
         struct SkeletalAnimationEvent final
@@ -141,6 +146,8 @@ namespace cro
             std::int32_t userType = -1; //! < User assigned event ID
             glm::vec3 position = glm::vec3(0.f); //! < Local position of the joint which raised this event
             Entity entity; //! < Entity which raised the event
+
+            static constexpr std::int32_t Stopped = std::numeric_limits<std::int32_t>::max();
         };
 
         /*!

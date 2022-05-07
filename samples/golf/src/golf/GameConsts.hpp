@@ -33,6 +33,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "../GolfGame.hpp"
 
+#include <crogine/core/ConfigFile.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Image.hpp>
@@ -114,6 +115,7 @@ struct ShaderID final
         CelTextured,
         CelTexturedInstanced,
         CelTexturedSkinned,
+        ShadowMap,
         Cloud,
         Leaderboard,
         Player,
@@ -126,7 +128,8 @@ struct ShaderID final
         Wireframe,
         WireframeCulled,
         Weather,
-        Transition
+        Transition,
+        Trophy
     };
 };
 
@@ -207,6 +210,27 @@ static inline void togglePixelScale(SharedStateData& sharedData, bool on)
         msg->data1 = size.y;
         msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
     }
+}
+
+static inline void saveAvatars(const SharedStateData& sd)
+{
+    cro::ConfigFile cfg("avatars");
+    for (const auto& player : sd.localConnectionData.playerData)
+    {
+        auto* avatar = cfg.addObject("avatar");
+        avatar->addProperty("name", player.name.empty() ? "Player" : player.name.toAnsiString()); //hmmm shame we can't save the encoding here
+        avatar->addProperty("ball_id").setValue(player.ballID);
+        avatar->addProperty("hair_id").setValue(player.hairID);
+        avatar->addProperty("skin_id").setValue(player.skinID);
+        avatar->addProperty("flipped").setValue(player.flipped);
+        avatar->addProperty("flags0").setValue(player.avatarFlags[0]);
+        avatar->addProperty("flags1").setValue(player.avatarFlags[1]);
+        avatar->addProperty("flags2").setValue(player.avatarFlags[2]);
+        avatar->addProperty("flags3").setValue(player.avatarFlags[3]);
+    }
+
+    auto path = cro::App::getPreferencePath() + "avatars.cfg";
+    cfg.save(path);
 }
 
 //applies material data loaded in a model definition such as texture info to custom materials

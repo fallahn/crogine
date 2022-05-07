@@ -179,7 +179,6 @@ namespace cro
 
         /*!
         \brief Requests a new buffer from the given PCMData struct.
-        The data pointer may be null
         */
         static std::int32_t requestNewBuffer(const Detail::PCMData&);
 
@@ -190,7 +189,7 @@ namespace cro
         static void deleteBuffer(std::int32_t buffer);
 
         /*!
-        \brief Requests a new audio stram from a file on disk.
+        \brief Requests a new audio stream from a file on disk.
         \param path Path to file to stream.
         \returns ID of stream, or -1 if opening the file failed
         */

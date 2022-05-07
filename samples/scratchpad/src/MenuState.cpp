@@ -87,6 +87,66 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
         //create some entities
         createScene();
     });
+
+//#ifdef CRO_DEBUG_
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("MPG1 Playback"))
+            {
+                static std::string label("No file open");
+                ImGui::Text("%s", label.c_str());
+                ImGui::SameLine();
+                if (ImGui::Button("Open video"))
+                {
+                    auto path = cro::FileSystem::openFileDialogue("", "mpg");
+                    if (!path.empty())
+                    {
+                        if (!m_video.loadFromFile(path))
+                        {
+                            cro::FileSystem::showMessageBox("Error", "Could not open file");
+                            label = "No file open";
+                        }
+                        else
+                        {
+                            label = cro::FileSystem::getFileName(path);
+                        }
+                    }
+                }
+
+                ImGui::Image(m_video.getTexture(), { 352.f, 288.f }, { 0.f, 1.f }, { 1.f, 0.f });
+
+                if (ImGui::Button("Play"))
+                {
+                    m_video.play();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Pause"))
+                {
+                    m_video.pause();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Stop"))
+                {
+                    m_video.stop();
+                }
+                ImGui::SameLine();
+                auto looped = m_video.getLooped();
+                if (ImGui::Checkbox("Loop", &looped))
+                {
+                    m_video.setLooped(looped);
+                }
+
+                ImGui::Text("%3.3f / %3.3f", m_video.getPosition(), m_video.getDuration());
+
+                ImGui::SameLine();
+                if (ImGui::Button("Jump"))
+                {
+                    m_video.seek(100.f);
+                }
+            }
+            ImGui::End();
+        });
+//#endif
 }
 
 //public
@@ -110,6 +170,8 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
+    m_video.update(dt);
+
     m_scene.simulate(dt);
     return true;
 }
@@ -181,7 +243,7 @@ void MenuState::createScene()
         e.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
         e.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
         e.getComponent<cro::Text>().setOutlineThickness(1.f);
-        e.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+        e.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(e);
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
 
@@ -253,6 +315,19 @@ void MenuState::createScene()
                 }
             });
 
+
+    //VATSs button
+    textPos.y -= MenuSpacing;
+    entity = createButton("Vertex Animation Textures", textPos);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(States::ScratchPad::VATs);
+                }
+            });
 
     //quit button
     textPos.y -= MenuSpacing * 2.f;

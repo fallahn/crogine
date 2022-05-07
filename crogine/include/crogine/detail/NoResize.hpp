@@ -35,11 +35,14 @@ namespace cro::Detail
 {
     /*!
     \brief Declares pooled resources which inherit this not have their component
-    pools resized in cases where it will harmfully invalidate references.
+    pools resized in cases where it will harmfully invalidate references. For 
+    example a component which contains a transform that has pointers to it should
+    not be moved during reallocation of the component pool, else those references
+    will become invalidated.
 
     Classes inheriting this should be components in the ECS (else this base class
     will have no effect), and will have the maximum memory pool size of 1024
-    components allocated to them immediately.
+    components reserved for any potential pool resize events.
     */
     class CRO_EXPORT_API NonResizeable
     {

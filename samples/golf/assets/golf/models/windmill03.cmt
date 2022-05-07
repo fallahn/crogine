@@ -1,7 +1,7 @@
 model windmill03
 {
     mesh = assets/golf/models/windmill03.cmb
-    cast_shadows = false
+    cast_shadows = true
 
     material Unlit
     {
@@ -11,6 +11,7 @@ model windmill03
         repeat = true
         depth_test = true
         double_sided = true
+        rx_shadows = true
         blendmode = none
         diffuse = "assets/golf/images/windmill.png"
         alpha_clip = 0.998000

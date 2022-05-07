@@ -6,22 +6,24 @@ model cart
     material Unlit
     {
         name = "Untitled"
-        colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = false
+        colour = 0.000000,0.000000,0.000000,0.372549
+        smooth = true
         repeat = true
         depth_test = true
-        blendmode = none
-        diffuse = "assets/golf/images/cart.png"
+        double_sided = false
+        blendmode = alpha
 
     }
     material Unlit
     {
         name = "Untitled"
-        colour = 0.000000,0.000000,0.000000,0.372549
-        smooth = true
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
         repeat = true
         depth_test = true
-        blendmode = alpha
+        double_sided = false
+        blendmode = none
+        diffuse = "assets/golf/images/cart.png"
 
     }
 }

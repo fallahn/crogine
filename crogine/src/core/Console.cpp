@@ -28,7 +28,6 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/core/Console.hpp>
-#include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/Log.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/SysTime.hpp>
@@ -157,19 +156,29 @@ void Console::doCommand(const std::string& str)
     else
     {
         //check to see if we have a convar
-        auto* convar = convars.findObjectWithName(command);
-        if (convar)
+        if (auto* convar = convars.findObjectWithName(command); convar)
         {
             if (!params.empty())
             {
-                auto* value = convar->findProperty("value");
-                if (value) value->setValue(params);
-                //TODO trigger a callback so systems can act on new value
+                if (auto* value = convar->findProperty("value"); value)
+                {
+                    value->setValue(params);
+                    
+                    //raise a message pointing to convar so we can act on it if needed
+                    auto* msg = App::getInstance().getMessageBus().post<Message::ConsoleEvent>(Message::ConsoleMessage);
+                    msg->type = Message::ConsoleEvent::ConvarSet;
+                    msg->convar = convar;
+                    
+                    print(command + " set to " + params);
+                }
             }
             else
             {
-                auto* help = convar->findProperty("help");
-                if (help) print(help->getValue<std::string>());
+                
+                if (auto* help = convar->findProperty("help"); help)
+                {
+                    print(help->getValue<std::string>());
+                }
             }
         }
         else
@@ -539,6 +548,11 @@ void Console::init()
 void Console::finalise()
 {
     convars.save(App::getPreferencePath() + convarName);
+}
+
+ConfigFile& Console::getConvars()
+{
+    return convars;
 }
 
 int textEditCallback(ImGuiTextEditCallbackData* data)

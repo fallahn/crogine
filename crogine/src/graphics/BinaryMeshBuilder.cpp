@@ -266,7 +266,7 @@ Mesh::Data BinaryMeshBuilder::build() const
 
             //boundingbox / sphere
             meshData.boundingBox[0] = glm::vec3(std::numeric_limits<float>::max());
-            meshData.boundingBox[1] = glm::vec3(std::numeric_limits<float>::min());
+            meshData.boundingBox[1] = glm::vec3(std::numeric_limits<float>::lowest());
             for (std::size_t i = 0; i < vertData.size(); i += (meshData.vertexSize / sizeof(float)))
             {
                 //min point
@@ -371,7 +371,7 @@ Mesh::Data BinaryMeshBuilder::build() const
                 }
 
                 std::vector<glm::mat4> invBindMatrices(skelHeader.frameSize);
-                for (auto i = 0; i < inverseBindPose.size(); i += 16)
+                for (auto i = 0u; i < inverseBindPose.size(); i += 16)
                 {
                     std::memcpy(&invBindMatrices[i / 16][0][0], inverseBindPose.data() + i, sizeof(glm::mat4));
                 }

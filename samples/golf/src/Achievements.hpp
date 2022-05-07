@@ -29,7 +29,14 @@ source distribution.
 
 #pragma once
 
+#include <crogine/graphics/Rectangle.hpp>
+
 #include <string>
+
+namespace cro
+{
+    class Texture;
+}
 
 struct StatData final
 {
@@ -45,11 +52,18 @@ struct StatData final
 struct AchievementData final
 {
     AchievementData() {}
-    AchievementData(const std::string& str, std::int32_t idx = -1, bool b = false)
-        :name(str), achieved(b), id(idx) {}
+    AchievementData(const std::string& str, std::int32_t idx = -1, bool b = false, std::uint64_t ts = 0)
+        : name(str), achieved(b), id(idx), timestamp(ts) {}
     std::string name;
     bool achieved = false;
     std::int32_t id = -1;
+    std::uint64_t timestamp = 0;
+};
+
+struct AchievementImage final
+{
+    const cro::Texture* texture = nullptr;
+    cro::FloatRect textureRect;
 };
 
 //base class for different implementations
@@ -65,6 +79,7 @@ public:
     virtual void awardAchievement(const std::string&) = 0;
 
     virtual const AchievementData* getAchievement(const std::string&) const { return nullptr; }
+    virtual AchievementImage getIcon(const std::string&) const = 0;
 
     virtual void setStat(const std::string&, float) {}
     virtual void setStat(const std::string&, std::int32_t) {}
@@ -88,6 +103,8 @@ public:
     static void awardAchievement(const std::string&);
 
     static const AchievementData* getAchievement(const std::string&);
+
+    static AchievementImage getIcon(const std::string&);
 
     static void setStat(const std::string&, float);
 

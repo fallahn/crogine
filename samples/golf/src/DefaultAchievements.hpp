@@ -60,6 +60,7 @@ public:
     void registerAchievement(const std::string&) override;
     void awardAchievement(const std::string&) override;
     const AchievementData* getAchievement(const std::string&) const override;
+    AchievementImage getIcon(const std::string&) const override;
     void setStat(const std::string&, std::int32_t) override;
     float incrementStat(const std::string&, std::int32_t) override;
     float incrementStat(const std::string&, float) override;
@@ -85,6 +86,7 @@ private:
     //8 * 32 achievements = 256, should be plenty :)
     std::array<std::uint32_t, 8> m_bitArray = {};
     std::array<float, 64> m_statArray = {};
+    std::array<std::uint64_t, 256> m_timeStamps = {};
     void readFile();
     void writeFile();
     bool readBit(std::int32_t);

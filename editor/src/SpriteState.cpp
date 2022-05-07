@@ -45,12 +45,18 @@ source distribution.
 
 #include <crogine/gui/Gui.hpp>
 
+namespace
+{
+	bool dragEnabled = false;
+}
+
 SpriteState::SpriteState(cro::StateStack& stack, cro::State::Context ctx, SharedStateData& sd)
 	: cro::State		(stack, ctx),
 	m_sharedData		(sd),
 	m_scene				(ctx.appInstance.getMessageBus()),
 	m_activeSprite		(nullptr),
-	m_showPreferences	(false)
+	m_showPreferences	(false),
+	m_showNewSprite		(false)
 {
 	ctx.mainWindow.loadResources([this]()
 		{
@@ -80,6 +86,22 @@ bool SpriteState::handleEvent(const cro::Event& evt)
 			position.y = std::floor(position.y);
 			m_entities[EntityID::Root].getComponent<cro::Transform>().setPosition(position);
 		}
+		else if (dragEnabled && m_activeSprite)
+		{
+			auto position = m_entities[EntityID::Bounds].getComponent<cro::Transform>().getPosition();
+			glm::vec3 movement(static_cast<float>(evt.motion.xrel), -static_cast<float>(evt.motion.yrel), 0.f);
+			movement /= m_entities[EntityID::Root].getComponent<cro::Transform>().getScale();
+			position += movement;
+
+			position.x = std::floor(position.x);
+			position.y = std::floor(position.y);
+			m_entities[EntityID::Bounds].getComponent<cro::Transform>().setPosition(position);
+
+			auto bounds = m_entities[EntityID::Bounds].getComponent<cro::Drawable2D>().getLocalBounds();
+			bounds.left = position.x;
+			bounds.bottom = position.y;
+			m_activeSprite->second.setTextureRect(bounds);
+		}
 	}
 	else if (evt.type == SDL_MOUSEWHEEL)
 	{
@@ -97,6 +119,40 @@ bool SpriteState::handleEvent(const cro::Event& evt)
 		m_entities[EntityID::Root].getComponent<cro::Transform>().setScale(scale);
 		relPos *= scale;
 		m_entities[EntityID::Root].getComponent<cro::Transform>().setPosition(mousePos - relPos);
+	}
+	else if (evt.type == SDL_MOUSEBUTTONDOWN)
+	{
+		/*auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+		auto bounds = m_entities[EntityID::Bounds].getComponent<cro::Drawable2D>().getLocalBounds();
+		bounds = m_entities[EntityID::Bounds].getComponent<cro::Transform>().getWorldTransform() * bounds;
+		if (bounds.contains(mousePos))
+		{
+			dragEnabled = true;
+		}*/
+	}
+	else if (evt.type == SDL_MOUSEBUTTONUP)
+	{
+		if (evt.button.button == SDL_BUTTON_LEFT)
+		{
+			dragEnabled = false;
+
+			if (m_activeSprite)
+			{
+				auto bounds = m_activeSprite->second.getTextureRect();
+				glm::vec2 texSize(m_activeSprite->second.getTexture()->getSize());
+
+				auto pos = glm::vec2(bounds.left, bounds.bottom);
+				LogI << pos << std::endl;
+				pos.x = std::max(0.f, std::min(pos.x, texSize.x - bounds.width));
+				pos.y = std::max(0.f, std::min(pos.y, texSize.y - bounds.height));
+				m_entities[EntityID::Bounds].getComponent<cro::Transform>().setPosition(pos);
+				LogI << pos << std::endl;
+
+				bounds.left = pos.x;
+				bounds.bottom = pos.y;
+				m_activeSprite->second.setTextureRect(bounds);
+			}
+		}
 	}
 	else if (evt.type == SDL_QUIT)
 	{

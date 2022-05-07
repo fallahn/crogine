@@ -74,7 +74,7 @@ namespace cro
         \brief Returns the index of the animation with the given name
         on the given sprite if it exists, else returns 0
         */
-        std::size_t getAnimationIndex(const std::string& name, const std::string& sprite) const;
+        std::int32_t getAnimationIndex(const std::string& name, const std::string& sprite) const;
 
         /*!
         \brief Returns true if the given animation exists on the sprite with the give name
@@ -96,6 +96,19 @@ namespace cro
         \brief Returns a pointer to the texture used by this Sprite Sheet if it is loaded
         */
         const cro::Texture* getTexture() const { return m_texture; }
+
+        /*!
+        \brief Sets the new texture and texture path of the SpriteSheet overwriting the
+        existing one.
+        \param path Relative path to the texture to use
+        \param textureResource Reference to an active texture resource
+        */
+        void setTexture(const std::string& path, TextureResource& textureResource, const std::string& workingDirectory = "");
+
+        /*!
+        \brief Adds the sprite with the given name, or does nothing if it already exists
+        */
+        void addSprite(const std::string& spriteName);
 
     private:
         mutable std::unordered_map<std::string, Sprite> m_sprites;

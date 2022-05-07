@@ -55,10 +55,7 @@ LobbyState::LobbyState(SharedData& sd)
     }
 
     //this is lobby readiness
-    for (auto& b : m_readyState)
-    {
-        b = false;
-    }
+    std::fill(m_readyState.begin(), m_readyState.end(), false);
 }
 
 void LobbyState::handleMessage(const cro::Message& msg)
@@ -100,10 +97,22 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
             }
         }
             break;
+        case PacketID::ScoreType:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.scoreType = evt.packet.as<std::uint8_t>();
+                m_sharedData.host.broadcastPacket(PacketID::ScoreType, m_sharedData.scoreType, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
         case PacketID::RequestGameStart:
             if (evt.peer.getID() == m_sharedData.hostID)
             {
-                m_returnValue = StateID::Game;
+                auto state = evt.packet.as<std::uint8_t>();
+                if (state < StateID::Count)
+                {
+                    m_returnValue = state;
+                }
+                //TODO throw a server error if this is a weird value
             }
             break;
         }
@@ -188,5 +197,7 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
 
         auto mapDir = serialiseString(m_sharedData.mapDir);
         m_sharedData.host.broadcastPacket(PacketID::MapInfo, mapDir.data(), mapDir.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+        m_sharedData.host.broadcastPacket(PacketID::ScoreType, m_sharedData.scoreType, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 }

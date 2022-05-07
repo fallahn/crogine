@@ -412,8 +412,7 @@ namespace cro::Shaders::VertexLit
             }
         #endif
 
-            vec3 I = normalize(v_worldPosition - u_cameraWorldPosition);
-            vec3 R = reflect(I, normal);
+            vec3 R = reflect(-eyeDirection, normal);
             FRAG_OUT.rgb = mix(TEXTURE_CUBE(u_skybox, R).rgb, FRAG_OUT.rgb, mask.a);
 
 

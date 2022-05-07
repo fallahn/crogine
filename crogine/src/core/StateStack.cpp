@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -111,6 +111,15 @@ bool StateStack::empty() const
 std::size_t StateStack::getStackSize() const
 {
     return m_stack.size();
+}
+
+std::int32_t StateStack::getTopmostState() const
+{
+    if (!m_stack.empty())
+    {
+        return m_stack.back()->getStateID();
+    }
+    return -1;
 }
 
 //private

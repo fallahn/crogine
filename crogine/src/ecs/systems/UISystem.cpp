@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -290,7 +290,7 @@ void UISystem::process(float)
                 m_movementCallbacks[input.callbacks[UIInput::Enter]](e, m_movementDelta, m);
             }
 
-            //only fire thetse events if the selection actually changed.
+            //only fire these events if the selection actually changed.
             if (m_selectedIndex != currentIndex)
             {
                 unselect(m_selectedIndex);
@@ -446,10 +446,9 @@ glm::vec2 UISystem::toWorldCoords(float x, float y)
 void UISystem::selectNext(std::size_t stride)
 {
     //call unselected on prev ent
-    auto& entities = m_groups[m_activeGroup];
+    const auto& entities = m_groups[m_activeGroup];
     unselect(m_selectedIndex);
 
-    //get new index
     m_selectedIndex = (m_selectedIndex + stride) % entities.size();
 
     //and do selected callback
@@ -459,7 +458,7 @@ void UISystem::selectNext(std::size_t stride)
 void UISystem::selectPrev(std::size_t stride)
 {
     //call unselected on prev ent
-    auto& entities = m_groups[m_activeGroup];
+    const auto& entities = m_groups[m_activeGroup];
     unselect(m_selectedIndex);
 
     //get new index
@@ -472,8 +471,11 @@ void UISystem::selectPrev(std::size_t stride)
 void UISystem::unselect(std::size_t entIdx)
 {
     auto& entities = m_groups[m_activeGroup];
-    auto idx = entities[entIdx].getComponent<UIInput>().callbacks[UIInput::Unselected];
-    m_selectionCallbacks[idx](entities[entIdx]);
+    if (entIdx < entities.size())
+    {
+        auto idx = entities[entIdx].getComponent<UIInput>().callbacks[UIInput::Unselected];
+        m_selectionCallbacks[idx](entities[entIdx]);
+    }
 }
 
 void UISystem::select(std::size_t entIdx)
@@ -496,6 +498,12 @@ void UISystem::updateGroupAssignments()
             //only swap group if we changed - we may have only changed index order
             if (input.m_previousGroup != input.m_group)
             {
+                //if we're selected unselect first
+                if (m_selectedIndex >= m_groups[m_activeGroup].size())
+                {
+                    m_selectedIndex = 0;
+                }
+
                 //remove from old group first
                 m_groups[input.m_previousGroup].erase(std::remove_if(m_groups[input.m_previousGroup].begin(),
                     m_groups[input.m_previousGroup].end(),
@@ -537,6 +545,15 @@ void UISystem::onEntityAdded(Entity entity)
 {
     //add to group 0 by default, process() will move the entity if needed
     m_groups[0].push_back(entity);
+
+    //add a default sort order to items without a specific
+    //position if they're left in the main group.
+    auto& input = entity.getComponent<UIInput>();
+    if (input.m_group == 0
+        && input.m_selectionIndex == 0)
+    {
+        input.m_selectionIndex = m_groups[0].size();
+    }
 }
 
 void UISystem::onEntityRemoved(Entity entity)

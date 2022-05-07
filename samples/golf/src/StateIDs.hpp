@@ -34,7 +34,7 @@ struct StateID final
     enum
     {
         Menu,
-        Game,
+        Golf,
         Options,
         Pause,
         Error,
@@ -43,6 +43,9 @@ struct StateID final
         Keyboard,
         Practice,
         DrivingRange,
-        PuttingRange
+        PuttingRange,
+        Clubhouse,
+        Billiards,
+        Trophy
     };
 };

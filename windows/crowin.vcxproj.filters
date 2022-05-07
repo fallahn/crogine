@@ -94,6 +94,18 @@
     <Filter Include="Source Files\network">
       <UniqueIdentifier>{fa1e5bf3-dca2-4170-8dac-ee0fc176c9ed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\audio\ecs">
+      <UniqueIdentifier>{ab7055d5-6483-4d6a-b31c-5dafb600f4a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\audio\ecs">
+      <UniqueIdentifier>{472747fe-23f5-4428-9e2e-92ea63c1260b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\audio\sound system">
+      <UniqueIdentifier>{865d83d5-63d0-43b3-9369-af4143ee9c6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\audio\sound system">
+      <UniqueIdentifier>{e33ca178-38c9-4a99-9be5-21c1e03f0dbb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\crogine\include\crogine\Config.hpp">
@@ -357,22 +369,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteAnimator.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\src\audio\OpenALImpl.hpp">
-      <Filter>Header Files\audio</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\src\audio\ALCheck.hpp">
-      <Filter>Header Files\audio</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\src\audio\AudioRenderer.hpp">
-      <Filter>Header Files\audio</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\src\audio\PCMData.hpp">
-      <Filter>Header Files\audio</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\src\audio\WavLoader.hpp">
-      <Filter>Header Files\audio</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\audio\AudioBuffer.hpp">
       <Filter>Header Files\audio</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\AudioSystem.hpp">
@@ -383,21 +380,6 @@
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\util\Matrix.hpp">
       <Filter>Header Files\util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\audio\AudioResource.hpp">
-      <Filter>Header Files\audio</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\src\audio\AudioFile.hpp">
-      <Filter>Header Files\audio</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\audio\AudioStream.hpp">
-      <Filter>Header Files\audio</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\src\audio\VorbisLoader.hpp">
-      <Filter>Header Files\audio</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\audio\AudioMixer.hpp">
-      <Filter>Header Files\audio</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\src\graphics\shaders\ShadowMap.hpp">
       <Filter>Header Files\graphics\shaders</Filter>
@@ -410,9 +392,6 @@
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\Sunlight.hpp">
       <Filter>Header Files\ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\src\audio\NullImpl.hpp">
-      <Filter>Header Files\audio</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\CallbackSystem.hpp">
       <Filter>Header Files\ecs\systems</Filter>
@@ -476,9 +455,6 @@
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\components\AudioEmitter.hpp">
       <Filter>Header Files\ecs\components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\audio\AudioSource.hpp">
-      <Filter>Header Files\audio</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Drawable2D.hpp">
       <Filter>Header Files\ecs\components</Filter>
@@ -615,9 +591,6 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\DeferredRenderSystem.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\include\crogine\audio\AudioScape.hpp">
-      <Filter>Header Files\audio</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\AudioPlayerSystem.hpp">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
@@ -658,6 +631,57 @@
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\graphics\UniformBuffer.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\CubemapTexture.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioBuffer.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\AudioFile.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioMixer.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\AudioRenderer.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioResource.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioScape.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioSource.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioStream.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\NullImpl.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\OpenALImpl.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\PCMData.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\VorbisLoader.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\WavLoader.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundSource.hpp">
+      <Filter>Header Files\audio\sound system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundStream.hpp">
+      <Filter>Header Files\audio\sound system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\VideoPlayer.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
   </ItemGroup>
@@ -848,35 +872,8 @@
     <ClCompile Include="..\crogine\src\ecs\systems\SpriteAnimator.cpp">
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\audio\OpenALImpl.cpp">
-      <Filter>Source Files\audio</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\audio\AudioRenderer.cpp">
-      <Filter>Source Files\audio</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\audio\WavLoader.cpp">
-      <Filter>Source Files\audio</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\audio\AudioBuffer.cpp">
-      <Filter>Source Files\audio</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\systems\AudioSystem.cpp">
       <Filter>Source Files\ecs\systems</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\audio\AudioResource.cpp">
-      <Filter>Source Files\audio</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\audio\AudioStream.cpp">
-      <Filter>Source Files\audio</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\audio\VorbisLoader.cpp">
-      <Filter>Source Files\audio</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\audio\stb_vorbis.c">
-      <Filter>Source Files\audio</Filter>
-    </ClCompile>
-    <ClCompile Include="..\crogine\src\audio\AudioMixer.cpp">
-      <Filter>Source Files\audio</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\systems\ShadowMapRenderer.cpp">
       <Filter>Source Files\ecs\systems</Filter>
@@ -1055,9 +1052,6 @@
     <ClCompile Include="..\crogine\src\ecs\systems\DeferredRenderSystem.cpp">
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\audio\AudioScape.cpp">
-      <Filter>Source Files\audio</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\ecs\systems\AudioPlayerSystem.cpp">
       <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
@@ -1098,6 +1092,48 @@
       <Filter>Source Files\detail</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\UniformBuffer.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\CubemapTexture.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioBuffer.cpp">
+      <Filter>Source Files\audio\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioMixer.cpp">
+      <Filter>Source Files\audio\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioRenderer.cpp">
+      <Filter>Source Files\audio\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioResource.cpp">
+      <Filter>Source Files\audio\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioScape.cpp">
+      <Filter>Source Files\audio\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioStream.cpp">
+      <Filter>Source Files\audio\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\OpenALImpl.cpp">
+      <Filter>Source Files\audio\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\stb_vorbis.c">
+      <Filter>Source Files\audio\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\VorbisLoader.cpp">
+      <Filter>Source Files\audio\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\WavLoader.cpp">
+      <Filter>Source Files\audio\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\sound_system\SoundSource.cpp">
+      <Filter>Source Files\audio\sound system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\sound_system\SoundStream.cpp">
+      <Filter>Source Files\audio\sound system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\VideoPlayer.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>

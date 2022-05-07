@@ -29,11 +29,44 @@ source distribution.
 
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/core/Log.hpp>
 
 using namespace cro;
 using namespace cro::Material;
+
+TextureID::TextureID(const cro::Texture& t)
+    : textureID(t.getGLHandle()) {}
+
+TextureID& TextureID::operator = (std::uint32_t id)
+{
+    textureID = id;
+    return *this;
+}
+
+TextureID& TextureID::operator = (const Texture& t)
+{
+    textureID = t.getGLHandle();
+    return *this;
+}
+
+
+CubemapID::CubemapID(const cro::CubemapTexture& t)
+    : textureID(t.getGLHandle()) {}
+
+CubemapID& CubemapID::operator = (std::uint32_t id)
+{
+    textureID = id;
+    return *this;
+}
+
+CubemapID& CubemapID::operator = (const CubemapTexture& t)
+{
+    textureID = t.getGLHandle();
+    return *this;
+}
+
 
 #ifdef CRO_DEBUG_
 #define  VERIFY(x) exists(x)

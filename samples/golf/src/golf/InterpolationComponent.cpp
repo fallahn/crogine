@@ -29,31 +29,57 @@ source distribution.
 
 #include "InterpolationSystem.hpp"
 
-#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/detail/Assert.hpp>
+
+namespace
+{
+
+}
 
 InterpolationComponent::InterpolationComponent(InterpolationPoint initialPoint)
     : m_enabled         (true),
     m_targetPoint       (initialPoint),
     m_previousPoint     (initialPoint),
     m_timeDifference    (1),
-    m_started           (false),
+    m_currentTime       (0),
     m_id                (0)
 {
-
+    m_elapsedTimer.restart();
+    m_targetPoint.timestamp++;
 }
 
 //public
-void InterpolationComponent::setTarget(const InterpolationPoint& target)
+void InterpolationComponent::addTarget(const InterpolationPoint& target)
 {
     if(m_buffer.size() < m_buffer.capacity())
     {
-        m_buffer.push_back(target);
+        if (m_buffer.empty() || m_buffer.back().timestamp < target.timestamp)
+        {
+            m_buffer.push_back(target);
+
+            //if this is the first target in a while
+            //check for a large delta and try to mitigate it
+            if (m_buffer.size() == 1)
+            {
+                auto delta = target.timestamp - m_targetPoint.timestamp;
+                if (delta > 167) //10 frames ish
+                {
+                    m_previousPoint = m_targetPoint = target;
+
+                    m_targetPoint.timestamp = target.timestamp - 1;
+                    m_previousPoint.timestamp = m_targetPoint.timestamp - 1;
+
+                    m_elapsedTimer.restart();
+                }
+            }
+        }
     }
 
-    if (!m_started && m_buffer.size() == /*m_buffer.capacity()*/2)
+    //if (!m_enabled)
     {
-        m_started = true;
+        //this *might* help keep things smoother (hard to tell) but it def causes lag between the cue/club anim
+        //we can tune this for a local client, however it is also variable in time depending on the client's lag...
+        //m_enabled = m_buffer.size() > 6; 
     }
 }
 
@@ -78,39 +104,22 @@ void InterpolationComponent::resetRotation(glm::quat rotation)
 }
 
 //private
-void InterpolationComponent::applyNextTarget(glm::vec3 currentPos, glm::quat currentRot, std::int32_t timestamp)
+void InterpolationComponent::applyNextTarget()
 {
-    if (m_started && m_buffer.size() > 0)
+    if (!m_buffer.empty())
     {
-        InterpolationPoint target;
-        while (m_buffer.size() > 0 &&
-            target.timestamp < timestamp)
-        {
-            //skips old/out of date targets
-            target = m_buffer.pop_front();
-        }
-
-
-        //we want to interp from where we actually got to
-        //otherwise snapping might cause jerky behaviour
-        //with async updates
-        m_previousPoint.timestamp = timestamp;
-        m_previousPoint.position = currentPos;
-        m_previousPoint.rotation = currentRot;
-
         CRO_ASSERT(!std::isnan(m_previousPoint.position.x), "");
 
-        m_elapsedTimer.restart();
-
+        auto target = m_buffer.pop_front();
+        
+        //time difference must never be 0!!
         if (target.timestamp > m_previousPoint.timestamp)
         {
+            m_previousPoint = m_targetPoint;
+            m_currentTime %= m_timeDifference;
+
             m_timeDifference = target.timestamp - m_previousPoint.timestamp;
+            m_targetPoint = target;
         }
-        else
-        {
-            target = m_previousPoint;
-            target.timestamp += m_timeDifference / 2;
-        }
-        m_targetPoint = target;
     }
 }

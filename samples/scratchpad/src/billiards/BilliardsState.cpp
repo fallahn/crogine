@@ -29,6 +29,7 @@ source distribution.
 
 #include "BilliardsState.hpp"
 #include "BilliardsSystem.hpp"
+#include "InterpolationSystem.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
 
@@ -43,10 +44,26 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 namespace
 {
     bool showDebug = false;
+
+    cro::Entity interpEnt;
+
+    std::array interpTargets =
+    {
+        glm::vec3(0.5f, 0.5f, 0.f),
+        glm::vec3(0.5f, 0.5f, -0.5f),
+        glm::vec3(0.f, 0.5f, -0.5f),
+        glm::vec3(-0.5f, 0.5f, -0.5f),
+        glm::vec3(-0.5f, 0.5f, 0.f),
+        glm::vec3(-0.5f, 0.5f, 0.5f),
+        glm::vec3(0.f, 0.5f, 0.5f),
+        glm::vec3(0.5f, 0.5f, 0.5f)
+    };
+    std::size_t interpIndex = 0;
 }
 
 BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx)
@@ -95,6 +112,9 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         case SDLK_KP_4:
             m_scene.setActiveCamera(m_cameras[4]);
             break;
+        case SDLK_SPACE:
+            interpEnt.getComponent<cro::Callback>().active = !interpEnt.getComponent<cro::Callback>().active;
+            break;
         }
     }
 
@@ -125,6 +145,7 @@ void BilliardsState::render()
 void BilliardsState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_scene.addSystem<InterpolationSystem>(mb);
     m_scene.addSystem<BilliardsSystem>(mb, m_debugDrawer);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
@@ -133,12 +154,7 @@ void BilliardsState::addSystems()
 
 void BilliardsState::buildScene()
 {
-    struct TableData final
-    {
-        std::string collisionModel;
-        std::string viewModel;
-        std::vector<PocketInfo> pockets;
-    }tableData;
+    TableData tableData;
 
     cro::ConfigFile tableConfig;
     if (tableConfig.loadFromFile("assets/billiards/billiards.table"))
@@ -273,6 +289,66 @@ void BilliardsState::buildScene()
 
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -25.f * cro::Util::Const::degToRad);
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -25.f * cro::Util::Const::degToRad);
+
+
+
+
+
+    //test interp component by sending updates with fixed space timestamps
+    //but applying them with +- 0.2 sec jitter. 1 in 60 updates are also dropped.
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<InterpolationComponent>(InterpolationPoint(glm::vec3(0.f), glm::vec3(0.f), glm::quat(1.f, 0.f ,0.f, 0.f), m_interpClock.elapsed().asMilliseconds()));
+    interpEnt = entity;
+
+    md.loadFromFile("assets/billiards/interp.cmt");
+    md.createModel(entity);
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        static constexpr float TimeStep = 1.f / 20.f;
+        static float nextTimeStep = TimeStep;
+        static const std::vector<float> TableX = cro::Util::Wavetable::sine(0.25f, 0.5f);
+        static std::size_t tableXIndex = 0;
+        static const std::vector<float> TableY = cro::Util::Wavetable::sine(0.125f, 0.8f);
+        static std::size_t tableYIndex = 0;
+
+        static glm::vec3 prevPos(0.f);
+        static glm::vec3 velocity(0.f);
+
+        glm::vec3 pos(TableX[tableXIndex], 0.5f, TableY[tableYIndex]);
+        velocity = (pos - prevPos) * (1.f / dt);
+        prevPos = pos;
+
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime += dt;
+
+        static std::int32_t ts = 50;
+
+        if (currTime > nextTimeStep)
+        {
+            currTime -= nextTimeStep;
+            nextTimeStep = TimeStep + cro::Util::Random::value(-0.01f, 0.01f);
+
+            //if (cro::Util::Random::value(0, 60) != 0)
+            {
+                interpEnt.getComponent<InterpolationComponent>().addPoint({ pos, velocity, glm::quat(1.f, 0.f, 0.f, 0.f), ts });
+            }
+            /*else
+            {
+                LogI << "skipped" << std::endl;
+            }*/
+            interpIndex = (interpIndex + 1) % interpTargets.size();
+
+            ts += 50;
+        }
+
+        tableXIndex = (tableXIndex + 1) % TableX.size();
+        tableYIndex = (tableYIndex + 1) % TableY.size();
+    };
 }
 
 void BilliardsState::addBall()

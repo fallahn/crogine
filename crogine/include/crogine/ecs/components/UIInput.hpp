@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -78,6 +78,12 @@ namespace cro
         }
 
         /*!
+        \brief Returns the ID of the group to which the input is currently assigned
+        \see setGroup()
+        */
+        std::size_t getGroup() const { return m_group; }
+
+        /*!
         \brief Defines the order in which components in a group are selected.
         By default this is set based on the order in which components
         are added to a group.
@@ -87,6 +93,11 @@ namespace cro
             m_selectionIndex = index;
             m_updateGroup = true;
         }
+
+        /*!
+        \brief Returns the current selection index assigned to the UIInput
+        */
+        std::size_t getSelectionIndex() const { return m_selectionIndex; }
 
     private:
         std::size_t m_previousGroup = 0;

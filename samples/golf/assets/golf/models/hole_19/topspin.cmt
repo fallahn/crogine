@@ -1,0 +1,18 @@
+model billiard_ball
+{
+    mesh = assets/golf/models/hole_19/billiard_ball.cmb
+    cast_shadows = true
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+        diffuse = "assets/golf/images/billiards/topspin.png"
+
+    }
+}

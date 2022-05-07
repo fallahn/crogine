@@ -47,11 +47,20 @@ namespace cro
     component attached so that the Sprite can be drawn in a 3D scene.
 
     When an entity is added to this system it is automatically assigned
-    a default sprite shader which is either textured or just vertex coloured.
+    a default sprite shader which is either textured or just vertex coloured,
+    depending on whether or not the Sprite component references a valid texture.
     These materials can be overridden with more complex ones, for example
     ones which support 3D lighting, by setting the material directly on
-    the Model component. (currently this must be done AFTER the system
-    has been updated at least once - this will be fixed eventually)
+    the Model component. Materials require a shader which provide these vertex
+    attributes:
+
+    vec2 a_position;
+    vec2 a_texCoord0;
+    vec4 a_colour;
+
+    If a Model component is found to have a material with no shader, or material
+    attributes which do not meet the above requirements the material is ignored
+    and the default material applied to the Model.
     */
     class CRO_EXPORT_API SpriteSystem3D final : public cro::System
     {
@@ -63,7 +72,7 @@ namespace cro
         a 3D scene is metres - so a 64 pixel wide sprite will be
         64 metres in the game world! Set this to the number of sprite
         pixels equivalent to a single 3D world unit to have the system
-        automatically scale sprites to the 3D scene in whic they appear.
+        automatically scale sprites to the 3D scene in which they appear.
         */
         explicit SpriteSystem3D(MessageBus& mb, float pixelsPerUnit = 1.f);
 

@@ -133,7 +133,7 @@ namespace cro
         \brief Posts a message on the system wide message bus
         */
         template <typename T>
-        T* postMessage(Message::ID id);
+        T* postMessage(Message::ID id) const;
 
         /*!
         \brief Returns a reference to the MessageBus
@@ -212,6 +212,9 @@ namespace cro
         */
         template <typename T>
         T* getSystem();
+
+        template <typename T>
+        const T* getSystem() const;
 
         /*!
         \brief Returns true if a system of this type exists within the manager

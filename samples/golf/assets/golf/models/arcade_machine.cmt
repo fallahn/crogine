@@ -1,0 +1,33 @@
+model arcade_machine
+{
+    mesh = assets/golf/models/arcade_machine.cmb
+    cast_shadows = true
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        rx_shadows = true
+        blendmode = none
+        diffuse = "assets/golf/images/arcade_machine.png"
+
+    }
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        subrect = 0.000000,0.120000,1.000000,0.780000
+        rx_shadows = true
+        blendmode = none
+        diffuse = "assets/golf/images/arcade_machine.png"
+
+    }
+}

@@ -57,6 +57,7 @@ namespace
     static constexpr float Margin = 1.02f;
     static constexpr float BallHoleDistance = (HoleRadius * Margin) * (HoleRadius * Margin);
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
+    static constexpr float AngularVelocity = 46.5f; //rad/s at 1m/s vel. Used for rolling animation.
 }
 
 const std::array<std::string, 5u> Ball::StateStrings = { "Idle", "Flight", "Putt", "Paused", "Reset" };
@@ -279,6 +280,10 @@ void BallSystem::process(float dt)
                 static constexpr float MaxVel = 2.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
                 tx.rotate(cro::Transform::Y_AXIS, cro::Util::Const::TAU * (vel2 / MaxVel) * ball.spin * dt);
 
+                /*float rollSpeed = AngularVelocity * std::sqrt(vel2);
+                glm::vec3 rollAxis = { -ball.velocity.z, ball.velocity.y, ball.velocity.x };
+                tx.rotate(glm::normalize(rollAxis), rollSpeed * dt);*/
+
                 //if we've slowed down or fallen more than the
                 //ball's diameter (radius??) stop the ball
                 if (vel2 < 0.01f
@@ -307,8 +312,8 @@ void BallSystem::process(float dt)
                     position = tx.getPosition();
                     len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
 
-                    auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
-                    msg->type = BallEvent::Landed;
+                    auto* msg = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
+                    msg->type = GolfBallEvent::Landed;
                     msg->terrain = ((penetration > Ball::Radius)||(len2 < MinBallDistance)) ? TerrainID::Hole : ball.terrain;
 
                     if (msg->terrain == TerrainID::Hole)
@@ -386,8 +391,8 @@ void BallSystem::process(float dt)
                 }
 
                 //raise message to say player should be penalised
-                auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
-                msg->type = BallEvent::Foul;
+                auto* msg = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
+                msg->type = GolfBallEvent::Foul;
                 msg->terrain = terrain;
                 msg->position = tx.getPosition();
 
@@ -407,7 +412,7 @@ void BallSystem::process(float dt)
                 auto len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
 
                 //send message to report status
-                auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
+                auto* msg = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
                 msg->terrain = ball.terrain;
                 msg->position = position;
 
@@ -416,12 +421,12 @@ void BallSystem::process(float dt)
                         || (len2 <= BallHoleDistance))
                 {
                     //we're in the hole
-                    msg->type = BallEvent::Holed;
+                    msg->type = GolfBallEvent::Holed;
                     //LogI << "Ball Holed" << std::endl;
                 }
                 else
                 {
-                    msg->type = BallEvent::TurnEnded;
+                    msg->type = GolfBallEvent::TurnEnded;
                     //LogI << "Turn Ended" << std::endl;
                 }
                 //LogI << "Distance: " << len2 << ", terrain: " << TerrainStrings[ball.terrain] << std::endl;
@@ -526,8 +531,8 @@ void BallSystem::doCollision(cro::Entity entity)
         ball.delay = BallTurnDelay;
         ball.terrain = terrain;
 
-        auto* msg = postMessage<BallEvent>(sv::MessageID::BallMessage);
-        msg->type = BallEvent::Landed;
+        auto* msg = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
+        msg->type = GolfBallEvent::Landed;
         msg->terrain = ball.terrain;
         msg->position = tx.getPosition();
     };
@@ -717,157 +722,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
 {
     clearCollisionObjects();
 
-    cro::Mesh::Data meshData;
-
-    cro::RaiiRWops file;
-    file.file = SDL_RWFromFile(modelPath.c_str(), "rb");
-    if (file.file)
-    {
-        cro::Detail::ModelBinary::Header header;
-        auto len = SDL_RWseek(file.file, 0, RW_SEEK_END);
-        if (len < sizeof(header))
-        {
-            LogE << "Unable to open " << modelPath << ": invalid file size" << std::endl;
-            return false;
-        }
-
-        SDL_RWseek(file.file, 0, RW_SEEK_SET);
-        SDL_RWread(file.file, &header, sizeof(header), 1);
-
-        if (header.magic != cro::Detail::ModelBinary::MAGIC
-            && header.magic != cro::Detail::ModelBinary::MAGIC_V1)
-        {
-            LogE << "Invalid header found" << std::endl;
-            return false;
-        }
-
-        if (header.meshOffset)
-        {
-            cro::Detail::ModelBinary::MeshHeader meshHeader;
-            SDL_RWread(file.file, &meshHeader, sizeof(meshHeader), 1);
-
-            if ((meshHeader.flags & cro::VertexProperty::Position) == 0)
-            {
-                LogE << "No position data in mesh" << std::endl;
-                return false;
-            }
-
-            std::vector<float> tempVerts;
-            std::vector<std::uint32_t> sizes(meshHeader.indexArrayCount);
-            m_indexData.resize(meshHeader.indexArrayCount);
-
-            SDL_RWread(file.file, sizes.data(), meshHeader.indexArrayCount * sizeof(std::uint32_t), 1);
-
-            std::uint32_t vertStride = 0;
-            for (auto i = 0u; i < cro::Mesh::Attribute::Total; ++i)
-            {
-                if (meshHeader.flags & (1 << i))
-                {
-                    switch (i)
-                    {
-                    default:
-                    case cro::Mesh::Attribute::Bitangent:
-                        break;
-                    case cro::Mesh::Attribute::Position:
-                        vertStride += 3;
-                        meshData.attributes[i] = 3;
-                        break;
-                    case cro::Mesh::Attribute::Colour:
-                        vertStride += 4;
-                        meshData.attributes[i] = 1; //we'll only store the red channel for reading terrain
-                        break;
-                    case cro::Mesh::Attribute::Normal:
-                        vertStride += 3;
-                        break;
-                    case cro::Mesh::Attribute::UV0:
-                    case cro::Mesh::Attribute::UV1:
-                        vertStride += 2;
-                        break;
-                    case cro::Mesh::Attribute::Tangent:
-                    case cro::Mesh::Attribute::BlendIndices:
-                    case cro::Mesh::Attribute::BlendWeights:
-                        vertStride += 4;
-                        break;
-                    }
-                }
-            }
-
-            auto pos = SDL_RWtell(file.file);
-            auto vertSize = meshHeader.indexArrayOffset - pos;
-            tempVerts.resize(vertSize / sizeof(float));
-            SDL_RWread(file.file, tempVerts.data(), vertSize, 1);
-            CRO_ASSERT(tempVerts.size() % vertStride == 0, "");
-
-            for (auto i = 0u; i < meshHeader.indexArrayCount; ++i)
-            {
-                m_indexData[i].resize(sizes[i]);
-                SDL_RWread(file.file, m_indexData[i].data(), sizes[i] * sizeof(std::uint32_t), 1);
-            }
-
-            //process vertex data
-            for (auto i = 0u; i < tempVerts.size(); i += vertStride)
-            {
-                std::uint32_t offset = 0;
-                for (auto j = 0u; j < cro::Mesh::Attribute::Total; ++j)
-                {
-                    if (meshHeader.flags & (1 << j))
-                    {
-                        switch (j)
-                        {
-                        default: break;
-                        case cro::Mesh::Attribute::Position:
-                            m_vertexData.push_back(tempVerts[i + offset]);
-                            m_vertexData.push_back(tempVerts[i + offset + 1]);
-                            m_vertexData.push_back(tempVerts[i + offset + 2]);
-
-                            offset += 3;
-                            meshData.attributeFlags |= cro::VertexProperty::Position;
-                            break;
-                        case cro::Mesh::Attribute::Colour:
-                            m_vertexData.push_back(tempVerts[i + offset]);
-                            /*m_vertexData.push_back(tempVerts[i + offset + 1]);
-                            m_vertexData.push_back(tempVerts[i + offset + 2]);
-                            m_vertexData.push_back(tempVerts[i + offset + 3]);*/
-                            offset += 1;
-                            meshData.attributeFlags |= cro::VertexProperty::Colour;
-                            break;
-                        case cro::Mesh::Attribute::Normal:
-                        case cro::Mesh::Attribute::Tangent:
-                        case cro::Mesh::Attribute::Bitangent:
-                        case cro::Mesh::Attribute::UV0:
-                        case cro::Mesh::Attribute::UV1:
-                        case cro::Mesh::Attribute::BlendIndices:
-                        case cro::Mesh::Attribute::BlendWeights:
-                            break;
-                        }
-                    }
-                }
-            }
-
-            meshData.primitiveType = GL_TRIANGLES;
-
-            for (const auto& a : meshData.attributes)
-            {
-                meshData.vertexSize += a;
-            }
-            meshData.vertexSize *= sizeof(float);
-            meshData.vertexCount = m_vertexData.size() / (meshData.vertexSize / sizeof(float));
-
-            meshData.submeshCount = meshHeader.indexArrayCount;
-            for (auto i = 0u; i < meshData.submeshCount; ++i)
-            {
-                meshData.indexData[i].format = GL_UNSIGNED_INT;
-                meshData.indexData[i].primitiveType = meshData.primitiveType;
-                meshData.indexData[i].indexCount = static_cast<std::uint32_t>(m_indexData[i].size());
-            }
-        }
-    }
-    else
-    {
-        LogE << modelPath << ": " << SDL_GetError() << std::endl;
-        return false;
-    }
-
+    cro::Mesh::Data meshData = cro::Detail::ModelBinary::read(modelPath, m_vertexData, m_indexData);
 
     if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
     {
