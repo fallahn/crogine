@@ -204,7 +204,6 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_lastMousePos      (0.f),
     m_bindingIndex      (-1),
     m_currentTabFunction(0),
-    m_previousMenuID    (MenuID::Controls),
     m_viewScale         (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -1493,7 +1492,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         });
 
 
-    auto createHighlight = [&, infoEnt, buttonChangeEnt](glm::vec2 position, std::int32_t keyIndex)
+    auto createHighlight = [&, infoEnt](glm::vec2 position, std::int32_t keyIndex)
     {
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(glm::vec3(position, HighlightOffset));

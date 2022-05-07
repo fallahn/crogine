@@ -56,7 +56,7 @@ source distribution.
 #include <algorithm>
 
 #ifdef CRO_DEBUG_
-//#define DEBUG_NO_CONTROLLER
+#define DEBUG_NO_CONTROLLER
 #endif // CRO_DEBUG_
 
 using namespace cro;

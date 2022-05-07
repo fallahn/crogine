@@ -92,7 +92,6 @@ private:
 
     std::array<std::function<void()>, 4u> m_tabFunctions = {};
     std::size_t m_currentTabFunction;
-    std::size_t m_previousMenuID;
 
     struct ScrollID final
     {
