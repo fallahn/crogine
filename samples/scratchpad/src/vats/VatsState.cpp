@@ -62,6 +62,8 @@ namespace
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec2 v_texCoord;
 
+    const float UVOffset = (1.0 / 35.0) / 2.0;
+
     vec3 decodeVector(sampler2D source, vec2 coord)
     {
         vec3 vec = TEXTURE(source, coord).rgb;
@@ -79,7 +81,7 @@ namespace
 #else
         vec2 texCoord = a_texCoord1;
         float scale = texCoord.y;
-        texCoord.y = 0.0; //TODO frame offset
+        texCoord.y = UVOffset; //TODO add frame offset
 
         vec4 position = vec4(decodeVector(u_positionMap, texCoord) * scale, 1.0);
         gl_Position = u_viewProjectionMatrix * u_worldMatrix * position;

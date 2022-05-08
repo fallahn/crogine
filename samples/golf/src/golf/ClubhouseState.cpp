@@ -596,7 +596,7 @@ void ClubhouseState::loadResources()
 
 void ClubhouseState::validateTables()
 {
-    const std::string tablePath("assets/golf/tables/");
+    const std::string tablePath(cro::FileSystem::getResourcePath() + "assets/golf/tables/");
 
     auto fileList = cro::FileSystem::listFiles(tablePath);
     for (const auto& file : fileList)

@@ -158,6 +158,8 @@ VideoPlayer::~VideoPlayer()
 
 bool VideoPlayer::loadFromFile(const std::string& path)
 {
+    auto fullPath = cro::FileSystem::getResourcePath() + path;
+
     //remove existing file first
     if (m_state == State::Playing)
     {
@@ -177,7 +179,7 @@ bool VideoPlayer::loadFromFile(const std::string& path)
         return false;
     }
 
-    if (!cro::FileSystem::fileExists(path))
+    if (!cro::FileSystem::fileExists(fullPath))
     {
         LogE << "Unable to open file " << path << ": file not found" << std::endl;
         return false;
@@ -185,7 +187,7 @@ bool VideoPlayer::loadFromFile(const std::string& path)
 
 
     //load the file
-    m_plm = plm_create_with_filename(path.c_str());
+    m_plm = plm_create_with_filename(fullPath.c_str());
 
     if (!m_plm)
     {
