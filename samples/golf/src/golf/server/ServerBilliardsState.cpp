@@ -271,7 +271,7 @@ std::int32_t BilliardsState::process(float dt)
 //private
 bool BilliardsState::validateData()
 {
-    auto path = cro::FileSystem::getResourcePath() + "assets/golf/tables/" + m_sharedData.mapDir + ".table";
+    auto path = "assets/golf/tables/" + m_sharedData.mapDir + ".table";
     if (m_tableData.loadFromFile(path))
     {
         if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + m_tableData.collisionModel))

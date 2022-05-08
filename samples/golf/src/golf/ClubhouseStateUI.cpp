@@ -156,16 +156,6 @@ void ClubhouseState::createUI()
             e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-        //and resizes banners horizontally
-        //cmd.targetFlags = CommandID::Menu::UIBanner;
-        //cmd.action =
-        //    [](cro::Entity e, float)
-        //{
-        //    //e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
-        //    e.getComponent<cro::Callback>().active = true;
-        //};
-        //m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
     entity = m_uiScene.createEntity();
