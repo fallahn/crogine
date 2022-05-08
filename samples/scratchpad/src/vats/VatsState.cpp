@@ -145,10 +145,10 @@ VatsState::VatsState(cro::StateStack& stack, cro::State::Context context)
                         m_reference.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
                     }
 
-                    if (ImGui::Button("Create Texture"))
+                    /*if (ImGui::Button("Create Texture"))
                     {
                         createNormalTexture();
-                    }
+                    }*/
                 }
             }
             ImGui::End();

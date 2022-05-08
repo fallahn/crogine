@@ -94,14 +94,11 @@ def unsign_vector(vec, yUp):
 
 def data_from_frame(obj, settings):
 
-    #calc normals if custom data not set
-    #if obj.data.has_custom_normals == False:
 
     if settings.tangents:
         obj.data.calc_tangents()
     else:
         obj.data.calc_normals_split()
-
 
 
     vertex_data = [None] * len(obj.data.vertices)
@@ -142,9 +139,10 @@ def object_from_frame(obj, frame):
     eval_obj = obj.evaluated_get(depsgraph)
     retval = bpy.data.objects.new('frame_0', bpy.data.meshes.new_from_object(eval_obj, preserve_all_data_layers = True, depsgraph = depsgraph))
 
+
     retval.matrix_world = obj.matrix_world
     retval.data.use_auto_smooth = obj.data.use_auto_smooth
-    retval.data.auto_smooth_angle = obj.data.auto_smooth_angle
+    retval.data.auto_smooth_angle = obj.data.auto_smooth_angle   
 
     return retval
 
