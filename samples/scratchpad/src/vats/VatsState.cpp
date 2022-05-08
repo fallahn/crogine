@@ -37,6 +37,8 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
+#include <crogine/graphics/Image.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Constants.hpp>
 
@@ -62,7 +64,7 @@ namespace
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec2 v_texCoord;
 
-    const float UVOffset = (1.0 / 35.0) / 2.0;
+    //const float UVOffset = (1.0 / 35.0) / 2.0;
 
     vec3 decodeVector(sampler2D source, vec2 coord)
     {
@@ -81,7 +83,7 @@ namespace
 #else
         vec2 texCoord = a_texCoord1;
         float scale = texCoord.y;
-        texCoord.y = UVOffset; //TODO add frame offset
+        texCoord.y = 0.0; //TODO add frame offset
 
         vec4 position = vec4(decodeVector(u_positionMap, texCoord) * scale, 1.0);
         gl_Position = u_viewProjectionMatrix * u_worldMatrix * position;
@@ -141,6 +143,11 @@ VatsState::VatsState(cro::StateStack& stack, cro::State::Context context)
                         m_model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
                         m_reference.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
                         m_reference.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
+                    }
+
+                    if (ImGui::Button("Create Texture"))
+                    {
+                        createNormalTexture();
                     }
                 }
             }
@@ -271,5 +278,67 @@ void VatsState::loadModel(const std::string& path)
         material.setProperty("u_normalMap", m_normalTexture);
 
         m_model.getComponent<cro::Model>().setMaterial(0, material);
+    }
+}
+
+void VatsState::createNormalTexture()
+{
+    if (m_reference.isValid())
+    {
+        const auto& meshData = m_reference.getComponent<cro::Model>().getMeshData();
+
+        std::vector<float> verts;
+        std::vector<std::vector<std::uint32_t>> indices;
+        cro::Mesh::readVertexData(meshData, verts, indices);
+
+        if (meshData.attributes[cro::Mesh::Attribute::UV1] != 0)
+        {
+            //the model already has this set so we can read it back to know
+            //where the destination pixel is in the target
+            auto vertexCount = 712;
+            std::vector<std::uint8_t> imageBuffer(vertexCount * 3);
+            const float pixelWidth = 1.f / vertexCount;
+            const auto stride = meshData.vertexSize / sizeof(float);
+
+            std::size_t normalOffset = 0;
+            for (auto i = 0u; i < cro::Mesh::Attribute::Normal; ++i)
+            {
+                normalOffset += meshData.attributes[i];
+            }
+
+            std::size_t uv1Offset = 0;
+            for (auto i = 0u; i < cro::Mesh::Attribute::UV1; ++i)
+            {
+                uv1Offset += meshData.attributes[i];
+            }
+
+            const auto unsign = [](float v)
+            {
+                return (v + 1.f) / 2.f;
+            };
+
+
+
+            for (auto i = 0; i < vertexCount; ++i)
+            {
+                auto vertIndex = i * stride;
+                float pixelPos = verts[vertIndex + uv1Offset];
+                pixelPos -= (pixelWidth / 2.f);
+
+                std::int32_t pixelIndex = static_cast<std::int32_t>(pixelPos / pixelWidth) * 3;
+
+                imageBuffer[pixelIndex] = static_cast<std::uint8_t>(unsign(verts[vertIndex + normalOffset]) * 255.f);
+                imageBuffer[pixelIndex + 1] = static_cast<std::uint8_t>(unsign(verts[vertIndex + normalOffset + 1]) * 255.f);
+                imageBuffer[pixelIndex + 2] = static_cast<std::uint8_t>(unsign(verts[vertIndex + normalOffset + 2]) * 255.f);
+            }
+
+            cro::Image img;
+            img.loadFromMemory(imageBuffer.data(), vertexCount, 1, cro::ImageFormat::RGB);
+            img.write("assets/vats/normals.png");
+
+            //glBindTexture(GL_TEXTURE_2D, m_normalTexture.getGLHandle());
+            //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, vertexCount, 1, 0, GL_FLOAT, GL_RGB, imageBuffer.data());
+            //glBindTexture(GL_TEXTURE_2D, 0);
+        }
     }
 }

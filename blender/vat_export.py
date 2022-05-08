@@ -140,18 +140,14 @@ def object_from_frame(obj, frame):
 
     depsgraph = bpy.context.view_layer.depsgraph
     eval_obj = obj.evaluated_get(depsgraph)
-    #retval = bpy.data.objects.new('frame_0', bpy.data.meshes.new_from_object(eval_obj))
-    #retval = bpy.data.objects.new('frame_0', obj.data.copy())
     retval = bpy.data.objects.new('frame_0', bpy.data.meshes.new_from_object(eval_obj, preserve_all_data_layers = True, depsgraph = depsgraph))
 
     retval.matrix_world = obj.matrix_world
     retval.data.use_auto_smooth = obj.data.use_auto_smooth
     retval.data.auto_smooth_angle = obj.data.auto_smooth_angle
 
-    #if obj.data.has_custom_normals:
-        #retval.data.custom_normals_set()
-
     return retval
+
 
 
 def export_textures(obj, frame_range, path, settings):

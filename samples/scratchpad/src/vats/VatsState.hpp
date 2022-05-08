@@ -92,4 +92,6 @@ private:
     void createScene();
 
     void loadModel(const std::string&);
+
+    void createNormalTexture();
 };
