@@ -1,18 +1,17 @@
-model clapping
+model clapping_processed
 {
     mesh = assets/vats/clapping.cmb
-    cast_shadows = true
+    cast_shadows = false
 
     material VertexLit
     {
-        mask_colour = 0.000000,0.000000,0.000000,1.000000
+        mask_colour = 1.000000,1.000000,0.000000,1.000000
         name = "Untitled"
-        colour = 1.000000,1.0,1.000000,1.000000
+        colour = 1.000000,0.000000,1.000000,1.000000
         smooth = true
         repeat = true
         depth_test = true
         double_sided = false
-        rx_shadows = true
         blendmode = none
 
     }

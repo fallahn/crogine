@@ -37,6 +37,8 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
+#include <crogine/graphics/Image.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Constants.hpp>
 
@@ -51,18 +53,29 @@ namespace
     ATTRIBUTE vec2 a_texCoord0;
     ATTRIBUTE vec2 a_texCoord1;
 
-    uniform mat4 u_worldMatrix;
+#if defined(INSTANCING)
+    ATTRIBUTE mat4 a_instanceWorldMatrix;
+    ATTRIBUTE mat3 a_instanceNormalMatrix;
+#endif
+
+#if defined(INSTANCING)
+    uniform mat4 u_viewMatrix;
+#else
+    uniform mat4 u_worldViewMatrix;
     uniform mat3 u_normalMatrix;
-    uniform mat4 u_viewProjectionMatrix;
+#endif
+    uniform mat4 u_worldMatrix;
+    uniform mat4 u_projectionMatrix;
+
 
     uniform sampler2D u_positionMap;
     uniform sampler2D u_normalMap;
+    uniform float u_time;
 
     VARYING_OUT vec4 v_colour;
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec2 v_texCoord;
-
-    const float UVOffset = (1.0 / 35.0) / 2.0;
+    flat VARYING_OUT int v_instanceID;
 
     vec3 decodeVector(sampler2D source, vec2 coord)
     {
@@ -73,20 +86,33 @@ namespace
         return vec;
     }
 
+    const float AnimationOffset = 0.34;    
+
     void main()
     {
+#if defined (INSTANCING)
+        mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
+        mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
+        mat3 normalMatrix = mat3(u_worldMatrix) * a_instanceNormalMatrix;
+        v_instanceID = gl_InstanceID;
+#else
+        mat4 worldMatrix = u_worldMatrix;
+        mat4 worldViewMatrix = u_worldViewMatrix;
+        mat3 normalMatrix = u_normalMatrix;
+#endif
+
+
 #if defined(NO_VATS)
-        gl_Position = u_viewProjectionMatrix * u_worldMatrix * a_position;
-        v_normal = u_normalMatrix * a_normal;
+        gl_Position = u_projectionMatrix * worldViewMatrix * a_position;
+        v_normal = normalMatrix * a_normal;
 #else
         vec2 texCoord = a_texCoord1;
         float scale = texCoord.y;
-        texCoord.y = UVOffset; //TODO add frame offset
+        texCoord.y = mod(u_time + (gl_InstanceID * AnimationOffset), 1.0);
 
         vec4 position = vec4(decodeVector(u_positionMap, texCoord) * scale, 1.0);
-        gl_Position = u_viewProjectionMatrix * u_worldMatrix * position;
-        v_normal = u_normalMatrix * normalize(decodeVector(u_normalMap, texCoord));
-        //v_normal = u_normalMatrix * a_normal;
+        gl_Position = u_projectionMatrix * worldViewMatrix * position;
+        v_normal = normalMatrix * normalize(decodeVector(u_normalMap, texCoord));
 #endif
         v_colour = a_colour;
         v_texCoord = a_texCoord0;
@@ -101,13 +127,24 @@ namespace
     VARYING_IN vec3 v_normal;
     VARYING_IN vec4 v_colour;
     VARYING_IN vec2 v_texCoord;
+    flat VARYING_IN int v_instanceID;
+
+    const vec4[3] Colours = vec4[3]
+    (
+        vec4(1.0, 0.0, 0.0, 1.0),
+        vec4(0.0, 1.0, 0.0, 1.0),
+        vec4(0.0, 0.0, 1.0, 1.0)
+    );
 
     void main()
     {
         float amount = clamp(dot(normalize(v_normal), normalize(-u_lightDirection)), 0.1, 1.0);
 
-        FRAG_OUT = vec4(1.0) * amount;
+        FRAG_OUT = Colours[v_instanceID] * amount;
     })";
+
+    std::int32_t timeUniform = -1;
+    std::uint32_t shaderID = 0;
 }
 
 VatsState::VatsState(cro::StateStack& stack, cro::State::Context context)
@@ -142,6 +179,11 @@ VatsState::VatsState(cro::StateStack& stack, cro::State::Context context)
                         m_reference.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
                         m_reference.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
                     }
+
+                    /*if (ImGui::Button("Create Texture"))
+                    {
+                        createNormalTexture();
+                    }*/
                 }
             }
             ImGui::End();
@@ -182,6 +224,13 @@ void VatsState::handleMessage(const cro::Message& msg)
 
 bool VatsState::simulate(float dt)
 {
+    static float timeAccum = 0.f;
+    timeAccum += dt;
+
+    glUseProgram(shaderID);
+    glUniform1f(timeUniform, timeAccum);
+    glUseProgram(0);
+
     m_gameScene.simulate(dt);
     return true;
 }
@@ -205,12 +254,15 @@ void VatsState::loadAssets()
     auto* shader = &m_resources.shaders.get(ShaderID::NoVats);
     m_materialIDs[MaterialID::NoVats] = m_resources.materials.add(*shader);
     
-    m_resources.shaders.loadFromString(ShaderID::Vats, Vertex, Fragment);
+    m_resources.shaders.loadFromString(ShaderID::Vats, Vertex, Fragment, "#define INSTANCING\n");
     shader = &m_resources.shaders.get(ShaderID::Vats);
     m_materialIDs[MaterialID::Vats] = m_resources.materials.add(*shader);
 
-    /*m_resources.shaders.loadFromString(ShaderID::VatsInstanced, "", "", "#define INSTANCED\n");
-    auto* shader = &m_resources.shaders.get(ShaderID::VatsInstanced);
+    timeUniform = shader->getUniformID("u_time");
+    shaderID = shader->getGLHandle();
+
+    /*m_resources.shaders.loadFromString(ShaderID::VatsInstanced, Vertex, Fragment, "#define INSTANCING\n");
+    shader = &m_resources.shaders.get(ShaderID::VatsInstanced);
     m_materialIDs[MaterialID::VatsInstanced] = m_resources.materials.add(*shader);*/
 }
 
@@ -252,11 +304,16 @@ void VatsState::loadModel(const std::string& path)
         if (md.loadFromFile(file.getModelPath()))
         {
             m_model = m_gameScene.createEntity();
-            m_model.addComponent<cro::Transform>().setPosition({ 0.6f, 0.f, 0.f});
+            m_model.addComponent<cro::Transform>().setPosition({ 0.45f, 0.f, 0.f});
             md.createModel(m_model);
 
+            std::vector<glm::mat4> tx = { glm::mat4(1.f), glm::mat4(1.f), glm::mat4(1.f) };
+            tx[1] = glm::translate(tx[1], glm::vec3(0.55f, 0.f, 0.1f));
+            tx[2] = glm::translate(tx[1], glm::vec3(-1.2f, 0.f, 0.13f));
+            m_model.getComponent<cro::Model>().setInstanceTransforms(tx);
+
             m_reference = m_gameScene.createEntity();
-            m_reference.addComponent<cro::Transform>().setPosition({ -0.6f, 0.f, 0.f });
+            m_reference.addComponent<cro::Transform>().setPosition({ -1.2f, 0.f, 0.f });
             m_reference.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
             md.createModel(m_reference);
 
@@ -264,12 +321,85 @@ void VatsState::loadModel(const std::string& path)
         }
 
         m_positionTexture.loadFromFile(file.getPositionPath());
+        m_positionTexture.setSmooth(true);
         m_normalTexture.loadFromFile(file.getNormalPath());
+        m_normalTexture.setSmooth(true);
 
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Vats]);
         material.setProperty("u_positionMap", m_positionTexture);
         material.setProperty("u_normalMap", m_normalTexture);
 
         m_model.getComponent<cro::Model>().setMaterial(0, material);
+    }
+}
+
+void VatsState::createNormalTexture()
+{
+    if (m_reference.isValid())
+    {
+        const auto& meshData = m_reference.getComponent<cro::Model>().getMeshData();
+
+        std::vector<float> verts;
+        std::vector<std::vector<std::uint32_t>> indices;
+        cro::Mesh::readVertexData(meshData, verts, indices);
+
+        if (meshData.attributes[cro::Mesh::Attribute::UV1] != 0)
+        {
+            std::vector<std::uint8_t> positionBuffer(meshData.vertexCount * 3);
+            std::vector<std::uint8_t> normalBuffer(meshData.vertexCount * 3);
+            const auto stride = meshData.vertexSize / sizeof(float);
+
+            std::size_t normalOffset = 0;
+            for (auto i = 0u; i < cro::Mesh::Attribute::Normal; ++i)
+            {
+                normalOffset += meshData.attributes[i];
+            }
+
+            std::size_t uv1Offset = 0;
+            for (auto i = 0u; i < cro::Mesh::Attribute::UV1; ++i)
+            {
+                uv1Offset += meshData.attributes[i];
+            }
+
+            const auto unsign = [](float v)
+            {
+                return (v + 1.f) / 2.f;
+            };
+
+            const float pixelWidth = 1.f / meshData.vertexCount;
+            const float scale = 1.8f;
+
+            for (auto i = 0; i < meshData.vertexCount; ++i)
+            {
+                auto vertIndex = i * stride;
+                verts[vertIndex + uv1Offset] = (i * pixelWidth) + (pixelWidth / 2.f);
+                verts[vertIndex + uv1Offset + 1] = scale;
+
+                auto pixelIndex = i * 3;
+
+                positionBuffer[pixelIndex] = static_cast<std::uint8_t>(unsign(verts[vertIndex] / scale) * 255.f);
+                positionBuffer[pixelIndex + 1] = -static_cast<std::uint8_t>(unsign(verts[vertIndex + 2] / scale) * 255.f);
+                positionBuffer[pixelIndex + 2] = static_cast<std::uint8_t>(unsign(verts[vertIndex + 1] / scale) * 255.f);
+
+                normalBuffer[pixelIndex] = static_cast<std::uint8_t>(unsign(verts[vertIndex + normalOffset]) * 255.f);
+                normalBuffer[pixelIndex + 1] = -static_cast<std::uint8_t>(unsign(verts[vertIndex + normalOffset + 2]) * 255.f);
+                normalBuffer[pixelIndex + 2] = static_cast<std::uint8_t>(unsign(verts[vertIndex + normalOffset + 1]) * 255.f);
+            }
+
+            //we could bypass creating the image and load straight
+            //to the texturem but we want to make use of the image write function
+
+            cro::Image img;
+            img.loadFromMemory(normalBuffer.data(), meshData.vertexCount, 1, cro::ImageFormat::RGB);
+            //img.write("assets/vats/normals.png");
+            m_normalTexture.loadFromImage(img);
+
+            img.loadFromMemory(positionBuffer.data(), meshData.vertexCount, 1, cro::ImageFormat::RGB);
+            m_positionTexture.loadFromImage(img);
+
+            glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+            glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+        }
     }
 }

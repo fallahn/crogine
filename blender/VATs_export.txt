@@ -1,6 +1,12 @@
-The VAT (Vertex Animation Texture) export script samples the active animation on the active selection and exports the animation data as a set of PNG images, for vertex position, vertex normal and optionally vertex tangents. NOTE that images produced are as wide in pixels as there are vertices in a model - so a model with 27K vertices will produce a text 27K pixels wide!! You have been warned ;) Images have one row of pixels for each sampled frame, so even a few hundred frames of animation should be OK. It's also possible to set the frame skip value in the export options to only sample every Nth frame.
+The VAT (Vertex Animation Texture) export script samples the active animation on the active selection and exports the animation data as a set of PNG images, for vertex position, vertex normal and optionally vertex tangents. NOTE that images produced are as wide in pixels as there are vertices in a model - so a model with 27K vertices will produce a texture 27K pixels wide!! You have been warned ;) Images have one row of pixels for each sampled frame, so even a few hundred frames of animation should be OK. It's also possible to set the frame skip value in the export options to only sample every Nth frame.
 
 More complex models mean that the script may take longer to run, causing Blender to apparently hang - in these cases be patient and let it run until Blender becomes responsive again.
+
+
+Currently incorrect normals can be produced when using custom normal/smoothing data, ie for flat shading. This is because the script processes Blender's meshes before the faces are split for export - for no reason other than I can't figure out how to hook the post-processed mesh data. For example a mesh with 712 vertices and custom normal data for flat shading will export to a mesh with 2800 vertices, to account for the extra normals needed to provide the flat shading. However the script processes the mesh *before* it is divided into flat faces so it only returns 712 smooth-shaded normals instead of all 2800. If anyone knows how to fix this / which process needs to be called first PLEASE let me know - I'm losing what little hair I have left ^_^
+
+However it is not all bad news - there is a work around by simply exporting the model to an animated/rigged glTF file first which creates the split mesh data during export. Then re-import this and run the VATs script on the mesh which now has the correct number of vertices, and the shading will be correct.
+
 
 The export script is based on a video by Martin Donald which can be found here:
 https://www.youtube.com/watch?v=NQ5Dllbxbz4

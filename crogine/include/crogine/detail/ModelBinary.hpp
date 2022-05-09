@@ -275,5 +275,12 @@ namespace cro::Detail::ModelBinary
 
     CRO_EXPORT_API bool write(cro::Entity, const std::string&, bool includeSkeleton = true);
 
+    /*!
+    \brief Reads vertex positions and index arrays from a binary file at the given path
+    If the file is successfully opened at the given path the mesh data is stored in the
+    given vectors, and meta data returned in the cro::MeshData::Struct
+    Note that this only loads position data from the file, as it is currently used
+    for loading collision meshes into the golf game. TODO: fix this.
+    */
     CRO_EXPORT_API cro::Mesh::Data read(const std::string&, std::vector<float>& dstVert, std::vector<std::vector<std::uint32_t>>& dstIdx);
 }
