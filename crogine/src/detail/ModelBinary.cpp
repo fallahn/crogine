@@ -389,8 +389,6 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
                 LogE << "No position data in mesh" << std::endl;
                 return {};
             }
-
-            std::vector<float> tempVerts;
             std::vector<std::uint32_t> sizes(meshHeader.indexArrayCount);
             dstIdx.resize(meshHeader.indexArrayCount);
 
@@ -412,19 +410,22 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
                         break;
                     case cro::Mesh::Attribute::Colour:
                         vertStride += 4;
-                        meshData.attributes[i] = 1; //TODO - do this properly instead of hack for golf game
+                        meshData.attributes[i] = 4;
                         break;
                     case cro::Mesh::Attribute::Normal:
                         vertStride += 3;
+                        meshData.attributes[i] = 3;
                         break;
                     case cro::Mesh::Attribute::UV0:
                     case cro::Mesh::Attribute::UV1:
                         vertStride += 2;
+                        meshData.attributes[i] = 2;
                         break;
                     case cro::Mesh::Attribute::Tangent:
                     case cro::Mesh::Attribute::BlendIndices:
                     case cro::Mesh::Attribute::BlendWeights:
                         vertStride += 4;
+                        meshData.attributes[i] = 4;
                         break;
                     }
                 }
@@ -432,7 +433,8 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
 
             auto pos = SDL_RWtell(file.file);
             auto vertSize = meshHeader.indexArrayOffset - pos;
-            tempVerts.resize(vertSize / sizeof(float));
+
+            std::vector<float> tempVerts(vertSize / sizeof(float));
             SDL_RWread(file.file, tempVerts.data(), vertSize, 1);
             CRO_ASSERT(tempVerts.size() % vertStride == 0, "");
 
@@ -442,47 +444,8 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
                 SDL_RWread(file.file, dstIdx[i].data(), sizes[i] * sizeof(std::uint32_t), 1);
             }
 
-            //process vertex data
-            for (auto i = 0u; i < tempVerts.size(); i += vertStride)
-            {
-                std::uint32_t offset = 0;
-                for (auto j = 0u; j < cro::Mesh::Attribute::Total; ++j)
-                {
-                    if (meshHeader.flags & (1 << j))
-                    {
-                        switch (j)
-                        {
-                        default: break;
-                        case cro::Mesh::Attribute::Position:
-                            dstVert.push_back(tempVerts[i + offset]);
-                            dstVert.push_back(tempVerts[i + offset + 1]);
-                            dstVert.push_back(tempVerts[i + offset + 2]);
-
-                            offset += 3;
-                            meshData.attributeFlags |= cro::VertexProperty::Position;
-                            break;
-                        case cro::Mesh::Attribute::Colour:
-                            dstVert.push_back(tempVerts[i + offset]);
-                            //TODO: unkludge this
-                            /*m_vertexData.push_back(tempVerts[i + offset + 1]);
-                            m_vertexData.push_back(tempVerts[i + offset + 2]);
-                            m_vertexData.push_back(tempVerts[i + offset + 3]);*/
-                            offset += 1;
-                            meshData.attributeFlags |= cro::VertexProperty::Colour;
-                            break;
-                        case cro::Mesh::Attribute::Normal:
-                        case cro::Mesh::Attribute::Tangent:
-                        case cro::Mesh::Attribute::Bitangent:
-                        case cro::Mesh::Attribute::UV0:
-                        case cro::Mesh::Attribute::UV1:
-                        case cro::Mesh::Attribute::BlendIndices:
-                        case cro::Mesh::Attribute::BlendWeights:
-                            break;
-                        }
-                    }
-                }
-            }
-
+            dstVert.swap(tempVerts);
+            meshData.attributeFlags = meshHeader.flags;
             meshData.primitiveType = GL_TRIANGLES;
 
             for (const auto& a : meshData.attributes)
