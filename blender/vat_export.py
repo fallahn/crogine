@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export Vertex Animation Textures",
     "author": "Bald Guy (Based on Martin Donald's example)",
-    "version": (2022, 5, 3),
+    "version": (2022, 5, 9),
     "blender": (2, 93, 0),
     "location": "File > Export > Vertex Animation Texture",
     "description": "Export active animation on selected object as texture information.",
@@ -276,7 +276,10 @@ class ExportVat(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 
             if bpy.context.selected_objects != None:
                 obj = bpy.context.selected_objects[0]
-                export_textures(obj, [frame_0, frame_1], self.properties.filepath, settings)
+                if len(obj.data.vertices) > 4096:
+                    show_message_box("More than 4096 vertices found, this would create a HUGE texture.", "Error", 'ERROR')
+                else:
+                    export_textures(obj, [frame_0, frame_1], self.properties.filepath, settings)
             context.scene.frame_set(current_frame)
 
 

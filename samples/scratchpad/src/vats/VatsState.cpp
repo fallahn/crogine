@@ -293,11 +293,8 @@ void VatsState::createNormalTexture()
 
         if (meshData.attributes[cro::Mesh::Attribute::UV1] != 0)
         {
-            //the model already has this set so we can read it back to know
-            //where the destination pixel is in the target
-            auto vertexCount = 712;
-            std::vector<std::uint8_t> imageBuffer(vertexCount * 3);
-            const float pixelWidth = 1.f / vertexCount;
+            std::vector<std::uint8_t> positionBuffer(meshData.vertexCount * 3);
+            std::vector<std::uint8_t> normalBuffer(meshData.vertexCount * 3);
             const auto stride = meshData.vertexSize / sizeof(float);
 
             std::size_t normalOffset = 0;
@@ -317,28 +314,40 @@ void VatsState::createNormalTexture()
                 return (v + 1.f) / 2.f;
             };
 
+            const float pixelWidth = 1.f / meshData.vertexCount;
+            const float scale = 1.8f;
 
-
-            for (auto i = 0; i < vertexCount; ++i)
+            for (auto i = 0; i < meshData.vertexCount; ++i)
             {
                 auto vertIndex = i * stride;
-                float pixelPos = verts[vertIndex + uv1Offset];
-                pixelPos -= (pixelWidth / 2.f);
+                verts[vertIndex + uv1Offset] = (i * pixelWidth) + (pixelWidth / 2.f);
+                verts[vertIndex + uv1Offset + 1] = scale;
 
-                std::int32_t pixelIndex = static_cast<std::int32_t>(pixelPos / pixelWidth) * 3;
+                auto pixelIndex = i * 3;
 
-                imageBuffer[pixelIndex] = static_cast<std::uint8_t>(unsign(verts[vertIndex + normalOffset]) * 255.f);
-                imageBuffer[pixelIndex + 1] = static_cast<std::uint8_t>(unsign(verts[vertIndex + normalOffset + 1]) * 255.f);
-                imageBuffer[pixelIndex + 2] = static_cast<std::uint8_t>(unsign(verts[vertIndex + normalOffset + 2]) * 255.f);
+                positionBuffer[pixelIndex] = static_cast<std::uint8_t>(unsign(verts[vertIndex] / scale) * 255.f);
+                positionBuffer[pixelIndex + 1] = -static_cast<std::uint8_t>(unsign(verts[vertIndex + 2] / scale) * 255.f);
+                positionBuffer[pixelIndex + 2] = static_cast<std::uint8_t>(unsign(verts[vertIndex + 1] / scale) * 255.f);
+
+                normalBuffer[pixelIndex] = static_cast<std::uint8_t>(unsign(verts[vertIndex + normalOffset]) * 255.f);
+                normalBuffer[pixelIndex + 1] = -static_cast<std::uint8_t>(unsign(verts[vertIndex + normalOffset + 2]) * 255.f);
+                normalBuffer[pixelIndex + 2] = static_cast<std::uint8_t>(unsign(verts[vertIndex + normalOffset + 1]) * 255.f);
             }
 
-            cro::Image img;
-            img.loadFromMemory(imageBuffer.data(), vertexCount, 1, cro::ImageFormat::RGB);
-            img.write("assets/vats/normals.png");
+            //we could bypass creating the image and load straight
+            //to the texturem but we want to make use of the image write function
 
-            //glBindTexture(GL_TEXTURE_2D, m_normalTexture.getGLHandle());
-            //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, vertexCount, 1, 0, GL_FLOAT, GL_RGB, imageBuffer.data());
-            //glBindTexture(GL_TEXTURE_2D, 0);
+            cro::Image img;
+            img.loadFromMemory(normalBuffer.data(), meshData.vertexCount, 1, cro::ImageFormat::RGB);
+            //img.write("assets/vats/normals.png");
+            m_normalTexture.loadFromImage(img);
+
+            img.loadFromMemory(positionBuffer.data(), meshData.vertexCount, 1, cro::ImageFormat::RGB);
+            m_positionTexture.loadFromImage(img);
+
+            glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+            glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
     }
 }
