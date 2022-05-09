@@ -138,7 +138,7 @@ namespace
 
     void main()
     {
-        float amount = clamp(dot(normalize(v_normal), normalize(-u_lightDirection)), 0.1, 1.0);
+        float amount = clamp(dot(normalize(v_normal), normalize(-u_lightDirection)), 0.4, 1.0);
 
         FRAG_OUT = Colours[v_instanceID] * amount;
     })";
