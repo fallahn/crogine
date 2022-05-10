@@ -116,6 +116,8 @@ struct ShaderID final
         CelTexturedInstanced,
         CelTexturedSkinned,
         ShadowMap,
+        Crowd,
+        CrowdShadow,
         Cloud,
         Leaderboard,
         Player,

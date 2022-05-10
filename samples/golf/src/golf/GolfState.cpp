@@ -1339,7 +1339,7 @@ void GolfState::loadAssets()
 
 
     //pre-process the crowd geometry
-    cro::ModelDefinition billboardDef(m_resources);
+    /*cro::ModelDefinition billboardDef(m_resources);
     cro::SpriteSheet crowdSprites;
     crowdSprites.loadFromFile("assets/golf/sprites/crowd.spt", m_resources.textures);
     const auto& sprites = crowdSprites.getSprites();
@@ -1347,7 +1347,7 @@ void GolfState::loadAssets()
     for (const auto& [name, spr] : sprites)
     {
         billboards.push_back(spriteToBillboard(spr));
-    }
+    }*/
 
     //used when parsing holes
     auto addCrowd = [&](HoleData& holeData, glm::vec3 position, float rotation)
@@ -1390,7 +1390,7 @@ void GolfState::loadAssets()
             auto tx = glm::translate(glm::mat4(1.f), position - glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f));
             tx = glm::rotate(tx, (rotation * cro::Util::Const::degToRad), glm::vec3(0.f, 1.f, 0.f));
             tx = glm::translate(tx, offsetPos);
-            tx = glm::rotate(tx, cro::Util::Random::value(-0.5f, 0.5f), glm::vec3(0.f, 1.f, 0.f));
+            tx = glm::rotate(tx, cro::Util::Random::value(-0.25f, 0.25f), glm::vec3(0.f, 1.f, 0.f));
             
             float scale = static_cast<float>(cro::Util::Random::value(95, 105)) / 100.f;
             tx = glm::scale(tx, glm::vec3(scale));
@@ -1780,6 +1780,7 @@ void GolfState::loadAssets()
                 holeData.distanceToPin = glm::length(holeData.pin - holeData.tee);
             }
         }
+        std::shuffle(holeData.crowdPositions.begin(), holeData.crowdPositions.end(), cro::Util::Random::rndEngine);
     }
 
     //add the dynamically updated model to any leaderboard props

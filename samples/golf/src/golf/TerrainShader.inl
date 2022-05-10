@@ -157,6 +157,9 @@ static const std::string CelVertexShader = R"(
 #if defined (TEXTURED)
     ATTRIBUTE vec2 a_texCoord0;
 #endif
+#if defined (VATS)
+    ATTRIBUTE vec2 a_texCoord1;
+#endif
 
 #if defined(INSTANCING)
     ATTRIBUTE mat4 a_instanceWorldMatrix;
@@ -168,6 +171,13 @@ static const std::string CelVertexShader = R"(
     ATTRIBUTE vec4 a_boneIndices;
     ATTRIBUTE vec4 a_boneWeights;
     uniform mat4 u_boneMatrices[MAX_BONES];
+#endif
+
+#if defined (VATS)
+    #define MAX_INSTANCE 3
+    uniform sampler2D u_vatsPosition;
+    uniform sampler2D u_vatsNormal;
+    uniform float u_time;
 #endif
 
 #if defined(RX_SHADOWS)
@@ -214,6 +224,15 @@ static const std::string CelVertexShader = R"(
     const vec2 MapSize = vec2(320.0, 200.0);
 #endif
 
+    vec3 decodeVector(sampler2D source, vec2 coord)
+    {
+        vec3 vec = TEXTURE(source, coord).rgb;
+        vec *= 2.0;
+        vec -= 1.0;
+
+        return vec;
+    }
+
     void main()
     {
     #if defined (INSTANCING)
@@ -226,8 +245,15 @@ static const std::string CelVertexShader = R"(
         mat3 normalMatrix = u_normalMatrix;
     #endif
 
+    #if defined (VATS)
+        vec2 texCoord = a_texCoord1;
+        float scale = texCoord.y;
+        texCoord.y = mod(u_time, 1.0);
 
+        vec4 position = vec4(decodeVector(u_vatsPosition, texCoord) * scale, 1.0);
+    #else
         vec4 position = a_position;
+    #endif
 
     #if defined(SKINNED)
         mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
@@ -273,10 +299,14 @@ static const std::string CelVertexShader = R"(
 
         gl_Position = vertPos;
 
+#if defined(VATS)
+        vec3 normal = decodeVector(u_vatsNormal, texCoord);
+#else
         vec3 normal = a_normal;
-    #if defined(SKINNED)
+#endif
+#if defined(SKINNED)
         normal = (skinMatrix * vec4(normal, 0.0)).xyz;
-    #endif
+#endif
         v_normal = normalMatrix * normal;
         v_cameraWorldPosition = u_cameraWorldPosition;
         v_colour = a_colour;

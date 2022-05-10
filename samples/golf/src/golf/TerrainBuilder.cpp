@@ -33,6 +33,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
 #include "CommandIDs.hpp"
+#include "VatFile.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -59,6 +60,12 @@ source distribution.
 namespace
 {
 #include "TerrainShader.inl"
+#include "ShadowMapping.inl"
+
+    std::uint32_t vatShader = 0;
+    std::int32_t vatUniform = -1;
+    std::uint32_t shadowShader = 0;
+    std::int32_t shadowUniform = -1;
 
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler
@@ -286,21 +293,35 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     //custom shader for instanced plants
     resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
-    const auto& reedShader = resources.shaders.get(ShaderID::CelTexturedInstanced);
-    materialID = resources.materials.add(reedShader);
+    auto reedMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CelTexturedInstanced));
 
-    //create billboard entities
+    //and VATs shader for crowd
+    resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS");
+    auto crowdMaterialID = resources.materials.add(resources.shaders.get(ShaderID::Crowd));
+
+    resources.shaders.loadFromString(ShaderID::CrowdShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define VATS\n");
+    auto shadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdShadow));
+
+    //testing
+    vatShader = resources.shaders.get(ShaderID::Crowd).getGLHandle();
+    vatUniform = resources.shaders.get(ShaderID::Crowd).getUniformID("u_time");
+    shadowShader = resources.shaders.get(ShaderID::CrowdShadow).getGLHandle();
+    shadowUniform = resources.shaders.get(ShaderID::CrowdShadow).getUniformID("u_time");
+
+
+    //create billboard/instanced entities
     cro::ModelDefinition billboardDef(resources);
     cro::ModelDefinition reedsDef(resources);
     cro::ModelDefinition crowdDef(resources);
     std::int32_t i = 0;
 
+    //TODO scan the directory for definition files?
     const std::array<std::string, 4u> spectatorPaths =
     {
-        "assets/golf/models/spectator01.cmt",
-        "assets/golf/models/spectator02.cmt",
-        "assets/golf/models/spectator03.cmt",
-        "assets/golf/models/spectator04.cmt"
+        "assets/golf/crowd/spectator01.vat",
+        "assets/golf/crowd/spectator02.vat",
+        "assets/golf/crowd/spectator03.vat",
+        "assets/golf/crowd/spectator04.vat"
     };
 
     for (auto& entity : m_billboardEntities)
@@ -344,7 +365,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
             if (reedsDef.loadFromFile(instancePath, true))
             {
-                auto material = resources.materials.get(materialID);
+                auto material = resources.materials.get(reedMaterialID);
 
                 auto childEnt = scene.createEntity();
                 childEnt.addComponent<cro::Transform>();
@@ -365,14 +386,24 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             //TODO will breaking this up for better culling opportunity benefit perf?
             for (const auto& p : spectatorPaths)
             {
-                if (crowdDef.loadFromFile(p, true))
+                VatFile vatFile;
+                if (vatFile.loadFromFile(p) &&
+                    crowdDef.loadFromFile(vatFile.getModelPath(), true))
                 {
                     auto childEnt = scene.createEntity();
                     childEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f });
                     crowdDef.createModel(childEnt);
 
-                    //TODO setup material
+                    //setup material
+                    auto material = resources.materials.get(crowdMaterialID);
+                    material.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
+                    material.setProperty("u_vatsNormal", resources.textures.get(vatFile.getNormalPath()));
 
+                    auto shadowMaterial = resources.materials.get(shadowMaterialID);
+                    shadowMaterial.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
+
+                    childEnt.getComponent<cro::Model>().setMaterial(0, material);
+                    childEnt.getComponent<cro::Model>().setShadowMaterial(0, shadowMaterial);
                     childEnt.getComponent<cro::Model>().setHidden(true);
                     childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
                     entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
@@ -382,6 +413,11 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             }
 
             i++;
+        }
+        else
+        {
+            //hmmm we need access to shared state data to set an
+            //error message and the state stack to push said error
         }
     }
 
@@ -582,6 +618,14 @@ void TerrainBuilder::updateTime(float elapsed)
 {
     glCheck(glUseProgram(m_slopeProperties.shader));
     glCheck(glUniform1f(m_slopeProperties.timeUniform, elapsed));
+
+
+    //just to test VATs is working
+    elapsed /= 10.f;
+    glUseProgram(vatShader);
+    glUniform1f(vatUniform, elapsed);
+    glUseProgram(shadowShader);
+    glUniform1f(shadowUniform, elapsed);
 }
 
 void TerrainBuilder::setSlopePosition(glm::vec3 position)
