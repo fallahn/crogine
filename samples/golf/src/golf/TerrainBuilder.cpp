@@ -84,6 +84,7 @@ namespace
         float destination = 0.f;
         cro::Entity otherEnt;
         cro::Entity instancedEnt; //entity containing instanced geometry
+        std::vector<cro::Entity>* crowdEnts = nullptr;
     };
 
     //callback for swapping shrub ents
@@ -120,6 +121,18 @@ namespace
                 if (swapData.instancedEnt.isValid())
                 {
                     swapData.instancedEnt.getComponent<cro::Model>().setHidden(true);
+                }
+
+                if (swapData.crowdEnts)
+                {
+                    auto& ents = *swapData.crowdEnts;
+                    for (auto e : ents)
+                    {
+                        if (e.isValid())
+                        {
+                            e.getComponent<cro::Model>().setHidden(true);
+                        }
+                    }
                 }
             }
         }
@@ -279,7 +292,16 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //create billboard entities
     cro::ModelDefinition billboardDef(resources);
     cro::ModelDefinition reedsDef(resources);
+    cro::ModelDefinition crowdDef(resources);
     std::int32_t i = 0;
+
+    const std::array<std::string, 4u> spectatorPaths =
+    {
+        "assets/golf/models/spectator01.cmt",
+        "assets/golf/models/spectator02.cmt",
+        "assets/golf/models/spectator03.cmt",
+        "assets/golf/models/spectator04.cmt"
+    };
 
     for (auto& entity : m_billboardEntities)
     {
@@ -338,6 +360,27 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
                 m_instancedEntities[i] = childEnt;
             }
+
+            //create entities to render instanced crowd models
+            //TODO will breaking this up for better culling opportunity benefit perf?
+            for (const auto& p : spectatorPaths)
+            {
+                if (crowdDef.loadFromFile(p, true))
+                {
+                    auto childEnt = scene.createEntity();
+                    childEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f });
+                    crowdDef.createModel(childEnt);
+
+                    //TODO setup material
+
+                    childEnt.getComponent<cro::Model>().setHidden(true);
+                    childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+                    entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
+
+                    m_crowdEntities[i].push_back(childEnt);
+                }
+            }
+
             i++;
         }
     }
@@ -469,6 +512,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.destination = -MaxShrubOffset;
                 swapData.otherEnt = m_billboardEntities[first];
                 swapData.instancedEnt = m_instancedEntities[second];
+                swapData.crowdEnts = &m_crowdEntities[second];
                 swapData.currentTime = 0.f;
                 m_billboardEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
                 m_billboardEntities[second].getComponent<cro::Callback>().active = true;
@@ -479,6 +523,24 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 {
                     m_instancedEntities[first].getComponent<cro::Model>().setHidden(false);
                     m_instancedEntities[first].getComponent<cro::Model>().setInstanceTransforms(m_instanceTransforms);
+                }
+
+                //crowd instances
+                //TODO can we move some of this to the thread func (can't set transforms in it though)
+                std::vector<std::vector<glm::mat4>> positions(m_crowdEntities[first].size());
+                for (auto i = 0u; i < m_holeData[m_currentHole].crowdPositions.size(); ++i)
+                {
+                    positions[i % positions.size()].push_back(m_holeData[m_currentHole].crowdPositions[i]);
+                }
+
+                for (auto i = 0u; i < m_crowdEntities[first].size(); ++i)
+                {
+                    if (m_crowdEntities[first][i].isValid()
+                        && !positions[i].empty())
+                    {
+                        m_crowdEntities[first][i].getComponent<cro::Model>().setInstanceTransforms(positions[i]);
+                        m_crowdEntities[first][i].getComponent<cro::Model>().setHidden(false);
+                    }
                 }
             }
 

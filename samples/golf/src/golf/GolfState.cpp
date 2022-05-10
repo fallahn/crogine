@@ -1353,36 +1353,53 @@ void GolfState::loadAssets()
     auto addCrowd = [&](HoleData& holeData, glm::vec3 position, float rotation)
     {
         //reload to ensure unique VBO
-        if (!billboards.empty() &&
-            billboardDef.loadFromFile("assets/golf/models/crowd.cmt"))
+        //if (!billboards.empty() &&
+        //    billboardDef.loadFromFile("assets/golf/models/crowd.cmt"))
+        //{
+        //    auto ent = m_gameScene.createEntity();
+        //    ent.addComponent<cro::Transform>().setPosition(position);
+        //    ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
+        //    billboardDef.createModel(ent);
+
+        //    auto material = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+        //    applyMaterialData(billboardDef, material);
+        //    ent.getComponent<cro::Model>().setMaterial(0, material);
+
+        //    glm::vec3 bbPos(-8.f, 0.f, 0.f);
+        //    for (auto i = 0; i < 16; ++i)
+        //    {
+        //        bbPos.x += 0.5f + (static_cast<float>(cro::Util::Random::value(5, 10)) / 10.f);
+        //        bbPos.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
+
+        //        //images are a little oversized at 2.5m...
+        //        auto bb = billboards[(i + cro::Util::Random::value(0, 2)) % billboards.size()];
+        //        bb.size *= static_cast<float>(cro::Util::Random::value(65, 75)) / 100.f;
+        //        bb.position = bbPos;
+        //        ent.getComponent<cro::BillboardCollection>().addBillboard(bb);
+        //    }
+
+        //    ent.getComponent<cro::Model>().setHidden(true);
+
+        //    holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+        //    holeData.propEntities.push_back(ent);
+        //}
+        //TODO remove above and use below to create instanced geom in TerrainBuilder.
+        glm::vec3 offsetPos(-8.f, 0.f, 0.f);
+        for (auto i = 0; i < 16; ++i)
         {
-            auto ent = m_gameScene.createEntity();
-            ent.addComponent<cro::Transform>().setPosition(position);
-            ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
-            billboardDef.createModel(ent);
+            auto tx = glm::translate(glm::mat4(1.f), position - glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f));
+            tx = glm::rotate(tx, (rotation * cro::Util::Const::degToRad), glm::vec3(0.f, 1.f, 0.f));
+            tx = glm::translate(tx, offsetPos);
+            tx = glm::rotate(tx, cro::Util::Random::value(-0.5f, 0.5f), glm::vec3(0.f, 1.f, 0.f));
+            
+            float scale = static_cast<float>(cro::Util::Random::value(95, 105)) / 100.f;
+            tx = glm::scale(tx, glm::vec3(scale));
 
-            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
-            applyMaterialData(billboardDef, material);
-            ent.getComponent<cro::Model>().setMaterial(0, material);
+            holeData.crowdPositions.push_back(tx);
 
-            glm::vec3 bbPos(-8.f, 0.f, 0.f);
-            for (auto i = 0; i < 16; ++i)
-            {
-                bbPos.x += 0.5f + (static_cast<float>(cro::Util::Random::value(5, 10)) / 10.f);
-                bbPos.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
-
-                //images are a little oversized at 2.5m...
-                auto bb = billboards[(i + cro::Util::Random::value(0, 2)) % billboards.size()];
-                bb.size *= static_cast<float>(cro::Util::Random::value(65, 75)) / 100.f;
-                bb.position = bbPos;
-                ent.getComponent<cro::BillboardCollection>().addBillboard(bb);
-            }
-
-            ent.getComponent<cro::Model>().setHidden(true);
-
-            holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-            holeData.propEntities.push_back(ent);
-        }
+            offsetPos.x += 0.3f + (static_cast<float>(cro::Util::Random::value(5, 10)) / 10.f);
+            offsetPos.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
+        }        
     };
 
 

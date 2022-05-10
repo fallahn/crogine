@@ -1,0 +1,18 @@
+model spectator01
+{
+    mesh = assets/golf/models/spectator.cmb
+    cast_shadows = false
+
+    material VertexLit
+    {
+        mask_colour = 0.000000,0.000000,0.000000,1.000000
+        name = "Untitled"
+        colour = 1.000000,0.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        blendmode = none
+
+    }
+}
