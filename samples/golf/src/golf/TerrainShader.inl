@@ -313,6 +313,10 @@ static const std::string CelVertexShader = R"(
 
 #if defined (TEXTURED)
         v_texCoord = a_texCoord0;
+#if defined (VATS)
+        v_texCoord.u /= MAX_INSTANCE;
+        v_texCoord.u += (1.0 / MAX_INSTANCE) * mod(gl_InstanceID, MAX_INSTANCE);
+#endif
 #endif
 
 #if defined (NORMAL_MAP)
