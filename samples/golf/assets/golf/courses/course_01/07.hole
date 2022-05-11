@@ -31,14 +31,20 @@ hole 07
 
     crowd
     {
-        position = 310.270538,1.801212,-46.730751
-        rotation = -76.358694
+        position = 174.869995,1.801259,-141.584137
+        rotation = -32.092114
     }
 
     crowd
     {
-        position = 311.995911,1.801212,-32.401390
-        rotation = -103.324792
+        position = 307.681274,1.801262,-47.836521
+        rotation = -76.050294
+    }
+
+    crowd
+    {
+        position = 302.703949,1.801259,-18.170397
+        rotation = -137.911430
     }
 
     prop
@@ -46,17 +52,5 @@ hole 07
         model = "assets/golf/models/view_platform.cmt"
         position = 178.847641,1.801224,-144.444199
         rotation = -953.512766
-    }
-
-    crowd
-    {
-        position = 180.637543,1.801215,-140.446213
-        rotation = -41.801093
-    }
-
-    crowd
-    {
-        position = 168.517319,1.801215,-147.628662
-        rotation = -25.371759
     }
 }
