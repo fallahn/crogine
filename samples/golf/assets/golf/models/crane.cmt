@@ -1,6 +1,6 @@
 model crane
 {
-    mesh = "assets/golf/models/crane.cmb"
+    mesh = assets/golf/models/crane.cmb
     cast_shadows = false
 
     material Unlit
@@ -9,7 +9,9 @@ model crane
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
         repeat = true
-        blendmode = "none"
+        depth_test = true
+        double_sided = false
+        blendmode = none
         diffuse = "assets/golf/images/crane_chassis.png"
 
     }
@@ -20,16 +22,20 @@ model crane
         colour = 1.000000,1.000000,1.000000,0.321569
         smooth = true
         repeat = true
-        blendmode = "alpha"
+        depth_test = true
+        double_sided = false
+        blendmode = alpha
 
     }
     material Unlit
     {
-        name = "shadow"
-        colour = 0.266667,0.266667,0.266667,0.427451
+        name = "Untitled"
+        colour = 0.000000,0.000000,0.000000,0.372549
         smooth = true
         repeat = true
-        blendmode = "alpha"
+        depth_test = true
+        double_sided = false
+        blendmode = alpha
 
     }
 }

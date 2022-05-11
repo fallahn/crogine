@@ -86,8 +86,26 @@ hole 06
 
     crowd
     {
-        position = 228.480804,1.129440,-138.233902
-        rotation = 61.142431
+        position = 228.296951,1.129486,-141.851761
+        rotation = -116.900195
+    }
+
+    crowd
+    {
+        position = 262.692444,1.129484,-17.718714
+        rotation = -168.037442
+    }
+
+    crowd
+    {
+        position = 78.580803,1.129487,-78.778702
+        rotation = 143.809715
+    }
+
+    crowd
+    {
+        position = 105.157623,1.129485,-111.604691
+        rotation = -32.956522
     }
 
     prop
@@ -150,12 +168,6 @@ hole 06
         scale = 1.000000,1.000000,1.000000
     }
 
-    crowd
-    {
-        position = 272.652527,1.129442,-19.874367
-        rotation = 18.838362
-    }
-
     prop
     {
         model = "assets/golf/models/scoreboard.cmt"
@@ -202,17 +214,5 @@ hole 06
         position = 61.726593,1.212328,-95.784790
         rotation = -69.947243
         scale = 1.000000,1.000000,1.000000
-    }
-
-    crowd
-    {
-        position = 63.242607,1.129444,-105.102722
-        rotation = 61.459500
-    }
-
-    crowd
-    {
-        position = 97.037781,1.129442,-116.952034
-        rotation = -35.299606
     }
 }
