@@ -10,8 +10,8 @@ hole 14
 
     crowd
     {
-        position = 297.034027,1.679726,-66.054520
-        rotation = -64.161384
+        position = 291.879333,1.679770,-68.604065
+        rotation = -43.135478
     }
 
     prop
@@ -19,12 +19,6 @@ hole 14
         model = "assets/golf/models/view_platform.cmt"
         position = 296.171692,1.679724,-71.940659
         rotation = -759.911305
-    }
-
-    crowd
-    {
-        position = 286.653870,1.679725,-74.853928
-        rotation = -26.932936
     }
 
     prop

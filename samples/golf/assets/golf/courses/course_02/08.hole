@@ -17,8 +17,14 @@ hole 08
 
     crowd
     {
-        position = 261.405121,1.281770,-130.820892
-        rotation = 20.197075
+        position = 258.087738,1.281815,-130.846664
+        rotation = -164.099573
+    }
+
+    crowd
+    {
+        position = 12.044516,1.281815,-33.588749
+        rotation = 89.458477
     }
 
     prop
@@ -47,18 +53,6 @@ hole 08
         model = "assets/golf/models/crane_arm.cmt"
         position = 91.112534,1.312337,-135.033432
         rotation = 71.533772
-    }
-
-    crowd
-    {
-        position = 21.735338,1.281770,-13.866223
-        rotation = 0.000000
-    }
-
-    crowd
-    {
-        position = 13.523406,1.281771,-20.085243
-        rotation = -46.713608
     }
 
     prop

@@ -17,8 +17,14 @@ hole 16
 
     crowd
     {
-        position = 192.821548,1.999999,-166.677094
-        rotation = 18.688985
+        position = 197.782349,2.000046,-166.885422
+        rotation = 9.137431
+    }
+
+    crowd
+    {
+        position = 43.330006,2.000045,-72.489067
+        rotation = 56.896900
     }
 
     prop
@@ -35,11 +41,6 @@ hole 16
         rotation = -738.788375
     }
 
-    crowd
-    {
-        position = 44.789368,1.999999,-75.906395
-        rotation = 45.736389
-    }
 
     prop
     {

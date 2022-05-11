@@ -17,14 +17,14 @@ hole 10
 
     crowd
     {
-        position = 43.962688,0.796787,-105.899437
-        rotation = -34.004720
+        position = 57.292358,0.796828,-99.032196
+        rotation = -205.672778
     }
 
     crowd
     {
-        position = 41.488945,0.796783,-109.035980
-        rotation = 104.330624
+        position = 195.147903,0.865718,-114.131683
+        rotation = -4.631442
     }
 
     prop
@@ -46,12 +46,6 @@ hole 10
         model = "assets/golf/models/fence02.cmt"
         position = 178.526520,0.806783,-115.016808
         rotation = -732.960305
-    }
-
-    crowd
-    {
-        position = 181.812256,0.796782,-113.263351
-        rotation = 0.000000
     }
 
 }
