@@ -3437,6 +3437,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_inputParser.setHoleDirection(target - player.position, m_currentPlayer != player); // this also selects the nearest club
 
     //TODO check if input is indeed CPU
+    //TODO if the player can rotate enough prefer the hole pin as the target
     if (localPlayer) m_cpuGolfer.activate(target);
 
 

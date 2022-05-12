@@ -50,6 +50,7 @@ namespace
     struct Debug final
     {
         float diff = 0.f;
+        float windDot = 0.f;
     }debug;
 
     constexpr float MinSearchDistance = 10.f;
@@ -75,6 +76,7 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap)
             if (ImGui::Begin("CPU"))
             {
                 ImGui::Text("State: %s", StateStrings[static_cast<std::int32_t>(m_state)].c_str());
+                ImGui::Text("Wind Dot: %3.2f", debug.windDot);
                 ImGui::Text("Target Diff: %3.2f", debug.diff);
                 ImGui::Text("Search Distance: %3.2f", m_searchDistance);
                 ImGui::Text("Current Club: %s", Clubs[m_clubID].name.c_str());
@@ -133,7 +135,7 @@ void CPUGolfer::update(float dt, glm::vec3 windVector)
         
         break;
     case State::PickingClub:
-        pickClub(dt);
+        pickClub(dt, windVector);
         break;
     case State::Aiming:
         aim(dt, windVector);
@@ -166,7 +168,7 @@ void CPUGolfer::think(float dt)
     }
 }
 
-void CPUGolfer::pickClub(float dt)
+void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
 {
     if (m_thinking)
     {
@@ -187,14 +189,26 @@ void CPUGolfer::pickClub(float dt)
 
 
         //get distance to target
-        float targetDistance = glm::length(m_target - m_activePlayer.position);
+        auto targetDir = m_target - m_activePlayer.position;
+        float targetDistance = glm::length(targetDir);
+
+        //adjust the target distance depending on how the wind carries us
+        float windDot = -(glm::dot(glm::vec2(windVector.x, windVector.z), glm::vec2(targetDir.x, targetDir.z)) / targetDistance);
+        windDot *= windVector.y;
+        windDot *= 0.4f; //magic number. This extends a distance of 77m to 100 for example
+        windDot = std::max(0.f, windDot); //skew this positively, negative amounts will be compensated for by using less power
+        targetDistance += (targetDistance * windDot);
+
+        //and hit further if we're off the fairway
         if (m_activePlayer.terrain == TerrainID::Rough
             || m_activePlayer.terrain == TerrainID::Bunker)
         {
             //we want to aim a bit further if we went
             //off the fairway, so we hit a bit harder.
-            targetDistance += 8.f;
+            targetDistance += 20.f;
         }
+
+
 
         auto club = m_inputParser.getClub();
         float clubDistance = Clubs[club].target;
@@ -211,6 +225,7 @@ void CPUGolfer::pickClub(float dt)
         auto diff = targetDistance - clubDistance;
 #ifdef CRO_DEBUG_
         debug.diff = diff;
+        debug.windDot = windDot;
 #endif
         if (std::abs(diff) < m_searchDistance)
         {

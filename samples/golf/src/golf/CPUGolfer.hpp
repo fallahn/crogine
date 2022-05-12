@@ -81,7 +81,7 @@ private:
     void startThinking(float);
     void think(float);
 
-    void pickClub(float);
+    void pickClub(float, glm::vec3);
     void aim(float, glm::vec3);
     void stroke();
 
