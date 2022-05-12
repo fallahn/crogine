@@ -264,6 +264,9 @@
     <ClCompile Include="src\golf\VatFile.cpp">
       <Filter>Source Files\golf\client</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\CPUGolfer.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -516,6 +519,9 @@
       <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\VatFile.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CPUGolfer.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>

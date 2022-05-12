@@ -139,6 +139,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_trophyScene       (context.appInstance.getMessageBus()),
     m_mouseVisible      (true),
     m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
+    m_cpuGolfer         (m_inputParser, m_currentPlayer),
     m_wantsGameState    (true),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
@@ -692,6 +693,8 @@ void GolfState::handleMessage(const cro::Message& msg)
     break;
     }
 
+    m_cpuGolfer.handleMessage(msg);
+
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
     m_trophyScene.forwardMessage(msg);
@@ -768,9 +771,10 @@ bool GolfState::simulate(float dt)
     data.elapsedTime = elapsed;
     m_windBuffer.setData(&data);
 
-    m_gameScene.getSystem<CloudSystem>()->setWindVector({ m_windUpdate.currentWindVector.x,
-                                                        m_windUpdate.currentWindSpeed,
-                                                        m_windUpdate.currentWindVector.z });
+    glm::vec3 windVector(m_windUpdate.currentWindVector.x,
+                        m_windUpdate.currentWindSpeed,
+                        m_windUpdate.currentWindVector.z);
+    m_gameScene.getSystem<CloudSystem>()->setWindVector(windVector);
 
     cro::Command cmd;
     cmd.targetFlags = CommandID::ParticleEmitter;
@@ -786,6 +790,7 @@ bool GolfState::simulate(float dt)
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+    m_cpuGolfer.update(dt, windVector);
 
     m_terrainBuilder.updateTime(elapsed * 10.f);
     m_inputParser.update(dt);
@@ -3430,6 +3435,10 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto target = m_cameras[CameraID::Player].getComponent<TargetInfo>().targetLookAt;
     m_inputParser.resetPower();
     m_inputParser.setHoleDirection(target - player.position, m_currentPlayer != player); // this also selects the nearest club
+
+    //TODO check if input is indeed CPU
+    if (localPlayer) m_cpuGolfer.activate(target);
+
 
     //if the pause/options menu is open, don't take control
     //from the active input (this will be set when the state is closed)

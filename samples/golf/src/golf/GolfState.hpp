@@ -36,6 +36,7 @@ source distribution.
 #include "CameraFollowSystem.hpp"
 #include "CollisionMesh.hpp"
 #include "LeaderboardTexture.hpp"
+#include "CPUGolfer.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -109,6 +110,7 @@ private:
     bool m_mouseVisible;
 
     InputParser m_inputParser;
+    CPUGolfer m_cpuGolfer;
 
     bool m_wantsGameState;
     cro::Clock m_readyClock; //pings ready state until ack'd

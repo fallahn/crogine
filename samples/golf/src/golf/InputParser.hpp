@@ -67,6 +67,8 @@ public:
 
     void setMaxRotation(float);
 
+    const InputBinding getInputBinding() const { return m_inputBinding; }
+
 private:
     const InputBinding& m_inputBinding;
     cro::MessageBus& m_messageBus;
