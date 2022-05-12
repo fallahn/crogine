@@ -73,6 +73,9 @@ private:
     std::int32_t m_searchDirection; //which way we search for a club
     float m_searchDistance;
 
+    float m_aimDistance;
+    float m_aimAngle;
+
     bool m_thinking; //not a state per se, rather used to pause/idle while in specific states
     float m_thinkTime;
     void startThinking(float);

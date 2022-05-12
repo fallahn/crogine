@@ -64,6 +64,8 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap)
     m_prevClubID        (ClubID::Driver),
     m_searchDirection   (0),
     m_searchDistance    (MinSearchDistance),
+    m_aimDistance       (0.f),
+    m_aimAngle          (0.f),
     m_thinking          (false),
     m_thinkTime         (0.f)
 {
@@ -186,6 +188,13 @@ void CPUGolfer::pickClub(float dt)
 
         //get distance to target
         float targetDistance = glm::length(m_target - m_activePlayer.position);
+        if (m_activePlayer.terrain == TerrainID::Rough
+            || m_activePlayer.terrain == TerrainID::Bunker)
+        {
+            //we want to aim a bit further if we went
+            //off the fairway, so we hit a bit harder.
+            targetDistance += 8.f;
+        }
 
         auto club = m_inputParser.getClub();
         float clubDistance = Clubs[club].target;
@@ -194,6 +203,8 @@ void CPUGolfer::pickClub(float dt)
         {
             startThinking(3.f);
             m_state = State::Aiming;
+            m_aimDistance = targetDistance;
+            m_aimAngle = m_inputParser.getYaw();
             LOG("CPU Entered Aiming Mode", cro::Logger::Type::Info);
         };
         
@@ -270,12 +281,41 @@ void CPUGolfer::aim(float dt, glm::vec3 wind)
     }
     else
     {
-        //wind is x, strength, z
-
-
-        //TODO check someone hasn't pressed the keyboard already
+        //check someone hasn't pressed the keyboard already
         //and started the power bar. In which case break from this
-        //could play avatar disappointed sound? :)
+        //TODO could play avatar disappointed sound? :)
+        if (m_inputParser.inProgress())
+        {
+            m_state = State::Watching;
+            return;
+        }
+
+        //we don't have slope info here unfortunately
+        //so we'll have to settle on hitting it as straight as possible
+        if (m_activePlayer.terrain == TerrainID::Green)
+        {
+            m_state = State::Stroke;
+            startThinking(4.f);
+            LOG("Started putt", cro::Logger::Type::Info);
+        }
+
+
+        //wind is x, strength (0 - 1), z
+
+        //create target angle based on wind strength / direction
+
+
+        //hold rotate button if not within angle tolerance
+
+
+        //if angle correct then calc a target power
+        //based on dot prod of aim angle and wind dir
+        //multiplied by percent of selected club distance to target distance
+
+        //add some random factor to target power and set to stroke mode
+
+
+
     }
 }
 
