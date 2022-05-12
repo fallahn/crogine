@@ -2595,9 +2595,11 @@ void GolfState::spawnBall(const ActorInfo& info)
         }
     };
 
+    material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
     if (m_ballModels.count(ballID) != 0)
     {
         m_ballModels[ballID]->createModel(entity);
+        applyMaterialData(*m_ballModels[ballID], material);
     }
     else
     {
@@ -2605,9 +2607,10 @@ void GolfState::spawnBall(const ActorInfo& info)
         //shouldn't have made it this far without loading at least something...
         LogW << "Ball with ID " << (int)ballID << " not found" << std::endl;
         m_ballModels.begin()->second->createModel(entity);
+        applyMaterialData(*m_ballModels.begin()->second, material);
     }
     
-    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Ball]));
+    entity.getComponent<cro::Model>().setMaterial(0, material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
