@@ -224,7 +224,10 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
         {
             //we want to aim a bit further if we went
             //off the fairway, so we hit a bit harder.
-            targetDistance += 20.f; //TODO reduce this if we're close to the green
+
+            //but not too much if we're near the hole
+            float multiplier = absDistance / Clubs[ClubID::PitchWedge].target;
+            targetDistance += 20.f * multiplier; //TODO reduce this if we're close to the green
         }
 
 
@@ -379,7 +382,14 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 
             //based on dot prod of aim angle and wind dir
             //multiplied by percent of selected club distance to target distance
-            m_targetPower = m_aimDistance / Clubs[m_clubID].target;
+            if (m_clubID < ClubID::SandWedge)
+            {
+                m_targetPower = m_aimDistance / Clubs[m_clubID].target;
+            }
+            else
+            {
+                m_targetPower = (glm::length(m_target - m_activePlayer.position) * 1.1f) / Clubs[m_clubID].target;
+            }
             m_targetPower += ((0.2f * (-dot * windVector.y)) * greenCompensation) * m_targetPower;
 
             if (m_activePlayer.terrain == TerrainID::Green)
@@ -391,8 +401,19 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             //add some random factor to target power and set to stroke mode
             m_targetPower = std::min(1.f, m_targetPower);
             m_targetPower += static_cast<float>(cro::Util::Random::value(-5, 5)) / 100.f;
-            m_targetPower = std::min(1.f, m_targetPower);
-            m_targetAccuracy = static_cast<float>(cro::Util::Random::value(0, 18)) / 100.f;
+            m_targetPower = std::max(0.06f, std::min(1.f, m_targetPower));
+
+            //due to input lag 0.08 is actually ~0 ie perfectly accurate
+            //so this range lies ~0.04 either side of perfect
+            m_targetAccuracy = static_cast<float>(cro::Util::Random::value(4, 12)) / 100.f;
+
+            //occasionally make really inaccurate
+            //... or maybe even perfect? :)
+            if (cro::Util::Random::value(0, 6) == 0)
+            {
+                m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-8, 4)) / 100.f;
+            }
+
 
 
             m_state = State::Stroke;
