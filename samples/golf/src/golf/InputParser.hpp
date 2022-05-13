@@ -66,6 +66,7 @@ public:
     bool getActive() const;
 
     void setMaxRotation(float);
+    float getMaxRotation() const { return m_maxRotation; }
 
     const InputBinding getInputBinding() const { return m_inputBinding; }
 

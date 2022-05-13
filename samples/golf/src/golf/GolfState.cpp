@@ -3437,8 +3437,28 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_inputParser.setHoleDirection(target - player.position, m_currentPlayer != player); // this also selects the nearest club
 
     //TODO check if input is indeed CPU
-    //TODO if the player can rotate enough prefer the hole pin as the target
-    if (localPlayer) m_cpuGolfer.activate(target);
+    if (localPlayer)
+    {
+        //if the player can rotate enough prefer the hole as the target
+        auto pin = m_holeData[m_currentHole].pin - player.position;
+        auto targetPoint = target - player.position;
+
+        auto p = glm::normalize(glm::vec2(pin.x, -pin.z));
+        auto t = glm::normalize(glm::vec2(targetPoint.x, -targetPoint.z));
+
+        float dot = glm::dot(p, t);
+        float det = (p.x * t.y) - (p.y * t.x);
+        float targetAngle = std::abs(std::atan2(det, dot));
+
+        if (targetAngle < m_inputParser.getMaxRotation())
+        {
+            m_cpuGolfer.activate(m_holeData[m_currentHole].pin);
+        }
+        else
+        {
+            m_cpuGolfer.activate(target);
+        }
+    }
 
 
     //if the pause/options menu is open, don't take control
