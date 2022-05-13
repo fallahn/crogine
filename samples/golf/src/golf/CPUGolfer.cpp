@@ -72,6 +72,8 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap)
     m_aimAngle          (0.f),
     m_targetPower       (1.f),
     m_targetAccuracy    (0.f),
+    m_prevPower         (0.f),
+    m_prevAccuracy      (-1.f),
     m_thinking          (false),
     m_thinkTime         (0.f)
 {
@@ -154,7 +156,7 @@ void CPUGolfer::update(float dt, glm::vec3 windVector)
         aim(dt, windVector);
         break;
     case State::Stroke:
-        stroke();
+        stroke(dt);
         break;
     case State::Watching:
 
@@ -192,6 +194,7 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
         //get distance to target
         auto targetDir = m_target - m_activePlayer.position;
         float targetDistance = glm::length(targetDir);
+        float absDistance = targetDistance;
 
         //if we're on the green putter should be auto selected
         if (m_activePlayer.terrain == TerrainID::Green)
@@ -209,7 +212,7 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
         }
 
         //adjust the target distance depending on how the wind carries us
-        float windDot = -(glm::dot(glm::vec2(windVector.x, windVector.z), glm::vec2(targetDir.x, targetDir.z)) / targetDistance);
+        float windDot = -(glm::dot(glm::normalize(glm::vec2(windVector.x, -windVector.z)), glm::normalize(glm::vec2(targetDir.x, -targetDir.z))));
         windDot *= windVector.y;
         windDot *= 0.3f; //magic number. This extends a distance of 77m to 100 for example
         windDot = std::max(0.f, windDot); //skew this positively, negative amounts will be compensated for by using less power
@@ -221,7 +224,7 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
         {
             //we want to aim a bit further if we went
             //off the fairway, so we hit a bit harder.
-            targetDistance += 20.f;
+            targetDistance += 20.f; //TODO reduce this if we're close to the green
         }
 
 
@@ -233,7 +236,7 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
         {
             startThinking(1.f);
             m_state = State::Aiming;
-            m_aimDistance = targetDistance;
+            m_aimDistance = absDistance < 15.f ? absDistance : targetDistance; //hacky way to shorten distance near the green
             m_aimAngle = m_inputParser.getYaw();
             LOG("CPU Entered Aiming Mode", cro::Logger::Type::Info);
         };
@@ -326,7 +329,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         float greenCompensation = 1.f;
         if (m_activePlayer.terrain == TerrainID::Green)
         {
-            greenCompensation = 0.01f;
+            greenCompensation = 0.1f;
         }
 
 
@@ -340,11 +343,17 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 
         float dot = glm::dot(w, t);
         float windComp = 1.f - std::abs(dot);
-        windComp *= cro::Util::Maths::sgn(std::atan2(w.y, w.x) - m_aimAngle);
+
+        auto wAngle = std::atan2(w.y, w.x);
+        auto tAngle = std::atan2(t.y, t.x);
+
+        windComp *= cro::Util::Maths::sgn(cro::Util::Maths::shortestRotation(wAngle, tAngle));
         windComp *= windVector.y; //reduce with wind strength
         windComp *= greenCompensation;
 
         float targetAngle = m_aimAngle + (m_inputParser.getMaxRotation() * windComp);
+        targetAngle = std::min(m_aimAngle + m_inputParser.getMaxRotation(), std::max(m_aimAngle - m_inputParser.getMaxRotation(), targetAngle));
+        targetAngle *= 0.99f;
 
 #ifdef CRO_DEBUG_
         debug.windComp = windComp;
@@ -352,7 +361,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 #endif        
 
         //hold rotate button if not within angle tolerance
-        if (targetAngle > m_inputParser.getYaw())
+        if (targetAngle < m_inputParser.getYaw())
         {
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Right], false);
         }
@@ -371,12 +380,19 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             //based on dot prod of aim angle and wind dir
             //multiplied by percent of selected club distance to target distance
             m_targetPower = m_aimDistance / Clubs[m_clubID].target;
-            m_targetPower += (0.2f * (-dot * windVector.y)) * m_targetPower;
+            m_targetPower += ((0.2f * (-dot * windVector.y)) * greenCompensation) * m_targetPower;
+
+            if (m_activePlayer.terrain == TerrainID::Green)
+            {
+                //hackiness to compensate for putting shortfall
+                m_targetPower *= 1.08f;
+            }
 
             //add some random factor to target power and set to stroke mode
             m_targetPower = std::min(1.f, m_targetPower);
-            m_targetPower += static_cast<float>(cro::Util::Random::value(-5, 0)) / 100.f;
-            m_targetAccuracy = static_cast<float>(cro::Util::Random::value(-10, 10)) / 100.f;
+            m_targetPower += static_cast<float>(cro::Util::Random::value(-5, 5)) / 100.f;
+            m_targetPower = std::min(1.f, m_targetPower);
+            m_targetAccuracy = static_cast<float>(cro::Util::Random::value(0, 18)) / 100.f;
 
 
             m_state = State::Stroke;
@@ -386,9 +402,50 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
     }
 }
 
-void CPUGolfer::stroke()
+void CPUGolfer::stroke(float dt)
 {
+    if (m_thinking)
+    {
+        think(dt);
+    }
+    else
+    {
+        if (!m_inputParser.inProgress())
+        {
+            //start the stroke
+            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
 
+            m_strokeState = StrokeState::Power;
+            m_prevPower = 0.f;
+            m_prevAccuracy = -1.f;
+        }
+        else
+        {
+            if (m_strokeState == StrokeState::Power)
+            {
+                auto power = m_inputParser.getPower();
+                if ((m_targetPower - power) < 0.02f
+                    && m_prevPower < power)
+                {
+                    sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
+                    m_strokeState = StrokeState::Accuracy;
+                }
+                m_prevPower = power;
+            }
+            else
+            {
+                auto accuracy = m_inputParser.getHook();
+                if (accuracy < m_targetAccuracy
+                    && m_prevAccuracy > accuracy)
+                {
+                    sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
+                    m_state = State::Watching;
+                    return;
+                }
+                m_prevAccuracy = accuracy;
+            }
+        }
+    }
 }
 
 void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)

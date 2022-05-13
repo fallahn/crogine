@@ -295,6 +295,7 @@ void InputParser::setActive(bool active)
     if (active)
     {
         resetPower();
+        m_inputFlags = 0;
     }
 }
 

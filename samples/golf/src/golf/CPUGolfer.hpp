@@ -79,6 +79,13 @@ private:
     float m_targetPower;
     float m_targetAccuracy;
 
+    float m_prevPower;
+    float m_prevAccuracy;
+    enum class StrokeState
+    {
+        Power, Accuracy
+    }m_strokeState = StrokeState::Power;
+
     bool m_thinking; //not a state per se, rather used to pause/idle while in specific states
     float m_thinkTime;
     void startThinking(float);
@@ -86,7 +93,7 @@ private:
 
     void pickClub(float, glm::vec3);
     void aim(float, glm::vec3);
-    void stroke();
+    void stroke(float);
 
     //for each pressed event we need a release event the next frame
     std::vector<cro::Event> m_popEvents;
