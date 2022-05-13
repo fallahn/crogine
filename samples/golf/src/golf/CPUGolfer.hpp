@@ -76,6 +76,9 @@ private:
     float m_aimDistance;
     float m_aimAngle;
 
+    float m_targetPower;
+    float m_targetAccuracy;
+
     bool m_thinking; //not a state per se, rather used to pause/idle while in specific states
     float m_thinkTime;
     void startThinking(float);
@@ -87,5 +90,5 @@ private:
 
     //for each pressed event we need a release event the next frame
     std::vector<cro::Event> m_popEvents;
-    void sendKeystroke(std::int32_t);
+    void sendKeystroke(std::int32_t, bool autoRelease = true);
 };

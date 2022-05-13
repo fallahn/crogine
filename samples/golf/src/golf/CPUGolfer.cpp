@@ -35,6 +35,7 @@ source distribution.
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Maths.hpp>
 
 namespace
 {
@@ -51,6 +52,8 @@ namespace
     {
         float diff = 0.f;
         float windDot = 0.f;
+        float windComp = 0.f;
+        float targetAngle = 0.f;
     }debug;
 
     constexpr float MinSearchDistance = 10.f;
@@ -67,6 +70,8 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap)
     m_searchDistance    (MinSearchDistance),
     m_aimDistance       (0.f),
     m_aimAngle          (0.f),
+    m_targetPower       (1.f),
+    m_targetAccuracy    (0.f),
     m_thinking          (false),
     m_thinkTime         (0.f)
 {
@@ -79,7 +84,15 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap)
                 ImGui::Text("Wind Dot: %3.2f", debug.windDot);
                 ImGui::Text("Target Diff: %3.2f", debug.diff);
                 ImGui::Text("Search Distance: %3.2f", m_searchDistance);
+                ImGui::Text("Target Distance: %3.3f", m_aimDistance);
                 ImGui::Text("Current Club: %s", Clubs[m_clubID].name.c_str());
+                ImGui::Separator();
+                ImGui::Text("Wind Comp: %3.3f", debug.windComp);
+                ImGui::Text("Start Angle: %3.3f", m_aimAngle);
+                ImGui::Text("Target Angle: %3.3f", debug.targetAngle);
+                ImGui::Text("Current Angle: %3.3f", m_inputParser.getYaw());
+                ImGui::Text("Target Power: %3.3f", m_targetPower);
+                ImGui::Text("Target Accuracy: %3.3f", m_targetAccuracy);
             }
             ImGui::End();
         });
@@ -176,26 +189,29 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
     }
     else
     {
-        //if we're on the green putter should be auto selected
-        if (m_activePlayer.terrain == TerrainID::Green)
-        {
-            startThinking(3.f);
-            m_state = State::Aiming;
-            m_clubID = ClubID::Putter;
-            m_prevClubID = m_clubID;
-            LOG("CPU Entered Aiming Mode", cro::Logger::Type::Info);
-            return;
-        }
-
-
         //get distance to target
         auto targetDir = m_target - m_activePlayer.position;
         float targetDistance = glm::length(targetDir);
 
+        //if we're on the green putter should be auto selected
+        if (m_activePlayer.terrain == TerrainID::Green)
+        {
+            startThinking(2.f);
+            m_state = State::Aiming;
+            m_clubID = ClubID::Putter;
+            m_prevClubID = m_clubID;
+
+            m_aimDistance = targetDistance;
+            m_aimAngle = m_inputParser.getYaw();
+
+            LOG("CPU Entered Aiming Mode", cro::Logger::Type::Info);
+            return;
+        }
+
         //adjust the target distance depending on how the wind carries us
         float windDot = -(glm::dot(glm::vec2(windVector.x, windVector.z), glm::vec2(targetDir.x, targetDir.z)) / targetDistance);
         windDot *= windVector.y;
-        windDot *= 0.4f; //magic number. This extends a distance of 77m to 100 for example
+        windDot *= 0.3f; //magic number. This extends a distance of 77m to 100 for example
         windDot = std::max(0.f, windDot); //skew this positively, negative amounts will be compensated for by using less power
         targetDistance += (targetDistance * windDot);
 
@@ -215,7 +231,7 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
 
         const auto acceptClub = [&]()
         {
-            startThinking(3.f);
+            startThinking(1.f);
             m_state = State::Aiming;
             m_aimDistance = targetDistance;
             m_aimAngle = m_inputParser.getYaw();
@@ -284,11 +300,11 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
         m_prevClubID = club;
 
         //else think for some time
-        startThinking(3.f);
+        startThinking(1.f);
     }
 }
 
-void CPUGolfer::aim(float dt, glm::vec3 wind)
+void CPUGolfer::aim(float dt, glm::vec3 windVector)
 {
     if (m_thinking)
     {
@@ -307,30 +323,66 @@ void CPUGolfer::aim(float dt, glm::vec3 wind)
 
         //we don't have slope info here unfortunately
         //so we'll have to settle on hitting it as straight as possible
+        float greenCompensation = 1.f;
         if (m_activePlayer.terrain == TerrainID::Green)
         {
-            m_state = State::Stroke;
-            startThinking(4.f);
-            LOG("Started putt", cro::Logger::Type::Info);
+            greenCompensation = 0.01f;
         }
 
 
         //wind is x, strength (0 - 1), z
 
         //create target angle based on wind strength / direction
+        auto targetDir = m_target - m_activePlayer.position;
 
+        auto w = glm::normalize(glm::vec2(windVector.x, -windVector.z));
+        auto t = glm::normalize(glm::vec2(targetDir.x, -targetDir.z));
+
+        float dot = glm::dot(w, t);
+        float windComp = 1.f - std::abs(dot);
+        windComp *= cro::Util::Maths::sgn(std::atan2(w.y, w.x) - m_aimAngle);
+        windComp *= windVector.y; //reduce with wind strength
+        windComp *= greenCompensation;
+
+        float targetAngle = m_aimAngle + (m_inputParser.getMaxRotation() * windComp);
+
+#ifdef CRO_DEBUG_
+        debug.windComp = windComp;
+        debug.targetAngle = targetAngle;
+#endif        
 
         //hold rotate button if not within angle tolerance
-
+        if (targetAngle > m_inputParser.getYaw())
+        {
+            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Right], false);
+        }
+        else
+        {
+            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Left], false);
+        }
 
         //if angle correct then calc a target power
-        //based on dot prod of aim angle and wind dir
-        //multiplied by percent of selected club distance to target distance
+        if (std::abs(m_inputParser.getYaw() - targetAngle) < 0.01f)
+        {
+            //stop holding rotate
+            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Right], true);
+            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Left], true);
 
-        //add some random factor to target power and set to stroke mode
+            //based on dot prod of aim angle and wind dir
+            //multiplied by percent of selected club distance to target distance
+            m_targetPower = m_aimDistance / Clubs[m_clubID].target;
+            m_targetPower += (0.2f * (-dot * windVector.y)) * m_targetPower;
+
+            //add some random factor to target power and set to stroke mode
+            m_targetPower = std::min(1.f, m_targetPower);
+            m_targetPower += static_cast<float>(cro::Util::Random::value(-5, 0)) / 100.f;
+            m_targetAccuracy = static_cast<float>(cro::Util::Random::value(-10, 10)) / 100.f;
 
 
-
+            m_state = State::Stroke;
+            startThinking(2.f);
+            LOG("Started stroke", cro::Logger::Type::Info);
+        }
     }
 }
 
@@ -339,7 +391,7 @@ void CPUGolfer::stroke()
 
 }
 
-void CPUGolfer::sendKeystroke(std::int32_t key)
+void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)
 {
     SDL_Event evt;
     evt.type = SDL_KEYDOWN;
@@ -352,8 +404,11 @@ void CPUGolfer::sendKeystroke(std::int32_t key)
 
     SDL_PushEvent(&evt);
 
-    //stash the counter-event
-    evt.type = SDL_KEYUP;
-    evt.key.state = SDL_RELEASED;
-    m_popEvents.push_back(evt);
+    if (autoRelease)
+    {
+        //stash the counter-event
+        evt.type = SDL_KEYUP;
+        evt.key.state = SDL_RELEASED;
+        m_popEvents.push_back(evt);
+    }
 };
