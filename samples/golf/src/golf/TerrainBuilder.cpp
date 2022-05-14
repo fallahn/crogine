@@ -296,7 +296,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto reedMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CelTexturedInstanced));
 
     //and VATs shader for crowd
-    resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define NOCHEX\n");
+    resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define NOCHEX\n#define TEXTURED\n");
     auto crowdMaterialID = resources.materials.add(resources.shaders.get(ShaderID::Crowd));
 
     resources.shaders.loadFromString(ShaderID::CrowdShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define VATS\n");
@@ -396,6 +396,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
                     //setup material
                     auto material = resources.materials.get(crowdMaterialID);
+                    applyMaterialData(crowdDef, material);
+
                     material.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
                     material.setProperty("u_vatsNormal", resources.textures.get(vatFile.getNormalPath()));
 

@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 namespace
 {
@@ -392,16 +393,21 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             }
             m_targetPower += ((0.2f * (-dot * windVector.y)) * greenCompensation) * m_targetPower;
 
-            if (m_activePlayer.terrain == TerrainID::Green)
-            {
-                //hackiness to compensate for putting shortfall
-                m_targetPower *= 1.08f;
-            }
 
             //add some random factor to target power and set to stroke mode
             m_targetPower = std::min(1.f, m_targetPower);
             m_targetPower += static_cast<float>(cro::Util::Random::value(-5, 5)) / 100.f;
             m_targetPower = std::max(0.06f, std::min(1.f, m_targetPower));
+
+            if (m_activePlayer.terrain == TerrainID::Green)
+            {
+                //hackiness to compensate for putting shortfall
+                float distRatio = 1.f - std::min(1.f, glm::length2(m_target - m_activePlayer.position) / 25.f);
+                float multiplier = (0.2f * distRatio) + 1.f;
+
+                m_targetPower = std::min(1.f, m_targetPower * multiplier);
+            }
+
 
             //due to input lag 0.08 is actually ~0 ie perfectly accurate
             //so this range lies ~0.04 either side of perfect

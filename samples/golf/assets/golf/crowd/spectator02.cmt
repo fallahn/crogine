@@ -7,12 +7,13 @@ model spectator01
     {
         mask_colour = 0.000000,0.000000,0.000000,1.000000
         name = "Untitled"
-        colour = 0.000000,1.000000,0.893805,1.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
         repeat = true
         depth_test = true
         double_sided = false
         blendmode = none
+        diffuse = "assets/golf/crowd/crowd01.png"
 
     }
 }

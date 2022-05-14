@@ -115,13 +115,13 @@ def data_from_frame(obj, settings):
             position = unsign_vector(position / settings.scale, settings.yUp)
             position.append(1.0)
 
-            normal = unsign_vector(vert.normal.copy(), False)
+            normal = unsign_vector(vert.normal.copy(), settings.yUp)
             normal.append(1.0)            
 
             tangent = list((1.0, 1.0, 1.0))
 
             if settings.tangents:
-                tangent = unsign_vector(vert.tangent.copy(), False)
+                tangent = unsign_vector(vert.tangent.copy(), settings.yUp)
 
             tangent.append(1.0)
 
