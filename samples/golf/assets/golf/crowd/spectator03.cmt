@@ -1,6 +1,6 @@
 model spectator01
 {
-    mesh = assets/golf/models/spectator.cmb
+    mesh = assets/golf/models/spectator03.cmb
     cast_shadows = true
 
     material VertexLit
@@ -13,7 +13,7 @@ model spectator01
         depth_test = true
         double_sided = false
         blendmode = none
-        diffuse = "assets/golf/crowd/crowd01.png"
+        diffuse = "assets/golf/crowd/crowd03.png"
 
     }
 }

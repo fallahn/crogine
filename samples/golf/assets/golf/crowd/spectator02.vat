@@ -4,6 +4,6 @@ vat clapping
     scale = 1.800000
     frame_count = 28
     frame_rate = 24.000000
-    position = "model01_position.png"
-    normal = "model01_normal.png"
+    position = "model02_position.png"
+    normal = "model02_normal.png"
 }
