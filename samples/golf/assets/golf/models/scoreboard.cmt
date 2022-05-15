@@ -15,16 +15,4 @@ model scoreboard
         diffuse = "assets/golf/images/score_board_texture.png"
 
     }
-    material Unlit
-    {
-        name = "shadow"
-        colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = false
-        repeat = true
-        depth_test = true
-        double_sided = false
-        blendmode = alpha
-        diffuse = "assets/golf/images/score_board_texture.png"
-
-    }
 }

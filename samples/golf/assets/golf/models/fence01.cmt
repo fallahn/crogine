@@ -16,16 +16,4 @@ model fence01
         alpha_clip = 0.420000
 
     }
-    material Unlit
-    {
-        name = "Shadow"
-        colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = false
-        repeat = true
-        depth_test = true
-        double_sided = false
-        blendmode = alpha
-        diffuse = "assets/golf/images/fence.png"
-
-    }
 }

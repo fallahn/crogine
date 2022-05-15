@@ -1,7 +1,7 @@
 model crane
 {
     mesh = assets/golf/models/crane.cmb
-    cast_shadows = false
+    cast_shadows = true
 
     material Unlit
     {
@@ -20,17 +20,6 @@ model crane
         mask_colour = 1.000000,1.000000,0.000000,0.474510
         name = "glass"
         colour = 1.000000,1.000000,1.000000,0.321569
-        smooth = true
-        repeat = true
-        depth_test = true
-        double_sided = false
-        blendmode = alpha
-
-    }
-    material Unlit
-    {
-        name = "Untitled"
-        colour = 0.000000,0.000000,0.000000,0.372549
         smooth = true
         repeat = true
         depth_test = true

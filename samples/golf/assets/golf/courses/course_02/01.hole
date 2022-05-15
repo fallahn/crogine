@@ -12,14 +12,14 @@ hole 01
     prop
     {
         model = "assets/golf/models/crane.cmt"
-        position = 33.442749,2.886726,-51.629166
+        position = 33.442749,2.3267,-51.629166
         rotation = 14.811081
     }
 
     prop
     {
         model = "assets/golf/models/crane_arm.cmt"
-        position = 33.442749,2.886726,-51.629166
+        position = 33.442749,2.3267,-51.629166
         rotation = 138.169127
     }
 
