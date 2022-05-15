@@ -64,6 +64,7 @@ static const std::string ShadowVertex = R"(
         uniform vec4 u_clipPlane;
 
     #if defined (VATS)
+        #define MAX_INSTANCE 3
         uniform sampler2D u_vatsPosition;
         uniform float u_time;
     #endif
@@ -107,7 +108,8 @@ static const std::string ShadowVertex = R"(
         #if defined (VATS)
             vec2 texCoord = a_texCoord1;
             float scale = texCoord.y;
-            texCoord.y = mod(u_time, 1.0);
+            float instanceOffset = mod(gl_InstanceID, MAX_INSTANCE) + 1.0;
+            texCoord.y = mod(u_time + (0.5 / instanceOffset), 1.0);
 
             vec4 position = vec4(decodeVector(u_vatsPosition, texCoord) * scale, 1.0);
         #else

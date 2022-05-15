@@ -1397,12 +1397,12 @@ void GolfState::loadAssets()
             tx = glm::translate(tx, offsetPos);
             tx = glm::rotate(tx, cro::Util::Random::value(-0.25f, 0.25f), glm::vec3(0.f, 1.f, 0.f));
             
-            float scale = static_cast<float>(cro::Util::Random::value(95, 105)) / 100.f;
+            float scale = static_cast<float>(cro::Util::Random::value(95, 110)) / 100.f;
             tx = glm::scale(tx, glm::vec3(scale));
 
             holeData.crowdPositions.push_back(tx);
 
-            offsetPos.x += 0.3f + (static_cast<float>(cro::Util::Random::value(5, 10)) / 10.f);
+            offsetPos.x += 0.3f + (static_cast<float>(cro::Util::Random::value(2, 5)) / 10.f);
             offsetPos.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
         }        
     };
