@@ -87,6 +87,10 @@ void DefaultAchievements::init()
     trigger = &StatTriggers[StatID::StrokeDistance].emplace_back();
     trigger->achID = AchievementID::StrokeOfMidnight;
     trigger->threshold = 12000; //metres
+
+    trigger = &StatTriggers[StatID::TimeOnTheRange].emplace_back();
+    trigger->achID = AchievementID::PracticeMakesPerfect;
+    trigger->threshold = 60 * 60 * 5; //seconds
 }
 
 void DefaultAchievements::update()

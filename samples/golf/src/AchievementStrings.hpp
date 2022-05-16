@@ -71,6 +71,8 @@ namespace AchievementID
         Stripes,
         EasyPink,
 
+        PracticeMakesPerfect,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
@@ -99,7 +101,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "socialiser",
     "spots",
     "stripes",
-    "easy_pink"
+    "easy_pink",
+    "practice_perfect"
 };
 
 //appears on the notification
@@ -126,7 +129,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Socialiser",
     "Spots",
     "Stripes",
-    "Easy Pink"
+    "Easy Pink",
+    "Practice Makes Perfect"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -153,7 +157,8 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Enter the Clubhouse at least once", false),
     std::make_pair("Win a game of Eightball", false),
     std::make_pair("Win a game of Nineball", false),
-    std::make_pair("Win a game of Snooker", false)
+    std::make_pair("Win a game of Snooker", false),
+    std::make_pair("Spend 5 hours on the Driving Range", false),
 };
 
 //assuming tropies load correctly they are
@@ -196,7 +201,8 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::SilverCup,
     TrophyID::Pool,
     TrophyID::Pool,
-    TrophyID::Pool
+    TrophyID::Pool,
+    TrophyID::GoldFigure
 };
 
 namespace StatID
@@ -215,6 +221,8 @@ namespace StatID
         EightballWon,
         NineballWon,
         SnookerWon,
+
+        TimeOnTheRange,
 
         Count
     };
@@ -235,7 +243,9 @@ static const std::array<std::string, StatID::Count> StatStrings =
 
     "eightball_won",
     "nineball_won",
-    "snooker_won"
+    "snooker_won",
+
+    "time_on_the_range"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -249,14 +259,15 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Total Rounds Played",
     "Eightball Games Won (multiplayer)",
     "Nineball Games Won (multiplayer)",
-    "Snooker Games Won (multiplayer)"
+    "Snooker Games Won (multiplayer)",
+    "Time spent at the Driving Range"
 };
 
 struct StatType final
 {
     enum
     {
-        Float, Integer, Percent
+        Float, Integer, Percent, Time
     };
 };
 
@@ -271,7 +282,8 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
     StatType::Integer,
-    StatType::Integer
+    StatType::Integer,
+    StatType::Time
 };
 
 struct StatTrigger final
