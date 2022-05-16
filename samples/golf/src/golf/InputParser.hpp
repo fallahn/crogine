@@ -54,7 +54,7 @@ public:
 
     std::int32_t getClub() const;
 
-    void setActive(bool);
+    void setActive(bool active, bool isCPU = false);
     void setSuspended(bool);
     void setEnableFlags(std::uint16_t); //bits which are set are *enabled*
     void setMaxClub(float); //based on overall distance of hole
@@ -69,6 +69,8 @@ public:
     float getMaxRotation() const { return m_maxRotation; }
 
     const InputBinding getInputBinding() const { return m_inputBinding; }
+
+    static constexpr std::uint32_t CPU_ID = 1337u;
 
 private:
     const InputBinding& m_inputBinding;
@@ -86,6 +88,7 @@ private:
     std::int32_t m_mouseMove;
     std::int32_t m_prevMouseMove;
 
+    bool m_isCPU;
 
     float m_holeDirection; //radians
     float m_rotation; //+- max rads

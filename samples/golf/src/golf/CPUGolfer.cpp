@@ -535,7 +535,7 @@ void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)
     evt.key.keysym.scancode = SDL_GetScancodeFromKey(key);
     evt.key.timestamp = 0;
     evt.key.repeat = 0;
-    evt.key.windowID = 0;
+    evt.key.windowID = InputParser::CPU_ID;
     evt.key.state = SDL_PRESSED;
 
     SDL_PushEvent(&evt);

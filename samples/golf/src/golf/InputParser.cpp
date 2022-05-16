@@ -59,6 +59,7 @@ InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)
     m_prevMouseWheel    (0),
     m_mouseMove         (0),
     m_prevMouseMove     (0),
+    m_isCPU             (false),
     m_holeDirection     (0.f),
     m_rotation          (0.f),
     m_maxRotation       (MaxRotation),
@@ -81,6 +82,11 @@ void InputParser::handleEvent(const cro::Event& evt)
     //apply to input mask
     if (evt.type == SDL_KEYDOWN)
     {
+        if (m_isCPU && evt.key.windowID != CPU_ID)
+        {
+            return;
+        }
+
         if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
         {
             m_inputFlags |= InputFlag::Up;
@@ -112,6 +118,11 @@ void InputParser::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYUP)
     {
+        if (m_isCPU && evt.key.windowID != CPU_ID)
+        {
+            return;
+        }
+
         if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
         {
             m_inputFlags &= ~InputFlag::Up;
@@ -143,7 +154,8 @@ void InputParser::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
+        if (!m_isCPU &&
+            evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
         {
             if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
             {
@@ -178,7 +190,8 @@ void InputParser::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
+        if (!m_isCPU &&
+            evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
         {
             if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
             {
@@ -286,9 +299,10 @@ std::int32_t InputParser::getClub() const
     return m_currentClub;
 }
 
-void InputParser::setActive(bool active)
+void InputParser::setActive(bool active, bool isCPU)
 {
     m_active = active;
+    m_isCPU = isCPU;
     m_state = State::Aim;
     //if the parser was suspended when set active then make sure un-suspending it returns the correct state.
     m_suspended = active;
@@ -514,7 +528,8 @@ void InputParser::checkControllerInput()
 {
     m_analogueAmount = 1.f;
 
-    if (!cro::GameController::isConnected(m_inputBinding.controllerID))
+    if (m_isCPU ||
+        !cro::GameController::isConnected(m_inputBinding.controllerID))
     {
         return;
     }

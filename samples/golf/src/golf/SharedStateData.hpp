@@ -59,6 +59,8 @@ struct PlayerData final
     std::uint8_t matchScore = 0;
     std::uint8_t skinScore = 0;
     glm::vec3 currentTarget = glm::vec3(0.f);
+
+    bool isCPU = false;
 };
 
 struct ConnectionData final

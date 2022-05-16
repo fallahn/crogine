@@ -168,7 +168,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_inputParser.setMaxRotation(0.1f);
 
     sd.baseState = StateID::Golf;
-    Achievements::setActive(sd.localConnectionData.playerCount == 1);
+    Achievements::setActive(sd.localConnectionData.playerCount == 1 && !m_sharedData.localConnectionData.playerData[0].isCPU);
     
     std::int32_t clientCount = 0;
     for (auto& c : sd.connectionData)
@@ -3382,8 +3382,9 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     showScoreboard(false);
 
     auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
+    auto isCPU = m_sharedData.localConnectionData.playerData[player.player].isCPU;
 
-    m_inputParser.setActive(localPlayer);
+    m_inputParser.setActive(localPlayer, isCPU);
 
     if (player.terrain == TerrainID::Bunker)
     {
@@ -3472,8 +3473,9 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_inputParser.resetPower();
     m_inputParser.setHoleDirection(target - player.position, m_currentPlayer != player); // this also selects the nearest club
 
-    //TODO check if input is indeed CPU
-    if (localPlayer)
+    //check if input is CPU
+    if (localPlayer
+        && isCPU)
     {
         //if the player can rotate enough prefer the hole as the target
         auto pin = m_holeData[m_currentHole].pin - player.position;

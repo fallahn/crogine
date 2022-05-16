@@ -782,6 +782,11 @@ void GolfGame::loadAvatars()
                         flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
                         m_sharedData.localConnectionData.playerData[i].avatarFlags[3] = static_cast<std::uint8_t>(flag);
                     }
+
+                    else if (name == "cpu")
+                    {
+                        m_sharedData.localConnectionData.playerData[i].isCPU = prop.getValue<bool>();
+                    }
                 }
 
                 i++;

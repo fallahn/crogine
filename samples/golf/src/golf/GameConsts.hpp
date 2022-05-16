@@ -229,6 +229,7 @@ static inline void saveAvatars(const SharedStateData& sd)
         avatar->addProperty("flags1").setValue(player.avatarFlags[1]);
         avatar->addProperty("flags2").setValue(player.avatarFlags[2]);
         avatar->addProperty("flags3").setValue(player.avatarFlags[3]);
+        avatar->addProperty("cpu").setValue(player.isCPU);
     }
 
     auto path = cro::App::getPreferencePath() + "avatars.cfg";
