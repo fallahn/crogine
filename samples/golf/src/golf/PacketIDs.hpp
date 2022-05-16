@@ -109,6 +109,7 @@ namespace PacketID
         ScoreType, //< uint8 ScoreType of golf game
         LobbyReady, //< uint8 playerID uint8 0 false 1 true
         AchievementGet, //< uint8 client uint8 achievement id (always assume first player on client, as achievements are disabled other wise)
+        CPUThink, //< uint8 0 if begin think, 1 end think
         CueUpdate //< BilliardsUpdate to show the 'ghost' cue on remote clients
     };
 }

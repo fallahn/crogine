@@ -54,7 +54,7 @@ struct CommandID final
             PlayerName           = 0x2,
             UIElement            = 0x4, //has its position updated on UI layout
             Root                 = 0x8,
-            //PlayerAvatar         = 0x10,
+            ThinkBubble          = 0x10,
             WindSock             = 0x20,
             WindSpeed            = 0x40,
             WindString           = 0x80,

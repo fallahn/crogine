@@ -113,6 +113,7 @@ void GolfState::buildUI()
     auto courseEnt = entity;
     m_courseEnt = courseEnt;
 
+
     //displays the trophies on round end - has to be displayed over top of scoreboard
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -130,6 +131,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     auto infoEnt = entity;
 
+    
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     //player's name
@@ -143,7 +145,45 @@ void GolfState::buildUI()
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().setUserData<TextCallbackData>();
     entity.getComponent<cro::Callback>().function = TextAnimCallback();
+    auto nameEnt = entity;
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //think bubble displayed when CPU players are thinking
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Thinking];
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::ThinkBubble;
+    entity.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(1, 0.f);
+    entity.getComponent<cro::Callback>().function =
+        [nameEnt](cro::Entity e, float dt)
+        {
+            auto end = nameEnt.getComponent<cro::Drawable2D>().getLocalBounds().width;
+            e.getComponent<cro::Transform>().setPosition({ end, 2.f });
+
+            float scale = 0.f;
+            auto& [direction, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+            if (direction == 0)
+            {
+                //grow
+                currTime = std::min(1.f, currTime + (dt * 3.f));
+                scale = cro::Util::Easing::easeOutQuint(currTime);
+            }
+            else
+            {
+                //shrink
+                currTime = std::max(0.f, currTime - (dt * 3.f));
+                if (currTime == 0)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                }
+
+                scale = cro::Util::Easing::easeInQuint(currTime);
+            }
+            
+            e.getComponent<cro::Transform>().setScale({ scale, scale });
+        };
+    nameEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole distance
     entity = m_uiScene.createEntity();

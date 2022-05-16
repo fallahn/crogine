@@ -234,6 +234,7 @@ private:
             HookBar,
             WindIndicator,
             WindSpeed,
+            Thinking,
             MessageBoard,
             Bunker,
             Foul,

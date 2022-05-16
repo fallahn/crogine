@@ -46,6 +46,7 @@ namespace MessageID
         AchievementMessage,
         BilliardsMessage,
         BilliardsCameraMessage,
+        AIMessage,
 
         Count
     };
@@ -141,4 +142,13 @@ struct BilliardsCameraEvent final
         NewTarget
     }type = NewTarget;
     cro::Entity target;
+};
+
+struct AIEvent final
+{
+    enum
+    {
+        BeginThink,
+        EndThink
+    }type = BeginThink;
 };

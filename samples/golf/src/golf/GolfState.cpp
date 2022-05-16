@@ -319,6 +319,19 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_INSERT:
             toggleFreeCam();
             break;
+        case SDLK_END:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::ThinkBubble;
+            cmd.action = [](cro::Entity e, float)
+            {
+                auto& [dir, _] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+                dir = (dir == 0) ? 1 : 0;
+                e.getComponent<cro::Callback>().active = true;
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+            break;
 #endif
         }
     }
@@ -691,6 +704,13 @@ void GolfState::handleMessage(const cro::Message& msg)
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::AchievementGet, packet, cro::NetFlag::Reliable);
     }
     break;
+
+    case MessageID::AIMessage:
+    {
+        const auto& data = msg.getData<AIEvent>();
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::CPUThink, std::uint8_t(data.type), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
+        break;
     }
 
     m_cpuGolfer.handleMessage(msg);
@@ -1044,6 +1064,7 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::WindSpeed] = spriteSheet.getSprite("wind_speed");
+    m_sprites[SpriteID::Thinking] = spriteSheet.getSprite("thinking");
     m_sprites[SpriteID::MessageBoard] = spriteSheet.getSprite("message_board");
     m_sprites[SpriteID::Bunker] = spriteSheet.getSprite("bunker");
     m_sprites[SpriteID::Foul] = spriteSheet.getSprite("foul");
@@ -2716,6 +2737,21 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::CPUThink:
+        {
+            auto direction = evt.packet.as<std::uint8_t>();
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::ThinkBubble;
+            cmd.action = [direction](cro::Entity e, float)
+            {
+                auto& [dir, _] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+                dir = direction;
+                e.getComponent<cro::Callback>().active = true;
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+            break;
         case PacketID::ReadyQuitStatus:
             m_readyQuitFlags = evt.packet.as<std::uint8_t>();
             break;

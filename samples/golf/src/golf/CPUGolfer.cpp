@@ -62,6 +62,12 @@ namespace
 
     constexpr float MinSearchDistance = 10.f;
     constexpr float SearchIncrease = 5.f;
+
+    template <typename T>
+    T* postMessage(std::int32_t id)
+    {
+        return cro::App::getInstance().getMessageBus().post<T>(id);
+    };
 }
 
 CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const CollisionMesh& cm)
@@ -120,7 +126,7 @@ void CPUGolfer::handleMessage(const cro::Message& msg)
         if (data.type == GolfEvent::BallLanded)
         {
             m_state = State::Inactive;
-            LOG("CPU is now inactive", cro::Logger::Type::Info);
+            //LOG("CPU is now inactive", cro::Logger::Type::Info);
         }
     }
         break;
@@ -138,7 +144,7 @@ void CPUGolfer::activate(glm::vec3 target)
         m_searchDistance = MinSearchDistance;
 
         startThinking(2.f);
-        LOG("CPU is now active", cro::Logger::Type::Info);
+        //LOG("CPU is now active", cro::Logger::Type::Info);
     }
 }
 
@@ -206,7 +212,7 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
         //if we're on the green putter should be auto selected
         if (m_activePlayer.terrain == TerrainID::Green)
         {
-            startThinking(2.f);
+            startThinking(1.f);
             m_state = State::Aiming;
             m_clubID = ClubID::Putter;
             m_prevClubID = m_clubID;
@@ -214,7 +220,10 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
             m_aimDistance = targetDistance;
             m_aimAngle = m_inputParser.getYaw();
 
-            LOG("CPU Entered Aiming Mode", cro::Logger::Type::Info);
+            auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
+            msg->type = AIEvent::BeginThink;
+
+            //LOG("CPU Entered Aiming Mode", cro::Logger::Type::Info);
             return;
         }
 
@@ -244,11 +253,11 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
 
         const auto acceptClub = [&]()
         {
-            startThinking(1.f);
+            startThinking(0.5f);
             m_state = State::Aiming;
             m_aimDistance = absDistance < 15.f ? absDistance : targetDistance; //hacky way to shorten distance near the green
             m_aimAngle = m_inputParser.getYaw();
-            LOG("CPU Entered Aiming Mode", cro::Logger::Type::Info);
+            //LOG("CPU Entered Aiming Mode", cro::Logger::Type::Info);
         };
         
         auto diff = targetDistance - clubDistance;
@@ -296,6 +305,11 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
             m_searchDirection = 1;
             startThinking(0.25f);
+
+            //doesn't matter if we send this more than
+            //once as all it does is make the think bubble appear
+            auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
+            msg->type = AIEvent::BeginThink;
         }
         else
         {
@@ -309,6 +323,9 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
             m_searchDirection = -1;
             startThinking(0.25f);
+
+            auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
+            msg->type = AIEvent::BeginThink;
         }
         m_prevClubID = club;
 
@@ -363,6 +380,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 #endif
             float slope = (resultA.height - resultB.height) / MaxSlope;
             slopeCompensation = m_inputParser.getMaxRotation() * slope;
+            slopeCompensation *= std::min(1.f, glm::length2(centrePoint)); //reduce the effect nearer the hole
         }
 
 
@@ -453,8 +471,12 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             }
 
             m_state = State::Stroke;
-            startThinking(2.f);
-            LOG("Started stroke", cro::Logger::Type::Info);
+            startThinking(0.4f);
+
+            auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
+            msg->type = AIEvent::EndThink;
+
+            //LOG("Started stroke", cro::Logger::Type::Info);
         }
     }
 }
