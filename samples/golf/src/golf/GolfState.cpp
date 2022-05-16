@@ -139,7 +139,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_trophyScene       (context.appInstance.getMessageBus()),
     m_mouseVisible      (true),
     m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
-    m_cpuGolfer         (m_inputParser, m_currentPlayer),
+    m_cpuGolfer         (m_inputParser, m_currentPlayer, m_collisionMesh),
     m_wantsGameState    (true),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),

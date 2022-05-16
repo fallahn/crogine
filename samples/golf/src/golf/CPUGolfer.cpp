@@ -31,6 +31,7 @@ source distribution.
 #include "InputParser.hpp"
 #include "MessageIDs.hpp"
 #include "Clubs.hpp"
+#include "CollisionMesh.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/gui/Gui.hpp>
@@ -54,6 +55,8 @@ namespace
         float diff = 0.f;
         float windDot = 0.f;
         float windComp = 0.f;
+        float slope = 0.f;
+        float slopeComp = 0.f;
         float targetAngle = 0.f;
     }debug;
 
@@ -61,9 +64,10 @@ namespace
     constexpr float SearchIncrease = 5.f;
 }
 
-CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap)
+CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const CollisionMesh& cm)
     : m_inputParser     (ip),
     m_activePlayer      (ap),
+    m_collisionMesh     (cm),
     m_target            (0.f),
     m_clubID            (ClubID::Driver),
     m_prevClubID        (ClubID::Driver),
@@ -91,6 +95,8 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap)
                 ImGui::Text("Current Club: %s", Clubs[m_clubID].name.c_str());
                 ImGui::Separator();
                 ImGui::Text("Wind Comp: %3.3f", debug.windComp);
+                ImGui::Text("Slope: %3.3f", debug.slope);
+                ImGui::Text("Slope Comp: %3.3f", debug.slopeComp);
                 ImGui::Text("Start Angle: %3.3f", m_aimAngle);
                 ImGui::Text("Target Angle: %3.3f", debug.targetAngle);
                 ImGui::Text("Current Angle: %3.3f", m_inputParser.getYaw());
@@ -328,12 +334,35 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             return;
         }
 
-        //we don't have slope info here unfortunately
-        //so we'll have to settle on hitting it as straight as possible
+        //putting is a special case where wind effect is lower
+        //but we also need to deal with the slope of the green
         float greenCompensation = 1.f;
+        float slopeCompensation = 0.f;
+
         if (m_activePlayer.terrain == TerrainID::Green)
         {
-            greenCompensation = 0.1f;
+            greenCompensation = 0.01f; //reduce the wind compensation by this
+
+            //then calculate the slope by measuring two points either side of a point
+            //approx half way to the hole.
+            auto centrePoint = (m_target - m_activePlayer.position) * 0.75f;
+            auto distance = glm::normalize(centrePoint);
+            centrePoint += m_activePlayer.position;
+
+            //left point
+            distance = { distance.z, distance.y, -distance.x };
+            auto resultA = m_collisionMesh.getTerrain(centrePoint + distance);
+
+            //right point
+            distance *= -1.f;
+            auto resultB = m_collisionMesh.getTerrain(centrePoint + distance);
+
+            static constexpr float MaxSlope = 0.025f; //~2.5cm diff in slope
+#ifdef CRO_DEBUG_
+            debug.slope = resultA.height - resultB.height;
+#endif
+            float slope = (resultA.height - resultB.height) / MaxSlope;
+            slopeCompensation = m_inputParser.getMaxRotation() * slope;
         }
 
 
@@ -356,11 +385,13 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         windComp *= greenCompensation;
 
         float targetAngle = m_aimAngle + (m_inputParser.getMaxRotation() * windComp);
+        targetAngle += slopeCompensation;
         targetAngle = std::min(m_aimAngle + m_inputParser.getMaxRotation(), std::max(m_aimAngle - m_inputParser.getMaxRotation(), targetAngle));
         targetAngle *= 0.99f;
 
 #ifdef CRO_DEBUG_
         debug.windComp = windComp;
+        debug.slopeComp = slopeCompensation;
         debug.targetAngle = targetAngle;
 #endif        
 
@@ -402,8 +433,9 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             if (m_activePlayer.terrain == TerrainID::Green)
             {
                 //hackiness to compensate for putting shortfall
-                float distRatio = 1.f - std::min(1.f, glm::length2(m_target - m_activePlayer.position) / 25.f);
-                float multiplier = (0.2f * distRatio) + 1.f;
+                //float distRatio = 1.f - std::min(1.f, glm::length2(m_target - m_activePlayer.position) / 25.f);
+                float distRatio = 1.f - std::min(1.f, glm::length(m_target - m_activePlayer.position) / 5.f);
+                float multiplier = (0.25f * distRatio) + 1.f;
 
                 m_targetPower = std::min(1.f, m_targetPower * multiplier);
             }
@@ -419,8 +451,6 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             {
                 m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-8, 4)) / 100.f;
             }
-
-
 
             m_state = State::Stroke;
             startThinking(2.f);

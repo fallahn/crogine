@@ -41,12 +41,13 @@ namespace cro
 }
 
 class InputParser;
+class CollisionMesh;
 struct ActivePlayer;
 class CPUGolfer final : public cro::GuiClient
 {
 public:
 
-    CPUGolfer(const InputParser&, const ActivePlayer&);
+    CPUGolfer(const InputParser&, const ActivePlayer&, const CollisionMesh&);
 
     void handleMessage(const cro::Message&);
     void activate(glm::vec3);
@@ -57,6 +58,7 @@ private:
 
     const InputParser& m_inputParser; //only reads the state - actual commands are send by raising events.
     const ActivePlayer& m_activePlayer;
+    const CollisionMesh& m_collisionMesh;
     glm::vec3 m_target;
 
     enum class State
