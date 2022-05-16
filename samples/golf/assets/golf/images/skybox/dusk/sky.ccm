@@ -1,0 +1,9 @@
+cubemap sky
+{
+    up = "assets/golf/images/skybox/dusk/py.png"
+    down = "assets/golf/images/skybox/dusk/ny.png"
+    left = "assets/golf/images/skybox/dusk/nx.png"
+    right = "assets/golf/images/skybox/dusk/px.png"
+    front = "assets/golf/images/skybox/dusk/pz.png"
+    back = "assets/golf/images/skybox/dusk/nz.png"
+}

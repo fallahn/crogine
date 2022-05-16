@@ -2476,7 +2476,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
 {
     //these can have fixed positions as they are attached to a menuEntity[] which is UI scaled
     static constexpr glm::vec3 EditButtonOffset(-47.f, -57.f, 0.f);
-    static constexpr glm::vec3 CPUTextOffset(19.f, -57.f, 0.f);
+    static constexpr glm::vec3 CPUTextOffset(28.f, -57.f, 0.f);
     static constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-68.f, -18.f, 0.f);
     static constexpr glm::vec3 BGOffset = AvatarOffset + glm::vec3(1.f, 7.f, -0.02f);
     static constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(115.f, 42.f, 0.f);
