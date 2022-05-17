@@ -2250,6 +2250,19 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
             value = ss.str();
         }
             break;
+        case StatType::Time:
+        {
+            std::int32_t v = static_cast<std::int32_t>(Achievements::getStat(StatStrings[i])->value);
+            auto seconds = v % 60;
+            auto minutes = v / 60;
+            auto hours = minutes / 60;
+            minutes %= 60;
+
+            std::stringstream ss;
+            ss << hours << "h " << minutes << "m " << seconds << "s";
+            value = ss.str();
+        }
+            break;
         }
 
         desc.setPosition(position + DescOffset);
