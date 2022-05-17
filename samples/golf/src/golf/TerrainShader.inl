@@ -248,8 +248,8 @@ static const std::string CelVertexShader = R"(
     #if defined (VATS)
         vec2 texCoord = a_texCoord1;
         float scale = texCoord.y;
-        float instanceOffset = mod(gl_InstanceID, MAX_INSTANCE) + 1.0;
-        texCoord.y = mod(u_time, 1.0); // + (0.4 / instanceOffset)
+        float instanceOffset = mod(gl_InstanceID, MAX_INSTANCE);
+        texCoord.y = mod(u_time, 1.0); // - (0.1 * instanceOffset)
 
         vec4 position = vec4(decodeVector(u_vatsPosition, texCoord) * scale, 1.0);
     #else
