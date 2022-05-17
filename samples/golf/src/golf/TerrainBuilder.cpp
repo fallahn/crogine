@@ -34,6 +34,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "CommandIDs.hpp"
 #include "VatFile.hpp"
+#include "VatAnimationSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -61,12 +62,6 @@ namespace
 {
 #include "TerrainShader.inl"
 #include "ShadowMapping.inl"
-
-    std::uint32_t vatShader = 0;
-    std::int32_t vatUniform = -1;
-    std::uint32_t shadowShader = 0;
-    std::int32_t shadowUniform = -1;
-
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler
     static constexpr float TreeDensity = 4.f;
@@ -302,12 +297,6 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     resources.shaders.loadFromString(ShaderID::CrowdShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define VATS\n");
     auto shadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdShadow));
 
-    //testing
-    vatShader = resources.shaders.get(ShaderID::Crowd).getGLHandle();
-    vatUniform = resources.shaders.get(ShaderID::Crowd).getUniformID("u_time");
-    shadowShader = resources.shaders.get(ShaderID::CrowdShadow).getGLHandle();
-    shadowUniform = resources.shaders.get(ShaderID::CrowdShadow).getUniformID("u_time");
-
 
     //create billboard/instanced entities
     cro::ModelDefinition billboardDef(resources);
@@ -408,6 +397,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     childEnt.getComponent<cro::Model>().setShadowMaterial(0, shadowMaterial);
                     childEnt.getComponent<cro::Model>().setHidden(true);
                     childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+                    childEnt.addComponent<VatAnimation>();
                     entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
 
                     m_crowdEntities[i].push_back(childEnt);
@@ -620,14 +610,6 @@ void TerrainBuilder::updateTime(float elapsed)
 {
     glCheck(glUseProgram(m_slopeProperties.shader));
     glCheck(glUniform1f(m_slopeProperties.timeUniform, elapsed));
-
-
-    //just to test VATs is working
-    elapsed /= 10.f;
-    glUseProgram(vatShader);
-    glUniform1f(vatUniform, elapsed);
-    glUseProgram(shadowShader);
-    glUniform1f(shadowUniform, elapsed);
 }
 
 void TerrainBuilder::setSlopePosition(glm::vec3 position)
