@@ -333,6 +333,18 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
             break;
+        case SDLK_DELETE:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Crowd;
+            cmd.action = [](cro::Entity e, float)
+            {
+                e.getComponent<VatAnimation>().targetTime = e.getComponent<VatAnimation>().totalTime;
+                e.getComponent<VatAnimation>().currentTime = e.getComponent<VatAnimation>().loopTime - cro::Util::Random::value(0.2f, 0.7f);
+            };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+            break;
 #endif
         }
     }

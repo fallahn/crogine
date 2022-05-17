@@ -31,10 +31,15 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 
+class VatFile;
 struct VatAnimation final
 {
-    float deltaTime = 1.f / 60.f;// 0.f;
+    float totalTime = 1.f;
     float currentTime = 0.f;
+    float loopTime = 1.f;
+    float targetTime = 1.f;
+
+    void setVatData(const VatFile&);
 };
 
 class VatAnimationSystem final : public cro::System

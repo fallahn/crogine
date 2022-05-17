@@ -38,7 +38,6 @@ public:
 
     bool loadFromFile(const std::string&);
 
-    float getScale() const { return m_scale; }
     const std::string& getModelPath() const { return m_modelPath; }
     const std::string& getPositionPath() const { return m_positionPath; }
     const std::string& getNormalPath() const { return m_normalPath; }
@@ -47,11 +46,17 @@ public:
     bool hasTangents() const { return !m_tangentPath.empty(); }
 
 private:
-    float m_scale;
+
+    float m_frameRate;
+    std::int32_t m_frameCount;
+    std::int32_t m_frameLoop;
+
     std::string m_modelPath;
     std::string m_positionPath;
     std::string m_normalPath;
     std::string m_tangentPath;
 
     void reset();
+
+    friend struct VatAnimation;
 };

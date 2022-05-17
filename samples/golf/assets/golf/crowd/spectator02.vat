@@ -3,7 +3,7 @@ vat clapping
     model = "spectator02.cmt"
     scale = 1.800000
     frame_count = 500
-    frame_rate = 24.000000
+    frame_rate = 30.000000
     position = "model02_position.png"
     normal = "model02_normal.png"
 }

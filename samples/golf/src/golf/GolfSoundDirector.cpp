@@ -33,6 +33,8 @@ source distribution.
 #include "GameConsts.hpp"
 #include "ScoreStrings.hpp"
 #include "Clubs.hpp"
+#include "CommandIDs.hpp"
+#include "VatAnimationSystem.hpp"
 
 #include <crogine/audio/AudioResource.hpp>
 
@@ -261,6 +263,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             if (data.score <= ScoreID::Par)
             {
                 playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f, MixerChannel::Effects);
+                applaud();
             }
 
             if (data.travelDistance > 25.f) //5m
@@ -293,6 +296,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                             || data.travelDistance > 10000.f) //landed a long shot
                         {
                             playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f);
+                            applaud();
                         }
                     }
                     break;
@@ -473,4 +477,16 @@ void GolfSoundDirector::playSoundDelayed(std::int32_t id, glm::vec3 position, fl
             getScene().destroyEntity(e);
         }
     };
+}
+
+void GolfSoundDirector::applaud()
+{
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Crowd;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<VatAnimation>().targetTime = e.getComponent<VatAnimation>().totalTime;
+        e.getComponent<VatAnimation>().currentTime = e.getComponent<VatAnimation>().loopTime - cro::Util::Random::value(0.2f, 0.7f);
+    };
+    getScene().getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

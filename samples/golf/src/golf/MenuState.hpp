@@ -133,8 +133,10 @@ private:
         std::uint32_t nextRules = 0;
         std::uint32_t prevCourse = 0;
         std::uint32_t nextCourse = 0;
-        std::uint32_t mouseEnter = 0;
-        std::uint32_t mouseExit = 0;
+        std::uint32_t selected = 0;
+        std::uint32_t unselected = 0;
+        std::uint32_t showTip = 0;
+        std::uint32_t hideTip = 0;
     }m_courseSelectCallbacks;
     std::array<std::uint32_t, 4u> m_avatarEditCallbacks = {};
 

@@ -397,7 +397,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     childEnt.getComponent<cro::Model>().setShadowMaterial(0, shadowMaterial);
                     childEnt.getComponent<cro::Model>().setHidden(true);
                     childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
-                    childEnt.addComponent<VatAnimation>();
+                    childEnt.addComponent<VatAnimation>().setVatData(vatFile);
+                    childEnt.addComponent<cro::CommandTarget>().ID = CommandID::Crowd;
                     entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
 
                     m_crowdEntities[i].push_back(childEnt);

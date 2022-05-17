@@ -28,8 +28,20 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "VatAnimationSystem.hpp"
+#include "VatFile.hpp"
 
 #include <crogine/ecs/components/Model.hpp>
+
+void VatAnimation::setVatData(const VatFile& file)
+{
+    CRO_ASSERT(file.m_frameCount != 0, "");
+
+    totalTime = static_cast<float>(file.m_frameCount) / file.m_frameRate;
+    loopTime = static_cast<float>(file.m_frameLoop) / file.m_frameRate;
+
+    targetTime = loopTime;
+    //LogI << "Target Time: " << targetTime << std::endl;
+}
 
 VatAnimationSystem::VatAnimationSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(VatAnimationSystem))
@@ -45,15 +57,19 @@ void VatAnimationSystem::process(float dt)
     for (auto entity : entities)
     {
         auto& anim = entity.getComponent<VatAnimation>();
-        anim.currentTime += anim.deltaTime;
+        anim.currentTime += dt;
 
-        if (anim.currentTime > 1.f)
+        if (anim.currentTime > anim.targetTime)
         {
-            anim.currentTime -= 1.f;
+            anim.currentTime -= anim.targetTime;
+
+            //always default back to idle looping.
+            anim.targetTime = anim.loopTime;
         }
 
         //would prefer not to do the string lookup, but perf hit is negligable...
-        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_time", anim.currentTime);
-        entity.getComponent<cro::Model>().setShadowMaterialProperty(0, "u_time", anim.currentTime);
+        float normTime = anim.currentTime / anim.totalTime;
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_time", normTime);
+        entity.getComponent<cro::Model>().setShadowMaterialProperty(0, "u_time", normTime);
     }
 }

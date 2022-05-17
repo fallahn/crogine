@@ -31,22 +31,25 @@ source distribution.
 
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/FileSystem.hpp>
+#include <crogine/graphics/Image.hpp>
 
 namespace
 {
     enum
     {
-        Model = 0x1,
-        Scale = 0x2,
-        Position = 0x4,
-        Normal = 0x8,
+        Model     = 0x1,
+        FrameRate = 0x2,
+        Position  = 0x4,
+        Normal    = 0x8,
 
-        FileOK = Model|Scale|Position|Normal
+        FileOK = Model|FrameRate|Position|Normal
     };
 }
 
 VatFile::VatFile()
-    : m_scale(1.f)
+    : m_frameRate   (0.f),
+    m_frameCount    (0),
+    m_frameLoop     (0)
 {
 
 }
@@ -71,7 +74,7 @@ bool VatFile::loadFromFile(const std::string& path)
         if (name == "model")
         {
             auto filepath = workingPath + prop.getValue<std::string>();
-            if (cro::FileSystem::fileExists(filepath))
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + filepath))
             {
                 resultFlags |= Model;
                 m_modelPath = filepath;
@@ -81,22 +84,26 @@ bool VatFile::loadFromFile(const std::string& path)
                 LogE << "Couldn't find file at " << filepath << std::endl;
             }
         }
-        else if (name == "scale")
+        else if (name == "frame_rate")
         {
-            float scale = prop.getValue<float>();
-            if (scale > 0)
+            float frameRate = prop.getValue<float>();
+            m_frameRate = frameRate;
+            if (frameRate > 0)
             {
-                m_scale = scale;
-                resultFlags |= Scale;
+                resultFlags |= FrameRate;
             }
         }
         else if (name == "position")
         {
             auto filepath = workingPath + prop.getValue<std::string>();
-            if (cro::FileSystem::fileExists(filepath))
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + filepath))
             {
                 resultFlags |= Position;
                 m_positionPath = filepath;
+
+                cro::Image img;
+                img.loadFromFile(m_positionPath);
+                m_frameCount = img.getSize().y;
             }
             else
             {
@@ -119,7 +126,7 @@ bool VatFile::loadFromFile(const std::string& path)
         else if (name == "tangent")
         {
             auto filepath = workingPath + prop.getValue<std::string>();
-            if (cro::FileSystem::fileExists(filepath))
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + filepath))
             {
                 m_tangentPath = filepath;
             }
@@ -128,7 +135,22 @@ bool VatFile::loadFromFile(const std::string& path)
                 LogE << "Couldn't find file at " << filepath << std::endl;
             }
         }
+        else if (name == "frame_count")
+        {
+            m_frameLoop = std::max(0, prop.getValue<std::int32_t>());
+        }
     }
+
+    if (m_frameCount == 0)
+    {
+        //TODO we could assert other images are the same size as
+        //the position image, but this won't break anything - we just
+        //want to prevent a div0 by having a zero frame count.
+        LogE << "Invalid animation frame count" << std::endl;
+        return false;
+    }
+
+    m_frameLoop = std::min(m_frameLoop, m_frameCount);
 
     return resultFlags == FileOK;
 }
@@ -136,7 +158,10 @@ bool VatFile::loadFromFile(const std::string& path)
 //private
 void VatFile::reset()
 {
-    m_scale = 1.f;
+    m_frameRate = 0.f;
+    m_frameCount = 0;
+    m_frameLoop = 0;
+
     m_modelPath.clear();
     m_positionPath.clear();
     m_normalPath.clear();
