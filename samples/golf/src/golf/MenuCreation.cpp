@@ -186,7 +186,7 @@ void MenuState::createToolTip()
         position.y = std::floor(position.y);
         position.z = 2.f;
 
-        static constexpr glm::vec3 Offset(8.f, 4.f, 0.f);
+        static constexpr glm::vec3 Offset(8.f, -4.f, 0.f);
         position += (Offset * m_viewScale.x);
 
         e.getComponent<cro::Transform>().setPosition(position);
@@ -780,6 +780,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     m_sprites[SpriteID::Controller] = spriteSheet.getSprite("controller");
     m_sprites[SpriteID::Keyboard] = spriteSheet.getSprite("keyboard");
     m_sprites[SpriteID::ThumbBackground] = spriteSheet.getSprite("thumb_bg");
+    m_sprites[SpriteID::CPUHighlight] = spriteSheet.getSprite("check_highlight");
 
     //this entity has the player edit text ents added to it by updateLocalAvatars
     auto avatarEnt = m_uiScene.createEntity();
@@ -1255,12 +1256,41 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                 });
     }
 
-
-    updateLocalAvatars(mouseEnter, mouseExit);
-
     //we have to store these so the avatars can be updated from elsewhere
     //such as the player config menu when it is closed
     m_avatarCallbacks = { mouseEnter, mouseExit };
+
+
+    //and these are used when creating the avatar window for CPU toggle
+    m_cpuOptionCallbacks[0] = uiSystem.addCallback([&](cro::Entity e) 
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    m_cpuOptionCallbacks[1] = uiSystem.addCallback([&](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+    m_cpuOptionCallbacks[2] = uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                auto index = e.getComponent<cro::Callback>().getUserData<const std::uint32_t>();
+                m_sharedData.localConnectionData.playerData[index].isCPU =
+                    !m_sharedData.localConnectionData.playerData[index].isCPU;
+            }
+        });
+
+    m_cpuOptionCallbacks[3] = uiSystem.addCallback([&](cro::Entity e, glm::vec2, const cro::MotionEvent&)
+        {
+            showToolTip("Make this a computer controlled player");
+        });
+    m_cpuOptionCallbacks[4] = uiSystem.addCallback([&](cro::Entity e, glm::vec2, const cro::MotionEvent&)
+        {
+            hideToolTip();
+        });
+
+    updateLocalAvatars(mouseEnter, mouseExit);
 }
 
 void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
@@ -2477,6 +2507,8 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
     //these can have fixed positions as they are attached to a menuEntity[] which is UI scaled
     static constexpr glm::vec3 EditButtonOffset(-47.f, -57.f, 0.f);
     static constexpr glm::vec3 CPUTextOffset(28.f, -57.f, 0.f);
+    static constexpr glm::vec3 CPUButtonOffset(16.f, -65.f, 0.f);
+    static constexpr glm::vec3 CPUHighlightOffset(18.f, -63.f, 0.f);
     static constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-68.f, -18.f, 0.f);
     static constexpr glm::vec3 BGOffset = AvatarOffset + glm::vec3(1.f, 7.f, -0.02f);
     static constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(115.f, 42.f, 0.f);
@@ -2561,7 +2593,48 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
 
-        
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(localPos + CPUHighlightOffset);
+        entity.addComponent<cro::Drawable2D>().setVertexData(
+            {
+                cro::Vertex2D(glm::vec2(0.f, 5.f)),
+                cro::Vertex2D(glm::vec2(0.f)),
+                cro::Vertex2D(glm::vec2(5.f)),
+                cro::Vertex2D(glm::vec2(5.f, 0.f))
+            }
+        );
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, i](cro::Entity e, float)
+        {
+            cro::Colour c = m_sharedData.localConnectionData.playerData[i].isCPU ? TextGoldColour : cro::Colour::Transparent;
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            for (auto& v : verts)
+            {
+                v.colour = c;
+            }
+        };
+        m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_avatarListEntities.push_back(entity);
+
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(localPos + CPUButtonOffset);
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::CPUHighlight];
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        entity.addComponent<cro::Callback>().setUserData<const std::uint32_t>(i); //just use this to store our index for button callback
+        entity.addComponent<cro::UIInput>().area = m_sprites[SpriteID::CPUHighlight].getTextureBounds();
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_cpuOptionCallbacks[0];
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_cpuOptionCallbacks[1];
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_cpuOptionCallbacks[2];
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Enter] = m_cpuOptionCallbacks[3];
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = m_cpuOptionCallbacks[4];
+        m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_avatarListEntities.push_back(entity);
+
 
         //input type icon
         entity = m_uiScene.createEntity();
