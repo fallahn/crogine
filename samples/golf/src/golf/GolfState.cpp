@@ -1869,6 +1869,23 @@ void GolfState::loadAssets()
             return !hd.modelEntity.isValid();
         }), m_holeData.end());
 
+    //check the crowd positions on every hole and set the height
+    for (auto& hole : m_holeData)
+    {
+        m_collisionMesh.updateCollisionMesh(hole.modelEntity.getComponent<cro::Model>().getMeshData());
+
+        for (auto& m : hole.crowdPositions)
+        {
+            glm::vec3 pos = m[3];
+            pos.x += MapSize.x / 2;
+            pos.z -= MapSize.y / 2;
+
+            auto result = m_collisionMesh.getTerrain(pos);
+            m[3][1] = result.height;
+        }
+    }
+
+
     if (error)
     {
         m_sharedData.errorMessage = "Failed to load course data\nSee console for more information";
