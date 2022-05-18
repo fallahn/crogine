@@ -377,6 +377,7 @@
     <ClInclude Include="src\DefaultAchievements.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\golf\BallSystem.hpp" />
+    <ClInclude Include="src\golf\BeaconCallback.hpp" />
     <ClInclude Include="src\golf\Billboard.hpp" />
     <ClInclude Include="src\golf\BilliardsClientCollision.hpp" />
     <ClInclude Include="src\golf\BilliardsSoundDirector.hpp" />

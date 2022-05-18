@@ -153,6 +153,8 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Thinking];
+    bounds = m_sprites[SpriteID::Thinking].getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::ThinkBubble;
     entity.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(1, 0.f);
@@ -160,7 +162,7 @@ void GolfState::buildUI()
         [nameEnt](cro::Entity e, float dt)
         {
             auto end = nameEnt.getComponent<cro::Drawable2D>().getLocalBounds().width;
-            e.getComponent<cro::Transform>().setPosition({ end, 2.f });
+            e.getComponent<cro::Transform>().setPosition({ end + 6.f, 4.f });
 
             float scale = 0.f;
             auto& [direction, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();

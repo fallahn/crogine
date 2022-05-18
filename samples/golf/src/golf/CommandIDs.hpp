@@ -43,7 +43,8 @@ struct CommandID final
         Crowd           = 0x80,
         SpectatorCam    = 0x100,
         PlayerAvatar    = 0x200,
-        ParticleEmitter = 0x400
+        ParticleEmitter = 0x400,
+        Beacon          = 0x800
     };
 
     struct UI final

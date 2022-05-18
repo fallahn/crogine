@@ -49,6 +49,7 @@ source distribution.
 #include "TrophyDisplaySystem.hpp"
 #include "CloudSystem.hpp"
 #include "VatAnimationSystem.hpp"
+#include "BeaconCallback.hpp"
 #include "../Achievements.hpp"
 #include "../AchievementStrings.hpp"
 
@@ -2036,8 +2037,16 @@ void GolfState::buildScene()
         }
     };
 
-
     auto flagEntity = entity;
+
+    md.loadFromFile("assets/golf/models/beacon.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Beacon;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = BeaconCallback(m_gameScene);
+    md.createModel(entity);
+    auto beaconEntity = entity;
 
     //displays the stroke direction
     auto pos = m_holeData[0].tee;
@@ -2095,6 +2104,7 @@ void GolfState::buildScene()
     entity.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
     entity.getComponent<cro::Transform>().addChild(holeEntity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(flagEntity.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(beaconEntity.getComponent<cro::Transform>());
 
     meshData = &entity.getComponent<cro::Model>().getMeshData();
     verts =

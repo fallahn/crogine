@@ -530,6 +530,9 @@
     <ClInclude Include="src\golf\VatAnimationSystem.hpp">
       <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\BeaconCallback.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\WaterShader.inl">
