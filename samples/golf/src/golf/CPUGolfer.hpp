@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include <crogine/core/Clock.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -87,6 +88,8 @@ private:
     {
         Power, Accuracy
     }m_strokeState = StrokeState::Power;
+
+    cro::Clock m_aimTimer;
 
     bool m_thinking; //not a state per se, rather used to pause/idle while in specific states
     float m_thinkTime;

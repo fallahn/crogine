@@ -68,6 +68,8 @@ namespace
     {
         return cro::App::getInstance().getMessageBus().post<T>(id);
     };
+
+    const cro::Time MaxAimTime = cro::seconds(5.f);
 }
 
 CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const CollisionMesh& cm)
@@ -219,6 +221,7 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
 
             m_aimDistance = targetDistance;
             m_aimAngle = m_inputParser.getYaw();
+            m_aimTimer.restart();
 
             auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
             msg->type = AIEvent::BeginThink;
@@ -257,6 +260,7 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
             m_state = State::Aiming;
             m_aimDistance = absDistance < 15.f ? absDistance : targetDistance; //hacky way to shorten distance near the green
             m_aimAngle = m_inputParser.getYaw();
+            m_aimTimer.restart();
             //LOG("CPU Entered Aiming Mode", cro::Logger::Type::Info);
         };
         
@@ -358,11 +362,13 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 
         if (m_activePlayer.terrain == TerrainID::Green)
         {
-            greenCompensation = 0.01f; //reduce the wind compensation by this
+            greenCompensation = 0.02f; //reduce the wind compensation by this
 
             //then calculate the slope by measuring two points either side of a point
-            //approx half way to the hole.
+            //approx two thirds to the hole.
             auto centrePoint = (m_target - m_activePlayer.position) * 0.75f;
+            float distanceReduction = std::min(1.f, glm::length2(centrePoint) / 25.f);
+
             auto distance = glm::normalize(centrePoint);
             centrePoint += m_activePlayer.position;
 
@@ -380,7 +386,8 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 #endif
             float slope = (resultA.height - resultB.height) / MaxSlope;
             slopeCompensation = m_inputParser.getMaxRotation() * slope;
-            slopeCompensation *= std::min(1.f, glm::length2(centrePoint)); //reduce the effect nearer the hole
+            slopeCompensation *= distanceReduction; //reduce the effect nearer the hole
+            greenCompensation *= distanceReduction;
         }
 
 
@@ -424,7 +431,8 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         }
 
         //if angle correct then calc a target power
-        if (std::abs(m_inputParser.getYaw() - targetAngle) < 0.01f)
+        if (std::abs(m_inputParser.getYaw() - targetAngle) < 0.01f
+            || m_aimTimer.elapsed() > MaxAimTime) //get out clause if aim calculation is out of bounds.
         {
             //stop holding rotate
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Right], true);
