@@ -67,6 +67,8 @@ static const std::string ShadowVertex = R"(
         #define MAX_INSTANCE 3
         uniform sampler2D u_vatsPosition;
         uniform float u_time;
+        uniform float u_maxTime;
+        uniform float u_offsetMultiplier;
     #endif
 
 #if defined(WIND_WARP)
@@ -108,8 +110,8 @@ static const std::string ShadowVertex = R"(
         #if defined (VATS)
             vec2 texCoord = a_texCoord1;
             float scale = texCoord.y;
-            float instanceOffset = mod(gl_InstanceID, MAX_INSTANCE) + 1.0;
-            texCoord.y = mod(u_time, 1.0);// + (0.1 * instanceOffset)
+            float instanceOffset = mod(gl_InstanceID, MAX_INSTANCE) * u_offsetMultiplier;
+            texCoord.y = mod(u_time + (0.15 * instanceOffset), u_maxTime);
 
             vec4 position = vec4(decodeVector(u_vatsPosition, texCoord) * scale, 1.0);
         #else

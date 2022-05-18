@@ -39,7 +39,10 @@ struct VatAnimation final
     float loopTime = 1.f;
     float targetTime = 1.f;
 
+    float offsetMultiplier = 0.f;
+
     void setVatData(const VatFile&);
+    void applaud();
 };
 
 class VatAnimationSystem final : public cro::System

@@ -31,6 +31,7 @@ source distribution.
 #include "VatFile.hpp"
 
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/util/Random.hpp>
 
 void VatAnimation::setVatData(const VatFile& file)
 {
@@ -41,6 +42,14 @@ void VatAnimation::setVatData(const VatFile& file)
 
     targetTime = loopTime;
     //LogI << "Target Time: " << targetTime << std::endl;
+}
+
+void VatAnimation::applaud()
+{
+    targetTime = totalTime;
+    currentTime = loopTime - cro::Util::Random::value(0.2f, 0.7f);
+
+    offsetMultiplier = 0.f;
 }
 
 VatAnimationSystem::VatAnimationSystem(cro::MessageBus& mb)
@@ -67,9 +76,21 @@ void VatAnimationSystem::process(float dt)
             anim.targetTime = anim.loopTime;
         }
 
+        if (anim.targetTime < anim.totalTime)
+        {
+            //we're in the idle loop so slow desync instances
+            anim.offsetMultiplier = std::min(1.f, anim.offsetMultiplier + dt);
+        }
+
         //would prefer not to do the string lookup, but perf hit is negligable...
         float normTime = anim.currentTime / anim.totalTime;
+        float targTime = anim.targetTime / anim.totalTime;
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_time", normTime);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_maxTime", targTime);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_offsetMultiplier", anim.offsetMultiplier);
+
         entity.getComponent<cro::Model>().setShadowMaterialProperty(0, "u_time", normTime);
+        entity.getComponent<cro::Model>().setShadowMaterialProperty(0, "u_maxTime", targTime);
+        entity.getComponent<cro::Model>().setShadowMaterialProperty(0, "u_offsetMultiplier", anim.offsetMultiplier);
     }
 }
