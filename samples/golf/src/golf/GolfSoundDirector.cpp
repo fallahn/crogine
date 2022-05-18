@@ -166,6 +166,16 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case GolfEvent::HoleWon:
+            if (auto idx = m_playerIndices[data.client][data.player]; idx > -1)
+            {
+                static const std::string emitterName = "celebrate";
+                if (m_playerVoices[idx].hasEmitter(emitterName))
+                {
+                    playAvatarSound(idx, emitterName, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+                }
+            }
+            break;
         case GolfEvent::HoleDrawn:
             playSoundDelayed(cro::Util::Random::value(AudioID::Draw01, AudioID::Draw02), glm::vec3(0.f), 0.2f, 1.f, MixerChannel::Voice);
             break;
@@ -430,12 +440,7 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
 
             if (m_playerVoices[idx].hasEmitter(emitterName))
             {
-                auto ent = getNextEntity();
-                ent.getComponent<cro::AudioEmitter>() = m_playerVoices[idx].getEmitter(emitterName);
-                ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
-                ent.getComponent<cro::AudioEmitter>().play();
-                ent.getComponent<cro::Transform>().setPosition(position);
-                return ent;
+                return playAvatarSound(idx, emitterName, position);
             }
         }
 
@@ -477,6 +482,16 @@ void GolfSoundDirector::playSoundDelayed(std::int32_t id, glm::vec3 position, fl
             getScene().destroyEntity(e);
         }
     };
+}
+
+cro::Entity GolfSoundDirector::playAvatarSound(std::int32_t idx, const std::string& emitterName, glm::vec3 position)
+{
+    auto ent = getNextEntity();
+    ent.getComponent<cro::AudioEmitter>() = m_playerVoices[idx].getEmitter(emitterName);
+    ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+    ent.getComponent<cro::AudioEmitter>().play();
+    ent.getComponent<cro::Transform>().setPosition(position);
+    return ent;
 }
 
 void GolfSoundDirector::applaud()

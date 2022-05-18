@@ -121,6 +121,8 @@ namespace
     std::int32_t debugFlags = 0;
     bool useFreeCam = false;
     cro::Entity ballEntity;
+    std::size_t bitrate = 0;
+    std::size_t bitrateCounter = 0;
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
@@ -194,6 +196,15 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
     ballEntity = {};
+
+    registerWindow([]()
+        {
+            if (ImGui::Begin("Network"))
+            {
+                ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
+            }
+            ImGui::End();
+        });
 
     //registerWindow([&]()
     //    {
@@ -703,6 +714,18 @@ void GolfState::handleMessage(const cro::Message& msg)
                 //make sure to set the correct controller
                 m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer.player];
             }
+            else if (data.id == StateID::Options)
+            {
+                //update the beacon if settings changed
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Beacon;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Callback>().active = m_sharedData.showBeacon;
+                    e.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
+                };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
         }
     }
         break;
@@ -767,9 +790,23 @@ bool GolfState::simulate(float dt)
         cro::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
+#ifdef CRO_DEBUG_
+            bitrateCounter += evt.packet.getSize() * 8;
+#endif
             //handle events
             handleNetEvent(evt);
         }
+
+#ifdef CRO_DEBUG_
+        static float bitrateTimer = 0.f;
+        bitrateTimer += dt;
+        if (bitrateTimer > 1.f)
+        {
+            bitrateTimer -= 1.f;
+            bitrate = bitrateCounter;
+            bitrateCounter = 0;
+        }
+#endif
 
         if (m_wantsGameState)
         {
@@ -2043,9 +2080,10 @@ void GolfState::buildScene()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Beacon;
-    entity.addComponent<cro::Callback>().active = true;
+    entity.addComponent<cro::Callback>().active = m_sharedData.showBeacon;
     entity.getComponent<cro::Callback>().function = BeaconCallback(m_gameScene);
     md.createModel(entity);
+    entity.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
     auto beaconEntity = entity;
 
     //displays the stroke direction
@@ -2960,9 +2998,14 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             }
             else
             {
-                auto msg = m_sharedData.connectionData[client].playerData[player].name;
-                msg += " has won the hole!";
-                showNotification(msg);
+                auto txt = m_sharedData.connectionData[client].playerData[player].name;
+                txt += " has won the hole!";
+                showNotification(txt);
+
+                auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                msg->type = GolfEvent::HoleWon;
+                msg->player = player;
+                msg->client = client;
             }
         }
         break;

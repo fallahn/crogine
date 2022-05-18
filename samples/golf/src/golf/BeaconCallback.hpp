@@ -62,7 +62,7 @@ public:
                 cro::Colour c(amount, amount, amount);
                 e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
 
-                float scale = 0.4f + (0.6f * amount);
+                float scale = 0.2f + (0.3f * amount);
                 e.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
             }
         }
@@ -73,5 +73,5 @@ private:
     const cro::Scene& m_scene;
 
     static constexpr float MaxDist = 120.f;
-    static constexpr float MinDist = 40.f;
+    static constexpr float MinDist = 20.f;
 };

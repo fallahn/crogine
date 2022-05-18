@@ -68,6 +68,7 @@ struct GolfEvent final
         NiceShot,
         DriveComplete,
         HoleInOne,
+        HoleWon,
         HoleDrawn
     }type = HitBall;
 
@@ -78,8 +79,13 @@ struct GolfEvent final
     {
         std::uint8_t terrain = 0;
         std::uint8_t score;
+        std::uint8_t player;
     };
-    std::uint8_t club = 0;
+    union
+    {
+        std::uint8_t club = 0;
+        std::uint8_t client;
+    };
 };
 
 struct SceneEvent

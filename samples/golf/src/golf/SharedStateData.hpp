@@ -157,6 +157,7 @@ struct SharedStateData final
     float mouseSpeed = 1.f;
     bool invertX = false;
     bool invertY = false;
+    bool showBeacon = true;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

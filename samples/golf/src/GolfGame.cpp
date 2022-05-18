@@ -650,6 +650,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.invertY = prop.getValue<bool>();
                 }
+                else if (name == "show_beacon")
+                {
+                    m_sharedData.showBeacon = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -702,6 +706,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("mouse_speed").setValue(m_sharedData.mouseSpeed);
     cfg.addProperty("invert_x").setValue(m_sharedData.invertX);
     cfg.addProperty("invert_y").setValue(m_sharedData.invertY);
+    cfg.addProperty("show_beacon").setValue(m_sharedData.showBeacon);
     cfg.save(path);
 
 
