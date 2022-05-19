@@ -1295,6 +1295,8 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                 auto index = e.getComponent<cro::Callback>().getUserData<const std::uint32_t>();
                 m_sharedData.localConnectionData.playerData[index].isCPU =
                     !m_sharedData.localConnectionData.playerData[index].isCPU;
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
 

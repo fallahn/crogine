@@ -39,7 +39,7 @@ public:
     explicit BeaconCallback(const cro::Scene& scene)
         : m_scene(scene) {}
 
-    void operator() (cro::Entity e, float)
+    void operator() (cro::Entity e, float dt)
     {
         auto pos = e.getComponent<cro::Transform>().getWorldPosition();
         glm::vec2 beaconPos(pos.x, -pos.z);
@@ -65,6 +65,8 @@ public:
                 float scale = 0.2f + (0.3f * amount);
                 e.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
             }
+
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
         }
     }
 
