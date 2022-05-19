@@ -2075,18 +2075,21 @@ void GolfState::buildScene()
 
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
-    //material.enableDepthTest = false;
+    material.blendMode = cro::Material::BlendMode::Additive;
+    material.enableDepthTest = false;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
 
+
     std::vector<float> verts =
     {
-        0.f, 0.05f, 0.f,    1.f, 0.97f, 0.88f, 1.f,
-        5.f, 0.1f, 0.f,    1.f, 0.97f, 0.88f, 0.2f
+        0.f, Ball::Radius, 0.005f, 1.f * IndicatorLightness, 0.97f * IndicatorLightness, 0.88f * IndicatorLightness, 1.f,
+        5.f, Ball::Radius, 0.f,    1.f * IndicatorDarkness, 0.97f * IndicatorDarkness, 0.88f * IndicatorDarkness, 1.f,
+        0.f, Ball::Radius, -0.005f,1.f * IndicatorLightness, 0.97f * IndicatorLightness, 0.88f * IndicatorLightness, 1.f
     };
     std::vector<std::uint32_t> indices =
     {
-        0,1
+        0,1,2
     };
 
     auto vertStride = (meshData->vertexSize / sizeof(float));

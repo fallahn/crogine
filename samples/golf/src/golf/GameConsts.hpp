@@ -71,6 +71,9 @@ static constexpr float MaxPixelScale = 3.f;
 
 static constexpr float PlaneHeight = 60.f;
 
+static constexpr float IndicatorDarkness = 0.002f;
+static constexpr float IndicatorLightness = 0.5f;
+
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
 static constexpr glm::uvec2 LabelTextureSize(128u, 64u);
