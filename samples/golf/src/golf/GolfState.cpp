@@ -860,7 +860,11 @@ bool GolfState::simulate(float dt)
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    m_cpuGolfer.update(dt, windVector);
+    //don't update the CPU if there are any menus open
+    if (getStateCount() == 1)
+    {
+        m_cpuGolfer.update(dt, windVector);
+    }
 
     m_terrainBuilder.updateTime(elapsed * 10.f);
     m_inputParser.update(dt);
