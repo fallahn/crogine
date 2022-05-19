@@ -66,6 +66,7 @@ namespace
 {
 #include "golf/TutorialShaders.inl"
 #include "golf/TerrainShader.inl"
+#include "golf/BeaconShader.inl"
 #include "golf/PostProcess.inl"
 #include "golf/RandNames.hpp"
 
@@ -450,6 +451,8 @@ bool GolfGame::initialise()
     m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
 
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::TutorialSlope, TutorialVertexShader, TutorialSlopeShader);
+    m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define SPRITE\n");
+
 
     m_sharedData.resolutions = getWindow().getAvailableResolutions();
     std::reverse(m_sharedData.resolutions.begin(), m_sharedData.resolutions.end());
@@ -654,6 +657,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.showBeacon = prop.getValue<bool>();
                 }
+                else if (name == "beacon_colour")
+                {
+                    m_sharedData.beaconColour = std::fmod(prop.getValue<float>(), 1.f);
+                }
             }
         }
     }
@@ -707,6 +714,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("invert_x").setValue(m_sharedData.invertX);
     cfg.addProperty("invert_y").setValue(m_sharedData.invertY);
     cfg.addProperty("show_beacon").setValue(m_sharedData.showBeacon);
+    cfg.addProperty("beacon_colour").setValue(m_sharedData.beaconColour);
     cfg.save(path);
 
 

@@ -724,6 +724,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     e.getComponent<cro::Callback>().active = m_sharedData.showBeacon;
                     e.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
+                    e.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
@@ -1094,7 +1095,7 @@ void GolfState::loadAssets()
     
 
     //mmmm... bacon
-    m_resources.shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment);
+    m_resources.shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define TEXTURED\n");
     m_materialIDs[MaterialID::Beacon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Beacon));
 
 
@@ -2056,6 +2057,7 @@ void GolfState::buildScene()
 
     entity.getComponent<cro::Model>().setMaterial(0, beaconMat);
     entity.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
     auto beaconEntity = entity;
 
     //displays the stroke direction

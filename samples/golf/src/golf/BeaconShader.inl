@@ -38,7 +38,13 @@ static const std::string BeaconVertex = R"(
 
     void main()
     {
-        gl_Position = u_projectionMatrix * u_worldViewMatrix * a_position;
+#if defined (SPRITE)
+        vec4 position = vec4(a_position.xy, 0.0, 1.0);
+#else
+        vec4 position = a_position;
+#endif
+
+        gl_Position = u_projectionMatrix * u_worldViewMatrix * position;
 
         v_texCoord = a_texCoord0;
 
@@ -46,7 +52,7 @@ static const std::string BeaconVertex = R"(
         hsv.x += u_colourRotation;
         v_colour = vec4(hsv2rgb(hsv), a_colour.a);
 
-        vec4 worldPos = u_worldMatrix * a_position;
+        vec4 worldPos = u_worldMatrix * position;
         gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
     })";
 
@@ -62,5 +68,9 @@ static const std::string BeaconFragment = R"(
 
     void main()
     {
+#if defined (TEXTURED)
         FRAG_OUT = TEXTURE(u_diffuseMap, v_texCoord) * v_colour * u_colour;
+#else
+        FRAG_OUT = v_colour;
+#endif
     })";

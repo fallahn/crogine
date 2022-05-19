@@ -65,6 +65,7 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/audio/AudioMixer.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 #include <sstream>
@@ -1451,7 +1452,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
 
-    //ebacon check box
+    //beacon check box
     entity = createHighlight(glm::vec2(175.f, 13.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -1483,6 +1484,73 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    //beacon colour preview
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(193.f, 15.f, HighlightOffset));
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+    {
+        cro::Vertex2D(glm::vec2(0.f, 7.f), cro::Colour::Magenta),
+        cro::Vertex2D(glm::vec2(0.f), cro::Colour::Magenta),
+        cro::Vertex2D(glm::vec2(7.f), cro::Colour::Magenta),
+        cro::Vertex2D(glm::vec2(7.f, 0.f), cro::Colour::Magenta)
+    });
+    auto& shader = m_sharedData.sharedResources->shaders.get(ShaderID::Beacon);
+    entity.getComponent<cro::Drawable2D>().setShader(&shader);
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto shaderID = shader.getGLHandle();
+    auto uniformID = shader.getUniformID("u_colourRotation");
+    glUseProgram(shaderID);
+    glUniform1f(uniformID, m_sharedData.beaconColour);
+
+    entity = createHighlight(glm::vec2(208.f, 13.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&, shaderID, uniformID](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.beaconColour = std::max(m_sharedData.beaconColour - 0.1f, 0.f);
+                    glUseProgram(shaderID);
+                    glUniform1f(uniformID, m_sharedData.beaconColour);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+    entity = createHighlight(glm::vec2(276.f, 13.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&, shaderID, uniformID](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.beaconColour = std::min(m_sharedData.beaconColour + 0.1f, 1.f);
+                    glUseProgram(shaderID);
+                    glUniform1f(uniformID, m_sharedData.beaconColour);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+    //colour slider
+    auto colourPos = glm::vec2(225.f, 19.f);
+    auto colourSlider = createSlider(colourPos);
+    auto sliderData = SliderData(colourPos, 44.f);
+    sliderData.onActivate =
+        [&, shaderID, uniformID](float distance)
+    {
+        m_sharedData.beaconColour = distance;
+        glUseProgram(shaderID);
+        glUniform1f(uniformID, m_sharedData.beaconColour);
+    };
+
+    colourSlider.getComponent<cro::Callback>().setUserData<SliderData>(sliderData);
+    colourSlider.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        const auto& [pos, width, _] = e.getComponent<cro::Callback>().getUserData<SliderData>();
+        e.getComponent<cro::Transform>().setPosition({ pos.x + (width * m_sharedData.beaconColour), pos.y });
+    };
 }
 
 void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
