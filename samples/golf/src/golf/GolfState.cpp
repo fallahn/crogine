@@ -2938,7 +2938,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                 player.matchScore = su.matchScore;
                 player.skinScore = su.skinsScore;
                 player.holeScores[su.hole] = su.stroke;
-                
+                LOG("Score Update", cro::Logger::Type::Info);
                 if (su.client == m_sharedData.localConnectionData.connectionID)
                 {
                     if (getClub() == ClubID::Putter)

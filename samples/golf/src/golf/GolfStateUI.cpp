@@ -1180,8 +1180,11 @@ void GolfState::updateScoreboard()
                     entry.total = entry.frontNine + entry.backNine;
                     break;
                 case ScoreType::Skins:
+                    entry.total = client.playerData[i].skinScore;
+                    break;
                 case ScoreType::Match:
-                    entry.total = entry.frontNine;
+                    //entry.total = entry.frontNine;
+                    entry.total = client.playerData[i].matchScore;
                     break;
                 }
 
@@ -1204,7 +1207,7 @@ void GolfState::updateScoreboard()
                 }
                 return a.score > b.score;
             });
-
+        LOG("Table Update", cro::Logger::Type::Info);
 
         auto& ents = e.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
         std::sort(scores.begin(), scores.end(),

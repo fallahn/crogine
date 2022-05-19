@@ -436,7 +436,6 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 cmd.targetFlags = CommandID::Beacon;
                 cmd.action = [&](cro::Entity e, float)
                 {
-                    e.getComponent<cro::Callback>().active = m_sharedData.showBeacon;
                     e.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
                     e.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
                 };
@@ -2021,18 +2020,23 @@ void DrivingState::createFlag()
 
     md.loadFromFile("assets/golf/models/beacon.cmt");
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Beacon;
-    entity.addComponent<cro::Callback>().active = false;
-    entity.getComponent<cro::Callback>().function = BeaconCallback(m_gameScene);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+    };
     md.createModel(entity);
 
     auto beaconMat = m_resources.materials.get(m_materialIDs[MaterialID::Beacon]);
     applyMaterialData(md, beaconMat);
 
     entity.getComponent<cro::Model>().setMaterial(0, beaconMat);
-    entity.getComponent<cro::Model>().setHidden(true);
+    entity.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
     entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour(0.3f, 0.3f, 0.3f));
     auto beaconEntity = entity;
 
 
@@ -2093,8 +2097,6 @@ void DrivingState::createFlag()
             {
                 data.state = FlagCallbackData::In;
             }
-
-            beaconEntity.getComponent<cro::Callback>().active = false; //prevent this overriding
         }
         else
         {
@@ -2113,9 +2115,6 @@ void DrivingState::createFlag()
                 e.getComponent<cro::ParticleEmitter>().start();
 
                 m_inputParser.setActive(true);
-
-                //reactivate if needed
-                beaconEntity.getComponent<cro::Callback>().active = m_sharedData.showBeacon;
             }
         }
 

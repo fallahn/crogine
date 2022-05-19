@@ -967,6 +967,7 @@ void OptionsState::buildScene()
     m_tooltips[ToolTipID::Pixel] = createToolTip("Scale up pixels to match\nthe current resolution.");
     m_tooltips[ToolTipID::VertSnap] = createToolTip("Snaps vertices to the nearest\nwhole pixel for a retro \'wobble\'.");
     m_tooltips[ToolTipID::Beacon] = createToolTip("Shows a beacon to indicate flag position\nat far distances.");
+    m_tooltips[ToolTipID::BeaconColour] = createToolTip("Display colour of the beacon.");
     m_tooltips[ToolTipID::MouseSpeed] = createToolTip("1.00");
     m_tooltips[ToolTipID::Video] = createToolTip("Sound & Video Settings");
     m_tooltips[ToolTipID::Controls] = createToolTip("Controls");
@@ -1497,6 +1498,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     });
     auto& shader = m_sharedData.sharedResources->shaders.get(ShaderID::Beacon);
     entity.getComponent<cro::Drawable2D>().setShader(&shader);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = [&](cro::Entity e, float) {updateToolTip(e, ToolTipID::BeaconColour); };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto shaderID = shader.getGLHandle();

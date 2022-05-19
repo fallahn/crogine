@@ -113,7 +113,7 @@ private:
         {
             Volume, FOV, Pixel,
             VertSnap, Beacon,
-            MouseSpeed,
+            BeaconColour, MouseSpeed,
             Video, Controls,
             Achievements, Stats,
             Count
