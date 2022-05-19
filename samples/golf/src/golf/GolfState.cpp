@@ -117,6 +117,7 @@ namespace
 #include "TransitionShader.inl"
 #include "BillboardShader.inl"
 #include "ShadowMapping.inl"
+#include "BeaconShader.inl"
 
     std::int32_t debugFlags = 0;
     bool useFreeCam = false;
@@ -1023,7 +1024,7 @@ void GolfState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
 
-
+    //custom shadow map so shadows move with wind too...
     m_resources.shaders.loadFromString(ShaderID::ShadowMap, ShadowVertex, ShadowFragment, "#define WIND_WARP\n#define ALPHA_CLIP\n");
     shader = &m_resources.shaders.get(ShaderID::ShadowMap);
     m_windBuffer.addShader(*shader);
@@ -1091,6 +1092,11 @@ void GolfState::loadAssets()
     m_waterShader.shaderID = m_resources.shaders.get(ShaderID::Water).getGLHandle();
     m_waterShader.timeUniform = m_resources.shaders.get(ShaderID::Water).getUniformMap().at("u_time");
     
+
+    //mmmm... bacon
+    m_resources.shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment);
+    m_materialIDs[MaterialID::Beacon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Beacon));
+
 
     //model definitions
     for (auto& md : m_modelDefs)
@@ -2044,6 +2050,11 @@ void GolfState::buildScene()
     entity.addComponent<cro::Callback>().active = m_sharedData.showBeacon;
     entity.getComponent<cro::Callback>().function = BeaconCallback(m_gameScene);
     md.createModel(entity);
+
+    auto beaconMat = m_resources.materials.get(m_materialIDs[MaterialID::Beacon]);
+    applyMaterialData(md, beaconMat);
+
+    entity.getComponent<cro::Model>().setMaterial(0, beaconMat);
     entity.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
     auto beaconEntity = entity;
 

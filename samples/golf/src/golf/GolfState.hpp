@@ -157,6 +157,7 @@ private:
             Ball,
             Billboard,
             Trophy,
+            Beacon,
 
             Count
         };

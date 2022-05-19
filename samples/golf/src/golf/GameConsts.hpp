@@ -131,7 +131,8 @@ struct ShaderID final
         WireframeCulled,
         Weather,
         Transition,
-        Trophy
+        Trophy,
+        Beacon
     };
 };
 
@@ -247,6 +248,10 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
         {
             dest = *m;
             return;
+        }
+        else
+        {
+            dest.blendMode = m->blendMode;
         }
 
         if (m->properties.count("u_diffuseMap"))

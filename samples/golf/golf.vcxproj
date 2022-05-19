@@ -460,6 +460,7 @@
     <ClInclude Include="src\StateIDs.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\golf\BeaconShader.inl" />
     <None Include="src\golf\BillboardShader.inl" />
     <None Include="src\golf\CloudShader.inl" />
     <None Include="src\golf\MinimapShader.inl" />
