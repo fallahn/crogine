@@ -158,7 +158,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Win a game of Eightball", false),
     std::make_pair("Win a game of Nineball", false),
     std::make_pair("Win a game of Snooker", false),
-    std::make_pair("Spend 5 hours on the Driving Range", false),
+    std::make_pair("Spend an hour in total on the driving range", false),
 };
 
 //assuming tropies load correctly they are

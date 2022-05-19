@@ -90,12 +90,12 @@ void DefaultAchievements::init()
 
     trigger = &StatTriggers[StatID::TimeOnTheRange].emplace_back();
     trigger->achID = AchievementID::PracticeMakesPerfect;
-    trigger->threshold = 60 * 60 * 5; //seconds
+    trigger->threshold = 60 * 60; //seconds
 }
 
 void DefaultAchievements::update()
 {
-    const float dt = 1.f / 60.f; //haaaaxaxxxxx
+    static constexpr float dt = 1.f / 60.f; //haaaaxaxxxxx
 
     for (auto& icon : m_icons)
     {

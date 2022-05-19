@@ -47,7 +47,7 @@ public:
         pos = m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
         glm::vec2 camPos(pos.x, -pos.z);
 
-        float amount = smoothstep(MinDist / MaxDist, MaxDist / MaxDist, std::min(1.f, glm::length(beaconPos - camPos) / MaxDist));
+        float amount = smoothstep(MinDist / MaxDist, MaxDist / MaxDist, std::min(1.f, glm::length2(beaconPos - camPos) / (MaxDist * MaxDist)));
 
         if (amount == 0)
         {
@@ -61,9 +61,6 @@ public:
                 //model is blended additively so black == transparent
                 cro::Colour c(amount, amount, amount);
                 e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
-
-                float scale = 0.2f + (0.3f * amount);
-                e.getComponent<cro::Transform>().setScale({ scale, 1.f, scale });
             }
 
             e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);

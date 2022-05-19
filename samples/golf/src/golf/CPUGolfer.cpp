@@ -448,7 +448,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             {
                 m_targetPower = (glm::length(m_target - m_activePlayer.position) * 1.1f) / Clubs[m_clubID].target;
             }
-            m_targetPower += ((0.2f * (-dot * windVector.y)) * greenCompensation) * m_targetPower;
+            m_targetPower += ((0.12f * (-dot * windVector.y)) * greenCompensation) * m_targetPower;
 
 
             //add some random factor to target power and set to stroke mode
