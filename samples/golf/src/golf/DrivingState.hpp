@@ -96,6 +96,7 @@ private:
             Hair,
             Wireframe,
             WireframeCulled,
+            Beacon,
 
             Count
         };

@@ -46,6 +46,7 @@ source distribution.
 #include "ClientCollisionSystem.hpp"
 #include "CloudSystem.hpp"
 #include "PoissonDisk.hpp"
+#include "BeaconCallback.hpp"
 #include "server/ServerMessages.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
@@ -98,6 +99,7 @@ namespace
 #include "WireframeShader.inl"
 #include "BillboardShader.inl"
 #include "CloudShader.inl"
+#include "BeaconShader.inl"
 
 #ifdef CRO_DEBUG_
     std::int32_t debugFlags = 0;
@@ -422,6 +424,27 @@ void DrivingState::handleMessage(const cro::Message& msg)
         }
     }
     break;
+    case cro::Message::StateMessage:
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped)
+        {
+            if (data.id == StateID::Options)
+            {
+                //update the beacon if settings changed
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Beacon;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Callback>().active = m_sharedData.showBeacon;
+                    e.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
+                    e.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
+                };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
+        }
+    }
+        break;
     }
 }
 
@@ -603,6 +626,9 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::WireframeCulled, WireframeVertex, WireframeFragment, "#define CULLED\n");
     m_materialIDs[MaterialID::WireframeCulled] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulled));
     m_resources.materials.get(m_materialIDs[MaterialID::WireframeCulled]).blendMode = cro::Material::BlendMode::Alpha;
+
+    m_resources.shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define TEXTURED\n");
+    m_materialIDs[MaterialID::Beacon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Beacon));
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
@@ -1993,6 +2019,24 @@ void DrivingState::createFlag()
     
     auto flagEntity = entity;
 
+    md.loadFromFile("assets/golf/models/beacon.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Beacon;
+    entity.addComponent<cro::Callback>().active = false;
+    entity.getComponent<cro::Callback>().function = BeaconCallback(m_gameScene);
+    md.createModel(entity);
+
+    auto beaconMat = m_resources.materials.get(m_materialIDs[MaterialID::Beacon]);
+    applyMaterialData(md, beaconMat);
+
+    entity.getComponent<cro::Model>().setMaterial(0, beaconMat);
+    entity.getComponent<cro::Model>().setHidden(true);
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
+    auto beaconEntity = entity;
+
+
+
     //draw the flag pole as a single line which can be
     //see from a distance - hole and model are also attached to this
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireframeCulled]);
@@ -2004,6 +2048,7 @@ void DrivingState::createFlag()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, -FlagCallbackData::MaxDepth, 0.f });
     entity.getComponent<cro::Transform>().addChild(holeEntity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(flagEntity.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(beaconEntity.getComponent<cro::Transform>());
 
     auto *meshData = &entity.getComponent<cro::Model>().getMeshData();
     auto vertStride = (meshData->vertexSize / sizeof(float));
@@ -2032,7 +2077,7 @@ void DrivingState::createFlag()
     entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/flag.cps", m_resources.textures);
     entity.addComponent<cro::Callback>().setUserData<FlagCallbackData>();
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, beaconEntity](cro::Entity e, float dt) mutable
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<FlagCallbackData>();
         auto& tx = e.getComponent<cro::Transform>();
@@ -2048,6 +2093,8 @@ void DrivingState::createFlag()
             {
                 data.state = FlagCallbackData::In;
             }
+
+            beaconEntity.getComponent<cro::Callback>().active = false; //prevent this overriding
         }
         else
         {
@@ -2066,7 +2113,17 @@ void DrivingState::createFlag()
                 e.getComponent<cro::ParticleEmitter>().start();
 
                 m_inputParser.setActive(true);
+
+                //reactivate if needed
+                beaconEntity.getComponent<cro::Callback>().active = m_sharedData.showBeacon;
             }
+        }
+
+        //update beacon if active
+        if (m_sharedData.showBeacon)
+        {
+            float scale = 1.f - data.progress;
+            beaconEntity.getComponent<cro::Transform>().setScale({ scale, scale, scale });
         }
     };
 }
