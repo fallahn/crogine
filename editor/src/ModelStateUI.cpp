@@ -1305,6 +1305,13 @@ void ModelState::drawInspector()
                 ImGui::SameLine();
                 helpMarker("Enables rendering both sides of a material.\nThis is usually desired for alpha blended materials\nor other instances where the back face would be visible");
 
+                if (ImGui::Checkbox("Use Mipmaps", &matDef.useMipmaps))
+                {
+                    //do nothing really, this isn't applied until the material is loaded in-game
+                }
+                ImGui::SameLine();
+                helpMarker("Tells crogine to generate mipmaps to the diffuse texture when it is loaded in-game.\nMaterials with alpha-clipped transparency may not look desirable.");
+
                 ImGui::Checkbox("Use Vertex Colours", &matDef.vertexColoured);
                 ImGui::SameLine();
                 helpMarker("Any colour information stored in the model's vertex data will be multiplied with the diffuse colour of the material");

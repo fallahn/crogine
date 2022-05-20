@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -325,6 +325,7 @@ void ModelState::exportMaterial() const
         file.addProperty("texture_repeat").setValue(matDef.repeatTexture);
         file.addProperty("depth_test").setValue(matDef.depthTest);
         file.addProperty("double_sided").setValue(matDef.doubleSided);
+        file.addProperty("use_mipmaps").setValue(matDef.useMipmaps);
 
         //textures
         auto getTextureName = [&](std::uint32_t id)
@@ -467,7 +468,7 @@ void ModelState::importMaterial(const std::string& path)
                 else if (name == "subrect")
                 {
                     auto subrect = prop.getValue<glm::vec4>();
-                    auto clamp = [](float& v)
+                    const auto clamp = [](float& v)
                     {
                         v = std::min(1.f, std::max(0.f, v));
                     };
@@ -492,6 +493,10 @@ void ModelState::importMaterial(const std::string& path)
                 else if (name == "double_sided")
                 {
                     def.doubleSided = prop.getValue<bool>();
+                }
+                else if (name == "use_mipmaps")
+                {
+                    def.useMipmaps = prop.getValue<bool>();
                 }
             }
 

@@ -2137,7 +2137,7 @@ void GolfState::buildScene()
     const float radius = 2.5f;
 
     std::vector<glm::vec2> points;
-    for (auto i = -m_inputParser.getMaxRotation(); i < -m_inputParser.getMaxRotation() + arc; i += step)
+    for (auto i = -m_inputParser.getMaxRotation(); i <= -m_inputParser.getMaxRotation() + arc; i += step)
     {
         auto& p = points.emplace_back(std::cos(i), std::sin(i));
         p *= radius;
@@ -3593,6 +3593,19 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
         e.getComponent<cro::Callback>().active = localPlayer;
         //e.getComponent<cro::Model>().setDepthTestEnabled(0, player.terrain == TerrainID::Green);
+
+        //fudgy way of changing the render type when putting
+        if (e.getComponent<cro::CommandTarget>().ID == CommandID::StrokeIndicator)
+        {
+            if (player.terrain == TerrainID::Green)
+            {
+                e.getComponent<cro::Model>().getMeshData().indexData[0].primitiveType = GL_TRIANGLES;
+            }
+            else
+            {
+                e.getComponent<cro::Model>().getMeshData().indexData[0].primitiveType = GL_LINE_STRIP;
+            }
+        }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

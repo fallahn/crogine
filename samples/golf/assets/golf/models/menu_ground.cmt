@@ -11,6 +11,7 @@ model menu_ground
         repeat = true
         blendmode = "none"
         diffuse = "assets/golf/images/menu_ground.png"
+        use_mipmaps = true
 
     }
 }
