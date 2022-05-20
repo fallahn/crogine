@@ -191,6 +191,7 @@ private:
     }m_ballResources;
 
     std::string m_audioPath;
+    std::string m_courseTitle;
 
     void loadAssets();
     void addSystems();

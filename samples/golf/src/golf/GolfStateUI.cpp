@@ -1037,6 +1037,20 @@ void GolfState::createScoreboard()
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    if (!m_courseTitle.empty())
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 200.f, 23.f, 0.5f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString(m_courseTitle);
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        bounds = cro::Text::getLocalBounds(entity);
+        bounds.width = std::floor(bounds.width / 2.f);
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+        bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.getComponent<cro::Transform>().setOrigin({ -6.f, 253.f, -0.2f});

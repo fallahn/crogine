@@ -1464,6 +1464,11 @@ void GolfState::loadAssets()
         error = true;
     }
 
+    if (auto* title = courseFile.findProperty("title"); title)
+    {
+        m_courseTitle = title->getValue<std::string>();
+    }
+
     ThemeSettings theme;
     std::vector<std::string> holeStrings;
     const auto& props = courseFile.getProperties();
@@ -1924,7 +1929,6 @@ void GolfState::loadAssets()
             std::fill(player.holeScores.begin(), player.holeScores.end(), 0);
         }
     }
-
 }
 
 void GolfState::addSystems()
