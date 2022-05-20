@@ -44,6 +44,8 @@ namespace
 
     static constexpr float MinPower = 0.01f;
     static constexpr float MaxPower = 1.f - MinPower;
+
+    static constexpr float MinAcceleration = 0.5f;
 }
 
 InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)
@@ -55,6 +57,7 @@ InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)
     m_prevDisabledFlags (0),
     m_prevStick         (0),
     m_analogueAmount    (0.f),
+    m_inputAcceleration (0.f),
     m_mouseWheel        (0),
     m_prevMouseWheel    (0),
     m_mouseMove         (0),
@@ -367,6 +370,16 @@ void InputParser::resetPower()
 
 void InputParser::update(float dt)
 {
+    if (m_inputFlags & (InputFlag::Left | InputFlag::Right))
+    {
+        m_inputAcceleration = std::min(1.f, m_inputAcceleration + dt);
+    }
+    else
+    {
+        m_inputAcceleration = 0.f;
+    }
+
+
     checkControllerInput();
     checkMouseInput();
 
@@ -526,7 +539,9 @@ void InputParser::rotate(float rotation)
 
 void InputParser::checkControllerInput()
 {
-    m_analogueAmount = 1.f;
+    //default amount from keyboard input, is overwritten
+    //by controller if there is any controller input.
+    m_analogueAmount = MinAcceleration + ((1.f - MinAcceleration) * m_inputAcceleration);
 
     if (m_isCPU ||
         !cro::GameController::isConnected(m_inputBinding.controllerID))

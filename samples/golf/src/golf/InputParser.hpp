@@ -82,6 +82,7 @@ private:
     std::uint16_t m_prevDisabledFlags; //< for raising events on disabled inputs
     std::uint16_t m_prevStick;
     float m_analogueAmount;
+    float m_inputAcceleration;
 
     std::int32_t m_mouseWheel;
     std::int32_t m_prevMouseWheel;
