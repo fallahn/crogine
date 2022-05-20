@@ -161,6 +161,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_readyQuitFlags    (0),
     m_hadFoul           (false)
 {
+    m_inputParser.setMaxRotation(0.1f);
+
     context.mainWindow.loadResources([this]() {
         addSystems();
         loadAssets();
@@ -170,7 +172,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
     createTransition();
-    m_inputParser.setMaxRotation(0.1f);
 
     sd.baseState = StateID::Golf;
     Achievements::setActive(sd.localConnectionData.playerCount == 1 && !m_sharedData.localConnectionData.playerData[0].isCPU);
@@ -2113,6 +2114,68 @@ void GolfState::buildScene()
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection));
 
 
+    //a 'fan' which shows max rotation
+    material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
+    material.blendMode = cro::Material::BlendMode::Additive;
+    material.enableDepthTest = false;
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_FAN));
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeArc;
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    entity.addComponent<cro::Transform>().setPosition(pos);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = 
+        [&](cro::Entity e, float)
+    {
+        float scale = m_currentPlayer.terrain != TerrainID::Green ? 1.f : 0.f;
+        e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+    };
+
+    const float pointCount = 5.f;
+    const float arc = m_inputParser.getMaxRotation() * 2.f;
+    const float step = arc / pointCount;
+    const float radius = 2.5f;
+
+    std::vector<glm::vec2> points;
+    for (auto i = -m_inputParser.getMaxRotation(); i < -m_inputParser.getMaxRotation() + arc; i += step)
+    {
+        auto& p = points.emplace_back(std::cos(i), std::sin(i));
+        p *= radius;
+    }
+
+    c = { TextGoldColour.getRed(), TextGoldColour.getGreen(), TextGoldColour.getBlue() };
+    c *= IndicatorLightness / 10.f;
+    meshData = &entity.getComponent<cro::Model>().getMeshData();
+    verts =
+    {
+        0.f, Ball::Radius, 0.f,                      c.r, c.g, c.b, 1.f,
+        points[0].x, Ball::Radius, -points[0].y,     c.r, c.g, c.b, 1.f,
+        points[1].x, Ball::Radius, -points[1].y,     c.r, c.g, c.b, 1.f,
+        points[2].x, Ball::Radius, -points[2].y,     c.r, c.g, c.b, 1.f,
+        points[3].x, Ball::Radius, -points[3].y,     c.r, c.g, c.b, 1.f,
+        points[4].x, Ball::Radius, -points[4].y,     c.r, c.g, c.b, 1.f,
+        points[5].x, Ball::Radius, -points[5].y,     c.r, c.g, c.b, 1.f
+    };
+    indices =
+    {
+        0,1,2,3,4,5,6
+    };
+    meshData->vertexCount = verts.size() / vertStride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
+
+
+
+
     //draw the flag pole as a single line which can be
     //seen from a distance - hole and model are also attached to this
     material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulled]);
@@ -2131,12 +2194,10 @@ void GolfState::buildScene()
     {
         0.f, 2.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
         0.f, 0.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
-        //0.f,  0.005f,  0.f,    0.f, 0.f, 0.f, 0.5f,
-        //1.4f, 0.005f, 1.4f,    0.f, 0.f, 0.f, 0.01f,
     };
     indices =
     {
-        0,1//,2,3
+        0,1
     };
     meshData->vertexCount = verts.size() / vertStride;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
@@ -3522,13 +3583,15 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
 
     //stroke indicator is in model scene...
-    cmd.targetFlags = CommandID::StrokeIndicator;
-    cmd.action = [localPlayer, player](cro::Entity e, float)
+    cmd.targetFlags = CommandID::StrokeIndicator | CommandID::StrokeArc;
+    cmd.action = [&,localPlayer, player](cro::Entity e, float)
     {
         auto position = player.position;
         position.y += 0.014f; //z-fighting
         e.getComponent<cro::Transform>().setPosition(position);
         e.getComponent<cro::Model>().setHidden(!localPlayer);
+        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
+        e.getComponent<cro::Callback>().active = localPlayer;
         //e.getComponent<cro::Model>().setDepthTestEnabled(0, player.terrain == TerrainID::Green);
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -3694,10 +3757,11 @@ void GolfState::hitBall()
 
     //hide the indicator
     cro::Command cmd;
-    cmd.targetFlags = CommandID::StrokeIndicator;
+    cmd.targetFlags = CommandID::StrokeIndicator | CommandID::StrokeArc;
     cmd.action = [](cro::Entity e, float)
     {
         e.getComponent<cro::Model>().setHidden(true);
+        e.getComponent<cro::Callback>().active = false;
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
@@ -4149,10 +4213,11 @@ void GolfState::startFlyBy()
     }
 
     //hide stroke indicator
-    cmd.targetFlags = CommandID::StrokeIndicator;
+    cmd.targetFlags = CommandID::StrokeIndicator | CommandID::StrokeArc;
     cmd.action = [](cro::Entity e, float)
     {
         e.getComponent<cro::Model>().setHidden(true);
+        e.getComponent<cro::Callback>().active = false;
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

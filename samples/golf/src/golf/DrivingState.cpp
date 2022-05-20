@@ -1730,6 +1730,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
         //skel.setInterpolationEnabled(false);
     }
 
+    auto playerEnt = entity;
 
     //displays the stroke direction
     //TODO do we want to fade the player model here?
@@ -1739,7 +1740,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&/*, playerEnt*/](cro::Entity e, float) mutable
+        [&, playerEnt](cro::Entity e, float) mutable
     {
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
         
@@ -1750,7 +1751,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
         cro::Colour c = cro::Colour::White;
         c.setAlpha(alpha);
-        playerEnt.getComponent<cro::Sprite>().setColour(c);*/
+        playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);*/
     };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
 
@@ -1787,6 +1788,57 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
     entity.getComponent<cro::Model>().setHidden(true);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+
+
+    //a 'fan' which shows max rotation
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_FAN));
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeArc;
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    entity.addComponent<cro::Transform>().setPosition(pos);
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+    entity.getComponent<cro::Model>().setHidden(true);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+
+    const float pointCount = 5.f;
+    const float arc = m_inputParser.getMaxRotation() * 2.f;
+    const float step = arc / pointCount;
+    const float radius = 2.5f;
+
+    std::vector<glm::vec2> points;
+    for (auto i = -m_inputParser.getMaxRotation(); i <= -m_inputParser.getMaxRotation() + arc; i += step)
+    {
+        auto& p = points.emplace_back(std::cos(i), std::sin(i));
+        p *= radius;
+    }
+
+    glm::vec3 c = { TextGoldColour.getRed(), TextGoldColour.getGreen(), TextGoldColour.getBlue() };
+    c *= IndicatorLightness / 10.f;
+    meshData = &entity.getComponent<cro::Model>().getMeshData();
+    verts =
+    {
+        0.f, Ball::Radius, 0.f,                      c.r, c.g, c.b, 1.f,
+        points[0].x, Ball::Radius, -points[0].y,     c.r, c.g, c.b, 1.f,
+        points[1].x, Ball::Radius, -points[1].y,     c.r, c.g, c.b, 1.f,
+        points[2].x, Ball::Radius, -points[2].y,     c.r, c.g, c.b, 1.f,
+        points[3].x, Ball::Radius, -points[3].y,     c.r, c.g, c.b, 1.f,
+        points[4].x, Ball::Radius, -points[4].y,     c.r, c.g, c.b, 1.f,
+        points[5].x, Ball::Radius, -points[5].y,     c.r, c.g, c.b, 1.f
+    };
+    indices =
+    {
+        0,1,2,3,4,5,6
+    };
+    meshData->vertexCount = verts.size() / vertStride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
 
 void DrivingState::createBall()
@@ -2270,7 +2322,7 @@ void DrivingState::setHole(std::int32_t index)
 
     //reset stroke indicator
     cro::Command cmd;
-    cmd.targetFlags = CommandID::StrokeIndicator;
+    cmd.targetFlags = CommandID::StrokeIndicator | CommandID::StrokeArc;
     cmd.action = [](cro::Entity e, float)
     {
         e.getComponent<cro::Model>().setHidden(false);
