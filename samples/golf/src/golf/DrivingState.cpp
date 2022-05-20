@@ -579,9 +579,9 @@ void DrivingState::loadAssets()
     //models
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define TEXTURED\n#define SKINNED\n#define NOCHEX\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
-    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
 
     //scanline transition
@@ -1597,7 +1597,7 @@ void DrivingState::createClouds()
 
 void DrivingState::createPlayer(cro::Entity courseEnt)
 {
-    //load sprites from avatar info
+    //load from avatar info
     const auto indexFromSkinID = [&](std::uint32_t skinID)->std::size_t
     {
         auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
@@ -1724,6 +1724,17 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
                 {
                     hairEnt.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
                 }
+
+                //fade callback
+                hairEnt.addComponent<cro::Callback>().active = true;
+                hairEnt.getComponent<cro::Callback>().function =
+                    [&](cro::Entity e, float)
+                {
+                    float alpha = std::abs(m_inputParser.getYaw());
+                    alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / (m_inputParser.getMaxRotation() * 1.06f)));
+
+                    e.getComponent<cro::Model>().setMaterialProperty(0, "u_fadeAmount", alpha);
+                };
             }
         }
 
@@ -1746,12 +1757,12 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
         
         //fade the player sprite at high angles
         //so we don't obstruct the view of the indicator
-        /*float alpha = std::abs(m_inputParser.getYaw());
-        alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / 0.35f));
 
-        cro::Colour c = cro::Colour::White;
-        c.setAlpha(alpha);
-        playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);*/
+        //we have to do this here as the player ent has a different callback func.
+        float alpha = std::abs(m_inputParser.getYaw());
+        alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / (m_inputParser.getMaxRotation() * 1.06f)));
+
+        playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_fadeAmount", alpha);
     };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
 

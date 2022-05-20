@@ -354,6 +354,10 @@ static const std::string CelFragmentShader = R"(
     uniform vec4 u_tintColour = vec4(1.0);
 #endif
 
+#if defined FADE_INPUT
+    uniform float u_fadeAmount = 1.0;
+#endif
+
 #if defined (USER_COLOUR)
     uniform vec4 u_hairColour = vec4(1.0, 0.0, 0.0, 1.0);
     uniform vec4 u_darkColour = vec4(0.5);
@@ -614,12 +618,16 @@ static const std::string CelFragmentShader = R"(
         FRAG_OUT *= u_tintColour;
 #endif 
 
-#if defined(DITHERED)
+#if defined (DITHERED) || defined (FADE_INPUT)
         vec2 xy = gl_FragCoord.xy / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
-        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
 
+#if defined (FADE_INPUT)
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, u_fadeAmount));
+#else
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+#endif
         if(alpha < 0.1) discard;
 #endif
     })";
