@@ -296,6 +296,11 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     break;
                 case TerrainID::Scrub:
                     playSound(cro::Util::Random::value(AudioID::TerrainScrub02, AudioID::TerrainScrub04), glm::vec3(0.f));
+
+                    if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
+                    {
+                        playAvatarSoundDelayed(idx, "scrub", glm::vec3(0.f), 2.2f);
+                    }
                     break;
                 case TerrainID::Green:
                     if (data.club != ClubID::Putter) //previous shot wasn't from green
@@ -492,6 +497,30 @@ cro::Entity GolfSoundDirector::playAvatarSound(std::int32_t idx, const std::stri
     ent.getComponent<cro::AudioEmitter>().play();
     ent.getComponent<cro::Transform>().setPosition(position);
     return ent;
+}
+
+void GolfSoundDirector::playAvatarSoundDelayed(std::int32_t idx, const std::string& emitterName, glm::vec3 position, float delay)
+{
+    if (m_playerVoices[idx].hasEmitter(emitterName))
+    {
+        auto entity = getScene().createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(delay);
+        entity.getComponent<cro::Callback>().function =
+            [&, idx, position, emitterName](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime -= dt;
+
+            if (currTime < 0)
+            {
+                playAvatarSound(idx, emitterName, position);
+
+                e.getComponent<cro::Callback>().active = false;
+                getScene().destroyEntity(e);
+            }
+        };
+    }
 }
 
 void GolfSoundDirector::applaud()

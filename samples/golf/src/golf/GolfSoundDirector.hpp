@@ -136,6 +136,7 @@ private:
     cro::Entity playSound(std::int32_t, glm::vec3, float = 1.f);
     void playSoundDelayed(std::int32_t, glm::vec3, float, float = 1.f, std::uint8_t = 1/*MixerChannel::Effects*/);
     cro::Entity playAvatarSound(std::int32_t, const std::string&, glm::vec3);
+    void playAvatarSoundDelayed(std::int32_t, const std::string&, glm::vec3, float);
 
     //not really sound, but we want to trigger it in sync (ish) with audio
     void applaud();
