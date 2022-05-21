@@ -794,7 +794,10 @@ bool GolfState::simulate(float dt)
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
 #ifdef CRO_DEBUG_
-            bitrateCounter += evt.packet.getSize() * 8;
+            if (evt.type == cro::NetEvent::PacketReceived)
+            {
+                bitrateCounter += evt.packet.getSize() * 8;
+            }
 #endif
             //handle events
             handleNetEvent(evt);
