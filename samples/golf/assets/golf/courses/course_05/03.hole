@@ -1,0 +1,13 @@
+hole 03
+{
+    map="assets/golf/courses/course_05//03.png"
+    model="assets/golf/models/course_05/03.cmt"
+    par = 4
+
+    pin = 279.589752,2.421064,-143.111542
+
+    target = 188.253067,1.888035,-109.590683
+
+    tee = 32.949982,1.888035,-36.705872
+
+}

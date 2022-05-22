@@ -1,0 +1,21 @@
+hole 07
+{
+    map="assets/golf/courses/course_05/07.png"
+    model="assets/golf/models/course_05/07.cmt"
+    par = 4
+
+    pin = 270.006409,2.724049,-36.377930
+
+    target = 158.013885,2.722667,-112.748123
+
+    tee = 30.901077,2.722667,-160.671692
+
+    prop
+    {
+        model = "assets/golf/models/bridge.cmt"
+        position = 187.724747,2.770932,-113.020386
+        rotation = -31.088659
+        scale = 1.000000,1.000000,1.000000
+    }
+
+}

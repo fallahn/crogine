@@ -1,0 +1,22 @@
+course course_05
+{
+    skybox = "assets/golf/images/skybox/dusk/sky.ccm"
+    billboard_model = "assets/golf/models/shrubbery04.cmt"
+    billboard_sprites = "assets/golf/sprites/shrubbery04.spt"
+    audio = "assets/golf/sound/ambience.xas"
+    instance_model = "assets/golf/models/bush01.cmt"
+    clouds = "assets/golf/sprites/clouds03.spt"
+
+    title = "Grove Bank, Mont Torville"
+    description = "C'est ca."
+
+    hole = "assets/golf/courses/course_05/01.hole"
+    hole = "assets/golf/courses/course_05/02.hole"
+    hole = "assets/golf/courses/course_05/03.hole"
+    hole = "assets/golf/courses/course_05/04.hole"
+    hole = "assets/golf/courses/course_05/05.hole"
+    hole = "assets/golf/courses/course_05/06.hole"
+    hole = "assets/golf/courses/course_05/07.hole"
+    hole = "assets/golf/courses/course_05/08.hole"
+    hole = "assets/golf/courses/course_05/09.hole"
+}

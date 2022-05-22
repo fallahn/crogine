@@ -1,0 +1,21 @@
+hole 05
+{
+    map="assets/golf/courses/course_05/05.png"
+    model="assets/golf/models/course_05/05.cmt"
+    par = 4
+
+    pin = 85.149216,1.263511,-98.524963
+
+    target = 136.404373,1.262303,-92.545197
+
+    tee = 241.477448,1.262303,-107.708183
+
+    prop
+    {
+        model = "assets/golf/models/bridge.cmt"
+        position = 176.399704,1.227726,-124.997009
+        rotation = -3.900509
+        scale = 1.000000,1.000000,1.000000
+    }
+
+}

@@ -1,0 +1,13 @@
+hole 08
+{
+    map="assets/golf/courses/course_05/08.png"
+    model="assets/golf/models/course_05/08.cmt"
+    par = 4
+
+    pin = 112.541946,2.019022,-84.125862
+
+    target = 154.571167,2.013302,-105.909302
+
+    tee = 254.518723,2.013302,-147.169693
+
+}
