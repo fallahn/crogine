@@ -2384,6 +2384,32 @@ void GolfState::buildScene()
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Green] = camEnt;
 
+
+    //bystander cam (when remote or CPU player is swinging)
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>();
+    camEnt.addComponent<cro::Camera>().resizeCallback =
+        [&](cro::Camera& cam)
+    {
+        //this cam has a slightly narrower FOV
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * 0.9f, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+    camEnt.getComponent<cro::Camera>().active = false;
+    /*camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
+    camEnt.addComponent<CameraFollower>().radius = 30.f * 30.f;
+    camEnt.getComponent<CameraFollower>().id = CameraID::Green;
+    camEnt.getComponent<CameraFollower>().zoom.speed = 2.f;*/
+    camEnt.addComponent<cro::AudioListener>();
+    camEnt.addComponent<TargetInfo>();
+    setPerspective(camEnt.getComponent<cro::Camera>());
+    m_cameras[CameraID::Bystander] = camEnt;
+
+
     //fly-by cam for transition
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();

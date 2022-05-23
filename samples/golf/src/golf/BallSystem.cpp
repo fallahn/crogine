@@ -286,7 +286,7 @@ void BallSystem::process(float dt)
 
                 //if we've slowed down or fallen more than the
                 //ball's diameter (radius??) stop the ball
-                if (vel2 < 0.01f
+                if (vel2 < 0.02f
                     || (penetration > (Ball::Radius * 2.5f)))
                 {
                     ball.velocity = glm::vec3(0.f);
