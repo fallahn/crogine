@@ -1058,9 +1058,17 @@ void DrivingState::createScene()
                         }
                     };
 
-                    //this assumes we're a cart, but hey
+                    //this assumes we're a cart based on the fact we have target points, but hey
                     entity.addComponent<cro::AudioEmitter>() = as.getEmitter("cart");
                     entity.getComponent<cro::AudioEmitter>().play();
+
+                    if (md.loadFromFile("assets/golf/models/menu/driver01.cmt"))
+                    {
+                        auto driver = m_gameScene.createEntity();
+                        driver.addComponent<cro::Transform>();
+                        md.createModel(driver);
+                        entity.getComponent<cro::Transform>().addChild(driver.getComponent<cro::Transform>());
+                    }
                 }
             }
         }

@@ -763,7 +763,9 @@ void MenuState::createScene()
                 if (passengers[i].hasComponent<cro::Skeleton>())
                 {
                     material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+#ifndef CRO_DEBUG_
                     passengers[i].getComponent<cro::Skeleton>().play(0);
+#endif
                 }
                 else
                 {

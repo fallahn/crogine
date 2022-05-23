@@ -73,7 +73,7 @@ driving_range
 
     prop
     {
-        model = "assets/golf/models/cart.cmt"
+        model = "assets/golf/models/menu/cart.cmt"
         position = 2.62,3.42,-172.2
         rotation = -7.92
 

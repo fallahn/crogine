@@ -1090,8 +1090,11 @@ void GolfState::loadAssets()
 
     //water
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
-    m_materialIDs[MaterialID::Water] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Water));
-    //forces rendering last to reduce overdraw - overdraws stroke indicator though
+    shader = &m_resources.shaders.get(ShaderID::Water);
+    m_scaleBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Water] = m_resources.materials.add(*shader);
+    //forces rendering last to reduce overdraw - overdraws stroke indicator though(??)
+    //also suffers the black banding effect where alpha  < 1
     //m_resources.materials.get(m_materialIDs[MaterialID::Water]).blendMode = cro::Material::BlendMode::Alpha; 
 
     m_waterShader.shaderID = m_resources.shaders.get(ShaderID::Water).getGLHandle();
@@ -2216,7 +2219,7 @@ void GolfState::buildScene()
 
 
     //water plane. Updated by various camera callbacks
-    meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(150.f, 30));
+    meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(200.f, 30));
     auto waterEnt = m_gameScene.createEntity();
     waterEnt.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
     waterEnt.getComponent<cro::Transform>().move({ 0.f, 0.f, -30.f });
@@ -3595,7 +3598,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         e.getComponent<cro::Model>().setHidden(!localPlayer);
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
         e.getComponent<cro::Callback>().active = localPlayer;
-        //e.getComponent<cro::Model>().setDepthTestEnabled(0, player.terrain == TerrainID::Green);
+        e.getComponent<cro::Model>().setDepthTestEnabled(0, player.terrain == TerrainID::Green);
 
         //fudgy way of changing the render type when putting
         if (e.getComponent<cro::CommandTarget>().ID == CommandID::StrokeIndicator)
