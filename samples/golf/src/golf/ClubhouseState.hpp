@@ -120,6 +120,7 @@ private:
         enum
         {
             Cel,
+            CelSkinned,
             Trophy,
             Shelf,
             Billboard,
