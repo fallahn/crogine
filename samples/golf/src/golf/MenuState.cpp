@@ -74,6 +74,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
@@ -517,9 +518,11 @@ void MenuState::addSystems()
     m_backgroundScene.addSystem<GolfCartSystem>(mb);
     m_backgroundScene.addSystem<CloudSystem>(mb)->setWindVector(glm::vec3(0.25f));
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
+    m_backgroundScene.addSystem<cro::SkeletalAnimator>(mb);
     m_backgroundScene.addSystem<cro::SpriteSystem3D>(mb);
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
+    m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<cro::ParticleSystem>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
@@ -554,7 +557,8 @@ void MenuState::loadAssets()
 
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX");
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
 
@@ -567,6 +571,11 @@ void MenuState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::Course);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Ground] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
     m_resolutionBuffer.addShader(*shader);
@@ -654,7 +663,7 @@ void MenuState::createScene()
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::Ground]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
     }
@@ -727,14 +736,52 @@ void MenuState::createScene()
 
 
     //golf carts
-    if (md.loadFromFile("assets/golf/models/cart.cmt"))
+    if (md.loadFromFile("assets/golf/models/menu/cart.cmt"))
     {
+        const std::array<std::string, 6u> passengerStrings =
+        {
+            "assets/golf/models/menu/driver01.cmt",
+            "assets/golf/models/menu/passenger01.cmt",
+            "assets/golf/models/menu/passenger02.cmt",
+            "assets/golf/models/menu/driver02.cmt",
+            "assets/golf/models/menu/passenger03.cmt",
+            "assets/golf/models/menu/passenger04.cmt"
+        };
+
+        std::array<cro::Entity, 6u> passengers = {};
+
+        cro::ModelDefinition passengerDef(m_resources);
+        for (auto i = 0u; i < passengerStrings.size(); ++i)
+        {
+            if (passengerDef.loadFromFile(passengerStrings[i]))
+            {
+                passengers[i] = m_backgroundScene.createEntity();
+                passengers[i].addComponent<cro::Transform>();
+                passengerDef.createModel(passengers[i]);
+
+                cro::Material::Data material;
+                if (passengers[i].hasComponent<cro::Skeleton>())
+                {
+                    material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+                    passengers[i].getComponent<cro::Skeleton>().play(0);
+                }
+                else
+                {
+                    material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+                }
+                applyMaterialData(passengerDef, material);
+                passengers[i].getComponent<cro::Model>().setMaterial(0, material);
+            }
+        }
+
+
+
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 5.f, 0.01f, 1.8f });
         entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 87.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::Ground]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
@@ -749,6 +796,15 @@ void MenuState::createScene()
 
             entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("cart");
             entity.getComponent<cro::AudioEmitter>().play();
+
+            for (auto j = 0; j < 3; ++j)
+            {
+                auto index = (i * 3) + j;
+                if (passengers[index].isValid())
+                {
+                    entity.getComponent<cro::Transform>().addChild(passengers[index].getComponent<cro::Transform>());
+                }
+            }
         }
     }
 
@@ -784,6 +840,7 @@ void MenuState::createScene()
     auto camEnt = m_backgroundScene.getActiveCamera();
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
+    cam.shadowMapBuffer.create(2048, 2048);
     updateView(cam);
 
     //camEnt.getComponent<cro::Transform>().setPosition({ -17.8273, 4.9, 25.0144 });

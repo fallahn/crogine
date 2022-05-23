@@ -262,6 +262,13 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
             dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
         }
 
+        if (m->properties.count("u_subrect"))
+        {
+            const float* v = m->properties.at("u_subrect").second.vecValue;
+            glm::vec4 subrect(v[0], v[1], v[2], v[3]);
+            dest.setProperty("u_subrect", subrect);
+        }
+
         dest.doubleSided = m->doubleSided;
     }
 }

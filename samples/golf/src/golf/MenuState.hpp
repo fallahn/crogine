@@ -109,6 +109,7 @@ private:
             CelTexturedSkinned,
             Hair,
             Billboard,
+            Ground,
 
             Count
         };
