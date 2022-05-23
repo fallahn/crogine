@@ -111,6 +111,12 @@ private:
     bool m_gameEnded;
     cro::Clock m_readyClock;
 
+    struct
+    {
+        std::uint32_t shaderID = 0;
+        std::int32_t timeUniform = -1;
+    }m_indicatorProperties;
+
 
     struct CameraID final
     {

@@ -70,7 +70,11 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
             file.write("    model=\"%s\"\n" % scene['model_path'])
         else:
             file.write("    model=\"assets/golf/models/course_0/%s.cmt\"\n" % Path(self.properties.filepath).stem)
-        file.write("    par = 4\n\n")
+        
+        if scene.get('par') is not None:
+            file.write("    par = %d\n\n" % scene['par'])
+        else:
+            file.write("    par = 4\n\n")
 
         teeWritten = False
         pinWritten = False
@@ -123,6 +127,8 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                                     WriteParticles(file, ob['path'], worldLocation)
                                 else:
                                     WriteParticles(file, "path_missing", worldLocation)
+                    elif ob.type == 'SPEAKER':
+                        self.report({'INFO'}, "Found a speaker")
 
         file.write("}")
         file.close()
