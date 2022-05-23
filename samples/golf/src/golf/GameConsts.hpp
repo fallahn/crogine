@@ -268,6 +268,10 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
             glm::vec4 subrect(v[0], v[1], v[2], v[3]);
             dest.setProperty("u_subrect", subrect);
         }
+        else if (dest.properties.count("u_subrect"))
+        {
+            dest.setProperty("u_subrect", glm::vec4(0.f, 0.f, 1.f, 1.f));
+        }
 
         dest.doubleSided = m->doubleSided;
     }

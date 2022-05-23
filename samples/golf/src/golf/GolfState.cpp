@@ -1954,7 +1954,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::SpriteAnimator>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(50.f);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(20.f);
 #ifdef CRO_DEBUG_
     m_gameScene.addSystem<FpsCameraSystem>(mb);
 #endif
@@ -3684,10 +3684,16 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             }
             m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
         }
+
+        //set just far enough the flag shows in the distance
+        m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(50.f);
     }
     else
     {
         m_activeAvatar->model.getComponent<cro::Model>().setHidden(true);
+
+        //and use closer shadow mapping
+        m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(20.f);
     }
     setActiveCamera(CameraID::Player);
 
