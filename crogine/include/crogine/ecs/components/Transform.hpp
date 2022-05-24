@@ -204,6 +204,11 @@ namespace cro
         */
         glm::quat getRotation() const;
 
+        /*!
+        \brief Returns the sum rotation of this transform
+        and all its parents (if any)
+        */
+        glm::quat getWorldRotation() const;
         
         /*!
         \brief Returns the local scale of the transform

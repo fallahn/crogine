@@ -343,6 +343,15 @@ glm::quat Transform::getRotation() const
     return m_rotation;
 }
 
+glm::quat Transform::getWorldRotation() const
+{
+    if (m_parent)
+    {
+        return m_parent->getWorldRotation() * m_rotation;
+    }
+    return m_rotation;
+}
+
 glm::vec3 Transform::getScale() const
 {
     return m_scale;
