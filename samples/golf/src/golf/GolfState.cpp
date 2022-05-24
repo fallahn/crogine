@@ -967,8 +967,10 @@ void GolfState::render()
     cam.setActivePass(cro::Camera::Pass::Reflection);
     cam.renderFlags = RenderFlags::Reflection;
     cam.reflectionBuffer.clear(cro::Colour::Red);
+    //don't want to test against skybox depth values.
+    //m_skyboxScene.render()
+    //glClear(GL_DEPTH_BUFFER_BIT)
     m_gameScene.render();
-    //m_uiScene.render();
     cam.reflectionBuffer.display();
 
     cam.setActivePass(cro::Camera::Pass::Final);
@@ -2729,6 +2731,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(info.position);
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.003f, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<InterpolationComponent<InterpolationType::Linear>>(
         InterpolationPoint(info.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).id = info.serverID;
@@ -3578,6 +3581,7 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
     m_gameScene.getDirector<GolfSoundDirector>()->setActivePlayer(player.client, player.player);
+    m_avatars[player.client][player.player].ballModel.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
 
     updateScoreboard();
     showScoreboard(false);
@@ -3645,7 +3649,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
 
     //show ui if this is our client    
     cmd.targetFlags = CommandID::UI::Root;
@@ -3767,7 +3770,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             m_sharedData.localConnectionData.playerData[player.player].isCPU))
         {
             static constexpr float MinCamDist = 25.f;
-            if (cro::Util::Random::value(0,1) == 0 &&
+            if (cro::Util::Random::value(0,2) != 0 &&
                 glm::length2(player.position - m_holeData[m_currentHole].pin) > (MinCamDist * MinCamDist))
             {
                 auto entity = m_gameScene.createEntity();
@@ -4375,6 +4378,13 @@ void GolfState::startFlyBy()
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+    //hide ball models so they aren't seen floating mid-air
+    cmd.targetFlags = CommandID::Ball;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+    };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 std::int32_t GolfState::getClub() const

@@ -290,6 +290,12 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 default: break;
                 case TerrainID::Bunker:
                     playSound(cro::Util::Random::value(AudioID::TerrainBunker01, AudioID::TerrainBunker05), glm::vec3(0.f));
+                    
+                    if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
+                    {
+                        playAvatarSoundDelayed(idx, "scrub", glm::vec3(0.f), 2.f);
+                    }
+                    
                     break;
                 case TerrainID::Fairway:
                     playSound(cro::Util::Random::value(AudioID::TerrainFairway01, AudioID::TerrainFairway02), glm::vec3(0.f));
