@@ -323,6 +323,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     break;
                 case TerrainID::Water:
                     playSound(cro::Util::Random::value(AudioID::TerrainWater01, AudioID::TerrainWater03), glm::vec3(0.f));
+                    LogI << "Splash: ball landed" << std::endl;
                     break;
                 case TerrainID::Rough:
                     playSound(cro::Util::Random::value(AudioID::TerrainRough01, AudioID::TerrainRough02), glm::vec3(0.f));
@@ -354,6 +355,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 break;
             case TerrainID::Water:
                 playSound(AudioID::Water, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                LogI << "Splish: collision" << std::endl;
                 break;
             case TerrainID::Hole:
                 playSound(AudioID::Hole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);

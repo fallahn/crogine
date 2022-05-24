@@ -145,7 +145,7 @@ void CPUGolfer::activate(glm::vec3 target)
         m_prevClubID = m_clubID;
         m_searchDistance = MinSearchDistance;
 
-        startThinking(2.f);
+        startThinking(1.6f);
         //LOG("CPU is now active", cro::Logger::Type::Info);
     }
 }

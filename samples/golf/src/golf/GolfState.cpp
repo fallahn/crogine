@@ -3775,7 +3775,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             {
                 auto entity = m_gameScene.createEntity();
                 entity.addComponent<cro::Callback>().active = true;
-                entity.getComponent<cro::Callback>().setUserData<float>(2.5f);
+                entity.getComponent<cro::Callback>().setUserData<float>(2.7f);
                 entity.getComponent<cro::Callback>().function =
                     [&, player, playerRotation](cro::Entity e, float dt)
                 {
