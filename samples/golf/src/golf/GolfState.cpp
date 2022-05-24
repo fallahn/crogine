@@ -104,6 +104,7 @@ source distribution.
 #include <crogine/util/Maths.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/glm/gtx/rotate_vector.hpp>
 #include "../ErrorCheck.hpp"
 
 #include <sstream>
@@ -578,7 +579,31 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_activeAvatar->ballModel.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
                 m_activeAvatar->ballModel.getComponent<cro::Callback>().active = true;
                 m_activeAvatar->ballModel.getComponent<cro::Model>().setHidden(true);
-            }            
+            }
+        }
+        else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
+        {
+            //delayed ent to restore player cam
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+            {
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime -= dt;
+
+                if (currTime < 0)
+                {
+                    if (m_currentCamera == CameraID::Bystander)
+                    {
+                        setActiveCamera(CameraID::Player);
+                    }
+
+                    e.getComponent<cro::Callback>().active = false;
+                    m_gameScene.destroyEntity(e);
+                }
+            };
         }
     }
     break;
@@ -2389,23 +2414,41 @@ void GolfState::buildScene()
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback =
-        [&](cro::Camera& cam)
+        [&,camEnt](cro::Camera& cam)
     {
         //this cam has a slightly narrower FOV
+
+        auto zoomFOV = camEnt.getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>().fov;
+
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * 0.9f, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f);
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * zoomFOV * 0.7f, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
-    /*camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
-    camEnt.addComponent<CameraFollower>().radius = 30.f * 30.f;
-    camEnt.getComponent<CameraFollower>().id = CameraID::Green;
-    camEnt.getComponent<CameraFollower>().zoom.speed = 2.f;*/
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
+
+    CameraFollower::ZoomData zoomData;
+    zoomData.speed = 3.f;
+    zoomData.target = 0.45f;
+    camEnt.addComponent<cro::Callback>().setUserData<CameraFollower::ZoomData>(zoomData);
+    camEnt.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& zoom = e.getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>();
+
+        zoom.progress = std::min(1.f, zoom.progress + (dt * zoom.speed));
+        zoom.fov = glm::mix(1.f, zoom.target, cro::Util::Easing::easeInOutQuad(zoom.progress));
+        e.getComponent<cro::Camera>().resizeCallback(e.getComponent<cro::Camera>());
+
+        if (zoom.progress == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Bystander] = camEnt;
 
@@ -3692,8 +3735,10 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_activeAvatar->model.getComponent<cro::Transform>().setPosition(player.position);
     if (player.terrain != TerrainID::Green)
     {
+        auto playerRotation = m_camRotation - (cro::Util::Const::PI / 2.f);
+
         m_activeAvatar->model.getComponent<cro::Model>().setHidden(false);
-        m_activeAvatar->model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation - (cro::Util::Const::PI / 2.f));
+        m_activeAvatar->model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, playerRotation);
         m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;
         m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().scale = 0.f;
         m_activeAvatar->model.getComponent<cro::Callback>().active = true;
@@ -3713,6 +3758,57 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
         //set just far enough the flag shows in the distance
         m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(50.f);
+
+
+        //if this is a CPU player or a remote player, show a bystander cam
+        if (player.client != m_sharedData.localConnectionData.connectionID
+            || 
+            (player.client == m_sharedData.localConnectionData.connectionID &&
+            m_sharedData.localConnectionData.playerData[player.player].isCPU))
+        {
+            static constexpr float MinCamDist = 25.f;
+            if (cro::Util::Random::value(0,1) == 0 &&
+                glm::length2(player.position - m_holeData[m_currentHole].pin) > (MinCamDist * MinCamDist))
+            {
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(2.5f);
+                entity.getComponent<cro::Callback>().function =
+                    [&, player, playerRotation](cro::Entity e, float dt)
+                {
+                    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                    currTime -= dt;
+                    if (currTime < 0)
+                    {
+                        //make sure to reset any zoom
+                        auto& zoomData = m_cameras[CameraID::Bystander].getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>();
+                        zoomData.progress = 0.f;
+                        zoomData.fov = 1.f;
+                        m_cameras[CameraID::Bystander].getComponent<cro::Camera>().resizeCallback(m_cameras[CameraID::Bystander].getComponent<cro::Camera>());
+
+                        //then set new position
+                        auto eye = CameraBystanderOffset;
+                        if (m_activeAvatar->model.getComponent<cro::Model>().getFacing() == cro::Model::Facing::Back)
+                        {
+                            eye.x *= -1.f;
+                        }
+                        eye = glm::rotateY(eye, playerRotation);
+                        eye += player.position;
+
+                        auto target = player.position;
+                        target.y += 1.f;
+
+                        auto tx = glm::inverse(glm::lookAt(eye, target, cro::Transform::Y_AXIS));
+                        m_cameras[CameraID::Bystander].getComponent<cro::Transform>().setLocalTransform(tx);
+
+                        setActiveCamera(CameraID::Bystander);
+
+                        e.getComponent<cro::Callback>().active = false;
+                        m_gameScene.destroyEntity(e);
+                    }
+                };
+            }
+        }
     }
     else
     {
@@ -3815,6 +3911,13 @@ void GolfState::hitBall()
         e.getComponent<cro::Callback>().active = false;
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    if (m_currentCamera == CameraID::Bystander
+        && cro::Util::Random::value(0,1) == 0)
+    {
+        //activate the zoom
+        m_cameras[CameraID::Bystander].getComponent<cro::Callback>().active = true;
+    }
 }
 
 void GolfState::updateActor(const ActorInfo& update)
@@ -4292,6 +4395,7 @@ void GolfState::setActiveCamera(std::int32_t camID)
     {
         return;
     }
+    //LogI << "Request Camera " << camID << std::endl;
 #endif
 
     CRO_ASSERT(camID >= 0 && camID < CameraID::Count, "");
