@@ -260,12 +260,14 @@ namespace cro::Util::String
 #elif defined __APPLE__
     static inline void parseURL(const std::string& url)
     {
-        system(("open "s + url).c_str());
+        std::string str = "open " + url;
+        system(str.c_str());
     }
 #else
     static inline void parseURL(const std::string& url)
     {
-        system(("xdg-open "s + url).c_str());
+        std::string str = "xdg-open " + url;
+        system(str.c_str());
     }
 #endif
 }
