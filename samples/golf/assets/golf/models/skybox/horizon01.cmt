@@ -8,13 +8,14 @@ model horizon
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
-        repeat = false
+        repeat = true
         depth_test = true
         double_sided = false
         use_mipmaps = false
+        vertex_coloured = true
         blendmode = none
         diffuse = "assets/golf/images/skybox/horizon01.png"
-        alpha_clip = 0.446000
+        alpha_clip = 0.523000
 
     }
 }

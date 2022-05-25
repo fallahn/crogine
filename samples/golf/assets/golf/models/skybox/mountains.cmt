@@ -1,6 +1,6 @@
-model horizon
+model mountains
 {
-    mesh = assets/golf/models/skybox/horizon.cmb
+    mesh = assets/golf/models/skybox/mountains.cmb
     cast_shadows = false
 
     material Unlit
@@ -8,13 +8,14 @@ model horizon
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
-        repeat = false
+        repeat = true
         depth_test = true
         double_sided = false
         use_mipmaps = false
+        vertex_coloured = true
         blendmode = none
-        diffuse = "assets/golf/images/skybox/horizon02.png"
-        alpha_clip = 0.446000
+        diffuse = "assets/golf/images/skybox/mountains.png"
+        alpha_clip = 0.463000
 
     }
 }

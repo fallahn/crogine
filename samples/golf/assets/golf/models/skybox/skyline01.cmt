@@ -8,13 +8,14 @@ model skyline
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
-        repeat = false
+        repeat = true
         depth_test = true
         double_sided = false
         use_mipmaps = false
+        vertex_coloured = true
         blendmode = none
         diffuse = "assets/golf/images/skybox/skyline01.png"
-        alpha_clip = 0.624000
+        alpha_clip = 0.544000
 
     }
 }
