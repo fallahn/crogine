@@ -911,7 +911,7 @@ bool GolfState::simulate(float dt)
     auto& dstCam = m_skyScene.getActiveCamera().getComponent<cro::Camera>();
 
     dstCam.viewport = srcCam.viewport;
-    dstCam.setPerspective(srcCam.getFOV(), srcCam.getAspectRatio(), 0.1f, 10.f);
+    dstCam.setPerspective(srcCam.getFOV(), srcCam.getAspectRatio(), 1.f, 14.f);
 
     m_skyScene.getActiveCamera().getComponent<cro::Transform>().setRotation(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation());
     //and make sure the skybox is up to date too, so there's
@@ -986,6 +986,7 @@ void GolfState::render()
     auto& skyCam = m_skyScene.getActiveCamera().getComponent<cro::Camera>();
     skyCam.setActivePass(cro::Camera::Pass::Reflection);
     skyCam.renderFlags = RenderFlags::Reflection;
+    skyCam.viewport = { 0.f,0.f,1.f,1.f };
 
     cam.reflectionBuffer.clear(cro::Colour::Red);
     //don't want to test against skybox depth values.
@@ -1000,6 +1001,7 @@ void GolfState::render()
 
     skyCam.setActivePass(cro::Camera::Pass::Final);
     skyCam.renderFlags = RenderFlags::All;
+    skyCam.viewport = oldVP;
 
     //then render scene
     //glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for... snow maybe?
@@ -1039,9 +1041,6 @@ void GolfState::render()
 void GolfState::loadAssets()
 {
     m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
-
-    m_skyScene.enableSkybox();
-    m_skyScene.setSkyboxColours(SkyTop, SkyBottom);
 
     std::string wobble;
     if (m_sharedData.vertexSnap)
@@ -1532,6 +1531,8 @@ void GolfState::loadAssets()
         m_courseTitle = title->getValue<std::string>();
     }
 
+    std::string skyboxPath;
+
     ThemeSettings theme;
     std::vector<std::string> holeStrings;
     const auto& props = courseFile.getProperties();
@@ -1545,19 +1546,7 @@ void GolfState::loadAssets()
         }
         else if (name == "skybox")
         {
-            //TODO load skybox model instead
-
-            //m_skyScene.setCubemap(prop.getValue<std::string>());
-
-            ////disable smoothing for super-pixels
-            //glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_gameScene.getCubemap().textureID));
-            //glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-            //glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-        }
-        else if (name == "sky_colour")
-        {
-            //TODO set the sky top colour
-
+            skyboxPath = prop.getValue<std::string>();
         }
         else if (name == "billboard_model")
         {
@@ -1593,6 +1582,8 @@ void GolfState::loadAssets()
         }
     }
     
+    loadSkybox(skyboxPath);
+
     if (theme.billboardModel.empty()
         || !cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + theme.billboardModel))
     {
@@ -2306,7 +2297,12 @@ void GolfState::buildScene()
     };
     m_waterEnt = waterEnt;
     m_gameScene.setWaterLevel(WaterLevel);
+    m_skyScene.setWaterLevel(WaterLevel);
 
+    //we never use the reflection buffer fot the skybox cam, but
+    //it needs for one to be created for the culling to consider
+    //the scene's objects for reflection map pass...
+    m_skyScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.create(2, 2);
 
     //tee marker
     md.loadFromFile("assets/golf/models/tee_balls.cmt");
@@ -2545,6 +2541,117 @@ void GolfState::buildScene()
         createWeather();
     }
 //#endif
+
+
+
+
+    //testing 3D skybox
+    if (md.loadFromFile("assets/golf/models/skybox/horizon01.cmt"))
+    {
+        entity = m_skyScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -10.f });
+        md.createModel(entity);
+    }
+
+    if (md.loadFromFile("assets/golf/models/skybox/skyline01.cmt"))
+    {
+        entity = m_skyScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -8.f });
+        md.createModel(entity);
+    }
+
+    if (md.loadFromFile("assets/golf/models/lighthouse.cmt"))
+    {
+        entity = m_skyScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -3.f });
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(1.f / 64.f));
+        md.createModel(entity);
+    }
+}
+
+void GolfState::loadSkybox(const std::string& path)
+{
+    auto skyTop = SkyTop;
+    auto skyMid = TextNormalColour;
+
+    cro::ConfigFile cfg;
+
+    struct PropData final
+    {
+        std::string path;
+        glm::vec3 position = glm::vec3(0.f);
+        glm::vec3 scale = glm::vec3(0.f);
+        float rotation = 0.f;
+    };
+    std::vector<PropData> propModels;
+
+    if (!path.empty()
+        && cfg.loadFromFile(path))
+    {
+        const auto& props = cfg.getProperties();
+        for (const auto& p : props)
+        {
+            const auto& name = p.getName();
+            if (name == "sky_light")
+            {
+                skyTop = p.getValue<cro::Colour>();
+            }
+            else if (name == "sky_mid")
+            {
+                skyMid = p.getValue<cro::Colour>();
+            }
+        }
+
+        const auto& objs = cfg.getObjects();
+        for (const auto& obj : objs)
+        {
+            const auto& name = obj.getName();
+            if (name == "prop")
+            {
+                auto& data = propModels.emplace_back();
+                const auto& props = obj.getProperties();
+                for (const auto& p : props)
+                {
+                    const auto& propName = p.getName();
+                    if (propName == "model")
+                    {
+                        data.path = p.getValue<std::string>();
+                    }
+                    else if (propName == "position")
+                    {
+                        data.position = p.getValue<glm::vec3>();
+                    }
+                    else if (propName == "rotation")
+                    {
+                        data.rotation = p.getValue<float>();
+                    }
+                    else if (propName == "scale")
+                    {
+                        data.scale = p.getValue<glm::vec3>();
+                    }
+                }
+            }
+        }
+    }
+
+    cro::ModelDefinition md(m_resources);
+    for (const auto& model : propModels)
+    {
+        //TODO how are we handling materials here?
+        //only apply custom shader to vertex lit types?
+        //that would require a LOT of rejiggering of materials...
+        if (md.loadFromFile(model.path))
+        {
+            auto entity = m_skyScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(model.position);
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, model.rotation);
+            entity.getComponent<cro::Transform>().setScale(model.scale);
+            md.createModel(entity);
+        }
+    }
+
+    m_skyScene.enableSkybox();
+    m_skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
 }
 
 void GolfState::initAudio()

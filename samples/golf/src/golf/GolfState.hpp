@@ -197,6 +197,7 @@ private:
     void loadAssets();
     void addSystems();
     void buildScene();
+    void loadSkybox(const std::string&);
     void initAudio();
 
     void createWeather(); //weather.cpp

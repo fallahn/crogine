@@ -79,24 +79,28 @@ namespace
         OUTPUT
 
         uniform LOW vec3 u_darkColour;
+        uniform LOW vec3 u_midColour;
         uniform LOW vec3 u_lightColour;
 
-        uniform LOW vec3 u_skyColour;
+        uniform float u_stepStart = 0.49;
+        uniform float u_stepEnd = 0.51;
 
         VARYING_IN vec3 v_texCoords;
 
         //const LOW vec3 lightColour = vec3(0.82, 0.98, 0.99);
-        //const LOW vec3 darkColour = vec3(0.3, 0.28, 0.21);
+        //const LOW vec3 lightColour = vec3(0.21, 0.5, 0.96);
 
-        const LOW vec3 darkColour = vec3(0.82, 0.98, 0.99);
-        const LOW vec3 lightColour = vec3(0.21, 0.5, 0.96);
+        const vec3 Up = vec3(0.0, 1.0, 0.0);
 
         void main()
         {
-            float dist = normalize(v_texCoords).y; /*v_texCoords.y + 0.5*/
+            float amount = dot(normalize(v_texCoords), Up);
+            amount += 1.0;
+            amount /= 2.0;
 
-            vec3 colour = mix(u_darkColour, u_lightColour, smoothstep(0.04, 0.88, dist));
-            FRAG_OUT = vec4(colour * u_skyColour, 1.0);
+            vec3 top = mix(u_midColour, u_lightColour, smoothstep(u_stepEnd, 0.55, amount));
+            FRAG_OUT = vec4(mix(u_darkColour, top, smoothstep(u_stepStart, u_stepEnd, amount)), 1.0);
+
         })";
     const std::string skyboxFragTextured =
         R"(
@@ -322,7 +326,7 @@ void Scene::enableSkybox()
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
             m_skybox.setShader(m_skyboxShaders[Coloured]);
-            setSkyboxColours();
+            setSkyboxColours(cro::Colour::Blue, cro::Colour::Green, cro::Colour::Red);
 
             m_shaderIndex = SkyboxType::Coloured;
         }
@@ -468,12 +472,13 @@ CubemapID Scene::getCubemap() const
     return CubemapID(m_activeSkyboxTexture);
 }
 
-void Scene::setSkyboxColours(cro::Colour dark, cro::Colour light)
+void Scene::setSkyboxColours(cro::Colour dark, cro::Colour mid, cro::Colour light)
 {
     if (m_skyboxShaders[SkyboxType::Coloured].getGLHandle())
     {
         glCheck(glUseProgram(m_skyboxShaders[SkyboxType::Coloured].getGLHandle()));
         glCheck(glUniform3f(m_skyboxShaders[SkyboxType::Coloured].getUniformMap().at("u_darkColour"), dark.getRed(), dark.getGreen(), dark.getBlue()));
+        glCheck(glUniform3f(m_skyboxShaders[SkyboxType::Coloured].getUniformMap().at("u_midColour"), mid.getRed(), mid.getGreen(), mid.getBlue()));
         glCheck(glUniform3f(m_skyboxShaders[SkyboxType::Coloured].getUniformMap().at("u_lightColour"), light.getRed(), light.getGreen(), light.getBlue()));
         glCheck(glUseProgram(0));
     }

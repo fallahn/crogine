@@ -242,7 +242,7 @@ namespace cro
         \brief Sets the colours used in the default skybox.
         If a skybox texture or environment map has been set then this does nothing.
         */
-        void setSkyboxColours(cro::Colour top = cro::Colour(0.82f, 0.98f, 0.99f), cro::Colour bottom = cro::Colour(0.21f, 0.5f, 0.96f));
+        void setSkyboxColours(cro::Colour bottom, cro::Colour middle, cro::Colour top);
 
 
         /*!

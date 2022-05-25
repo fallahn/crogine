@@ -1,0 +1,29 @@
+skybox
+{
+    sky_light = 1,0.5, 0,1
+    sky_mid = 0,1,0.5,1
+
+    prop
+    {
+        model = "assets/golf/models/jetty.cmt"
+        position = 4.757034,0,-4.424744
+        rotation = 21.907947
+        scale = 0.015625,0.015625,0.015625
+    }
+
+    prop
+    {
+        model = "assets/golf/models/boat02.cmt"
+        position = 6.028915,0,-3.200806
+        rotation = 22.950075
+        scale = 0.015625,0.015625,0.015625
+    }
+
+    prop
+    {
+        model = "assets/golf/models/menu_pavilion.cmt"
+        position = 8.839920,0,-6.432892
+        rotation = 17.538569
+        scale = 0.015625,0.015625,0.015625
+    }    
+}
