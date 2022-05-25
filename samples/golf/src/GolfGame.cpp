@@ -61,6 +61,7 @@ source distribution.
 
 #include <crogine/util/Network.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/String.hpp>
 
 namespace
 {
@@ -392,6 +393,10 @@ bool GolfGame::initialise()
             ImGui::Text("Programming: Matt Marchant, source available at: https://github.com/fallahn/crogine");
             ImGui::NewLine();
             ImGui::Text("Check out other games available from https://fallahn.itch.io !");
+            if (ImGui::Button("Visit Website"))
+            {
+                cro::Util::String::parseURL("https://fallahn.itch.io/vga-golf");
+            }
         });
 
     getWindow().setLoadingScreen<LoadingScreen>();

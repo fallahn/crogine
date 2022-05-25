@@ -397,7 +397,7 @@ void OptionsState::handleMessage(const cro::Message& msg)
 bool OptionsState::simulate(float dt)
 {
     m_scene.simulate(dt);
-    return false; //TODO return false on main menu only?
+    //return false; //TODO return false on main menu only?
     return true;
 }
 
@@ -1077,7 +1077,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     };
 
     //post process label
-    createLabel({ 204.f, 98.f }, "Post Effect");
+    createLabel({ 204.f, 98.f }, "Post FX");
 
 
     auto createSlider = [&](glm::vec2 position)
