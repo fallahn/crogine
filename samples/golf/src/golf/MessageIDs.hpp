@@ -114,6 +114,7 @@ struct SystemEvent final
     enum
     {
         PostProcessToggled,
+        PostProcessIndexChanged,
         StateRequest,
         InputActivated
     }type = PostProcessToggled;

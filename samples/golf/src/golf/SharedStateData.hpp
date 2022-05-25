@@ -149,6 +149,7 @@ struct SharedStateData final
 
     //client settings
     bool usePostProcess = false;
+    std::int32_t postProcessIndex = 0;
     std::string customShaderPath;
     InputBinding inputBinding;
     bool pixelScale = true;

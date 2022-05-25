@@ -84,10 +84,10 @@ namespace
 
     const std::array PostShaders =
     {
-        ShaderDescription(TerminalFragment.c_str(), "Terminal Display", "by Mostly Hairless."),
-        ShaderDescription(TerminalDistorted.c_str(), "Terminal Display (Extreme)", "by Mostly Hairless."),
-        ShaderDescription(BWFragment.c_str(), "Black and White", "by Mostly Hairless."),
-        ShaderDescription(CRTFragment.c_str(), "CRT Effect", "PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER\nby Timothy Lottes"),
+        ShaderDescription(TerminalFragment.c_str(), ShaderNames[0], "by Mostly Hairless."),
+        ShaderDescription(TerminalDistorted.c_str(), ShaderNames[1], "by Mostly Hairless."),
+        ShaderDescription(BWFragment.c_str(), ShaderNames[2], "by Mostly Hairless."),
+        ShaderDescription(CRTFragment.c_str(), ShaderNames[3], "PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER\nby Timothy Lottes"),
     };
 }
 
@@ -95,7 +95,6 @@ cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
 
 GolfGame::GolfGame()
     : m_stateStack      ({*this, getWindow()}),
-    m_postProcessIndex  (0),
     m_activeIndex       (0)
 {
     //must be set before anything, else cfg is still loaded from default path
@@ -196,26 +195,32 @@ void GolfGame::handleMessage(const cro::Message& msg)
         {
         default: break;
         case SystemEvent::PostProcessToggled:
-            m_sharedData.usePostProcess = !m_sharedData.usePostProcess;
-
-            auto windowSize = cro::App::getWindow().getSize();
-            if (m_sharedData.usePostProcess)
+            if (m_postShader->getGLHandle() != 0)
             {
-                recreatePostProcess();
-                m_renderTarget = m_postBuffer.get();
-            }
-            else
-            {
-                m_renderTarget = &cro::App::getWindow();
-            }
+                m_sharedData.usePostProcess = !m_sharedData.usePostProcess;
 
-            //create a fake resize event to trigger any camera callbacks.
-            SDL_Event resizeEvent;
-            resizeEvent.type = SDL_WINDOWEVENT_SIZE_CHANGED;
-            resizeEvent.window.windowID = 0;
-            resizeEvent.window.data1 = windowSize.x;
-            resizeEvent.window.data2 = windowSize.y;
-            SDL_PushEvent(&resizeEvent);
+                auto windowSize = cro::App::getWindow().getSize();
+                if (m_sharedData.usePostProcess)
+                {
+                    recreatePostProcess();
+                    m_renderTarget = m_postBuffer.get();
+                }
+                else
+                {
+                    m_renderTarget = &cro::App::getWindow();
+                }
+
+                //create a fake resize event to trigger any camera callbacks.
+                SDL_Event resizeEvent;
+                resizeEvent.type = SDL_WINDOWEVENT_SIZE_CHANGED;
+                resizeEvent.window.windowID = 0;
+                resizeEvent.window.data1 = windowSize.x;
+                resizeEvent.window.data2 = windowSize.y;
+                SDL_PushEvent(&resizeEvent);
+            }
+            break;
+        case SystemEvent::PostProcessIndexChanged:
+            applyPostProcess();
             break;
         }
     }
@@ -267,31 +272,6 @@ bool GolfGame::initialise()
         return false;
     }
 
-    static const auto setShader = [&](const char* frag)
-    {
-        std::unique_ptr<cro::Shader> shader = std::make_unique<cro::Shader>();
-        if (shader->loadFromString(PostVertex, frag))
-        {
-            //if the shader loaded successfully
-            //swap with current shader.
-            m_postShader.swap(shader);
-            m_postQuad->setShader(*m_postShader);
-
-            m_sharedData.usePostProcess = false; //message handler flips this???
-            auto* msg = getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
-            msg->type = SystemEvent::PostProcessToggled;
-
-            m_activeIndex = m_postProcessIndex;
-            return true;
-        }
-        else
-        {
-            cro::FileSystem::showMessageBox("Error", "Failed to compile shader\nSee console for more details");
-        }
-        return false;
-    };
-
-
     registerConsoleTab("Advanced",
         [&]()
         {
@@ -303,22 +283,19 @@ bool GolfGame::initialise()
                 //set the shared data property, in case we need to first create the buffer
 
                 //raise a message to resize the post process buffers
-                if (m_postShader->getGLHandle() != 0)
-                {
-                    auto* msg = getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
-                    msg->type = SystemEvent::PostProcessToggled;
-                }
+                auto* msg = getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+                msg->type = SystemEvent::PostProcessToggled;
             }
 
             ImGui::PushItemWidth(260.f);
-            if (ImGui::BeginCombo("Shader", PostShaders[m_postProcessIndex].description.c_str()))
+            if (ImGui::BeginCombo("Shader", PostShaders[m_sharedData.postProcessIndex].description.c_str()))
             {
                 for (auto i = 0u; i < PostShaders.size(); ++i)
                 {
-                    bool selected = (m_postProcessIndex == static_cast<std::int32_t>(i));
+                    bool selected = (m_sharedData.postProcessIndex == static_cast<std::int32_t>(i));
                     if (ImGui::Selectable(PostShaders[i].description.c_str(), selected))
                     {
-                        m_postProcessIndex = static_cast<std::int32_t>(i);
+                        m_sharedData.postProcessIndex = static_cast<std::int32_t>(i);
                     }
 
                     if (selected)
@@ -334,7 +311,7 @@ bool GolfGame::initialise()
             if (ImGui::IsItemHovered())
             {
                 ImGui::BeginTooltip();
-                ImGui::Text("%s", PostShaders[m_postProcessIndex].toolTip.c_str());
+                ImGui::Text("%s", PostShaders[m_sharedData.postProcessIndex].toolTip.c_str());
                 ImGui::EndTooltip();
             }
 
@@ -349,14 +326,7 @@ bool GolfGame::initialise()
 
             if (ImGui::Button("Apply"))
             {
-                if (m_activeIndex != m_postProcessIndex
-                    || !m_sharedData.customShaderPath.empty())
-                {
-                    if (setShader(PostShaders[m_postProcessIndex].fragmentString))
-                    {
-                        m_sharedData.customShaderPath.clear();
-                    }
-                }
+                applyPostProcess();
             }
             if (ImGui::IsItemHovered())
             {
@@ -416,9 +386,10 @@ bool GolfGame::initialise()
             ImGui::Text("Credits:");
             ImGui::Text("OPL VST synthesiser: https://github.com/jpcima/ADLplug");
             ImGui::Text("Sound Effects: https://freesound.org (see assets directory for specific credits)");
+            ImGui::Text("CRT Effect Post Process Shader by Timothy Lottes (Public Domain)");
             ImGui::Text("Artwork: Blender and Aseprite https://blender.org https://aseprite.org");
             ImGui::Text("Colour Palette: Colordome32 https://lospec.com/palette-list/colordome-32");
-            ImGui::Text("Programming: Matt Marchant, source available here: https://github.com/fallahn/crogine");
+            ImGui::Text("Programming: Matt Marchant, source available at: https://github.com/fallahn/crogine");
             ImGui::NewLine();
             ImGui::Text("Check out other games available from https://fallahn.itch.io !");
         });
@@ -497,7 +468,7 @@ bool GolfGame::initialise()
                 buffer.push_back(0);
                 if (!m_postShader->loadFromString(PostVertex, buffer.data()))
                 {
-                    m_postShader->loadFromString(PostVertex, PostShaders[m_postProcessIndex].fragmentString);
+                    m_postShader->loadFromString(PostVertex, PostShaders[m_sharedData.postProcessIndex].fragmentString);
                 }
             }
             else
@@ -514,7 +485,7 @@ bool GolfGame::initialise()
     }
     else
     {
-        m_postShader->loadFromString(PostVertex, PostShaders[m_postProcessIndex].fragmentString);
+        m_postShader->loadFromString(PostVertex, PostShaders[m_sharedData.postProcessIndex].fragmentString);
     }
     auto shaderRes = glm::vec2(windowSize);
     glCheck(glUseProgram(m_postShader->getGLHandle()));
@@ -527,7 +498,7 @@ bool GolfGame::initialise()
     m_postQuad->setTexture(m_postBuffer->getTexture());
     m_postQuad->setShader(*m_postShader);
 
-    m_activeIndex = m_postProcessIndex;
+    m_activeIndex = m_sharedData.postProcessIndex;
 
 
     registerCommand("clubhouse", [&](const std::string&)
@@ -610,7 +581,7 @@ void GolfGame::loadPreferences()
                 }
                 else if (name == "post_index")
                 {
-                    m_postProcessIndex = std::max(0, std::min(static_cast<std::int32_t>(PostShaders.size()) - 1, prop.getValue<std::int32_t>()));
+                    m_sharedData.postProcessIndex = std::max(0, std::min(static_cast<std::int32_t>(PostShaders.size()) - 1, prop.getValue<std::int32_t>()));
                 }
                 else if (name == "custom_shader")
                 {
@@ -701,7 +672,7 @@ void GolfGame::savePreferences()
 
     //advanced options
     cfg.addProperty("use_post_process").setValue(m_sharedData.usePostProcess);
-    cfg.addProperty("post_index").setValue(m_postProcessIndex);
+    cfg.addProperty("post_index").setValue(m_sharedData.postProcessIndex);
     if (!m_sharedData.customShaderPath.empty())
     {
         cfg.addProperty("custom_shader").setValue(m_sharedData.customShaderPath);
@@ -829,3 +800,39 @@ void GolfGame::recreatePostProcess()
     float scale = std::floor(shaderRes.y / calcVPSize().y);
     glCheck(glUniform2f(m_postShader->getUniformID("u_scale"), scale, scale));
 }
+
+void GolfGame::applyPostProcess()
+{
+    if (m_activeIndex != m_sharedData.postProcessIndex
+        || !m_sharedData.customShaderPath.empty())
+    {
+        if (setShader(PostShaders[m_sharedData.postProcessIndex].fragmentString))
+        {
+            m_sharedData.customShaderPath.clear();
+        }
+    }
+}
+
+bool GolfGame::setShader(const char* frag)
+{
+    std::unique_ptr<cro::Shader> shader = std::make_unique<cro::Shader>();
+    if (shader->loadFromString(PostVertex, frag))
+    {
+        //if the shader loaded successfully
+        //swap with current shader.
+        m_postShader.swap(shader);
+        m_postQuad->setShader(*m_postShader);
+
+        m_sharedData.usePostProcess = false; //message handler flips this???
+        auto* msg = getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+        msg->type = SystemEvent::PostProcessToggled;
+
+        m_activeIndex = m_sharedData.postProcessIndex;
+        return true;
+    }
+    else
+    {
+        cro::FileSystem::showMessageBox("Error", "Failed to compile shader\nSee console for more details");
+    }
+    return false;
+};

@@ -133,6 +133,7 @@ private:
     void createButtons(cro::Entity, std::int32_t, std::uint32_t, std::uint32_t, const cro::SpriteSheet&);
 
     void updateToolTip(cro::Entity, std::int32_t);
+    void updateActiveCallbacks();
 
     void quitState();
 };
