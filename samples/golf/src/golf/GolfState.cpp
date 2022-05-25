@@ -141,6 +141,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     : cro::State        (stack, context),
     m_sharedData        (sd),
     m_gameScene         (context.appInstance.getMessageBus(), 768/*, cro::INFO_FLAG_SYSTEM_TIME | cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_skyScene          (context.appInstance.getMessageBus(), 512),
     m_uiScene           (context.appInstance.getMessageBus(), 1024),
     m_trophyScene       (context.appInstance.getMessageBus()),
     m_mouseVisible      (true),
@@ -502,6 +503,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
 #endif
 
     m_gameScene.forwardEvent(evt);
+    m_skyScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
     m_trophyScene.forwardEvent(evt);
 
@@ -780,6 +782,7 @@ void GolfState::handleMessage(const cro::Message& msg)
     m_cpuGolfer.handleMessage(msg);
 
     m_gameScene.forwardMessage(msg);
+    m_skyScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
     m_trophyScene.forwardMessage(msg);
 }
@@ -902,6 +905,19 @@ bool GolfState::simulate(float dt)
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 
+
+    //do this last to ensure game scene camera is up to date
+    const auto& srcCam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    auto& dstCam = m_skyScene.getActiveCamera().getComponent<cro::Camera>();
+
+    dstCam.viewport = srcCam.viewport;
+    dstCam.setPerspective(srcCam.getFOV(), srcCam.getAspectRatio(), 0.1f, 10.f);
+
+    m_skyScene.getActiveCamera().getComponent<cro::Transform>().setRotation(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation());
+    //and make sure the skybox is up to date too, so there's
+    //no lag between camera orientation.
+    m_skyScene.simulate(dt);
+
 #ifndef CRO_DEBUG_
     if (m_roundEnded)
 #endif
@@ -966,10 +982,15 @@ void GolfState::render()
 
     cam.setActivePass(cro::Camera::Pass::Reflection);
     cam.renderFlags = RenderFlags::Reflection;
+
+    auto& skyCam = m_skyScene.getActiveCamera().getComponent<cro::Camera>();
+    skyCam.setActivePass(cro::Camera::Pass::Reflection);
+    skyCam.renderFlags = RenderFlags::Reflection;
+
     cam.reflectionBuffer.clear(cro::Colour::Red);
     //don't want to test against skybox depth values.
-    //m_skyboxScene.render()
-    //glClear(GL_DEPTH_BUFFER_BIT)
+    m_skyScene.render();
+    glClear(GL_DEPTH_BUFFER_BIT);
     m_gameScene.render();
     cam.reflectionBuffer.display();
 
@@ -977,9 +998,14 @@ void GolfState::render()
     cam.renderFlags = RenderFlags::All;
     cam.viewport = oldVP;
 
+    skyCam.setActivePass(cro::Camera::Pass::Final);
+    skyCam.renderFlags = RenderFlags::All;
+
     //then render scene
     //glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for... snow maybe?
     m_gameSceneTexture.clear();
+    m_skyScene.render();
+    glClear(GL_DEPTH_BUFFER_BIT);
     m_gameScene.render();
 #ifdef CRO_DEBUG_
     m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
@@ -1013,6 +1039,9 @@ void GolfState::render()
 void GolfState::loadAssets()
 {
     m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
+
+    m_skyScene.enableSkybox();
+    m_skyScene.setSkyboxColours(SkyTop, SkyBottom);
 
     std::string wobble;
     if (m_sharedData.vertexSnap)
@@ -1516,12 +1545,19 @@ void GolfState::loadAssets()
         }
         else if (name == "skybox")
         {
-            m_gameScene.setCubemap(prop.getValue<std::string>());
+            //TODO load skybox model instead
 
-            //disable smoothing for super-pixels
-            glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_gameScene.getCubemap().textureID));
-            glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-            glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+            //m_skyScene.setCubemap(prop.getValue<std::string>());
+
+            ////disable smoothing for super-pixels
+            //glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_gameScene.getCubemap().textureID));
+            //glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+            //glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+        }
+        else if (name == "sky_colour")
+        {
+            //TODO set the sky top colour
+
         }
         else if (name == "billboard_model")
         {
@@ -2001,6 +2037,9 @@ void GolfState::addSystems()
     {
         m_gameScene.addDirector<TutorialDirector>(m_sharedData, m_inputParser);
     }
+
+    m_skyScene.addSystem<cro::CameraSystem>(mb);
+    m_skyScene.addSystem<cro::ModelRenderer>(mb);
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);

@@ -81,6 +81,8 @@ static constexpr glm::uvec2 LabelTextureSize(128u, 64u);
 static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, -static_cast<float>(MapSize.y / 2));
 
 static const cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
+static const cro::Colour SkyTop(0.678f, 0.851f, 0.718f);
+static const cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
 
 struct SpriteAnimID final
 {

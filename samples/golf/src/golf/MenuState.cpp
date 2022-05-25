@@ -478,8 +478,12 @@ bool MenuState::simulate(float dt)
     m_windBuffer.setData(&wind);
 
     m_backgroundScene.simulate(dt);
-    m_avatarScene.simulate(dt);
-    m_uiScene.simulate(dt);
+    //processing these with options open only slows things down.
+    if (getStateCount() == 1)
+    {
+        m_avatarScene.simulate(dt);
+        m_uiScene.simulate(dt);
+    }
     return true;
 }
 

@@ -397,7 +397,6 @@ void OptionsState::handleMessage(const cro::Message& msg)
 bool OptionsState::simulate(float dt)
 {
     m_scene.simulate(dt);
-    //return false; //TODO return false on main menu only?
     return true;
 }
 
@@ -1565,7 +1564,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //post process checkbox
-    entity = createHighlight(glm::vec2(280.f, 89.f));
+    entity = createHighlight(glm::vec2(246.f, 89.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -1580,7 +1579,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //post process checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(282.f, 91.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(248.f, 91.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -1598,11 +1597,11 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    auto shaderLabel = createLabel(glm::vec2(342.f, 98.f), ShaderNames[m_sharedData.postProcessIndex]);
+    auto shaderLabel = createLabel(glm::vec2(325.f, 98.f), ShaderNames[m_sharedData.postProcessIndex]);
     centreText(shaderLabel);
 
     //prev/next post process
-    entity = createHighlight(glm::vec2(296.f, 89.f));
+    entity = createHighlight(glm::vec2(262.f, 89.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&, shaderLabel](cro::Entity e, cro::ButtonEvent evt) mutable
             {

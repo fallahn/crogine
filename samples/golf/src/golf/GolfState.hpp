@@ -103,6 +103,7 @@ private:
     
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
+    cro::Scene m_skyScene;
     cro::Scene m_uiScene;
     cro::Scene m_trophyScene;
 

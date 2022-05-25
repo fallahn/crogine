@@ -109,7 +109,7 @@ static const cro::Time MouseHideTime = cro::seconds(3.f);
 static const std::array<std::string, 4u> ShaderNames =
 {
     "Terminal Display",
-    "Terminal Display (Extreme)",
+    "Terminal (Extreme)",
     "Black and White",
     "CRT Effect"
 };
