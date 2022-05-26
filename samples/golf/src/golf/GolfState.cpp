@@ -2276,7 +2276,7 @@ void GolfState::buildScene()
 
 
     //water plane. Updated by various camera callbacks
-    meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(200.f, 30));
+    meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(240.f, 30));
     auto waterEnt = m_gameScene.createEntity();
     waterEnt.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
     waterEnt.getComponent<cro::Transform>().move({ 0.f, 0.f, -30.f });
@@ -2541,32 +2541,6 @@ void GolfState::buildScene()
         createWeather();
     }
 //#endif
-
-
-
-
-    //testing 3D skybox
-    if (md.loadFromFile("assets/golf/models/skybox/horizon01.cmt"))
-    {
-        entity = m_skyScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -10.f });
-        md.createModel(entity);
-    }
-
-    if (md.loadFromFile("assets/golf/models/skybox/skyline01.cmt"))
-    {
-        entity = m_skyScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -8.f });
-        md.createModel(entity);
-    }
-
-    if (md.loadFromFile("assets/golf/models/lighthouse.cmt"))
-    {
-        entity = m_skyScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -3.f });
-        entity.getComponent<cro::Transform>().setScale(glm::vec3(1.f / 64.f));
-        md.createModel(entity);
-    }
 }
 
 void GolfState::loadSkybox(const std::string& path)
@@ -2592,11 +2566,11 @@ void GolfState::loadSkybox(const std::string& path)
         for (const auto& p : props)
         {
             const auto& name = p.getName();
-            if (name == "sky_light")
+            if (name == "sky_top")
             {
                 skyTop = p.getValue<cro::Colour>();
             }
-            else if (name == "sky_mid")
+            else if (name == "sky_bottom")
             {
                 skyMid = p.getValue<cro::Colour>();
             }

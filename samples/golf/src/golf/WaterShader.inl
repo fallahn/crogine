@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -177,7 +177,8 @@ static const std::string WaterFragment = R"(
         wave *= 0.2 * pow(reflectCoords.y, 4.0);
         blendedColour.rgb += wave;
 
-        float amount = 1.0 - smoothstep(120.0, 199.9, length(v_vertDistance));
+        //edge feather
+        float amount = 1.0 - smoothstep(160.0, 239.9, length(v_vertDistance));
 
         vec2 xy = gl_FragCoord.xy / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));

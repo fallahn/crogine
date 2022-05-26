@@ -1,0 +1,21 @@
+skybox
+{
+    sky_top = 0.431, 0.701, 0.616,1
+    sky_bottom = 0.925,0.6,0.514,1
+
+    prop
+    {
+        model = "assets/golf/models/skybox/horizon02.cmt"
+        position = 0,0,0
+        rotation = 0
+        scale = 1,1,1
+    }
+
+    prop
+    {
+        model = "assets/golf/models/skybox/skyline01.cmt"
+        position = 0,0,0
+        rotation = 0.6
+        scale = 1,1,1
+    }
+}
