@@ -100,6 +100,7 @@ namespace
 #include "BillboardShader.inl"
 #include "CloudShader.inl"
 #include "BeaconShader.inl"
+#include "WaterShader.inl"
 
 #ifdef CRO_DEBUG_
     std::int32_t debugFlags = 0;
@@ -646,6 +647,9 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define TEXTURED\n");
     m_materialIDs[MaterialID::Beacon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Beacon));
 
+    m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag);
+    m_materialIDs[MaterialID::Horizon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Horizon));
+
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", m_resources.textures);
@@ -1146,7 +1150,7 @@ void DrivingState::createScene()
     {
         skybox += skyboxes[cro::Util::Random::value(0u, skyboxes.size() - 1)];
     }
-    auto cloudPath = loadSkybox(skybox, m_skyScene, m_resources);
+    auto cloudPath = loadSkybox(skybox, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
     createClouds(cloudPath);
 
     //tee marker

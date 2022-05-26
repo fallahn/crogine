@@ -98,6 +98,7 @@ private:
             Wireframe,
             WireframeCulled,
             Beacon,
+            Horizon,
 
             Count
         };

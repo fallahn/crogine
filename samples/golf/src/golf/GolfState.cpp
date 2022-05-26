@@ -1156,6 +1156,10 @@ void GolfState::loadAssets()
     m_waterShader.timeUniform = m_resources.shaders.get(ShaderID::Water).getUniformMap().at("u_time");
     
 
+    m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag);
+    shader = &m_resources.shaders.get(ShaderID::Horizon);
+    m_materialIDs[MaterialID::Horizon] = m_resources.materials.add(*shader);
+
     //mmmm... bacon
     m_resources.shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define TEXTURED\n");
     m_materialIDs[MaterialID::Beacon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Beacon));
@@ -1578,7 +1582,7 @@ void GolfState::loadAssets()
         }
     }
     
-    theme.cloudPath = loadSkybox(skyboxPath, m_skyScene, m_resources);
+    theme.cloudPath = loadSkybox(skyboxPath, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
 
     if (theme.billboardModel.empty()
         || !cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + theme.billboardModel))

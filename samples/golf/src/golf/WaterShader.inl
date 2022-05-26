@@ -178,7 +178,7 @@ static const std::string WaterFragment = R"(
         blendedColour.rgb += wave;
 
         //edge feather
-        float amount = 1.0 - smoothstep(160.0, 239.9, length(v_vertDistance));
+        float amount = 1.0 - smoothstep(150.0, 239.9, length(v_vertDistance));
 
         vec2 xy = gl_FragCoord.xy / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
@@ -188,4 +188,43 @@ static const std::string WaterFragment = R"(
         if(alpha < 0.1) discard;
 
         FRAG_OUT = vec4(blendedColour, 1.0);
+    })";
+
+    static const std::string HorizonVert = 
+        R"(
+    ATTRIBUTE vec4 a_position;
+    ATTRIBUTE vec4 a_colour;
+    ATTRIBUTE vec2 a_texCoord0;
+
+    uniform mat4 u_worldMatrix;
+    uniform mat4 u_viewProjectionMatrix;
+
+    VARYING_OUT vec4 v_colour;
+    VARYING_OUT vec2 v_texCoord;
+
+    void main()
+    {
+        gl_Position = u_viewProjectionMatrix * u_worldMatrix * a_position;
+
+        v_colour = a_colour;
+        v_texCoord = a_texCoord0;
+    })";
+
+    static const std::string HorizonFrag = 
+        R"(
+    OUTPUT
+
+    uniform sampler2D u_diffuseMap;
+
+    VARYING_IN vec4 v_colour;
+    VARYING_IN vec2 v_texCoord;
+
+    const vec3 WaterColour = vec3(0.02, 0.078, 0.578);
+
+    void main()
+    {
+        vec4 colour = TEXTURE(u_diffuseMap, v_texCoord);
+        FRAG_OUT = vec4(mix(WaterColour, colour.rgb, v_colour.g), 1.0);
+
+        if(colour.a < 0.1) discard;
     })";

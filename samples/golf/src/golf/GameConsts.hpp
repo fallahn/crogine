@@ -117,6 +117,7 @@ struct ShaderID final
     enum
     {
         Water = 100,
+        Horizon,
         Terrain,
         Billboard,
         Cel,
@@ -397,7 +398,7 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
 }
 
 //return the path to cloud sprites if it is found
-static inline std::string loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources)
+static inline std::string loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, std::int32_t materialID)
 {
     auto skyTop = SkyTop;
     auto skyMid = TextNormalColour;
@@ -470,9 +471,6 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
     cro::ModelDefinition md(resources);
     for (const auto& model : propModels)
     {
-        //TODO how are we handling materials here?
-        //only apply custom shader to vertex lit types?
-        //that would require a LOT of rejiggering of materials...
         if (md.loadFromFile(model.path))
         {
             auto entity = skyScene.createEntity();
@@ -480,6 +478,10 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
             entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, model.rotation);
             entity.getComponent<cro::Transform>().setScale(model.scale);
             md.createModel(entity);
+
+            auto material = resources.materials.get(materialID);
+            applyMaterialData(md, material);
+            entity.getComponent<cro::Model>().setMaterial(0, material);
         }
     }
 

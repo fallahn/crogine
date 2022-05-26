@@ -146,6 +146,7 @@ private:
             WireFrame,
             WireFrameCulled,
             Water,
+            Horizon,
             Cel,
             CelSkinned,
             CelTextured,
