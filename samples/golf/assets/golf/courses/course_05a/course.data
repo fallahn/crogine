@@ -5,7 +5,6 @@ course course_05a
     billboard_sprites = "assets/golf/sprites/shrubbery04.spt"
     audio = "assets/golf/sound/ambience.xas"
     instance_model = "assets/golf/models/bush01.cmt"
-    clouds = "assets/golf/sprites/clouds03.spt"
 
     title = "Grove Bank, Mont Torville"
     description = "Front 9 Holes"

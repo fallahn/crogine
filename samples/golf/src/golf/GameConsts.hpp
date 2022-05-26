@@ -30,11 +30,14 @@ source distribution.
 #pragma once
 
 #include "Terrain.hpp"
+#include "MenuConsts.hpp"
 #include "SharedStateData.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -393,6 +396,99 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
     return img;
 }
 
+//return the path to cloud sprites if it is found
+static inline std::string loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources)
+{
+    auto skyTop = SkyTop;
+    auto skyMid = TextNormalColour;
+    std::string  cloudPath;
+
+    cro::ConfigFile cfg;
+
+    struct PropData final
+    {
+        std::string path;
+        glm::vec3 position = glm::vec3(0.f);
+        glm::vec3 scale = glm::vec3(0.f);
+        float rotation = 0.f;
+    };
+    std::vector<PropData> propModels;
+
+    if (!path.empty()
+        && cfg.loadFromFile(path))
+    {
+        const auto& props = cfg.getProperties();
+        for (const auto& p : props)
+        {
+            const auto& name = p.getName();
+            if (name == "sky_top")
+            {
+                skyTop = p.getValue<cro::Colour>();
+            }
+            else if (name == "sky_bottom")
+            {
+                skyMid = p.getValue<cro::Colour>();
+            }
+            else if (name == "clouds")
+            {
+                cloudPath = p.getValue<std::string>();
+            }
+        }
+
+        const auto& objs = cfg.getObjects();
+        for (const auto& obj : objs)
+        {
+            const auto& name = obj.getName();
+            if (name == "prop")
+            {
+                auto& data = propModels.emplace_back();
+                const auto& props = obj.getProperties();
+                for (const auto& p : props)
+                {
+                    const auto& propName = p.getName();
+                    if (propName == "model")
+                    {
+                        data.path = p.getValue<std::string>();
+                    }
+                    else if (propName == "position")
+                    {
+                        data.position = p.getValue<glm::vec3>();
+                    }
+                    else if (propName == "rotation")
+                    {
+                        data.rotation = p.getValue<float>();
+                    }
+                    else if (propName == "scale")
+                    {
+                        data.scale = p.getValue<glm::vec3>();
+                    }
+                }
+            }
+        }
+    }
+
+    cro::ModelDefinition md(resources);
+    for (const auto& model : propModels)
+    {
+        //TODO how are we handling materials here?
+        //only apply custom shader to vertex lit types?
+        //that would require a LOT of rejiggering of materials...
+        if (md.loadFromFile(model.path))
+        {
+            auto entity = skyScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(model.position);
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, model.rotation);
+            entity.getComponent<cro::Transform>().setScale(model.scale);
+            md.createModel(entity);
+        }
+    }
+
+    skyScene.enableSkybox();
+    skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
+
+    return cloudPath;
+}
+
 static inline void createFallbackModel(cro::Entity target, cro::ResourceCollection& resources)
 {
     CRO_ASSERT(target.isValid(), "");
@@ -407,36 +503,4 @@ static inline void createFallbackModel(cro::Entity target, cro::ResourceCollecti
     auto meshData = resources.meshes.getMesh(meshID);
 
     target.addComponent<cro::Model>(meshData, material);
-}
-
-//TODO use this for interpolating slope height on a height map
-static inline float readHeightmap(glm::vec3 position, const std::vector<float>& heightmap)
-{
-    return 0.f;
-    /*const auto lerp = [](float a, float b, float t) constexpr
-    {
-        return a + t * (b - a);
-    };*/
-
-    //const auto getHeightAt = [&](std::int32_t x, std::int32_t y)
-    //{
-    //    //heightmap is flipped relative to the world innit
-    //    x = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, x));
-    //    y = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, y));
-    //    return heightmap[(IslandTileCount - y) * IslandTileCount + x];
-    //};
-
-    //float posX = position.x / TileSize;
-    //float posY = position.z / TileSize;
-
-    //float intpart = 0.f;
-    //auto modX = std::modf(posX, &intpart) / TileSize;
-    //auto modY = std::modf(posY, &intpart) / TileSize; //normalise this for lerpitude
-
-    //std::int32_t x = static_cast<std::int32_t>(posX);
-    //std::int32_t y = static_cast<std::int32_t>(posY);
-
-    //float topLine = lerp(getHeightAt(x, y), getHeightAt(x + 1, y), modX);
-    //float botLine = lerp(getHeightAt(x, y + 1), getHeightAt(x + 1, y + 1), modX);
-    //return lerp(topLine, botLine, modY) * MaxTerrainHeight;
 }

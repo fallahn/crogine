@@ -7,7 +7,6 @@ course course_04b
     grass = 0.909,0.89,0.713,1
     grass_tint = 0.909, 0.909, 0.773, 1.0
     instance_model = "assets/golf/models/rock.cmt"
-    clouds = "assets/golf/sprites/clouds02.spt"
 
     title = "Roving Sands, East Nerringham"
     description = "Back 9 Holes"

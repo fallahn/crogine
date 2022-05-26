@@ -4,7 +4,6 @@ course course_02b
     billboard_model = "assets/golf/models/shrubbery.cmt"
     billboard_sprites = "assets/golf/sprites/shrubbery.spt"
     audio = "assets/golf/sound/ambience.xas"
-    clouds = "assets/golf/sprites/clouds02.spt"
 
     title = "Sunny Cove, Weald & Hedgeways"
     description = "Back 9 Holes"

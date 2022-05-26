@@ -163,6 +163,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_sharedData        (sd),
     m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
     m_gameScene         (context.appInstance.getMessageBus()),
+    m_skyScene          (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_viewScale         (1.f),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
@@ -295,6 +296,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
     m_inputParser.handleEvent(evt);
     m_gameScene.forwardEvent(evt);
+    m_skyScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
     return true;
 }
@@ -305,6 +307,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
     //up to date by the time the switchblock below is
     //processed
     m_gameScene.forwardMessage(msg);
+    m_skyScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 
     switch (msg.id)
@@ -469,6 +472,16 @@ bool DrivingState::simulate(float dt)
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 
+
+    const auto& srcCam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    auto& dstCam = m_skyScene.getActiveCamera().getComponent<cro::Camera>();
+
+    dstCam.viewport = srcCam.viewport;
+    dstCam.setPerspective(srcCam.getFOV(), srcCam.getAspectRatio(), 1.f, 14.f);
+
+    m_skyScene.getActiveCamera().getComponent<cro::Transform>().setRotation(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation());
+    m_skyScene.simulate(dt);
+
     //auto hide the mouse if not paused
     if (m_mouseVisible
         && getStateCount() == 1)
@@ -492,6 +505,8 @@ void DrivingState::render()
     m_windBuffer.bind(2);
 
     m_backgroundTexture.clear();
+    m_skyScene.render();
+    glClear(GL_DEPTH_BUFFER_BIT);
     m_gameScene.render();
 #ifdef CRO_DEBUG_
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
@@ -554,6 +569,10 @@ void DrivingState::addSystems()
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures);
 
 
+    m_skyScene.addSystem<cro::CameraSystem>(mb);
+    m_skyScene.addSystem<cro::ModelRenderer>(mb);
+
+
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::UISystem>(mb);
@@ -568,8 +587,6 @@ void DrivingState::addSystems()
 
 void DrivingState::loadAssets()
 {
-    m_gameScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
-
     std::string wobble;
     if (m_sharedData.vertexSnap)
     {
@@ -1123,7 +1140,14 @@ void DrivingState::createScene()
     createFoliage(entity);
 
     //and sky detail
-    createClouds();
+    std::string skybox = "assets/golf/skyboxes/";
+    auto skyboxes = cro::FileSystem::listFiles(skybox);
+    if (!skyboxes.empty())
+    {
+        skybox += skyboxes[cro::Util::Random::value(0u, skyboxes.size() - 1)];
+    }
+    auto cloudPath = loadSkybox(skybox, m_skyScene, m_resources);
+    createClouds(cloudPath);
 
     //tee marker
     md.loadFromFile("assets/golf/models/tee_balls.cmt");
@@ -1529,11 +1553,12 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     }
 }
 
-void DrivingState::createClouds()
+void DrivingState::createClouds(const std::string& cloudPath)
 {
-    //TODO would 3D models look better?
+    auto spritePath = cloudPath.empty() ? "assets/golf/sprites/clouds.spt" : cloudPath;
+
     cro::SpriteSheet spriteSheet;
-    if (spriteSheet.loadFromFile("assets/golf/sprites/clouds.spt", m_resources.textures)
+    if (spriteSheet.loadFromFile(spritePath, m_resources.textures)
         && spriteSheet.getSprites().size() > 1)
     {
         const auto& sprites = spriteSheet.getSprites();

@@ -2,6 +2,7 @@ skybox
 {
     sky_top = 0.678, 0.851, 0.718,1
     sky_bottom = 1,0.973,0.882,1
+    clouds = "assets/golf/sprites/clouds.spt"
 
     prop
     {

@@ -65,6 +65,7 @@ private:
     InputParser m_inputParser;
 
     cro::Scene m_gameScene;
+    cro::Scene m_skyScene;
     cro::Scene m_uiScene;
     glm::vec2 m_viewScale;
 
@@ -153,7 +154,7 @@ private:
     void initAudio();
     void createScene();
     void createFoliage(cro::Entity);
-    void createClouds();
+    void createClouds(const std::string&);
     void createPlayer(cro::Entity);
     void createBall();
     void createFlag();

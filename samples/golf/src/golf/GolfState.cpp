@@ -1576,13 +1576,9 @@ void GolfState::loadAssets()
         {
             theme.instancePath = prop.getValue<std::string>();
         }
-        else if (name == "clouds")
-        {
-            theme.cloudPath = prop.getValue<std::string>();
-        }
     }
     
-    loadSkybox(skyboxPath);
+    theme.cloudPath = loadSkybox(skyboxPath, m_skyScene, m_resources);
 
     if (theme.billboardModel.empty()
         || !cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + theme.billboardModel))
@@ -1976,7 +1972,7 @@ void GolfState::loadAssets()
         m_scaleBuffer.addShader(*shader);
         m_resolutionBuffer.addShader(*shader);
 
-        createClouds(theme);
+        createClouds(theme.cloudPath);
     }
 
     //reserve the slots for each hole score
@@ -2541,91 +2537,6 @@ void GolfState::buildScene()
         createWeather();
     }
 //#endif
-}
-
-void GolfState::loadSkybox(const std::string& path)
-{
-    auto skyTop = SkyTop;
-    auto skyMid = TextNormalColour;
-
-    cro::ConfigFile cfg;
-
-    struct PropData final
-    {
-        std::string path;
-        glm::vec3 position = glm::vec3(0.f);
-        glm::vec3 scale = glm::vec3(0.f);
-        float rotation = 0.f;
-    };
-    std::vector<PropData> propModels;
-
-    if (!path.empty()
-        && cfg.loadFromFile(path))
-    {
-        const auto& props = cfg.getProperties();
-        for (const auto& p : props)
-        {
-            const auto& name = p.getName();
-            if (name == "sky_top")
-            {
-                skyTop = p.getValue<cro::Colour>();
-            }
-            else if (name == "sky_bottom")
-            {
-                skyMid = p.getValue<cro::Colour>();
-            }
-        }
-
-        const auto& objs = cfg.getObjects();
-        for (const auto& obj : objs)
-        {
-            const auto& name = obj.getName();
-            if (name == "prop")
-            {
-                auto& data = propModels.emplace_back();
-                const auto& props = obj.getProperties();
-                for (const auto& p : props)
-                {
-                    const auto& propName = p.getName();
-                    if (propName == "model")
-                    {
-                        data.path = p.getValue<std::string>();
-                    }
-                    else if (propName == "position")
-                    {
-                        data.position = p.getValue<glm::vec3>();
-                    }
-                    else if (propName == "rotation")
-                    {
-                        data.rotation = p.getValue<float>();
-                    }
-                    else if (propName == "scale")
-                    {
-                        data.scale = p.getValue<glm::vec3>();
-                    }
-                }
-            }
-        }
-    }
-
-    cro::ModelDefinition md(m_resources);
-    for (const auto& model : propModels)
-    {
-        //TODO how are we handling materials here?
-        //only apply custom shader to vertex lit types?
-        //that would require a LOT of rejiggering of materials...
-        if (md.loadFromFile(model.path))
-        {
-            auto entity = m_skyScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(model.position);
-            entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, model.rotation);
-            entity.getComponent<cro::Transform>().setScale(model.scale);
-            md.createModel(entity);
-        }
-    }
-
-    m_skyScene.enableSkybox();
-    m_skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
 }
 
 void GolfState::initAudio()

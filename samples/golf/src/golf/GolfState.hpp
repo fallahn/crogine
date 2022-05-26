@@ -197,11 +197,10 @@ private:
     void loadAssets();
     void addSystems();
     void buildScene();
-    void loadSkybox(const std::string&);
     void initAudio();
 
     void createWeather(); //weather.cpp
-    void createClouds(const ThemeSettings&);
+    void createClouds(const std::string&);
     void spawnBall(const struct ActorInfo&);
 
     void handleNetEvent(const cro::NetEvent&);

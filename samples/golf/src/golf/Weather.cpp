@@ -236,9 +236,9 @@ void GolfState::createWeather()
     };
 }
 
-void GolfState::createClouds(const ThemeSettings& theme)
+void GolfState::createClouds(const std::string& cloudPath)
 {
-    auto spritePath = theme.cloudPath.empty() ? "assets/golf/sprites/clouds.spt" : theme.cloudPath;
+    auto spritePath = cloudPath.empty() ? "assets/golf/sprites/clouds.spt" : cloudPath;
 
     cro::SpriteSheet spriteSheet;
     if (spriteSheet.loadFromFile(spritePath, m_resources.textures)
