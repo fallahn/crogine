@@ -457,7 +457,7 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
                     }
                     else if (propName == "rotation")
                     {
-                        data.rotation = p.getValue<float>();
+                        data.rotation = p.getValue<float>() * cro::Util::Const::degToRad;
                     }
                     else if (propName == "scale")
                     {
