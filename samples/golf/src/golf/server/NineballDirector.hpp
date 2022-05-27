@@ -50,5 +50,22 @@ private:
 
     std::vector<BallInfo> m_ballLayout;
     std::size_t m_currentPlayer;
+    std::int8_t m_firstCollision;
 
+    std::int8_t m_currentTarget;
+    std::vector<std::int8_t> m_pocketsThisTurn;
+    std::array<std::int32_t, 10u> m_pocketCount = {};
+
+    struct TurnFlags final
+    {
+        enum
+        {
+            Foul        = 0x1,
+            NineBallPot = 0x2,
+            FreeTable   = 0x4
+        };
+    };
+    std::uint8_t m_turnFlags;
+
+    void summariseTurn();
 };
