@@ -354,7 +354,6 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 break;
             case TerrainID::Water:
                 playSound(AudioID::Water, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-                LogI << "Splish: collision, type: " << data.type << std::endl;
                 break;
             case TerrainID::Hole:
                 playSound(AudioID::Hole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);

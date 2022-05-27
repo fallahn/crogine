@@ -215,12 +215,13 @@ glm::vec3 Camera::pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize) 
     auto pixelCoords = screenPosition  * (targetSize / glm::vec2(cro::App::getWindow().getSize()));
     pixelCoords += glm::vec2(0.5f);
 
+    glm::vec3 winCoords(pixelCoords.x, targetSize.y - pixelCoords.y, 0.f); //inverts mouse pos Y
 #ifdef __APPLE__
     //hacky test to see if this fixes the hardware reset with apple drivers
-    glFinish();
+    LogI << "Win coords: " << winCoords << std::endl;
+    glReadBuffer(GL_BACK);
 #endif
 
-    glm::vec3 winCoords(pixelCoords.x, targetSize.y - pixelCoords.y, 0.f); //inverts mouse pos Y
     glCheck(glReadPixels(static_cast<std::int32_t>(winCoords.x), static_cast<std::int32_t>(winCoords.y), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winCoords.z));
 
     return glm::unProject(winCoords, m_passes[Pass::Final].viewMatrix, m_projectionMatrix, vp);
