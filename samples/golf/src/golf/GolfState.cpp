@@ -911,9 +911,14 @@ bool GolfState::simulate(float dt)
     auto& dstCam = m_skyScene.getActiveCamera().getComponent<cro::Camera>();
 
     dstCam.viewport = srcCam.viewport;
-    dstCam.setPerspective(srcCam.getFOV(), srcCam.getAspectRatio(), 1.f, 14.f);
+    dstCam.setPerspective(srcCam.getFOV(), srcCam.getAspectRatio(), 0.5f, 14.f);
 
     m_skyScene.getActiveCamera().getComponent<cro::Transform>().setRotation(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation());
+    auto pos = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
+    pos.x = 0.f;
+    pos.y /= 64.f;
+    pos.z = 0.f;
+    m_skyScene.getActiveCamera().getComponent<cro::Transform>().setPosition(pos);
     //and make sure the skybox is up to date too, so there's
     //no lag between camera orientation.
     m_skyScene.simulate(dt);
@@ -2318,6 +2323,24 @@ void GolfState::buildScene()
 
     auto teeEnt = entity;
 
+    //golf bags
+    md.loadFromFile("assets/golf/models/golfbag02.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -0.6f, 0.f, 3.1f });
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.2f);
+    md.createModel(entity);
+    teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    if (m_sharedData.localConnectionData.playerCount > 2
+        || m_sharedData.connectionData[2].playerCount > 0)
+    {
+        md.loadFromFile("assets/golf/models/golfbag01.cmt");
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -0.2f, 0.f, -2.8f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 3.2f);
+        md.createModel(entity);
+        teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
 
     //carts
     md.loadFromFile("assets/golf/models/cart.cmt");

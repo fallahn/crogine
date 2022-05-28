@@ -11,4 +11,13 @@ skybox
         rotation = 0
         scale = 1,1,1
     }
+
+
+    prop
+    {
+        model = "assets/golf/models/skybox/hills.cmt"
+        position = 0,0,0
+        rotation = 0
+        scale = 1,1,1
+    }    
 }

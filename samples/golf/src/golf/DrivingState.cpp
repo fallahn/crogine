@@ -481,6 +481,11 @@ bool DrivingState::simulate(float dt)
     dstCam.setPerspective(srcCam.getFOV(), srcCam.getAspectRatio(), 1.f, 14.f);
 
     m_skyScene.getActiveCamera().getComponent<cro::Transform>().setRotation(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation());
+    auto pos = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
+    pos.x = 0.f;
+    pos.y /= 64.f;
+    pos.z = 0.f;
+    m_skyScene.getActiveCamera().getComponent<cro::Transform>().setPosition(pos);
     m_skyScene.simulate(dt);
 
     //auto hide the mouse if not paused
