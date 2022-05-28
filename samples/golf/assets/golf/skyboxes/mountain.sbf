@@ -30,7 +30,7 @@ skybox
 
     prop
     {
-        model = "assets/golf/models/skybox/mountains.cmt"
+        model = "assets/golf/models/skybox/island.cmt"
         position = 0,0,0
         rotation = 237.6
         scale = 1,1,1

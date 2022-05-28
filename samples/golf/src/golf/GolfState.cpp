@@ -2329,6 +2329,7 @@ void GolfState::buildScene()
     entity.addComponent<cro::Transform>().setPosition({ -0.6f, 0.f, 3.1f });
     entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.2f);
     md.createModel(entity);
+    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Ball]));
     teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     if (m_sharedData.localConnectionData.playerCount > 2
@@ -2339,6 +2340,7 @@ void GolfState::buildScene()
         entity.addComponent<cro::Transform>().setPosition({ -0.2f, 0.f, -2.8f });
         entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 3.2f);
         md.createModel(entity);
+        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Ball]));
         teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 

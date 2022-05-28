@@ -480,8 +480,11 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
             md.createModel(entity);
 
             auto material = resources.materials.get(materialID);
-            applyMaterialData(md, material);
-            entity.getComponent<cro::Model>().setMaterial(0, material);
+            for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+            {
+                applyMaterialData(md, material, i);
+                entity.getComponent<cro::Model>().setMaterial(i, material);
+            }
         }
     }
 
