@@ -859,7 +859,8 @@ void MenuState::createScene()
     camEnt.getComponent<cro::AudioEmitter>().play();
 
     auto sunEnt = m_backgroundScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, /*-0.967f*/-40.56f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, /*-0.967f*/-40.56f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, /*-0.967f*/-40.56f * cro::Util::Const::degToRad);
     //sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -80.7f * cro::Util::Const::degToRad);
 
     //set up cam / models for ball preview

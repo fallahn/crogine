@@ -371,6 +371,10 @@ static const std::string CelFragmentShader = R"(
     uniform vec4 u_subrect = vec4(0.0, 0.0, 1.0, 1.0);
 #endif
 
+#if defined (TERRAIN)
+    uniform float u_morphTime;
+#endif
+
 #if defined (TEXTURED)
     uniform sampler2D u_diffuseMap;
     VARYING_IN vec2 v_texCoord;
@@ -524,9 +528,15 @@ static const std::string CelFragmentShader = R"(
 
 
     const float Quantise = 10.0;
+    const float TerrainLevel = -0.049;
+    const float WaterLevel = -0.019;
 
     void main()
     {
+#if defined(TERRAIN)
+    //if (v_worldPosition.y < TerrainLevel - u_morphTime) discard;
+#endif
+
         vec4 colour = vec4(1.0);
 #if defined (TEXTURED)
         vec2 texCoord = v_texCoord;
@@ -617,6 +627,11 @@ static const std::string CelFragmentShader = R"(
 #if defined (TINT)
         FRAG_OUT *= u_tintColour;
 #endif 
+
+#if defined (TERRAIN)
+    //FRAG_OUT.rgb = mix(FRAG_OUT.rgb, vec3(0.02, 0.078, 0.578), clamp(v_worldPosition.y / WaterLevel, 0.0, 1.0));
+#endif
+
 
 #if defined (DITHERED) || defined (FADE_INPUT)
         vec2 xy = gl_FragCoord.xy / u_pixelScale;

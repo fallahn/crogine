@@ -1,7 +1,7 @@
 skybox
 {
     sky_top = 0.663, 0.729, 0.753,1
-    sky_bottom = 0.768,0.803,0.76,1
+    sky_bottom = 0.858,0.686,0.467,1
     clouds = "assets/golf/sprites/clouds02.spt"
 
     prop
@@ -19,5 +19,13 @@ skybox
         position = 0,0,0
         rotation = 0
         scale = 1,1,1
-    }    
+    }
+
+    prop
+    {
+        model = "assets/golf/models/skybox/clouds02.cmt"
+        position = 0,0,0
+        rotation = 0
+        scale = 1,1,1
+    }
 }

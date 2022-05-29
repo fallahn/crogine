@@ -171,12 +171,14 @@ void Camera::updateMatrices(const Transform& tx, float level)
     finalPass.m_aabb = Spatial::updateFrustum(finalPass.m_frustum, finalPass.viewProjectionMatrix);
     finalPass.forwardVector = Util::Matrix::getForwardVector(worldTx);
 
-    //TODO - disable this pass if the reflection buffer isn't created?
-    reflectionPass.viewMatrix = glm::scale(finalPass.viewMatrix, glm::vec3(1.f, -1.f, 1.f));
-    reflectionPass.viewMatrix = glm::translate(reflectionPass.viewMatrix, glm::vec3(0.f, level, 0.f));
-    reflectionPass.viewProjectionMatrix = m_projectionMatrix * reflectionPass.viewMatrix;
-    reflectionPass.m_aabb = Spatial::updateFrustum(reflectionPass.m_frustum, reflectionPass.viewProjectionMatrix);
-    reflectionPass.forwardVector = glm::reflect(finalPass.forwardVector, Transform::Y_AXIS);
+    if (reflectionBuffer.available())
+    {
+        reflectionPass.viewMatrix = glm::scale(finalPass.viewMatrix, glm::vec3(1.f, -1.f, 1.f));
+        reflectionPass.viewMatrix = glm::translate(reflectionPass.viewMatrix, glm::vec3(0.f, level, 0.f));
+        reflectionPass.viewProjectionMatrix = m_projectionMatrix * reflectionPass.viewMatrix;
+        reflectionPass.m_aabb = Spatial::updateFrustum(reflectionPass.m_frustum, reflectionPass.viewProjectionMatrix);
+        reflectionPass.forwardVector = glm::reflect(finalPass.forwardVector, Transform::Y_AXIS);
+    }
 }
 
 glm::vec2 Camera::coordsToPixel(glm::vec3 worldPoint, glm::vec2 targetSize, std::int32_t passIdx) const

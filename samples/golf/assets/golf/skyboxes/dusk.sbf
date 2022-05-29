@@ -26,5 +26,13 @@ skybox
         position = 0,0,0
         rotation = 0
         scale = 1,1,1
+    }
+
+    prop
+    {
+        model = "assets/golf/models/skybox/clouds03.cmt"
+        position = 0,0,0
+        rotation = 0
+        scale = 1,1,1
     }    
 }

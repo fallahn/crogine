@@ -1107,7 +1107,7 @@ void GolfState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Player);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Player] = m_resources.materials.add(*shader);
@@ -2310,12 +2310,13 @@ void GolfState::buildScene()
     m_skyScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.create(2, 2);
 
     //tee marker
+    material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
     md.loadFromFile("assets/golf/models/tee_balls.cmt");
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Tee;
     md.createModel(entity);
-    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Ball]));
+    entity.getComponent<cro::Model>().setMaterial(0, material);
     
     auto targetDir = m_holeData[m_currentHole].target - m_holeData[0].tee;
     m_camRotation = std::atan2(-targetDir.z, targetDir.x);
@@ -2324,12 +2325,13 @@ void GolfState::buildScene()
     auto teeEnt = entity;
 
     //golf bags
+    material.doubleSided = true;
     md.loadFromFile("assets/golf/models/golfbag02.cmt");
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ -0.6f, 0.f, 3.1f });
     entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.2f);
     md.createModel(entity);
-    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Ball]));
+    entity.getComponent<cro::Model>().setMaterial(0, material);
     teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     if (m_sharedData.localConnectionData.playerCount > 2
