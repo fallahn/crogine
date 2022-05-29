@@ -14,7 +14,7 @@ skybox
 
     prop
     {
-        model = "assets/golf/models/skybox/mountains.cmt"
+        model = "assets/golf/models/skybox/mountains02.cmt"
         position = 0,0,0
         rotation = 0
         scale = 1.4,1.4,1
@@ -22,7 +22,7 @@ skybox
 
     prop
     {
-        model = "assets/golf/models/skybox/mountains.cmt"
+        model = "assets/golf/models/skybox/mountains02.cmt"
         position = 0,0,0
         rotation = 132
         scale = 1.2,1.2,1
@@ -30,7 +30,7 @@ skybox
 
     prop
     {
-        model = "assets/golf/models/skybox/mountains.cmt"
+        model = "assets/golf/models/skybox/mountains02.cmt"
         position = 0,0,0
         rotation = 252
         scale = 1.3,1.3,1
