@@ -48,7 +48,7 @@ skybox
     {
         model = "assets/golf/models/skybox/clouds02.cmt"
         position = 0,0,0
-        rotation = 0
+        rotation = 361
         scale = 1,1,1
     }    
 }

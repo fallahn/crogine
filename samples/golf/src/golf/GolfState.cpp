@@ -881,6 +881,13 @@ bool GolfState::simulate(float dt)
                         m_windUpdate.currentWindVector.z);
     m_gameScene.getSystem<CloudSystem>()->setWindVector(windVector);
 
+
+    auto& windEnts = m_skyScene.getSystem<cro::CallbackSystem>()->getEntities();
+    for (auto e : windEnts)
+    {
+        e.getComponent<cro::Callback>().setUserData<float>(m_windUpdate.currentWindSpeed);
+    }
+
     cro::Command cmd;
     cmd.targetFlags = CommandID::ParticleEmitter;
     cmd.action = [&](cro::Entity e, float)
@@ -2035,6 +2042,7 @@ void GolfState::addSystems()
         m_gameScene.addDirector<TutorialDirector>(m_sharedData, m_inputParser);
     }
 
+    m_skyScene.addSystem<cro::CallbackSystem>(mb);
     m_skyScene.addSystem<cro::CameraSystem>(mb);
     m_skyScene.addSystem<cro::ModelRenderer>(mb);
 
@@ -3051,8 +3059,8 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
                     std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
                     if (score == 1)
                     {
-                        Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOne]);
-
+                        //achievement is awarded in showMessageBoard() where other achievements/stats are updated.
+                        //Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOne]);
                         auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                         msg->type = GolfEvent::HoleInOne;
                         msg->position = m_holeData[m_currentHole].pin;

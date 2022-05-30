@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Image.hpp>
@@ -457,7 +458,7 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
                     }
                     else if (propName == "rotation")
                     {
-                        data.rotation = p.getValue<float>() * cro::Util::Const::degToRad;
+                        data.rotation = p.getValue<float>();
                     }
                     else if (propName == "scale")
                     {
@@ -475,7 +476,7 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
         {
             auto entity = skyScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(model.position);
-            entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, model.rotation);
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, model.rotation * cro::Util::Const::degToRad);
             entity.getComponent<cro::Transform>().setScale(model.scale);
             md.createModel(entity);
 
@@ -484,6 +485,21 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
             {
                 applyMaterialData(md, material, i);
                 entity.getComponent<cro::Model>().setMaterial(i, material);
+            }
+
+            //add auto rotation if this model is set to > 360
+            if (model.rotation > 360)
+            {
+                float speed = (std::fmod(model.rotation, 360.f) * cro::Util::Const::degToRad) / 2.f;
+
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+                entity.getComponent<cro::Callback>().function =
+                    [speed](cro::Entity e, float dt)
+                {
+                    auto currSpeed = speed * e.getComponent<cro::Callback>().getUserData<float>();
+                    e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, currSpeed * dt);
+                };
             }
         }
     }

@@ -1573,6 +1573,22 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
             {
                 Achievements::awardAchievement(AchievementStrings[AchievementID::Boomerang]);
             }
+
+            switch (score)
+            {
+            default: break;
+            case ScoreID::Birdie:
+                Achievements::incrementStat(StatStrings[StatID::Birdies]);
+                break;
+            case ScoreID::Eagle:
+                Achievements::incrementStat(StatStrings[StatID::Eagles]);
+                Achievements::awardAchievement(AchievementStrings[AchievementID::Soaring]);
+                break;
+            case ScoreID::HIO:
+                Achievements::incrementStat(StatStrings[StatID::HIOs]);
+                Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOne]);
+                break;
+            }
         }
 
         auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);

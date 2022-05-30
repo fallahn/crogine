@@ -91,6 +91,10 @@ void DefaultAchievements::init()
     trigger = &StatTriggers[StatID::TimeOnTheRange].emplace_back();
     trigger->achID = AchievementID::PracticeMakesPerfect;
     trigger->threshold = 60 * 60; //seconds
+
+    trigger = &StatTriggers[StatID::Birdies].emplace_back();
+    trigger->achID = AchievementID::AllOfATwitter;
+    trigger->threshold = 18;
 }
 
 void DefaultAchievements::update()
@@ -182,7 +186,7 @@ void DefaultAchievements::setStat(const std::string& name, std::int32_t value)
     {
         CRO_ASSERT(m_stats[name].id > -1, "");
 
-        LOG("Set stat " + name + " to " + std::to_string(value), cro::Logger::Type::Info);
+        //LOG("Set stat " + name + " to " + std::to_string(value), cro::Logger::Type::Info);
 
         auto& stat = m_stats[name];
         stat.value = static_cast<float>(value);
@@ -196,7 +200,7 @@ float DefaultAchievements::incrementStat(const std::string& name, std::int32_t v
     {
         CRO_ASSERT(m_stats[name].id > -1, "");
 
-        LOG("Incremented stat " + name + " by " + std::to_string(value), cro::Logger::Type::Info);
+        //LOG("Incremented stat " + name + " by " + std::to_string(value), cro::Logger::Type::Info);
 
         auto& stat = m_stats[name];
         stat.value += static_cast<float>(value);
@@ -211,7 +215,7 @@ float DefaultAchievements::incrementStat(const std::string& name, float value)
     {
         CRO_ASSERT(m_stats[name].id > -1, "");
 
-        LOG("Incremented stat " + name + " by " + std::to_string(value), cro::Logger::Type::Info);
+        //LOG("Incremented stat " + name + " by " + std::to_string(value), cro::Logger::Type::Info);
 
         auto& stat = m_stats[name];
         stat.value += value;
