@@ -538,7 +538,8 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             m_gameScene.getSystem<ClientCollisionSystem>()->setActiveClub(getClub());
 
-            if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+            if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+                && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
             {
                 cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 50000, 35000, 200);
             }
@@ -3729,13 +3730,13 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         auto position = player.position;
         position.y += 0.014f; //z-fighting
         e.getComponent<cro::Transform>().setPosition(position);
-        e.getComponent<cro::Model>().setHidden(!localPlayer);
+        e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[player.player].isCPU));
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
         e.getComponent<cro::Callback>().active = localPlayer;
         e.getComponent<cro::Model>().setDepthTestEnabled(0, player.terrain == TerrainID::Green);
 
         //fudgy way of changing the render type when putting
-        if (e.getComponent<cro::CommandTarget>().ID == CommandID::StrokeIndicator)
+        if (e.getComponent<cro::CommandTarget>().ID & CommandID::StrokeIndicator)
         {
             if (player.terrain == TerrainID::Green)
             {
