@@ -974,7 +974,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                     {
                         if (!m_sharedData.clientConnection.connected)
                         {
-                            m_sharedData.serverInstance.launch(2);
+                            m_sharedData.serverInstance.launch(2, Server::GameMode::Billiards);
 
                             //small delay for server to get ready
                             cro::Clock clock;

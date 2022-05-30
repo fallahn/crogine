@@ -1434,8 +1434,18 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
             requestStackPush(StateID::Error);
             break;
         case PacketID::ClientVersion:
-            //server is requesting our client version
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientVersion, CURRENT_VER, cro::NetFlag::Reliable);
+            //server is requesting our client version, and stating current game mode
+            if (evt.packet.as<std::uint16_t>() == static_cast<std::uint16_t>(Server::GameMode::Billiards))
+            {
+                //reply if we're the right mode
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientVersion, CURRENT_VER, cro::NetFlag::Reliable);
+            }
+            else
+            {
+                //else bail
+                m_sharedData.errorMessage = "This is not a Billiards lobby";
+                requestStackPush(StateID::Error);
+            }
             break;
             break;
         }

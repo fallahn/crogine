@@ -43,7 +43,8 @@ source distribution.
 
 Server::Server()
     : m_maxConnections  (ConstVal::MaxClients),
-    m_running           (false)
+    m_running           (false),
+    m_gameMode          (GameMode::None)
 {
 
 }
@@ -57,7 +58,7 @@ Server::~Server()
 }
 
 //public
-void Server::launch(std::size_t maxConnections)
+void Server::launch(std::size_t maxConnections, GameMode gameMode)
 {
     //stop any existing instance first
     stop();
@@ -69,6 +70,7 @@ void Server::launch(std::size_t maxConnections)
     }
 
     m_maxConnections = std::max(std::size_t(1u), std::min(ConstVal::MaxClients, maxConnections));
+    m_gameMode = gameMode;
 
     m_running = true;
     m_thread = std::make_unique<std::thread>(&Server::run, this);
@@ -83,6 +85,7 @@ void Server::stop()
 
         m_thread.reset();
     }
+    m_gameMode = GameMode::None;
 }
 
 void Server::setHostID(std::uint32_t id)
@@ -134,7 +137,7 @@ void Server::run()
                 if (m_currentState->stateID() == sv::StateID::Lobby)
                 {
                     m_pendingConnections.emplace_back().peer = evt.peer;
-                    m_sharedData.host.sendPacket(evt.peer, PacketID::ClientVersion, std::uint16_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.host.sendPacket(evt.peer, PacketID::ClientVersion, std::uint16_t(m_gameMode), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
                 else
                 {
@@ -304,6 +307,13 @@ std::uint8_t Server::addClient(const cro::NetPeer& peer)
 
 void Server::removeClient(const cro::NetEvent& evt)
 {
+    //remove from pending connection in case client is quitting due to game mode mismatch
+    m_pendingConnections.erase(std::remove_if(m_pendingConnections.begin(), m_pendingConnections.end(),
+        [&evt](const PendingConnection& pc)
+        {
+            return pc.peer == evt.peer;
+        }), m_pendingConnections.end());
+
     auto result = std::find_if(m_sharedData.clients.begin(), m_sharedData.clients.end(), 
         [&evt](const sv::ClientConnection& c) 
         {

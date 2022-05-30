@@ -38,6 +38,11 @@ source distribution.
 class Server final
 {
 public:
+    enum class GameMode
+    {
+        Golf, Billiards, None
+    };
+
     Server();
     ~Server();
 
@@ -46,7 +51,7 @@ public:
     Server& operator = (const Server&) = delete;
     Server& operator = (Server&&) = delete;
 
-    void launch(std::size_t);
+    void launch(std::size_t, GameMode);
     bool running() const { return m_running; }
     void stop();
 
@@ -56,6 +61,7 @@ public:
     void setPreferredIP(const std::string& ip) { m_preferredIP = ip; }
     const std::string& getPreferredIP() const { return m_preferredIP; }
 
+
 private:
     std::size_t m_maxConnections;
     std::string m_preferredIP;
@@ -63,6 +69,7 @@ private:
     std::unique_ptr<std::thread> m_thread;
 
     std::unique_ptr<sv::State> m_currentState;
+    GameMode m_gameMode;
 
     sv::SharedData m_sharedData;
 
@@ -70,7 +77,7 @@ private:
     {
         cro::NetPeer peer;
         cro::Clock connectionTime;
-        static constexpr float Timeout = 5.f;
+        static constexpr float Timeout = 15.f;
     };
     std::vector<PendingConnection> m_pendingConnections;
 

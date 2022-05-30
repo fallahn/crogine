@@ -94,7 +94,6 @@ namespace PacketID
         ReadyQuitStatus, //< uint8 flags containing status of ready/quit at round end
 
         //from client
-        ClientVersion, //uint16 CURRENT_VER of client. Clients are kicked if this does not match the server
         RequestGameStart, //uint8 sv::State, ie Golf to start golf, Billiards to start billiards etc
         ClientReady, //< uint8 clientID - requests game data from server. Sent repeatedly until ack'd
         InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput) for golf, or BilliardBallInput
@@ -105,6 +104,7 @@ namespace PacketID
         BallPlaced, //< BilliardBallInput with position in offset member
 
         //both directions
+        ClientVersion, //uint16 FROM server on join contains the game mode, TO server CURRENT_VER of client. Clients are kicked if this does not match the server
         TurnReady, //< uint8 clientID - ready to take their turn - rebroadcast by server to tell all clients to clear messages
         MapInfo, //< serialised cro::String containing course directory
         ScoreType, //< uint8 ScoreType of golf game
