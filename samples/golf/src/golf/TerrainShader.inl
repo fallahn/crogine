@@ -633,13 +633,20 @@ static const std::string CelFragmentShader = R"(
 #endif
 
 
-#if defined (DITHERED) || defined (FADE_INPUT)
+#if defined (DITHERED) || defined (FADE_INPUT)// || defined (TERRAIN)
         vec2 xy = gl_FragCoord.xy / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
 
 #if defined (FADE_INPUT)
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, u_fadeAmount));
+//#elif defined(TERRAIN)
+//        float alpha = 1.0;
+//        if(v_worldPosition.y < WaterLevel)
+//        {
+//            float distance = clamp(length(vec2(v_worldPosition.xz - vec2(160.0, -100.0))) / 100.0, 0.0, 1.0);
+//            alpha = findClosest(x, y, smoothstep(0.9, 0.99, 1.0 - distance));
+//        }
 #else
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
 #endif

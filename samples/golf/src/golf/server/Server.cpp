@@ -117,6 +117,10 @@ void Server::run()
     cro::HiResTimer updateClock;
     float updateAccumulator = 0.f;
 
+    const cro::Time pingTime = cro::seconds(1.f);
+    cro::Clock pingClock;
+    cro::Time pingAccumulator;
+
     while (m_running)
     {
         while (!m_sharedData.messageBus.empty())
@@ -188,6 +192,23 @@ void Server::run()
         {
             updateAccumulator -= ConstVal::FixedGameUpdate;
             nextState = m_currentState->process(ConstVal::FixedGameUpdate);
+        }
+
+        //broadcast connection quality
+        pingAccumulator += pingClock.restart();
+        while (pingAccumulator > pingTime)
+        {
+            pingAccumulator -= pingTime;
+            for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
+            {
+                if (m_sharedData.clients[i].connected)
+                {
+                    std::uint16_t client = i;
+                    std::uint16_t ping = m_sharedData.clients[i].peer.getRoundTripTime();
+                    std::uint32_t data = (client << 16) | ping;
+                    m_sharedData.host.broadcastPacket(PacketID::PingTime, data, cro::NetFlag::Unreliable);
+                }
+            }
         }
 
         //switch state if last update returned a new state ID

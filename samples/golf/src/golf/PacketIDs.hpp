@@ -67,6 +67,7 @@ namespace PacketID
     enum
     {
         //from server
+        PingTime, //< uint16 client id | uint16 time in ms
         ClientConnected, //< uint8 client ID
         ClientDisconnected, //< uint8 client ID
         ConnectionRefused, //< uint8 MessageType

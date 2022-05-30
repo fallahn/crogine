@@ -881,7 +881,6 @@ bool GolfState::simulate(float dt)
                         m_windUpdate.currentWindVector.z);
     m_gameScene.getSystem<CloudSystem>()->setWindVector(windVector);
 
-
     auto& windEnts = m_skyScene.getSystem<cro::CallbackSystem>()->getEntities();
     for (auto e : windEnts)
     {
@@ -3007,6 +3006,17 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::PingTime:
+        {
+            auto data = evt.packet.as<std::uint32_t>();
+            auto pingTime = data & 0xffff;
+            auto client = (data & 0xffff0000) >> 16;
+
+            m_sharedData.connectionData[client].pingTime = pingTime;
+
+            //LogI << "Ping: " << pingTime << ", from " << client << std::endl;
+        }
+            break;
         case PacketID::CPUThink:
         {
             auto direction = evt.packet.as<std::uint8_t>();
