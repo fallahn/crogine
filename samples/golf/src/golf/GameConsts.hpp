@@ -490,7 +490,7 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
             //add auto rotation if this model is set to > 360
             if (model.rotation > 360)
             {
-                float speed = (std::fmod(model.rotation, 360.f) * cro::Util::Const::degToRad) / 2.f;
+                float speed = (std::fmod(model.rotation, 360.f) * cro::Util::Const::degToRad) / 4.f;
 
                 entity.addComponent<cro::Callback>().active = true;
                 entity.getComponent<cro::Callback>().setUserData<float>(1.f);

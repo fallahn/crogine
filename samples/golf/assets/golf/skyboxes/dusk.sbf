@@ -30,6 +30,14 @@ skybox
 
     prop
     {
+        model = "assets/golf/models/skybox/sun.cmt"
+        position = 0,0,0
+        rotation = 40
+        scale = 1,1,1
+    }    
+
+    prop
+    {
         model = "assets/golf/models/skybox/clouds03.cmt"
         position = 0,0,0
         rotation = 361
