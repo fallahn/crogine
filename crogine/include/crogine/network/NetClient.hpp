@@ -37,6 +37,7 @@ source distribution.
 #include <thread>
 #include <mutex>
 #include <any>
+#include <memory>
 
 struct _ENetHost;
 
@@ -149,9 +150,10 @@ namespace cro
         _ENetHost* m_client;
         NetPeer m_peer;
 
-        std::thread m_thread;
+        std::unique_ptr<std::thread> m_thread;
         std::mutex m_mutex;
-        std::vector<std::any> m_evtBuffer;
+        std::list<std::any> m_evtBuffer;
+        std::list<std::any> m_activeBuffer;
         std::atomic_bool m_threadRunning;
         void threadFunc();
     };
