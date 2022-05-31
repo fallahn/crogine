@@ -1121,6 +1121,33 @@ void GolfState::createScoreboard()
     ents.back().getComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions.back(), 0.5f));
 
     updateScoreboard();
+
+    //net strength icons
+    glm::vec3 iconPos(378.f, 236.f, 2.2f);
+    static constexpr float IconSpacing = 14.f;
+    for (const auto& c : m_sharedData.connectionData)
+    {
+        for (auto i = 0u; i < c.playerCount; ++i)
+        {
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(iconPos);
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("strength_meter");
+            entity.addComponent<cro::SpriteAnimation>();
+            entity.addComponent<cro::Callback>().setUserData<std::uint8_t>(c.connectionID);
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float)
+            {
+                auto client = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
+                auto idx = m_sharedData.connectionData[client].pingTime / 30;
+                e.getComponent<cro::SpriteAnimation>().play(std::min(4u, idx));
+            };
+            bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            m_netStrengthIcons.push_back(entity);
+
+            iconPos.y -= IconSpacing;
+        }
+    }
 }
 
 void GolfState::updateScoreboard()
@@ -1136,6 +1163,7 @@ void GolfState::updateScoreboard()
             std::int32_t frontNine = 0;
             std::int32_t backNine = 0;
             std::int32_t total = 0;
+            std::uint8_t client = 0;
         };
 
         std::vector<ScoreEntry> scores;
@@ -1143,7 +1171,7 @@ void GolfState::updateScoreboard()
 
         std::uint32_t playerCount = 0;
         auto holeCount = m_holeData.size();
-        std::int32_t clientID = 0;
+        std::uint8_t clientID = 0;
         for (const auto& client : m_sharedData.connectionData)
         {
             playerCount += client.playerCount;
@@ -1152,6 +1180,7 @@ void GolfState::updateScoreboard()
             {
                 auto& entry = scores.emplace_back();
                 entry.name = client.playerData[i].name;
+                entry.client = clientID;
 
                 for (auto j = 0u; j < client.playerData[i].holeScores.size(); ++j)
                 {
@@ -1254,6 +1283,7 @@ void GolfState::updateScoreboard()
         for (auto i = 0u; i < playerCount; ++i)
         {
             nameString += "\n" + scores[i].name;
+            m_netStrengthIcons[i].getComponent<cro::Callback>().getUserData<std::uint8_t>() = scores[i].client;
         }
         if (page2)
         {
@@ -1323,10 +1353,10 @@ void GolfState::updateScoreboard()
             case ScoreType::Stroke:
                 break;
             case ScoreType::Match:
-                totalString += " (POINTS)";
+                totalString += " POINTS";
                 break;
             case ScoreType::Skins:
-                totalString += " (SKINS)";
+                totalString += " SKINS";
                 break;
             }
         }
@@ -1398,6 +1428,11 @@ void GolfState::updateScoreboard()
 
 void GolfState::showScoreboard(bool visible)
 {
+    for (auto e : m_netStrengthIcons)
+    {
+        e.getComponent<cro::Callback>().active = visible;
+    }
+
     if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
     {
         if (m_inputParser.inProgress())

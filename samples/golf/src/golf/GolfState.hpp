@@ -313,6 +313,8 @@ private:
     cro::Entity m_greenCam;
     cro::RenderTexture m_greenBuffer;
 
+    std::vector<cro::Entity> m_netStrengthIcons;
+
     //------------
 
     bool m_hadFoul; //tracks 'boomerang' stat
