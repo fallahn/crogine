@@ -181,23 +181,9 @@ spritesheet scoreboard
         colour = 1.000000,1.000000,1.000000,1.000000
 
 
-        animation four
+        animation zero
         {
-            frame = 528.000000,500.000000,16.000000,16.000000
-            loop = true
-            framerate = 24
-        }
-
-        animation three
-        {
-            frame = 512.000000,500.000000,16.000000,16.000000
-            loop = true
-            framerate = 24
-        }
-
-        animation two
-        {
-            frame = 496.000000,500.000000,16.000000,16.000000
+            frame = 464.000000,500.000000,16.000000,16.000000
             loop = true
             framerate = 24
         }
@@ -209,9 +195,25 @@ spritesheet scoreboard
             framerate = 24
         }
 
-        animation zero
+
+        animation two
         {
-            frame = 464.000000,500.000000,16.000000,16.000000
+            frame = 496.000000,500.000000,16.000000,16.000000
+            loop = true
+            framerate = 24
+        }
+
+
+        animation three
+        {
+            frame = 512.000000,500.000000,16.000000,16.000000
+            loop = true
+            framerate = 24
+        }
+
+        animation four
+        {
+            frame = 528.000000,500.000000,16.000000,16.000000
             loop = true
             framerate = 24
         }

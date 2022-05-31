@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "GolfCartSystem.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
@@ -120,7 +121,18 @@ void GolfCartSystem::process(float dt)
                     auto accel2 = std::min(1.f, length2 / BrakingDistance);
                     accel2 = MinAcceleration + (accel2 * (1.f - MinAcceleration));
 
-                    accel = std::max(MinAcceleration, accel * accel2);
+                    //accel = std::max(MinAcceleration, accel * accel2);
+                    //accel = std::min(accel, accel2);
+                    //accel = length < length2 ? accel : accel2;
+
+                    //we want to see how much these overlap by then
+                    //interpolate the value based on how far along
+                    //the overlap we are so there are no 'pops' in speed
+                    float overlap = (BrakingDistance * 2.f) - glm::length(prevPoint - target);
+                    float travel = length - (BrakingDistance - overlap);
+                    travel = std::max(0.f, std::min(1.f, travel / overlap));
+
+                    accel = interpolate(accel, accel2, travel);
                 }                
 
 

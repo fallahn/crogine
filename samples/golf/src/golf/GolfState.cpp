@@ -3037,8 +3037,6 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             auto client = (data & 0xffff0000) >> 16;
 
             m_sharedData.connectionData[client].pingTime = pingTime;
-
-            //LogI << "Ping: " << pingTime << ", from " << client << std::endl;
         }
             break;
         case PacketID::CPUThink:

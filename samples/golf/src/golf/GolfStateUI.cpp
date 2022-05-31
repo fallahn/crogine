@@ -1246,7 +1246,7 @@ void GolfState::updateScoreboard()
             page2 = std::min(MaxCols, holeCount - m_scoreColumnCount);
         }
 
-        //store the strings to update the leaderboard texture with
+        //store the strings to update the leaderboard texture
         std::vector<LeaderboardEntry> leaderboardEntries;
 
         //name column

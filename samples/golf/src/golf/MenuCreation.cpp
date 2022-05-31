@@ -1847,6 +1847,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
 
+    //network icon
+    spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
+    m_sprites[SpriteID::NetStrength] = spriteSheet.getSprite("strength_meter");
+
+
     //running scores
     struct ScoreInfo final
     {
@@ -2828,7 +2833,7 @@ void MenuState::updateLobbyAvatars()
             if (c.connectionID < m_sharedData.nameTextures.size())
             {
                 m_sharedData.nameTextures[c.connectionID].clear(cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha / 3.f));
-                
+
                 for (auto i = 0u; i < c.playerCount; ++i)
                 {
                     simpleText.setString(c.playerData[i].name);
@@ -2881,7 +2886,7 @@ void MenuState::updateLobbyAvatars()
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
-            [&, h](cro::Entity e2, float)
+                [&, h](cro::Entity e2, float)
             {
                 cro::Colour colour = m_readyState[h] ? TextGreenColour : LeaderboardTextDark;
 
@@ -2903,6 +2908,33 @@ void MenuState::updateLobbyAvatars()
                 cro::Vertex2D(glm::vec2(8.f))
             };
             entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+
+            //add a network status icon
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(textPos + ReadyOffset);
+            entity.getComponent<cro::Transform>().move({ -4.f, -46.f });
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::NetStrength];
+            entity.addComponent<cro::SpriteAnimation>();
+
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&, h](cro::Entity ent, float)
+            {
+                if (m_sharedData.connectionData[h].playerCount == 0)
+                {
+                    ent.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                }
+                else
+                {
+                    ent.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    auto index = std::min(4u, m_sharedData.connectionData[h].pingTime / 30);
+                    ent.getComponent<cro::SpriteAnimation>().play(index);
+                }
+            };
+
+            e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            children.push_back(entity);
 
             h++;
         }

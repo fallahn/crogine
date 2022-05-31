@@ -293,6 +293,7 @@ void GolfState::createClouds(const std::string& cloudPath)
             float scale = static_cast<float>(cro::Util::Random::value(2, 8));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
             entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, 180.f * cro::Util::Const::degToRad);
 
             delayedUpdates.push_back(entity);
         }

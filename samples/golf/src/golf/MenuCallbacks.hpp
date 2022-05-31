@@ -99,6 +99,7 @@ struct SpriteID final
         RemovePlayer,
         ReadyUp,
         ReadyStatus,
+        NetStrength,
         StartGame,
         Connect,
         PrevCourse,

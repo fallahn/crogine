@@ -949,6 +949,15 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::PingTime:
+        {
+            auto data = evt.packet.as<std::uint32_t>();
+            auto pingTime = data & 0xffff;
+            auto client = (data & 0xffff0000) >> 16;
+
+            m_sharedData.connectionData[client].pingTime = pingTime;
+        }
+        break;
         case PacketID::StateChange:
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Golf)
             {
