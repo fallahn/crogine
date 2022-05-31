@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -72,6 +72,14 @@ cro::Colour::Colour(float red, float green, float blue, float alpha)
     CRO_ASSERT((r >= 0 && r <= 1) && (g >= 0 && g <= 1) && (b >= 0 && b <= 1) && (a >= 0 && a <= 1), "Values must be normalised");
 }
 
+cro::Colour::Colour(glm::vec3 vector)
+    : r(0.f), g(0.f), b(0.f), a(1.f)
+{
+    setRed(vector.r);
+    setGreen(vector.g);
+    setBlue(vector.b);
+}
+
 cro::Colour::Colour(glm::vec4 vector)
     : r(0.f), g(0.f), b(0.f), a(0.f)
 {
@@ -87,6 +95,24 @@ cro::Colour& cro::Colour::operator = (std::uint32_t mask)
     g = (static_cast<float>((mask >> 16) & 0xFF) / 255.f);
     b = (static_cast<float>((mask >> 8) & 0xFF) / 255.f);
     a = (static_cast<float>(mask & 0xFF) / 255.f);
+    return *this;
+}
+
+cro::Colour& cro::Colour::operator = (glm::vec3 rhs)
+{
+    setRed(rhs.r);
+    setGreen(rhs.g);
+    setBlue(rhs.b);
+    a = 1.f;
+    return *this;
+}
+
+cro::Colour& cro::Colour::operator = (glm::vec4 rhs)
+{
+    setRed(rhs.r);
+    setGreen(rhs.g);
+    setBlue(rhs.b);
+    setAlpha(rhs.a);
     return *this;
 }
 

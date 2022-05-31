@@ -67,6 +67,12 @@ namespace cro
         explicit Colour(float red, float green, float blue, float alpha = 1.f);
 
         /*!
+        \brief Constructs the colour from a vector 3
+        The alpha value defaults to 1
+        */
+        explicit Colour(glm::vec3 vector);
+
+        /*!
         \brief Constructs the colour from a vector 4
         */
         Colour(glm::vec4 vector);
@@ -75,6 +81,17 @@ namespace cro
         \brief Creates a colour by assigning a RGBA packed 32bit integer
         */
         Colour& operator = (std::uint32_t mask);
+
+        /*!
+        \brief Assignment operator for glm::vec3
+        Assumes the alpha channel is 1
+        */
+        Colour& operator = (glm::vec3);
+
+        /*!
+        \brief Assignment operator for glm::vec4
+        */
+        Colour& operator = (glm::vec4);
 
         /*!
         \brief sets the red channel value

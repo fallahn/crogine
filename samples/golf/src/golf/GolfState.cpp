@@ -125,6 +125,8 @@ namespace
     cro::Entity ballEntity;
     std::size_t bitrate = 0;
     std::size_t bitrateCounter = 0;
+    glm::vec4 topSky;
+    glm::vec4 bottomSky;
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
@@ -200,34 +202,50 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
     ballEntity = {};
+    useFreeCam = false;
 
-    registerWindow([]()
+    registerWindow([&]()
         {
             if (ImGui::Begin("Network"))
             {
                 ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
+
+                for (const auto& c : m_sharedData.connectionData)
+                {
+                    ImGui::Text("Ping: %u", c.pingTime);
+                }
             }
             ImGui::End();
         });
 
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("buns"))
-    //        {
-    //            //ImGui::Text("Speed %3.3f", m_billboardUniforms.currentWindSpeed);
-    //            //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), {256.f, 256.f}, {0.f, 1.f}, {1.f, 0.f});
-    //            if (ballEntity.isValid())
-    //            {
-    //                auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
-    //                ImGui::Text("Ball Pos: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-    //            }
-    //            else
-    //            {
-    //                ImGui::Text("Ball Entity not valid");
-    //            }
-    //        }
-    //        ImGui::End();
-    //    });
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("buns"))
+            {
+                if (ImGui::ColorEdit4("Top", &topSky.x))
+                {
+                    m_skyScene.setSkyboxColours(WaterColour, bottomSky, topSky);
+                }
+
+                if (ImGui::ColorEdit4("Bottom", &bottomSky.x))
+                {
+                    m_skyScene.setSkyboxColours(WaterColour, bottomSky, topSky);
+                }
+
+                //ImGui::Text("Speed %3.3f", m_billboardUniforms.currentWindSpeed);
+                //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), {256.f, 256.f}, {0.f, 1.f}, {1.f, 0.f});
+                /*if (ballEntity.isValid())
+                {
+                    auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
+                    ImGui::Text("Ball Pos: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+                }
+                else
+                {
+                    ImGui::Text("Ball Entity not valid");
+                }*/
+            }
+            ImGui::End();
+        });
 #endif
 }
 
@@ -1595,6 +1613,12 @@ void GolfState::loadAssets()
     }
     
     theme.cloudPath = loadSkybox(skyboxPath, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+
+#ifdef CRO_DEBUG_
+    auto& colours = m_skyScene.getSkyboxColours();
+    topSky = colours.top.getVec4();
+    bottomSky = colours.middle.getVec4();
+#endif
 
     if (theme.billboardModel.empty()
         || !cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + theme.billboardModel))

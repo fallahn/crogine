@@ -130,6 +130,10 @@ bool NetClient::connect(const std::string& address, std::uint16_t port, std::uin
     ENetEvent evt;
     if (enet_host_service(m_client, &evt, timeout) > 0 && evt.type == ENET_EVENT_TYPE_CONNECT)
     {
+        //this is a hack to allow for long(er) loading times when the main
+        //thread is unable to poll a connection to keep it alive
+        enet_peer_timeout(m_peer.m_peer, ENET_PEER_TIMEOUT_LIMIT * 2, ENET_PEER_TIMEOUT_MINIMUM * 2, ENET_PEER_TIMEOUT_MAXIMUM * 2);
+
         LOG("Connected to " + address, Logger::Type::Info);
         return true;
     }
@@ -226,4 +230,10 @@ void NetClient::sendPacket(std::uint8_t id, const void* data, std::size_t size, 
 
         enet_peer_send(m_peer.m_peer, channel, packet);
     }
+}
+
+//private
+void NetClient::threadFunc()
+{
+
 }

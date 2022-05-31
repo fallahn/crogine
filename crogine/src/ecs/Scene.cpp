@@ -482,6 +482,9 @@ void Scene::setSkyboxColours(cro::Colour dark, cro::Colour mid, cro::Colour ligh
         glCheck(glUniform3f(m_skyboxShaders[SkyboxType::Coloured].getUniformMap().at("u_lightColour"), light.getRed(), light.getGreen(), light.getBlue()));
         glCheck(glUseProgram(0));
     }
+    m_skybox.colours.bottom = dark;
+    m_skybox.colours.middle = mid;
+    m_skybox.colours.top = light;
 }
 
 Entity Scene::getDefaultCamera() const
