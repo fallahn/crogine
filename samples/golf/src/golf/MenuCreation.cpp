@@ -2869,6 +2869,8 @@ void MenuState::updateLobbyAvatars()
             textPos.x = (h % 2) * 120.f;
             textPos.y = (h / 2) * -60.f;
 
+            textPos.x += 1.f;
+
             auto entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(textPos);
             entity.addComponent<cro::Drawable2D>();
@@ -2880,7 +2882,7 @@ void MenuState::updateLobbyAvatars()
             children.push_back(entity);
 
             //add a ready status for that client
-            static constexpr glm::vec2 ReadyOffset(-12.f, -7.f);
+            static constexpr glm::vec2 ReadyOffset(-12.f, -5.f);
             entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(textPos + ReadyOffset);
             entity.addComponent<cro::Drawable2D>();
@@ -2903,16 +2905,16 @@ void MenuState::updateLobbyAvatars()
             verts =
             {
                 cro::Vertex2D(glm::vec2(0.f)),
-                cro::Vertex2D(glm::vec2(8.f, 0.f)),
-                cro::Vertex2D(glm::vec2(0.f, 8.f)),
-                cro::Vertex2D(glm::vec2(8.f))
+                cro::Vertex2D(glm::vec2(5.f, 0.f)),
+                cro::Vertex2D(glm::vec2(0.f, 5.f)),
+                cro::Vertex2D(glm::vec2(5.f))
             };
             entity.getComponent<cro::Drawable2D>().updateLocalBounds();
 
             //add a network status icon
             entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(textPos + ReadyOffset);
-            entity.getComponent<cro::Transform>().move({ -4.f, -46.f });
+            entity.getComponent<cro::Transform>().move({ -5.f, -50.f });
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::NetStrength];
             entity.addComponent<cro::SpriteAnimation>();
