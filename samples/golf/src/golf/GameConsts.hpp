@@ -49,6 +49,9 @@ source distribution.
 
 #include <cstdint>
 
+static constexpr glm::uvec2 MapSize(320u, 200u);
+static constexpr glm::vec2 RangeSize(200.f, 250.f);
+
 static constexpr float CameraStrokeHeight = 2.f;// 3.2f;// 2.6f;
 static constexpr float CameraPuttHeight = 0.3f;
 static constexpr float CameraStrokeOffset = 5.f;// 7.5f;// 5.1f;
@@ -57,6 +60,7 @@ static constexpr glm::vec3 CameraBystanderOffset = glm::vec3(7.f, 2.f, 7.f);
 
 static constexpr float GreenCamHeight = 3.f;
 static constexpr float SkyCamHeight = 16.f;
+static constexpr glm::vec3 DefaultSkycamPosition(MapSize.x / 2.f, SkyCamHeight, -static_cast<float>(MapSize.y) / 2.f);
 
 static constexpr float BallPointSize = 1.4f;
 
@@ -79,8 +83,6 @@ static constexpr float PlaneHeight = 60.f;
 static constexpr float IndicatorDarkness = 0.002f;
 static constexpr float IndicatorLightness = 0.5f;
 
-static constexpr glm::uvec2 MapSize(320u, 200u);
-static constexpr glm::vec2 RangeSize(200.f, 250.f);
 static constexpr glm::uvec2 LabelTextureSize(128u, 64u);
 static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, -static_cast<float>(MapSize.y / 2));
 

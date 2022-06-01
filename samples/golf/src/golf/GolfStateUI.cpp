@@ -1123,7 +1123,7 @@ void GolfState::createScoreboard()
     updateScoreboard();
 
     //net strength icons
-    glm::vec3 iconPos(378.f, 236.f, 2.2f);
+    glm::vec3 iconPos(378.f, 234.f, 2.2f);
     static constexpr float IconSpacing = 14.f;
     for (const auto& c : m_sharedData.connectionData)
     {

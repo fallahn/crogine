@@ -2460,7 +2460,7 @@ void GolfState::buildScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
-    camEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, SkyCamHeight, -static_cast<float>(MapSize.y) / 2.f });
+    camEnt.addComponent<cro::Transform>().setPosition(DefaultSkycamPosition);
     camEnt.addComponent<cro::Camera>().resizeCallback = 
         [&,camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
@@ -3977,6 +3977,46 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     msg2->type = GolfEvent::SetNewPlayer;
 
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
+
+
+    //see where the player is and move the sky cam if possible
+    //else set it to the default position
+    static constexpr float MinPlayerDist = 40.f * 40.f; //TODO should this be the sky cam radius^2?
+    auto dir = m_holeData[m_currentHole].pin - player.position;
+    if (auto len2 = glm::length2(dir); len2 > MinPlayerDist)
+    {
+        static constexpr float MaxHeightMultiplier = static_cast<float>(MapSize.x) * 0.9f; //probably should be diagonal but meh
+        
+        auto camHeight = SkyCamHeight * (std::sqrt(len2) / MaxHeightMultiplier);
+        dir /= 2.f;
+        dir.y = camHeight;
+
+        dir += player.position;
+
+        /*auto centre = glm::vec3(static_cast<float>(MapSize.x) / 2.f, camHeight, -static_cast<float>(MapSize.y) / 2.f);
+        dir += (centre - dir) / 2.f;*/
+        auto perp = glm::vec3( - dir.z, dir.y, dir.x );
+        perp *= 0.1f;
+        dir += perp;
+
+        //make sure we're not too close to the player else we won't switch to this cam
+        auto followerRad = m_cameras[CameraID::Sky].getComponent<CameraFollower>().radius;
+        if (len2 = glm::length2(player.position - dir); len2 < followerRad)
+        {
+            auto diff = std::sqrt(followerRad) - std::sqrt(len2);
+            dir += glm::normalize(dir - player.position) * (diff * 1.01f);
+
+            //clamp the height - if we're so close this needs to happen
+            //then we don't want to switch to this cam anyway...
+            dir.y = std::min(dir.y, SkyCamHeight);
+        }
+
+        m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(dir);
+    }
+    else
+    {
+        m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(DefaultSkycamPosition);
+    }
 }
 
 void GolfState::hitBall()
