@@ -64,6 +64,7 @@ source distribution.
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/String.hpp>
 #include <crogine/audio/AudioMixer.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
@@ -2598,7 +2599,36 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     //hack to stop multiple instances covering each other when not active
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = textHideCallback;
-        
+
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //website
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(88.f, 12.f));
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("www");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::UIInput>().setGroup(menuID);
+    entity.getComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                cro::Util::String::parseURL("https://fallahn.itch.io/vga-golf");
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+
+    //hack to stop multiple instances covering each other when not active
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = textHideCallback;
 
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
