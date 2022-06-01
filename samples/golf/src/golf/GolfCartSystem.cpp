@@ -36,6 +36,8 @@ source distribution.
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
 
+#include <crogine/gui/Gui.hpp>
+
 namespace
 {
     static constexpr std::array Path01 = { glm::vec3(-70.f, 0.01f, 5.4f),glm::vec3(60.f, 0.01f, 5.4f),  glm::vec3(70.f, 0.01f, 5.4f),  glm::vec3(77.f, 0.01f, 5.4f) };
@@ -46,6 +48,8 @@ namespace
     {
         Path01, Path02, Path03
     };
+
+    std::vector<float> accelVals;
 }
 
 GolfCartSystem::GolfCartSystem(cro::MessageBus& mb)
@@ -55,11 +59,29 @@ GolfCartSystem::GolfCartSystem(cro::MessageBus& mb)
 {
     requireComponent<GolfCart>();
     requireComponent<cro::Transform>();
+
+#ifdef CRO_DEBUG_
+    /*registerWindow([&]()
+        {
+            if (ImGui::Begin("Buns"))
+            {
+                for (auto v : accelVals)
+                {
+                    ImGui::Text("%3.3f", v);
+                }
+            }
+            ImGui::End();
+        });*/
+#endif
 }
 
 //public
 void GolfCartSystem::process(float dt)
 {
+#ifdef CRO_DEBUG_
+    accelVals.clear();
+#endif
+
     auto& entities = getEntities();
     for (auto entity : entities)
     {
@@ -128,7 +150,7 @@ void GolfCartSystem::process(float dt)
                     float travel = length - (BrakingDistance - overlap);
                     travel = std::max(0.f, std::min(1.f, travel / overlap));
 
-                    accel = interpolate(accel, accel2, travel);
+                    accel = interpolate(accel2, accel, travel);
                 }                
 
 
@@ -154,6 +176,10 @@ void GolfCartSystem::process(float dt)
                 static constexpr float Exaggeration = 50.f;
                 entity.getComponent<cro::AudioEmitter>().setVelocity(tx.getForwardVector() * accel * Exaggeration);
                 entity.getComponent<cro::AudioEmitter>().setPitch(accel * m_maxPitch);
+
+#ifdef CRO_DEBUG_
+                accelVals.push_back(accel);
+#endif
             }
         }
     }
