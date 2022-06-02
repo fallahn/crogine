@@ -3995,8 +3995,13 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
         /*auto centre = glm::vec3(static_cast<float>(MapSize.x) / 2.f, camHeight, -static_cast<float>(MapSize.y) / 2.f);
         dir += (centre - dir) / 2.f;*/
-        auto perp = glm::vec3( - dir.z, dir.y, dir.x );
-        perp *= 0.1f;
+        auto perp = glm::vec3( dir.z, dir.y, -dir.x );
+        if (cro::Util::Random::value(0, 1) == 0)
+        {
+            perp.x *= -1.f;
+            perp.z *= -1.f;
+        }
+        perp *= static_cast<float>(cro::Util::Random::value(5, 10)) / 100.f;
         dir += perp;
 
         //make sure we're not too close to the player else we won't switch to this cam

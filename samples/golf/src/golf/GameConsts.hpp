@@ -59,7 +59,7 @@ static constexpr float CameraPuttOffset = 0.8f;
 static constexpr glm::vec3 CameraBystanderOffset = glm::vec3(7.f, 2.f, 7.f);
 
 static constexpr float GreenCamHeight = 3.f;
-static constexpr float SkyCamHeight = 16.f;
+static constexpr float SkyCamHeight = 24.f;
 static constexpr glm::vec3 DefaultSkycamPosition(MapSize.x / 2.f, SkyCamHeight, -static_cast<float>(MapSize.y) / 2.f);
 
 static constexpr float BallPointSize = 1.4f;

@@ -1,0 +1,13 @@
+hole 12
+{
+    map="assets/golf/courses/course_05/12.png"
+    model="assets/golf/models/course_05/12.cmt"
+    par = 4
+
+    pin = 69.391029,2.418685,-107.003899
+
+    target = 168.057205,2.420378,-109.054092
+
+    tee = 282.612488,2.420378,-75.225685
+
+}
