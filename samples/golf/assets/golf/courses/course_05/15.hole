@@ -1,0 +1,13 @@
+hole 15
+{
+    map="assets/golf/courses/course_05/15.png"
+    model="assets/golf/models/course_05/15.cmt"
+    par = 4
+
+    pin = 34.731964,1.812466,-165.370850
+
+    target = 141.598969,1.809379,-109.502716
+
+    tee = 298.952332,1.809379,-24.162880
+
+}

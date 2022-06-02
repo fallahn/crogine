@@ -107,5 +107,15 @@ audioscape ambience
         volume = 1
         attenuation = 0
         mixer_channel = 1
+    }
+
+    emitter drone
+    {
+        path = "assets/golf/sound/ambience/drone.wav"
+        looped = true
+        streaming = false
+        volume = 0.5
+        attenuation = 0.5
+        mixer_channel = 1
     }    
 }
