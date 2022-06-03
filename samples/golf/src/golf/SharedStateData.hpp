@@ -90,6 +90,8 @@ struct SharedStateData final
         bool connected = false;
         bool ready = false;
         std::uint8_t connectionID = 4;
+
+        std::vector<cro::NetEvent> eventBuffer; //don't touch this while loading screen is active!!
     }clientConnection;
 
     //data of all players rx'd from server

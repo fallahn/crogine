@@ -29,6 +29,7 @@ source distribution.
 
 #include "LoadingScreen.hpp"
 #include "golf/GameConsts.hpp"
+#include "golf/SharedStateData.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/detail/OpenGL.hpp>
@@ -83,8 +84,9 @@ namespace
     )";
 }
 
-LoadingScreen::LoadingScreen()
-    : m_vao             (0),
+LoadingScreen::LoadingScreen(SharedStateData& sd)
+    :m_sharedData       (sd),
+    m_vao               (0),
     m_vbo               (0),
     m_projectionIndex   (-1),
     m_transformIndex    (-1),
@@ -196,6 +198,16 @@ void LoadingScreen::update()
         }
         
         accumulator -= timestep;
+
+        if (m_sharedData.clientConnection.connected)
+        {
+            cro::NetEvent evt;
+            while (m_sharedData.clientConnection.netClient.pollEvent(evt))
+            {
+                m_sharedData.clientConnection.eventBuffer.emplace_back(std::move(evt));
+                evt = {}; //not strictly necessary but squashes warning about re-using a moved object
+            }
+        }
     }
 }
 

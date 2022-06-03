@@ -395,6 +395,12 @@ bool ClubhouseState::simulate(float dt)
 {
     if (m_sharedData.clientConnection.connected)
     {
+        for (const auto& evt : m_sharedData.clientConnection.eventBuffer)
+        {
+            handleNetEvent(evt);
+        }
+        m_sharedData.clientConnection.eventBuffer.clear();
+
         cro::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {

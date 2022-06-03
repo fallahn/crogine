@@ -39,10 +39,11 @@ source distribution.
 
 #include <vector>
 
+struct SharedStateData;
 class LoadingScreen final : public cro::LoadingScreen
 {
 public:
-    LoadingScreen();
+    explicit LoadingScreen(SharedStateData&);
     ~LoadingScreen();
 
     void launch() override;
@@ -50,6 +51,8 @@ public:
     void draw() override;
 
 private:
+    SharedStateData& m_sharedData;
+
     std::uint32_t m_vao;
     std::uint32_t m_vbo;
     std::int32_t m_projectionIndex;

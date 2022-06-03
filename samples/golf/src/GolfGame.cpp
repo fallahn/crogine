@@ -399,7 +399,7 @@ bool GolfGame::initialise()
             }
         });
 
-    getWindow().setLoadingScreen<LoadingScreen>();
+    getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("VGA Golf - " + StringVer);
     getWindow().setIcon(icon);
     m_renderTarget = &getWindow();
