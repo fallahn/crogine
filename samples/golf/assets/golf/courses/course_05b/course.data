@@ -1,4 +1,4 @@
-course course_05
+course course_05b
 {
     skybox = "assets/golf/skyboxes/dusk.sbf"
     billboard_model = "assets/golf/models/shrubbery04.cmt"
@@ -7,17 +7,8 @@ course course_05
     instance_model = "assets/golf/models/bush01.cmt"
 
     title = "Grove Bank, Mont Torville"
-    description = "It's a long drive home."
+    description = "Back 9 Holes"
 
-    hole = "assets/golf/courses/course_05/01.hole"
-    hole = "assets/golf/courses/course_05/02.hole"
-    hole = "assets/golf/courses/course_05/03.hole"
-    hole = "assets/golf/courses/course_05/04.hole"
-    hole = "assets/golf/courses/course_05/05.hole"
-    hole = "assets/golf/courses/course_05/06.hole"
-    hole = "assets/golf/courses/course_05/14.hole"
-    hole = "assets/golf/courses/course_05/17.hole"
-    hole = "assets/golf/courses/course_05/18.hole"
     hole = "assets/golf/courses/course_05/15.hole"
     hole = "assets/golf/courses/course_05/16.hole"
     hole = "assets/golf/courses/course_05/13.hole"

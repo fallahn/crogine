@@ -38,6 +38,7 @@ source distribution.
 #include <mutex>
 #include <any>
 #include <memory>
+#include <atomic>
 
 struct _ENetHost;
 

@@ -1,0 +1,13 @@
+hole 17
+{
+    map="assets/golf/courses/course_05/17.png"
+    model="assets/golf/models/course_05/17.cmt"
+    par = 4
+
+    pin = 46.378876,1.547720,-62.373795
+
+    target = 167.682755,1.547869,-84.157242
+
+    tee = 284.288239,1.547869,-166.165497
+
+}

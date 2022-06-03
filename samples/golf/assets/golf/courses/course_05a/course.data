@@ -15,7 +15,7 @@ course course_05a
     hole = "assets/golf/courses/course_05/04.hole"
     hole = "assets/golf/courses/course_05/05.hole"
     hole = "assets/golf/courses/course_05/06.hole"
-    hole = "assets/golf/courses/course_05/07.hole"
-    hole = "assets/golf/courses/course_05/08.hole"
-    hole = "assets/golf/courses/course_05/09.hole"
+    hole = "assets/golf/courses/course_05/14.hole"
+    hole = "assets/golf/courses/course_05/17.hole"
+    hole = "assets/golf/courses/course_05/18.hole"
 }
