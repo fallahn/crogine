@@ -170,7 +170,8 @@ void CameraFollowSystem::process(float dt)
                 auto dist2 = glm::length2(tx.getPosition() - follower.playerPosition);
                 if (dist < currDist
                     && dist < follower.radius
-                    && dist2 > follower.radius)
+                    && dist2 > follower.radius
+                    && follower.id > m_closestCamera) //once we reach green don't go back until explicitly reset
                 {
                     currDist = dist;
                     m_closestCamera = follower.id;

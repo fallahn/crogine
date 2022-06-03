@@ -153,6 +153,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_scaleBuffer       ("PixelScale", sizeof(float)),
     m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
     m_windBuffer        ("WindValues", sizeof(WindData)),
+    m_holeToModelRatio  (1.f),
     m_currentHole       (0),
     m_terrainBuilder    (m_holeData),
     m_audioPath         ("assets/golf/sound/ambience.xas"),
@@ -1652,6 +1653,7 @@ void GolfState::loadAssets()
     std::vector<cro::Entity> prevProps;
     std::vector<cro::Entity> prevParticles;
     std::vector<cro::Entity> leaderboardProps;
+    std::int32_t holeModelCount = 0; //use this to get a guestimate of how many holes per model there are to adjust the camera offset
 
     for (const auto& hole : holeStrings)
     {
@@ -1748,6 +1750,8 @@ void GolfState::loadAssets()
 
                         prevHoleString = modelPath;
                         prevHoleEntity = holeData.modelEntity;
+
+                        holeModelCount++;
                     }
                     else
                     {
@@ -2006,21 +2010,24 @@ void GolfState::loadAssets()
         m_sharedData.errorMessage = "Failed to load course data\nSee console for more information";
         requestStackPush(StateID::Error);
     }
-    //else
+    else
     {
-        m_terrainBuilder.create(m_resources, m_gameScene, theme);
-
-        //this will have loaded a series of shaders for which we need to capture some uniforms
-        shader = &m_resources.shaders.get(ShaderID::Terrain);
-        m_scaleBuffer.addShader(*shader);
-        m_resolutionBuffer.addShader(*shader);
-
-        shader = &m_resources.shaders.get(ShaderID::CelTexturedInstanced);
-        m_scaleBuffer.addShader(*shader);
-        m_resolutionBuffer.addShader(*shader);
-
-        createClouds(theme.cloudPath);
+        m_holeToModelRatio = static_cast<float>(std::max(6, holeModelCount) / m_holeData.size());
     }
+
+
+    m_terrainBuilder.create(m_resources, m_gameScene, theme);
+
+    //this will have loaded a series of shaders for which we need to capture some uniforms
+    shader = &m_resources.shaders.get(ShaderID::Terrain);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedInstanced);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+
+    createClouds(theme.cloudPath);
 
     //reserve the slots for each hole score
     for (auto& client : m_sharedData.connectionData)
@@ -3992,7 +3999,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto dir = m_holeData[m_currentHole].pin - player.position;
     if (auto len2 = glm::length2(dir); len2 > MinPlayerDist)
     {
-        static constexpr float MaxHeightMultiplier = static_cast<float>(MapSize.x) * 0.9f; //probably should be diagonal but meh
+        static constexpr float MaxHeightMultiplier = static_cast<float>(MapSize.x) * 0.8f; //probably should be diagonal but meh
         
         auto camHeight = SkyCamHeight * (std::sqrt(len2) / MaxHeightMultiplier);
         dir /= 2.f;
@@ -4008,7 +4015,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             perp.x *= -1.f;
             perp.z *= -1.f;
         }
-        perp *= static_cast<float>(cro::Util::Random::value(5, 10)) / 100.f;
+        perp *= static_cast<float>(cro::Util::Random::value(7, 9)) / 100.f;
+        perp *= m_holeToModelRatio;
         dir += perp;
 
         //make sure we're not too close to the player else we won't switch to this cam

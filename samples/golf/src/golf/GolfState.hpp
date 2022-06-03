@@ -131,7 +131,8 @@ private:
         glm::vec3 windVector = glm::vec3(0.f);
     }m_windUpdate;
 
-    cro::Image m_currentMap;
+    cro::Image m_currentMap; 
+    float m_holeToModelRatio;
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;
     ActivePlayer m_currentPlayer;
