@@ -54,6 +54,8 @@ namespace
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
     static constexpr float FallRadius = Ball::Radius * 0.25f;
     static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
+    static constexpr float AttractRadius = HoleRadius * 1.2f;
+    static constexpr float MinAttachRadius = AttractRadius * AttractRadius;
     static constexpr float Margin = 1.02f;
     static constexpr float BallHoleDistance = (HoleRadius * Margin) * (HoleRadius * Margin);
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
@@ -181,6 +183,14 @@ void BallSystem::process(float dt)
                 //test distance to pin
                 auto pinDir = m_holeData->pin - position;
                 auto len2 = glm::length2(glm::vec2(pinDir.x, pinDir.z));
+
+                if (len2 < AttractRadius)
+                {
+                    auto attraction = pinDir;
+                    attraction.y = 0.f;
+                    ball.velocity += attraction * dt;
+                }
+
                 if (len2 < MinBallDistance)
                 {
                     //over hole or in the air
@@ -225,8 +235,8 @@ void BallSystem::process(float dt)
                         else
                         {
                             //lets the ball continue travelling, ie overshoot
-                            auto bounceVel = glm::length2(ball.velocity) * 0.2f;
-                            ball.velocity *= 0.1f;
+                            auto bounceVel = glm::length2(ball.velocity) * 0.4f;// 0.2f;
+                            ball.velocity *= 0.8f;// 0.15f;
                             ball.velocity.y = bounceVel;
 
                             position.y += penetration;
@@ -280,9 +290,6 @@ void BallSystem::process(float dt)
                 static constexpr float MaxVel = 2.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
                 tx.rotate(cro::Transform::Y_AXIS, cro::Util::Const::TAU * (vel2 / MaxVel) * ball.spin * dt);
 
-                /*float rollSpeed = AngularVelocity * std::sqrt(vel2);
-                glm::vec3 rollAxis = { -ball.velocity.z, ball.velocity.y, ball.velocity.x };
-                tx.rotate(glm::normalize(rollAxis), rollSpeed * dt);*/
 
                 //if we've slowed down or fallen more than the
                 //ball's diameter (radius??) stop the ball
