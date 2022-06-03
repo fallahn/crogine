@@ -106,9 +106,9 @@ namespace cro
             ~Packet();
 
             Packet(const Packet&) = delete;
-            Packet(Packet&&) = delete;
+            Packet(Packet&&) noexcept;
             Packet& operator = (const Packet&) = delete;
-            Packet& operator = (Packet&&) = delete;
+            Packet& operator = (Packet&&) noexcept;
 
             /*!
             \brief The unique ID this packet was tagged with when sent
