@@ -10,4 +10,86 @@ hole 13
 
     tee = 28.821899,1.960807,-74.465904
 
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 42.404575,1.960807,-95.056534
+        rotation = 27.880202
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 47.847137,1.960807,-98.138565
+        rotation = 28.651372
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 55.490334,1.960852,-100.172287
+        rotation = 27.689416
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 203.898712,2.098300,-128.249496
+        rotation = 130.479124
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = 203.898712,2.098300,-128.249496
+        rotation = -209.993578
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 193.756638,1.960807,-128.186218
+        rotation = -30.972271
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 204.968796,1.960808,-122.882103
+        rotation = -22.441388
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 210.412979,1.960807,-120.761482
+        rotation = -19.363153
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/rock_large.cmt"
+        position = 197.105453,2.015731,-128.182693
+        rotation = -136.119862
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 278.728027,1.960854,-48.750278
+        rotation = -172.293316
+    }
+
+    crowd
+    {
+        position = 283.075623,1.960854,-91.624886
+        rotation = -33.444545
+    }
+
 }

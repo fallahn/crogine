@@ -10,4 +10,32 @@ hole 15
 
     tee = 298.952332,1.809379,-24.162880
 
+    prop
+    {
+        model = "assets/golf/models/jetty.cmt"
+        position = 252.420578,0.023117,-86.016273
+        rotation = -21.991820
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/boat01.cmt"
+        position = 256.095184,-1.502171,-87.943901
+        rotation = -14.589895
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 32.602123,1.809428,-180.904282
+        rotation = 0.000000
+    }
+
+    crowd
+    {
+        position = 18.305849,1.809428,-167.920288
+        rotation = 77.235419
+    }
+
 }

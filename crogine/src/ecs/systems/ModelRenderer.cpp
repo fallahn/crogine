@@ -272,7 +272,6 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
         list.clear();
     }
 
-    //TODO add an option to cull this list based on AABB tree
     for (auto& entity : entities)
     {
         auto& model = entity.getComponent<Model>();

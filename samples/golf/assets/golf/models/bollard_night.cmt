@@ -19,7 +19,7 @@ model bollard_night
     material Unlit
     {
         name = "Untitled"
-        colour = 0.084071,0.069235,0.000000,0.419608
+        colour = 0.082353,0.070588,0.000000,1.000000
         smooth = true
         repeat = true
         depth_test = true
