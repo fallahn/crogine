@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2022, 6, 2),
+    "version": (2022, 6, 5),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -28,13 +28,53 @@ def vecMultiply(vec, vec2):
 def WriteProperty(file, propName, location):
     file.write("    %s = %f,%f,%f\n\n" % (propName, location[0], location[2], -location[1]))
 
-def WriteProp(file, modelName, location, rotation, scale):
+
+def WritePath(file, path):
+    file.write("\n        path\n        {\n")
+    for p in path.data.splines.active.points:
+        worldP = path.matrix_world @ p.co
+        file.write("            point = %f,%f,%f\n" % (worldP.x, worldP.z, -worldP.y))
+
+    if path.get('loop') is not None:
+        if path['loop'] == 0:
+            file.write("\n            loop = false\n")
+        else:
+            file.write("\n            loop = true\n")
+    else:
+        file.write("\n            loop = false\n")
+
+    file.write("        }\n")
+
+
+def WriteSpeaker(file, speaker):
+    print("TODO")
+
+
+
+def WriteProp(file, modelName, location, rotation, scale, ob):
     file.write("    prop\n    {\n")
     file.write("        model = \"%s\"\n" % modelName)
     file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
     file.write("        rotation = %f\n" % (rotation[2] * (180.0 / 3.141)))
     file.write("        scale = %f,%f,%f\n" % (scale[0], scale[2], scale[1]))
+
+
+    if ob.parent is not None and ob.parent.type == 'CURVE':
+        WritePath(file, ob.parent)
+
+    for child in ob.children:
+        if child.type == 'SPEAKER':
+            WriteSpeaker(file, child)
+        elif child.type == 'EMPTY':
+            if child.get('type') is not None and child['type'] == 1:
+                if child.get('path') is not None:
+                    file.write("        particles = \"%s\"\n" % child['path'])
+                else:
+                    file.write("        particles = \"path_is_missing\"\n")
+
+
     file.write("    }\n\n")
+
 
 def WriteCrowd(file, location, rotation):
     file.write("    crowd\n    {\n")
@@ -42,16 +82,19 @@ def WriteCrowd(file, location, rotation):
     file.write("        rotation = %f\n" % (rotation[2] * (180.0 / 3.141)))
     file.write("    }\n\n")
 
+
 def WriteParticles(file, path, location):
     file.write("    particles\n    {\n")
     file.write("        path = \"%s\"\n" % path)
     file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
     file.write("    }\n\n")
 
+
+
 class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
     '''Export object position and rotation info'''
     bl_idname = "export.golf"
-    bl_label = 'Export Object Info'
+    bl_label = 'Export Hole Info'
     filename_ext = ".hole"
 
     def execute(self, context):
@@ -118,7 +161,7 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                         teeWritten = True
                 else:
                     if ob.type == 'MESH':
-                        WriteProp(file, modelName, worldLocation, worldRotation, worldScale)
+                        WriteProp(file, modelName, worldLocation, worldRotation, worldScale, ob)
                     elif ob.type == 'EMPTY':
                         if ob.get('type') is not None:
                             if ob['type'] == 1:
