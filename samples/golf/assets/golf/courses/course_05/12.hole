@@ -28,7 +28,7 @@ hole 12
 
     prop
     {
-        model = "assets/golf/models/bollard_night"
+        model = "assets/golf/models/bollard_night.cmt"
         position = 214.268585,2.438683,-72.264366
         rotation = 0.000000
         scale = 1.000000,1.000000,1.000000

@@ -19,13 +19,14 @@ model bollard_night
     material Unlit
     {
         name = "Untitled"
-        colour = 0.082353,0.070588,0.000000,1.000000
-        smooth = true
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
         repeat = true
         depth_test = true
         double_sided = false
         use_mipmaps = false
         blendmode = add
+        diffuse = "assets/golf/images/light_bollard.png"
 
     }
 }

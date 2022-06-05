@@ -21,7 +21,7 @@ hole 15
     prop
     {
         model = "assets/golf/models/boat01.cmt"
-        position = 256.095184,-1.502171,-87.943901
+        position = 249.313110,-0.741361,-92.890999
         rotation = -14.589895
         scale = 1.000000,1.000000,1.000000
     }

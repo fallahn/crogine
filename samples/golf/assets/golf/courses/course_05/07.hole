@@ -28,14 +28,6 @@ hole 07
 
     prop
     {
-        model = "assets/golf/models/boat01.cmt"
-        position = 215.362991,-0.693016,-140.638626
-        rotation = 4.800136
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
         model = "assets/golf/models/bollard_day.cmt"
         position = 195.980042,2.425968,-103.382698
         rotation = 0.000000
@@ -68,7 +60,7 @@ hole 07
 
     prop
     {
-        model = "assets/golf/models/bollard_night"
+        model = "assets/golf/models/bollard_night.cmt"
         position = 170.615875,2.740975,-120.004654
         rotation = 0.000000
         scale = 1.000000,1.000000,1.000000
@@ -116,6 +108,14 @@ hole 07
     {
         position = 263.421509,1.988372,-22.790989
         rotation = -180.884186
+    }
+
+    prop
+    {
+        model = "assets/golf/models/boat01.cmt"
+        position = 198.583466,-0.403768,-139.144012
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
     }
 
 }
