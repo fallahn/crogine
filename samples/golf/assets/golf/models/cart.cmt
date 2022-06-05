@@ -11,6 +11,7 @@ model cart
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
         blendmode = alpha
 
     }
@@ -21,7 +22,8 @@ model cart
         smooth = false
         repeat = true
         depth_test = true
-        double_sided = false
+        double_sided = true
+        use_mipmaps = false
         blendmode = none
         diffuse = "assets/golf/images/cart.png"
 

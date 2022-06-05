@@ -54,7 +54,7 @@ namespace
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
     static constexpr float FallRadius = Ball::Radius * 0.25f;
     static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
-    static constexpr float AttractRadius = HoleRadius * 1.2f;
+    static constexpr float AttractRadius = HoleRadius * 1.25f;
     static constexpr float MinAttachRadius = AttractRadius * AttractRadius;
     static constexpr float Margin = 1.02f;
     static constexpr float BallHoleDistance = (HoleRadius * Margin) * (HoleRadius * Margin);
@@ -236,7 +236,7 @@ void BallSystem::process(float dt)
                         {
                             //lets the ball continue travelling, ie overshoot
                             auto bounceVel = glm::length2(ball.velocity) * 0.4f;// 0.2f;
-                            ball.velocity *= 0.8f;// 0.15f;
+                            ball.velocity *= 0.65f;// 0.15f;
                             ball.velocity.y = bounceVel;
 
                             position.y += penetration;
