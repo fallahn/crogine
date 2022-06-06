@@ -1590,10 +1590,8 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     case MessageBoardID::HoleScore:
     {
         std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
-        score -= m_holeData[m_currentHole].par;
-        auto overPar = score;
-        score += ScoreID::ScoreOffset;
-
+        auto overPar = score - m_holeData[m_currentHole].par;
+      
         //if this is a remote player the score won't
         //have arrived yet, so kludge this here so the
         //display type is correct.
@@ -1601,9 +1599,23 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
         {
             score++;
         }
+
+        if (score > 1)
+        {
+            score -= m_holeData[m_currentHole].par;
+            score += ScoreID::ScoreOffset;
+        }
         else
         {
-            //if this is a local player check to see if they got the boomerang achievement
+            //hio is also technically an eagle or birdie
+            //etc, so we need to differentiate
+            score = ScoreID::HIO;
+        }
+
+
+        //if this is a local player update achievements
+        if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+        {
             if (m_hadFoul && overPar < 1)
             {
                 Achievements::awardAchievement(AchievementStrings[AchievementID::Boomerang]);

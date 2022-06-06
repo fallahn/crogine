@@ -128,6 +128,8 @@ namespace
     glm::vec4 topSky;
     glm::vec4 bottomSky;
 
+    constexpr float ShadowFarDistance = 50.f;
+    constexpr float ShadowNearDistance = 20.f;
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
     //use to move the flag as the player approaches
@@ -2058,7 +2060,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::SpriteAnimator>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(20.f);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(ShadowNearDistance);
 #ifdef CRO_DEBUG_
     m_gameScene.addSystem<FpsCameraSystem>(mb);
 #endif
@@ -3880,7 +3882,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         }
 
         //set just far enough the flag shows in the distance
-        m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(50.f);
+        m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(ShadowFarDistance);
 
 
         //if this is a CPU player or a remote player, show a bystander cam
@@ -3938,7 +3940,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         m_activeAvatar->model.getComponent<cro::Model>().setHidden(true);
 
         //and use closer shadow mapping
-        m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(20.f);
+        m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(ShadowNearDistance);
     }
     setActiveCamera(CameraID::Player);
 
@@ -4339,6 +4341,8 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
 void GolfState::startFlyBy()
 {
+    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(ShadowFarDistance);
+
     //static for lambda capture
     static constexpr float MoveSpeed = 50.f; //metres per sec
     static constexpr float MaxHoleDistance = 275.f; //this scales the move speed based on the tee-pin distance
