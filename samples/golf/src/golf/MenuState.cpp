@@ -689,6 +689,27 @@ void MenuState::createScene()
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
     }
 
+    if (md.loadFromFile("assets/golf/models/bollard_day.cmt"))
+    {
+        constexpr std::array positions =
+        {
+            glm::vec3(7.2f, 0.f, 12.f),
+            glm::vec3(7.2f, 0.f, 3.5f),
+            glm::vec3(-10.5f, 0.f, 12.5f),
+            glm::vec3(-8.2f, 0.f, 3.5f)
+        };
+
+        for (auto pos : positions)
+        {
+            auto entity = m_backgroundScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(pos);
+            md.createModel(entity);
+
+            texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+            applyMaterialData(md, texturedMat);
+            entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+        }
+    }
     /*cro::EmitterSettings sprinkler;
     if (sprinkler.loadFromFile("assets/golf/particles/sprinkler.cps", m_resources.textures))
     {

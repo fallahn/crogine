@@ -980,6 +980,14 @@ void GolfState::showCountdown(std::uint8_t seconds)
             e.getComponent<cro::Drawable2D>().setVertexData(vertices);
         };
     }
+
+
+    if (cro::Util::Random::value(0, 3) == 0)
+    {
+        auto pos = m_holeData[m_currentHole].pin;
+        pos.x += 5.f;
+        m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(pos);
+    }
 }
 
 void GolfState::createScoreboard()
