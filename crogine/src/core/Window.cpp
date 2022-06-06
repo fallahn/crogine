@@ -204,6 +204,8 @@ glm::uvec2 Window::getSize() const
 
 void Window::setSize(glm::uvec2 size)
 {
+    m_previousWindowSize = size;
+
     CRO_ASSERT(m_window, "window not created");
     SDL_SetWindowSize(m_window, size.x, size.y);
     SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
@@ -233,6 +235,13 @@ void Window::setFullScreen(bool fullscreen)
         m_fullscreen = fullscreen;
         if (!fullscreen)
         {
+            auto size = getSize();
+            if (size.x == m_previousWindowSize.x
+                && size.y == m_previousWindowSize.y) 
+            {
+                m_previousWindowSize = { 640u, 480u };
+            }
+
             SDL_SetWindowSize(m_window, m_previousWindowSize.x, m_previousWindowSize.y);
             SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
         }
