@@ -977,6 +977,7 @@ void OptionsState::buildScene()
     m_tooltips[ToolTipID::Controls] = createToolTip("Controls");
     m_tooltips[ToolTipID::Achievements] = createToolTip("Achievements");
     m_tooltips[ToolTipID::Stats] = createToolTip("Stats");
+    m_tooltips[ToolTipID::Website] = createToolTip("Visit Website");
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
@@ -2605,10 +2606,10 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
 
     //website
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(88.f, 12.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(89.f, 14.f));
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("www");
+    entity.addComponent<cro::Text>(font).setString("Website");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     bounds = cro::Text::getLocalBounds(entity);

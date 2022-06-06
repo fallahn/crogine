@@ -1,0 +1,12 @@
+audioscape
+{
+    emitter drone
+    {
+        path = "assets/golf/sound/ambience/drone.wav"
+        looped = true
+        streaming = false
+        volume = 0.7
+        attenuation = 0.1
+        mixer_channel = 1
+    }
+}

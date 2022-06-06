@@ -2598,6 +2598,78 @@ void GolfState::buildScene()
     m_freeCam = camEnt;
 #endif
 
+    //drone model to follow camera
+    if (md.loadFromFile("assets/golf/models/drone.cmt"))
+    {
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(2.f));
+        md.createModel(entity);
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        applyMaterialData(md, material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+        entity.getComponent<cro::Model>().setMaterial(1, material);
+
+        entity.addComponent<cro::AudioEmitter>();
+
+        cro::AudioScape as;
+        if (as.loadFromFile("assets/golf/sound/drone.xas", m_resources.audio)
+            && as.hasEmitter("drone"))
+        {
+            entity.getComponent<cro::AudioEmitter>() = as.getEmitter("drone");
+            entity.getComponent<cro::AudioEmitter>().play();
+        }
+
+        struct DroneCallbackData final
+        {
+            float rotation = 0.f;
+            float acceleration = 0.f;
+        };
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<DroneCallbackData>();
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            auto oldPos = e.getComponent<cro::Transform>().getPosition();
+            auto playerPos = m_currentPlayer.position;
+
+            //rotate towards active player
+            glm::vec2 dir = glm::vec2(oldPos.x - playerPos.x, oldPos.z - playerPos.z);
+            float rotation = std::atan2(dir.y, dir.x);
+
+            auto& [currRotation, acceleration] = e.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
+            currRotation += cro::Util::Maths::shortestRotation(currRotation, rotation) * dt;
+
+            e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
+
+
+            //move towards skycam
+            static constexpr float MoveSpeed = 20.f;
+            static constexpr float MinRadius = MoveSpeed * MoveSpeed;
+
+            auto movement = m_cameras[CameraID::Sky].getComponent<cro::Transform>().getPosition() - oldPos;
+            if (auto len2 = glm::length2(movement); len2 > MinRadius)
+            {
+                movement /= std::sqrt(len2);
+                movement *= MoveSpeed;
+
+                acceleration = std::min(1.f, acceleration + (dt / 2.f));
+                movement *= cro::Util::Easing::easeInCubic(acceleration);
+            }
+            else
+            {
+                acceleration = 0.f;
+            }
+            e.getComponent<cro::Transform>().move(movement * dt);
+
+
+            //update emitter based on velocity
+            auto velocity = oldPos - e.getComponent<cro::Transform>().getPosition();
+            e.getComponent<cro::AudioEmitter>().setVelocity(velocity * 60.f);
+        };
+    }
+
 
     m_currentPlayer.position = m_holeData[m_currentHole].tee; //prevents the initial camera movement
 
