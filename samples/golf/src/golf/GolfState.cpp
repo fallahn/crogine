@@ -2030,6 +2030,7 @@ void GolfState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
 
     createClouds(theme.cloudPath);
+    //buildBow();
 
     //reserve the slots for each hole score
     for (auto& client : m_sharedData.connectionData)
@@ -2608,6 +2609,10 @@ void GolfState::buildScene()
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
         applyMaterialData(md, material);
         entity.getComponent<cro::Model>().setMaterial(0, material);
+
+        //material.doubleSided = true;
+        applyMaterialData(md, material, 1);
+        material.blendMode = cro::Material::BlendMode::Alpha;
         entity.getComponent<cro::Model>().setMaterial(1, material);
 
         entity.addComponent<cro::AudioEmitter>();
@@ -2638,11 +2643,8 @@ void GolfState::buildScene()
             glm::vec2 dir = glm::vec2(oldPos.x - playerPos.x, oldPos.z - playerPos.z);
             float rotation = std::atan2(dir.y, dir.x);
 
+
             auto& [currRotation, acceleration] = e.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
-            currRotation += cro::Util::Maths::shortestRotation(currRotation, rotation) * dt;
-
-            e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
-
 
             //move towards skycam
             static constexpr float MoveSpeed = 20.f;
@@ -2656,13 +2658,16 @@ void GolfState::buildScene()
 
                 acceleration = std::min(1.f, acceleration + (dt / 2.f));
                 movement *= cro::Util::Easing::easeInCubic(acceleration);
+
+                currRotation += cro::Util::Maths::shortestRotation(currRotation, rotation) * dt;
             }
             else
             {
                 acceleration = 0.f;
+                currRotation = std::fmod(currRotation + (dt * 0.5f), cro::Util::Const::TAU);
             }
             e.getComponent<cro::Transform>().move(movement * dt);
-
+            e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
 
             //update emitter based on velocity
             auto velocity = oldPos - e.getComponent<cro::Transform>().getPosition();
@@ -4681,7 +4686,10 @@ void GolfState::setActiveCamera(std::int32_t camID)
 
         //set scene camera
         m_gameScene.setActiveCamera(m_cameras[camID]);
-        m_gameScene.setActiveListener(m_cameras[camID]);
+        if (camID != CameraID::Sky)
+        {
+            m_gameScene.setActiveListener(m_cameras[camID]);
+        }
         m_currentCamera = camID;
 
         m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = waterEnt;

@@ -37,10 +37,12 @@ R"(
     uniform mat4 u_viewProjectionMatrix;
 
     ATTRIBUTE vec4 a_position;
+    ATTRIBUTE vec4 a_colour;
     ATTRIBUTE MED vec2 a_texCoord0;
 
-    VARYING_OUT LOW vec3 v_worldPos;
-    VARYING_OUT MED vec2 v_texCoord;
+    VARYING_OUT vec3 v_worldPos;
+    VARYING_OUT vec4 v_colour;
+    VARYING_OUT vec2 v_texCoord;
 
     void main()
     {
@@ -48,8 +50,57 @@ R"(
         gl_Position = u_viewProjectionMatrix * worldPos;
         
         v_worldPos = worldPos.xyz;
-
+        v_colour = a_colour;
         v_texCoord = a_texCoord0;
+    }
+)";
+
+static const std::string BowFragment =
+R"(
+    VARYING_IN vec4 v_colour;
+    VARYING_IN vec2 v_texCoord;
+
+    OUTPUT
+
+    const float BowStart = 0.85;
+    const float BowEnd = 0.9;
+    const float BowWidth = BowEnd - BowStart;
+
+    #define MAX_COLOURS 7
+    const vec3[] Colours = vec3[MAX_COLOURS + 2]
+    (
+        vec3(0.0),
+        vec3(0.2,   0.171, 1.0),
+        vec3(0.101, 0.181, 1.0),
+        vec3(0.092, 0.547, 1.0),
+        vec3(0.0,   1.0,   0.312),
+        vec3(0.89,  1.0,   0.074),
+        vec3(1.0,   0.497, 0.088),
+        vec3(1.0,   0.12,  0.12),
+        vec3(0.0)
+    );
+
+    const vec3 WaterColour = vec3(0.02, 0.078, 0.578);
+    const float Intensity = 0.1;
+
+    void main()
+    {
+        vec2 coord = v_texCoord - 0.5;
+        coord *= 2.0;
+
+        float amount = length(coord);
+        amount = max(0.0, amount - BowStart);
+        amount /= BowWidth;
+
+        int index = int(min(floor(amount * MAX_COLOURS), MAX_COLOURS + 1));
+
+        vec3 colour = Colours[index] * Intensity;
+        colour = mix(colour, WaterColour, (step(0.5, 1.0 - v_texCoord.y) * (1.0 - 0.31)) * Intensity);
+
+        float avg = Colours[index].r + Colours[index].g + Colours[index].b;
+        colour *= step(0.00001, avg / 3.0);
+
+        FRAG_OUT = vec4(colour, 1.0);
     }
 )";
 

@@ -145,7 +145,8 @@ struct ShaderID final
         Weather,
         Transition,
         Trophy,
-        Beacon
+        Beacon,
+        Bow
     };
 };
 

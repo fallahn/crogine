@@ -9,6 +9,7 @@ model crane_arm
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
         repeat = true
+        double_sided = true
         blendmode = "none"
         diffuse = "assets/golf/images/crane_arm.png"
 

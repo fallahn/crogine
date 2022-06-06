@@ -984,8 +984,14 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
     if (cro::Util::Random::value(0, 3) == 0)
     {
+        //hmmm not sure the point of this as it lands so close that it fades out...
         auto pos = m_holeData[m_currentHole].pin;
-        pos.x += 5.f;
+        auto camPos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
+        camPos.y = pos.y;
+
+        auto diff = pos - camPos;
+        pos += diff;
+
         m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(pos);
     }
 }

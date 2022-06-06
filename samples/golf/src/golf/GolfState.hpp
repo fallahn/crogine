@@ -203,6 +203,7 @@ private:
 
     void createWeather(); //weather.cpp
     void createClouds(const std::string&);
+    void buildBow();
     void spawnBall(const struct ActorInfo&);
 
     void handleNetEvent(const cro::NetEvent&);
