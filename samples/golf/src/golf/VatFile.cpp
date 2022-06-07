@@ -113,7 +113,7 @@ bool VatFile::loadFromFile(const std::string& path)
         else if (name == "normal")
         {
             auto filepath = workingPath + prop.getValue<std::string>();
-            if (cro::FileSystem::fileExists(filepath))
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + filepath))
             {
                 resultFlags |= Normal;
                 m_normalPath = filepath;
