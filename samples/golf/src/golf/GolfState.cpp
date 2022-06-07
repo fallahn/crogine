@@ -663,6 +663,9 @@ void GolfState::handleMessage(const cro::Message& msg)
         if (data.type == GolfEvent::HitBall)
         {
             hitBall();
+#ifdef PATH_TRACING
+            beginBallDebug();
+#endif
         }
         else if (data.type == GolfEvent::ClubChanged)
         {
@@ -734,6 +737,9 @@ void GolfState::handleMessage(const cro::Message& msg)
                     m_gameScene.destroyEntity(e);
                 }
             };
+#ifdef PATH_TRACING
+            endBallDebug();
+#endif
         }
     }
     break;
@@ -2597,6 +2603,10 @@ void GolfState::buildScene()
     camEnt.addComponent<FpsCamera>();
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_freeCam = camEnt;
+
+#ifdef PATH_TRACING
+    initBallDebug();
+#endif
 #endif
 
     //drone model to follow camera
@@ -4214,11 +4224,8 @@ void GolfState::updateActor(const ActorInfo& update)
         //set the green cam zoom as appropriate
         float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
 
-#ifdef CRO_DEBUG_
-        if (ballDist < 0)
-        {
-            LogE << "Ball dist is wrong! value: " << ballDist << " with position " << update.position << std::endl;
-        }
+#ifdef PATH_TRACING
+        updateBallDebug(update.position);
 #endif // CRO_DEBUG_
 
         m_greenCam.getComponent<cro::Callback>().getUserData<MiniCamData>().targetSize =

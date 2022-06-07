@@ -227,6 +227,7 @@ void GolfState::netBroadcast()
         if (ball == m_playerInfo[0].ballEntity)
         {
             auto timestamp = m_serverTime.elapsed().asMilliseconds();
+            
 
             ActorInfo info;
             info.serverID = static_cast<std::uint32_t>(ball.getIndex());

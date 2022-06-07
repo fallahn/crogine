@@ -2652,8 +2652,14 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         {
             if (activated(evt))
             {
-                cro::App::getWindow().setSize(m_sharedData.resolutions[m_videoSettings.resolutionIndex]);
-                cro::App::getWindow().setFullScreen(m_videoSettings.fullScreen);
+                if (m_videoSettings.fullScreen != cro::App::getWindow().isFullscreen())
+                {
+                    cro::App::getWindow().setFullScreen(m_videoSettings.fullScreen);
+                }
+                else
+                {
+                    cro::App::getWindow().setSize(m_sharedData.resolutions[m_videoSettings.resolutionIndex]);
+                }
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });

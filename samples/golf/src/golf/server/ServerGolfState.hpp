@@ -35,6 +35,7 @@ source distribution.
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/HiResTimer.hpp>
 
 namespace sv
 {

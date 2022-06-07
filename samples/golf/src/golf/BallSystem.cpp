@@ -515,7 +515,7 @@ void BallSystem::doCollision(cro::Entity entity)
 {
     /*
     This function raises collision messages, although
-    they are only effective when it's used locally, such
+    they are only effective when the system is used locally, such
     as in the driving range. Server instances ignore
     collision messages.
     */

@@ -55,6 +55,11 @@ source distribution.
 #include <array>
 #include <unordered_map>
 
+#ifdef CRO_DEBUG_
+//#define PATH_TRACING
+#endif
+
+
 namespace cro
 {
     struct NetEvent;
@@ -329,4 +334,21 @@ private:
         std::int32_t score = 0;
     };
     std::vector<StatBoardEntry> m_statBoardScores;
+
+#ifdef PATH_TRACING
+    //------------
+    struct BallDebugPoint final
+    {
+        glm::vec3 position = glm::vec3(0.f);
+        glm::vec4 colour = glm::vec4(1.f);
+        BallDebugPoint(glm::vec3 p, glm::vec4 c) : position(p), colour(c) {}
+    };
+    std::vector<BallDebugPoint> m_ballDebugPoints;
+    std::vector<std::uint32_t> m_ballDebugIndices;
+    bool m_ballDebugActive = false;
+    void initBallDebug();
+    void beginBallDebug();
+    void updateBallDebug(glm::vec3);
+    void endBallDebug();
+#endif
 };

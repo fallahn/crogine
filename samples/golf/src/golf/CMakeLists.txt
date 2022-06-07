@@ -24,6 +24,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/GolfParticleDirector.cpp
   ${PROJECT_DIR}/golf/GolfSoundDirector.cpp
   ${PROJECT_DIR}/golf/GolfState.cpp
+  ${PROJECT_DIR}/golf/GolfStateDebug.cpp
   ${PROJECT_DIR}/golf/GolfStateUI.cpp
   ${PROJECT_DIR}/golf/InputParser.cpp  
 #  ${PROJECT_DIR}/golf/InterpolationComponent.cpp

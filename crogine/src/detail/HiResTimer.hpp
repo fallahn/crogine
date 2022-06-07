@@ -39,10 +39,10 @@ namespace cro
     /*!
     \brief High Resolution Timer.
     Generally cro::Clock will suffice for millisecond accurate timing
-    but when floating point values are used for representing seconds
+    but when floating point values for representing seconds
     are required cro::Clock can lose precision. In these cases it's
     possible to use the high resolution timer which has greater
-    floatnig point precision.
+    floating point precision.
     */
 
     CRO_EXPORT_API class HiResTimer final
