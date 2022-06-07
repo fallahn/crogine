@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -332,8 +332,14 @@ void Console::draw()
                     if (ui::Button("Apply", { 50.f, 20.f }))
                     {
                         //apply settings
-                        App::getWindow().setSize(resolutions[currentResolution]);
-                        App::getWindow().setFullScreen(fullScreen);
+                        if (fullScreen != App::getWindow().isFullscreen())
+                        {
+                            App::getWindow().setFullScreen(fullScreen);
+                        }
+                        else
+                        {
+                            App::getWindow().setSize(resolutions[currentResolution]);
+                        }
                     }
                     ui::EndTabItem();
                 }

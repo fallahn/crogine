@@ -235,9 +235,10 @@ void Window::setFullScreen(bool fullscreen)
         m_fullscreen = fullscreen;
         if (!fullscreen)
         {
-            auto size = getSize();
-            if (size.x == m_previousWindowSize.x
-                && size.y == m_previousWindowSize.y) 
+            SDL_DisplayMode dm;
+            SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_window), &dm);
+            if (dm.w == m_previousWindowSize.x
+                && dm.h == m_previousWindowSize.y) 
             {
                 m_previousWindowSize = { 640u, 480u };
             }
