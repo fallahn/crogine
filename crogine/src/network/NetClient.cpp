@@ -40,7 +40,8 @@ source distribution.
 using namespace cro;
 
 NetClient::NetClient()
-    : m_client  (nullptr)
+    : m_client      (nullptr),
+    m_threadRunning (false)
 {
     if (!NetConf::instance)
     {
@@ -130,6 +131,15 @@ bool NetClient::connect(const std::string& address, std::uint16_t port, std::uin
     ENetEvent evt;
     if (enet_host_service(m_client, &evt, timeout) > 0 && evt.type == ENET_EVENT_TYPE_CONNECT)
     {
+        //this is a hack to allow for long(er) loading times when the main
+        //thread is unable to poll a connection to keep it alive
+        enet_peer_timeout(m_peer.m_peer, ENET_PEER_TIMEOUT_LIMIT * 2, ENET_PEER_TIMEOUT_MINIMUM * 2, ENET_PEER_TIMEOUT_MAXIMUM * 2);
+
+
+        //ehhhhh... it actually works, but ofc introduces latency.
+        //m_threadRunning = true;
+        //m_thread = std::make_unique<std::thread>(&NetClient::threadFunc, this);
+
         LOG("Connected to " + address, Logger::Type::Info);
         return true;
     }
@@ -142,6 +152,10 @@ bool NetClient::connect(const std::string& address, std::uint16_t port, std::uin
 
 void NetClient::disconnect()
 {
+    /*m_threadRunning = false;
+    m_thread->join();
+    m_thread.reset();*/
+
     if (m_peer.m_peer)
     {
         ENetEvent evt;
@@ -177,7 +191,11 @@ bool NetClient::pollEvent(NetEvent& evt)
 
     ENetEvent hostEvt;
     if (enet_host_service(m_client, &hostEvt, 0) > 0)
+    //if (!m_activeBuffer.empty())
     {
+        //auto hostEvt = std::any_cast<ENetEvent>(m_activeBuffer.front());
+        //m_activeBuffer.pop_front();
+
         switch (hostEvt.type)
         {
         default:
@@ -198,6 +216,11 @@ bool NetClient::pollEvent(NetEvent& evt)
         }
         evt.peer.m_peer = hostEvt.peer;
         return true;
+    }
+
+    {
+        //std::lock_guard<std::mutex> lock(m_mutex);
+        //m_activeBuffer.swap(m_evtBuffer);
     }
     return false;
 }
@@ -225,5 +248,23 @@ void NetClient::sendPacket(std::uint8_t id, const void* data, std::size_t size, 
         std::memcpy(&packet->data[sizeof(std::uint8_t)], data, size);
 
         enet_peer_send(m_peer.m_peer, channel, packet);
+    }
+}
+
+//private
+void NetClient::threadFunc()
+{
+    while (m_threadRunning)
+    {
+        ENetEvent hostEvt;
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            while (enet_host_service(m_client, &hostEvt, 0) != 0)
+            {
+                m_evtBuffer.push_back(std::make_any<ENetEvent>(hostEvt));
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(50));
     }
 }

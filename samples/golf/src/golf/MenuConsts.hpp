@@ -106,6 +106,14 @@ static constexpr glm::vec2 WindIndicatorPosition(-48.f, 40.f); //absolute from e
 
 static const cro::Time MouseHideTime = cro::seconds(3.f);
 
+static const std::array<std::string, 4u> ShaderNames =
+{
+    "Terminal Display",
+    "Terminal (Extreme)",
+    "Black and White",
+    "CRT Effect"
+};
+
 static inline bool activated(const cro::ButtonEvent& evt)
 {
     switch (evt.type)

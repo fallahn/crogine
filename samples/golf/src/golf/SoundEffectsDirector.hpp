@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 #include <crogine/ecs/Director.hpp>
 #include <crogine/ecs/Entity.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 #include <vector>
 
@@ -65,7 +66,7 @@ if(msg.id == PlayerMessage)
 \endcode
 */
 
-class SoundEffectsDirector : public cro::Director 
+class SoundEffectsDirector : public cro::Director, public cro::GuiClient
 {
 public:
     SoundEffectsDirector();

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -79,6 +79,7 @@ struct MaterialDefinition final
 
     bool smoothTexture = true;
     bool repeatTexture = true;
+    bool useMipmaps = false;
 
     cro::Material::BlendMode blendMode = cro::Material::BlendMode::None;
 

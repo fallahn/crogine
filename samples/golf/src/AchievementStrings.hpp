@@ -71,6 +71,10 @@ namespace AchievementID
         Stripes,
         EasyPink,
 
+        PracticeMakesPerfect,
+        AllOfATwitter,
+        Soaring,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
@@ -99,7 +103,10 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "socialiser",
     "spots",
     "stripes",
-    "easy_pink"
+    "easy_pink",
+    "practice_perfect",
+    "all_of_a_twitter",
+    "soaring"
 };
 
 //appears on the notification
@@ -126,7 +133,10 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Socialiser",
     "Spots",
     "Stripes",
-    "Easy Pink"
+    "Easy Pink",
+    "Practice Makes Perfect",
+    "All of a Twitter",
+    "Soaring"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -153,7 +163,10 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Enter the Clubhouse at least once", false),
     std::make_pair("Win a game of Eightball", false),
     std::make_pair("Win a game of Nineball", false),
-    std::make_pair("Win a game of Snooker", false)
+    std::make_pair("Win a game of Snooker", false),
+    std::make_pair("Spend an hour in total on the driving range", false),
+    std::make_pair("Get 18 Birdies", false),
+    std::make_pair("Get an Eagle", false),
 };
 
 //assuming tropies load correctly they are
@@ -196,7 +209,10 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::SilverCup,
     TrophyID::Pool,
     TrophyID::Pool,
-    TrophyID::Pool
+    TrophyID::Pool,
+    TrophyID::GoldFigure,
+    TrophyID::SilverFigure,
+    TrophyID::GoldFigure,
 };
 
 namespace StatID
@@ -215,6 +231,11 @@ namespace StatID
         EightballWon,
         NineballWon,
         SnookerWon,
+
+        TimeOnTheRange,
+        Birdies,
+        Eagles,
+        HIOs,
 
         Count
     };
@@ -235,7 +256,12 @@ static const std::array<std::string, StatID::Count> StatStrings =
 
     "eightball_won",
     "nineball_won",
-    "snooker_won"
+    "snooker_won",
+
+    "time_on_the_range"
+    "birdies",
+    "eagles",
+    "hios"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -249,14 +275,18 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Total Rounds Played",
     "Eightball Games Won (multiplayer)",
     "Nineball Games Won (multiplayer)",
-    "Snooker Games Won (multiplayer)"
+    "Snooker Games Won (multiplayer)",
+    "Time spent at the Driving Range",
+    "Birdies scored",
+    "Eagles scored",
+    "Holes in one"
 };
 
 struct StatType final
 {
     enum
     {
-        Float, Integer, Percent
+        Float, Integer, Percent, Time
     };
 };
 
@@ -269,6 +299,10 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Percent,
     StatType::Percent,
     StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Time,
     StatType::Integer,
     StatType::Integer,
     StatType::Integer

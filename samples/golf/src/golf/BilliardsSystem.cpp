@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/graphics/MeshBuilder.hpp>
+#include <crogine/util/Random.hpp>
 
 namespace
 {
@@ -623,6 +624,9 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
 {
     auto& ball = entity.getComponent<BilliardBall>();
     ball.m_parent = entity;
+
+    //set a random orientation
+    entity.getComponent<cro::Transform>().setRotation(cro::Util::Random::quaternion());
 
     btTransform transform;
     transform.setFromOpenGLMatrix(&entity.getComponent<cro::Transform>().getWorldTransform()[0][0]);

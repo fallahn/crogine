@@ -1,7 +1,7 @@
 model scoreboard
 {
-    mesh = "assets/golf/models/scoreboard.cmb"
-    cast_shadows = false
+    mesh = assets/golf/models/scoreboard.cmb
+    cast_shadows = true
 
     material Unlit
     {
@@ -9,17 +9,9 @@ model scoreboard
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        blendmode = "none"
-        diffuse = "assets/golf/images/score_board_texture.png"
-
-    }
-    material Unlit
-    {
-        name = "shadow"
-        colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = false
-        repeat = true
-        blendmode = "alpha"
+        depth_test = true
+        double_sided = false
+        blendmode = none
         diffuse = "assets/golf/images/score_board_texture.png"
 
     }

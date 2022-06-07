@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 struct GolfCart final
 {
@@ -45,7 +46,7 @@ struct GolfCart final
     float rotation = 0.f;
 };
 
-class GolfCartSystem final : public cro::System
+class GolfCartSystem final : public cro::System, public cro::GuiClient
 {
 public:
     explicit GolfCartSystem(cro::MessageBus&);

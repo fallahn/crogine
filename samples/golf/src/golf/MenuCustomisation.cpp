@@ -160,7 +160,11 @@ void MenuState::createBallScene()
             auto entity = m_backgroundScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition({ (i * BallSpacing) + RootPoint, 0.f, 0.f });
             ballDef.createModel(entity);
-            entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+
+            //allow for double sided balls.
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+            applyMaterialData(ballDef, material);
+            entity.getComponent<cro::Model>().setMaterial(0, material);
 
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =

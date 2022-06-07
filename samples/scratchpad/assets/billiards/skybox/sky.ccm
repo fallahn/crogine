@@ -1,0 +1,9 @@
+cubemap sky
+{
+    up = "assets/billiards/skybox/py.png"
+    down = "assets/billiards/skybox/ny.png"
+    left = "assets/billiards/skybox/nx.png"
+    right = "assets/billiards/skybox/px.png"
+    front = "assets/billiards/skybox/pz.png"
+    back = "assets/billiards/skybox/nz.png"
+}

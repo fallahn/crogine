@@ -1,7 +1,7 @@
 model phone_box
 {
     mesh = "assets/golf/models/phone_box.cmb"
-    cast_shadows = false
+    cast_shadows = true
 
     material VertexLit
     {
@@ -13,6 +13,6 @@ model phone_box
         repeat = true
         blendmode = "none"
         diffuse = "assets/golf/images/phone_box_low_poly_albedo.png"
-
+        use_mipmaps = false
     }
 }

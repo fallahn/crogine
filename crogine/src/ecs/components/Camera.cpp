@@ -171,12 +171,14 @@ void Camera::updateMatrices(const Transform& tx, float level)
     finalPass.m_aabb = Spatial::updateFrustum(finalPass.m_frustum, finalPass.viewProjectionMatrix);
     finalPass.forwardVector = Util::Matrix::getForwardVector(worldTx);
 
-    //TODO - disable this pass if the reflection buffer isn't created?
-    reflectionPass.viewMatrix = glm::scale(finalPass.viewMatrix, glm::vec3(1.f, -1.f, 1.f));
-    reflectionPass.viewMatrix = glm::translate(reflectionPass.viewMatrix, glm::vec3(0.f, level, 0.f));
-    reflectionPass.viewProjectionMatrix = m_projectionMatrix * reflectionPass.viewMatrix;
-    reflectionPass.m_aabb = Spatial::updateFrustum(reflectionPass.m_frustum, reflectionPass.viewProjectionMatrix);
-    reflectionPass.forwardVector = glm::reflect(finalPass.forwardVector, Transform::Y_AXIS);
+    if (reflectionBuffer.available())
+    {
+        reflectionPass.viewMatrix = glm::scale(finalPass.viewMatrix, glm::vec3(1.f, -1.f, 1.f));
+        reflectionPass.viewMatrix = glm::translate(reflectionPass.viewMatrix, glm::vec3(0.f, level, 0.f));
+        reflectionPass.viewProjectionMatrix = m_projectionMatrix * reflectionPass.viewMatrix;
+        reflectionPass.m_aabb = Spatial::updateFrustum(reflectionPass.m_frustum, reflectionPass.viewProjectionMatrix);
+        reflectionPass.forwardVector = glm::reflect(finalPass.forwardVector, Transform::Y_AXIS);
+    }
 }
 
 glm::vec2 Camera::coordsToPixel(glm::vec3 worldPoint, glm::vec2 targetSize, std::int32_t passIdx) const
@@ -216,6 +218,8 @@ glm::vec3 Camera::pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize) 
     pixelCoords += glm::vec2(0.5f);
 
     glm::vec3 winCoords(pixelCoords.x, targetSize.y - pixelCoords.y, 0.f); //inverts mouse pos Y
+
+    //TODO this triggers an abort trap 6 on mac. No idea why.
     glCheck(glReadPixels(static_cast<std::int32_t>(winCoords.x), static_cast<std::int32_t>(winCoords.y), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winCoords.z));
 
     return glm::unProject(winCoords, m_passes[Pass::Final].viewMatrix, m_projectionMatrix, vp);

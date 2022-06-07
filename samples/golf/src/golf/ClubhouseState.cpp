@@ -48,6 +48,7 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
@@ -394,6 +395,12 @@ bool ClubhouseState::simulate(float dt)
 {
     if (m_sharedData.clientConnection.connected)
     {
+        for (const auto& evt : m_sharedData.clientConnection.eventBuffer)
+        {
+            handleNetEvent(evt);
+        }
+        m_sharedData.clientConnection.eventBuffer.clear();
+
         cro::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
@@ -501,10 +508,11 @@ void ClubhouseState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
     m_backgroundScene.addSystem<GolfCartSystem>(mb);
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
-    m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(20.f);
+    m_backgroundScene.addSystem<cro::SkeletalAnimator>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
+    m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(20.f);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
 
     m_tableScene.addSystem<cro::CallbackSystem>(mb);
@@ -556,6 +564,10 @@ void ClubhouseState::loadResources()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::CelSkinned] = m_resources.materials.add(*shader);
 
     //ball material in table preview
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define REFLECTIONS\n#define NOCHEX\n#define TEXTURED\n#define SUBRECT\n");
@@ -851,9 +863,6 @@ void ClubhouseState::buildScene()
         entity.getComponent<cro::Model>().setMaterialProperty(1, "u_diffuseMap", cro::TextureID(m_arcadeVideo.getTexture().getGLHandle()));
     }
 
-    //TODO bar stools
-    //TODO sofa
-
 
 
 
@@ -889,8 +898,46 @@ void ClubhouseState::buildScene()
     }
 
     //golf carts
-    if (md.loadFromFile("assets/golf/models/cart.cmt"))
+    if (md.loadFromFile("assets/golf/models/menu/cart.cmt"))
     {
+        const std::array<std::string, 6u> passengerStrings =
+        {
+            "assets/golf/models/menu/driver01.cmt",
+            "assets/golf/models/menu/passenger01.cmt",
+            "assets/golf/models/menu/passenger02.cmt",
+            "assets/golf/models/menu/driver02.cmt",
+            "assets/golf/models/menu/passenger03.cmt",
+            "assets/golf/models/menu/passenger04.cmt"
+        };
+
+        std::array<cro::Entity, 6u> passengers = {};
+
+        cro::ModelDefinition passengerDef(m_resources);
+        for (auto i = 0u; i < passengerStrings.size(); ++i)
+        {
+            if (passengerDef.loadFromFile(passengerStrings[i]))
+            {
+                passengers[i] = m_backgroundScene.createEntity();
+                passengers[i].addComponent<cro::Transform>();
+                passengerDef.createModel(passengers[i]);
+
+                cro::Material::Data material;
+                if (passengers[i].hasComponent<cro::Skeleton>())
+                {
+                    material = m_resources.materials.get(m_materialIDs[MaterialID::CelSkinned]);
+                    passengers[i].getComponent<cro::Skeleton>().play(0);
+                }
+                else
+                {
+                    material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+                }
+                applyMaterialData(passengerDef, material);
+                passengers[i].getComponent<cro::Model>().setMaterial(0, material);
+            }
+        }
+
+
+
         for (auto i = 0u; i < 2u; ++i)
         {
             auto entity = m_backgroundScene.createEntity();
@@ -901,6 +948,15 @@ void ClubhouseState::buildScene()
 
             entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("cart");
             entity.getComponent<cro::AudioEmitter>().play();
+
+            for (auto j = 0; j < 3; ++j)
+            {
+                auto index = (i * 3) + j;
+                if (passengers[index].isValid())
+                {
+                    entity.getComponent<cro::Transform>().addChild(passengers[index].getComponent<cro::Transform>());
+                }
+            }
         }
     }
 
@@ -1384,8 +1440,18 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
             requestStackPush(StateID::Error);
             break;
         case PacketID::ClientVersion:
-            //server is requesting our client version
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientVersion, CURRENT_VER, cro::NetFlag::Reliable);
+            //server is requesting our client version, and stating current game mode
+            if (evt.packet.as<std::uint16_t>() == static_cast<std::uint16_t>(Server::GameMode::Billiards))
+            {
+                //reply if we're the right mode
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientVersion, CURRENT_VER, cro::NetFlag::Reliable);
+            }
+            else
+            {
+                //else bail
+                m_sharedData.errorMessage = "This is not a Billiards lobby";
+                requestStackPush(StateID::Error);
+            }
             break;
             break;
         }

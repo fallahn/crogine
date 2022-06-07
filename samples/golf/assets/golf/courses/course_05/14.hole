@@ -1,0 +1,95 @@
+hole 14
+{
+    map="assets/golf/courses/course_05/14.png"
+    model="assets/golf/models/course_05/14.cmt"
+    par = 4
+
+    pin = 287.444153,1.797399,-138.820892
+
+    target = 187.496567,1.793530,-116.524887
+
+    tee = 29.118134,1.793530,-43.486282
+
+    prop
+    {
+        model = "assets/golf/models/bollard_day.cmt"
+        position = 183.630173,1.793526,-129.702927
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/bollard_day.cmt"
+        position = 185.405045,1.793531,-126.766273
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/bollard_day.cmt"
+        position = 199.467545,1.793529,-139.187256
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/bollard_night.cmt"
+        position = 201.915649,1.811835,-136.559128
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/bollard_day.cmt"
+        position = 274.764038,1.793529,-170.165894
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/bollard_day.cmt"
+        position = 109.990829,1.793518,-119.291611
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/bollard_day.cmt"
+        position = 111.121902,1.793529,-116.116684
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cart.cmt"
+        position = 46.570175,1.798530,-80.219040
+        rotation = 30.045359
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 96.526825,1.793572,-62.168640
+        rotation = -150.476049
+    }
+
+    crowd
+    {
+        position = 287.174622,1.793576,-158.237930
+        rotation = -22.730158
+    }
+
+    crowd
+    {
+        position = 296.005951,1.793574,-125.618996
+        rotation = -139.431079
+    }
+
+}

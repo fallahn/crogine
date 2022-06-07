@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/gui/Gui.hpp>
 
 namespace
 {
@@ -40,9 +41,19 @@ namespace
 }
 
 SoundEffectsDirector::SoundEffectsDirector()
-    : m_nextFreeEmitter   (0)
+    : m_nextFreeEmitter(0)
 {
-
+#ifdef CRO_DEBUG_
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Flaps"))
+            {
+                ImGui::Text("Emitters Size %u", m_emitters.size());
+                ImGui::Text("Next Free Emitter %u", m_nextFreeEmitter);
+            }
+            ImGui::End();        
+        });
+#endif
 }
 
 //public

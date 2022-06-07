@@ -54,7 +54,7 @@ namespace cro
         LoadingScreen& operator = (LoadingScreen&&) = delete;
 
         /*!
-        \brief This is require to create a valid VAO for the thread
+        \brief This is required to create a valid VAO for the thread
         context, and called when the thread is launched. It is up to the
         user to make sure any VAO resources are released properly
         */

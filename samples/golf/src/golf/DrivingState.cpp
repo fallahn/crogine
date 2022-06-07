@@ -46,6 +46,7 @@ source distribution.
 #include "ClientCollisionSystem.hpp"
 #include "CloudSystem.hpp"
 #include "PoissonDisk.hpp"
+#include "BeaconCallback.hpp"
 #include "server/ServerMessages.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
@@ -98,6 +99,8 @@ namespace
 #include "WireframeShader.inl"
 #include "BillboardShader.inl"
 #include "CloudShader.inl"
+#include "BeaconShader.inl"
+#include "WaterShader.inl"
 
 #ifdef CRO_DEBUG_
     std::int32_t debugFlags = 0;
@@ -161,6 +164,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_sharedData        (sd),
     m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
     m_gameScene         (context.appInstance.getMessageBus()),
+    m_skyScene          (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_viewScale         (1.f),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
@@ -293,6 +297,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
     m_inputParser.handleEvent(evt);
     m_gameScene.forwardEvent(evt);
+    m_skyScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
     return true;
 }
@@ -303,6 +308,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
     //up to date by the time the switchblock below is
     //processed
     m_gameScene.forwardMessage(msg);
+    m_skyScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 
     switch (msg.id)
@@ -422,6 +428,26 @@ void DrivingState::handleMessage(const cro::Message& msg)
         }
     }
     break;
+    case cro::Message::StateMessage:
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped)
+        {
+            if (data.id == StateID::Options)
+            {
+                //update the beacon if settings changed
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Beacon;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
+                    e.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
+                };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
+        }
+    }
+        break;
     }
 }
 
@@ -447,6 +473,21 @@ bool DrivingState::simulate(float dt)
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 
+
+    const auto& srcCam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    auto& dstCam = m_skyScene.getActiveCamera().getComponent<cro::Camera>();
+
+    dstCam.viewport = srcCam.viewport;
+    dstCam.setPerspective(srcCam.getFOV(), srcCam.getAspectRatio(), 1.f, 14.f);
+
+    m_skyScene.getActiveCamera().getComponent<cro::Transform>().setRotation(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation());
+    auto pos = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
+    pos.x = 0.f;
+    pos.y /= 64.f;
+    pos.z = 0.f;
+    m_skyScene.getActiveCamera().getComponent<cro::Transform>().setPosition(pos);
+    m_skyScene.simulate(dt);
+
     //auto hide the mouse if not paused
     if (m_mouseVisible
         && getStateCount() == 1)
@@ -470,6 +511,8 @@ void DrivingState::render()
     m_windBuffer.bind(2);
 
     m_backgroundTexture.clear();
+    m_skyScene.render();
+    glClear(GL_DEPTH_BUFFER_BIT);
     m_gameScene.render();
 #ifdef CRO_DEBUG_
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
@@ -515,7 +558,7 @@ void DrivingState::addSystems()
     m_gameScene.addSystem<CloudSystem>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(50.f);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(40.f);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
@@ -532,6 +575,10 @@ void DrivingState::addSystems()
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures);
 
 
+    m_skyScene.addSystem<cro::CameraSystem>(mb);
+    m_skyScene.addSystem<cro::ModelRenderer>(mb);
+
+
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::UISystem>(mb);
@@ -546,8 +593,6 @@ void DrivingState::addSystems()
 
 void DrivingState::loadAssets()
 {
-    m_gameScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
-
     std::string wobble;
     if (m_sharedData.vertexSnap)
     {
@@ -557,9 +602,9 @@ void DrivingState::loadAssets()
     //models
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define TEXTURED\n#define SKINNED\n#define NOCHEX\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
-    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
 
     //scanline transition
@@ -603,6 +648,12 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::WireframeCulled, WireframeVertex, WireframeFragment, "#define CULLED\n");
     m_materialIDs[MaterialID::WireframeCulled] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulled));
     m_resources.materials.get(m_materialIDs[MaterialID::WireframeCulled]).blendMode = cro::Material::BlendMode::Alpha;
+
+    m_resources.shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define TEXTURED\n");
+    m_materialIDs[MaterialID::Beacon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Beacon));
+
+    m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag);
+    m_materialIDs[MaterialID::Horizon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Horizon));
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
@@ -1033,9 +1084,17 @@ void DrivingState::createScene()
                         }
                     };
 
-                    //this assumes we're a cart, but hey
+                    //this assumes we're a cart based on the fact we have target points, but hey
                     entity.addComponent<cro::AudioEmitter>() = as.getEmitter("cart");
                     entity.getComponent<cro::AudioEmitter>().play();
+
+                    if (md.loadFromFile("assets/golf/models/menu/driver01.cmt"))
+                    {
+                        auto driver = m_gameScene.createEntity();
+                        driver.addComponent<cro::Transform>();
+                        md.createModel(driver);
+                        entity.getComponent<cro::Transform>().addChild(driver.getComponent<cro::Transform>());
+                    }
                 }
             }
         }
@@ -1090,7 +1149,14 @@ void DrivingState::createScene()
     createFoliage(entity);
 
     //and sky detail
-    createClouds();
+    std::string skybox = "assets/golf/skyboxes/";
+    auto skyboxes = cro::FileSystem::listFiles(skybox);
+    if (!skyboxes.empty())
+    {
+        skybox += skyboxes[cro::Util::Random::value(0u, skyboxes.size() - 1)];
+    }
+    auto cloudPath = loadSkybox(skybox, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+    createClouds(cloudPath);
 
     //tee marker
     md.loadFromFile("assets/golf/models/tee_balls.cmt");
@@ -1496,11 +1562,12 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     }
 }
 
-void DrivingState::createClouds()
+void DrivingState::createClouds(const std::string& cloudPath)
 {
-    //TODO would 3D models look better?
+    auto spritePath = cloudPath.empty() ? "assets/golf/sprites/clouds.spt" : cloudPath;
+
     cro::SpriteSheet spriteSheet;
-    if (spriteSheet.loadFromFile("assets/golf/sprites/clouds.spt", m_resources.textures)
+    if (spriteSheet.loadFromFile(spritePath, m_resources.textures)
         && spriteSheet.getSprites().size() > 1)
     {
         const auto& sprites = spriteSheet.getSprites();
@@ -1548,6 +1615,7 @@ void DrivingState::createClouds()
             float scale = static_cast<float>(cro::Util::Random::value(8, 20));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
             entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
+            //entity.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, 180.f * cro::Util::Const::degToRad);
 
             delayedUpdates.push_back(entity);
         }
@@ -1572,7 +1640,7 @@ void DrivingState::createClouds()
 
 void DrivingState::createPlayer(cro::Entity courseEnt)
 {
-    //load sprites from avatar info
+    //load from avatar info
     const auto indexFromSkinID = [&](std::uint32_t skinID)->std::size_t
     {
         auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
@@ -1699,12 +1767,24 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
                 {
                     hairEnt.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
                 }
+
+                //fade callback
+                hairEnt.addComponent<cro::Callback>().active = true;
+                hairEnt.getComponent<cro::Callback>().function =
+                    [&](cro::Entity e, float)
+                {
+                    float alpha = std::abs(m_inputParser.getYaw());
+                    alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / (m_inputParser.getMaxRotation() * 1.06f)));
+
+                    e.getComponent<cro::Model>().setMaterialProperty(0, "u_fadeAmount", alpha);
+                };
             }
         }
 
         //skel.setInterpolationEnabled(false);
     }
 
+    auto playerEnt = entity;
 
     //displays the stroke direction
     //TODO do we want to fade the player model here?
@@ -1714,35 +1794,39 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&/*, playerEnt*/](cro::Entity e, float) mutable
+        [&, playerEnt](cro::Entity e, float) mutable
     {
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
         
         //fade the player sprite at high angles
         //so we don't obstruct the view of the indicator
-        /*float alpha = std::abs(m_inputParser.getYaw());
-        alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / 0.35f));
 
-        cro::Colour c = cro::Colour::White;
-        c.setAlpha(alpha);
-        playerEnt.getComponent<cro::Sprite>().setColour(c);*/
+        //we have to do this here as the player ent has a different callback func.
+        float alpha = std::abs(m_inputParser.getYaw());
+        alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / (m_inputParser.getMaxRotation() * 1.06f)));
+
+        playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_fadeAmount", alpha);
     };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
 
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     material = m_resources.materials.get(m_materialIDs[MaterialID::Wireframe]);
+    material.blendMode = cro::Material::BlendMode::Additive;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
 
+    
     std::vector<float> verts =
     {
-        0.f, 0.05f, 0.f,    1.f, 0.97f, 0.88f, 1.f,
-        0.f, 0.1f, -5.f,    1.f, 0.97f, 0.88f, 0.2f
+        0.f, Ball::Radius, 0.005f,  1.f * IndicatorLightness, 0.97f * IndicatorLightness, 0.88f * IndicatorLightness, 1.f,
+        0.f, Ball::Radius, -5.f,    1.f * IndicatorDarkness, 0.97f * IndicatorDarkness, 0.88f * IndicatorDarkness, 0.2f,
+        0.f, Ball::Radius, 0.005f,  1.f * IndicatorLightness, 0.97f * IndicatorLightness, 0.88f * IndicatorLightness, 1.f
     };
     std::vector<std::uint32_t> indices =
     {
-        0,1
+        0,1,2
     };
+
 
     auto vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = verts.size() / vertStride;
@@ -1758,6 +1842,57 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
     entity.getComponent<cro::Model>().setHidden(true);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+
+
+    //a 'fan' which shows max rotation
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_FAN));
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeArc;
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    entity.addComponent<cro::Transform>().setPosition(pos);
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+    entity.getComponent<cro::Model>().setHidden(true);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+
+    const float pointCount = 5.f;
+    const float arc = m_inputParser.getMaxRotation() * 2.f;
+    const float step = arc / pointCount;
+    const float radius = 2.5f;
+
+    std::vector<glm::vec2> points;
+    for (auto i = -m_inputParser.getMaxRotation(); i <= -m_inputParser.getMaxRotation() + arc; i += step)
+    {
+        auto& p = points.emplace_back(std::cos(i), std::sin(i));
+        p *= radius;
+    }
+
+    glm::vec3 c = { TextGoldColour.getRed(), TextGoldColour.getGreen(), TextGoldColour.getBlue() };
+    c *= IndicatorLightness / 10.f;
+    meshData = &entity.getComponent<cro::Model>().getMeshData();
+    verts =
+    {
+        0.f, Ball::Radius, 0.f,                      c.r, c.g, c.b, 1.f,
+        points[0].x, Ball::Radius, -points[0].y,     c.r, c.g, c.b, 1.f,
+        points[1].x, Ball::Radius, -points[1].y,     c.r, c.g, c.b, 1.f,
+        points[2].x, Ball::Radius, -points[2].y,     c.r, c.g, c.b, 1.f,
+        points[3].x, Ball::Radius, -points[3].y,     c.r, c.g, c.b, 1.f,
+        points[4].x, Ball::Radius, -points[4].y,     c.r, c.g, c.b, 1.f,
+        points[5].x, Ball::Radius, -points[5].y,     c.r, c.g, c.b, 1.f
+    };
+    indices =
+    {
+        0,1,2,3,4,5,6
+    };
+    meshData->vertexCount = verts.size() / vertStride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
 
 void DrivingState::createBall()
@@ -1989,6 +2124,29 @@ void DrivingState::createFlag()
     
     auto flagEntity = entity;
 
+    md.loadFromFile("assets/golf/models/beacon.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Beacon;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+    };
+    md.createModel(entity);
+
+    auto beaconMat = m_resources.materials.get(m_materialIDs[MaterialID::Beacon]);
+    applyMaterialData(md, beaconMat);
+
+    entity.getComponent<cro::Model>().setMaterial(0, beaconMat);
+    entity.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour(0.3f, 0.3f, 0.3f));
+    auto beaconEntity = entity;
+
+
+
     //draw the flag pole as a single line which can be
     //see from a distance - hole and model are also attached to this
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireframeCulled]);
@@ -2000,6 +2158,7 @@ void DrivingState::createFlag()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, -FlagCallbackData::MaxDepth, 0.f });
     entity.getComponent<cro::Transform>().addChild(holeEntity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(flagEntity.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(beaconEntity.getComponent<cro::Transform>());
 
     auto *meshData = &entity.getComponent<cro::Model>().getMeshData();
     auto vertStride = (meshData->vertexSize / sizeof(float));
@@ -2028,7 +2187,7 @@ void DrivingState::createFlag()
     entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/flag.cps", m_resources.textures);
     entity.addComponent<cro::Callback>().setUserData<FlagCallbackData>();
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, beaconEntity](cro::Entity e, float dt) mutable
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<FlagCallbackData>();
         auto& tx = e.getComponent<cro::Transform>();
@@ -2063,6 +2222,13 @@ void DrivingState::createFlag()
 
                 m_inputParser.setActive(true);
             }
+        }
+
+        //update beacon if active
+        if (m_sharedData.showBeacon)
+        {
+            float scale = 1.f - data.progress;
+            beaconEntity.getComponent<cro::Transform>().setScale({ scale, scale, scale });
         }
     };
 }
@@ -2210,7 +2376,7 @@ void DrivingState::setHole(std::int32_t index)
 
     //reset stroke indicator
     cro::Command cmd;
-    cmd.targetFlags = CommandID::StrokeIndicator;
+    cmd.targetFlags = CommandID::StrokeIndicator | CommandID::StrokeArc;
     cmd.action = [](cro::Entity e, float)
     {
         e.getComponent<cro::Model>().setHidden(false);

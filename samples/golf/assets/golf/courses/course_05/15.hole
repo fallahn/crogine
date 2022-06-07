@@ -1,0 +1,41 @@
+hole 15
+{
+    map="assets/golf/courses/course_05/15.png"
+    model="assets/golf/models/course_05/15.cmt"
+    par = 4
+
+    pin = 34.731964,1.812466,-165.370850
+
+    target = 141.598969,1.809379,-109.502716
+
+    tee = 298.952332,1.809379,-24.162880
+
+    prop
+    {
+        model = "assets/golf/models/jetty.cmt"
+        position = 252.420578,0.023117,-86.016273
+        rotation = -21.991820
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/boat01.cmt"
+        position = 249.313110,-0.741361,-92.890999
+        rotation = -14.589895
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 32.602123,1.809428,-180.904282
+        rotation = 0.000000
+    }
+
+    crowd
+    {
+        position = 18.305849,1.809428,-167.920288
+        rotation = 77.235419
+    }
+
+}

@@ -36,6 +36,7 @@ source distribution.
 #include "CameraFollowSystem.hpp"
 #include "CollisionMesh.hpp"
 #include "LeaderboardTexture.hpp"
+#include "CPUGolfer.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -53,6 +54,11 @@ source distribution.
 
 #include <array>
 #include <unordered_map>
+
+#ifdef CRO_DEBUG_
+//#define PATH_TRACING
+#endif
+
 
 namespace cro
 {
@@ -102,6 +108,7 @@ private:
     
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
+    cro::Scene m_skyScene;
     cro::Scene m_uiScene;
     cro::Scene m_trophyScene;
 
@@ -109,6 +116,7 @@ private:
     bool m_mouseVisible;
 
     InputParser m_inputParser;
+    CPUGolfer m_cpuGolfer;
 
     bool m_wantsGameState;
     cro::Clock m_readyClock; //pings ready state until ack'd
@@ -128,7 +136,8 @@ private:
         glm::vec3 windVector = glm::vec3(0.f);
     }m_windUpdate;
 
-    cro::Image m_currentMap;
+    cro::Image m_currentMap; 
+    float m_holeToModelRatio;
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;
     ActivePlayer m_currentPlayer;
@@ -143,6 +152,7 @@ private:
             WireFrame,
             WireFrameCulled,
             Water,
+            Horizon,
             Cel,
             CelSkinned,
             CelTextured,
@@ -155,6 +165,7 @@ private:
             Ball,
             Billboard,
             Trophy,
+            Beacon,
 
             Count
         };
@@ -188,6 +199,7 @@ private:
     }m_ballResources;
 
     std::string m_audioPath;
+    std::string m_courseTitle;
 
     void loadAssets();
     void addSystems();
@@ -195,7 +207,8 @@ private:
     void initAudio();
 
     void createWeather(); //weather.cpp
-    void createClouds(const ThemeSettings&);
+    void createClouds(const std::string&);
+    void buildBow();
     void spawnBall(const struct ActorInfo&);
 
     void handleNetEvent(const cro::NetEvent&);
@@ -232,6 +245,7 @@ private:
             HookBar,
             WindIndicator,
             WindSpeed,
+            Thinking,
             MessageBoard,
             Bunker,
             Foul,
@@ -306,6 +320,8 @@ private:
     cro::Entity m_greenCam;
     cro::RenderTexture m_greenBuffer;
 
+    std::vector<cro::Entity> m_netStrengthIcons;
+
     //------------
 
     bool m_hadFoul; //tracks 'boomerang' stat
@@ -318,4 +334,21 @@ private:
         std::int32_t score = 0;
     };
     std::vector<StatBoardEntry> m_statBoardScores;
+
+#ifdef PATH_TRACING
+    //------------
+    struct BallDebugPoint final
+    {
+        glm::vec3 position = glm::vec3(0.f);
+        glm::vec4 colour = glm::vec4(1.f);
+        BallDebugPoint(glm::vec3 p, glm::vec4 c) : position(p), colour(c) {}
+    };
+    std::vector<BallDebugPoint> m_ballDebugPoints;
+    std::vector<std::uint32_t> m_ballDebugIndices;
+    bool m_ballDebugActive = false;
+    void initBallDebug();
+    void beginBallDebug();
+    void updateBallDebug(glm::vec3);
+    void endBallDebug();
+#endif
 };

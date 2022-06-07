@@ -88,6 +88,7 @@ struct SpriteID final
         ArrowRight,
         ArrowLeftHighlight,
         ArrowRightHighlight,
+        CPUHighlight,
 
         ButtonBanner,
         Cursor,
@@ -98,6 +99,7 @@ struct SpriteID final
         RemovePlayer,
         ReadyUp,
         ReadyStatus,
+        NetStrength,
         StartGame,
         Connect,
         PrevCourse,

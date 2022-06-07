@@ -112,7 +112,7 @@ namespace
 
         vec4 position = vec4(decodeVector(u_positionMap, texCoord) * scale, 1.0);
         gl_Position = u_projectionMatrix * worldViewMatrix * position;
-        v_normal = normalMatrix * normalize(decodeVector(u_normalMap, texCoord));
+        v_normal = normalMatrix * (decodeVector(u_normalMap, texCoord));
 #endif
         v_colour = a_colour;
         v_texCoord = a_texCoord0;
@@ -138,7 +138,7 @@ namespace
 
     void main()
     {
-        float amount = clamp(dot(normalize(v_normal), normalize(-u_lightDirection)), 0.1, 1.0);
+        float amount = clamp(dot(normalize(v_normal), normalize(-u_lightDirection)), 0.4, 1.0);
 
         FRAG_OUT = Colours[v_instanceID] * amount;
     })";
@@ -321,7 +321,7 @@ void VatsState::loadModel(const std::string& path)
         }
 
         m_positionTexture.loadFromFile(file.getPositionPath());
-        m_positionTexture.setSmooth(true);
+        m_positionTexture.setSmooth(false);
         m_normalTexture.loadFromFile(file.getNormalPath());
         m_normalTexture.setSmooth(true);
 

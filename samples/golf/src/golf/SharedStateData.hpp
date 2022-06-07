@@ -59,6 +59,8 @@ struct PlayerData final
     std::uint8_t matchScore = 0;
     std::uint8_t skinScore = 0;
     glm::vec3 currentTarget = glm::vec3(0.f);
+
+    bool isCPU = false;
 };
 
 struct ConnectionData final
@@ -68,6 +70,8 @@ struct ConnectionData final
 
     std::uint8_t playerCount = 1;
     std::array<PlayerData, MaxPlayers> playerData = {};
+
+    std::uint32_t pingTime = 0;
 
     std::vector<std::uint8_t> serialise() const;
     bool deserialise(const cro::NetEvent::Packet&);
@@ -86,6 +90,8 @@ struct SharedStateData final
         bool connected = false;
         bool ready = false;
         std::uint8_t connectionID = 4;
+
+        std::vector<cro::NetEvent> eventBuffer; //don't touch this while loading screen is active!!
     }clientConnection;
 
     //data of all players rx'd from server
@@ -147,6 +153,7 @@ struct SharedStateData final
 
     //client settings
     bool usePostProcess = false;
+    std::int32_t postProcessIndex = 0;
     std::string customShaderPath;
     InputBinding inputBinding;
     bool pixelScale = true;
@@ -155,6 +162,8 @@ struct SharedStateData final
     float mouseSpeed = 1.f;
     bool invertX = false;
     bool invertY = false;
+    bool showBeacon = true;
+    float beaconColour = 1.f; //normalised rotation
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

@@ -36,8 +36,9 @@ source distribution.
 //(terrain data changed between 100 -> 110)
 //(model format changed between 120 -> 130)
 //(server layout updated 140 -> 150)
-static constexpr std::uint16_t CURRENT_VER = 150;
-static const std::string StringVer("1.5.0");
+//(skybox format changed 150 -> 160)
+static constexpr std::uint16_t CURRENT_VER = 160;
+static const std::string StringVer("1.6.0");
 
 namespace ScoreType
 {
@@ -66,6 +67,7 @@ namespace PacketID
     enum
     {
         //from server
+        PingTime, //< uint16 client id | uint16 time in ms
         ClientConnected, //< uint8 client ID
         ClientDisconnected, //< uint8 client ID
         ConnectionRefused, //< uint8 MessageType
@@ -93,7 +95,6 @@ namespace PacketID
         ReadyQuitStatus, //< uint8 flags containing status of ready/quit at round end
 
         //from client
-        ClientVersion, //uint16 CURRENT_VER of client. Clients are kicked if this does not match the server
         RequestGameStart, //uint8 sv::State, ie Golf to start golf, Billiards to start billiards etc
         ClientReady, //< uint8 clientID - requests game data from server. Sent repeatedly until ack'd
         InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput) for golf, or BilliardBallInput
@@ -104,11 +105,13 @@ namespace PacketID
         BallPlaced, //< BilliardBallInput with position in offset member
 
         //both directions
+        ClientVersion, //uint16 FROM server on join contains the game mode, TO server CURRENT_VER of client. Clients are kicked if this does not match the server
         TurnReady, //< uint8 clientID - ready to take their turn - rebroadcast by server to tell all clients to clear messages
         MapInfo, //< serialised cro::String containing course directory
         ScoreType, //< uint8 ScoreType of golf game
         LobbyReady, //< uint8 playerID uint8 0 false 1 true
         AchievementGet, //< uint8 client uint8 achievement id (always assume first player on client, as achievements are disabled other wise)
+        CPUThink, //< uint8 0 if begin think, 1 end think
         CueUpdate //< BilliardsUpdate to show the 'ghost' cue on remote clients
     };
 }

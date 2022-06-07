@@ -1,0 +1,19 @@
+model beacon
+{
+    mesh = assets/golf/models/beacon.cmb
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 0.371681,0.371678,0.371678,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = true
+        vertex_coloured = true
+        blendmode = add
+        diffuse = "assets/golf/images/beacon.png"
+
+    }
+}

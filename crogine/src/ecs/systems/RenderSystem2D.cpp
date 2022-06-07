@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -96,13 +96,17 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
         auto& drawable = entity.getComponent<Drawable2D>();
         if (drawable.m_autoCrop)
         {
-            const auto worldMat = entity.getComponent<cro::Transform>().getWorldTransform();
-
-            //check local bounds for visibility and draw if visible
-            auto bounds = drawable.m_localBounds.transform(worldMat);
-            if (bounds.intersects(viewRect))
+            auto scale = entity.getComponent<cro::Transform>().getWorldScale();
+            if (scale.x * scale.y != 0)
             {
-                m_drawList.push_back(entity);
+                const auto worldMat = entity.getComponent<cro::Transform>().getWorldTransform();
+
+                //check local bounds for visibility and draw if visible
+                auto bounds = drawable.m_localBounds.transform(worldMat);
+                if (bounds.intersects(viewRect))
+                {
+                    m_drawList.push_back(entity);
+                }
             }
         }
         else

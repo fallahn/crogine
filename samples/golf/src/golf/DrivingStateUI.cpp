@@ -992,6 +992,9 @@ your overall accuracy. Good Luck!
 
                     m_mapTexture.clear(cro::Colour::Transparent);
                     m_mapTexture.display();
+
+                    //reset stat timer
+                    m_statClock.restart();
                 }
             });
     centreSprite(startButton);
@@ -1637,6 +1640,9 @@ void DrivingState::showMessage(float range)
                     m_gameScene.render();
                     m_mapTexture.display();
                     m_gameScene.setActiveCamera(oldCam);
+
+                    //update the stat
+                    Achievements::incrementStat(StatStrings[StatID::TimeOnTheRange], m_statClock.elapsed().asSeconds());
                 }
                 else
                 {

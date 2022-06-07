@@ -1,0 +1,22 @@
+model driver01
+{
+    mesh = assets/golf/models/menu/driver01.cmb
+    cast_shadows = true
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        subrect = 0.333000,0.000000,0.333000,1.000000
+        rx_shadows = true
+        blendmode = none
+        diffuse = "assets/golf/crowd/crowd01.png"
+        skinned = true
+
+    }
+}

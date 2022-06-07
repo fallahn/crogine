@@ -317,6 +317,7 @@
     <ClCompile Include="src\golf\ClubhouseState.cpp" />
     <ClCompile Include="src\golf\ClubhouseStateUI.cpp" />
     <ClCompile Include="src\golf\CollisionMesh.cpp" />
+    <ClCompile Include="src\golf\CPUGolfer.cpp" />
     <ClCompile Include="src\golf\DebugDraw.cpp" />
     <ClCompile Include="src\golf\DrivingRangeDirector.cpp" />
     <ClCompile Include="src\golf\DrivingState.cpp" />
@@ -327,6 +328,7 @@
     <ClCompile Include="src\golf\GolfParticleDirector.cpp" />
     <ClCompile Include="src\golf\GolfSoundDirector.cpp" />
     <ClCompile Include="src\golf\GolfState.cpp" />
+    <ClCompile Include="src\golf\GolfStateDebug.cpp" />
     <ClCompile Include="src\golf\InputParser.cpp" />
     <ClCompile Include="src\golf\GolfStateUI.cpp" />
     <ClCompile Include="src\golf\KeyboardState.cpp" />
@@ -361,6 +363,8 @@
     <ClCompile Include="src\golf\TrophyState.cpp" />
     <ClCompile Include="src\golf\TutorialDirector.cpp" />
     <ClCompile Include="src\golf\TutorialState.cpp" />
+    <ClCompile Include="src\golf\VatAnimationSystem.cpp" />
+    <ClCompile Include="src\golf\VatFile.cpp" />
     <ClCompile Include="src\golf\Weather.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -374,6 +378,7 @@
     <ClInclude Include="src\DefaultAchievements.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\golf\BallSystem.hpp" />
+    <ClInclude Include="src\golf\BeaconCallback.hpp" />
     <ClInclude Include="src\golf\Billboard.hpp" />
     <ClInclude Include="src\golf\BilliardsClientCollision.hpp" />
     <ClInclude Include="src\golf\BilliardsSoundDirector.hpp" />
@@ -390,6 +395,7 @@
     <ClInclude Include="src\golf\CollisionMesh.hpp" />
     <ClInclude Include="src\golf\CommandIDs.hpp" />
     <ClInclude Include="src\golf\CommonConsts.hpp" />
+    <ClInclude Include="src\golf\CPUGolfer.hpp" />
     <ClInclude Include="src\golf\DebugDraw.hpp" />
     <ClInclude Include="src\golf\DrivingRangeDirector.hpp" />
     <ClInclude Include="src\golf\DrivingState.hpp" />
@@ -447,12 +453,15 @@
     <ClInclude Include="src\golf\TutorialDirector.hpp" />
     <ClInclude Include="src\golf\TutorialState.hpp" />
     <ClInclude Include="src\golf\Utility.hpp" />
+    <ClInclude Include="src\golf\VatFile.hpp" />
+    <ClInclude Include="src\golf\VatAnimationSystem.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\GolfGame.hpp" />
     <ClInclude Include="src\SplashScreenState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\golf\BeaconShader.inl" />
     <None Include="src\golf\BillboardShader.inl" />
     <None Include="src\golf\CloudShader.inl" />
     <None Include="src\golf\MinimapShader.inl" />

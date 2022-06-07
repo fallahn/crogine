@@ -40,10 +40,12 @@ struct CommandID final
         Tee             = 0x10,
         Cart            = 0x20,
         SlopeIndicator  = 0x40,
-        //PlayerShadow    = 0x80,
+        Crowd           = 0x80,
         SpectatorCam    = 0x100,
         PlayerAvatar    = 0x200,
-        ParticleEmitter = 0x400
+        ParticleEmitter = 0x400,
+        Beacon          = 0x800,
+        StrokeArc       = 0x1000
     };
 
     struct UI final
@@ -54,7 +56,7 @@ struct CommandID final
             PlayerName           = 0x2,
             UIElement            = 0x4, //has its position updated on UI layout
             Root                 = 0x8,
-            //PlayerAvatar         = 0x10,
+            ThinkBubble          = 0x10,
             WindSock             = 0x20,
             WindSpeed            = 0x40,
             WindString           = 0x80,

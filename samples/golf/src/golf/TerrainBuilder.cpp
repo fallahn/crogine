@@ -33,6 +33,8 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
 #include "CommandIDs.hpp"
+#include "VatFile.hpp"
+#include "VatAnimationSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -59,7 +61,7 @@ source distribution.
 namespace
 {
 #include "TerrainShader.inl"
-
+#include "ShadowMapping.inl"
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler
     static constexpr float TreeDensity = 4.f;
@@ -84,6 +86,7 @@ namespace
         float destination = 0.f;
         cro::Entity otherEnt;
         cro::Entity instancedEnt; //entity containing instanced geometry
+        std::vector<cro::Entity>* crowdEnts = nullptr;
     };
 
     //callback for swapping shrub ents
@@ -120,6 +123,18 @@ namespace
                 if (swapData.instancedEnt.isValid())
                 {
                     swapData.instancedEnt.getComponent<cro::Model>().setHidden(true);
+                }
+
+                if (swapData.crowdEnts)
+                {
+                    auto& ents = *swapData.crowdEnts;
+                    for (auto e : ents)
+                    {
+                        if (e.isValid())
+                        {
+                            e.getComponent<cro::Model>().setHidden(true);
+                        }
+                    }
                 }
             }
         }
@@ -221,7 +236,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
 
     //use a custom material for morphage
-    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define RX_SHADOWS\n#define ADD_NOISE\n");
+    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define RX_SHADOWS\n#define ADD_NOISE\n#define TERRAIN\n");
     const auto& shader = resources.shaders.get(ShaderID::Terrain);
     m_terrainProperties.morphUniform = shader.getUniformID("u_morphTime");
     m_terrainProperties.shaderID = shader.getGLHandle();
@@ -273,13 +288,30 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     //custom shader for instanced plants
     resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
-    const auto& reedShader = resources.shaders.get(ShaderID::CelTexturedInstanced);
-    materialID = resources.materials.add(reedShader);
+    auto reedMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CelTexturedInstanced));
 
-    //create billboard entities
+    //and VATs shader for crowd
+    resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define NOCHEX\n#define TEXTURED\n");
+    auto crowdMaterialID = resources.materials.add(resources.shaders.get(ShaderID::Crowd));
+
+    resources.shaders.loadFromString(ShaderID::CrowdShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define VATS\n");
+    auto shadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdShadow));
+
+
+    //create billboard/instanced entities
     cro::ModelDefinition billboardDef(resources);
     cro::ModelDefinition reedsDef(resources);
+    cro::ModelDefinition crowdDef(resources);
     std::int32_t i = 0;
+
+    //TODO scan the directory for definition files?
+    const std::array<std::string, 4u> spectatorPaths =
+    {
+        "assets/golf/crowd/spectator01.vat",
+        "assets/golf/crowd/spectator02.vat",
+        "assets/golf/crowd/spectator03.vat",
+        "assets/golf/crowd/spectator04.vat"
+    };
 
     for (auto& entity : m_billboardEntities)
     {
@@ -322,7 +354,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
             if (reedsDef.loadFromFile(instancePath, true))
             {
-                auto material = resources.materials.get(materialID);
+                auto material = resources.materials.get(reedMaterialID);
 
                 auto childEnt = scene.createEntity();
                 childEnt.addComponent<cro::Transform>();
@@ -338,7 +370,47 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
                 m_instancedEntities[i] = childEnt;
             }
+
+            //create entities to render instanced crowd models
+            //TODO will breaking this up for better culling opportunity benefit perf?
+            for (const auto& p : spectatorPaths)
+            {
+                VatFile vatFile;
+                if (vatFile.loadFromFile(p) &&
+                    crowdDef.loadFromFile(vatFile.getModelPath(), true))
+                {
+                    auto childEnt = scene.createEntity();
+                    childEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f });
+                    crowdDef.createModel(childEnt);
+
+                    //setup material
+                    auto material = resources.materials.get(crowdMaterialID);
+                    applyMaterialData(crowdDef, material);
+
+                    material.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
+                    material.setProperty("u_vatsNormal", resources.textures.get(vatFile.getNormalPath()));
+
+                    auto shadowMaterial = resources.materials.get(shadowMaterialID);
+                    shadowMaterial.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
+
+                    childEnt.getComponent<cro::Model>().setMaterial(0, material);
+                    childEnt.getComponent<cro::Model>().setShadowMaterial(0, shadowMaterial);
+                    childEnt.getComponent<cro::Model>().setHidden(true);
+                    childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+                    childEnt.addComponent<VatAnimation>().setVatData(vatFile);
+                    childEnt.addComponent<cro::CommandTarget>().ID = CommandID::Crowd;
+                    entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
+
+                    m_crowdEntities[i].push_back(childEnt);
+                }
+            }
+
             i++;
+        }
+        else
+        {
+            //hmmm we need access to shared state data to set an
+            //error message and the state stack to push said error
         }
     }
 
@@ -469,6 +541,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.destination = -MaxShrubOffset;
                 swapData.otherEnt = m_billboardEntities[first];
                 swapData.instancedEnt = m_instancedEntities[second];
+                swapData.crowdEnts = &m_crowdEntities[second];
                 swapData.currentTime = 0.f;
                 m_billboardEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
                 m_billboardEntities[second].getComponent<cro::Callback>().active = true;
@@ -479,6 +552,24 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 {
                     m_instancedEntities[first].getComponent<cro::Model>().setHidden(false);
                     m_instancedEntities[first].getComponent<cro::Model>().setInstanceTransforms(m_instanceTransforms);
+                }
+
+                //crowd instances
+                //TODO can we move some of this to the thread func (can't set transforms in it though)
+                std::vector<std::vector<glm::mat4>> positions(m_crowdEntities[first].size());
+                for (auto i = 0u; i < m_holeData[m_currentHole].crowdPositions.size(); ++i)
+                {
+                    positions[i % positions.size()].push_back(m_holeData[m_currentHole].crowdPositions[i]);
+                }
+
+                for (auto i = 0u; i < m_crowdEntities[first].size(); ++i)
+                {
+                    if (m_crowdEntities[first][i].isValid()
+                        && !positions[i].empty())
+                    {
+                        m_crowdEntities[first][i].getComponent<cro::Model>().setInstanceTransforms(positions[i]);
+                        m_crowdEntities[first][i].getComponent<cro::Model>().setHidden(false);
+                    }
                 }
             }
 

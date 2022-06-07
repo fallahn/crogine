@@ -1,9 +1,15 @@
- 
+spritesheet scoreboard
 {
     src = "assets/golf/images/score_background.png"
     smooth = false
     repeat = false
 
+    sprite border
+    {
+        bounds = 388.000000,0.000000,400.000000,300.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
     sprite yes_highlight
     {
         bounds = 464.000000,472.000000,32.000000,18.000000
@@ -16,18 +22,6 @@
         colour = 1.000000,1.000000,1.000000,1.000000
 
     }
-    sprite border
-    {
-        bounds = 388.000000,0.000000,400.000000,300.000000
-        colour = 1.000000,1.000000,1.000000,1.000000
-
-    }
-    sprite player_select
-    {
-        bounds = 400.000000,308.000000,94.000000,98.000000
-        colour = 1.000000,1.000000,1.000000,1.000000
-
-    }
     sprite no_highlight
     {
         bounds = 512.000000,472.000000,32.000000,18.000000
@@ -37,6 +31,12 @@
     sprite background
     {
         bounds = 0.000000,0.000000,388.000000,532.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite player_select
+    {
+        bounds = 400.000000,308.000000,94.000000,98.000000
         colour = 1.000000,1.000000,1.000000,1.000000
 
     }
@@ -64,15 +64,15 @@
         colour = 1.000000,1.000000,1.000000,1.000000
 
     }
-    sprite quit_not_ready
-    {
-        bounds = 416.000000,500.000000,16.000000,16.000000
-        colour = 1.000000,1.000000,1.000000,1.000000
-
-    }
     sprite start_highlight
     {
         bounds = 400.000000,472.000000,48.000000,18.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite quit_not_ready
+    {
+        bounds = 416.000000,500.000000,16.000000,16.000000
         colour = 1.000000,1.000000,1.000000,1.000000
 
     }
@@ -173,6 +173,49 @@
             event = 1.000000,2.000000
             event = 1.000000,3.000000
 
+        }
+    }
+    sprite strength_meter
+    {
+        bounds = 464.000000,500.000000,16.000000,16.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+
+        animation zero
+        {
+            frame = 464.000000,500.000000,16.000000,16.000000
+            loop = true
+            framerate = 24
+        }
+
+        animation one
+        {
+            frame = 480.000000,500.000000,16.000000,16.000000
+            loop = true
+            framerate = 24
+        }
+
+
+        animation two
+        {
+            frame = 496.000000,500.000000,16.000000,16.000000
+            loop = true
+            framerate = 24
+        }
+
+
+        animation three
+        {
+            frame = 512.000000,500.000000,16.000000,16.000000
+            loop = true
+            framerate = 24
+        }
+
+        animation four
+        {
+            frame = 528.000000,500.000000,16.000000,16.000000
+            loop = true
+            framerate = 24
         }
     }
 }

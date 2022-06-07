@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/detail/Assert.hpp>
+#include <crogine/detail/glm/gtc/quaternion.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
 #include <random>
@@ -86,6 +87,40 @@ namespace cro
             \param maxPoints maximum number of points to try generating
             */
             CRO_EXPORT_API std::vector<glm::vec2> poissonDiscDistribution(const FloatRect& area, float minDist, std::size_t maxPoints);
+
+            /*!
+            \brief Returns a pseudo-random unit quaternion
+            Probably biased.
+            */
+            static inline glm::quat quaternion()
+            {
+                //https://stackoverflow.com/a/56794499/6740859
+
+                float x = 0.f;
+                float y = 0.f;
+                float z = 0.f;
+
+                float u = 0.f;
+                float v = 0.f;
+                float w = 0.f;
+
+                do
+                {
+                    x = value(-1.f, 1.f);
+                    y = value(-1.f, 1.f);
+                    z = x * x + y * y;
+                } while (z > 1);
+
+                do
+                {
+                    u = value(-1.f, 1.f);
+                    v = value(-1.f, 1.f);
+                    w = u * u + v * v;
+                } while (w > 1);
+
+                float s = std::sqrt((1.f - z) / w);
+                return { x, y, s * u, s * v };
+            }
         }
     }
 }

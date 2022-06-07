@@ -1,0 +1,7 @@
+ball 
+{
+    model = assets/golf/models/balls/ball_pineapple.cmt
+    tint = 0.949,0.812,0.361,1.0
+    uid = 2159568665
+
+}

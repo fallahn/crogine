@@ -48,6 +48,31 @@ NetEvent::Packet::~Packet()
     }
 }
 
+NetEvent::Packet::Packet(Packet&& other) noexcept
+    : m_packet(other.m_packet),
+    m_id(other.m_id)
+{
+    other.m_packet = nullptr;
+    other.m_id = 0;
+}
+
+NetEvent::Packet& NetEvent::Packet::operator=(NetEvent::Packet&& other) noexcept
+{
+    if (m_packet)
+    {
+        enet_packet_destroy(m_packet);
+    }
+
+    m_packet = other.m_packet;
+    m_id = other.m_id;
+
+
+    other.m_packet = nullptr;
+    other.m_id = 0;
+
+    return *this;
+}
+
 //public
 std::uint8_t NetEvent::Packet::getID() const
 {

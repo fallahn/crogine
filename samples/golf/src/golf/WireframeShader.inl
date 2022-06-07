@@ -35,6 +35,10 @@ static const std::string WireframeVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
 
+//#if defined (DASHED)
+    ATTRIBUTE vec2 a_texCoord0;
+//#endif
+
     uniform mat4 u_worldMatrix;
     uniform mat4 u_worldViewMatrix;
     uniform mat4 u_projectionMatrix;
@@ -45,6 +49,7 @@ static const std::string WireframeVertex = R"(
 #endif
 
     VARYING_OUT LOW vec4 v_colour;
+    VARYING_OUT vec2 v_texCoord;
 
     void main()
     {
@@ -54,6 +59,9 @@ static const std::string WireframeVertex = R"(
 
         vec4 worldPos = u_worldMatrix * position;
         v_colour = a_colour;
+#if defined (DASHED)
+        v_texCoord = a_texCoord0;
+#endif
 
 #if defined (CULLED)
         vec3 distance = worldPos.xyz - u_cameraWorldPosition;
@@ -67,13 +75,25 @@ static const std::string WireframeVertex = R"(
 static const std::string WireframeFragment = R"(
     OUTPUT
     uniform vec4 u_colour = vec4(1.0);
-
+#if defined (DASHED)
+    uniform float u_time;
+#endif
     VARYING_IN vec4 v_colour;
+    VARYING_IN vec2 v_texCoord;
+
+    const float TAU = 6.28;
 
     void main()
     {
         vec4 colour = v_colour * u_colour;
         colour.rgb += (1.0 - colour.a) * colour.rgb;
+
+#if defined (DASHED)
+        float alpha = (sin(u_time - ((v_texCoord.x * TAU) * 40.0)) + 1.0) * 0.5;
+        alpha = step(0.5, alpha);
+        if (alpha < 0.5) discard;
+#endif
+
         FRAG_OUT = colour;
     }
 )";

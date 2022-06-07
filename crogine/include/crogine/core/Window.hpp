@@ -240,6 +240,8 @@ namespace cro
         bool m_fullscreen;
         bool m_multisamplingEnabled;
 
+        glm::uvec2 m_previousWindowSize; //restore to this if toggling full screen
+
         const Cursor* m_cursor;
         friend class Cursor;
 

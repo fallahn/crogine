@@ -12,6 +12,8 @@ Spline::Spline()
 void Spline::addPoint(const glm::vec3& v)
 {
     m_points.push_back(v);
+
+    //hmmmm but does this not assume we're evenly spaced?
     m_dt = 1.f / static_cast<float>(m_points.size());
 }
 

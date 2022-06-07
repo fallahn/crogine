@@ -144,14 +144,26 @@ hole 15
 
     crowd
     {
-        position = 85.491272,1.273556,-40.166801
-        rotation = -54.495126
+        position = 85.762596,1.273602,-42.134678
+        rotation = 120.431550
     }
 
     crowd
     {
-        position = 64.639610,1.273559,-183.477524
-        rotation = 0.000000
+        position = 60.641342,1.273601,-182.320267
+        rotation = 10.446217
+    }
+
+    crowd
+    {
+        position = 297.508606,1.273602,-135.892227
+        rotation = -88.991736
+    }
+
+    crowd
+    {
+        position = 255.463913,1.273602,-97.391426
+        rotation = -190.136508
     }
 
     prop
@@ -210,18 +222,6 @@ hole 15
         scale = 1.000000,1.000000,1.000000
     }
 
-    crowd
-    {
-        position = 297.386597,1.273560,-128.791306
-        rotation = -92.212594
-    }
-
-    crowd
-    {
-        position = 256.109253,1.273552,-96.277855
-        rotation = 0.000000
-    }
-
     prop
     {
         model = "assets/golf/models/beach_hut.cmt"
@@ -237,5 +237,4 @@ hole 15
         rotation = 160.653721
         scale = 1.000000,1.000000,1.000000
     }
-
 }

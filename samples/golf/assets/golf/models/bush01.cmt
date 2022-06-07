@@ -1,0 +1,20 @@
+model bush01
+{
+    mesh = assets/golf/models/bush01.cmb
+    cast_shadows = true
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = true
+        use_mipmaps = false
+        blendmode = none
+        diffuse = "assets/golf/images/oak_leaf.png"
+        alpha_clip = 0.339000
+
+    }
+}

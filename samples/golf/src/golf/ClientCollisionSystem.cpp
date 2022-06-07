@@ -94,7 +94,9 @@ void ClientCollisionSystem::process(float)
                 collider.terrain = TerrainID::Hole;
             }
         }
-        else if (collider.terrain == TerrainID::Water)
+
+        //not sure why we had this, this case is caught below
+        /*else if (collider.terrain == TerrainID::Water)
         {
             if (position.y < WaterLevel
                 && collider.previousWorldHeight > WaterLevel)
@@ -105,7 +107,7 @@ void ClientCollisionSystem::process(float)
                 msg->terrain = TerrainID::Water;
                 msg->clubID = m_club;
             }
-        }
+        }*/
 
         const auto notify = [&](CollisionEvent::Type type, glm::vec3 position)
         {

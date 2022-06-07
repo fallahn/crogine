@@ -35,6 +35,7 @@ source distribution.
 #include "HoleData.hpp"
 #include "Billboard.hpp"
 
+#include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -64,6 +65,7 @@ private:
     InputParser m_inputParser;
 
     cro::Scene m_gameScene;
+    cro::Scene m_skyScene;
     cro::Scene m_uiScene;
     glm::vec2 m_viewScale;
 
@@ -95,6 +97,8 @@ private:
             Hair,
             Wireframe,
             WireframeCulled,
+            Beacon,
+            Horizon,
 
             Count
         };
@@ -151,7 +155,7 @@ private:
     void initAudio();
     void createScene();
     void createFoliage(cro::Entity);
-    void createClouds();
+    void createClouds(const std::string&);
     void createPlayer(cro::Entity);
     void createBall();
     void createFlag();
@@ -191,6 +195,8 @@ private:
     std::array<float, 3u> m_topScores = {};
     void loadScores();
     void saveScores();
+
+    cro::Clock m_statClock;
 
 #ifdef CRO_DEBUG_
     cro::Texture m_debugHeightmap;

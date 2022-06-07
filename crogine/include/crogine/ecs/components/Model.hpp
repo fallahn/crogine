@@ -76,7 +76,19 @@ namespace cro
         }
 
         /*!
-        \brief Enables of disables depth testing for a material at the given index
+        \brief Sets a parameter on the shadow map material applied at the given index
+        This is generally only useful for custom shadow map shaders, as the default has
+        no paramters to set.
+        */
+        template <typename T>
+        void setShadowMaterialProperty(std::size_t idx, const std::string& str, T val)
+        {
+            CRO_ASSERT(idx < m_materials[Mesh::IndexData::Shadow].size(), "Index out of range");
+            m_materials[Mesh::IndexData::Shadow][idx].setProperty(str, val);
+        }
+
+        /*!
+        \brief Enables or disables depth testing for a material at the given index
         \param idx Index of the material to set the depth test paramter on
         \param enabled Set to true to enable depth testing
         This doesn't affect shadow pass materials. Useful for overlay materials

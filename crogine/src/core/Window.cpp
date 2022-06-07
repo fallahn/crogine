@@ -54,6 +54,7 @@ Window::Window()
     m_mainContext           (nullptr),
     m_fullscreen            (false),
     m_multisamplingEnabled  (false),
+    m_previousWindowSize    (0),
     m_cursor                (nullptr)
 {
 
@@ -203,6 +204,8 @@ glm::uvec2 Window::getSize() const
 
 void Window::setSize(glm::uvec2 size)
 {
+    m_previousWindowSize = size;
+
     CRO_ASSERT(m_window, "window not created");
     SDL_SetWindowSize(m_window, size.x, size.y);
     SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
@@ -219,12 +222,28 @@ void Window::setFullScreen(bool fullscreen)
 #define FS_MODE SDL_WINDOW_FULLSCREEN_DESKTOP
 #endif
 
+    std::int32_t mode = 0;
+    if (fullscreen)
+    {
+        mode = FS_MODE;
+        m_previousWindowSize = getSize();
+    }
+
     CRO_ASSERT(m_window, "window not created");
-    if (SDL_SetWindowFullscreen(m_window, fullscreen ? FS_MODE : 0) == 0)
+    if (SDL_SetWindowFullscreen(m_window, mode) == 0)
     {
         m_fullscreen = fullscreen;
         if (!fullscreen)
         {
+            SDL_DisplayMode dm;
+            SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_window), &dm);
+            if (dm.w == m_previousWindowSize.x
+                && dm.h == m_previousWindowSize.y) 
+            {
+                m_previousWindowSize = { 640u, 480u };
+            }
+
+            SDL_SetWindowSize(m_window, m_previousWindowSize.x, m_previousWindowSize.y);
             SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
         }
     }

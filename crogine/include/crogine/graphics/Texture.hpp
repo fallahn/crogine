@@ -183,5 +183,10 @@ namespace cro
         bool m_smooth;
         bool m_repeated;
         bool m_hasMipMaps;
+
+        bool isFloat(SDL_RWops* file);
+        bool loadAsFloat(SDL_RWops* file, bool createMipmaps);
+        bool loadAsByte(SDL_RWops* file, bool createMipmaps);
+        void generateMipMaps();
     };
 }

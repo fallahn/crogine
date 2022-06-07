@@ -313,7 +313,7 @@ void PracticeState::buildScene()
                     //start a local server and connect
                     if (!m_sharedData.clientConnection.connected)
                     {
-                        m_sharedData.serverInstance.launch(1);
+                        m_sharedData.serverInstance.launch(1, Server::GameMode::Golf);
 
                         //small delay for server to get ready
                         cro::Clock clock;

@@ -236,9 +236,9 @@ void GolfState::createWeather()
     };
 }
 
-void GolfState::createClouds(const ThemeSettings& theme)
+void GolfState::createClouds(const std::string& cloudPath)
 {
-    auto spritePath = theme.cloudPath.empty() ? "assets/golf/sprites/clouds.spt" : theme.cloudPath;
+    auto spritePath = cloudPath.empty() ? "assets/golf/sprites/clouds.spt" : cloudPath;
 
     cro::SpriteSheet spriteSheet;
     if (spriteSheet.loadFromFile(spritePath, m_resources.textures)
@@ -293,6 +293,7 @@ void GolfState::createClouds(const ThemeSettings& theme)
             float scale = static_cast<float>(cro::Util::Random::value(2, 8));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
             entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, 180.f * cro::Util::Const::degToRad);
 
             delayedUpdates.push_back(entity);
         }
@@ -313,4 +314,45 @@ void GolfState::createClouds(const ThemeSettings& theme)
             m_uiScene.destroyEntity(e);
         };
     }
+}
+
+void GolfState::buildBow()
+{
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::UV0, 1, GL_TRIANGLE_STRIP));
+
+    auto* meshData = &m_resources.meshes.getMesh(meshID);
+    std::vector<float> verts =
+    {
+        -5.f, 5.f, -12.f,    1.f, 1.f, 1.f, 1.f,  0.f, 1.f,
+        -5.f, -5.f, -12.f,   1.f, 1.f, 1.f, 1.f,  0.f, 0.f,
+        5.f, 5.f, -12.f,     1.f, 1.f, 1.f, 1.f,  1.f, 1.f,
+        5.f, -5.f, -12.f,    1.f, 1.f, 1.f, 1.f,  1.f, 0.f,
+    };
+    std::vector<std::uint32_t> indices =
+    {
+        0,1,2,3
+    };
+
+    meshData->vertexCount = verts.size();
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = indices.size();
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    meshData->boundingBox = { glm::vec3(-1.f, -1.f, -12.1f), glm::vec3(1.f, 1.f, -11.9f) };
+    meshData->boundingSphere = meshData->boundingBox;
+
+    m_resources.shaders.loadFromString(ShaderID::Bow, CloudVertex, BowFragment);
+    auto materialID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Bow));
+    auto material = m_resources.materials.get(materialID);
+    material.blendMode = cro::Material::BlendMode::Additive;
+
+    auto entity = m_skyScene.createEntity();
+    entity.addComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 220.f * cro::Util::Const::degToRad);
+    entity.addComponent<cro::Model>(*meshData, material);
 }

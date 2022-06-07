@@ -9,6 +9,9 @@ model driving_range
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = true
         blendmode = none
         diffuse = "assets/golf/images/driving_range.png"
 
@@ -19,6 +22,9 @@ model driving_range
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = true
         blendmode = none
         diffuse = "assets/golf/images/scrub.png"
 
@@ -29,6 +35,9 @@ model driving_range
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
         blendmode = none
         diffuse = "assets/golf/images/driving_range_02.png"
         alpha_clip = 0.303000

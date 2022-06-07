@@ -1,16 +1,15 @@
 #### Course File Format
-Courses are defined by sets of two different kinds of file (subject to change)
+Courses are defined by sets of three different kinds of file (subject to change)
 
 ###### Course File
 A course folder should contain one file with the name `course.data`. It has the following format:
 
     course course_01 //name or identifier, doesn't have to be unique
     {
-        skybox = "assets/golf/images/skybox/sky.ccm" //a path to the skybox to use when the course is loaded
+        skybox = "assets/golf/skyboxes/sky.sbf" //a path to the skybox definition file to use (see below)
         billboard_model = "assets/golf/models/shrubbery.cmt" //path to the model definition for the billboard file containing the trees/shrubs
         billboard_sprites = "assets/golf/sprites/shrubbery.spt" //path to the spritesheet containing the sprite definitions for each billboard in the billboard model
         instance_model = "assets/golf/models/reeds_large.cmt" //optional path to a model which is instanced around the water's edge. Defaults to reeds if this is omitted
-        clouds = "assets/golf/sprites/clouds.spt" //optional path to a sprite sheet containing cloud sprites. These are used for the dynamic clouds.
         grass = 1,0.5,0,1 //surrounding grass colour. This is optional and will default to dark green from the colordome-32 palette
         grass_tint = 1.0, 1.0, 0.5, 1 //affects the colour of the noise applied to the grass colour. This is optional, by default just darkens the grass colour
         audio = "assets/golf/sound/ambience.xas" //optional path to a crogine audioscape file for environment sounds (see below)
@@ -69,3 +68,24 @@ The red channel of the map file stores a value representing the current terrain 
 The green channel of the map contains height values used to create the surrounding terrain. Values of zero will be below the water plane, whereas values of 255 will raise the terrain at that point to its max height (currently 4.5 metres). A heightmap can be created by sculpting a 3D plane and baking its values to a texture in software such as Blender. See readme.txt for more details.
 
 Note that although the blue and alpha channels are currently unused the image MUST be in RGBA format for it to be loaded correctly.
+
+
+###### Skybox File (since 1.6.0)
+The skybox definition file is used to declare the colour of the skybox, as well as the layout of any models used in the background. Its syntax is very similar to the hole definition file, with the same declarations used for props.
+
+    skybox
+    {
+        sky_top = 1.0,1.0,1.0,1.0 //normalised colour for the top part of the sky gradient
+        sky_bottom = 0.9, 0.8, 0.9, 1.0 //normalised colour for the bottom part of the sky gradient
+        clouds = "path/to/clouds.spt" //path to a sprite sheet containing cloud sprites. Note that previous to 1.6.0 this was part of the course definition file.
+
+        prop
+        {
+            model = "assets/golf/models/skybox/horizon01.cmt"
+            position = 0,0,0 //note that in the case of sky boxes the limit is a 10 unit radius around 0,0,0 with a minimum of 3 units
+            scale = 1,1,1 //models such as the horizon are specifically designed for skyboxes. Other props will work but should be scaled down to around 1/64 to look correct.
+            rotation = 10.2 //rotation around the Y axis
+        }
+    }
+
+For an example of creating models for a skybox see the `skybox.blend` file. Note that many models include 'fake' reflections modelled directly as part of the mesh, for cases where they are rendered outside the world's reflection plane. The vertex colour of the mesh is used to decide how much 'tint' the model receives in the reflected part to take on the water colour, where 1 (white) is no tint, and 0 (black) is completely water colour.

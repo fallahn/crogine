@@ -157,6 +157,9 @@ static const std::string CelVertexShader = R"(
 #if defined (TEXTURED)
     ATTRIBUTE vec2 a_texCoord0;
 #endif
+#if defined (VATS)
+    ATTRIBUTE vec2 a_texCoord1;
+#endif
 
 #if defined(INSTANCING)
     ATTRIBUTE mat4 a_instanceWorldMatrix;
@@ -168,6 +171,15 @@ static const std::string CelVertexShader = R"(
     ATTRIBUTE vec4 a_boneIndices;
     ATTRIBUTE vec4 a_boneWeights;
     uniform mat4 u_boneMatrices[MAX_BONES];
+#endif
+
+#if defined (VATS)
+    #define MAX_INSTANCE 3
+    uniform sampler2D u_vatsPosition;
+    uniform sampler2D u_vatsNormal;
+    uniform float u_time;
+    uniform float u_maxTime;
+    uniform float u_offsetMultiplier;
 #endif
 
 #if defined(RX_SHADOWS)
@@ -214,6 +226,15 @@ static const std::string CelVertexShader = R"(
     const vec2 MapSize = vec2(320.0, 200.0);
 #endif
 
+    vec3 decodeVector(sampler2D source, vec2 coord)
+    {
+        vec3 vec = TEXTURE(source, coord).rgb;
+        vec *= 2.0;
+        vec -= 1.0;
+
+        return vec;
+    }
+
     void main()
     {
     #if defined (INSTANCING)
@@ -226,8 +247,16 @@ static const std::string CelVertexShader = R"(
         mat3 normalMatrix = u_normalMatrix;
     #endif
 
+    #if defined (VATS)
+        vec2 texCoord = a_texCoord1;
+        float scale = texCoord.y;
+        float instanceOffset = mod(gl_InstanceID, MAX_INSTANCE) * u_offsetMultiplier;
+        texCoord.y = mod(u_time + (0.15 * instanceOffset), u_maxTime);
 
+        vec4 position = vec4(decodeVector(u_vatsPosition, texCoord) * scale, 1.0);
+    #else
         vec4 position = a_position;
+    #endif
 
     #if defined(SKINNED)
         mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
@@ -273,16 +302,24 @@ static const std::string CelVertexShader = R"(
 
         gl_Position = vertPos;
 
+#if defined(VATS)
+        vec3 normal = decodeVector(u_vatsNormal, texCoord);
+#else
         vec3 normal = a_normal;
-    #if defined(SKINNED)
+#endif
+#if defined(SKINNED)
         normal = (skinMatrix * vec4(normal, 0.0)).xyz;
-    #endif
+#endif
         v_normal = normalMatrix * normal;
         v_cameraWorldPosition = u_cameraWorldPosition;
         v_colour = a_colour;
 
 #if defined (TEXTURED)
         v_texCoord = a_texCoord0;
+#if defined (VATS)
+        v_texCoord.x /= MAX_INSTANCE;
+        v_texCoord.x += (1.0 / MAX_INSTANCE) * mod(gl_InstanceID, MAX_INSTANCE);
+#endif
 #endif
 
 #if defined (NORMAL_MAP)
@@ -317,6 +354,10 @@ static const std::string CelFragmentShader = R"(
     uniform vec4 u_tintColour = vec4(1.0);
 #endif
 
+#if defined FADE_INPUT
+    uniform float u_fadeAmount = 1.0;
+#endif
+
 #if defined (USER_COLOUR)
     uniform vec4 u_hairColour = vec4(1.0, 0.0, 0.0, 1.0);
     uniform vec4 u_darkColour = vec4(0.5);
@@ -328,6 +369,10 @@ static const std::string CelFragmentShader = R"(
 
 #if defined (SUBRECT)
     uniform vec4 u_subrect = vec4(0.0, 0.0, 1.0, 1.0);
+#endif
+
+#if defined (TERRAIN)
+    uniform float u_morphTime;
 #endif
 
 #if defined (TEXTURED)
@@ -483,9 +528,15 @@ static const std::string CelFragmentShader = R"(
 
 
     const float Quantise = 10.0;
+    const float TerrainLevel = -0.049;
+    const float WaterLevel = -0.019;
 
     void main()
     {
+#if defined(TERRAIN)
+    //if (v_worldPosition.y < TerrainLevel - u_morphTime) discard;
+#endif
+
         vec4 colour = vec4(1.0);
 #if defined (TEXTURED)
         vec2 texCoord = v_texCoord;
@@ -577,12 +628,28 @@ static const std::string CelFragmentShader = R"(
         FRAG_OUT *= u_tintColour;
 #endif 
 
-#if defined(DITHERED)
+#if defined (TERRAIN)
+    //FRAG_OUT.rgb = mix(FRAG_OUT.rgb, vec3(0.02, 0.078, 0.578), clamp(v_worldPosition.y / WaterLevel, 0.0, 1.0));
+#endif
+
+
+#if defined (DITHERED) || defined (FADE_INPUT)// || defined (TERRAIN)
         vec2 xy = gl_FragCoord.xy / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
-        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
 
+#if defined (FADE_INPUT)
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, u_fadeAmount));
+//#elif defined(TERRAIN)
+//        float alpha = 1.0;
+//        if(v_worldPosition.y < WaterLevel)
+//        {
+//            float distance = clamp(length(vec2(v_worldPosition.xz - vec2(160.0, -100.0))) / 100.0, 0.0, 1.0);
+//            alpha = findClosest(x, y, smoothstep(0.9, 0.99, 1.0 - distance));
+//        }
+#else
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+#endif
         if(alpha < 0.1) discard;
 #endif
     })";

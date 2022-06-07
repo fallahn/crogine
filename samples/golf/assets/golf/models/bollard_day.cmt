@@ -1,0 +1,19 @@
+model bollard_day
+{
+    mesh = assets/golf/models/bollard_day.cmb
+    cast_shadows = true
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        blendmode = none
+        diffuse = "assets/golf/images/light_bollard.png"
+
+    }
+}

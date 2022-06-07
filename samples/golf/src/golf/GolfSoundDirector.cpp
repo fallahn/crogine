@@ -33,6 +33,8 @@ source distribution.
 #include "GameConsts.hpp"
 #include "ScoreStrings.hpp"
 #include "Clubs.hpp"
+#include "CommandIDs.hpp"
+#include "VatAnimationSystem.hpp"
 
 #include <crogine/audio/AudioResource.hpp>
 
@@ -164,6 +166,16 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case GolfEvent::HoleWon:
+            if (auto idx = m_playerIndices[data.client][data.player]; idx > -1)
+            {
+                static const std::string emitterName = "celebrate";
+                if (m_playerVoices[idx].hasEmitter(emitterName))
+                {
+                    playAvatarSound(idx, emitterName, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+                }
+            }
+            break;
         case GolfEvent::HoleDrawn:
             playSoundDelayed(cro::Util::Random::value(AudioID::Draw01, AudioID::Draw02), glm::vec3(0.f), 0.2f, 1.f, MixerChannel::Voice);
             break;
@@ -261,6 +273,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             if (data.score <= ScoreID::Par)
             {
                 playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f, MixerChannel::Effects);
+                applaud();
             }
 
             if (data.travelDistance > 25.f) //5m
@@ -277,12 +290,23 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 default: break;
                 case TerrainID::Bunker:
                     playSound(cro::Util::Random::value(AudioID::TerrainBunker01, AudioID::TerrainBunker05), glm::vec3(0.f));
+                    
+                    if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
+                    {
+                        playAvatarSoundDelayed(idx, "scrub", glm::vec3(0.f), 2.f);
+                    }
+                    
                     break;
                 case TerrainID::Fairway:
                     playSound(cro::Util::Random::value(AudioID::TerrainFairway01, AudioID::TerrainFairway02), glm::vec3(0.f));
                     break;
                 case TerrainID::Scrub:
                     playSound(cro::Util::Random::value(AudioID::TerrainScrub02, AudioID::TerrainScrub04), glm::vec3(0.f));
+
+                    if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
+                    {
+                        playAvatarSoundDelayed(idx, "scrub", glm::vec3(0.f), 2.2f);
+                    }
                     break;
                 case TerrainID::Green:
                     if (data.club != ClubID::Putter) //previous shot wasn't from green
@@ -293,6 +317,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                             || data.travelDistance > 10000.f) //landed a long shot
                         {
                             playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f);
+                            applaud();
                         }
                     }
                     break;
@@ -426,12 +451,7 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
 
             if (m_playerVoices[idx].hasEmitter(emitterName))
             {
-                auto ent = getNextEntity();
-                ent.getComponent<cro::AudioEmitter>() = m_playerVoices[idx].getEmitter(emitterName);
-                ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
-                ent.getComponent<cro::AudioEmitter>().play();
-                ent.getComponent<cro::Transform>().setPosition(position);
-                return ent;
+                return playAvatarSound(idx, emitterName, position);
             }
         }
 
@@ -473,4 +493,49 @@ void GolfSoundDirector::playSoundDelayed(std::int32_t id, glm::vec3 position, fl
             getScene().destroyEntity(e);
         }
     };
+}
+
+cro::Entity GolfSoundDirector::playAvatarSound(std::int32_t idx, const std::string& emitterName, glm::vec3 position)
+{
+    auto ent = getNextEntity();
+    ent.getComponent<cro::AudioEmitter>() = m_playerVoices[idx].getEmitter(emitterName);
+    ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+    ent.getComponent<cro::AudioEmitter>().play();
+    ent.getComponent<cro::Transform>().setPosition(position);
+    return ent;
+}
+
+void GolfSoundDirector::playAvatarSoundDelayed(std::int32_t idx, const std::string& emitterName, glm::vec3 position, float delay)
+{
+    if (m_playerVoices[idx].hasEmitter(emitterName))
+    {
+        auto entity = getScene().createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(delay);
+        entity.getComponent<cro::Callback>().function =
+            [&, idx, position, emitterName](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime -= dt;
+
+            if (currTime < 0)
+            {
+                playAvatarSound(idx, emitterName, position);
+
+                e.getComponent<cro::Callback>().active = false;
+                getScene().destroyEntity(e);
+            }
+        };
+    }
+}
+
+void GolfSoundDirector::applaud()
+{
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Crowd;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<VatAnimation>().applaud();
+    };
+    getScene().getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

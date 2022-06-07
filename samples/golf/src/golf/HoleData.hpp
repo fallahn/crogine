@@ -44,6 +44,7 @@ struct HoleData final
     cro::Entity modelEntity;
     std::vector<cro::Entity> propEntities;
     std::vector<cro::Entity> particleEntities;
+    std::vector<glm::mat4> crowdPositions;
 };
 
 static constexpr std::size_t MaxHoles = 18;

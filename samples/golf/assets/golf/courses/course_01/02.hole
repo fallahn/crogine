@@ -32,20 +32,20 @@ hole 02
 
     crowd
     {
-        position = 42.297527,1.570260,-189.062759
-        rotation = -8.027100
+        position = 60.890743,1.570306,-135.783493
+        rotation = -191.521262
     }
 
     crowd
     {
-        position = 52.026077,1.570260,-187.332489
-        rotation = -16.676399
+        position = 37.456406,1.570306,-187.757523
+        rotation = 0.000000
     }
 
     crowd
     {
-        position = 71.351921,1.570260,-178.929886
-        rotation = -215.009974
+        position = 57.670109,1.570306,-184.404999
+        rotation = -16.483784
     }
 
     prop
@@ -88,11 +88,5 @@ hole 02
         model = "assets/golf/models/view_platform.cmt"
         position = 66.459259,1.529153,-131.493744
         rotation = -720.167679
-    }
-
-    crowd
-    {
-        position = 62.925911,1.570260,-134.661072
-        rotation = -186.927120
     }
 }

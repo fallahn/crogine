@@ -34,6 +34,11 @@ source distribution.
 #include <crogine/network/NetData.hpp>
 
 #include <string>
+#include <thread>
+#include <mutex>
+#include <any>
+#include <memory>
+#include <atomic>
 
 struct _ENetHost;
 
@@ -145,6 +150,13 @@ namespace cro
 
         _ENetHost* m_client;
         NetPeer m_peer;
+
+        std::unique_ptr<std::thread> m_thread;
+        std::mutex m_mutex;
+        std::list<std::any> m_evtBuffer;
+        std::list<std::any> m_activeBuffer;
+        std::atomic_bool m_threadRunning;
+        void threadFunc();
     };
 
 #include "NetClient.inl"

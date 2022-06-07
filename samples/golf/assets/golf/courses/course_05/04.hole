@@ -1,0 +1,87 @@
+hole 04
+{
+    map="assets/golf/courses/course_05/04.png"
+    model="assets/golf/models/course_05/04.cmt"
+    par = 4
+
+    pin = 271.798767,1.358978,-40.403290
+
+    target = 154.168182,1.163162,-103.959671
+
+    tee = 33.718582,0.979921,-158.290131
+
+    crowd
+    {
+        position = 176.724487,1.181300,-107.505699
+        rotation = -39.802393
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane_arm.cmt"
+        position = 219.529541,1.330422,-45.488121
+        rotation = -179.181290
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/crane.cmt"
+        position = 219.529541,1.330422,-45.488121
+        rotation = -213.825669
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 258.304688,1.347546,-28.175802
+        rotation = 147.754347
+    }
+
+    crowd
+    {
+        position = 278.460846,1.347546,-57.192108
+        rotation = -52.588239
+    }
+
+    prop
+    {
+        model = "assets/golf/models/driving_shed.cmt"
+        position = 67.701523,1.365801,-165.650589
+        rotation = -32.656538
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 70.445061,1.347501,-161.394012
+        rotation = -34.016179
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 62.414700,1.347503,-167.101212
+        rotation = -39.049852
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 74.605011,1.360175,-158.891632
+        rotation = -26.704771
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cart.cmt"
+        position = 72.113770,1.341495,-161.453033
+        rotation = -32.208143
+        scale = 1.000000,1.000000,1.000000
+    }
+
+}

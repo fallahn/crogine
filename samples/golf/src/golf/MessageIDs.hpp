@@ -46,6 +46,7 @@ namespace MessageID
         AchievementMessage,
         BilliardsMessage,
         BilliardsCameraMessage,
+        AIMessage,
 
         Count
     };
@@ -67,6 +68,7 @@ struct GolfEvent final
         NiceShot,
         DriveComplete,
         HoleInOne,
+        HoleWon,
         HoleDrawn
     }type = HitBall;
 
@@ -77,8 +79,13 @@ struct GolfEvent final
     {
         std::uint8_t terrain = 0;
         std::uint8_t score;
+        std::uint8_t player;
     };
-    std::uint8_t club = 0;
+    union
+    {
+        std::uint8_t club = 0;
+        std::uint8_t client;
+    };
 };
 
 struct SceneEvent
@@ -107,6 +114,7 @@ struct SystemEvent final
     enum
     {
         PostProcessToggled,
+        PostProcessIndexChanged,
         StateRequest,
         InputActivated
     }type = PostProcessToggled;
@@ -141,4 +149,13 @@ struct BilliardsCameraEvent final
         NewTarget
     }type = NewTarget;
     cro::Entity target;
+};
+
+struct AIEvent final
+{
+    enum
+    {
+        BeginThink,
+        EndThink
+    }type = BeginThink;
 };

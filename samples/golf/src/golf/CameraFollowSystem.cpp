@@ -108,6 +108,28 @@ void CameraFollowSystem::handleMessage(const cro::Message& msg)
 
 void CameraFollowSystem::process(float dt)
 {
+    const auto snapTarget = [](CameraFollower& follower, glm::vec3 target)
+    {
+        float velocity = 0.f;
+        if (follower.target.hasComponent<Ball>())
+        {
+            //driving range
+            velocity = glm::length2(follower.target.getComponent<Ball>().velocity);
+        }
+        else
+        {
+            //net game
+            velocity = glm::length2(follower.target.getComponent<InterpolationComponent<InterpolationType::Linear>>().getVelocity());
+        }
+        float snapMultiplier = velocity / 1350.f;
+
+        //snap to target if close to reduce stutter
+        if (glm::length2(target - follower.currentTarget) < (0.005f * snapMultiplier))
+        {
+            follower.currentTarget = target;
+        }
+    };
+
     float currDist = std::numeric_limits<float>::max();
     auto lastCam = m_closestCamera;
 
@@ -132,24 +154,7 @@ void CameraFollowSystem::process(float dt)
             diffMultiplier *= 4.f;
             follower.currentTarget += diff * (dt * (diffMultiplier + (4.f * follower.zoom.progress)));
 
-            float velocity = 0.f;
-            if (follower.target.hasComponent<Ball>())
-            {
-                //driving range
-                velocity = glm::length2(follower.target.getComponent<Ball>().velocity);
-            }
-            else
-            {
-                //net game
-                velocity = glm::length2(follower.target.getComponent<InterpolationComponent<InterpolationType::Linear>>().getVelocity());
-            }
-            float snapMultiplier = velocity / 1350.f;
-
-            //snap to target if close to reduce stutter
-            if (glm::length2(target - follower.currentTarget) < (0.005f * snapMultiplier))
-            {
-                follower.currentTarget = target;
-            }
+            snapTarget(follower, target);
 
 
             auto& tx = entity.getComponent<cro::Transform>();
@@ -165,7 +170,8 @@ void CameraFollowSystem::process(float dt)
                 auto dist2 = glm::length2(tx.getPosition() - follower.playerPosition);
                 if (dist < currDist
                     && dist < follower.radius
-                    && dist2 > follower.radius)
+                    && dist2 > follower.radius
+                    && follower.id > m_closestCamera) //once we reach green don't go back until explicitly reset
                 {
                     currDist = dist;
                     m_closestCamera = follower.id;
@@ -210,8 +216,11 @@ void CameraFollowSystem::process(float dt)
                     follower.state = CameraFollower::Track;
                 }
 
-                auto diff = follower.target.getComponent<cro::Transform>().getPosition() - follower.currentTarget;
+                auto target = follower.target.getComponent<cro::Transform>().getPosition();
+                auto diff = target - follower.currentTarget;
                 follower.currentTarget += diff * (dt * (2.f + (2.f * follower.zoom.progress)));
+
+                snapTarget(follower, target);
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);

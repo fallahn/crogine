@@ -32,8 +32,10 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 
 #include "../detail/GLCheck.hpp"
+#include "../detail/stb_image.h"
 #include "../detail/stb_image_write.h"
 #include "../detail/SDLImageRead.hpp"
+#include <SDL_rwops.h>
 
 #include <algorithm>
 
@@ -162,10 +164,28 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
     glCheck(glBindTexture(GL_TEXTURE_2D, 0));
 }
 
-bool Texture::loadFromFile(const std::string& path, bool createMipMaps)
+bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps)
 {
+    //auto path = FileSystem::getResourcePath() + filePath;
+
+    //auto* file = SDL_RWFromFile(path.c_str(), "rb");
+    //if (!file)
+    //{
+    //    Logger::log("Failed opening " + path, Logger::Type::Error);
+    //    return false;
+    //}
+
+    //if (/*isFloat(file)*/stbi_is_16_bit(filePath.c_str()))
+    //{
+    //    return loadAsFloat(file, createMipMaps);
+    //}
+    //else
+    //{
+    //    return loadAsByte(file, createMipMaps);
+    //}
+
     Image image;
-    if (image.loadFromFile(path))
+    if (image.loadFromFile(filePath))
     {
         return loadFromImage(image, createMipMaps);
     }
@@ -220,27 +240,13 @@ bool Texture::update(const std::uint8_t* pixels, bool createMipMaps, URect area)
             format = GL_RED;
         }
 
-        //glCheck(glActiveTexture(GL_TEXTURE0));
         glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
         glCheck(glTexSubImage2D(GL_TEXTURE_2D, 0, area.left, area.bottom, area.width, area.height, format, GL_UNSIGNED_BYTE, pixels));
         
         //attempt to generate mip maps and set correct filter
         if (m_hasMipMaps || createMipMaps)
         {
-            glGenerateMipmap(GL_TEXTURE_2D);
-            auto err = glGetError();
-            if (err == GL_INVALID_OPERATION || err == GL_INVALID_ENUM)
-            {
-                glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR : GL_NEAREST));
-                m_hasMipMaps = false;
-                LOG("Failed to create Mipmaps", Logger::Type::Warning);
-            }
-            else
-            {
-                glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_NEAREST));
-                m_hasMipMaps = true;
-                //LOG("Created Mipmaps", Logger::Type::Warning);
-            }
+            generateMipMaps();
         }
         else
         {
@@ -461,4 +467,160 @@ bool Texture::saveToImage(Image& dst) const
     dst.loadFromMemory(buffer.data(), m_size.x, m_size.y, cro::ImageFormat::RGBA);
 
     return true;
+}
+
+//private
+bool Texture::isFloat(SDL_RWops* file)
+{
+    //TODO figure out why this doesn't work
+    STBIMG_stbio_RWops io;
+    stbi_callback_from_RW(file, &io);
+
+    return stbi_is_16_bit_from_callbacks(&io.stb_cbs, nullptr) != 0;
+}
+
+bool Texture::loadAsFloat(SDL_RWops* file, bool createMipMaps)
+{
+    //rewind file first...
+    SDL_RWseek(file, 0, RW_SEEK_SET);
+
+    STBIMG_stbio_RWops io;
+    stbi_callback_from_RW(file, &io);
+
+    stbi_set_flip_vertically_on_load(1);
+
+    std::int32_t w, h, fmt;
+    auto* img = stbi_loadf_from_callbacks(&io.stb_cbs, &io, &w, &h, &fmt, 0);
+    if (img)
+    {
+        stbi_set_flip_vertically_on_load(0);
+
+        GLint internalFormat = GL_R32F;
+        GLint glFormat = GL_RED;
+        m_format = ImageFormat::A;
+        switch (fmt)
+        {
+        default: 
+            stbi_image_free(img);
+            SDL_RWclose(file);
+
+            LogE << fmt << ": unsupported image format" << std::endl;
+
+            return false;
+        case 4:
+            m_format = ImageFormat::Type::RGBA;
+            internalFormat = GL_RGBA32F;
+            glFormat = GL_RGBA;
+            break;
+        case 3:
+            m_format = ImageFormat::Type::RGB;
+            internalFormat = GL_RGB32F;
+            glFormat = GL_RGB;
+            break;
+        }
+
+
+        create(w, h, m_format);
+
+        glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
+        glCheck(glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, w, h, 0, glFormat, GL_FLOAT, img));
+
+        //attempt to generate mip maps and set correct filter
+        if (m_hasMipMaps || createMipMaps)
+        {
+            generateMipMaps();
+        }
+        else
+        {
+            glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR : GL_NEAREST));
+            m_hasMipMaps = false;
+        }
+        glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+
+        stbi_image_free(img);
+        SDL_RWclose(file);
+
+        return true;
+    }
+    else
+    {
+        SDL_RWclose(file);
+        return false;
+    }
+
+    return false;
+}
+
+bool Texture::loadAsByte(SDL_RWops* file, bool createMipmaps)
+{
+    SDL_RWseek(file, 0, RW_SEEK_SET);
+
+    STBIMG_stbio_RWops io;
+    stbi_callback_from_RW(file, &io);
+
+    stbi_set_flip_vertically_on_load(1);
+
+    std::int32_t w, h, fmt;
+    auto* img = stbi_load_from_callbacks(&io.stb_cbs, &io, &w, &h, &fmt, 0);
+    if (img)
+    {
+        stbi_set_flip_vertically_on_load(0);
+
+        m_format = ImageFormat::A;
+        switch (fmt)
+        {
+        default:
+            stbi_image_free(img);
+            SDL_RWclose(file);
+
+            LogE << fmt << ": unsupported image format" << std::endl;
+
+            return false;
+        case 4:
+            m_format = ImageFormat::Type::RGBA;
+            break;
+        case 3:
+            m_format = ImageFormat::Type::RGB;
+            break;
+        }
+
+        create(w, h, m_format);
+        update(img, createMipmaps);
+
+        stbi_image_free(img);
+        SDL_RWclose(file);
+
+        return true;
+    }
+    else
+    {
+        SDL_RWclose(file);
+        stbi_set_flip_vertically_on_load(0);
+        return false;
+    }
+    return false;
+}
+
+void Texture::generateMipMaps()
+{
+#ifdef CRO_DEBUG_
+    std::int32_t result = 0;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &result);
+    CRO_ASSERT(result == m_handle, "Texture not bound!");
+#endif
+
+    glGenerateMipmap(GL_TEXTURE_2D);
+    auto err = glGetError();
+    if (err == GL_INVALID_OPERATION || err == GL_INVALID_ENUM)
+    {
+        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR : GL_NEAREST));
+        m_hasMipMaps = false;
+        LOG("Failed to create Mipmaps", Logger::Type::Warning);
+    }
+    else
+    {
+        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_NEAREST));
+        m_hasMipMaps = true;
+        //LOG("Created Mipmaps", Logger::Type::Warning);
+    }
 }

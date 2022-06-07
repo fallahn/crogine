@@ -40,7 +40,8 @@ struct CameraID final
 {
     enum
     {
-        Player, Sky, Green, Transition,
+        Player, Bystander, Sky, Green,
+        Transition,        
         Count
     };
 };

@@ -30,11 +30,15 @@ source distribution.
 #pragma once
 
 #include "Terrain.hpp"
+#include "MenuConsts.hpp"
 #include "SharedStateData.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -45,13 +49,18 @@ source distribution.
 
 #include <cstdint>
 
+static constexpr glm::uvec2 MapSize(320u, 200u);
+static constexpr glm::vec2 RangeSize(200.f, 250.f);
+
 static constexpr float CameraStrokeHeight = 2.f;// 3.2f;// 2.6f;
 static constexpr float CameraPuttHeight = 0.3f;
 static constexpr float CameraStrokeOffset = 5.f;// 7.5f;// 5.1f;
 static constexpr float CameraPuttOffset = 0.8f;
+static constexpr glm::vec3 CameraBystanderOffset = glm::vec3(7.f, 2.f, 7.f);
 
 static constexpr float GreenCamHeight = 3.f;
 static constexpr float SkyCamHeight = 16.f;
+static constexpr glm::vec3 DefaultSkycamPosition(MapSize.x / 2.f, SkyCamHeight, -static_cast<float>(MapSize.y) / 2.f);
 
 static constexpr float BallPointSize = 1.4f;
 
@@ -71,12 +80,15 @@ static constexpr float MaxPixelScale = 3.f;
 
 static constexpr float PlaneHeight = 60.f;
 
-static constexpr glm::uvec2 MapSize(320u, 200u);
-static constexpr glm::vec2 RangeSize(200.f, 250.f);
+static constexpr float IndicatorDarkness = 0.002f;
+static constexpr float IndicatorLightness = 0.5f;
+
 static constexpr glm::uvec2 LabelTextureSize(128u, 64u);
 static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, -static_cast<float>(MapSize.y / 2));
 
 static const cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
+static const cro::Colour SkyTop(0.678f, 0.851f, 0.718f);
+static const cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
 
 struct SpriteAnimID final
 {
@@ -91,7 +103,8 @@ struct MixerChannel final
 {
     enum
     {
-        Music, Effects, Menu, Voice,
+        Music, Effects, Menu,
+        Voice, Vehicles,
 
         Count
     };
@@ -108,6 +121,7 @@ struct ShaderID final
     enum
     {
         Water = 100,
+        Horizon,
         Terrain,
         Billboard,
         Cel,
@@ -116,6 +130,8 @@ struct ShaderID final
         CelTexturedInstanced,
         CelTexturedSkinned,
         ShadowMap,
+        Crowd,
+        CrowdShadow,
         Cloud,
         Leaderboard,
         Player,
@@ -129,7 +145,9 @@ struct ShaderID final
         WireframeCulled,
         Weather,
         Transition,
-        Trophy
+        Trophy,
+        Beacon,
+        Bow
     };
 };
 
@@ -227,6 +245,7 @@ static inline void saveAvatars(const SharedStateData& sd)
         avatar->addProperty("flags1").setValue(player.avatarFlags[1]);
         avatar->addProperty("flags2").setValue(player.avatarFlags[2]);
         avatar->addProperty("flags3").setValue(player.avatarFlags[3]);
+        avatar->addProperty("cpu").setValue(player.isCPU);
     }
 
     auto path = cro::App::getPreferencePath() + "avatars.cfg";
@@ -245,10 +264,25 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
             dest = *m;
             return;
         }
+        else
+        {
+            dest.blendMode = m->blendMode;
+        }
 
         if (m->properties.count("u_diffuseMap"))
         {
             dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
+        }
+
+        if (m->properties.count("u_subrect"))
+        {
+            const float* v = m->properties.at("u_subrect").second.vecValue;
+            glm::vec4 subrect(v[0], v[1], v[2], v[3]);
+            dest.setProperty("u_subrect", subrect);
+        }
+        else if (dest.properties.count("u_subrect"))
+        {
+            dest.setProperty("u_subrect", glm::vec4(0.f, 0.f, 1.f, 1.f));
         }
 
         dest.doubleSided = m->doubleSided;
@@ -368,6 +402,118 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
     return img;
 }
 
+//return the path to cloud sprites if it is found
+static inline std::string loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, std::int32_t materialID)
+{
+    auto skyTop = SkyTop;
+    auto skyMid = TextNormalColour;
+    std::string  cloudPath;
+
+    cro::ConfigFile cfg;
+
+    struct PropData final
+    {
+        std::string path;
+        glm::vec3 position = glm::vec3(0.f);
+        glm::vec3 scale = glm::vec3(0.f);
+        float rotation = 0.f;
+    };
+    std::vector<PropData> propModels;
+
+    if (!path.empty()
+        && cfg.loadFromFile(path))
+    {
+        const auto& props = cfg.getProperties();
+        for (const auto& p : props)
+        {
+            const auto& name = p.getName();
+            if (name == "sky_top")
+            {
+                skyTop = p.getValue<cro::Colour>();
+            }
+            else if (name == "sky_bottom")
+            {
+                skyMid = p.getValue<cro::Colour>();
+            }
+            else if (name == "clouds")
+            {
+                cloudPath = p.getValue<std::string>();
+            }
+        }
+
+        const auto& objs = cfg.getObjects();
+        for (const auto& obj : objs)
+        {
+            const auto& name = obj.getName();
+            if (name == "prop")
+            {
+                auto& data = propModels.emplace_back();
+                const auto& props = obj.getProperties();
+                for (const auto& p : props)
+                {
+                    const auto& propName = p.getName();
+                    if (propName == "model")
+                    {
+                        data.path = p.getValue<std::string>();
+                    }
+                    else if (propName == "position")
+                    {
+                        data.position = p.getValue<glm::vec3>();
+                    }
+                    else if (propName == "rotation")
+                    {
+                        data.rotation = p.getValue<float>();
+                    }
+                    else if (propName == "scale")
+                    {
+                        data.scale = p.getValue<glm::vec3>();
+                    }
+                }
+            }
+        }
+    }
+
+    cro::ModelDefinition md(resources);
+    for (const auto& model : propModels)
+    {
+        if (md.loadFromFile(model.path))
+        {
+            auto entity = skyScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(model.position);
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, model.rotation * cro::Util::Const::degToRad);
+            entity.getComponent<cro::Transform>().setScale(model.scale);
+            md.createModel(entity);
+
+            auto material = resources.materials.get(materialID);
+            for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+            {
+                applyMaterialData(md, material, i);
+                entity.getComponent<cro::Model>().setMaterial(i, material);
+            }
+
+            //add auto rotation if this model is set to > 360
+            if (model.rotation > 360)
+            {
+                float speed = (std::fmod(model.rotation, 360.f) * cro::Util::Const::degToRad) / 4.f;
+
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+                entity.getComponent<cro::Callback>().function =
+                    [speed](cro::Entity e, float dt)
+                {
+                    auto currSpeed = speed * e.getComponent<cro::Callback>().getUserData<float>();
+                    e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, currSpeed * dt);
+                };
+            }
+        }
+    }
+
+    skyScene.enableSkybox();
+    skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
+
+    return cloudPath;
+}
+
 static inline void createFallbackModel(cro::Entity target, cro::ResourceCollection& resources)
 {
     CRO_ASSERT(target.isValid(), "");
@@ -382,36 +528,4 @@ static inline void createFallbackModel(cro::Entity target, cro::ResourceCollecti
     auto meshData = resources.meshes.getMesh(meshID);
 
     target.addComponent<cro::Model>(meshData, material);
-}
-
-//TODO use this for interpolating slope height on a height map
-static inline float readHeightmap(glm::vec3 position, const std::vector<float>& heightmap)
-{
-    return 0.f;
-    /*const auto lerp = [](float a, float b, float t) constexpr
-    {
-        return a + t * (b - a);
-    };*/
-
-    //const auto getHeightAt = [&](std::int32_t x, std::int32_t y)
-    //{
-    //    //heightmap is flipped relative to the world innit
-    //    x = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, x));
-    //    y = std::min(static_cast<std::int32_t>(IslandTileCount), std::max(0, y));
-    //    return heightmap[(IslandTileCount - y) * IslandTileCount + x];
-    //};
-
-    //float posX = position.x / TileSize;
-    //float posY = position.z / TileSize;
-
-    //float intpart = 0.f;
-    //auto modX = std::modf(posX, &intpart) / TileSize;
-    //auto modY = std::modf(posY, &intpart) / TileSize; //normalise this for lerpitude
-
-    //std::int32_t x = static_cast<std::int32_t>(posX);
-    //std::int32_t y = static_cast<std::int32_t>(posY);
-
-    //float topLine = lerp(getHeightAt(x, y), getHeightAt(x + 1, y), modX);
-    //float botLine = lerp(getHeightAt(x, y + 1), getHeightAt(x + 1, y + 1), modX);
-    //return lerp(topLine, botLine, modY) * MaxTerrainHeight;
 }

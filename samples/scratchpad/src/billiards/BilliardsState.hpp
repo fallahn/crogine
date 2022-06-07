@@ -57,6 +57,7 @@ private:
     cro::Clock m_interpClock;
 
     cro::Scene m_scene;
+    cro::Scene m_skyboxScene;
     cro::ResourceCollection m_resources;
 
     BulletDebug m_debugDrawer;
@@ -72,6 +73,10 @@ private:
         };
     };
     std::array<cro::Entity, Camera::Count> m_cameras = {};
+    float m_fov;
+
+    cro::Entity m_gyre;
+    cro::Entity m_gimbal;
 
     void addSystems();
     void buildScene();

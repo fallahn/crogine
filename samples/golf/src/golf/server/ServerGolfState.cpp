@@ -180,6 +180,9 @@ void GolfState::netEvent(const cro::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::CPUThink:
+            m_sharedData.host.broadcastPacket(PacketID::CPUThink, evt.packet.as<std::uint8_t>(), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            break;
         case PacketID::ClientReady:
             if (!m_sharedData.clients[evt.packet.as<std::uint8_t>()].ready)
             {
@@ -224,6 +227,7 @@ void GolfState::netBroadcast()
         if (ball == m_playerInfo[0].ballEntity)
         {
             auto timestamp = m_serverTime.elapsed().asMilliseconds();
+            
 
             ActorInfo info;
             info.serverID = static_cast<std::uint32_t>(ball.getIndex());

@@ -42,7 +42,7 @@ const std::array<std::string, EightballDirector::PlayerStatus::Count> EightballD
 };
 
 EightballDirector::EightballDirector()
-    : m_currentPlayer     (cro::Util::Random::value(0,1)),
+    : m_currentPlayer   (cro::Util::Random::value(0,1)),
     m_firstCollision    (0),
     m_turnFlags         (0)
 {

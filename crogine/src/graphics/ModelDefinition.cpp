@@ -302,6 +302,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         bool repeatTextures = false;
         bool enableDepthTest = true;
         bool doubleSided = false;
+        bool createMipmaps = false;
         const auto& properties = mat.getProperties();
         for (const auto& p : properties)
         {
@@ -411,6 +412,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
             {
                 doubleSided = p.getValue<bool>();
             }
+            else if (name == "use_mipmaps")
+            {
+                createMipmaps = p.getValue<bool>();
+            }
         }
 
         if (lockRotation)
@@ -463,7 +468,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
             const auto& name = Util::String::toLower(p.getName());
             if (name == "diffuse")
             {
-                auto& tex = m_resources.textures.get(m_workingDir + p.getValue<std::string>());
+                auto& tex = m_resources.textures.get(m_workingDir + p.getValue<std::string>(), createMipmaps);
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_diffuseMap", tex);

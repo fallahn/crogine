@@ -38,14 +38,14 @@ hole 12
 
     crowd
     {
-        position = 282.080078,1.408644,-186.528717
-        rotation = 0.000000
+        position = 290.302582,1.408688,-184.235962
+        rotation = -10.577256
     }
 
     crowd
     {
-        position = 295.975800,1.408643,-185.303665
-        rotation = -34.183585
+        position = 244.911514,1.545627,-98.932137
+        rotation = -121.073791
     }
 
     prop
@@ -88,17 +88,5 @@ hole 12
         model = "assets/golf/models/driving_shed.cmt"
         position = 247.655853,1.736895,-95.580048
         rotation = -107.702000
-    }
-
-    crowd
-    {
-        position = 244.888779,1.430861,-100.934990
-        rotation = 34.386237
-    }
-
-    crowd
-    {
-        position = 239.530762,1.407374,-88.678757
-        rotation = 54.208928
     }
 }

@@ -46,6 +46,8 @@ source distribution.
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Wavetable.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
+
 namespace
 {
     bool showDebug = false;
@@ -69,7 +71,9 @@ namespace
 BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx)
     : cro::State    (ss, ctx),
     m_scene         (ctx.appInstance.getMessageBus()),
-    m_ballDef       (m_resources)
+    m_skyboxScene   (ctx.appInstance.getMessageBus()),
+    m_ballDef       (m_resources),
+    m_fov           (60.f)
 {
     addSystems();
     buildScene();
@@ -119,22 +123,72 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
     }
 
     m_scene.forwardEvent(evt);
+    m_skyboxScene.forwardEvent(evt);
     return false;
 }
 
 void BilliardsState::handleMessage(const cro::Message& msg)
 {
     m_scene.forwardMessage(msg);
+    m_skyboxScene.forwardMessage(msg);
 }
 
 bool BilliardsState::simulate(float dt)
 {
+    if (cro::Keyboard::isKeyPressed(SDLK_UP))
+    {
+        m_gimbal.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, dt);
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_DOWN))
+    {
+        m_gimbal.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -dt);
+    }
+
+    if (cro::Keyboard::isKeyPressed(SDLK_LEFT))
+    {
+        m_gyre.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_RIGHT))
+    {
+        m_gyre.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -dt);
+    }
+
+    if (cro::Keyboard::isKeyPressed(SDLK_KP_PLUS))
+    {
+        m_fov = std::min(90.f, m_fov + (dt * 20.f));
+        m_cameras[0].getComponent<cro::Camera>().resizeCallback(m_scene.getActiveCamera().getComponent<cro::Camera>());
+    }
+
+    if (cro::Keyboard::isKeyPressed(SDLK_KP_MINUS))
+    {
+        m_fov = std::max(60.f, m_fov - (dt * 20.f));
+        m_cameras[0].getComponent<cro::Camera>().resizeCallback(m_scene.getActiveCamera().getComponent<cro::Camera>());
+    }
+
+
     m_scene.simulate(dt);
+    //make sure the scene's camera is up to date ^^
+    //then we can copy it to the skybox scene
+    const auto& srcCam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+    auto& dstCam = m_skyboxScene.getActiveCamera().getComponent<cro::Camera>();
+
+    dstCam.viewport = srcCam.viewport;
+    dstCam.setPerspective(srcCam.getFOV(), srcCam.getAspectRatio(), 0.1f, 10.f);
+
+    m_skyboxScene.getActiveCamera().getComponent<cro::Transform>().setRotation(m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation());
+    //and make sure the skybox is up to date too, so there's
+    //no lag between camera orientation.
+    m_skyboxScene.simulate(dt);
+
     return false;
 }
 
 void BilliardsState::render()
 {
+    m_skyboxScene.render();
+    //this is the magic bit - now everything in the
+    //main scene will render on top of the sky box :D
+    glClear(GL_DEPTH_BUFFER_BIT);
     m_scene.render();
 
     auto viewProj = m_scene.getActiveCamera().getComponent<cro::Camera>().getActivePass().viewProjectionMatrix;
@@ -150,10 +204,24 @@ void BilliardsState::addSystems()
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
+
+    m_skyboxScene.addSystem<cro::CameraSystem>(mb);
+    m_skyboxScene.addSystem<cro::ModelRenderer>(mb);
+
+    m_skyboxScene.setCubemap("assets/billiards/skybox/sky.ccm");
 }
 
 void BilliardsState::buildScene()
 {
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/billiards/skyrings.cmt"))
+    {
+        auto entity = m_skyboxScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+    }
+
+
     TableData tableData;
 
     cro::ConfigFile tableConfig;
@@ -202,8 +270,6 @@ void BilliardsState::buildScene()
         }
     }
 
-
-    cro::ModelDefinition md(m_resources);
     if (md.loadFromFile(tableData.collisionModel))
     {
         //table
@@ -232,10 +298,10 @@ void BilliardsState::buildScene()
 
 
     //camera / sunlight
-    auto callback = [](cro::Camera& cam)
+    auto callback = [&](cro::Camera& cam)
     {
         glm::vec2 winSize(cro::App::getWindow().getSize());
-        cam.setPerspective(60.f * cro::Util::Const::degToRad, winSize.x / winSize.y, 0.1f, 10.f);
+        cam.setPerspective(m_fov * cro::Util::Const::degToRad, winSize.x / winSize.y, 0.1f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     auto& camera = m_scene.getActiveCamera().getComponent<cro::Camera>();
@@ -245,9 +311,16 @@ void BilliardsState::buildScene()
 
     m_scene.getActiveCamera().getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
     m_scene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    m_scene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -90.f * cro::Util::Const::degToRad);
     m_cameras[0] = m_scene.getActiveCamera();
 
+    m_gyre = m_scene.createEntity();
+    m_gyre.addComponent<cro::Transform>();
+
+    m_gimbal = m_scene.createEntity();
+    m_gimbal.addComponent<cro::Transform>();
+
+    m_gimbal.getComponent<cro::Transform>().addChild(m_cameras[0].getComponent<cro::Transform>());
+    m_gyre.getComponent<cro::Transform>().addChild(m_gimbal.getComponent<cro::Transform>());
 
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ -1.2f, 0.8f, 1.4f });

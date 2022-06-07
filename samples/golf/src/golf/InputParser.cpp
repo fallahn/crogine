@@ -44,6 +44,8 @@ namespace
 
     static constexpr float MinPower = 0.01f;
     static constexpr float MaxPower = 1.f - MinPower;
+
+    static constexpr float MinAcceleration = 0.5f;
 }
 
 InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)
@@ -55,10 +57,12 @@ InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)
     m_prevDisabledFlags (0),
     m_prevStick         (0),
     m_analogueAmount    (0.f),
+    m_inputAcceleration (0.f),
     m_mouseWheel        (0),
     m_prevMouseWheel    (0),
     m_mouseMove         (0),
     m_prevMouseMove     (0),
+    m_isCPU             (false),
     m_holeDirection     (0.f),
     m_rotation          (0.f),
     m_maxRotation       (MaxRotation),
@@ -81,6 +85,11 @@ void InputParser::handleEvent(const cro::Event& evt)
     //apply to input mask
     if (evt.type == SDL_KEYDOWN)
     {
+        if (m_isCPU && evt.key.windowID != CPU_ID)
+        {
+            return;
+        }
+
         if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
         {
             m_inputFlags |= InputFlag::Up;
@@ -112,6 +121,11 @@ void InputParser::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYUP)
     {
+        if (m_isCPU && evt.key.windowID != CPU_ID)
+        {
+            return;
+        }
+
         if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
         {
             m_inputFlags &= ~InputFlag::Up;
@@ -143,7 +157,8 @@ void InputParser::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
+        if (!m_isCPU &&
+            evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
         {
             if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
             {
@@ -178,7 +193,8 @@ void InputParser::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
+        if (!m_isCPU &&
+            evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID))
         {
             if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
             {
@@ -286,15 +302,17 @@ std::int32_t InputParser::getClub() const
     return m_currentClub;
 }
 
-void InputParser::setActive(bool active)
+void InputParser::setActive(bool active, bool isCPU)
 {
     m_active = active;
+    m_isCPU = isCPU;
     m_state = State::Aim;
     //if the parser was suspended when set active then make sure un-suspending it returns the correct state.
     m_suspended = active;
     if (active)
     {
         resetPower();
+        m_inputFlags = 0;
     }
 }
 
@@ -352,6 +370,16 @@ void InputParser::resetPower()
 
 void InputParser::update(float dt)
 {
+    if (m_inputFlags & (InputFlag::Left | InputFlag::Right))
+    {
+        m_inputAcceleration = std::min(1.f, m_inputAcceleration + dt);
+    }
+    else
+    {
+        m_inputAcceleration = 0.f;
+    }
+
+
     checkControllerInput();
     checkMouseInput();
 
@@ -394,7 +422,7 @@ void InputParser::update(float dt)
 
                 auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
-                msg->score = 1; //tag this with a value so we know the input triggered this and should play a sound.
+                msg->score = m_isCPU ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
             }
 
             if ((m_prevFlags & InputFlag::NextClub) == 0
@@ -406,7 +434,7 @@ void InputParser::update(float dt)
 
                 auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
-                msg->score = 1;
+                msg->score = m_isCPU? 0 : 1;
             }
         }
         break;
@@ -511,9 +539,12 @@ void InputParser::rotate(float rotation)
 
 void InputParser::checkControllerInput()
 {
-    m_analogueAmount = 1.f;
+    //default amount from keyboard input, is overwritten
+    //by controller if there is any controller input.
+    m_analogueAmount = MinAcceleration + ((1.f - MinAcceleration) * m_inputAcceleration);
 
-    if (!cro::GameController::isConnected(m_inputBinding.controllerID))
+    if (m_isCPU ||
+        !cro::GameController::isConnected(m_inputBinding.controllerID))
     {
         return;
     }

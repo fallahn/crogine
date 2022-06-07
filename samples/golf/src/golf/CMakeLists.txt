@@ -13,6 +13,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ClubhouseState.cpp
   ${PROJECT_DIR}/golf/ClubhouseStateUI.cpp
   ${PROJECT_DIR}/golf/CollisionMesh.cpp
+  ${PROJECT_DIR}/golf/CPUGolfer.cpp
   ${PROJECT_DIR}/golf/DebugDraw.cpp
   ${PROJECT_DIR}/golf/DrivingRangeDirector.cpp
   ${PROJECT_DIR}/golf/DrivingState.cpp
@@ -23,6 +24,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/GolfParticleDirector.cpp
   ${PROJECT_DIR}/golf/GolfSoundDirector.cpp
   ${PROJECT_DIR}/golf/GolfState.cpp
+  ${PROJECT_DIR}/golf/GolfStateDebug.cpp
   ${PROJECT_DIR}/golf/GolfStateUI.cpp
   ${PROJECT_DIR}/golf/InputParser.cpp  
 #  ${PROJECT_DIR}/golf/InterpolationComponent.cpp
@@ -52,6 +54,8 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/TrophyState.cpp
   ${PROJECT_DIR}/golf/TutorialDirector.cpp
   ${PROJECT_DIR}/golf/TutorialState.cpp
+  ${PROJECT_DIR}/golf/VatAnimationSystem.cpp
+  ${PROJECT_DIR}/golf/VatFile.cpp
   ${PROJECT_DIR}/golf/Weather.cpp
 
   ${PROJECT_DIR}/golf/server/EightballDirector.cpp

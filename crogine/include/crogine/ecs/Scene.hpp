@@ -241,8 +241,22 @@ namespace cro
         /*!
         \brief Sets the colours used in the default skybox.
         If a skybox texture or environment map has been set then this does nothing.
+        \param bottom The colour for the bottom half of the skybox
+        \param middle The colour for the horizon of the skybox
+        \param top The colour for the top half og the skybox
         */
-        void setSkyboxColours(cro::Colour top = cro::Colour(0.82f, 0.98f, 0.99f), cro::Colour bottom = cro::Colour(0.21f, 0.5f, 0.96f));
+        void setSkyboxColours(cro::Colour bottom, cro::Colour middle, cro::Colour top);
+
+        struct SkyColours final
+        {
+            cro::Colour top;
+            cro::Colour middle;
+            cro::Colour bottom;
+        };
+        /*!
+        \brief Returns a reference to a struct containing the current skybox colours
+        */
+        const SkyColours& getSkyboxColours() const { return m_skybox.colours; }
 
 
         /*!
@@ -414,6 +428,8 @@ namespace cro
             const Shader* activeShader = nullptr;
 
             glm::mat4 modelMatrix = glm::mat4(1.f);
+
+            SkyColours colours;
 
             void setShader(const Shader& shader)
             {

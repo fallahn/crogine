@@ -59,7 +59,6 @@ private:
     std::unique_ptr<cro::RenderTexture> m_postBuffer;
     std::unique_ptr<cro::SimpleQuad> m_postQuad;
     std::unique_ptr<cro::Shader> m_postShader;
-    std::int32_t m_postProcessIndex;
     std::int32_t m_activeIndex;
 
     struct UniformID final
@@ -90,4 +89,6 @@ private:
     void savePreferences();
     void loadAvatars();
     void recreatePostProcess();
+    void applyPostProcess();
+    bool setShader(const char*);
 };

@@ -17,14 +17,14 @@ hole 05
 
     crowd
     {
-        position = 191.001740,1.499999,-129.962341
-        rotation = 0.000000
+        position = 186.431198,1.500045,-128.172333
+        rotation = 9.918469
     }
 
     crowd
     {
-        position = 177.478348,1.500001,-127.170433
-        rotation = 15.196595
+        position = 311.548676,1.500046,-164.010284
+        rotation = -73.733624
     }
 
     prop
@@ -53,12 +53,6 @@ hole 05
         model = "assets/golf/models/boat01.cmt"
         position = 333.610901,-0.967538,-152.669891
         rotation = 85.056450
-    }
-
-    crowd
-    {
-        position = 309.456879,1.500001,-173.407776
-        rotation = -74.881565
     }
 
 }

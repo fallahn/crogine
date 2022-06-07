@@ -12,6 +12,6 @@ model menu_pavilion
         blendmode = "none"
         diffuse = "assets/golf/images/pavilion.png"
         alpha_clip = 0.065000
-
+        use_mipmaps = false
     }
 }

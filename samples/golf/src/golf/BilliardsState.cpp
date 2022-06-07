@@ -462,6 +462,12 @@ bool BilliardsState::simulate(float dt)
 {
     if (m_sharedData.clientConnection.connected)
     {
+        for (const auto& evt : m_sharedData.clientConnection.eventBuffer)
+        {
+            handleNetEvent(evt);
+        }
+        m_sharedData.clientConnection.eventBuffer.clear();
+
         cro::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
@@ -484,6 +490,12 @@ bool BilliardsState::simulate(float dt)
         m_sharedData.errorMessage = "Lost connection to host.";
         requestStackPush(StateID::Error);
     }
+
+    static float timeAccum = 0.f;
+    timeAccum += dt;
+
+    glCheck(glUseProgram(m_indicatorProperties.shaderID));
+    glCheck(glUniform1f(m_indicatorProperties.timeUniform, timeAccum * (10.f + (40.f * m_inputParser.getPower()))));
 
     m_inputParser.update(dt);
 
@@ -595,12 +607,15 @@ void BilliardsState::loadAssets()
 
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
 
-    m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
-    m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
+    m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment, "#define DASHED\n");
+    auto* shader = &m_resources.shaders.get(ShaderID::Wireframe);
+    m_indicatorProperties.shaderID = shader->getGLHandle();
+    m_indicatorProperties.timeUniform = shader->getUniformID("u_time");
+    m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]).blendMode = cro::Material::BlendMode::Alpha;
 
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
-    auto* shader = &m_resources.shaders.get(ShaderID::Course);
+    shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Table] = m_resources.materials.add(*shader);
@@ -990,7 +1005,7 @@ void BilliardsState::buildScene()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
 
-    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::UV0, 1, GL_LINE_STRIP));
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     entity.getComponent<cro::Model>().setHidden(true);
@@ -998,17 +1013,18 @@ void BilliardsState::buildScene()
 
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
     meshData->boundingBox = { glm::vec3(3.f), glm::vec3(-3.f) };
+    //UV is used for dashed line effect
     std::vector<float> verts =
     {
-        0.f, 0.f, 0.f,   1.f, 0.97f, 0.f, 1.f,
-        0.f, 0.f, -1.f,  1.f, 0.97f, 0.f, 1.f,
-        0.f, 0.f, -1.f,  1.f, 0.97f, 0.f, 1.f
+        0.f, 0.f, 0.f,   1.f, 0.97f, 0.f, 1.f,  0.f, 0.f,
+        0.f, 0.f, -1.f,  1.f, 0.97f, 0.f, 1.f,  1.f, 0.f,
+        0.f, 0.f, -1.f,  1.f, 0.97f, 0.f, 1.f,  1.f, 0.f
     };
 
     auto vertStride = (meshData->vertexSize / sizeof(float));
     meshData->vertexCount = verts.size() / vertStride;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize* meshData->vertexCount, verts.data(), GL_DYNAMIC_DRAW));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_DYNAMIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     std::vector<std::uint32_t> indices =
@@ -1040,9 +1056,9 @@ void BilliardsState::buildScene()
             auto endpoint = position + direction;
             vertexData =
             {
-                position.x, position.y, position.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha,
-                endpoint.x, endpoint.y, endpoint.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha,
-                endpoint.x, endpoint.y, endpoint.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha
+                position.x, position.y, position.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha, 0.f, 0.f,
+                endpoint.x, endpoint.y, endpoint.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha, 1.f, 0.f,
+                endpoint.x, endpoint.y, endpoint.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha, 1.f, 0.f
             };
         }
         else
@@ -1053,9 +1069,9 @@ void BilliardsState::buildScene()
             endpoint += midpoint;
             vertexData =
             {
-                position.x, position.y, position.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha,
-                midpoint.x, midpoint.y, midpoint.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha,
-                endpoint.x, endpoint.y, endpoint.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha
+                position.x, position.y, position.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha, 0.f, 0.f,
+                midpoint.x, midpoint.y, midpoint.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha, glm::length(midpoint - position), 0.f,
+                endpoint.x, endpoint.y, endpoint.z,  c.getRed(), c.getGreen(), c.getBlue(), alpha, 1.f, 0.f
             };
         }
 

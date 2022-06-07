@@ -99,7 +99,7 @@ bool MyApp::initialise()
     m_stateStack.registerState<VatsState>(States::ScratchPad::VATs);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::VATs);
+    m_stateStack.pushState(States::ScratchPad::Billiards);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);

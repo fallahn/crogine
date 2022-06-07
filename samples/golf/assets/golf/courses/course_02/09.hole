@@ -33,8 +33,8 @@ hole 09
 
     crowd
     {
-        position = 63.540611,1.169254,-33.980080
-        rotation = -62.533060
+        position = 70.322968,1.201689,-49.776604
+        rotation = 55.300301
     }
 
     prop
@@ -56,12 +56,6 @@ hole 09
         model = "assets/golf/models/view_platform.cmt"
         position = 64.198502,1.234109,-46.060783
         rotation = -837.401469
-    }
-
-    crowd
-    {
-        position = 69.899055,1.196225,-50.734509
-        rotation = 58.211338
     }
 
 }

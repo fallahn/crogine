@@ -30,6 +30,16 @@ audioscape player03
         looped = false
     }
 
+    emitter celebrate
+    {
+        path = "assets/golf/sound/avatars/green03.wav"
+        streaming = false
+        volume = 0.6
+        mixer_channel = 3
+        attenuation = 0.06
+        looped = false
+    }
+
     emitter hook
     {
         path = "assets/golf/sound/avatars/hook03.wav"

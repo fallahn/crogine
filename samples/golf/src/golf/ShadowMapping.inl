@@ -32,13 +32,16 @@ source distribution.
 #include <string>
 
 //modified shadow mapping shader for wind animated models
-
+//and models with VATs
 static const std::string ShadowVertex = R"(
         ATTRIBUTE vec4 a_position;
         ATTRIBUTE vec4 a_colour;
 
     #if defined (ALPHA_CLIP)
         ATTRIBUTE vec2 a_texCoord0;
+    #endif
+    #if defined (VATS)
+        ATTRIBUTE vec2 a_texCoord1;
     #endif
 
     #if defined(INSTANCING)
@@ -60,6 +63,14 @@ static const std::string ShadowVertex = R"(
         uniform mat4 u_projectionMatrix;
         uniform vec4 u_clipPlane;
 
+    #if defined (VATS)
+        #define MAX_INSTANCE 3
+        uniform sampler2D u_vatsPosition;
+        uniform float u_time;
+        uniform float u_maxTime;
+        uniform float u_offsetMultiplier;
+    #endif
+
 #if defined(WIND_WARP)
         layout (std140) uniform WindValues
         {
@@ -75,6 +86,15 @@ static const std::string ShadowVertex = R"(
         VARYING_OUT vec2 v_texCoord0;
     #endif
 
+        vec3 decodeVector(sampler2D source, vec2 coord)
+        {
+            vec3 vec = TEXTURE(source, coord).rgb;
+            vec *= 2.0;
+            vec -= 1.0;
+
+            return vec;
+        }
+
         void main()
         {
         #if defined(INSTANCING)
@@ -86,7 +106,17 @@ static const std::string ShadowVertex = R"(
         #endif
 
             mat4 wvp = u_projectionMatrix * worldViewMatrix;
+
+        #if defined (VATS)
+            vec2 texCoord = a_texCoord1;
+            float scale = texCoord.y;
+            float instanceOffset = mod(gl_InstanceID, MAX_INSTANCE) * u_offsetMultiplier;
+            texCoord.y = mod(u_time + (0.15 * instanceOffset), u_maxTime);
+
+            vec4 position = vec4(decodeVector(u_vatsPosition, texCoord) * scale, 1.0);
+        #else
             vec4 position = a_position;
+        #endif
 
         #if defined (SKINNED)
             mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
@@ -96,18 +126,18 @@ static const std::string ShadowVertex = R"(
             position = skinMatrix * position;
         #endif                    
 
-#if defined(WIND_WARP)
-        const float xFreq = 0.6;
-        const float yFreq = 0.8;
-        const float scale = 0.2;
+    #if defined(WIND_WARP)
+            const float xFreq = 0.6;
+            const float yFreq = 0.8;
+            const float scale = 0.2;
 
-        float strength = u_windData.y;
-        float totalScale = scale * strength * a_colour.b;
+            float strength = u_windData.y;
+            float totalScale = scale * strength * a_colour.b;
 
-        position.x += sin((u_windData.w * (xFreq)) + worldMatrix[3].x) * totalScale;
-        position.z += sin((u_windData.w * (yFreq)) + worldMatrix[3].z) * totalScale;
-        position.xz += (u_windData.xz * strength * 2.0) * totalScale;
-#endif
+            position.x += sin((u_windData.w * (xFreq)) + worldMatrix[3].x) * totalScale;
+            position.z += sin((u_windData.w * (yFreq)) + worldMatrix[3].z) * totalScale;
+            position.xz += (u_windData.xz * strength * 2.0) * totalScale;
+    #endif
 
 
             gl_Position = wvp * position;

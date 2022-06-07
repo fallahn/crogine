@@ -12,14 +12,14 @@ hole 01
     prop
     {
         model = "assets/golf/models/crane.cmt"
-        position = 33.442749,2.886726,-51.629166
+        position = 33.442749,2.3267,-51.629166
         rotation = 14.811081
     }
 
     prop
     {
         model = "assets/golf/models/crane_arm.cmt"
-        position = 33.442749,2.886726,-51.629166
+        position = 33.442749,2.3267,-51.629166
         rotation = 138.169127
     }
 
@@ -32,19 +32,13 @@ hole 01
 
     crowd
     {
-        position = 24.591471,2.314145,-20.066252
-        rotation = -612.359416
+        position = 23.908970,2.314384,-31.445501
+        rotation = 84.615225
     }
 
     crowd
     {
-        position = 188.239868,2.314145,-32.408455
-        rotation = -704.023367
-    }
-
-    crowd
-    {
-        position = 25.659071,2.314145,-40.989548
-        rotation = -678.488614
-    }    
+        position = 195.279785,2.317486,-36.094978
+        rotation = -154.219753
+    }   
 }
