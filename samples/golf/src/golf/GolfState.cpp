@@ -3049,8 +3049,9 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     auto playerID = info.playerID;
     auto clientID = info.clientID;
+    auto depthOffset = (clientID * 4) + playerID;
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, 0.f, 0.f });
+    entity.addComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, 0.f, -0.1f - (0.1f * depthOffset) });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[info.clientID].getTexture());
     entity.getComponent<cro::Sprite>().setTextureRect({ 0.f, playerID * (texSize.y / 4.f), texSize.x, texSize.y / 4.f });
