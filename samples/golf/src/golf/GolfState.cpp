@@ -2672,6 +2672,14 @@ void GolfState::buildScene()
             //update emitter based on velocity
             auto velocity = oldPos - e.getComponent<cro::Transform>().getPosition();
             e.getComponent<cro::AudioEmitter>().setVelocity(velocity * 60.f);
+
+            //update the pitch based on height above hole
+            static constexpr float MaxHeight = 10.f;
+            float height = oldPos.y - m_holeData[m_currentHole].pin.y;
+            height = std::min(1.f, height / MaxHeight);
+
+            float pitch = 0.5f + (0.5f * height);
+            e.getComponent<cro::AudioEmitter>().setPitch(pitch);
         };
     }
 

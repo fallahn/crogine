@@ -7,6 +7,6 @@ audioscape
         streaming = false
         volume = 0.7
         attenuation = 0.2
-        mixer_channel = 1
+        mixer_channel = 4
     }
 }

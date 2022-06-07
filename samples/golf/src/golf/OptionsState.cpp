@@ -106,7 +106,8 @@ namespace
         "Music Volume",
         "Effects Volume",
         "Menu Volume",
-        "Voice Volume"
+        "Voice Volume",
+        "Vehicle Volume"
     };
     //generally static vars would be a bad idea, but in this case
     //a static index value will remember the last channel between
@@ -977,7 +978,6 @@ void OptionsState::buildScene()
     m_tooltips[ToolTipID::Controls] = createToolTip("Controls");
     m_tooltips[ToolTipID::Achievements] = createToolTip("Achievements");
     m_tooltips[ToolTipID::Stats] = createToolTip("Stats");
-    m_tooltips[ToolTipID::Website] = createToolTip("Visit Website");
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {

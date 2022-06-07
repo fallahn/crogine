@@ -408,6 +408,7 @@ bool GolfGame::initialise()
     cro::AudioMixer::setLabel("Effects", MixerChannel::Effects);
     cro::AudioMixer::setLabel("Menu", MixerChannel::Menu);
     cro::AudioMixer::setLabel("Announcer", MixerChannel::Voice);
+    cro::AudioMixer::setLabel("Vehicles", MixerChannel::Vehicles);
 
     loadPreferences();
     loadAvatars();

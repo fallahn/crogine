@@ -116,7 +116,6 @@ private:
             BeaconColour, MouseSpeed,
             Video, Controls,
             Achievements, Stats,
-            Website,
             Count
         };
     };
