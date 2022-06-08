@@ -2036,7 +2036,10 @@ void GolfState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
 
     createClouds(theme.cloudPath);
-    //buildBow();
+    if (cro::SysTime::now().months() == 6)
+    {
+        buildBow();
+    }
 
     //reserve the slots for each hole score
     for (auto& client : m_sharedData.connectionData)
@@ -4015,6 +4018,9 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
                         }
                         eye = glm::rotateY(eye, playerRotation);
                         eye += player.position;
+
+                        auto result = m_collisionMesh.getTerrain(eye);
+                        eye.y = result.height + CameraBystanderOffset.y;
 
                         auto target = player.position;
                         target.y += 1.f;
