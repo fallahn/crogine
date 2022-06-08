@@ -13,7 +13,7 @@ audioscape menu
     {
         path = "assets/golf/sound/cart.wav"
         streaming = false
-        mixer_channel = 1
+        mixer_channel = 4
         looped = true
         attenuation = 0.4
         volume = 2.5

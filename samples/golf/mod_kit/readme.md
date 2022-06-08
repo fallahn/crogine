@@ -18,6 +18,7 @@ hole_template.blend - example hole model in Blender format
 placeholders.blend - Blender asset library of prop placeholders for creating hole layouts. Requires Blender 3 and above
 post_process.frag - template fragment shader for creating post process effects.
 prop-export.py - Export script for Blender written in python. Used to export the positions of prop models and crowds in the `*.hole` format.
+skybox.blend - 3D skybox models.
 
 
 
@@ -51,6 +52,10 @@ Tee, hole and initial player target positions can be placed by creating a new Em
 
 Further models can be created in blender and used as props, for example vehicles or buildings. These should be exported and converted in the same way as other models first, then in Blender add a custom property named 'model_path' with the relative path of the model in the assets directory as its value - eg `assets/golf/models/cart.cmt`. This is used with the prop-export.py script (enabled in Blender with `Edit->Preferences->Add Ons->Install`...) to export the positions of prop models about the hole to a text file. This appears as `File->Export->Golf Hole Data` in Blender. Selected props, crowds and empties (used for tee and hole positions) will be exported to a `*.hole` file. See `course_format.md` for more information on this file.
 
+
+Skyboxes
+--------
+Since version 1.6.0 skyboxes are created by a combination of 3D models and meta data about the sky colour and cloud sprites described in a skybox definition file. For more information see the wiki page [3D skyboxes](https://github.com/fallahn/crogine/wiki/Skyboxes-(Golf-1.6.0-and-above)).
 
 
 Collision Colours
