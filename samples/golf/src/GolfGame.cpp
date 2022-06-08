@@ -115,6 +115,10 @@ GolfGame::GolfGame()
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
+
+    /*cro::ConfigFile cfg;
+    cfg.loadFromFile("example_2.json");
+    cfg.save("test.cfg");*/
 }
 
 //public

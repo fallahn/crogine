@@ -27,6 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "../detail/json.hpp"
+
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/detail/Assert.hpp>
@@ -39,11 +41,19 @@ source distribution.
 #include <algorithm>
 
 using namespace cro;
+using json = nlohmann::json;
 
 namespace
 {
     const std::string indentBlock("    ");
     std::size_t currentLine = 0;
+
+    template <typename T>
+    void addToObject(ConfigObject* dst, const std::string& key, json& value)
+    {
+        T v = value;
+        dst->addProperty(key).setValue(v);
+    }
 }
 
 //--------------------//
@@ -178,6 +188,11 @@ bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
 
     if (rr.file)
     {
+        if (cro::FileSystem::getFileExtension(path) == ".json")
+        {
+            return parseAsJson(rr.file);
+        }
+
         //remove any opening comments
         std::string data;
         std::int64_t readTotal = 0;
@@ -536,6 +551,127 @@ void ConfigObject::removeComment(std::string& line)
         LogW << "Line " << currentLine << " contains semi-colon, is this intentional?" << std::endl;
     }
     currentLine++;
+}
+
+bool ConfigObject::parseAsJson(SDL_RWops* file)
+{
+    json j;
+
+    {
+        auto fileSize = SDL_RWsize(file);
+        std::vector<char> jsonData(fileSize);
+        SDL_RWread(file, jsonData.data(), fileSize, 1);
+
+        if (jsonData.empty())
+        {
+            LogE << "no data was read from json file" << std::endl;
+            return false;
+        }
+        jsonData.push_back(0);
+
+        try 
+        {
+            j = json::parse(jsonData.data());
+        }
+        catch (...)
+        {
+            LogE << "Failed parsing json string" << std::endl;
+            return false;
+        }
+    }
+
+    std::vector<ConfigObject*> objStack;
+    objStack.push_back(this);
+
+    std::function<void(decltype(j.items())&)> parseItemList = [&](decltype(j.items())& items)
+    {
+        for (auto& [key, value] : items)
+        {
+            if (value.is_object())
+            {
+                objStack.push_back(objStack.back()->addObject(key));
+                parseItemList(value.items());
+                objStack.pop_back();
+            }
+            else
+            {
+                //parse regular key/val
+                if (value.is_string())
+                {
+                    addToObject<std::string>(objStack.back(), key, value);
+                }
+                else if (value.is_number())
+                {
+                    if (value.is_number_float())
+                    {
+                        addToObject<float>(objStack.back(), key, value);
+                    }
+                    else if (value.is_number_unsigned())
+                    {
+                        addToObject<std::uint32_t>(objStack.back(), key, value);
+                    }
+                    else
+                    {
+                        addToObject<std::int32_t>(objStack.back(), key, value);
+                    }
+                }
+                else if (value.is_boolean())
+                {
+                    addToObject<bool>(objStack.back(), key, value);
+                }
+                else if (value.is_array())
+                {
+                    std::vector<float> numVals;
+
+                    for (auto& [arKey, arVal] : value.items())
+                    {
+                        //only accept numeric arrays which represent vec2/3/4/colour/rect
+                        if (arVal.is_number())
+                        {
+                            numVals.push_back(arVal);
+                        }
+                        else if(arVal.is_object())
+                        {
+                            //else parse each into its own object
+                            objStack.push_back(objStack.back()->addObject(key));
+                            parseItemList(arVal.items());
+                            objStack.pop_back();
+                        }
+                        else
+                        {
+                            LogW << "Arrays of " << arVal.type_name() << " are not supported." << std::endl;
+                        }
+                    }
+
+                    if (!numVals.empty())
+                    {
+                        switch (numVals.size())
+                        {
+                        case 1:
+                            objStack.back()->addProperty(key).setValue(numVals[0]);
+                            break;
+                        case 2:
+                            objStack.back()->addProperty(key).setValue(glm::vec2(numVals[0], numVals[1]));
+                            break;
+                        case 3:
+                            objStack.back()->addProperty(key).setValue(glm::vec3(numVals[0], numVals[1], numVals[2]));
+                            break;
+                        default:
+                            objStack.back()->addProperty(key).setValue(glm::vec4(numVals[0], numVals[1], numVals[2], numVals[3]));
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    LogW << key << ": was skipped. " << value.type_name() << " is not a supported type." << std::endl;
+                }
+            }
+        }
+    };
+
+    parseItemList(j.items());
+    return true;
 }
 
 bool ConfigObject::save(const std::string& path)
