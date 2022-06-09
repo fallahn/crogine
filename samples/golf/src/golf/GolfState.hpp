@@ -225,6 +225,7 @@ private:
     void setActiveCamera(std::int32_t);
     void setPlayerPosition(cro::Entity, glm::vec3);
 
+    cro::Entity m_drone;
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;
     void toggleFreeCam();

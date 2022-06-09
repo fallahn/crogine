@@ -318,9 +318,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //setActiveCamera(1);
             //m_cameras[CameraID::Sky].getComponent<CameraFollower>().state = CameraFollower::Zoom;
         {
-            auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-            msg->type = GolfEvent::HoleInOne;
-            msg->position = m_holeData[m_currentHole].pin;
+            if (m_drone.isValid())
+            {
+                auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                msg->type = GolfEvent::DroneHit;
+                msg->position = m_drone.getComponent<cro::Transform>().getPosition();
+            }
         }
             break;
         case SDLK_KP_2:
@@ -741,6 +744,19 @@ void GolfState::handleMessage(const cro::Message& msg)
 #ifdef PATH_TRACING
             endBallDebug();
 #endif
+        }
+        else if (data.type == GolfEvent::DroneHit)
+        {
+            //TODO award achievement
+            m_gameScene.destroyEntity(m_drone);
+            m_drone = {};
+
+            m_cameras[CameraID::Sky].getComponent<TargetInfo>().postProcess = &m_resources.shaders.get(ShaderID::Noise);
+
+            if (m_currentCamera == CameraID::Sky)
+            {
+                m_courseEnt.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::Noise));
+            }
         }
     }
     break;
@@ -2698,6 +2714,8 @@ void GolfState::buildScene()
             float pitch = 0.5f + (0.5f * height);
             e.getComponent<cro::AudioEmitter>().setPitch(pitch);
         };
+
+        m_drone = entity;
     }
 
 
@@ -4279,6 +4297,15 @@ void GolfState::updateActor(const ActorInfo& update)
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
+
+
+    if (m_drone.isValid() &&
+        glm::length2(m_drone.getComponent<cro::Transform>().getPosition() - update.position) < 1.f)
+    {
+        auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+        msg->position = m_drone.getComponent<cro::Transform>().getPosition();
+        msg->type = GolfEvent::DroneHit;
     }
 }
 
