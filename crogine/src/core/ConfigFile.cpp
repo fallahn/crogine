@@ -583,7 +583,8 @@ bool ConfigObject::parseAsJson(SDL_RWops* file)
     std::vector<ConfigObject*> objStack;
     objStack.push_back(this);
 
-    std::function<void(decltype(j.items())&)> parseItemList = [&](decltype(j.items())& items)
+    std::function<void(const decltype(j.items())&)> parseItemList = 
+        [&](const decltype(j.items())& items)
     {
         for (auto& [key, value] : items)
         {
