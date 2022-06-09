@@ -59,6 +59,7 @@ struct TargetInfo final
     glm::vec3 prevLookAt = glm::vec3(0.f);
 
     cro::Entity waterPlane;
+    cro::Shader* postProcess = nullptr;
 };
 
 struct CameraFollower final

@@ -79,7 +79,11 @@ static const std::string WaterFragment = R"(
     uniform sampler2D u_refractionMap;
 
     uniform vec3 u_cameraWorldPosition;
-    uniform float u_time;
+
+    layout (std140) uniform WindValues
+    {
+        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
+    };
 
     layout (std140) uniform PixelScale
     {
@@ -146,7 +150,7 @@ static const std::string WaterFragment = R"(
     void main()
     {
         //sparkle
-        float waveSpeed = u_time / 2.0;
+        float waveSpeed = (u_windData.w * 7.5);
         vec2 coord = v_texCoord;
         coord.y += waveSpeed / (PixelCount.y * 4.0);
 
@@ -156,7 +160,7 @@ static const std::string WaterFragment = R"(
         wave = smoothstep(0.25, 1.0, wave);
         
 
-        float coordOffset = sin((u_time / 4.0) + (gl_FragCoord.z * 325.0)) * 0.0002;
+        float coordOffset = sin(((u_windData.w * 15.0) / 4.0) + (gl_FragCoord.z * 325.0)) * 0.0002;
         coordOffset += wave * 0.002;
 
         //reflection

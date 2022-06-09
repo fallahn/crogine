@@ -119,6 +119,7 @@ namespace
 #include "BillboardShader.inl"
 #include "ShadowMapping.inl"
 #include "BeaconShader.inl"
+#include "PostProcess.inl"
 
     std::int32_t debugFlags = 0;
     bool useFreeCam = false;
@@ -896,9 +897,6 @@ bool GolfState::simulate(float dt)
     //update time uniforms
     static float elapsed = dt;
     elapsed += dt;
-
-    glUseProgram(m_waterShader.shaderID);
-    glUniform1f(m_waterShader.timeUniform, elapsed * 15.f);
     
     m_windUpdate.currentWindSpeed += (m_windUpdate.windVector.y - m_windUpdate.currentWindSpeed) * dt;
     m_windUpdate.currentWindVector += (m_windUpdate.windVector - m_windUpdate.currentWindVector) * dt;
@@ -1176,6 +1174,13 @@ void GolfState::loadAssets()
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
 
+    //noise effect
+    m_resources.shaders.loadFromString(ShaderID::Noise, MinimapVertex, NoiseFragment);
+    shader = &m_resources.shaders.get(ShaderID::Noise);
+    m_scaleBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+
+
     //wireframe
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
     m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
@@ -1193,13 +1198,11 @@ void GolfState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
     shader = &m_resources.shaders.get(ShaderID::Water);
     m_scaleBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(*shader);
     //forces rendering last to reduce overdraw - overdraws stroke indicator though(??)
     //also suffers the black banding effect where alpha  < 1
     //m_resources.materials.get(m_materialIDs[MaterialID::Water]).blendMode = cro::Material::BlendMode::Alpha; 
-
-    m_waterShader.shaderID = m_resources.shaders.get(ShaderID::Water).getGLHandle();
-    m_waterShader.timeUniform = m_resources.shaders.get(ShaderID::Water).getUniformMap().at("u_time");
     
 
     m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag);
@@ -2504,7 +2507,8 @@ void GolfState::buildScene()
     camEnt.getComponent<CameraFollower>().zoom.target = 0.1f;
     camEnt.getComponent<CameraFollower>().zoom.speed = 3.f;
     camEnt.addComponent<cro::AudioListener>();
-    camEnt.addComponent<TargetInfo>(); //this just holds the water plane ent when active
+    //this holds the water plane ent when active
+    camEnt.addComponent<TargetInfo>();// .postProcess = &m_resources.shaders.get(ShaderID::Noise);
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Sky] = camEnt;
 
@@ -4716,6 +4720,8 @@ void GolfState::setActiveCamera(std::int32_t camID)
 
         m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = waterEnt;
         m_cameras[m_currentCamera].getComponent<cro::Camera>().active = true;
+
+        m_courseEnt.getComponent<cro::Drawable2D>().setShader(m_cameras[m_currentCamera].getComponent<TargetInfo>().postProcess);
     }
 }
 

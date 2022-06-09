@@ -147,7 +147,8 @@ struct ShaderID final
         Transition,
         Trophy,
         Beacon,
-        Bow
+        Bow,
+        Noise
     };
 };
 

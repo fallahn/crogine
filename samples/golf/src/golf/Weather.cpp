@@ -344,7 +344,7 @@ void GolfState::buildBow()
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-    meshData->boundingBox = { glm::vec3(-1.f, -1.f, -12.1f), glm::vec3(1.f, 1.f, -11.9f) };
+    meshData->boundingBox = { glm::vec3(-5.f, -5.f, -12.1f), glm::vec3(5.f, 5.f, -11.9f) };
     meshData->boundingSphere = meshData->boundingBox;
 
     m_resources.shaders.loadFromString(ShaderID::Bow, CloudVertex, BowFragment);

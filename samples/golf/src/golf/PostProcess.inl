@@ -50,6 +50,36 @@ R"(
         v_colour = a_colour;
     })";
 
+static const std::string NoiseFragment =
+R"(
+    uniform sampler2D u_texture;
+
+    layout (std140) uniform WindValues
+    {
+        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
+    };
+
+    layout (std140) uniform PixelScale
+    {
+        float u_pixelScale;
+    };
+
+    VARYING_IN vec4 v_colour;
+    VARYING_IN vec2 v_texCoord;
+
+    OUTPUT
+
+    float rand(vec2 position)
+    {
+        return fract(sin(dot(position, vec2(12.9898, 4.1414) + u_windData.w)) * 43758.5453);
+    }
+
+    void main()
+    {
+        FRAG_OUT = vec4(vec3(rand(floor((v_texCoord * textureSize(u_texture, 0)) / u_pixelScale))), 1.0) * v_colour; 
+    }
+)";
+
 static const std::string BWFragment =
 R"(
     uniform sampler2D u_texture;
