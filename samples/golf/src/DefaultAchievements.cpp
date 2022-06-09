@@ -422,7 +422,7 @@ DefaultAchievements::AchievementIcon::AchievementIcon(const AchievementData& dat
     m_titleText.setString("ACHIEVEMENT UNLOCKED!");
     m_titleText.setPosition({ 86.f, 54.f });
 
-    const std::int32_t width = 5; //number of icons per row
+    const std::int32_t width = 8; //number of icons per row
     auto x = data.id % width;
     auto y = data.id / width;
 

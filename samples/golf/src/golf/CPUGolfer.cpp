@@ -91,7 +91,7 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     m_thinkTime         (0.f)
 {
 #ifdef CRO_DEBUG_
-    registerWindow([&]()
+    /*registerWindow([&]()
         {
             if (ImGui::Begin("CPU"))
             {
@@ -112,7 +112,7 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
                 ImGui::Text("Target Accuracy: %3.3f", m_targetAccuracy);
             }
             ImGui::End();
-        });
+        });*/
 #endif
 }
 

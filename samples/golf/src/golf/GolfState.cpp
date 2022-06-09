@@ -208,7 +208,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     ballEntity = {};
     useFreeCam = false;
 
-    registerWindow([&]()
+    /*registerWindow([&]()
         {
             if (ImGui::Begin("Network"))
             {
@@ -220,36 +220,36 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 }
             }
             ImGui::End();
-        });
+        });*/
 
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("buns"))
-            {
-                if (ImGui::ColorEdit4("Top", &topSky.x))
-                {
-                    m_skyScene.setSkyboxColours(WaterColour, bottomSky, topSky);
-                }
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("buns"))
+    //        {
+    //            if (ImGui::ColorEdit4("Top", &topSky.x))
+    //            {
+    //                m_skyScene.setSkyboxColours(WaterColour, bottomSky, topSky);
+    //            }
 
-                if (ImGui::ColorEdit4("Bottom", &bottomSky.x))
-                {
-                    m_skyScene.setSkyboxColours(WaterColour, bottomSky, topSky);
-                }
+    //            if (ImGui::ColorEdit4("Bottom", &bottomSky.x))
+    //            {
+    //                m_skyScene.setSkyboxColours(WaterColour, bottomSky, topSky);
+    //            }
 
-                //ImGui::Text("Speed %3.3f", m_billboardUniforms.currentWindSpeed);
-                //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), {256.f, 256.f}, {0.f, 1.f}, {1.f, 0.f});
-                /*if (ballEntity.isValid())
-                {
-                    auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
-                    ImGui::Text("Ball Pos: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-                }
-                else
-                {
-                    ImGui::Text("Ball Entity not valid");
-                }*/
-            }
-            ImGui::End();
-        });
+    //            //ImGui::Text("Speed %3.3f", m_billboardUniforms.currentWindSpeed);
+    //            //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), {256.f, 256.f}, {0.f, 1.f}, {1.f, 0.f});
+    //            /*if (ballEntity.isValid())
+    //            {
+    //                auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
+    //                ImGui::Text("Ball Pos: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+    //            }
+    //            else
+    //            {
+    //                ImGui::Text("Ball Entity not valid");
+    //            }*/
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
