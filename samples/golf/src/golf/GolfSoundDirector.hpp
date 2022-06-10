@@ -123,6 +123,8 @@ private:
             DriveGood,
             DriveBad,
 
+            Burst,
+
             Count
         };
     };

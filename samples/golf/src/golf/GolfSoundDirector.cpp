@@ -119,6 +119,8 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/kudos/drive_excellent.wav",
         "assets/golf/sound/kudos/drive_good.wav",
         "assets/golf/sound/kudos/drive_poor.wav",
+
+        "assets/golf/sound/ambience/burst.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -166,6 +168,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case GolfEvent::DroneHit:
+            playSound(AudioID::Burst, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            break;
         case GolfEvent::HoleWon:
             if (auto idx = m_playerIndices[data.client][data.player]; idx > -1)
             {
