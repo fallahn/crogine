@@ -132,7 +132,10 @@ static const std::string SlopeFragmentShader =
 R"(
     OUTPUT
 
-    uniform float u_time;
+    layout (std140) uniform WindValues
+    {
+        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
+    };    
     uniform float u_alpha;
 
     VARYING_IN vec4 v_colour;
@@ -142,7 +145,7 @@ R"(
 
     void main()
     {
-        float alpha = (sin(v_texCoord.x - (u_time * v_texCoord.y)) + 1.0) * 0.5;
+        float alpha = (sin(v_texCoord.x - ((u_windData.w * 10.f) * v_texCoord.y)) + 1.0) * 0.5;
         alpha = step(0.5, alpha);
 
         FRAG_OUT = v_colour;

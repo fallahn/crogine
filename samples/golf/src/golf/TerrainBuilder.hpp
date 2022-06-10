@@ -81,8 +81,6 @@ public:
 
     void setSlopePosition(glm::vec3);
 
-    void updateTime(float);
-
 private:
 
     const std::vector<HoleData>& m_holeData;
@@ -134,7 +132,6 @@ private:
     {
         cro::Mesh::Data* meshData = nullptr;
         std::int32_t positionUniform = -1;
-        std::int32_t timeUniform = -1;
         std::int32_t alphaUniform = -1;
         std::uint32_t shader = 0;
         cro::Entity entity;

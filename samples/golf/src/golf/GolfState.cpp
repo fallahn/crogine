@@ -956,7 +956,6 @@ bool GolfState::simulate(float dt)
         m_cpuGolfer.update(dt, windVector);
     }
 
-    m_terrainBuilder.updateTime(elapsed * 10.f);
     m_inputParser.update(dt);
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
@@ -2054,6 +2053,9 @@ void GolfState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::CelTexturedInstanced);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::Slope);
+    m_windBuffer.addShader(*shader);
 
     createClouds(theme.cloudPath);
     if (cro::SysTime::now().months() == 6)

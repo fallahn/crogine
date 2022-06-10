@@ -437,7 +437,6 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     resources.shaders.loadFromString(ShaderID::Slope, SlopeVertexShader, SlopeFragmentShader);
     auto& slopeShader = resources.shaders.get(ShaderID::Slope);
     m_slopeProperties.positionUniform = slopeShader.getUniformID("u_centrePosition");
-    m_slopeProperties.timeUniform = slopeShader.getUniformID("u_time");
     m_slopeProperties.alphaUniform = slopeShader.getUniformID("u_alpha");
     m_slopeProperties.shader = slopeShader.getGLHandle();
     materialID = resources.materials.add(slopeShader);
@@ -605,12 +604,6 @@ void TerrainBuilder::update(std::size_t holeIndex)
             m_wantsUpdate = true;
         }
     }
-}
-
-void TerrainBuilder::updateTime(float elapsed)
-{
-    glCheck(glUseProgram(m_slopeProperties.shader));
-    glCheck(glUniform1f(m_slopeProperties.timeUniform, elapsed));
 }
 
 void TerrainBuilder::setSlopePosition(glm::vec3 position)
