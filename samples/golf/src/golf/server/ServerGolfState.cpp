@@ -92,7 +92,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     {
                         //tell clients to remove the ball
                         std::uint32_t idx = p.ballEntity.getIndex();
-                        m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, idx, cro::NetFlag::Reliable);
+                        m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, idx, net::NetFlag::Reliable);
 
                         m_scene.destroyEntity(p.ballEntity);
                         return true;
@@ -166,22 +166,22 @@ void GolfState::handleMessage(const cro::Message& msg)
             BallUpdate bu;
             bu.terrain = data.terrain;
             bu.position = data.position;
-            m_sharedData.host.broadcastPacket(PacketID::BallLanded, bu, cro::NetFlag::Reliable);
+            m_sharedData.host.broadcastPacket(PacketID::BallLanded, bu, net::NetFlag::Reliable);
         }
     }
 
     m_scene.forwardMessage(msg);
 }
 
-void GolfState::netEvent(const cro::NetEvent& evt)
+void GolfState::netEvent(const net::NetEvent& evt)
 {
-    if (evt.type == cro::NetEvent::PacketReceived)
+    if (evt.type == net::NetEvent::PacketReceived)
     {
         switch (evt.packet.getID())
         {
         default: break;
         case PacketID::CPUThink:
-            m_sharedData.host.broadcastPacket(PacketID::CPUThink, evt.packet.as<std::uint8_t>(), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::CPUThink, evt.packet.as<std::uint8_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
         case PacketID::ClientReady:
             if (!m_sharedData.clients[evt.packet.as<std::uint8_t>()].ready)
@@ -238,12 +238,12 @@ void GolfState::netBroadcast()
             info.clientID = player.client;
             info.playerID = player.player;
             info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
-            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Unreliable);
+            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Unreliable);
         }
     }
 
     auto wind = cro::Util::Net::compressVec3(m_scene.getSystem<BallSystem>()->getWindDirection());
-    m_sharedData.host.broadcastPacket(PacketID::WindDirection, wind, cro::NetFlag::Unreliable);
+    m_sharedData.host.broadcastPacket(PacketID::WindDirection, wind, net::NetFlag::Unreliable);
 }
 
 std::int32_t GolfState::process(float dt)
@@ -292,7 +292,7 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
     {
         if (!m_mapDataValid)
         {
-            m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ServerError, static_cast<std::uint8_t>(MessageType::MapNotFound), cro::NetFlag::Reliable);
+            m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ServerError, static_cast<std::uint8_t>(MessageType::MapNotFound), net::NetFlag::Reliable);
             return;
         }
 
@@ -308,7 +308,7 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
             info.clientID = player.client;
             info.playerID = player.player;
             info.timestamp = timestamp;
-            m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ActorSpawn, info, cro::NetFlag::Reliable);
+            m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ActorSpawn, info, net::NetFlag::Reliable);
         }
     }
 
@@ -353,7 +353,7 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
     }
 }
 
-void GolfState::handlePlayerInput(const cro::NetEvent::Packet& packet)
+void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet)
 {
     if (m_playerInfo.empty())
     {
@@ -389,7 +389,7 @@ void GolfState::handlePlayerInput(const cro::NetEvent::Packet& packet)
             m_playerInfo[0].holeScore[m_currentHole]++;
 
             auto animID = ball.terrain == TerrainID::Green ? AnimationID::Putt : AnimationID::Swing;
-            m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
             m_turnTimer.restart(); //don't time out mid-shot...
         }
@@ -422,7 +422,7 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
         }
     }
     //let clients know to update their display
-    m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::ReadyQuitStatus, broadcastFlags, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::ReadyQuitStatus, broadcastFlags, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     for (const auto& p : m_playerInfo)
     {
@@ -448,7 +448,7 @@ void GolfState::setNextPlayer()
     su.matchScore = m_playerInfo[0].matchWins;
     su.skinsScore = m_playerInfo[0].skins;
     su.hole = m_currentHole;
-    m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance = 0.f;
 
@@ -470,8 +470,8 @@ void GolfState::setNextPlayer()
     else
     {
         //go to next player
-        m_sharedData.host.broadcastPacket(PacketID::SetPlayer, player, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(AnimationID::Idle), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::SetPlayer, player, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(AnimationID::Idle), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 
     m_turnTimer.restart();
@@ -523,14 +523,14 @@ void GolfState::setNextHole()
 
             //send notification packet to clients that player won the hole
             std::uint16_t data = (player->client << 8) | player->player;
-            m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
         else
         {
             m_skinsPot++;
 
             std::uint16_t data = 0xff00 | m_skinsPot;
-            m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
     }
 
@@ -548,7 +548,7 @@ void GolfState::setNextHole()
         su.skinsScore = player.skins;
         su.stroke = player.holeScore[m_currentHole];
 
-        m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 
     //set clients as not yet loaded
@@ -566,7 +566,7 @@ void GolfState::setNextHole()
         auto ballSystem = m_scene.getSystem<BallSystem>();
         if (!ballSystem->setHoleData(m_holeData[m_currentHole]))
         {
-            m_sharedData.host.broadcastPacket(PacketID::ServerError, static_cast<std::uint8_t>(MessageType::MapNotFound), cro::NetFlag::Reliable);
+            m_sharedData.host.broadcastPacket(PacketID::ServerError, static_cast<std::uint8_t>(MessageType::MapNotFound), net::NetFlag::Reliable);
             return;
         }
 
@@ -591,11 +591,11 @@ void GolfState::setNextHole()
             info.clientID = player.client;
             info.playerID = player.player;
             info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
-            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
 
         //tell clients to set up next hole
-        m_sharedData.host.broadcastPacket(PacketID::SetHole, m_currentHole, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::SetHole, m_currentHole, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         //create an ent which waits for all clients to load the next hole
         //which include playing the transition animation.
@@ -632,7 +632,7 @@ void GolfState::setNextHole()
             {
                 //end of game baby! TODO really this should include all final scores so
                 //clients will make sure to show correct trophy/podium
-                m_sharedData.host.broadcastPacket(PacketID::GameEnd, ConstVal::SummaryTimeout, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_sharedData.host.broadcastPacket(PacketID::GameEnd, ConstVal::SummaryTimeout, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                 //create a timer ent which returns to lobby on time out
                 auto entity = m_scene.createEntity();
@@ -858,7 +858,7 @@ void GolfState::doServerCommand(const cro::NetEvent& evt)
     case ServerCommand::EndGame:
     {
         //end of game baby!
-        m_sharedData.host.broadcastPacket(PacketID::GameEnd, std::uint8_t(10), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::GameEnd, std::uint8_t(10), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         //create a timer ent which returns to lobby on time out
         auto entity = m_scene.createEntity();

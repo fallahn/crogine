@@ -128,40 +128,40 @@ void Server::run()
             m_currentState->handleMessage(m_sharedData.messageBus.poll());
         }
 
-        cro::NetEvent evt;
+        net::NetEvent evt;
         while(m_sharedData.host.pollEvent(evt))
         {
             m_currentState->netEvent(evt);
         
             //handle connects / disconnects
-            if (evt.type == cro::NetEvent::ClientConnect)
+            if (evt.type == net::NetEvent::ClientConnect)
             {
                 //refuse if not in lobby state
                 //else add to pending list and await version confirmation
                 if (m_currentState->stateID() == sv::StateID::Lobby)
                 {
                     m_pendingConnections.emplace_back().peer = evt.peer;
-                    m_sharedData.host.sendPacket(evt.peer, PacketID::ClientVersion, std::uint16_t(m_gameMode), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.host.sendPacket(evt.peer, PacketID::ClientVersion, std::uint16_t(m_gameMode), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
                 else
                 {
                     //send rejection packet
-                    m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::NotInLobby), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::NotInLobby), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     m_sharedData.host.disconnectLater(evt.peer);
                 }
             }
-            else if (evt.type == cro::NetEvent::ClientDisconnect)
+            else if (evt.type == net::NetEvent::ClientDisconnect)
             {
                 //remove from client list
                 removeClient(evt);
             }
-            else if(evt.type == cro::NetEvent::PacketReceived)
+            else if(evt.type == net::NetEvent::PacketReceived)
             {
                 if (evt.packet.getID() == PacketID::ClientVersion)
                 {
                     if (evt.packet.as<std::uint16_t>() != CURRENT_VER)
                     {
-                        m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::VersionMismatch), cro::NetFlag::Reliable);
+                        m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::VersionMismatch), net::NetFlag::Reliable);
                     }
                     else
                     {
@@ -171,7 +171,7 @@ void Server::run()
                 else if (evt.packet.getID() == PacketID::AchievementGet)
                 {
                     //re-broadcast to all clients
-                    m_sharedData.host.broadcastPacket(PacketID::AchievementGet, evt.packet.as<std::array<std::uint8_t, 2u>>(), cro::NetFlag::Reliable);
+                    m_sharedData.host.broadcastPacket(PacketID::AchievementGet, evt.packet.as<std::array<std::uint8_t, 2u>>(), net::NetFlag::Reliable);
                 }
             }
         }
@@ -206,7 +206,7 @@ void Server::run()
                     std::uint16_t client = i;
                     std::uint16_t ping = m_sharedData.clients[i].peer.getRoundTripTime();
                     std::uint32_t data = (client << 16) | ping;
-                    m_sharedData.host.broadcastPacket(PacketID::PingTime, data, cro::NetFlag::Unreliable);
+                    m_sharedData.host.broadcastPacket(PacketID::PingTime, data, net::NetFlag::Unreliable);
                 }
             }
         }
@@ -228,7 +228,7 @@ void Server::run()
                 break;
             }
 
-            m_sharedData.host.broadcastPacket(PacketID::StateChange, std::uint8_t(nextState), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::StateChange, std::uint8_t(nextState), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             
             //mitigate large DT which may have built up while new state was loading.
             netFrameClock.restart();
@@ -255,7 +255,7 @@ void Server::checkPending()
     {
         if (t.elapsed().asSeconds() > PendingConnection::Timeout)
         {
-            m_sharedData.host.sendPacket(peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::VersionMismatch), cro::NetFlag::Reliable);
+            m_sharedData.host.sendPacket(peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::VersionMismatch), net::NetFlag::Reliable);
             m_sharedData.host.disconnectLater(peer);
         }
 
@@ -269,7 +269,7 @@ void Server::checkPending()
         }), m_pendingConnections.end());
 }
 
-void Server::validatePeer(cro::NetPeer& peer)
+void Server::validatePeer(net::NetPeer& peer)
 {
     auto result = std::find_if(m_pendingConnections.begin(), m_pendingConnections.end(),
         [&peer](const PendingConnection& pc)
@@ -282,13 +282,13 @@ void Server::validatePeer(cro::NetPeer& peer)
         if (auto i = addClient(peer); i >= /*ConstVal::MaxClients*/m_maxConnections)
         {
             //tell client server is full
-            m_sharedData.host.sendPacket(peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerFull), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.sendPacket(peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerFull), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             m_sharedData.host.disconnectLater(peer);
         }
         else
         {
             //tell the client which player they are
-            m_sharedData.host.sendPacket(peer, PacketID::ConnectionAccepted, i, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.sendPacket(peer, PacketID::ConnectionAccepted, i, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
 
         m_pendingConnections.erase(result);
@@ -299,7 +299,7 @@ void Server::validatePeer(cro::NetPeer& peer)
     }
 }
 
-std::uint8_t Server::addClient(const cro::NetPeer& peer)
+std::uint8_t Server::addClient(const net::NetPeer& peer)
 {
     std::uint8_t i = 0;
     for (; i < m_sharedData.clients.size(); ++i)
@@ -313,7 +313,7 @@ std::uint8_t Server::addClient(const cro::NetPeer& peer)
 
             //broadcast to all connected clients
             //so they can update lobby view.
-            m_sharedData.host.broadcastPacket(PacketID::ClientConnected, i, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::ClientConnected, i, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
             auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(sv::MessageID::ConnectionMessage);
             msg->clientID = i;
@@ -326,7 +326,7 @@ std::uint8_t Server::addClient(const cro::NetPeer& peer)
     return i;
 }
 
-void Server::removeClient(const cro::NetEvent& evt)
+void Server::removeClient(const net::NetEvent& evt)
 {
     //remove from pending connection in case client is quitting due to game mode mismatch
     m_pendingConnections.erase(std::remove_if(m_pendingConnections.begin(), m_pendingConnections.end(),
@@ -351,7 +351,7 @@ void Server::removeClient(const cro::NetEvent& evt)
         msg->type = ConnectionEvent::Disconnected;
 
         //broadcast to all connected clients
-        m_sharedData.host.broadcastPacket(PacketID::ClientDisconnected, static_cast<std::uint8_t>(playerID), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::ClientDisconnected, static_cast<std::uint8_t>(playerID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         LOG("Client disconnected", cro::Logger::Type::Info);
     }
 }

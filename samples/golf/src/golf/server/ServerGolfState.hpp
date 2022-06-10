@@ -45,7 +45,7 @@ namespace sv
         explicit GolfState(SharedData&);
 
         void handleMessage(const cro::Message&) override;
-        void netEvent(const cro::NetEvent&) override;
+        void netEvent(const net::NetEvent&) override;
         void netBroadcast() override;
         std::int32_t process(float) override;
 
@@ -70,7 +70,7 @@ namespace sv
         cro::Clock m_turnTimer;
 
         void sendInitialGameState(std::uint8_t);
-        void handlePlayerInput(const cro::NetEvent::Packet&);
+        void handlePlayerInput(const net::NetEvent::Packet&);
         void checkReadyQuit(std::uint8_t);
 
         void setNextPlayer();
@@ -80,6 +80,6 @@ namespace sv
         void initScene();
         void buildWorld();
 
-        void doServerCommand(const cro::NetEvent&);
+        void doServerCommand(const net::NetEvent&);
     };
 }

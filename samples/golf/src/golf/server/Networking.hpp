@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,29 +29,7 @@ source distribution.
 
 #pragma once
 
-#include "ServerState.hpp"
+#include <crogine/network/NetData.hpp>
+#include <crogine/network/NetHost.hpp>
 
-#include <array>
-
-namespace sv
-{
-    class LobbyState final : public State
-    {
-    public:
-        explicit LobbyState(SharedData&);
-
-        void handleMessage(const cro::Message&) override;
-        void netEvent(const net::NetEvent&) override;
-        std::int32_t process(float) override;
-
-        std::int32_t stateID() const override { return StateID::Lobby; }
-
-    private:
-        std::int32_t m_returnValue;
-        SharedData& m_sharedData;
-
-        std::array<bool, ConstVal::MaxClients> m_readyState = {};
-
-        void insertPlayerInfo(const net::NetEvent&);
-    };
-}
+namespace net = cro;

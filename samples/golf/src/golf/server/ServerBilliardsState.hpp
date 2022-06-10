@@ -46,7 +46,7 @@ namespace sv
         explicit BilliardsState(SharedData&);
 
         void handleMessage(const cro::Message&) override;
-        void netEvent(const cro::NetEvent&) override;
+        void netEvent(const net::NetEvent&) override;
         void netBroadcast() override;
         std::int32_t process(float) override;
 
@@ -73,7 +73,7 @@ namespace sv
         void initScene();
         void buildWorld();
         void sendInitialGameState(std::uint8_t);
-        void doServerCommand(const cro::NetEvent&);
+        void doServerCommand(const net::NetEvent&);
 
         void setNextPlayer(bool waitForAck);
         cro::Entity addBall(glm::vec3, std::uint8_t);
