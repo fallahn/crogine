@@ -209,7 +209,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             //auto ready up if host
             m_sharedData.clientConnection.netClient.sendPacket(
                 PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
-                cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
 
             //set the course selection menu
@@ -236,7 +236,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             //send the initially selected map/course
             m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
             auto data = serialiseString(m_sharedData.mapDirectory);
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
         }
         else
         {
@@ -465,7 +465,7 @@ bool MenuState::simulate(float dt)
         }
         m_sharedData.clientConnection.eventBuffer.clear();
 
-        cro::NetEvent evt;
+        net::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
             //handle events
@@ -969,9 +969,9 @@ void MenuState::createClouds()
     }
 }
 
-void MenuState::handleNetEvent(const cro::NetEvent& evt)
+void MenuState::handleNetEvent(const net::NetEvent& evt)
 {
-    if (evt.type == cro::NetEvent::PacketReceived)
+    if (evt.type == net::NetEvent::PacketReceived)
     {
         switch (evt.packet.getID())
         {
@@ -1001,11 +1001,11 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
 
                 //send player details to server (name, skin)
                 auto buffer = m_sharedData.localConnectionData.serialise();
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                 if (m_sharedData.tutorial)
                 {
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
                 else
                 {
@@ -1026,7 +1026,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                     //auto ready up if hosting
                     m_sharedData.clientConnection.netClient.sendPacket(
                         PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
-                        cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
 
                 LOG("Successfully connected to server", cro::Logger::Type::Info);
@@ -1188,7 +1188,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             if (evt.packet.as<std::uint16_t>() == static_cast<std::uint16_t>(Server::GameMode::Golf))
             {
                 //reply if we're the right mode
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientVersion, CURRENT_VER, cro::NetFlag::Reliable);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientVersion, CURRENT_VER, net::NetFlag::Reliable);
             }
             else
             {
@@ -1200,7 +1200,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
         break;
         }
     }
-    else if (evt.type == cro::NetEvent::ClientDisconnect)
+    else if (evt.type == net::NetEvent::ClientDisconnect)
     {
         m_sharedData.errorMessage = "Lost Connection To Host";
         requestStackPush(StateID::Error);

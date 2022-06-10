@@ -30,9 +30,9 @@ source distribution.
 #pragma once
 
 #include "InputBinding.hpp"
+#include "Networking.hpp"
 #include "server/Server.hpp"
 
-#include <crogine/network/NetClient.hpp>
 #include <crogine/core/String.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/Texture.hpp>
@@ -86,12 +86,12 @@ struct SharedStateData final
 
     struct ClientConnection final
     {
-        cro::NetClient netClient;
+        net::NetClient netClient;
         bool connected = false;
         bool ready = false;
         std::uint8_t connectionID = 4;
 
-        std::vector<cro::NetEvent> eventBuffer; //don't touch this while loading screen is active!!
+        std::vector<net::NetEvent> eventBuffer; //don't touch this while loading screen is active!!
     }clientConnection;
 
     //data of all players rx'd from server

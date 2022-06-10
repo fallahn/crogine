@@ -536,6 +536,9 @@
     <ClInclude Include="src\golf\BeaconCallback.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\Networking.hpp">
+      <Filter>Header Files\golf</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\WaterShader.inl">

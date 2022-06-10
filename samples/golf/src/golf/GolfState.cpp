@@ -284,16 +284,16 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
 #ifdef CRO_DEBUG_
         case SDLK_F2:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextHole), cro::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextHole), net::NetFlag::Reliable);
             break;
         case SDLK_F3:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextPlayer), cro::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextPlayer), net::NetFlag::Reliable);
             break;
         case SDLK_F4:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::GotoGreen), cro::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::GotoGreen), net::NetFlag::Reliable);
             break;
         case SDLK_F6:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), cro::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
             break;
         case SDLK_F7:
             //showCountdown(10);
@@ -304,7 +304,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             showCountdown(20);
             break;
         case SDLK_F9:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::ChangeWind), cro::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::ChangeWind), net::NetFlag::Reliable);
             break;
         case SDLK_KP_0:
             //setActiveCamera(0);
@@ -652,7 +652,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete, m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
             break;
         case SceneEvent::RequestSwitchCamera:
@@ -813,14 +813,14 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_sharedData.localConnectionData.connectionID,
             data.id
         };
-        m_sharedData.clientConnection.netClient.sendPacket(PacketID::AchievementGet, packet, cro::NetFlag::Reliable);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::AchievementGet, packet, net::NetFlag::Reliable);
     }
     break;
 
     case MessageID::AIMessage:
     {
         const auto& data = msg.getData<AIEvent>();
-        m_sharedData.clientConnection.netClient.sendPacket(PacketID::CPUThink, std::uint8_t(data.type), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::CPUThink, std::uint8_t(data.type), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
         break;
     }
@@ -871,7 +871,7 @@ bool GolfState::simulate(float dt)
         }
         m_sharedData.clientConnection.eventBuffer.clear();
 
-        cro::NetEvent evt;
+        net::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
 #ifdef CRO_DEBUG_
@@ -899,7 +899,7 @@ bool GolfState::simulate(float dt)
         {
             if (m_readyClock.elapsed() > ReadyPingFreq)
             {
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable);
                 m_readyClock.restart();
             }
         }
@@ -3162,11 +3162,11 @@ void GolfState::spawnBall(const ActorInfo& info)
 #endif
 }
 
-void GolfState::handleNetEvent(const cro::NetEvent& evt)
+void GolfState::handleNetEvent(const net::NetEvent& evt)
 {
     switch (evt.type)
     {
-    case cro::NetEvent::PacketReceived:
+    case net::NetEvent::PacketReceived:
         switch (evt.packet.getID())
         {
         default: break;
@@ -3401,7 +3401,7 @@ void GolfState::handleNetEvent(const cro::NetEvent& evt)
             break;
         }
         break;
-    case cro::NetEvent::ClientDisconnect:
+    case net::NetEvent::ClientDisconnect:
         m_sharedData.errorMessage = "Disconnected From Server (Host Quit)";
         requestStackPush(StateID::Error);
         break;
@@ -4191,7 +4191,7 @@ void GolfState::hitBall()
     update.playerID = m_currentPlayer.player;
     update.impulse = impulse;
 
-    m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, update, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, update, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_inputParser.setActive(false);
 

@@ -205,7 +205,7 @@ private:
     void buildBow();
     void spawnBall(const struct ActorInfo&);
 
-    void handleNetEvent(const cro::NetEvent&);
+    void handleNetEvent(const net::NetEvent&);
     void removeClient(std::uint8_t);
 
     void setCurrentHole(std::uint32_t);

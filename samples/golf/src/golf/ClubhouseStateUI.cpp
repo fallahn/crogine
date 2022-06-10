@@ -1039,7 +1039,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                                 //send the initially selected table - this triggers the menu to move to the next stage.
                                 //m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
                                 auto data = serialiseString(m_sharedData.mapDirectory);
-                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
                             }
                         }
                     }
@@ -1066,7 +1066,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
 
                 m_sharedData.mapDirectory = m_tableData[m_sharedData.courseIndex].name;
                 auto data = serialiseString(m_sharedData.mapDirectory);
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
@@ -1080,7 +1080,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
 
                 m_sharedData.mapDirectory = m_tableData[m_sharedData.courseIndex].name;
                 auto data = serialiseString(m_sharedData.mapDirectory);
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
@@ -1688,7 +1688,7 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
                         if (ready && m_sharedData.clientConnection.connected
                             && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
                         {
-                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Billiards), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Billiards), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                         }
                     }
                     else
@@ -1696,7 +1696,7 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
                         //toggle readyness
                         std::uint8_t ready = m_readyState[m_sharedData.clientConnection.connectionID] ? 0 : 1;
                         m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),
-                            cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                            net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                         if (ready)
                         {

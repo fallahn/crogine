@@ -213,10 +213,10 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_F2:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::SpawnBall), cro::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::SpawnBall), net::NetFlag::Reliable);
             break;
         case SDLK_F3:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::StrikeBall), cro::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::StrikeBall), net::NetFlag::Reliable);
             break;
         case SDLK_F4:
             
@@ -257,7 +257,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             setActiveCamera(CameraID::Overhead);
             break;
         case SDLK_F6:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), cro::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
             break;
         case SDLK_F7:
         {
@@ -386,7 +386,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             input.client = m_sharedData.localConnectionData.connectionID;
             input.player = m_currentPlayer.player;
 
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
             if (m_activeCamera != CameraID::Overhead)
             {
@@ -416,7 +416,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             input.client = m_sharedData.localConnectionData.connectionID;
             input.player = m_currentPlayer.player;
 
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::BallPlaced, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::BallPlaced, input, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
         else if (data.type == BilliardBallEvent::ShotTaken)
         {
@@ -427,9 +427,9 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             input.client = m_sharedData.localConnectionData.connectionID;
             input.player = m_currentPlayer.player;
 
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);*/
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, net::NetFlag::Reliable, ConstVal::NetChannelReliable);*/
 
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ActorAnimation, std::uint8_t(1), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ActorAnimation, std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
             //hide free table sign if active
             cro::Command cmd;
@@ -468,7 +468,7 @@ bool BilliardsState::simulate(float dt)
         }
         m_sharedData.clientConnection.eventBuffer.clear();
 
-        cro::NetEvent evt;
+        net::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
             //handle events
@@ -479,7 +479,7 @@ bool BilliardsState::simulate(float dt)
         {
             if (m_readyClock.elapsed() > ReadyPingFreq)
             {
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable);
                 m_readyClock.restart();
             }
         }
@@ -530,7 +530,7 @@ bool BilliardsState::simulate(float dt)
             info.rotation = cro::Util::Net::compressQuat(rotation);
             info.timestamp = timestamp;
 
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::CueUpdate, info, cro::NetFlag::Unreliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::CueUpdate, info, net::NetFlag::Unreliable);
         }
     }
     /*else
@@ -1096,7 +1096,7 @@ void BilliardsState::buildScene()
 
     //TODO this wants to be done after any loading animation
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete,
-        m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_scaleBuffer.bind(0);
     m_resolutionBuffer.bind(1);
@@ -1156,9 +1156,9 @@ void BilliardsState::buildScene()
     };
 }
 
-void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
+void BilliardsState::handleNetEvent(const net::NetEvent& evt)
 {
-    if (evt.type == cro::NetEvent::PacketReceived)
+    if (evt.type == net::NetEvent::PacketReceived)
     {
         switch (evt.packet.getID())
         {
@@ -1287,7 +1287,7 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
             break;
         }
     }
-    else if (evt.type == cro::NetEvent::ClientDisconnect)
+    else if (evt.type == net::NetEvent::ClientDisconnect)
     {
         m_sharedData.errorMessage = "Disconnected From Server (Host Quit)";
         requestStackPush(StateID::Error);
@@ -1557,7 +1557,7 @@ void BilliardsState::sendReadyNotify()
     if (m_wantsNotify)
     {
         m_wantsNotify = false;
-        m_sharedData.clientConnection.netClient.sendPacket(PacketID::TurnReady, m_sharedData.localConnectionData.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::TurnReady, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 }
 

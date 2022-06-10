@@ -417,6 +417,7 @@
     <ClInclude Include="src\golf\MenuSoundDirector.hpp" />
     <ClInclude Include="src\golf\MenuState.hpp" />
     <ClInclude Include="src\golf\MessageIDs.hpp" />
+    <ClInclude Include="src\golf\Networking.hpp" />
     <ClInclude Include="src\golf\NotificationSystem.hpp" />
     <ClInclude Include="src\golf\OptionsState.hpp" />
     <ClInclude Include="src\golf\PacketIDs.hpp" />

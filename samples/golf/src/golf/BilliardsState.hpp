@@ -50,6 +50,7 @@ namespace cro
 {
     struct NetEvent;
 }
+namespace net = cro;
 
 struct SharedStateData;
 
@@ -166,7 +167,7 @@ private:
     void addSystems();
     void buildScene();
 
-    void handleNetEvent(const cro::NetEvent&);
+    void handleNetEvent(const net::NetEvent&);
     void removeClient(std::uint8_t);
     void spawnBall(const ActorInfo&);
     void updateBall(const BilliardsUpdate&);

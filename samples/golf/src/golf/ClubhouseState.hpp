@@ -52,6 +52,7 @@ namespace cro
 {
     struct NetEvent;
 }
+namespace net = cro;
 
 class ClubhouseState;
 struct ClubhouseContext final : public MenuContext
@@ -196,7 +197,7 @@ private:
     void updateLobbyAvatars();
     void updateBallTexture();
 
-    void handleNetEvent(const cro::NetEvent&);
+    void handleNetEvent(const net::NetEvent&);
 
     friend struct ClubhouseContext;
 };

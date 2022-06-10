@@ -336,7 +336,7 @@ void PracticeState::buildScene()
 
                             //set the course to tutorial
                             auto data = serialiseString(m_sharedData.mapDirectory);
-                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                             //now we wait for the server to send us the map name so we know the tutorial
                             //course has been set. Then the network event handler launches the game.

@@ -244,7 +244,7 @@ private:
 
     //loading moved to GolfGame.cpp
 
-    void handleNetEvent(const cro::NetEvent&);
+    void handleNetEvent(const net::NetEvent&);
 
     friend struct MainMenuContext;
 };
