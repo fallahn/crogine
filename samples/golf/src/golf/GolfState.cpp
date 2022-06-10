@@ -747,7 +747,8 @@ void GolfState::handleMessage(const cro::Message& msg)
         }
         else if (data.type == GolfEvent::DroneHit)
         {
-            //TODO award achievement
+            Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOneMillion]);
+
             m_gameScene.destroyEntity(m_drone);
             m_drone = {};
 

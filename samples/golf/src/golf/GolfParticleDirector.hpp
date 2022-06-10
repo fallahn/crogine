@@ -55,6 +55,7 @@ private:
         {
             Grass, Water, Sand,
             Sparkle, HIO,
+            Drone, Explode, Blades,
 
             Count
         };

@@ -75,6 +75,8 @@ namespace AchievementID
         AllOfATwitter,
         Soaring,
 
+        HoleInOneMillion,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
@@ -106,7 +108,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "easy_pink",
     "practice_perfect",
     "all_of_a_twitter",
-    "soaring"
+    "soaring",
+    "hole_in_one_million"
 };
 
 //appears on the notification
@@ -136,7 +139,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Easy Pink",
     "Practice Makes Perfect",
     "All of a Twitter",
-    "Soaring"
+    "Soaring",
+    "Hole In One Million"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -167,6 +171,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Spend an hour in total on the driving range", false),
     std::make_pair("Get 18 Birdies", false),
     std::make_pair("Get an Eagle", false),
+    std::make_pair("Hit the camera drone with a ball", false),
 };
 
 //assuming tropies load correctly they are
@@ -213,6 +218,7 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldFigure,
     TrophyID::SilverFigure,
     TrophyID::GoldFigure,
+    TrophyID::GoldFigure, //TODO platinum trophy
 };
 
 namespace StatID

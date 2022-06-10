@@ -51,6 +51,9 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr)
     m_emitterSettings[ParticleID::Sand].loadFromFile("assets/golf/particles/sand.cps", tr);
     m_emitterSettings[ParticleID::Sparkle].loadFromFile("assets/golf/particles/new_ball.cps", tr);
     m_emitterSettings[ParticleID::HIO].loadFromFile("assets/golf/particles/hio.cps", tr);
+    m_emitterSettings[ParticleID::Drone].loadFromFile("assets/golf/particles/drone.cps", tr);
+    m_emitterSettings[ParticleID::Explode].loadFromFile("assets/golf/particles/explode.cps", tr);
+    m_emitterSettings[ParticleID::Blades].loadFromFile("assets/golf/particles/blades.cps", tr);
 
     //hmm how to set smoothing on the texture?
     cro::SpriteSheet spriteSheet;
@@ -106,6 +109,12 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
         else if (data.type == GolfEvent::HoleInOne)
         {
             getEnt(ParticleID::HIO, data.position);
+        }
+        else if (data.type == GolfEvent::DroneHit)
+        {
+            getEnt(ParticleID::Drone, data.position);
+            getEnt(ParticleID::Explode, data.position);
+            getEnt(ParticleID::Blades, data.position);
         }
     }
         break;
