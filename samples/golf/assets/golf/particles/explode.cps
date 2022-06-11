@@ -2,7 +2,7 @@ particle_system explode
 {
     src = assets/golf/images/explosion.png
     texture_smoothing = false
-    blendmode = add
+    blendmode = alpha
     acceleration = 1.000000
     gravity = 0.000000,-1.176000,0.000000
     velocity = 0.000000,0.294000,0.000000
@@ -10,7 +10,7 @@ particle_system explode
     lifetime = 1.000000
     lifetime_variance = 0.000000
     colour = 255.000000,255.000000,255.000000,255.000000
-    random_initial_rotation = true
+    random_initial_rotation = false
     rotation_speed = 0.000000
     scale_affector = 0.000000
     size = 0.658000
@@ -19,7 +19,7 @@ particle_system explode
     spawn_radius = 0.518000
     spawn_offset = 0.000000,0.000000,0.000000
     release_count = 10
-    inherit_rotation = true
+    inherit_rotation = false
     frame_count = 6
     animate = true
     random_frame = false

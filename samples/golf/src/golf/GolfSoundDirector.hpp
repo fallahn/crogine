@@ -123,6 +123,9 @@ private:
             DriveGood,
             DriveBad,
 
+            NicePutt01,
+            NicePutt02,
+
             Burst,
 
             Count

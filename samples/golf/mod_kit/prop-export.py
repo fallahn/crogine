@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2022, 6, 5),
+    "version": (2022, 6, 11),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -76,10 +76,15 @@ def WriteProp(file, modelName, location, rotation, scale, ob):
     file.write("    }\n\n")
 
 
-def WriteCrowd(file, location, rotation):
+def WriteCrowd(file, location, rotation, ob):
     file.write("    crowd\n    {\n")
     file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
     file.write("        rotation = %f\n" % (rotation[2] * (180.0 / 3.141)))
+
+
+    if ob.parent is not None and ob.parent.type == 'CURVE':
+        WritePath(file, ob.parent)
+
     file.write("    }\n\n")
 
 
@@ -131,22 +136,18 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                 if ob.get('model_path') is not None:
                     modelName = ob['model_path']
 
-                worldLocation = None
-                worldRotation = None
-                worldScale = None
+                worldLocation = ob.location
+                worldRotation = ob.rotation_euler
+                worldScale = ob.scale
 
-                if ob.parent is None:
-                    worldLocation = ob.location
-                    worldRotation = ob.rotation_euler
-                    worldScale = ob.scale
-                else:
+                if ob.parent is not None and ob.parent.type == 'MESH':
                     worldLocation = ob.matrix_world @ ob.location
                     worldRotation = ob.matrix_world.to_euler('XYZ')
                     worldScale = vecMultiply(ob.parent.scale, ob.scale)
 
 
                 if "crowd" in modelName.lower():
-                    WriteCrowd(file, worldLocation, worldRotation)
+                    WriteCrowd(file, worldLocation, worldRotation, ob)
                 elif modelName.lower() == "pin":
                     if pinWritten == False:
                         WriteProperty(file, "pin", worldLocation)

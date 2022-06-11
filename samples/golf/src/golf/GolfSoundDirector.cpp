@@ -120,6 +120,9 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/kudos/drive_good.wav",
         "assets/golf/sound/kudos/drive_poor.wav",
 
+        "assets/golf/sound/kudos/putt02.wav",
+        "assets/golf/sound/kudos/putt01.wav",
+
         "assets/golf/sound/ambience/burst.wav",
     };
 
@@ -284,6 +287,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             if (data.travelDistance > 25.f) //5m
             {
                 playSoundDelayed(AudioID::ApplausePlus, glm::vec3(0.f), 1.2f, MixerChannel::Effects);
+                playSoundDelayed(cro::Util::Random::value(AudioID::NicePutt01, AudioID::NicePutt02), glm::vec3(0.f), 2.2f, MixerChannel::Voice);
             }
 
             break;
