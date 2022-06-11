@@ -775,7 +775,7 @@ void TrophyState::buildTrophyScene()
 
     //these ought to be loaded in the same order
     //as TrophyID in AchievementStrings.hpp
-    const std::array<std::string, 7> paths =
+    const std::array<std::string, 8> paths =
     {
         std::string("assets/golf/models/trophies/trophy01.cmt"),
         "assets/golf/models/trophies/trophy02.cmt",
@@ -784,6 +784,7 @@ void TrophyState::buildTrophyScene()
         "assets/golf/models/trophies/trophy05.cmt",
         "assets/golf/models/trophies/trophy06.cmt",
         "assets/golf/models/trophies/trophy07.cmt",
+        "assets/golf/models/trophies/trophy08.cmt",
     };
 
     auto trophyCallback =

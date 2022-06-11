@@ -454,6 +454,7 @@ bool GolfGame::initialise()
     md.loadFromFile("assets/golf/models/trophies/trophy05.cmt");
     md.loadFromFile("assets/golf/models/trophies/trophy06.cmt");
     md.loadFromFile("assets/golf/models/trophies/trophy07.cmt");
+    md.loadFromFile("assets/golf/models/trophies/trophy08.cmt");
 
     //set up the post process
     auto windowSize = cro::App::getWindow().getSize();

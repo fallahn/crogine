@@ -178,7 +178,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
 /*
 Gold, silver, bronze cup
 Gold, silver, bronze mannequin
-Pool
+Pool, Platinum
 */
 
 struct TrophyID final
@@ -187,14 +187,14 @@ struct TrophyID final
     {
         GoldCup, SilverCup, BronzeCup,
         GoldFigure, SilverFigure, BronzeFigure,
-        Pool
+        Pool, Platinum
     };
 };
 
 static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophies =
 {
     TrophyID::Pool,
-    TrophyID::GoldCup,
+    TrophyID::Platinum,
     TrophyID::SilverFigure,
     TrophyID::GoldFigure,
     TrophyID::BronzeFigure,
@@ -218,7 +218,7 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldFigure,
     TrophyID::SilverFigure,
     TrophyID::GoldFigure,
-    TrophyID::GoldFigure, //TODO platinum trophy
+    TrophyID::Platinum
 };
 
 namespace StatID
