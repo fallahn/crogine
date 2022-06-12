@@ -1,0 +1,12 @@
+course course_06
+{
+    skybox = "assets/golf/skyboxes/spring.sbf"
+    billboard_model = "assets/golf/models/shrubbery.cmt"
+    billboard_sprites = "assets/golf/sprites/shrubbery.spt"
+    audio = "assets/golf/sound/ambience.xas"
+
+    title = "Putting Test"
+    description = "A Putt Above the Rest"
+
+    hole = "assets/golf/courses/course_06/01.hole"
+}

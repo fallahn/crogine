@@ -1,0 +1,46 @@
+model 01
+{
+    mesh = assets/golf/models/course_06/01.cmb
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "green"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        blendmode = none
+        diffuse = "assets/golf/images/green.png"
+
+    }
+    material Unlit
+    {
+        name = "rough"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        blendmode = none
+        diffuse = "assets/golf/images/rough.png"
+
+    }
+    material Unlit
+    {
+        name = "stone"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        rx_shadows = true
+        blendmode = none
+        diffuse = "assets/golf/images/stone.png"
+
+    }
+}
