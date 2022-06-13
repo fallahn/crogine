@@ -34,6 +34,8 @@ source distribution.
 
 #include <string>
 #include <cstdint>
+#include <vector>
+#include <queue>
 
 namespace gns
 {
@@ -71,7 +73,19 @@ namespace gns
 
     private:
         HSteamListenSocket m_host = 0;
+        HSteamNetPollGroup m_pollGroup = 0;
         std::size_t m_maxClients = 0;
+        std::vector<NetPeer> m_peers;
+        std::queue<NetEvent> m_events;
+
+        //the open source version requires callbacks to be set explicitly
+        //when creating a connection
+#ifdef GNS_OS
+        static void onSteamNetConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_t*);
+        void onConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_t*);
+#else
+        STEAM_CALLBACK(NetHost, onSteamNetConnectionStatusChanged, SteamNetConnectionStatusChangedCallback_t);
+#endif
     };
 
 #include "NetHost.inl"

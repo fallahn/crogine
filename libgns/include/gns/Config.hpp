@@ -66,10 +66,11 @@ source distribution.
 
 #include <steam/steamnetworkingsockets.h>
 #include <steam/steamnetworkingtypes.h>
+#include <steam/steam_api_common.h>
 
 #ifndef STEAMNETWORKINGSOCKETS_OPENSOURCE
 #include <steam/steam_api.h>
 #else
 #define GNS_OS
-#define ISockets SteamGameServerNetworkingSockets
+#define ISockets SteamNetworkingSockets
 #endif

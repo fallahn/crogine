@@ -31,4 +31,12 @@ source distribution.
 
 #include <gns/Config.hpp>
 
-
+/*
+Note that in the open source version each client connection will be calling RunCallbacks() when
+the event queue is polled. This is fine for a single connection (the general use case) but
+multiple connections will call RunCallbacks() multiple times per frame. Although this is not
+the case when using steamworks, not that in all cases pollEvent *doesn't* return events specific
+to one connection, rather it returns all events. Again not a problem with a single connection
+but if multiple connections really are needed then perhaps pollEvent() should be made static and
+used only once per frame.
+*/

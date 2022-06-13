@@ -25,6 +25,9 @@
 // End SteamNetworkingSockets config.
 //-----------------------------------------------------------------------------
 
+#if !defined( STEAMNETWORKINGSOCKETS_OPENSOURCE ) && !defined( STEAMNETWORKINGSOCKETS_STREAMINGCLIENT )
+	#define STEAMNETWORKINGSOCKETS_STEAM
+#endif
 #ifdef NN_NINTENDO_SDK // We always static link on Nintendo
 	#define STEAMNETWORKINGSOCKETS_STATIC_LINK
 #endif
@@ -1479,7 +1482,6 @@ enum ESteamNetworkingConfigValue
 	k_ESteamNetworkingConfig_P2P_TURN_UserList = 108,
 	k_ESteamNetworkingConfig_P2P_TURN_PassList = 109,
 	//k_ESteamNetworkingConfig_P2P_Transport_LANBeacon_Penalty = 107,
-	k_ESteamNetworkingConfig_P2P_Transport_ICE_Implementation = 110,
 
 //
 // Settings for SDR relayed connections
