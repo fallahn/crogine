@@ -33,6 +33,8 @@ source distribution.
 
 #include <string>
 #include <cstdint>
+#include <cassert>
+#include <vector>
 
 namespace gns
 {
@@ -82,7 +84,42 @@ namespace gns
 
         struct GNS_EXPORT_API Packet final
         {
+            std::uint8_t getID() const
+            {
+                if (!m_data.empty())
+                {
+                    return m_data[0];
+                }
+                return 0;
+            }
 
+            template <typename T>
+            T as() const
+            {
+                assert(sizeof(T) == getSize());
+
+                /*T returnData;
+                std::memcpy(&returnData, getData(), getSize());
+
+                return returnData;*/
+                return reinterpret_cast<T&>(&m_data[1]);
+            }
+
+            const void* getData() const
+            {
+                assert(m_data.size() > 1);
+                return m_data.empty() ? nullptr : &m_data[1];
+            }
+
+            std::size_t getSize() const
+            {
+                return m_data.empty() ? 0 : m_data.size() - 1;
+            }
+
+        private:
+            std::vector<std::uint8_t> m_data;
+
+            friend class NetHost;
         }packet;
 
         NetPeer sender;

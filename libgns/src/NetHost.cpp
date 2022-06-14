@@ -160,12 +160,28 @@ bool NetHost::pollEvent(NetEvent& dst)
         //run callbacks and push them into queue
         //this is done by steam API if not using the open source lib
 
+        //HMMMMM if we're running a local loopback connection RunCallbacks
+        //will get called multiple times...
+
         //ugh - we have to manually register callbacks in the OS version
         activeInstance = this;
         ISockets()->RunCallbacks();
 #endif
 
-        //TODO check messages
+        //check messages
+        ISteamNetworkingMessage* msgs = nullptr;
+        auto msgCount = ISockets()->ReceiveMessagesOnPollGroup(m_pollGroup, &msgs, 5);
+        for (auto i = 0; i < msgCount; ++i)
+        {
+            m_events.push(NetEvent());
+            auto& evt = m_events.back();
+            evt.type = NetEvent::PacketReceived;
+            evt.packet.m_data.resize(msgs[i].m_cbSize);
+            std::memcpy(evt.packet.m_data.data(), msgs[i].GetData(), msgs[i].m_cbSize);
+            evt.sender.m_peer = msgs[i].m_conn;
+
+            msgs[i].Release();
+        }
     }
 
     //parse queue
@@ -188,9 +204,13 @@ void NetHost::broadcastPacket(std::uint8_t id, const void* data, std::size_t siz
 
 void NetHost::sendPacket(const NetPeer& peer, std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel)
 {
-    //TODO send to peer
-    auto* msg = SteamNetworkingUtils()->AllocateMessage(0);
+    //TODO use send messages instead?
+    //auto* msg = SteamNetworkingUtils()->AllocateMessage(0);
     
+    std::vector<std::uint8_t> buff(size + 1);
+    buff[0] = id;
+    std::memcpy(&buff[1], data, size);
+    ISockets()->SendMessageToConnection(peer.m_peer, buff.data(), static_cast<std::uint32_t>(buff.size()), static_cast<std::int32_t>(flags), nullptr);
 }
 
 void NetHost::disconnect(NetPeer& peer)
@@ -226,11 +246,70 @@ void NetHost::onSteamNetConnectionStatusChanged(SteamNetConnectionStatusChangedC
 
 void NetHost::onConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_t* cb)
 {
-    //TODO check if we can accept a connection (less than max clients)
-    //and then add to peer list / poll group
+    switch (cb->m_info.m_eState)
+    {
+    default:
+        break;
+    case k_ESteamNetworkingConnectionState_None:
+        //this will be raised when destroying connections
+        LOG("Disconnected peer from host");
+        [[fallthrough]];
+    case k_ESteamNetworkingConnectionState_ClosedByPeer:
+    case k_ESteamNetworkingConnectionState_ProblemDetectedLocally:
+        //make sure they were actually connected first
+        if (cb->m_eOldState == k_ESteamNetworkingConnectionState_Connected)
+        {
+            //remove disconnects from peer list / poll group
+            m_peers.erase(std::remove_if(m_peers.begin(), m_peers.end(), 
+                [cb](const NetPeer& p)
+                {
+                    return p.m_peer == cb->m_hConn;
+                }), m_peers.end());
 
-    //TODO remove disconnects from peer list / poll group
+            ISockets()->SetConnectionPollGroup(cb->m_hConn, 0);
+            ISockets()->CloseConnection(cb->m_hConn, 0, nullptr, false);
 
-    //TODO create net events for connect/disconnects
+            //and push back a net event
+            m_events.push(NetEvent());
+            m_events.back().type = NetEvent::ClientDisconnect;
+            m_events.back().sender.m_peer = cb->m_hConn;
+        }
+        break;
+    case k_ESteamNetworkingConnectionState_Connecting:
+    {
+        //we actually handle connections here rather than 'connected' events
+        //as we have to explicitly accept incoming connections
+        if (m_peers.size() < m_maxClients)
+        {
+            if (ISockets()->AcceptConnection(cb->m_hConn) != k_EResultOK)
+            {
+                //client gave up connecting before we could accept
+                ISockets()->CloseConnection(cb->m_hConn, 0, nullptr, false);
+                break;
+            }
 
+            if (!ISockets()->SetConnectionPollGroup(cb->m_hConn, m_pollGroup))
+            {
+                ISockets()->CloseConnection(cb->m_hConn, 0, nullptr, false);
+                break;
+            }
+            m_peers.emplace_back().m_peer = cb->m_hConn;
+
+            m_events.push(NetEvent());
+            m_events.back().type = NetEvent::ClientConnect;
+            m_events.back().sender.m_peer = cb->m_hConn;
+        }
+        else
+        {
+            //TODO we probably need some kind of rejection message
+            //see k_ESteamNetConnectionEnd
+            ISockets()->CloseConnection(cb->m_hConn, 0, nullptr, false);
+        }
+    }
+        break;
+    case k_ESteamNetworkingConnectionState_Connected:
+        //this happens when we accept a connection - so we should have already
+        //dealt with anything we need to do.
+        break;
+    }
 }

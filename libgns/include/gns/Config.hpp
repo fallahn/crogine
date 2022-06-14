@@ -74,3 +74,9 @@ source distribution.
 #define GNS_OS
 #define ISockets SteamNetworkingSockets
 #endif
+
+#ifdef GNS_DEBUG
+#define LOG(x) std::cerr << x << "\n"
+#else
+#define LOG(x)
+#endif
