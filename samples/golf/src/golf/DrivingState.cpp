@@ -1150,7 +1150,7 @@ void DrivingState::createScene()
 
     //and sky detail
     std::string skybox = "assets/golf/skyboxes/";
-    auto skyboxes = cro::FileSystem::listFiles(skybox);
+    auto skyboxes = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + skybox);
     if (!skyboxes.empty())
     {
         skybox += skyboxes[cro::Util::Random::value(0u, skyboxes.size() - 1)];
