@@ -33,6 +33,7 @@ source distribution.
 
 #include <string>
 #include <cstdint>
+#include <cstddef>
 #include <cassert>
 #include <vector>
 
@@ -42,7 +43,7 @@ namespace gns
     {
         std::string getAddress() const; //! <String containing the IPv4 address
         std::uint16_t getPort() const; //! <Port number
-        std::uint32_t getID() const; //! <Unique ID
+        std::uint64_t getID() const; //! <Unique ID
         std::uint32_t getRoundTripTime() const; //! <Mean round trip time in milliseconds of a reliable packet
 
         enum class State
@@ -89,7 +90,7 @@ namespace gns
             {
                 if (!m_data.empty())
                 {
-                    return m_data[0];
+                    return std::to_integer<std::uint8_t>(m_data[0]);
                 }
                 return 0;
             }
@@ -119,7 +120,7 @@ namespace gns
             }
 
         private:
-            std::vector<std::uint8_t> m_data;
+            std::vector<std::byte> m_data;
 
             friend class NetHost;
             friend class NetClient;

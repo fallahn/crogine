@@ -105,6 +105,7 @@ bool NetHost::start(const std::string& address, std::uint16_t port, std::size_t 
         m_pollGroup = ISockets()->CreatePollGroup();
     }
 
+    DLOG("Created host: " << m_host);
 
     return m_host != 0;
 }
@@ -144,23 +145,25 @@ bool NetHost::pollEvent(NetEvent& dst)
 
         //HMMMMM if we're running a local loopback connection RunCallbacks
         //will get called multiple times... probably on more than one thread!!
-
         ISockets()->RunCallbacks();
 #endif
 
         //check messages
         ISteamNetworkingMessage* msgs = nullptr;
-        auto msgCount = ISockets()->ReceiveMessagesOnPollGroup(m_pollGroup, &msgs, 5);
-        for (auto i = 0; i < msgCount; ++i)
-        {
-            m_events.push(NetEvent());
-            auto& evt = m_events.back();
-            evt.type = NetEvent::PacketReceived;
-            evt.packet.m_data.resize(msgs[i].m_cbSize);
-            std::memcpy(evt.packet.m_data.data(), msgs[i].GetData(), msgs[i].m_cbSize);
-            evt.peer.m_peer = msgs[i].m_conn;
+        auto msgCount = ISockets()->ReceiveMessagesOnPollGroup(m_pollGroup, &msgs, 1);
 
-            msgs[i].Release();
+        if (msgs)
+        {
+            {
+                m_events.push(NetEvent());
+                auto& evt = m_events.back();
+                evt.type = NetEvent::PacketReceived;
+                evt.packet.m_data.resize(msgs->m_cbSize);
+                std::memcpy(evt.packet.m_data.data(), msgs->GetData(), msgs->m_cbSize);
+                evt.peer.m_peer = msgs->m_conn;
+            }
+
+            msgs->Release();
         }
     }
 
@@ -169,8 +172,9 @@ bool NetHost::pollEvent(NetEvent& dst)
     {
         dst = std::move(m_events.front());
         m_events.pop();
+        return true;
     }
-    return !m_events.empty();
+    return false;
 }
 
 void NetHost::broadcastPacket(std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel)
@@ -250,9 +254,13 @@ void NetHost::onConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_
             ISockets()->CloseConnection(cb->m_hConn, 0, nullptr, false);
 
             //and push back a net event
-            m_events.push(NetEvent());
-            m_events.back().type = NetEvent::ClientDisconnect;
-            m_events.back().peer.m_peer = cb->m_hConn;
+            {
+                m_events.push(NetEvent());
+                m_events.back().type = NetEvent::ClientDisconnect;
+                m_events.back().peer.m_peer = cb->m_hConn;
+            }
+
+            DLOG("Dropped peer " << cb->m_hConn);
         }
         break;
     case k_ESteamNetworkingConnectionState_Connecting:
@@ -264,20 +272,25 @@ void NetHost::onConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_
             if (ISockets()->AcceptConnection(cb->m_hConn) != k_EResultOK)
             {
                 //client gave up connecting before we could accept
+                DLOG("Failed to accept incoming connection");
                 ISockets()->CloseConnection(cb->m_hConn, 0, nullptr, false);
                 break;
             }
 
             if (!ISockets()->SetConnectionPollGroup(cb->m_hConn, m_pollGroup))
             {
+                DLOG("Failed to add connection to poll group");
                 ISockets()->CloseConnection(cb->m_hConn, 0, nullptr, false);
                 break;
             }
             m_peers.emplace_back().m_peer = cb->m_hConn;
 
-            m_events.push(NetEvent());
-            m_events.back().type = NetEvent::ClientConnect;
-            m_events.back().peer.m_peer = cb->m_hConn;
+            {
+                m_events.push(NetEvent());
+                m_events.back().type = NetEvent::ClientConnect;
+                m_events.back().peer.m_peer = cb->m_hConn;
+            }
+            DLOG("Accepted peer " << cb->m_hConn);
         }
         else
         {

@@ -53,7 +53,7 @@ std::uint16_t NetPeer::getPort() const
     return m_peer->address.port;
 }
 
-std::uint32_t NetPeer::getID() const
+std::uint64_t NetPeer::getID() const
 {
     CRO_ASSERT(m_peer, "Not a valid peer");
 

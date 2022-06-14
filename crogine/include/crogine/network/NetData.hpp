@@ -49,7 +49,7 @@ namespace cro
     {
         std::string getAddress() const; //! <String containing the IPv4 address
         std::uint16_t getPort() const; //! <Port number
-        std::uint32_t getID() const; //! <Unique ID
+        std::uint64_t getID() const; //! <Unique ID
         std::uint32_t getRoundTripTime() const; //! <Mean round trip time in milliseconds of a reliable packet
 
         enum class State

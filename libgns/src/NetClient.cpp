@@ -83,7 +83,7 @@ bool NetClient::connect(const std::string& address, std::uint16_t port, std::uin
     //steam api uses a macro to register callbacks
     m_peer.m_peer = ISockets()->ConnectByIPAddress(addr, 1, nullptr);
 #endif
-
+    DLOG("Got peer ID " << m_peer.m_peer);
     return m_peer.m_peer != 0;
 }
 
@@ -98,21 +98,29 @@ void NetClient::disconnect()
 
 bool NetClient::pollEvent(NetEvent& dst)
 {
+    if (m_peer.m_peer == 0)
+    {
+        return false;
+    }
+
     if (m_events.empty())
     {
         //check messages and run callbacks if necessary
         ISteamNetworkingMessage* msgs = nullptr;
-        auto msgCount = ISockets()->ReceiveMessagesOnConnection(m_peer.m_peer, &msgs, 5);
-        for (auto i = 0; i < msgCount; ++i)
-        {
-            m_events.push(NetEvent());
-            auto& evt = m_events.back();
-            evt.type = NetEvent::PacketReceived;
-            evt.packet.m_data.resize(msgs[i].m_cbSize);
-            std::memcpy(evt.packet.m_data.data(), msgs[i].GetData(), msgs[i].m_cbSize);
-            evt.peer.m_peer = msgs[i].m_conn;
+        auto msgCount = ISockets()->ReceiveMessagesOnConnection(m_peer.m_peer, &msgs, 1);
 
-            msgs[i].Release();
+        if (msgs)
+        {
+            {
+                m_events.push(NetEvent());
+                auto& evt = m_events.back();
+                evt.type = NetEvent::PacketReceived;
+                evt.packet.m_data.resize(msgs->m_cbSize);
+                std::memcpy(evt.packet.m_data.data(), msgs->GetData(), msgs->m_cbSize);
+                evt.peer.m_peer = msgs->m_conn;
+            }
+
+            msgs->Release();
         }
 
 #ifdef GNS_OS
@@ -128,9 +136,10 @@ bool NetClient::pollEvent(NetEvent& dst)
     {
         dst = std::move(m_events.front());
         m_events.pop();
+        return true;
     }
 
-    return !m_events.empty();
+    return false;
 }
 
 void NetClient::sendPacket(std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t)
@@ -159,20 +168,33 @@ void NetClient::onConnectionStatusChanged(SteamNetConnectionStatusChangedCallbac
         default:
         case k_ESteamNetworkingConnectionState_None:
             //this will happen when we disconnect
+            DLOG("Client disconnected");
             break;
         case k_ESteamNetworkingConnectionState_ClosedByPeer:
         case k_ESteamNetworkingConnectionState_ProblemDetectedLocally:
             //TODO check the reason this was disconnected
             ISockets()->CloseConnection(m_peer.m_peer, 0, nullptr, false);
             m_peer = {};
+            DLOG("Client connection failure, reason: " << cb->m_info.m_eState);
+
+            {
+                m_events.push(NetEvent());
+                m_events.back().type = NetEvent::ClientDisconnect;
+                m_events.back().peer.m_peer = cb->m_hConn;
+            }
+
             break;
         case k_ESteamNetworkingConnectionState_Connecting:
             DLOG("Connecting...");
             break;
         case k_ESteamNetworkingConnectionState_Connected:
             DLOG("Connected.");
+            {
+                m_events.push(NetEvent());
+                m_events.back().type = NetEvent::ClientConnect;
+                m_events.back().peer.m_peer = cb->m_hConn;
+            }
             break;
         }
-
     }
 }

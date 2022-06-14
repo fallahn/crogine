@@ -49,7 +49,11 @@ static inline std::vector<std::uint8_t> serialiseString(const cro::String& str)
     std::uint8_t size = static_cast<std::uint8_t>(len * sizeof(std::uint32_t));
     std::vector<std::uint8_t> buffer(size + 1);
     buffer[0] = size;
-    std::memcpy(&buffer[1], workingString.data(), size);
+    
+    //if (size)
+    {
+        std::memcpy(&buffer[1], workingString.data(), size);
+    }
 
     return buffer;
 }

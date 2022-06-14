@@ -55,7 +55,7 @@ public:
     bool running() const { return m_running; }
     void stop();
 
-    void setHostID(std::uint32_t id);
+    void setHostID(std::uint64_t id);
 
     //note this is not atomic!
     void setPreferredIP(const std::string& ip) { m_preferredIP = ip; }

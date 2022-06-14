@@ -40,10 +40,16 @@ std::string NetPeer::getAddress() const
         SteamNetConnectionInfo_t info;
         if (ISockets()->GetConnectionInfo(m_peer, &info))
         {
+            //unresolved symbol for some reason..?
+            //char str[128];
+            //info.m_addrRemote.ToString(str, 128, false);
+
+            //return str;
+
             const auto* ip = info.m_addrRemote.m_ipv4.m_ip;
 
             std::stringstream ss;
-            ss << ip[0] << "." << ip[1] << "." << ip[2] << "." << ip[3] << std::endl;
+            ss << (int)ip[0] << "." << (int)ip[1] << "." << (int)ip[2] << "." << (int)ip[3];
             return ss.str();
         }
     }
@@ -63,9 +69,23 @@ std::uint16_t NetPeer::getPort() const
     return 0;
 }
 
-std::uint32_t NetPeer::getID() const
+std::uint64_t NetPeer::getID() const
 {
-    return m_peer;
+    //TODO is there any way we can identify this on both
+    //ends of the connection? This is a bit of a hack
+    //as 2 peers may appear the same if returning a local
+    //network ID and those networks happen to run the same
+    //subnet as each other.
+    
+
+    SteamNetworkingIdentity i;
+    ISockets()->GetIdentity(&i);
+#ifdef GNS_OS
+    std::uint32_t ret = *i.GetIPAddr()->m_ipv4.m_ip;
+    return ret;
+#else
+    return i.GetSteamID64();
+#endif
 }
 
 std::uint32_t NetPeer::getRoundTripTime() const

@@ -72,7 +72,7 @@ namespace sv
         cro::String mapDir;
         std::uint8_t scoreType = 0;
 
-        std::atomic_uint32_t hostID = 0;
+        std::atomic_uint64_t hostID = 0;
     };
 
     namespace StateID
