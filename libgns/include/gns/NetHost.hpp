@@ -78,6 +78,8 @@ namespace gns
         std::vector<NetPeer> m_peers;
         std::queue<NetEvent> m_events;
 
+        std::vector<std::uint8_t> m_packetBuffer;
+
         //the open source version requires callbacks to be set explicitly
         //when creating a connection
 #ifdef GNS_OS

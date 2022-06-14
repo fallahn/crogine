@@ -69,6 +69,7 @@ namespace gns
         HSteamNetConnection m_peer = 0;
 
         friend class NetHost;
+        friend class NetClient;
     };
 
     struct GNS_EXPORT_API NetEvent final
@@ -120,6 +121,7 @@ namespace gns
             std::vector<std::uint8_t> m_data;
 
             friend class NetHost;
+            friend class NetClient;
         }packet;
 
         NetPeer sender;

@@ -81,33 +81,13 @@ bool NetHost::start(const std::string& address, std::uint16_t port, std::size_t 
 
     //ISockets()->ConfigureConnectionLanes();
 
-
     SteamNetworkingIPAddr addr;
     addr.Clear();
-    addr.m_port = port;
-    
     if (!address.empty())
     {
-        std::stringstream ss(address);
-        std::string token;
-        std::vector<std::string> output;
-        while (std::getline(ss, token, '.'))
-        {
-            if (!token.empty())
-            {
-                output.push_back(token);
-            }
-        }
-
-        for (auto i = 0u; i < 4 && i < output.size(); ++i)
-        {
-            try
-            {
-                addr.m_ipv4.m_ip[i] = std::atoi(output[i].c_str());
-            }
-            catch (...) { std::cerr << output[i] << ": invalid IP address fragment.\n"; }
-        }
+        addr.ParseString(address.c_str());
     }
+    addr.m_port = port;
 
 #ifdef GNS_OS
     SteamNetworkingConfigValue_t opt;
@@ -161,7 +141,7 @@ bool NetHost::pollEvent(NetEvent& dst)
         //this is done by steam API if not using the open source lib
 
         //HMMMMM if we're running a local loopback connection RunCallbacks
-        //will get called multiple times...
+        //will get called multiple times... probably on more than one thread!!
 
         //ugh - we have to manually register callbacks in the OS version
         activeInstance = this;
@@ -187,7 +167,7 @@ bool NetHost::pollEvent(NetEvent& dst)
     //parse queue
     if (!m_events.empty())
     {
-        dst = m_events.front();
+        dst = std::move(m_events.front());
         m_events.pop();
     }
     return !m_events.empty();
@@ -202,15 +182,15 @@ void NetHost::broadcastPacket(std::uint8_t id, const void* data, std::size_t siz
     }
 }
 
-void NetHost::sendPacket(const NetPeer& peer, std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel)
+void NetHost::sendPacket(const NetPeer& peer, std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t)
 {
     //TODO use send messages instead?
     //auto* msg = SteamNetworkingUtils()->AllocateMessage(0);
     
-    std::vector<std::uint8_t> buff(size + 1);
-    buff[0] = id;
-    std::memcpy(&buff[1], data, size);
-    ISockets()->SendMessageToConnection(peer.m_peer, buff.data(), static_cast<std::uint32_t>(buff.size()), static_cast<std::int32_t>(flags), nullptr);
+    m_packetBuffer.resize(size + 1);
+    m_packetBuffer[0] = id;
+    std::memcpy(&m_packetBuffer[1], data, size);
+    ISockets()->SendMessageToConnection(peer.m_peer, m_packetBuffer.data(), static_cast<std::uint32_t>(m_packetBuffer.size()), static_cast<std::int32_t>(flags), nullptr);
 }
 
 void NetHost::disconnect(NetPeer& peer)
