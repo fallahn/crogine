@@ -76,7 +76,7 @@ source distribution.
 #endif
 
 #ifdef GNS_DEBUG
-#define LOG(x) std::cerr << x << "\n"
+#define DLOG(x) std::cerr << x << "\n"
 #else
-#define LOG(x)
+#define DLOG(x)
 #endif

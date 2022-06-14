@@ -29,6 +29,10 @@ source distribution.
 
 #pragma once
 
+#ifdef USE_GNS
+#include <gns/NetClient.hpp>
+namespace net = gns;
+#else
 #include <crogine/network/NetClient.hpp>
-
 namespace net = cro;
+#endif

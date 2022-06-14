@@ -48,11 +48,19 @@ source distribution.
 
 #include <vector>
 
+#ifdef USE_GNS
+namespace gns
+{
+    struct NetEvent;
+}
+namespace net = gns;
+#else
 namespace cro
 {
     struct NetEvent;
 }
 namespace net = cro;
+#endif
 
 class ClubhouseState;
 struct ClubhouseContext final : public MenuContext
@@ -187,7 +195,7 @@ private:
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
 
-    void updateLobbyData(const cro::NetEvent&);
+    void updateLobbyData(const net::NetEvent&);
     void quitLobby();
 
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);

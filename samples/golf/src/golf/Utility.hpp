@@ -54,7 +54,7 @@ static inline std::vector<std::uint8_t> serialiseString(const cro::String& str)
     return buffer;
 }
 
-static inline cro::String deserialiseString(const cro::NetEvent::Packet& packet)
+static inline cro::String deserialiseString(const net::NetEvent::Packet& packet)
 {
     CRO_ASSERT(packet.getSize() > 0, "TODO we need better error handling");
 

@@ -46,11 +46,19 @@ source distribution.
 #include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
+#ifdef USE_GNS
+namespace gns
+{
+    struct NetEvent;
+}
+namespace net = gns;
+#else
 namespace cro
 {
     struct NetEvent;
 }
 namespace net = cro;
+#endif
 
 struct SharedStateData;
 

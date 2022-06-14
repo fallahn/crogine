@@ -90,6 +90,8 @@ bool NetHost::start(const std::string& address, std::uint16_t port, std::size_t 
     addr.m_port = port;
 
 #ifdef GNS_OS
+    activeInstance = this;
+
     SteamNetworkingConfigValue_t opt;
     opt.SetPtr(k_ESteamNetworkingConfig_Callback_ConnectionStatusChanged, (void*)onSteamNetConnectionStatusChanged);
     m_host = ISockets()->CreateListenSocketIP(addr, 1, &opt);
@@ -143,8 +145,6 @@ bool NetHost::pollEvent(NetEvent& dst)
         //HMMMMM if we're running a local loopback connection RunCallbacks
         //will get called multiple times... probably on more than one thread!!
 
-        //ugh - we have to manually register callbacks in the OS version
-        activeInstance = this;
         ISockets()->RunCallbacks();
 #endif
 
@@ -158,7 +158,7 @@ bool NetHost::pollEvent(NetEvent& dst)
             evt.type = NetEvent::PacketReceived;
             evt.packet.m_data.resize(msgs[i].m_cbSize);
             std::memcpy(evt.packet.m_data.data(), msgs[i].GetData(), msgs[i].m_cbSize);
-            evt.sender.m_peer = msgs[i].m_conn;
+            evt.peer.m_peer = msgs[i].m_conn;
 
             msgs[i].Release();
         }
@@ -218,7 +218,7 @@ void NetHost::disconnectLater(NetPeer& peer)
 #ifdef GNS_OS
 void NetHost::onSteamNetConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_t * cb)
 {
-    assert(activeInstance);
+    assert(activeInstance != nullptr);
     activeInstance->onConnectionStatusChanged(cb);
 }
 #endif
@@ -232,7 +232,7 @@ void NetHost::onConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_
         break;
     case k_ESteamNetworkingConnectionState_None:
         //this will be raised when destroying connections
-        LOG("Disconnected peer from host");
+        DLOG("Disconnected peer from host");
         [[fallthrough]];
     case k_ESteamNetworkingConnectionState_ClosedByPeer:
     case k_ESteamNetworkingConnectionState_ProblemDetectedLocally:
@@ -252,7 +252,7 @@ void NetHost::onConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_
             //and push back a net event
             m_events.push(NetEvent());
             m_events.back().type = NetEvent::ClientDisconnect;
-            m_events.back().sender.m_peer = cb->m_hConn;
+            m_events.back().peer.m_peer = cb->m_hConn;
         }
         break;
     case k_ESteamNetworkingConnectionState_Connecting:
@@ -277,7 +277,7 @@ void NetHost::onConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_
 
             m_events.push(NetEvent());
             m_events.back().type = NetEvent::ClientConnect;
-            m_events.back().sender.m_peer = cb->m_hConn;
+            m_events.back().peer.m_peer = cb->m_hConn;
         }
         else
         {

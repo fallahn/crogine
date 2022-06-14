@@ -1726,7 +1726,7 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 }
 
-void ClubhouseState::updateLobbyData(const cro::NetEvent& evt)
+void ClubhouseState::updateLobbyData(const net::NetEvent& evt)
 {
     ConnectionData cd;
     if (cd.deserialise(evt.packet))

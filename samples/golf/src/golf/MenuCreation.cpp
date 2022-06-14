@@ -2779,7 +2779,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
     }
 }
 
-void MenuState::updateLobbyData(const cro::NetEvent& evt)
+void MenuState::updateLobbyData(const net::NetEvent& evt)
 {
     ConnectionData cd;
     if (cd.deserialise(evt.packet))

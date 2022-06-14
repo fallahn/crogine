@@ -74,6 +74,8 @@ bool NetClient::connect(const std::string& address, std::uint16_t port, std::uin
     addr.m_port = port;
 
 #ifdef GNS_OS
+    activeInstance = this;
+
     SteamNetworkingConfigValue_t opt;
     opt.SetPtr(k_ESteamNetworkingConfig_Callback_ConnectionStatusChanged, (void*)onSteamNetConnectionStatusChanged);
     m_peer.m_peer = ISockets()->ConnectByIPAddress(addr, 1, &opt);
@@ -108,7 +110,7 @@ bool NetClient::pollEvent(NetEvent& dst)
             evt.type = NetEvent::PacketReceived;
             evt.packet.m_data.resize(msgs[i].m_cbSize);
             std::memcpy(evt.packet.m_data.data(), msgs[i].GetData(), msgs[i].m_cbSize);
-            evt.sender.m_peer = msgs[i].m_conn;
+            evt.peer.m_peer = msgs[i].m_conn;
 
             msgs[i].Release();
         }
@@ -118,7 +120,6 @@ bool NetClient::pollEvent(NetEvent& dst)
         //on the same machine from the same networking instance
         //as it gets called twice FROM DIFFERENT THREADS
 
-        activeInstance = this;
         ISockets()->RunCallbacks();
 #endif
     }
@@ -144,7 +145,7 @@ void NetClient::sendPacket(std::uint8_t id, const void* data, std::size_t size, 
 #ifdef GNS_OS
 void NetClient::onSteamNetConnectionStatusChanged(SteamNetConnectionStatusChangedCallback_t* cb)
 {
-    assert(activeInstance);
+    assert(activeInstance != nullptr);
     activeInstance->onConnectionStatusChanged(cb);
 }
 #endif
@@ -166,10 +167,10 @@ void NetClient::onConnectionStatusChanged(SteamNetConnectionStatusChangedCallbac
             m_peer = {};
             break;
         case k_ESteamNetworkingConnectionState_Connecting:
-            LOG("Connecting...");
+            DLOG("Connecting...");
             break;
         case k_ESteamNetworkingConnectionState_Connected:
-            LOG("Connected.");
+            DLOG("Connected.");
             break;
         }
 

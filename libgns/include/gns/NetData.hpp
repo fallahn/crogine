@@ -99,11 +99,12 @@ namespace gns
             {
                 assert(sizeof(T) == getSize());
 
-                /*T returnData;
+                //TODO remove this copy
+                T returnData;
                 std::memcpy(&returnData, getData(), getSize());
 
-                return returnData;*/
-                return reinterpret_cast<T&>(&m_data[1]);
+                return returnData;
+                //return reinterpret_cast<const T&>(&m_data[1]);
             }
 
             const void* getData() const
@@ -124,7 +125,7 @@ namespace gns
             friend class NetClient;
         }packet;
 
-        NetPeer sender;
+        NetPeer peer;
     };
 
     enum class NetFlag

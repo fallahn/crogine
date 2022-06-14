@@ -154,9 +154,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>CRO_DEBUG_;_CRT_SECURE_NO_WARNINGS;_MBCS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_GNS;CRO_DEBUG_;_CRT_SECURE_NO_WARNINGS;_MBCS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\polyvox</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\gns\include;$(SolutionDir)libgns\include;$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\polyvox</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -165,7 +165,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Debug</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine-d.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;LinearMath_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libgns-d.lib;crogine-d.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;LinearMath_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugASan|x64'">

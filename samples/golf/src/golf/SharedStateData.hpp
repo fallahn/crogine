@@ -74,7 +74,7 @@ struct ConnectionData final
     std::uint32_t pingTime = 0;
 
     std::vector<std::uint8_t> serialise() const;
-    bool deserialise(const cro::NetEvent::Packet&);
+    bool deserialise(const net::NetEvent::Packet&);
 };
 
 static constexpr float MinFOV = 60.f;
