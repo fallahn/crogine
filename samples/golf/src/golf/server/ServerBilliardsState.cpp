@@ -97,7 +97,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             //raise forfeit message if necessary
             if (data.first == BilliardsEvent::Forfeit)
             {
-                m_sharedData.host.broadcastPacket(PacketID::FoulEvent, std::int8_t(BilliardsEvent::Forfeit), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_sharedData.host.broadcastPacket(PacketID::FoulEvent, std::int8_t(BilliardsEvent::Forfeit), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             //don't delete this scope...
             {

@@ -236,7 +236,7 @@ private:
     void handleTextEdit(const cro::Event&);
     bool applyTextEdit(); //returns true if this consumed event
     void updateLocalAvatars(std::uint32_t, std::uint32_t);
-    void updateLobbyData(const cro::NetEvent&);
+    void updateLobbyData(const net::NetEvent&);
     void updateLobbyAvatars();
     void showPlayerConfig(bool, std::uint8_t);
     void quitLobby();

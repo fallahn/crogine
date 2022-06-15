@@ -815,7 +815,7 @@ void GolfState::buildWorld()
     }
 }
 
-void GolfState::doServerCommand(const cro::NetEvent& evt)
+void GolfState::doServerCommand(const net::NetEvent& evt)
 {
 #ifdef CRO_DEBUG_
     switch (evt.packet.as<std::uint8_t>())

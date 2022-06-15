@@ -87,7 +87,7 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
     return buffer;
 }
 
-bool ConnectionData::deserialise(const cro::NetEvent::Packet& packet)
+bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
 {
     //read header
     std::array<std::uint8_t, 5u> sizes = { 0,0,0,0,0 };

@@ -29,7 +29,12 @@ source distribution.
 
 #pragma once
 
+#ifdef USE_GNS
+#include <gns/NetData.hpp>
+#include <gns/NetHost.hpp>
+namespace net = gns;
+#else
 #include <crogine/network/NetData.hpp>
 #include <crogine/network/NetHost.hpp>
-
 namespace net = cro;
+#endif

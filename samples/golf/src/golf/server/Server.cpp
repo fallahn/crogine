@@ -88,7 +88,7 @@ void Server::stop()
     m_gameMode = GameMode::None;
 }
 
-void Server::setHostID(std::uint32_t id)
+void Server::setHostID(std::uint64_t id)
 {
     m_sharedData.hostID = id;
 }

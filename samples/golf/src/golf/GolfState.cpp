@@ -208,7 +208,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     ballEntity = {};
     useFreeCam = false;
 
-    /*registerWindow([&]()
+    registerWindow([&]()
         {
             if (ImGui::Begin("Network"))
             {
@@ -220,7 +220,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 }
             }
             ImGui::End();
-        });*/
+        });
 
     //registerWindow([&]()
     //    {

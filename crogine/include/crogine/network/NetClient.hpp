@@ -87,7 +87,7 @@ namespace cro
         attempt will not wait for a response from the server.
         \returns true on success or false if the attempt timed out.
         */
-        bool connect(const std::string& address, Uint16 port, std::uint32_t timeout = 5000);
+        bool connect(const std::string& address, std::uint16_t port, std::uint32_t timeout = 5000);
 
         /*!
         \brief Closes any active connections.
