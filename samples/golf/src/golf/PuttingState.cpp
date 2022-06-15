@@ -353,7 +353,7 @@ void PuttingState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::UI::ClubName;
             cmd.action = [&](cro::Entity e, float)
             {
-                e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].name);
+                e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements));
 
                 auto dist = glm::length(PlayerPosition - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin) * 1.67f;
                 if (m_inputParser.getClub() < ClubID::NineIron &&
@@ -2070,7 +2070,7 @@ void PuttingState::setHole(std::int32_t index)
     cmd.targetFlags = CommandID::UI::ClubName;
     cmd.action = [&, index](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].name);
+        e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements));
 
         auto dist = glm::length(PlayerPosition - m_holeData[index].pin) * 1.67f;
         if (m_inputParser.getClub() < ClubID::NineIron &&

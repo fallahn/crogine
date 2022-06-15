@@ -703,7 +703,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                 {
-                    e.getComponent<cro::Text>().setString(Clubs[getClub()].name);
+                    e.getComponent<cro::Text>().setString(Clubs[getClub()].getName(m_sharedData.imperialMeasurements));
 
                     auto dist = glm::length(m_currentPlayer.position - m_holeData[m_currentHole].pin) * 1.67f;
                     if (getClub() < ClubID::NineIron &&
@@ -801,6 +801,30 @@ void GolfState::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //and distance values
+                cmd.targetFlags = CommandID::UI::ClubName;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+                    {
+                        e.getComponent<cro::Text>().setString(Clubs[getClub()].getName(m_sharedData.imperialMeasurements));
+                    }
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::UI::PinDistance;
+                cmd.action =
+                    [&](cro::Entity e, float)
+                {
+                    float ballDist = glm::length(m_currentPlayer.position - m_holeData[m_currentHole].pin);
+                    formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
+
+                    auto bounds = cro::Text::getLocalBounds(e);
+                    bounds.width = std::floor(bounds.width / 2.f);
+                    e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
         }
     }
@@ -3863,20 +3887,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.action =
         [&, player](cro::Entity e, float)
     {
-        //if we're on the green convert to cm
         float ballDist = glm::length(player.position - m_holeData[m_currentHole].pin);
-        std::int32_t distance = 0;
-
-        if (ballDist > 5)
-        {
-            distance = static_cast<std::int32_t>(ballDist);
-            e.getComponent<cro::Text>().setString("Pin: " + std::to_string(distance) + "m");
-        }
-        else
-        {
-            distance = static_cast<std::int32_t>(ballDist * 100.f);
-            e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "cm");
-        }
+        formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
 
         auto bounds = cro::Text::getLocalBounds(e);
         bounds.width = std::floor(bounds.width / 2.f);
@@ -4267,19 +4279,7 @@ void GolfState::updateActor(const ActorInfo& update)
         cmd.targetFlags = CommandID::UI::PinDistance;
         cmd.action = [&, ballDist](cro::Entity e, float)
         {
-            //if we're on the green convert to cm
-            std::int32_t distance = 0;
-
-            if (ballDist > 7)
-            {
-                distance = static_cast<std::int32_t>(ballDist);
-                e.getComponent<cro::Text>().setString("Pin: " + std::to_string(distance) + "m");
-            }
-            else
-            {
-                distance = static_cast<std::int32_t>(ballDist * 100.f);
-                e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "cm");
-            }
+            formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
 
             auto bounds = cro::Text::getLocalBounds(e);
             bounds.width = std::floor(bounds.width / 2.f);

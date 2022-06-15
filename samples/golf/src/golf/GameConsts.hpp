@@ -530,3 +530,46 @@ static inline void createFallbackModel(cro::Entity target, cro::ResourceCollecti
 
     target.addComponent<cro::Model>(meshData, material);
 }
+
+static inline void formatDistanceString(float distance, cro::Text& target, bool imperial)
+{
+    static constexpr float ToYards = 1.094f;
+    static constexpr float ToFeet = 3.281f;
+    static constexpr float ToInches = 12.f;
+
+    if (imperial)
+    {
+        if (distance > 7) //TODO this should read the putter value
+        {
+            auto dist = static_cast<std::int32_t>(distance * ToYards);
+            target.setString("Pin: " + std::to_string(dist) + "yds");
+        }
+        else
+        {
+            distance *= ToFeet;
+            if (distance > 1)
+            {
+                auto dist = static_cast<std::int32_t>(distance);
+                target.setString("Distance: " + std::to_string(dist) + "ft");
+            }
+            else
+            {
+                auto dist = static_cast<std::int32_t>(distance * ToInches);
+                target.setString("Distance: " + std::to_string(dist) + "in");
+            }
+        }
+    }
+    else
+    {
+        if (distance > 5)
+        {
+            auto dist = static_cast<std::int32_t>(distance);
+            target.setString("Pin: " + std::to_string(dist) + "m");
+        }
+        else
+        {
+            auto dist = static_cast<std::int32_t>(distance * 100.f);
+            target.setString("Distance: " + std::to_string(dist) + "cm");
+        }
+    }
+}

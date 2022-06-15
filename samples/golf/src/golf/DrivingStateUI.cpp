@@ -1431,7 +1431,14 @@ void DrivingState::showMessage(float range)
 
     std::stringstream s1;
     s1.precision(3);
-    s1 << range << "m";
+    if (m_sharedData.imperialMeasurements)
+    {
+        s1 << range * 1.094f << "y";
+    }
+    else
+    {
+        s1 << range << "m";
+    }
 
     auto textEnt2 = m_uiScene.createEntity();
     textEnt2.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 36.f, 0.02f });

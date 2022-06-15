@@ -371,7 +371,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::UI::ClubName;
             cmd.action = [&](cro::Entity e, float)
             {
-                e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].name);
+                e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements));
 
                 auto dist = glm::length(PlayerPosition - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin) * 1.67f;
                 if (m_inputParser.getClub() < ClubID::NineIron &&
@@ -444,6 +444,28 @@ void DrivingState::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //and the measurement settings
+                cmd.targetFlags = CommandID::UI::ClubName;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements));
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //update distance to hole
+                cmd.targetFlags = CommandID::UI::PinDistance;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    float ballDist = 
+                        glm::length(PlayerPosition - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin);
+                    formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
+
+                    auto bounds = cro::Text::getLocalBounds(e);
+                    bounds.width = std::floor(bounds.width / 2.f);
+                    e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
         }
     }
@@ -1988,20 +2010,10 @@ void DrivingState::createBall()
             cmd.action = [&, pos](cro::Entity e, float)
             {
                 //if we're on the green convert to cm
-                std::int32_t distance = 0;
                 float ballDist = 
                     glm::length(pos - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin);
 
-                if (ballDist > 5)
-                {
-                    distance = static_cast<std::int32_t>(ballDist);
-                    e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
-                }
-                else
-                {
-                    distance = static_cast<std::int32_t>(ballDist * 100.f);
-                    e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "cm");
-                }
+                formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
 
                 auto bounds = cro::Text::getLocalBounds(e);
                 bounds.width = std::floor(bounds.width / 2.f);
@@ -2395,7 +2407,7 @@ void DrivingState::setHole(std::int32_t index)
     cmd.targetFlags = CommandID::UI::ClubName;
     cmd.action = [&, index](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].name);
+        e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements));
 
         auto dist = glm::length(PlayerPosition - m_holeData[index].pin) * 1.67f;
         if (m_inputParser.getClub() < ClubID::NineIron &&
@@ -2431,11 +2443,8 @@ void DrivingState::setHole(std::int32_t index)
     cmd.targetFlags = CommandID::UI::PinDistance;
     cmd.action = [&, index](cro::Entity e, float)
     {
-        //if we're on the green convert to cm
         float ballDist = glm::length(PlayerPosition - m_holeData[index].pin);
-        
-        auto distance = static_cast<std::int32_t>(ballDist);
-        e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
+        formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
 
         auto bounds = cro::Text::getLocalBounds(e);
         bounds.width = std::floor(bounds.width / 2.f);

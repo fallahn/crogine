@@ -639,6 +639,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.beaconColour = std::fmod(prop.getValue<float>(), 1.f);
                 }
+                else if (name == "imperial_measurements")
+                {
+                    m_sharedData.imperialMeasurements = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -693,6 +697,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("invert_y").setValue(m_sharedData.invertY);
     cfg.addProperty("show_beacon").setValue(m_sharedData.showBeacon);
     cfg.addProperty("beacon_colour").setValue(m_sharedData.beaconColour);
+    cfg.addProperty("imperial_measurements").setValue(m_sharedData.imperialMeasurements);
     cfg.save(path);
 
 
