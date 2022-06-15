@@ -847,6 +847,22 @@ void GolfState::handleMessage(const cro::Message& msg)
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::CPUThink, std::uint8_t(data.type), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
         break;
+    case MessageID::CollisionMessage:
+    {
+        const auto& data = msg.getData<CollisionEvent>();
+        if (data.terrain == TerrainID::Scrub)
+        {
+            if (cro::Util::Random::value(0, 3) == 0)
+            {
+                auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                msg2->type = GolfEvent::BirdHit;
+                msg2->position = data.position;
+                auto dir = data.position - m_cameras[m_currentCamera].getComponent<cro::Transform>().getPosition();
+                msg2->travelDistance = std::atan2(dir.z, dir.x);
+            }
+        }
+    }
+        break;
     }
 
     m_cpuGolfer.handleMessage(msg);

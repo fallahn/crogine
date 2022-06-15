@@ -171,6 +171,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case GolfEvent::BirdHit:
+
+            break;
         case GolfEvent::DroneHit:
             playSound(AudioID::Burst, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             break;

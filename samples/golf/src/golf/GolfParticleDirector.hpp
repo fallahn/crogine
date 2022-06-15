@@ -54,7 +54,7 @@ private:
         enum
         {
             Grass, Water, Sand,
-            Sparkle, HIO,
+            Sparkle, HIO, Bird,
             Drone, Explode, Blades,
 
             Count
