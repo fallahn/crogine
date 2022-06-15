@@ -34,7 +34,7 @@ source distribution.
 
 namespace
 {
-    constexpr float MaxRadius = 280.f;
+    constexpr float MaxRadius = 380.f;
     constexpr float MaxDistance = MaxRadius * MaxRadius;
     constexpr float ResetDistance = (MaxRadius * 2.f);
 }

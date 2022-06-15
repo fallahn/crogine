@@ -2063,7 +2063,7 @@ void GolfState::loadAssets()
     }
     else
     {
-        m_holeToModelRatio = static_cast<float>(std::max(6, holeModelCount) / m_holeData.size());
+        m_holeToModelRatio = static_cast<float>(/*std::max(6, */holeModelCount/*)*/) / m_holeData.size();
     }
 
 
@@ -3691,7 +3691,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     //each player starts a new hole on a driver/3 wood
     m_inputParser.setHoleDirection(m_holeData[m_currentHole].target - m_currentPlayer.position, true);
     m_currentPlayer.terrain = TerrainID::Fairway; //this will be overwritten from the server but setting this to non-green makes sure the mini cam stops updating in time
-    m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin * 1.1f); //limits club selection based on hole size
+    m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin * 1.2f); //limits club selection based on hole size
 
     //hide the slope indicator
     cro::Command cmd;
@@ -3867,7 +3867,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     }
     else
     {
-        m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin * 1.1f);
+        m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin * 1.2f);
     }
 
     //player UI name

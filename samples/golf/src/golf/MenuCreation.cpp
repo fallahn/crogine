@@ -1124,9 +1124,12 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                             cro::Clock clock;
                             while (clock.elapsed().asMilliseconds() < 500) {}
 
-                            //m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+#ifdef USE_GNS
+                            //gns only supports 127.0.0.1 for loopback, but to report correct local IP with enet we need 255.255.255.255
                             m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("127.0.0.1", ConstVal::GamePort);
-
+#else
+                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+#endif
                             if (!m_sharedData.clientConnection.connected)
                             {
                                 m_sharedData.serverInstance.stop();
