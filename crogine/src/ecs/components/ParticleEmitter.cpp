@@ -173,7 +173,7 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
             }
             else if (name == "emit_count")
             {
-                emitCount = p.getValue<std::int32_t>();
+                emitCount = p.getValue<std::uint32_t>();
             }
             else if (name == "spawn_radius")
             {
@@ -193,7 +193,11 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
             }
             else if (name == "frame_count")
             {
-                frameCount = std::max(1, p.getValue<std::int32_t>());
+                frameCount = std::max(1u, p.getValue<std::uint32_t>());
+            }
+            else if (name == "loop_count")
+            {
+                loopCount = std::min(20u, p.getValue<std::uint32_t>());
             }
             else if (name == "animate")
             {
@@ -292,12 +296,13 @@ bool EmitterSettings::saveToFile(const std::string& path)
     cfg.addProperty("scale_affector").setValue(scaleModifier);
     cfg.addProperty("size").setValue(size);
     cfg.addProperty("emit_rate").setValue(emitRate);
-    cfg.addProperty("emit_count").setValue(static_cast<std::int32_t>(emitCount));
+    cfg.addProperty("emit_count").setValue(emitCount);
     cfg.addProperty("spawn_radius").setValue(spawnRadius);
     cfg.addProperty("spawn_offset").setValue(spawnOffset);
     cfg.addProperty("release_count").setValue(releaseCount);
     cfg.addProperty("inherit_rotation").setValue(inheritRotation);
-    cfg.addProperty("frame_count").setValue(static_cast<std::int32_t>(frameCount));
+    cfg.addProperty("frame_count").setValue(frameCount);
+    cfg.addProperty("loop_count").setValue(loopCount);
     cfg.addProperty("animate").setValue(animate);
     cfg.addProperty("random_frame").setValue(useRandomFrame);
     cfg.addProperty("framerate").setValue(framerate);

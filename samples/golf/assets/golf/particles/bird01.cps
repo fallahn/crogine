@@ -4,11 +4,11 @@ particle_system bird01
     texture_smoothing = false
     blendmode = alpha
     acceleration = 1.000000
-    gravity = 0.000000,0.000000,0.000000
+    gravity = 0.000000,1.471000,0.000000
     velocity = 3.235000,2.059000,0.000000
     spread = 15.540000
-    lifetime = 1.738000
-    lifetime_variance = 1.379000
+    lifetime = 2.450000
+    lifetime_variance = 0.719000
     colour = 255.000000,255.000000,255.000000,255.000000
     random_initial_rotation = false
     rotation_speed = 0.000000
@@ -20,7 +20,8 @@ particle_system bird01
     spawn_offset = 0.000000,0.000000,0.000000
     release_count = 7
     inherit_rotation = true
-    frame_count = 16
+    frame_count = 4
+    loop_count = 4
     animate = true
     random_frame = false
     framerate = 18.000000

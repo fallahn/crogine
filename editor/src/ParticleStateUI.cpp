@@ -125,7 +125,7 @@ void ParticleState::drawMenuBar()
 
                 m_cameras[CameraID::ThreeDee].emitter.getComponent<cro::ParticleEmitter>().settings = {};
 
-                //make sure to sace the 2D particles
+                //make sure to save the 2D particles
                 auto& settings = m_cameras[CameraID::TwoDee].emitter.getComponent<cro::ParticleEmitter>().settings;
                 settings = {};
                 settings.acceleration *= TwoDeeScale;
@@ -325,6 +325,14 @@ void ParticleState::drawInspector()
                 m_particleSettings->frameCount = count;
             }
             
+            //loop count
+            count = static_cast<std::int32_t>(m_particleSettings->loopCount);
+            if (ImGui::InputInt("Loop Count", &count))
+            {
+                count = std::max(0, std::min(20, count));
+                m_particleSettings->loopCount = count;
+            }
+
             //frame rate
             ImGui::InputFloat("Frame Rate", &m_particleSettings->framerate, 0.1f, 50.f);
             

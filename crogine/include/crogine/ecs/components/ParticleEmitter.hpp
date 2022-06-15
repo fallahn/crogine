@@ -51,6 +51,7 @@ namespace cro
     {
         Colour colour;
         std::uint32_t frameID = 0;
+        std::uint32_t loopCount = 0;
         
         glm::vec3 position = glm::vec3(0.f);
         glm::vec3 velocity = glm::vec3(0.f);
@@ -88,6 +89,7 @@ namespace cro
         std::uint32_t emitCount = 1; //!< amount released at once
         std::int32_t releaseCount = 0; //!< number of particles released before stopping (0 for infinite)
         std::uint32_t frameCount = 1; //!< must be at least one. Texture width is divided by this
+        std::uint32_t loopCount = 0;
 
         float lifetime = 1.f;
         float lifetimeVariance = 0.f;
