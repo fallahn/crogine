@@ -7,13 +7,13 @@ particle_system bird01
     gravity = 0.000000,1.471000,0.000000
     velocity = 3.235000,2.059000,0.000000
     spread = 15.540000
-    lifetime = 2.450000
-    lifetime_variance = 0.719000
+    lifetime = 3.942000
+    lifetime_variance = 0.844000
     colour = 255.000000,255.000000,255.000000,255.000000
     random_initial_rotation = false
     rotation_speed = 0.000000
     scale_affector = 0.000000
-    size = 0.288000
+    size = 0.222000
     emit_rate = 5.844000
     emit_count = 1
     spawn_radius = 0.403000
@@ -21,7 +21,7 @@ particle_system bird01
     release_count = 7
     inherit_rotation = true
     frame_count = 4
-    loop_count = 4
+    loop_count = 7
     animate = true
     random_frame = false
     framerate = 18.000000

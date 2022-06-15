@@ -1081,7 +1081,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     createLabel({ 204.f, 98.f }, "Post FX");
 
     //measurements
-    createLabel({ 204.f, 82.f }, "Imperial    Display Distance As Yards");
+    createLabel({ 204.f, 82.f }, "Units         Display As Yards");
 
 
     auto createSlider = [&](glm::vec2 position)

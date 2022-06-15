@@ -852,7 +852,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<CollisionEvent>();
         if (data.terrain == TerrainID::Scrub)
         {
-            if (cro::Util::Random::value(0, 3) == 0)
+            if (cro::Util::Random::value(0, 2) == 0)
             {
                 auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                 msg2->type = GolfEvent::BirdHit;
