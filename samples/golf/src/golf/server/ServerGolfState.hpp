@@ -73,7 +73,7 @@ namespace sv
         void handlePlayerInput(const net::NetEvent::Packet&);
         void checkReadyQuit(std::uint8_t);
 
-        void setNextPlayer();
+        void setNextPlayer(bool newHole = false);
         void setNextHole();
 
         bool validateMap();

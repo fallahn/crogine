@@ -436,7 +436,7 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
     m_returnValue = StateID::Lobby;
 }
 
-void GolfState::setNextPlayer()
+void GolfState::setNextPlayer(bool newHole)
 {
     //broadcast current player's score first
     ScoreUpdate su;
@@ -452,14 +452,25 @@ void GolfState::setNextPlayer()
 
     m_playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance = 0.f;
 
-    //sort players by distance
-    std::sort(m_playerInfo.begin(), m_playerInfo.end(),
-        [](const PlayerStatus& a, const PlayerStatus& b)
-        {
-            return a.distanceToHole > b.distanceToHole;
-        });
+    if (!newHole || m_currentHole == 0)
+    {
+        //sort players by distance
+        std::sort(m_playerInfo.begin(), m_playerInfo.end(),
+            [](const PlayerStatus& a, const PlayerStatus& b)
+            {
+                return a.distanceToHole > b.distanceToHole;
+            });
+    }
+    else
+    {
+        //winner of the last hole goes first
+        std::sort(m_playerInfo.begin(), m_playerInfo.end(),
+            [&](const PlayerStatus& a, const PlayerStatus& b)
+            {
+                return a.holeScore[m_currentHole - 1] < b.holeScore[m_currentHole - 1];
+            });
+    }
 
-    ActivePlayer player = m_playerInfo[0]; //deliberate slice.
 
     if (m_playerInfo[0].distanceToHole == 0)
     {
@@ -470,6 +481,7 @@ void GolfState::setNextPlayer()
     else
     {
         //go to next player
+        ActivePlayer player = m_playerInfo[0]; //deliberate slice.
         m_sharedData.host.broadcastPacket(PacketID::SetPlayer, player, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(AnimationID::Idle), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
@@ -607,7 +619,7 @@ void GolfState::setNextHole()
         {
             if (m_allMapsLoaded)
             {
-                setNextPlayer();
+                setNextPlayer(true);
                 e.getComponent<cro::Callback>().active = false;
                 m_scene.destroyEntity(e);
             }
