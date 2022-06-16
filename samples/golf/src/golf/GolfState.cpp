@@ -1858,6 +1858,7 @@ void GolfState::loadAssets()
                         float rotation = 0.f;
                         glm::vec3 scale(1.f);
                         std::string path;
+                        std::vector<glm::vec3> curve;
 
                         for (const auto& modelProp : modelProps)
                         {
@@ -1877,6 +1878,28 @@ void GolfState::loadAssets()
                             else if (propName == "scale")
                             {
                                 scale = modelProp.getValue<glm::vec3>();
+                            }
+                        }
+
+                        const auto modelObjs = obj.getObjects();
+                        for (const auto& o : modelObjs)
+                        {
+                            if (o.getName() == "path")
+                            {
+                                const auto points = o.getProperties();
+                                for (const auto& p : points)
+                                {
+                                    if (p.getName() == "point")
+                                    {
+                                        curve.push_back(p.getValue<glm::vec3>());
+                                    }
+                                    else if (p.getName() == "loop")
+                                    {
+                                        LogW << "Remember to parse loop property..." << std::endl;
+                                    }
+                                }
+
+                                break;
                             }
                         }
 
@@ -1930,6 +1953,11 @@ void GolfState::loadAssets()
                                 if (cro::FileSystem::getFileName(path) == "leaderboard.cmt")
                                 {
                                     leaderboardProps.push_back(ent);
+                                }
+
+                                if (curve.size() > 2)
+                                {
+                                    LogI << "Found prop curve with " << curve.size() << " points" << std::endl;
                                 }
                             }
                         }
@@ -1985,7 +2013,33 @@ void GolfState::loadAssets()
                             }
                         }
 
-                        addCrowd(holeData, position, rotation);
+                        std::vector<glm::vec3> curve;
+                        const auto& modelObjs = obj.getObjects();
+                        for (const auto& o : modelObjs)
+                        {
+                            if (o.getName() == "path")
+                            {
+                                const auto& points = o.getProperties();
+                                for (const auto& p : points)
+                                {
+                                    if (p.getName() == "point")
+                                    {
+                                        curve.push_back(p.getValue<glm::vec3>());
+                                    }
+                                }
+
+                                break;
+                            }
+                        }
+
+                        if (curve.size() < 3)
+                        {
+                            addCrowd(holeData, position, rotation);
+                        }
+                        else
+                        {
+                            LogI << "Found crowd path with " << curve.size() << " points" << std::endl;
+                        }
                     }
                 }
 
