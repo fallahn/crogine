@@ -195,7 +195,10 @@ private:
     std::string m_audioPath;
     std::string m_courseTitle;
 
+    std::vector<cro::Entity> m_spectatorModels;
+
     void loadAssets();
+    void loadSpectators();
     void addSystems();
     void buildScene();
     void initAudio();

@@ -1196,7 +1196,7 @@ void GolfState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Leaderboard] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define NOCHEX\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define NOCHEX\n#define SUBRECT\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1271,6 +1271,8 @@ void GolfState::loadAssets()
 
 
     //model definitions
+    loadSpectators();
+
     for (auto& md : m_modelDefs)
     {
         md = std::make_unique<cro::ModelDefinition>(m_resources);
@@ -1927,6 +1929,7 @@ void GolfState::loadAssets()
                                     {
                                         ent.getComponent<cro::Skeleton>().play(0);
                                         skel.getAnimations()[0].looped = true;
+                                        skel.setMaxInterpolationDistance(100.f);
                                     }
                                 }
                                 else
@@ -2168,6 +2171,59 @@ void GolfState::loadAssets()
             std::fill(player.holeScores.begin(), player.holeScores.end(), 0);
         }
     }
+}
+
+void GolfState::loadSpectators()
+{
+    cro::ModelDefinition md(m_resources);
+    std::array modelPaths =
+    {
+        "assets/golf/models/spectators/01.cmt",
+        "assets/golf/models/spectators/02.cmt",
+        "assets/golf/models/spectators/03.cmt",
+        "assets/golf/models/spectators/04.cmt"
+    };
+
+
+    for (auto j = 0; j < 2; ++j)
+    {
+        for (const auto& path : modelPaths)
+        {
+            if (md.loadFromFile(path))
+            {
+                for (auto i = 0; i < 3; ++i)
+                {
+                    auto entity = m_gameScene.createEntity();
+                    entity.addComponent<cro::Transform>().setOrigin({ 0.75, 0.f, 0.f });
+                    md.createModel(entity);
+
+                    if (md.hasSkeleton())
+                    {
+                        auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+                        applyMaterialData(md, material);
+
+                        glm::vec4 rect((1.f / 3.f) * i, 0.f, (1.f / 3.f) * i, 1.f);
+                        material.setProperty("u_subrect", rect);
+
+                        entity.getComponent<cro::Model>().setMaterial(0, material);
+                        entity.getComponent<cro::Model>().setHidden(true);
+
+                        auto& skel = entity.getComponent<cro::Skeleton>();
+                        if (!skel.getAnimations().empty())
+                        {
+                            //skel.getAnimations()[0].looped = true;
+                            //TODO parse animations / map indices etc
+                            skel.setMaxInterpolationDistance(70.f);
+                        }
+                    }
+
+                    m_spectatorModels.push_back(entity);
+                }
+            }
+        }
+    }
+
+    std::shuffle(m_spectatorModels.begin(), m_spectatorModels.end(), cro::Util::Random::rndEngine);
 }
 
 void GolfState::addSystems()
