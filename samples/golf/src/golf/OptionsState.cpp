@@ -973,6 +973,7 @@ void OptionsState::buildScene()
     m_tooltips[ToolTipID::VertSnap] = createToolTip("Snaps vertices to the nearest\nwhole pixel for a retro \'wobble\'.");
     m_tooltips[ToolTipID::Beacon] = createToolTip("Shows a beacon to indicate flag position\nat far distances.");
     m_tooltips[ToolTipID::BeaconColour] = createToolTip("Display colour of the beacon.");
+    m_tooltips[ToolTipID::Units] = createToolTip("Select to display in yards/feet or\nunselect to display in metres/cm");
     m_tooltips[ToolTipID::MouseSpeed] = createToolTip("1.00");
     m_tooltips[ToolTipID::Video] = createToolTip("Sound & Video Settings");
     m_tooltips[ToolTipID::Controls] = createToolTip("Controls");
@@ -1081,7 +1082,13 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     createLabel({ 204.f, 98.f }, "Post FX");
 
     //measurements
-    createLabel({ 204.f, 82.f }, "Units         Display As Yards");
+    auto measureLabel = createLabel({ 204.f, 82.f }, "Units         Imperial Measurements");
+    measureLabel.addComponent<cro::Callback>().active = true;
+    measureLabel.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        updateToolTip(e, ToolTipID::Units);
+    };
 
 
     auto createSlider = [&](glm::vec2 position)

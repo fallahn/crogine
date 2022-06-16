@@ -4073,7 +4073,11 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
                         eye += player.position;
 
                         auto result = m_collisionMesh.getTerrain(eye);
-                        eye.y = result.height + CameraBystanderOffset.y;
+                        auto terrainHeight = result.height + CameraBystanderOffset.y;
+                        if (terrainHeight > eye.y)
+                        {
+                            eye.y = terrainHeight;
+                        }
 
                         auto target = player.position;
                         target.y += 1.f;
