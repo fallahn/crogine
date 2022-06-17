@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,24 +29,49 @@ source distribution.
 
 #pragma once
 
-#include <crogine/ecs/Entity.hpp>
-#include <crogine/util/Spline.hpp>
-#include <crogine/detail/glm/vec3.hpp>
+#include <crogine/ecs/System.hpp>
 
-struct HoleData final
+namespace cro::Util::Maths
 {
-    glm::vec3 tee = glm::vec3(0.f);
-    glm::vec3 target = glm::vec3(1.f);
-    glm::vec3 pin = glm::vec3(0.f);
-    float distanceToPin = 0.f;
-    std::int32_t par = 0;
-    std::string mapPath;
-    std::string modelPath;
-    cro::Entity modelEntity;
-    std::vector<cro::Entity> propEntities;
-    std::vector<cro::Entity> particleEntities;
-    std::vector<glm::mat4> crowdPositions;
-    std::vector<cro::Util::Maths::Spline> crowdCurves;
+    class Spline;
+}
+
+struct Spectator final
+{
+    float progress = 0.f;
+    float stateTime = 0.f;
+    float pauseTime = 1.f;
+
+    float direction = 1.f;
+    static constexpr float walkSpeed = 1.4f;
+    const cro::Util::Maths::Spline* path = nullptr;
+
+    float rotation = 0.f;
+    float targetRotation = 0.f;
+
+    enum class State
+    {
+        Walk, Pause
+    }state = State::Pause;
+
+    struct AnimID final
+    {
+        enum
+        {
+            Walk, Idle,
+            Count
+        };
+    };
+    std::array<std::size_t, AnimID::Count> anims = {};
 };
 
-static constexpr std::size_t MaxHoles = 18;
+class SpectatorSystem final : public cro::System
+{
+public:
+    explicit SpectatorSystem(cro::MessageBus&);
+
+    void process(float) override;
+
+private:
+    void onEntityAdded(cro::Entity) override;
+};

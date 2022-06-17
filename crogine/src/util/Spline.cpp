@@ -4,7 +4,9 @@
 using namespace cro::Util::Maths;
 
 Spline::Spline()
-: m_dt(0.f)
+    : m_dt          (0.f),
+    m_dirtyLength   (false),
+    m_length        (0.f)
 {
 }
 
@@ -12,13 +14,18 @@ Spline::Spline()
 void Spline::addPoint(const glm::vec3& v)
 {
     m_points.push_back(v);
+    m_dirtyLength = true;
 
     //hmmmm but does this not assume we're evenly spaced?
+    //otherwise we end up travelling faster between greater
+    //distances for the same amount of interpolation...
     m_dt = 1.f / static_cast<float>(m_points.size());
 }
 
-glm::vec3 Spline::getInterpolatedPoint(float t)
+glm::vec3 Spline::getInterpolatedPoint(float t) const
 {
+    CRO_ASSERT(m_points.size() > 3, "Not enough points added");
+
     //find out in which interval we are on the spline
     std::int32_t p = static_cast<std::int32_t>(t / m_dt);
 
@@ -35,6 +42,18 @@ glm::vec3 Spline::getInterpolatedPoint(float t)
     return eq(lt, m_points[p0], m_points[p1], m_points[p2], m_points[p3]);
 }
 
+glm::quat Spline::getInterpolatedOrientation(float t) const
+{
+    const auto a = getInterpolatedPoint(std::max(0.f, t - 0.01f));
+    const auto b = getInterpolatedPoint(std::min(1.f, t + 0.01f));
+
+    const auto T = glm::normalize(b - a);
+    const auto B = glm::normalize(glm::cross(T, b + a));
+    const auto N = glm::cross(B, T);
+
+    return glm::quat(glm::mat3(T,B,N));
+}
+
 std::size_t Spline::getPointCount() const
 {
     return m_points.size();
@@ -46,8 +65,27 @@ glm::vec3 Spline::getPointAt(std::size_t idx) const
     return m_points[idx];
 }
 
+float Spline::getLength() const
+{
+    if (m_dirtyLength)
+    {
+        m_length = 0.f;
+        glm::vec3 pointA = getInterpolatedPoint(0.f);
+
+        for (auto i = 0.05f; i < 1.f; i += 0.05f)
+        {
+            auto pointB = getInterpolatedPoint(i);
+            m_length += glm::length(pointA - pointB);
+            pointA = pointB;
+        }
+
+        m_dirtyLength = false;
+    }
+    return m_length;
+}
+
 //private
-glm::vec3 Spline::eq(float t, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec3& p4)
+glm::vec3 Spline::eq(float t, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec3& p4) const
 {
     float t2 = t * t;
     float t3 = t2 * t;

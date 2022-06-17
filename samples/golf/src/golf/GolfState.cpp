@@ -50,6 +50,7 @@ source distribution.
 #include "CloudSystem.hpp"
 #include "VatAnimationSystem.hpp"
 #include "BeaconCallback.hpp"
+#include "SpectatorSystem.hpp"
 #include "../Achievements.hpp"
 #include "../AchievementStrings.hpp"
 
@@ -76,6 +77,7 @@ source distribution.
 #include <crogine/ecs/systems/AudioSystem.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
+#include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
@@ -1271,8 +1273,6 @@ void GolfState::loadAssets()
 
 
     //model definitions
-    loadSpectators();
-
     for (auto& md : m_modelDefs)
     {
         md = std::make_unique<cro::ModelDefinition>(m_resources);
@@ -1622,6 +1622,7 @@ void GolfState::loadAssets()
 
     //load the map data
     bool error = false;
+    bool hasSpectators = false;
     auto mapDir = m_sharedData.mapDirectory.toAnsiString();
     auto mapPath = ConstVal::MapPath + mapDir + "/course.data";
 
@@ -1958,7 +1959,7 @@ void GolfState::loadAssets()
                                     leaderboardProps.push_back(ent);
                                 }
 
-                                if (curve.size() > 2)
+                                if (curve.size() > 3)
                                 {
                                     LogI << "Found prop curve with " << curve.size() << " points" << std::endl;
                                 }
@@ -2035,13 +2036,18 @@ void GolfState::loadAssets()
                             }
                         }
 
-                        if (curve.size() < 3)
+                        if (curve.size() < 4)
                         {
                             addCrowd(holeData, position, rotation);
                         }
                         else
                         {
-                            LogI << "Found crowd path with " << curve.size() << " points" << std::endl;
+                            auto& spline = holeData.crowdCurves.emplace_back();
+                            for (auto p : curve)
+                            {
+                                spline.addPoint(p);
+                            }
+                            hasSpectators = true;
                         }
                     }
                 }
@@ -2137,6 +2143,11 @@ void GolfState::loadAssets()
     else
     {
         m_holeToModelRatio = static_cast<float>(/*std::max(6, */holeModelCount/*)*/) / m_holeData.size();
+
+        if (hasSpectators)
+        {
+            loadSpectators();
+        }
     }
 
 
@@ -2185,35 +2196,47 @@ void GolfState::loadSpectators()
     };
 
 
-    for (auto j = 0; j < 2; ++j)
+    for (auto i = 0; i < 2; ++i)
     {
         for (const auto& path : modelPaths)
         {
             if (md.loadFromFile(path))
             {
-                for (auto i = 0; i < 3; ++i)
+                for (auto j = 0; j < 3; ++j)
                 {
                     auto entity = m_gameScene.createEntity();
-                    entity.addComponent<cro::Transform>().setOrigin({ 0.75, 0.f, 0.f });
+                    entity.addComponent<cro::Transform>();
                     md.createModel(entity);
+                    entity.getComponent<cro::Model>().setHidden(true);
+                    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
 
                     if (md.hasSkeleton())
                     {
                         auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
                         applyMaterialData(md, material);
 
-                        glm::vec4 rect((1.f / 3.f) * i, 0.f, (1.f / 3.f) * i, 1.f);
+                        glm::vec4 rect((1.f / 3.f) * j, 0.f, (1.f / 3.f), 1.f);
                         material.setProperty("u_subrect", rect);
 
                         entity.getComponent<cro::Model>().setMaterial(0, material);
-                        entity.getComponent<cro::Model>().setHidden(true);
 
                         auto& skel = entity.getComponent<cro::Skeleton>();
                         if (!skel.getAnimations().empty())
                         {
-                            //skel.getAnimations()[0].looped = true;
-                            //TODO parse animations / map indices etc
-                            skel.setMaxInterpolationDistance(70.f);
+                            auto& spectator = entity.addComponent<Spectator>();
+                            for(auto k = 0u; k < skel.getAnimations().size(); ++k)
+                            {
+                                if (skel.getAnimations()[k].name == "Walk")
+                                {
+                                    spectator.anims[Spectator::AnimID::Walk] = k;
+                                }
+                                else if (skel.getAnimations()[k].name == "Idle")
+                                {
+                                    spectator.anims[Spectator::AnimID::Idle] = k;
+                                }
+                            }
+
+                            skel.setMaxInterpolationDistance(30.f);
                         }
                     }
 
@@ -2235,6 +2258,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<ClientCollisionSystem>(mb, m_holeData, m_collisionMesh);
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
+    m_gameScene.addSystem<SpectatorSystem>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<VatAnimationSystem>(mb);
@@ -3623,13 +3647,21 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                 propModels->at(i).getComponent<cro::Model>().setHidden(rescale);
             }
 
-            for (auto i = 0u; i < particles->size(); ++i)
+            if (rescale)
             {
-                if (rescale)
+                for (auto i = 0u; i < particles->size(); ++i)
                 {
+
                     particles->at(i).getComponent<cro::ParticleEmitter>().stop();
                 }
                 //should already be started otherwise...
+
+                for (auto spectator : m_spectatorModels)
+                {
+                    spectator.getComponent<cro::Model>().setHidden(true);
+                    spectator.getComponent<Spectator>().path = nullptr;
+                    spectator.getComponent<cro::Skeleton>().stop();
+                }
             }
 
             //index should be updated by now (as this is a callback)
@@ -3677,6 +3709,38 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             for (auto particle : m_holeData[m_currentHole].particleEntities)
             {
                 particle.getComponent<cro::ParticleEmitter>().start();
+            }
+
+            //check hole for any crowd paths and assign any free
+            //spectator models we have
+            if (rescale &&
+                !m_holeData[m_currentHole].crowdCurves.empty())
+            {
+                auto modelsPerPath = std::min(std::size_t(6), m_spectatorModels.size() / m_holeData[m_currentHole].crowdCurves.size());
+                std::size_t assignedModels = 0;
+                for (const auto& curve : m_holeData[m_currentHole].crowdCurves)
+                {
+                    for (auto i = 0u; i < modelsPerPath && assignedModels < m_spectatorModels.size(); i++, assignedModels++)
+                    {
+                        auto model = m_spectatorModels[assignedModels];
+                        model.getComponent<cro::Model>().setHidden(false);
+                        
+                        auto& spectator = model.getComponent<Spectator>();
+                        spectator.path = &curve;
+                        spectator.progress = 0.f + (i * (1.f / modelsPerPath));
+                        spectator.stateTime = 0.f;
+                        spectator.state = Spectator::State::Pause;
+                        spectator.direction = cro::Util::Random::value(0, 1) == 0 ? -1.f : 1.f;
+
+                        model.getComponent<cro::Skeleton>().play(spectator.anims[Spectator::AnimID::Idle]);
+#ifdef CRO_DEBUG_
+                        model.getComponent<cro::Skeleton>().setInterpolationEnabled(false);
+                        model.getComponent<cro::ShadowCaster>().active = false;
+#endif
+
+                        m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().addChild(model.getComponent<cro::Transform>());
+                    }
+                }
             }
         }
     };

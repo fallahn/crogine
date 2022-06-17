@@ -273,6 +273,9 @@
     <ClCompile Include="src\golf\GolfStateDebug.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\SpectatorSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -541,6 +544,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\server\Networking.hpp">
       <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\SpectatorSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
