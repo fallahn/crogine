@@ -95,9 +95,11 @@ bool NetHost::start(const std::string& address, std::uint16_t port, std::size_t 
     SteamNetworkingConfigValue_t opt;
     opt.SetPtr(k_ESteamNetworkingConfig_Callback_ConnectionStatusChanged, (void*)onSteamNetConnectionStatusChanged);
     m_host = ISockets()->CreateListenSocketIP(addr, 1, &opt);
+
 #else
     //steam api uses a macro to register callbacks
-    m_host = ISockets()->CreateListenSocketIP(addr, 0, nullptr);
+    //m_host = ISockets()->CreateListenSocketIP(addr, 0, nullptr);
+    m_host = ISockets()->CreateListenSocketP2P(0, 0, nullptr);
 #endif
 
     if (m_host)

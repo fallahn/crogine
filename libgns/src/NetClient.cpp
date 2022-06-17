@@ -79,9 +79,14 @@ bool NetClient::connect(const std::string& address, std::uint16_t port, std::uin
     SteamNetworkingConfigValue_t opt;
     opt.SetPtr(k_ESteamNetworkingConfig_Callback_ConnectionStatusChanged, (void*)onSteamNetConnectionStatusChanged);
     m_peer.m_peer = ISockets()->ConnectByIPAddress(addr, 1, &opt);
+
 #else
     //steam api uses a macro to register callbacks
-    m_peer.m_peer = ISockets()->ConnectByIPAddress(addr, 1, nullptr);
+    //m_peer.m_peer = ISockets()->ConnectByIPAddress(addr, 0, nullptr);
+    
+    SteamNetworkingIdentity id;
+    id.SetIPAddr(addr);
+    m_peer.m_peer = ISockets()->ConnectP2P(id, 0, 0, nullptr);
 #endif
     DLOG("Got peer ID " << m_peer.m_peer);
     return m_peer.m_peer != 0;

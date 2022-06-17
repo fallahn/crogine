@@ -31,6 +31,10 @@ source distribution.
 
 #include <iostream>
 
+#ifndef GNS_OS
+#include <steam/steam_api.h>
+#endif
+
 using namespace gns;
 
 std::unique_ptr<NetConf> NetConf::instance;
@@ -45,7 +49,17 @@ NetConf::NetConf()
         std::cerr << "ERROR: Failed init GNS: " << err << "\n";
     }
 #else
-    std::cout << __FILE__ << "Steam networking goes here.\n"
+    SteamDatagramErrMsg err;
+    if (m_initOK = SteamDatagramClient_Init(); !m_initOK)
+    {
+        std::cerr << "ERROR: Failed init Steam datagram client\n";
+    }
+    else
+    {
+        SteamDatagram_SetAppID(570);
+        SteamDatagram_SetUniverse(false, k_EUniverseDev);
+        //SteamNetworkingUtils()->SetGlobalConfigValueInt32( k_ESteamNetworkingConfig_IP_AllowWithoutAuth, 1 );
+    }
 #endif
 }
 
@@ -56,7 +70,7 @@ NetConf::~NetConf()
 #ifdef GNS_OS
         GameNetworkingSockets_Kill();
 #else
-
+        SteamDatagramlClient_Kill();
 #endif
     }
 }
