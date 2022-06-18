@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "Path.hpp"
+
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/util/Spline.hpp>
 #include <crogine/detail/glm/vec3.hpp>
@@ -46,7 +48,7 @@ struct HoleData final
     std::vector<cro::Entity> propEntities;
     std::vector<cro::Entity> particleEntities;
     std::vector<glm::mat4> crowdPositions;
-    std::vector<cro::Util::Maths::Spline> crowdCurves;
+    std::vector<Path> crowdCurves;
 };
 
 static constexpr std::size_t MaxHoles = 18;

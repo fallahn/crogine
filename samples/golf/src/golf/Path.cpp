@@ -27,50 +27,48 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "Path.hpp"
 
-#include <crogine/ecs/System.hpp>
+#include <crogine/detail/Assert.hpp>
 
-class Path;
-
-struct Spectator final
+Path::Path()
+    : m_length(0.f)
 {
-    float stateTime = 0.f;
-    float pauseTime = 1.f;
 
-    std::int32_t direction = 1;
-    std::int32_t target = 0;
-    static constexpr float walkSpeed = 1.f;
-    const Path* path = nullptr;
+}
 
-    float rotation = 0.f;
-    float targetRotation = 0.f;
-
-    glm::vec3 velocity = glm::vec3(0.f);
-
-    enum class State
+//public
+void Path::addPoint(glm::vec3 point)
+{
+    if (!m_points.empty()
+        && m_points.back() == point)
     {
-        Walk, Pause
-    }state = State::Pause;
+        return;
+    }
 
-    struct AnimID final
+    m_points.push_back(point);
+
+    if (m_points.size() > 1)
     {
-        enum
+        m_length += glm::length(point - m_points[m_points.size() - 2]);
+
+        m_speedMultipliers.clear();
+        for (auto i = 0; i < m_points.size() - 1; ++i)
         {
-            Walk, Idle,
-            Count
-        };
-    };
-    std::array<std::size_t, AnimID::Count> anims = {};
-};
+            float edgeLength = glm::length(m_points[i] - m_points[i + 1]);
+            m_speedMultipliers.push_back(1.f - (edgeLength / m_length));
+        }
+    }
+}
 
-class SpectatorSystem final : public cro::System
+glm::vec3 Path::getPoint(std::size_t index) const
 {
-public:
-    explicit SpectatorSystem(cro::MessageBus&);
+    CRO_ASSERT(index < m_points.size(), "Index out of range");
+    return m_points[index];
+}
 
-    void process(float) override;
-
-private:
-    void onEntityAdded(cro::Entity) override;
-};
+float Path::getSpeedMultiplier(std::size_t segmentIndex) const
+{
+    CRO_ASSERT(segmentIndex < m_speedMultipliers.size(), "Index out of range");
+    return m_speedMultipliers[segmentIndex];
+}

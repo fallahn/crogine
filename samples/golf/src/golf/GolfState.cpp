@@ -2132,6 +2132,15 @@ void GolfState::loadAssets()
             auto result = m_collisionMesh.getTerrain(pos);
             m[3][1] = result.height;
         }
+
+        for (auto& c : hole.crowdCurves)
+        {
+            for (auto& p : c.getPoints())
+            {
+                auto result = m_collisionMesh.getTerrain(p);
+                p.y = result.height;
+            }
+        }
     }
 
 
@@ -2182,6 +2191,7 @@ void GolfState::loadAssets()
             std::fill(player.holeScores.begin(), player.holeScores.end(), 0);
         }
     }
+
 }
 
 void GolfState::loadSpectators()
@@ -3727,17 +3737,17 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                         
                         auto& spectator = model.getComponent<Spectator>();
                         spectator.path = &curve;
-                        spectator.progress = 0.f + (i * (1.f / modelsPerPath));
+                        spectator.target = i % curve.getPoints().size();
                         spectator.stateTime = 0.f;
                         spectator.state = Spectator::State::Pause;
-                        spectator.direction = cro::Util::Random::value(0, 1) == 0 ? -1.f : 1.f;
+                        spectator.direction = spectator.target < (curve.getPoints().size() / 2) ? -1 : 1;
 
                         model.getComponent<cro::Skeleton>().play(spectator.anims[Spectator::AnimID::Idle]);
 #ifdef CRO_DEBUG_
                         model.getComponent<cro::Skeleton>().setInterpolationEnabled(false);
                         model.getComponent<cro::ShadowCaster>().active = false;
 #endif
-
+                        model.getComponent<cro::Transform>().setPosition(curve.getPoint(spectator.target));
                         m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().addChild(model.getComponent<cro::Transform>());
                     }
                 }

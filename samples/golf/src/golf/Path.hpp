@@ -29,48 +29,28 @@ source distribution.
 
 #pragma once
 
-#include <crogine/ecs/System.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
-class Path;
+#include <vector>
 
-struct Spectator final
-{
-    float stateTime = 0.f;
-    float pauseTime = 1.f;
-
-    std::int32_t direction = 1;
-    std::int32_t target = 0;
-    static constexpr float walkSpeed = 1.f;
-    const Path* path = nullptr;
-
-    float rotation = 0.f;
-    float targetRotation = 0.f;
-
-    glm::vec3 velocity = glm::vec3(0.f);
-
-    enum class State
-    {
-        Walk, Pause
-    }state = State::Pause;
-
-    struct AnimID final
-    {
-        enum
-        {
-            Walk, Idle,
-            Count
-        };
-    };
-    std::array<std::size_t, AnimID::Count> anims = {};
-};
-
-class SpectatorSystem final : public cro::System
+class Path final
 {
 public:
-    explicit SpectatorSystem(cro::MessageBus&);
+    Path();
 
-    void process(float) override;
+    void addPoint(glm::vec3 point);
+
+    glm::vec3 getPoint(std::size_t index) const;
+
+    float getSpeedMultiplier(std::size_t segmentIndex) const;
+
+    float getLength() const { return m_length; }
+
+    const std::vector<glm::vec3> getPoints() const { return m_points; }
+    std::vector<glm::vec3> getPoints() { return m_points; }
 
 private:
-    void onEntityAdded(cro::Entity) override;
+    std::vector<glm::vec3> m_points;
+    std::vector<float> m_speedMultipliers;
+    float m_length;
 };
