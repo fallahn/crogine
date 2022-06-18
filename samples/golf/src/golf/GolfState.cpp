@@ -2151,7 +2151,7 @@ void GolfState::loadAssets()
     }
     else
     {
-        m_holeToModelRatio = static_cast<float>(/*std::max(6, */holeModelCount/*)*/) / m_holeData.size();
+        m_holeToModelRatio = static_cast<float>(holeModelCount) / m_holeData.size();
 
         if (hasSpectators)
         {
@@ -3741,6 +3741,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                         spectator.stateTime = 0.f;
                         spectator.state = Spectator::State::Pause;
                         spectator.direction = spectator.target < (curve.getPoints().size() / 2) ? -1 : 1;
+                        spectator.walkSpeed = 1.f + cro::Util::Random::value(-0.1f, 0.15f);
 
                         model.getComponent<cro::Skeleton>().play(spectator.anims[Spectator::AnimID::Idle]);
 #ifdef CRO_DEBUG_
@@ -3752,6 +3753,8 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                     }
                 }
             }
+
+            m_gameScene.getSystem<SpectatorSystem>()->updateSpectatorGroups();
         }
     };
 

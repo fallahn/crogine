@@ -37,6 +37,12 @@ source distribution.
 #include <crogine/util/Maths.hpp>
 #include <crogine/util/Random.hpp>
 
+namespace
+{
+    constexpr float BaseSeparation = 1.8f;
+    constexpr float NextTargetRadius = (0.5f * 0.5f);
+}
+
 SpectatorSystem::SpectatorSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(SpectatorSystem))
 {
@@ -63,49 +69,54 @@ void SpectatorSystem::process(float dt)
                 {
                     spectator.stateTime = 0.f;
                     spectator.state = Spectator::State::Walk;
-                    entity.getComponent<cro::Skeleton>().play(spectator.anims[Spectator::AnimID::Walk], 1.f, 0.5f);
+                    entity.getComponent<cro::Skeleton>().play(spectator.anims[Spectator::AnimID::Walk], spectator.walkSpeed, 0.15f);
                 }
                 break;
 
             case Spectator::State::Walk:
             {
-                //segmentIndex is max(targetIndex, targetIndex - direction) - 1;
-
                 auto targetPos = spectator.path->getPoint(spectator.target);
                 auto segmentIndex = spectator.target - std::max(0, spectator.direction);
                 float speed = spectator.path->getSpeedMultiplier(segmentIndex) * (spectator.walkSpeed / spectator.path->getLength());
 
-
+                //separate paths in opposition directions
                 auto offset = glm::normalize(spectator.path->getPoints().back() - spectator.path->getPoints().front()) * static_cast<float>(spectator.direction);
                 auto temp = offset.z;
                 offset.z = -offset.x;
                 offset.x = temp;
-                targetPos -= (offset * 0.8f);
+                targetPos -= (offset * BaseSeparation);
 
-
+                //steer away from other spectators, and adjust target if it overlaps another spectator
                 auto currPos = entity.getComponent<cro::Transform>().getPosition();
-                for (auto e : entities)
+                for (auto e : m_spectatorGroups[spectator.path])
                 {
                     if (e != entity)
                     {
-                        if (e.getComponent<Spectator>().path == spectator.path)
+                        static constexpr float Rad = 1.15f;
+                        static constexpr float MinRadius = Rad * Rad;
+                        auto diff = e.getComponent<cro::Transform>().getPosition() - currPos;
+                        if (auto len2 = glm::length2(diff); len2 < MinRadius)
                         {
-                            static constexpr float Rad = 0.85f;
-                            static constexpr float MinRadius = Rad * Rad;
-                            auto diff = e.getComponent<cro::Transform>().getPosition() - currPos;
-                            if (auto len2 = glm::length2(diff); len2 < MinRadius)
-                            {
-                                spectator.velocity -= diff * dt;
-                            }
+                            spectator.velocity -= diff * dt;
 
-                            diff = e.getComponent<cro::Transform>().getPosition() - targetPos;
-                            if (auto len2 = glm::length2(diff); len2 < MinRadius)
-                            {
-                                auto len = std::sqrt(len2);
-                                diff /= len;
-                                len = Rad - len;
-                                targetPos += diff * len;
-                            }
+                            //makes 2 spectators disappear :S
+                            /*auto len = std::sqrt(len2);
+                            diff /= len;
+                            len = Rad - len;
+                            entity.getComponent<cro::Transform>().move(-diff * (len / 2.f));
+                            e.getComponent<cro::Transform>().move(diff * (len / 2.f));*/
+                        }
+
+                        static constexpr float TargetRad = 2.5f;
+                        static constexpr float MinTargetRadius = TargetRad * TargetRad;
+                        diff = e.getComponent<cro::Transform>().getPosition() - targetPos;
+                        if (auto len2 = glm::length2(diff); len2 < MinTargetRadius)
+                        {
+                            //TODO this should only be done in the x/z plane
+                            auto len = std::sqrt(len2);
+                            diff /= len;
+                            len = TargetRad - len;
+                            targetPos += diff * len;
                         }
                     }
                 }
@@ -126,7 +137,7 @@ void SpectatorSystem::process(float dt)
 
 
                 //move to next target if < 0.5m
-                if (glm::length2(dir) < (0.5f * 0.5f))
+                if (glm::length2(dir) < NextTargetRadius)
                 {
                     if (spectator.target == 0
                         || spectator.target == spectator.path->getPoints().size() - 1)
@@ -143,6 +154,21 @@ void SpectatorSystem::process(float dt)
             }
                 break;
             }
+        }
+    }
+}
+
+void SpectatorSystem::updateSpectatorGroups()
+{
+    m_spectatorGroups.clear();
+
+    auto& entities = getEntities();
+    for (auto entity : entities)
+    {
+        auto* path = entity.getComponent<Spectator>().path;
+        if (path)
+        {
+            m_spectatorGroups[path].push_back(entity);
         }
     }
 }

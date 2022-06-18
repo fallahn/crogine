@@ -31,6 +31,8 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 
+#include <unordered_map>
+
 class Path;
 
 struct Spectator final
@@ -40,7 +42,7 @@ struct Spectator final
 
     std::int32_t direction = 1;
     std::int32_t target = 0;
-    static constexpr float walkSpeed = 1.f;
+    float walkSpeed = 1.f;
     const Path* path = nullptr;
 
     float rotation = 0.f;
@@ -71,6 +73,10 @@ public:
 
     void process(float) override;
 
+    void updateSpectatorGroups();
+
 private:
+    std::unordered_map<const Path*, std::vector<cro::Entity>> m_spectatorGroups;
+
     void onEntityAdded(cro::Entity) override;
 };

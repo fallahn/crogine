@@ -46,8 +46,8 @@ public:
 
     float getLength() const { return m_length; }
 
-    const std::vector<glm::vec3> getPoints() const { return m_points; }
-    std::vector<glm::vec3> getPoints() { return m_points; }
+    const std::vector<glm::vec3>& getPoints() const { return m_points; }
+    std::vector<glm::vec3>& getPoints() { return m_points; }
 
 private:
     std::vector<glm::vec3> m_points;
