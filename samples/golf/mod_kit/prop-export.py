@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2022, 6, 11),
+    "version": (2022, 6, 18),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -47,7 +47,8 @@ def WritePath(file, path):
 
 
 def WriteSpeaker(file, speaker):
-    print("TODO")
+    if speaker.get('name') is not None:
+        file.write("        emitter = \"%s\"\n" % speaker['name'])
 
 
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -30,26 +30,38 @@ source distribution.
 #pragma once
 
 #include "Path.hpp"
+#include <crogine/ecs/System.hpp>
 
-#include <crogine/ecs/Entity.hpp>
-#include <crogine/util/Spline.hpp>
-#include <crogine/detail/glm/vec3.hpp>
 
-struct HoleData final
+struct PropFollower final
 {
-    glm::vec3 tee = glm::vec3(0.f);
-    glm::vec3 target = glm::vec3(1.f);
-    glm::vec3 pin = glm::vec3(0.f);
-    float distanceToPin = 0.f;
-    std::int32_t par = 0;
-    std::string mapPath;
-    std::string modelPath;
-    cro::Entity modelEntity;
-    std::vector<cro::Entity> propEntities;
-    std::vector<cro::Entity> particleEntities;
-    std::vector<glm::mat4> crowdPositions;
-    std::vector<Path> crowdCurves;
-    std::vector<Path> propCurves;
+    Path path;
+    
+    float rotation = 0.f;
+    float  targetRotation = 0.f;
+    
+    float speed = 6.f;
+    std::int32_t target = 1;
+
+    bool loop = true;
+
+    enum State
+    {
+        Idle, Follow
+    }state = Idle;
+    float idleTime = 0.f;
+
 };
 
-static constexpr std::size_t MaxHoles = 18;
+class CollisionMesh;
+
+class PropFollowSystem final : public cro::System
+{
+public:
+    PropFollowSystem(cro::MessageBus&, const CollisionMesh&);
+
+    void process(float) override;
+
+private:
+    const CollisionMesh& m_collisionMesh;
+};

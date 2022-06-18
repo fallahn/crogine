@@ -51,6 +51,7 @@ source distribution.
 #include "VatAnimationSystem.hpp"
 #include "BeaconCallback.hpp"
 #include "SpectatorSystem.hpp"
+#include "PropFollowSystem.hpp"
 #include "../Achievements.hpp"
 #include "../AchievementStrings.hpp"
 
@@ -1862,6 +1863,7 @@ void GolfState::loadAssets()
                         glm::vec3 scale(1.f);
                         std::string path;
                         std::vector<glm::vec3> curve;
+                        bool loopCurve = true;
 
                         for (const auto& modelProp : modelProps)
                         {
@@ -1898,7 +1900,7 @@ void GolfState::loadAssets()
                                     }
                                     else if (p.getName() == "loop")
                                     {
-                                        LogW << "Remember to parse loop property..." << std::endl;
+                                        loopCurve = p.getValue<bool>();
                                     }
                                 }
 
@@ -1961,7 +1963,14 @@ void GolfState::loadAssets()
 
                                 if (curve.size() > 3)
                                 {
-                                    LogI << "Found prop curve with " << curve.size() << " points" << std::endl;
+                                    Path propPath(loopCurve);
+                                    for (auto p : curve)
+                                    {
+                                        propPath.addPoint(p);
+                                    }
+
+                                    ent.addComponent<PropFollower>().path = propPath;
+                                    ent.getComponent<cro::Transform>().setPosition(curve[0]);
                                 }
                             }
                         }
@@ -2269,6 +2278,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<SpectatorSystem>(mb);
+    m_gameScene.addSystem<PropFollowSystem>(mb, m_collisionMesh);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<VatAnimationSystem>(mb);

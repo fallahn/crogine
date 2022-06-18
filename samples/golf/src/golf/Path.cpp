@@ -31,8 +31,9 @@ source distribution.
 
 #include <crogine/detail/Assert.hpp>
 
-Path::Path()
-    : m_length(0.f)
+Path::Path(bool looped)
+    : m_length  (0.f),
+    m_looped    (looped)
 {
 
 }

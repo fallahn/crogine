@@ -44,6 +44,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/PlayerAvatar.cpp
   ${PROJECT_DIR}/golf/PocketBallSystem.cpp
   ${PROJECT_DIR}/golf/PracticeState.cpp
+  ${PROJECT_DIR}/golf/PropFollowSystem.cpp
   ${PROJECT_DIR}/golf/PuttingState.cpp
   ${PROJECT_DIR}/golf/PuttingStateUI.cpp
   ${PROJECT_DIR}/golf/SharedStateData.cpp
