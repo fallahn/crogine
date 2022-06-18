@@ -67,7 +67,7 @@ void PropFollowSystem::process(float dt)
             else
             {
                 auto targetPos = follower.path.getPoint(follower.target);
-                float speed = follower.path.getSpeedMultiplier(follower.target - 1) * (follower.speed / follower.path.getLength());
+                float speed = follower.speed;// follower.path.getSpeedMultiplier(follower.target - 1)* (follower.speed / follower.path.getLength());
 
                 auto& tx = entity.getComponent<cro::Transform>();
 
@@ -77,7 +77,7 @@ void PropFollowSystem::process(float dt)
 
                 auto tangent = glm::normalize(dir);
                 auto movement = tangent * speed;
-                tx.move(movement);
+                tx.move(movement * dt);
 
 
 

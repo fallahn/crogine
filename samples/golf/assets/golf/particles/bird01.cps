@@ -5,7 +5,7 @@ particle_system bird01
     blendmode = alpha
     acceleration = 1.000000
     gravity = 0.000000,1.471000,0.000000
-    velocity = 3.235000,2.059000,0.000000
+    velocity = 5.000000,4.426000,0.000000
     spread = 15.540000
     lifetime = 3.942000
     lifetime_variance = 0.844000
