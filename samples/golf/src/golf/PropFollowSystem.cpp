@@ -36,6 +36,12 @@ source distribution.
 #include <crogine/util/Maths.hpp>
 #include <crogine/util/Random.hpp>
 
+namespace
+{
+    constexpr float MinTargetRad = 0.5f;
+    constexpr float MinTargetRadSqr = MinTargetRad * MinTargetRad;
+}
+
 PropFollowSystem::PropFollowSystem(cro::MessageBus& mb, const CollisionMesh& cm)
     : cro::System   (mb, typeid(PropFollowSystem)),
     m_collisionMesh (cm)
@@ -55,10 +61,11 @@ void PropFollowSystem::process(float dt)
             auto& follower = entity.getComponent<PropFollower>();
             if (follower.state == PropFollower::Idle)
             {
-                follower.idleTime -= dt;
-                if (follower.idleTime < 0)
+                follower.stateTimer += dt;
+                if (follower.stateTimer > follower.idleTime)
                 {
                     follower.state = PropFollower::Follow;
+                    follower.stateTimer = 0.f;
 
                     entity.getComponent<cro::Transform>().setPosition(follower.path.getPoint(0));
                     follower.target = 1;
@@ -97,15 +104,18 @@ void PropFollowSystem::process(float dt)
                 tx.setRotation(glm::quat(mat));*/
 
 
-                if (len2 < (0.5f * 0.5f))
+                if (len2 < MinTargetRadSqr)
                 {
-                    //TODO check the follower to see if we ping-pong because loop is false
                     follower.target = (follower.target + 1) % follower.path.getPoints().size();
 
                     if (follower.target == 0)
                     {
+                        if (!follower.loop)
+                        {
+                            follower.path.reverse();
+                        }
+
                         follower.state = PropFollower::Idle;
-                        follower.idleTime = 4.f + cro::Util::Random::value(0.f, 3.f);
                     }
                 }
             }

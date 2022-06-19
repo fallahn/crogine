@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2022, 6, 18),
+    "version": (2022, 6, 19),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -37,13 +37,25 @@ def WritePath(file, path):
 
     if path.get('loop') is not None:
         if path['loop'] == 0:
-            file.write("\n            loop = false\n")
+            file.write("\n            loop = false")
         else:
-            file.write("\n            loop = true\n")
+            file.write("\n            loop = true")
     else:
-        file.write("\n            loop = false\n")
+        file.write("\n            loop = false")
 
-    file.write("        }\n")
+
+    if path.get('delay') is not None:
+        file.write("\n            delay = %f" % path['delay'])
+    else:
+        file.write("\n            delay = 4.0")
+
+
+    if path.get('speed') is not None:
+        file.write("\n            speed = %f" % path['speed'])
+    else:
+        file.write("\n            speed = 6.0")        
+
+    file.write("\n        }\n")
 
 
 def WriteSpeaker(file, speaker):

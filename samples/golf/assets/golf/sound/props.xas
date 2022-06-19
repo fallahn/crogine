@@ -1,0 +1,34 @@
+audioscape props
+{
+    emitter plane
+    {
+        path = "assets/golf/sound/ambience/plane.ogg"
+        streaming = true
+        volume = 2
+        mixer_channel = 1
+        looped = false
+        attenuation = 0.01
+    }
+
+    emitter cart
+    {
+        path = "assets/golf/sound/cart.wav"
+        streaming = false
+        mixer_channel = 4
+        looped = true
+        attenuation = 0.4
+        volume = 2.5
+        pitch = 0.8
+    }
+
+    emitter boat
+    {
+        path = "assets/golf/sound/boat.wav"
+        streaming = false
+        mixer_channel = 4
+        looped = true
+        attenuation = 0.4
+        volume = 2.5
+        pitch = 0.8
+    }
+}

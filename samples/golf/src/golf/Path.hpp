@@ -36,7 +36,7 @@ source distribution.
 class Path final
 {
 public:
-    explicit Path(bool looped = false);
+    explicit Path(/*bool looped = false*/);
 
     void addPoint(glm::vec3 point);
 
@@ -49,9 +49,11 @@ public:
     const std::vector<glm::vec3>& getPoints() const { return m_points; }
     std::vector<glm::vec3>& getPoints() { return m_points; }
 
+    void reverse();
+
 private:
     std::vector<glm::vec3> m_points;
     std::vector<float> m_speedMultipliers;
     float m_length;
-    bool m_looped;
+    //bool m_looped;
 };

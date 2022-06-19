@@ -31,9 +31,8 @@ source distribution.
 
 #include <crogine/detail/Assert.hpp>
 
-Path::Path(bool looped)
-    : m_length  (0.f),
-    m_looped    (looped)
+Path::Path()
+    : m_length  (0.f)
 {
 
 }
@@ -72,4 +71,10 @@ float Path::getSpeedMultiplier(std::size_t segmentIndex) const
 {
     CRO_ASSERT(segmentIndex < m_speedMultipliers.size(), "Index out of range");
     return m_speedMultipliers[segmentIndex];
+}
+
+void Path::reverse()
+{
+    std::reverse(m_points.begin(), m_points.end());
+    std::reverse(m_speedMultipliers.begin(), m_speedMultipliers.end());
 }

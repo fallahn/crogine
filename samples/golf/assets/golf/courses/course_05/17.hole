@@ -117,6 +117,8 @@ hole 17
             point = 305.539795,0.000000,-1.863636
 
             loop = false
+            delay = 0.000000
+            speed = 20.000000
         }
         emitter = "boat"
         particles = "assets/golf/particles/sprinkler.cps"

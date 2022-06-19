@@ -282,6 +282,23 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
+        case SDLK_KP_DIVIDE:
+            if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+                && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+            {
+                if (m_inputParser.getActive())
+                {
+                    if (m_currentCamera == CameraID::Player)
+                    {
+                        setActiveCamera(CameraID::Bystander);
+                    }
+                    else if (m_currentCamera == CameraID::Bystander)
+                    {
+                        setActiveCamera(CameraID::Player);
+                    }
+                }
+            }
+            break;
         case SDLK_TAB:
             showScoreboard(false);
             break;
@@ -1862,8 +1879,11 @@ void GolfState::loadAssets()
                         float rotation = 0.f;
                         glm::vec3 scale(1.f);
                         std::string path;
+
                         std::vector<glm::vec3> curve;
                         bool loopCurve = true;
+                        float loopDelay = 4.f;
+                        float loopSpeed = 6.f;
 
                         for (const auto& modelProp : modelProps)
                         {
@@ -1901,6 +1921,14 @@ void GolfState::loadAssets()
                                     else if (p.getName() == "loop")
                                     {
                                         loopCurve = p.getValue<bool>();
+                                    }
+                                    else if (p.getName() == "delay")
+                                    {
+                                        loopDelay = std::max(0.f, p.getValue<float>());
+                                    }
+                                    else if (p.getName() == "speed")
+                                    {
+                                        loopSpeed = std::max(0.f, p.getValue<float>());
                                     }
                                 }
 
@@ -1963,13 +1991,16 @@ void GolfState::loadAssets()
 
                                 if (curve.size() > 3)
                                 {
-                                    Path propPath(loopCurve);
+                                    Path propPath;
                                     for (auto p : curve)
                                     {
                                         propPath.addPoint(p);
                                     }
 
                                     ent.addComponent<PropFollower>().path = propPath;
+                                    ent.getComponent<PropFollower>().loop = loopCurve;
+                                    ent.getComponent<PropFollower>().idleTime = loopDelay;
+                                    ent.getComponent<PropFollower>().speed = loopSpeed;
                                     ent.getComponent<cro::Transform>().setPosition(curve[0]);
                                 }
                             }
@@ -4234,7 +4265,40 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(ShadowFarDistance);
 
 
-        //if this is a CPU player or a remote player, show a bystander cam
+
+        //update the position of the bystander camera
+        //make sure to reset any zoom
+        auto& zoomData = m_cameras[CameraID::Bystander].getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>();
+        zoomData.progress = 0.f;
+        zoomData.fov = 1.f;
+        m_cameras[CameraID::Bystander].getComponent<cro::Camera>().resizeCallback(m_cameras[CameraID::Bystander].getComponent<cro::Camera>());
+
+        //then set new position
+        auto eye = CameraBystanderOffset;
+        if (m_activeAvatar->model.getComponent<cro::Model>().getFacing() == cro::Model::Facing::Back)
+        {
+            eye.x *= -1.f;
+        }
+        eye = glm::rotateY(eye, playerRotation);
+        eye += player.position;
+
+        auto result = m_collisionMesh.getTerrain(eye);
+        auto terrainHeight = result.height + CameraBystanderOffset.y;
+        if (terrainHeight > eye.y)
+        {
+            eye.y = terrainHeight;
+        }
+
+        auto target = player.position;
+        target.y += 1.f;
+
+        auto tx = glm::inverse(glm::lookAt(eye, target, cro::Transform::Y_AXIS));
+        m_cameras[CameraID::Bystander].getComponent<cro::Transform>().setLocalTransform(tx);
+
+
+
+
+        //if this is a CPU player or a remote player, show a bystander cam automatically
         if (player.client != m_sharedData.localConnectionData.connectionID
             || 
             (player.client == m_sharedData.localConnectionData.connectionID &&
@@ -4248,40 +4312,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
                 entity.addComponent<cro::Callback>().active = true;
                 entity.getComponent<cro::Callback>().setUserData<float>(2.7f);
                 entity.getComponent<cro::Callback>().function =
-                    [&, player, playerRotation](cro::Entity e, float dt)
+                    [&/*, player, playerRotation*/](cro::Entity e, float dt)
                 {
                     auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
                     currTime -= dt;
                     if (currTime < 0)
                     {
-                        //make sure to reset any zoom
-                        auto& zoomData = m_cameras[CameraID::Bystander].getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>();
-                        zoomData.progress = 0.f;
-                        zoomData.fov = 1.f;
-                        m_cameras[CameraID::Bystander].getComponent<cro::Camera>().resizeCallback(m_cameras[CameraID::Bystander].getComponent<cro::Camera>());
-
-                        //then set new position
-                        auto eye = CameraBystanderOffset;
-                        if (m_activeAvatar->model.getComponent<cro::Model>().getFacing() == cro::Model::Facing::Back)
-                        {
-                            eye.x *= -1.f;
-                        }
-                        eye = glm::rotateY(eye, playerRotation);
-                        eye += player.position;
-
-                        auto result = m_collisionMesh.getTerrain(eye);
-                        auto terrainHeight = result.height + CameraBystanderOffset.y;
-                        if (terrainHeight > eye.y)
-                        {
-                            eye.y = terrainHeight;
-                        }
-
-                        auto target = player.position;
-                        target.y += 1.f;
-
-                        auto tx = glm::inverse(glm::lookAt(eye, target, cro::Transform::Y_AXIS));
-                        m_cameras[CameraID::Bystander].getComponent<cro::Transform>().setLocalTransform(tx);
-
                         setActiveCamera(CameraID::Bystander);
 
                         e.getComponent<cro::Callback>().active = false;

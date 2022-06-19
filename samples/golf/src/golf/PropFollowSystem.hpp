@@ -50,7 +50,7 @@ struct PropFollower final
         Idle, Follow
     }state = Idle;
     float idleTime = 0.f;
-
+    float stateTimer = 0.f;
 };
 
 class CollisionMesh;

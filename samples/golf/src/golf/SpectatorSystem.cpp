@@ -69,7 +69,7 @@ void SpectatorSystem::process(float dt)
                 {
                     spectator.stateTime = 0.f;
                     spectator.state = Spectator::State::Walk;
-                    entity.getComponent<cro::Skeleton>().play(spectator.anims[Spectator::AnimID::Walk], spectator.walkSpeed, 0.15f);
+                    entity.getComponent<cro::Skeleton>().play(spectator.anims[Spectator::AnimID::Walk], /*spectator.walkSpeed*/1.f, 0.15f);
                 }
                 break;
 
