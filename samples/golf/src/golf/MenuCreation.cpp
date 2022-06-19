@@ -2870,7 +2870,7 @@ void MenuState::updateLobbyAvatars()
                 str = "Empty";
             }
 
-            textPos.x = (h % 2) * 120.f;
+            textPos.x = (h % 2) * 274.f;
             textPos.y = (h / 2) * -60.f;
 
             textPos.x += 1.f;

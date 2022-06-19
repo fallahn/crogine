@@ -47,6 +47,11 @@ BilliardsSoundDirector::BilliardsSoundDirector(cro::AudioResource& ar)
 
         "assets/golf/sound/billiards/pocket_start.wav",
         "assets/golf/sound/billiards/pocket_end.wav",
+
+        "assets/golf/sound/billiards/announcer/start.wav",
+        "assets/golf/sound/billiards/announcer/nice.wav",
+        "assets/golf/sound/billiards/announcer/foul01.wav",
+        "assets/golf/sound/billiards/announcer/foul01.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -106,6 +111,12 @@ void BilliardsSoundDirector::handleMessage(const cro::Message& msg)
             auto ent = playSound(AudioID::PocketEnd, glm::vec3(0.f), data.volume);
             ent.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.15f));
         }
+            break;
+        case BilliardBallEvent::GameStarted:
+            playSound(AudioID::Start, glm::vec3(0.f));
+            break;
+        case BilliardBallEvent::Foul:
+            playSound(AudioID::Foul01 + cro::Util::Random::value(0, 1), glm::vec3(0.f));
             break;
         }
     }

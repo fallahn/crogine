@@ -40,6 +40,7 @@ source distribution.
 #include "NotificationSystem.hpp"
 #include "PocketBallSystem.hpp"
 #include "BilliardsSoundDirector.hpp"
+#include "MessageIDs.hpp"
 #include "server/ServerPacketData.hpp"
 #include "server/ServerMessages.hpp"
 #include "../ErrorCheck.hpp"
@@ -1154,6 +1155,28 @@ void BilliardsState::buildScene()
             }
         }
     };
+
+
+
+    //delayed message to announce start
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(3.5f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime -= dt;
+
+        if (currTime < 0)
+        {
+            auto* msg = getContext().appInstance.getMessageBus().post<BilliardBallEvent>(MessageID::BilliardsMessage);
+            msg->type = BilliardBallEvent::GameStarted;
+
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+    };
 }
 
 void BilliardsState::handleNetEvent(const net::NetEvent& evt)
@@ -1191,6 +1214,9 @@ void BilliardsState::handleNetEvent(const net::NetEvent& evt)
             else if(id < FoulStrings.size())
             {
                 showNotification(FoulStrings[id]);
+
+                auto* msg = getContext().appInstance.getMessageBus().post<BilliardBallEvent>(MessageID::BilliardsMessage);
+                msg->type = BilliardBallEvent::Foul;
             }
         }
             break;
