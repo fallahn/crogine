@@ -113,10 +113,10 @@ void BilliardsSoundDirector::handleMessage(const cro::Message& msg)
         }
             break;
         case BilliardBallEvent::GameStarted:
-            playSound(AudioID::Start, glm::vec3(0.f));
+            playSound(AudioID::Start, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
             break;
         case BilliardBallEvent::Foul:
-            playSound(AudioID::Foul01 + cro::Util::Random::value(0, 1), glm::vec3(0.f));
+            playSound(AudioID::Foul01 + cro::Util::Random::value(0, 1), glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
             break;
         }
     }

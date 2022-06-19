@@ -127,6 +127,7 @@ private:
             NicePutt02,
 
             Burst,
+            Airmail,
             Birds,
 
             Count

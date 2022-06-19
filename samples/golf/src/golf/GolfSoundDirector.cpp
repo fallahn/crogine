@@ -124,6 +124,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/kudos/putt01.wav",
 
         "assets/golf/sound/ambience/burst.wav",
+        "assets/golf/sound/holes/airmail.wav",
         "assets/golf/sound/ambience/birds01.wav",
     };
 
@@ -177,6 +178,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             break;
         case GolfEvent::DroneHit:
             playSound(AudioID::Burst, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            playSoundDelayed(AudioID::Airmail, glm::vec3(0.f), 1.2f, 1.f, MixerChannel::Voice);
             break;
         case GolfEvent::HoleWon:
             if (auto idx = m_playerIndices[data.client][data.player]; idx > -1)
