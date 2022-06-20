@@ -37,12 +37,17 @@ struct PropFollower final
 {
     Path path;
     
+    struct Point final
+    {
+        glm::vec3 position = glm::vec3(0.f);
+        std::int32_t target = 1;
+    };
+    std::array<Point, 2> axis = {};
+    void initAxis(cro::Entity);
+
     float rotation = 0.f;
     float  targetRotation = 0.f;
-    
     float speed = 6.f;
-    std::int32_t target = 1;
-
     bool loop = true;
 
     enum State
@@ -64,4 +69,6 @@ public:
 
 private:
     const CollisionMesh& m_collisionMesh;
+
+    void onEntityAdded(cro::Entity) override;
 };

@@ -67,58 +67,79 @@ void PropFollowSystem::process(float dt)
                     follower.state = PropFollower::Follow;
                     follower.stateTimer = 0.f;
 
-                    entity.getComponent<cro::Transform>().setPosition(follower.path.getPoint(0));
-                    follower.target = 1;
+                    follower.initAxis(entity);
                 }
             }
             else
             {
-                auto targetPos = follower.path.getPoint(follower.target);
-                float speed = follower.speed;// follower.path.getSpeedMultiplier(follower.target - 1)* (follower.speed / follower.path.getLength());
+                for (auto& point : follower.axis)
+                {
+                    auto targetPos = follower.path.getPoint(point.target);
+                    auto dir = targetPos - point.position;
+                    auto len2 = glm::length2(glm::vec2(dir.x, dir.z));
 
-                auto& tx = entity.getComponent<cro::Transform>();
-
-                auto dir = targetPos - tx.getPosition();
-
-                auto len2 = glm::length2(glm::vec2(dir.x, dir.z));
-
-                auto tangent = glm::normalize(dir);
-                auto movement = tangent * speed;
-                tx.move(movement * dt);
+                    point.position += glm::normalize(dir) * follower.speed * dt;
 
 
+                    if (len2 < MinTargetRadSqr)
+                    {
+                        point.target = (point.target + 1) % follower.path.getPoints().size();
 
-                follower.targetRotation = std::atan2(-movement.z, movement.x);
-                follower.rotation += cro::Util::Maths::shortestRotation(follower.rotation, follower.targetRotation) * (dt * 6.f);
-                tx.setRotation(cro::Transform::Y_AXIS, follower.rotation);
+                        if (point.target == 0)
+                        {
+                            if (!follower.loop)
+                            {
+                                follower.path.reverse();
+                            }
 
-                auto pos = tx.getPosition();
+                            follower.state = PropFollower::Idle;
+                        }
+                    }
+                }
+
+                auto axis = (follower.axis[0].position - follower.axis[1].position) / 2.f;
+                auto pos = axis + follower.axis[1].position;
+
                 auto result = m_collisionMesh.getTerrain(pos);
                 pos.y = result.height;
 
-                tx.setPosition(pos);
-
-                /*auto bitan = glm::normalize(glm::cross(tangent, result.normal));
-                tangent = glm::normalize(glm::cross(bitan, result.normal));
-                glm::mat3 mat(tangent, result.normal, bitan);
-                tx.setRotation(glm::quat(mat));*/
+                entity.getComponent<cro::Transform>().setPosition(pos);
 
 
-                if (len2 < MinTargetRadSqr)
-                {
-                    follower.target = (follower.target + 1) % follower.path.getPoints().size();
-
-                    if (follower.target == 0)
-                    {
-                        if (!follower.loop)
-                        {
-                            follower.path.reverse();
-                        }
-
-                        follower.state = PropFollower::Idle;
-                    }
-                }
+                follower.targetRotation = std::atan2(-axis.z, axis.x);
+                follower.rotation += cro::Util::Maths::shortestRotation(follower.rotation, follower.targetRotation) * (dt * 6.f);
+                entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, follower.rotation);
             }
         }
     }
+}
+
+//private
+void PropFollowSystem::onEntityAdded(cro::Entity e)
+{
+    e.getComponent<PropFollower>().initAxis(e);
+}
+
+void PropFollower::initAxis(cro::Entity e)
+{
+    //this assumes the model is aligned along the X axis
+    //to match atan2
+
+    //we align the axis along the first segment of the path
+    //and space them bounding box width
+
+    auto bb = e.getComponent<cro::Model>().getAABB();
+    auto& follower = e.getComponent<PropFollower>();
+    follower.axis[0].position = follower.path.getPoint(0);
+    auto dir = glm::normalize(follower.path.getPoint(1) - follower.path.getPoint(0));
+    follower.axis[0].position += dir * bb[1].x;
+
+    follower.axis[1].position = follower.path.getPoint(0);
+    follower.axis[1].position += dir * bb[0].x;
+
+
+    follower.axis[0].target = 1;
+    follower.axis[1].target = 1;
+
+    e.getComponent<cro::Transform>().setPosition(follower.path.getPoint(0));
 }
