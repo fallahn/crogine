@@ -1740,8 +1740,12 @@ void GolfState::loadAssets()
     cro::Entity prevHoleEntity;
     std::vector<cro::Entity> prevProps;
     std::vector<cro::Entity> prevParticles;
+    std::vector<cro::Entity> prevAudio;
     std::vector<cro::Entity> leaderboardProps;
     std::int32_t holeModelCount = 0; //use this to get a guestimate of how many holes per model there are to adjust the camera offset
+
+    cro::AudioScape propAudio;
+    propAudio.loadFromFile("assets/golf/sound/props.xas", m_resources.audio);
 
     for (const auto& hole : holeStrings)
     {
@@ -1886,6 +1890,7 @@ void GolfState::loadAssets()
                         float loopSpeed = 6.f;
 
                         std::string particlePath;
+                        std::string emitterName;
 
                         for (const auto& modelProp : modelProps)
                         {
@@ -1909,6 +1914,10 @@ void GolfState::loadAssets()
                             else if (propName == "particles")
                             {
                                 particlePath = modelProp.getValue<std::string>();
+                            }
+                            else if (propName == "emitter")
+                            {
+                                emitterName = modelProp.getValue<std::string>();
                             }
                         }
 
@@ -2026,6 +2035,34 @@ void GolfState::loadAssets()
                                         holeData.particleEntities.push_back(pEnt);
                                     }
                                 }
+
+                                //and child audio
+                                if (propAudio.hasEmitter(emitterName))
+                                {
+                                    auto audioEnt = m_gameScene.createEntity();
+                                    audioEnt.addComponent<cro::Transform>();
+                                    audioEnt.addComponent<cro::AudioEmitter>() = propAudio.getEmitter(emitterName);
+                                    audioEnt.addComponent<cro::CommandTarget>().ID = CommandID::AudioEmitter;
+                                    audioEnt.addComponent<cro::Callback>().active = true;
+                                    audioEnt.getComponent<cro::Callback>().setUserData<glm::vec3>(0.f);
+                                    audioEnt.getComponent<cro::Callback>().function =
+                                        [&, ent](cro::Entity e, float)
+                                    {
+                                        auto& prevPos = e.getComponent<cro::Callback>().getUserData<glm::vec3>();
+                                        auto pos = ent.getComponent<cro::Transform>().getPosition();
+                                        auto velocity = (pos - prevPos) * 60.f; //frame time
+                                        prevPos = pos;
+                                        e.getComponent<cro::AudioEmitter>().setVelocity(velocity);
+
+                                        if (ent.destroyed())
+                                        {
+                                            e.getComponent<cro::Callback>().active = false;
+                                            m_gameScene.destroyEntity(e);
+                                        }
+                                    };
+                                    ent.getComponent<cro::Transform>().addChild(audioEnt.getComponent<cro::Transform>());
+                                    holeData.audioEntities.push_back(audioEnt);
+                                }
                             }
                         }
                     }
@@ -2118,11 +2155,13 @@ void GolfState::loadAssets()
 
                 prevProps = holeData.propEntities;
                 prevParticles = holeData.particleEntities;
+                prevAudio = holeData.audioEntities;
             }
             else
             {
                 holeData.propEntities = prevProps;
                 holeData.particleEntities = prevParticles;
+                holeData.audioEntities = prevAudio;
             }
 
             //cos you know someone is dying to try and break the game :P
@@ -3696,10 +3735,11 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     bool rescale = (hole == 0) || (m_holeData[hole - 1].modelPath != m_holeData[hole].modelPath);
     auto* propModels = &m_holeData[m_currentHole].propEntities;
     auto* particles = &m_holeData[m_currentHole].particleEntities;
+    auto* audio = &m_holeData[m_currentHole].audioEntities;
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().active = true;
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().setUserData<float>(0.f);
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().function =
-        [&, propModels, particles, rescale](cro::Entity e, float dt)
+        [&, propModels, particles, audio, rescale](cro::Entity e, float dt)
     {
         auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
         progress = std::min(1.f, progress + (dt / 2.f));
@@ -3726,10 +3766,14 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             {
                 for (auto i = 0u; i < particles->size(); ++i)
                 {
-
                     particles->at(i).getComponent<cro::ParticleEmitter>().stop();
                 }
                 //should already be started otherwise...
+
+                for (auto i = 0u; i < audio->size(); ++i)
+                {
+                    audio->at(i).getComponent<cro::AudioEmitter>().stop();
+                }
 
                 for (auto spectator : m_spectatorModels)
                 {
@@ -3784,6 +3828,11 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             for (auto particle : m_holeData[m_currentHole].particleEntities)
             {
                 particle.getComponent<cro::ParticleEmitter>().start();
+            }
+
+            for (auto audio : m_holeData[m_currentHole].audioEntities)
+            {
+                audio.getComponent<cro::AudioEmitter>().play();
             }
 
             //check hole for any crowd paths and assign any free

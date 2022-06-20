@@ -47,6 +47,7 @@ struct HoleData final
     cro::Entity modelEntity;
     std::vector<cro::Entity> propEntities;
     std::vector<cro::Entity> particleEntities;
+    std::vector<cro::Entity> audioEntities;
     std::vector<glm::mat4> crowdPositions;
     std::vector<Path> crowdCurves;
     std::vector<Path> propCurves;
