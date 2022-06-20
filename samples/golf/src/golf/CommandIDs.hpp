@@ -93,7 +93,8 @@ struct CommandID final
             CourseHoles  = 0x800,
             CourseSelect = 0x1000,
             TitleText    = 0x2000,
-            ScoreType    = 0x4000
+            ScoreType    = 0x4000,
+            ScoreDesc    = 0x8000
         };
     };
 };

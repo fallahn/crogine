@@ -1169,6 +1169,13 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     centreText(e);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::Menu::ScoreDesc;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(ScoreDesc[m_sharedData.scoreType]);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
             break;
         case PacketID::ServerError:

@@ -1618,14 +1618,25 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //display the score type
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({bounds.width / 2.f, 14.f, 0.1f});
+    entity.addComponent<cro::Transform>().setPosition({bounds.width / 2.f, 128.f, 0.1f});
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::ScoreType;
     centreText(entity);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //and score description
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) - 74.f, 112.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setString(ScoreDesc[m_sharedData.scoreType]);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::ScoreDesc;
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //display lobby members - updateLobbyAvatars() adds the text ents to this.
     entity = m_uiScene.createEntity();
@@ -3056,7 +3067,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { -44.f, -69.f };
+    buttonEnt.addComponent<UIElement>().absolutePosition = { -54.f, 45.f };
     buttonEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     auto bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
@@ -3080,7 +3091,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 44.f, -69.f };
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 54.f, 45.f };
     buttonEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
