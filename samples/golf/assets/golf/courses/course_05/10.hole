@@ -45,13 +45,4 @@ hole 10
         rotation = 15.373208
         scale = 1.000000,1.000000,1.000000
     }
-
-    prop
-    {
-        model = "assets/golf/models/boat02.cmt"
-        position = 190.569107,-0.019448,-68.737000
-        rotation = 25.162533
-        scale = 1.000000,1.000000,1.000000
-    }
-
 }

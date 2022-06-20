@@ -133,6 +133,8 @@ hole 12
             point = 273.172333,2.420378,-38.461845
 
             loop = false
+            delay = 27.000000
+            speed = 6.0
         }
         emitter = "cart"
     }

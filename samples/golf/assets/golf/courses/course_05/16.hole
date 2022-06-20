@@ -185,6 +185,8 @@ hole 16
             point = 124.111115,1.280880,-39.767998
 
             loop = false
+            delay = 35.000000
+            speed = 6.0
         }
         emitter = "cart"
     }

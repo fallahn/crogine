@@ -41,7 +41,7 @@ source distribution.
 namespace
 {
     static constexpr float MinBallDist = (HoleRadius * 1.2f) * (HoleRadius * 1.2f);
-    static constexpr float NearHoleDist = (0.01f * 0.01f); //10cm, used for near misses
+    static constexpr float NearHoleDist = (0.06f * 0.06f); //60cm, used for near misses
 }
 
 ClientCollisionSystem::ClientCollisionSystem(cro::MessageBus& mb, const std::vector<HoleData>& hd, const CollisionMesh& cm)
@@ -84,22 +84,27 @@ void ClientCollisionSystem::process(float)
 
         if (collider.terrain == TerrainID::Green)
         {
+
             //check if we're in the hole
             glm::vec2 pin(m_holeData[m_holeIndex].pin.x, m_holeData[m_holeIndex].pin.z);
             glm::vec2 pos(position.x, position.z);
             
             auto len2 = glm::length2(pin - pos);
+
+            auto oldNear = collider.nearHole;
+            collider.nearHole = len2 < NearHoleDist;
+
             if (len2 <= MinBallDist
                 && (result.height - position.y) > (Ball::Radius * 2.f))
             {
                 collider.terrain = TerrainID::Hole;
+                collider.nearHole = false;
             }
 
             //or a near miss
-            auto oldNear = collider.nearHole;
-            collider.nearHole = len2 < NearHoleDist;
-
-            if (oldNear && !collider.nearHole)
+            if (oldNear 
+                && !collider.nearHole 
+                && collider.terrain == TerrainID::Green)
             {
                 auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
                 msg->type = CollisionEvent::NearMiss;

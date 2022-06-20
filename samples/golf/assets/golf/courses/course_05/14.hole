@@ -126,6 +126,8 @@ hole 14
             point = 284.100067,1.793530,-183.492004
 
             loop = false
+            delay = 22.000000
+            speed = 6.0
         }
         emitter = "cart"
     }
