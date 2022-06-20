@@ -71,6 +71,7 @@ namespace sv
         cro::MessageBus messageBus;
         cro::String mapDir;
         std::uint8_t scoreType = 0;
+        std::uint8_t gimmeRadius = 0;
 
         std::atomic_uint64_t hostID = 0;
     };

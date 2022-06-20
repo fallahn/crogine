@@ -140,6 +140,7 @@ struct SharedStateData final
     //within which a file named data.course is sought
     cro::String mapDirectory = "course_01";
     std::uint8_t scoreType = 0;
+    std::uint8_t gimmeRadius = 0;
 
     //printed by the error state
     std::string errorMessage;

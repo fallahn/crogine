@@ -1178,6 +1178,20 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
             break;
+        case PacketID::GimmeRadius:
+        {
+            m_sharedData.gimmeRadius = evt.packet.as<std::uint8_t>();
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Menu::GimmeDesc;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                e.getComponent<cro::Text>().setString(GimmeString[m_sharedData.gimmeRadius]);
+                centreText(e);
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+            break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())
             {

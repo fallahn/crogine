@@ -51,8 +51,13 @@ using namespace sv;
 
 namespace
 {
-    const std::uint8_t MaxStrokes = 12;
+    constexpr std::uint8_t MaxStrokes = 12;
     const cro::Time TurnTime = cro::seconds(90.f);
+
+    constexpr std::array GimmeRadii =
+    {
+        0.f, 0.65f, 1.f
+    };
 }
 
 GolfState::GolfState(SharedData& sd)
@@ -123,8 +128,9 @@ void GolfState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<GolfBallEvent>();
         if (data.type == GolfBallEvent::TurnEnded)
         {
-            //check if we reached max strokes
-            if (m_playerInfo[0].holeScore[m_currentHole] >= MaxStrokes)
+            //check if we reached max strokes / inside the gimme
+            if (m_playerInfo[0].holeScore[m_currentHole] >= MaxStrokes
+                || (glm::length(data.position - m_holeData[m_currentHole].pin) < GimmeRadii[m_sharedData.gimmeRadius]))
             {
                 //set the player as having holed the ball
                 m_playerInfo[0].position = m_holeData[m_currentHole].pin;

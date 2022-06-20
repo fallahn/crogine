@@ -132,6 +132,8 @@ private:
     {
         std::uint32_t prevRules = 0;
         std::uint32_t nextRules = 0;
+        std::uint32_t prevRadius = 0;
+        std::uint32_t nextRadius = 0;
         std::uint32_t prevCourse = 0;
         std::uint32_t nextCourse = 0;
         std::uint32_t selected = 0;
