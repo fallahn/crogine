@@ -147,6 +147,20 @@ namespace cro
         */
         const Sphere& getBounds() const { return m_bounds; }
 
+        /*!
+        \brief Sets the render flags for this emitter.
+        If the render flags, when AND'd with the current render flags of the active camera,
+        are non-zero then the emitter is drawn, else the emitter is skipped by rendering.
+        Defaults to std::numeric_limits<std::uint64_t>::max() (all flags set)
+        \see Camera::renderFlags
+        */
+        void setRenderFlags(std::uint64_t flags) { m_renderFlags = flags; }
+
+        /*!
+        \brief Returns the current render flags of this model.
+        */
+        std::uint64_t getRenderFlags() const { return m_renderFlags; }
+
         static const std::uint32_t MaxParticles = 1000u;
         EmitterSettings settings;
 
@@ -160,7 +174,8 @@ namespace cro
         bool m_running;
         Clock m_emissionClock;
         Sphere m_bounds;
-        bool m_visible = true;
+        bool m_visible;
+        std::uint64_t m_renderFlags;
 
         std::int32_t m_releaseCount;
 

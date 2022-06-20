@@ -141,12 +141,12 @@ namespace cro
         */
         bool isHidden() const { return m_hidden; }
 
-
         /*!
         \brief Sets the render flags for this model.
-        If the render flags, when AND'd with the current render flags of the ModelRenderer,
+        If the render flags, when AND'd with the current render flags of the active camera,
         are non-zero then the model is drawn, else the model is skipped by rendering.
         Defaults to std::numeric_limits<std::uint64_t>::max() (all flags set)
+        \see Camera::renderFlags
         */
         void setRenderFlags(std::uint64_t flags) { m_renderFlags = flags; }
 

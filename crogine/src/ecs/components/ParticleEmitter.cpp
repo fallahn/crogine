@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -39,6 +39,8 @@ ParticleEmitter::ParticleEmitter()
     m_vao               (0),
     m_nextFreeParticle  (0),
     m_running           (false),
+    m_visible           (true),
+    m_renderFlags       (std::numeric_limits<std::uint64_t>::max()),
     m_releaseCount      (-1)
 {
 

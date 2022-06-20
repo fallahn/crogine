@@ -158,7 +158,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         if ((model.m_renderFlags & camComponent.renderFlags) == 0)
         {
             continue;
-        }   
+        } 
         glCheck(glFrontFace(model.m_facing));
         
         //calc entity transform

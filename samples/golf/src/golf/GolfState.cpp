@@ -1885,6 +1885,8 @@ void GolfState::loadAssets()
                         float loopDelay = 4.f;
                         float loopSpeed = 6.f;
 
+                        std::string particlePath;
+
                         for (const auto& modelProp : modelProps)
                         {
                             auto propName = modelProp.getName();
@@ -1903,6 +1905,10 @@ void GolfState::loadAssets()
                             else if (propName == "scale")
                             {
                                 scale = modelProp.getValue<glm::vec3>();
+                            }
+                            else if (propName == "particles")
+                            {
+                                particlePath = modelProp.getValue<std::string>();
                             }
                         }
 
@@ -1989,6 +1995,7 @@ void GolfState::loadAssets()
                                     leaderboardProps.push_back(ent);
                                 }
 
+                                //add path if it exists
                                 if (curve.size() > 3)
                                 {
                                     Path propPath;
@@ -2002,6 +2009,22 @@ void GolfState::loadAssets()
                                     ent.getComponent<PropFollower>().idleTime = loopDelay;
                                     ent.getComponent<PropFollower>().speed = loopSpeed;
                                     ent.getComponent<cro::Transform>().setPosition(curve[0]);
+                                }
+
+                                //add child particles if they exist
+                                if (!particlePath.empty())
+                                {
+                                    cro::EmitterSettings settings;
+                                    if (settings.loadFromFile(particlePath, m_resources.textures))
+                                    {
+                                        auto pEnt = m_gameScene.createEntity();
+                                        pEnt.addComponent<cro::Transform>();
+                                        pEnt.addComponent<cro::ParticleEmitter>().settings = settings;
+                                        pEnt.getComponent<cro::ParticleEmitter>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+                                        pEnt.addComponent<cro::CommandTarget>().ID = CommandID::ParticleEmitter;
+                                        ent.getComponent<cro::Transform>().addChild(pEnt.getComponent<cro::Transform>());
+                                        holeData.particleEntities.push_back(pEnt);
+                                    }
                                 }
                             }
                         }
@@ -2033,6 +2056,7 @@ void GolfState::loadAssets()
                                 auto ent = m_gameScene.createEntity();
                                 ent.addComponent<cro::Transform>().setPosition(position);
                                 ent.addComponent<cro::ParticleEmitter>().settings = settings;
+                                ent.getComponent<cro::ParticleEmitter>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
                                 ent.addComponent<cro::CommandTarget>().ID = CommandID::ParticleEmitter;
                                 holeData.particleEntities.push_back(ent);
                             }

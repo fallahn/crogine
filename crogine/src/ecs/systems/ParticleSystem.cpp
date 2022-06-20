@@ -528,6 +528,12 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
     for(auto entity : entities)
     {
         const auto& emitter = entity.getComponent<ParticleEmitter>();
+
+        if ((emitter.m_renderFlags & cam.renderFlags) == 0)
+        {
+            continue;
+        }
+
         //bind emitter texture
         glCheck(glBindTexture(GL_TEXTURE_2D, emitter.settings.textureID));
         glCheck(glUniform1f(m_uniformIDs[UniformID::ParticleSize], emitter.settings.size));
