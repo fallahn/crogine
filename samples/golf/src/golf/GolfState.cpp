@@ -2053,12 +2053,6 @@ void GolfState::loadAssets()
                                         auto velocity = (pos - prevPos) * 60.f; //frame time
                                         prevPos = pos;
                                         e.getComponent<cro::AudioEmitter>().setVelocity(velocity);
-
-                                        /*if (ent.destroyed())
-                                        {
-                                            e.getComponent<cro::Callback>().active = false;
-                                            m_gameScene.destroyEntity(e);
-                                        }*/
                                     };
                                     ent.getComponent<cro::Transform>().addChild(audioEnt.getComponent<cro::Transform>());
                                     holeData.audioEntities.push_back(audioEnt);
@@ -2813,6 +2807,7 @@ void GolfState::buildScene()
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
     camEnt.getComponent<CameraFollower>().zoom.target = 0.1f;
     camEnt.getComponent<CameraFollower>().zoom.speed = 3.f;
+    camEnt.getComponent<CameraFollower>().targetOffset = { 0.f,1.5f,0.f };
     camEnt.addComponent<cro::AudioListener>();
     //this holds the water plane ent when active
     camEnt.addComponent<TargetInfo>();// .postProcess = &m_resources.shaders.get(ShaderID::Noise);

@@ -1561,7 +1561,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
 {
     auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-    auto position = glm::vec3(size.x / 2.f, size.y / 2.f /*- (((bounds.height / 2.f) + UIBarHeight + 2.f) * m_viewScale.y)*/, 0.05f);
+    auto position = glm::vec3(size.x / 2.f, (size.y / 2.f) + UIBarHeight * m_viewScale.y, 0.05f);
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
