@@ -68,6 +68,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/ball/wedge01.wav",
 
         "assets/golf/sound/ball/holed.wav",
+        "assets/golf/sound/ball/near_miss.wav",
         "assets/golf/sound/ball/splash.wav",
         "assets/golf/sound/ball/drop.wav",
         "assets/golf/sound/ball/scrub.wav",
@@ -381,7 +382,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 break;
             }
         }
-        else// if (data.type == CollisionEvent::End)
+        else if (data.type == CollisionEvent::End)
         {
             if (data.terrain == TerrainID::Green
                 && data.clubID == ClubID::Putter)
@@ -392,6 +393,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             {
                 playSound(AudioID::Hole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             }
+        }
+        else
+        {
+            playSound(AudioID::NearMiss, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
         }
     }
         break;

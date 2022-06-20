@@ -104,7 +104,7 @@ struct CollisionEvent final
 {
     enum Type
     {
-        Begin, End
+        Begin, End, NearMiss
     }type = Begin;
     glm::vec3 position = glm::vec3(0.f);
     std::int32_t terrain = 0;

@@ -41,6 +41,7 @@ source distribution.
 namespace
 {
     static constexpr float MinBallDist = (HoleRadius * 1.2f) * (HoleRadius * 1.2f);
+    static constexpr float NearHoleDist = (0.01f * 0.01f); //10cm, used for near misses
 }
 
 ClientCollisionSystem::ClientCollisionSystem(cro::MessageBus& mb, const std::vector<HoleData>& hd, const CollisionMesh& cm)
@@ -93,6 +94,23 @@ void ClientCollisionSystem::process(float)
             {
                 collider.terrain = TerrainID::Hole;
             }
+
+            //or a near miss
+            auto oldNear = collider.nearHole;
+            collider.nearHole = len2 < NearHoleDist;
+
+            if (oldNear && !collider.nearHole)
+            {
+                auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+                msg->type = CollisionEvent::NearMiss;
+                msg->position = position;
+                msg->terrain = TerrainID::Green;
+                msg->clubID = m_club;
+            }
+        }
+        else
+        {
+            collider.nearHole = false;
         }
 
         //not sure why we had this, this case is caught below
