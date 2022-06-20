@@ -2054,11 +2054,11 @@ void GolfState::loadAssets()
                                         prevPos = pos;
                                         e.getComponent<cro::AudioEmitter>().setVelocity(velocity);
 
-                                        if (ent.destroyed())
+                                        /*if (ent.destroyed())
                                         {
                                             e.getComponent<cro::Callback>().active = false;
                                             m_gameScene.destroyEntity(e);
-                                        }
+                                        }*/
                                     };
                                     ent.getComponent<cro::Transform>().addChild(audioEnt.getComponent<cro::Transform>());
                                     holeData.audioEntities.push_back(audioEnt);
@@ -3612,7 +3612,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 player.matchScore = su.matchScore;
                 player.skinScore = su.skinsScore;
                 player.holeScores[su.hole] = su.stroke;
-                LOG("Score Update", cro::Logger::Type::Info);
+
                 if (su.client == m_sharedData.localConnectionData.connectionID)
                 {
                     if (getClub() == ClubID::Putter)
@@ -3818,8 +3818,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                 }
             };
 
-            //unhide any prop models - this will be empty on duplicated
-            //holes, so does nothing
+            //unhide any prop models
             for (auto prop : m_holeData[m_currentHole].propEntities)
             {
                 prop.getComponent<cro::Model>().setHidden(false);
@@ -3869,6 +3868,29 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             }
 
             m_gameScene.getSystem<SpectatorSystem>()->updateSpectatorGroups();
+
+
+            if (entity != e)
+            {
+                //new hole model so remove old props
+                for (auto i = 0u; i < propModels->size(); ++i)
+                {
+                    m_gameScene.destroyEntity(propModels->at(i));
+                }
+                propModels->clear();
+
+                for (auto i = 0u; i < particles->size(); ++i)
+                {
+                    m_gameScene.destroyEntity(particles->at(i));
+                }
+                particles->clear();
+                
+                for (auto i = 0u; i < audio->size(); ++i)
+                {
+                    m_gameScene.destroyEntity(audio->at(i));
+                }
+                audio->clear();
+            }
         }
     };
 
