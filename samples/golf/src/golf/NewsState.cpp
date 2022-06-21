@@ -35,7 +35,6 @@ source distribution.
 #include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "../GolfGame.hpp"
-#include "../rss/Newsfeed.hpp"
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
@@ -291,7 +290,7 @@ void NewsState::buildScene()
     auto selectedID = uiSystem.addCallback(
         [](cro::Entity e) mutable
         {
-            e.getComponent<cro::Text>().setFillColour(TextGoldColour); 
+            e.getComponent<cro::Text>().setFillColour(TextEditColour); 
             e.getComponent<cro::AudioEmitter>().play();
             e.getComponent<cro::Callback>().setUserData<float>(0.f);
             e.getComponent<cro::Callback>().active = true;
@@ -299,10 +298,10 @@ void NewsState::buildScene()
     auto unselectedID = uiSystem.addCallback(
         [](cro::Entity e) 
         { 
-            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            e.getComponent<cro::Text>().setFillColour(TextGoldColour);
         });
     
-    auto createItem = [&](glm::vec2 position, const std::string label, cro::Entity parent) 
+    const auto createItem = [&, selectedID, unselectedID](glm::vec2 position, const std::string label, cro::Entity parent) 
     {
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(position);
@@ -310,7 +309,7 @@ void NewsState::buildScene()
         e.addComponent<cro::Drawable2D>();
         e.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
         e.getComponent<cro::Text>().setString(label);
-        e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        e.getComponent<cro::Text>().setFillColour(TextGoldColour);
         centreText(e);
         e.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(e);
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
@@ -324,97 +323,112 @@ void NewsState::buildScene()
     };
 
 #ifdef USE_RSS
-    glm::vec3 position(0.f, -44.f, 0.1f);
 
-    RSSFeed feed;
-    if (feed.fetch("https://fallahn.itch.io/vga-golf/devlog.rss"))
+    m_feed.fetchAsync("https://fallahn.itch.io/vga-golf/devlog.rss");
+
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, menuEntity, createItem](cro::Entity e, float) mutable
     {
-        const auto& items = feed.getItems();
-        entity = createItem({ -170.f, 100.f }, items[0].title, menuEntity);
-        entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
-        auto url = items[0].url;
-        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-            uiSystem.addCallback([&, url](cro::Entity e, cro::ButtonEvent evt)
-                {
-                    if (activated(evt))
-                    {
-                        cro::Util::String::parseURL(url);
-                    }
-                });
-
-        entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({-170.f, 90.f, 0.1f});
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString(items[0].date);
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-        std::size_t start = 50;
-        auto description = items[0].description;
-        auto found = description.find_first_of(' ', start);
-        do
+        if (m_feed.fetchComplete())
         {
-            description[found] = '\n';
-            start += 50;
-            found = description.find_first_of(' ', start);
-        } while (found != std::string::npos);
+            const auto& items = m_feed.getItems();
+            glm::vec3 position(0.f, -44.f, 0.1f);
 
-
-        entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ -170.f, 70.f, 0.1f });
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString(description);
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-        static constexpr std::size_t MaxItems = 4;
-        for (auto i = 1u; i < items.size() && i < MaxItems; ++i)
-        {
-            entity = createItem(position, items[i].title, menuEntity);
-            url = items[i].url;
-            entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-                uiSystem.addCallback([&, url](cro::Entity e, cro::ButtonEvent evt)
-                    {
-                        if (activated(evt))
+            if (!items.empty())
+            {
+                auto ent = createItem({ /*-17*/0.f, 100.f }, items[0].title, menuEntity);
+                //ent.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
+                auto url = items[0].url;
+                ent.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+                ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+                    uiSystem.addCallback([&, url](cro::Entity e, cro::ButtonEvent evt)
                         {
-                            cro::Util::String::parseURL(url);
-                        }
-                    });
+                            if (activated(evt))
+                            {
+                                cro::Util::String::parseURL(url);
+                            }
+                        });
 
-            position.y -= 10.f;
+                ent = m_scene.createEntity();
+                ent.addComponent<cro::Transform>().setPosition({ -170.f, 70.f, 0.1f });
+                ent.addComponent<cro::Drawable2D>();
+                ent.addComponent<cro::Text>(smallFont).setString(items[0].date);
+                ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                ent.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+                menuEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
-            entity = m_scene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(position);
-            entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Text>(smallFont).setString(items[i].date);
-            entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-            entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-            centreText(entity);
-            menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-            position.y -= 14.f;
+                std::size_t start = 50;
+                auto description = items[0].description;
+                auto found = description.find_first_of(' ', start);
+                do
+                {
+                    description[found] = '\n';
+                    start += 50;
+                    found = description.find_first_of(' ', start);
+                } while (found != std::string::npos);
+
+
+                ent = m_scene.createEntity();
+                ent.addComponent<cro::Transform>().setPosition({ -170.f, 50.f, 0.1f });
+                ent.addComponent<cro::Drawable2D>();
+                ent.addComponent<cro::Text>(smallFont).setString(description);
+                ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                ent.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+                menuEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+
+
+                static constexpr std::size_t MaxItems = 4;
+                for (auto i = 1u; i < items.size() && i < MaxItems; ++i)
+                {
+                    ent = createItem(position, items[i].title, menuEntity);
+                    url = items[i].url;
+                    ent.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+                    ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+                        uiSystem.addCallback([&, url](cro::Entity e, cro::ButtonEvent evt)
+                            {
+                                if (activated(evt))
+                                {
+                                    cro::Util::String::parseURL(url);
+                                }
+                            });
+
+                    position.y -= 10.f;
+
+                    ent = m_scene.createEntity();
+                    ent.addComponent<cro::Transform>().setPosition(position);
+                    ent.addComponent<cro::Drawable2D>();
+                    ent.addComponent<cro::Text>(smallFont).setString(items[i].date);
+                    ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                    ent.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+                    centreText(ent);
+                    menuEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+                    position.y -= 14.f;
+                }
+            }
+            else
+            {
+                auto ent = m_scene.createEntity();
+                ent.addComponent<cro::Transform>().setPosition(position);
+                ent.addComponent<cro::Drawable2D>();
+                ent.addComponent<cro::Text>(font).setString("No news found");
+                ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                ent.getComponent<cro::Text>().setCharacterSize(UITextSize);
+                centreText(ent);
+                menuEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+            }
+
+            e.getComponent<cro::Callback>().active = false;
+            m_scene.destroyEntity(e);
         }
-    }
-    else
-    {
-        entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(position);
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString("No news found");
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-        centreText(entity);
-        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    }
+    };
 #endif
 
 
     //quit state
-    entity = createItem(glm::vec2(0.f, -120.f), "Awesome!", menuEntity);
+    entity = createItem(glm::vec2(0.f, -120.f), "OK, Let's go!", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)

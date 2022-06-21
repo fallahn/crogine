@@ -71,6 +71,7 @@ private:
             Wedge,
 
             Hole,
+            NearHole,
             NearMiss,
             Water,
             Ground,

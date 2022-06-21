@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "../rss/Newsfeed.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
@@ -72,6 +73,9 @@ private:
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     void buildScene();
-
     void quitState();
+
+#ifdef USE_RSS
+    RSSFeed m_feed;
+#endif
 };

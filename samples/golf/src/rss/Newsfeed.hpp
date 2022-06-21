@@ -33,10 +33,14 @@ source distribution.
 
 #include <string>
 #include <vector>
+#include <thread>
+#include <mutex>
+#include <atomic>
 
 class RSSFeed final
 {
 public:
+        
     /*!
     \brief Contains the name and location (URL)
     of a news item parsed from an RSS feed.
@@ -64,7 +68,26 @@ public:
     */
     const std::vector<Item>& getItems() const { return m_items; }
 
+    /*!
+    \brief Performs fetch() in its own thread.
+    Use fetchComplete() to see when the thread has finished.
+    */
+    void fetchAsync(const std::string&);
+
+    /*!
+    \brief Returns true if an async fetch is complete. Doesn't
+    necesserily mean that the fetch was succecssful, the item list
+    may still be empty.
+    */
+    const std::atomic_bool& fetchComplete() const { return m_fetchComplete; }
+
 private:
+    
+    std::atomic_bool m_fetchComplete = false;
+
+    std::thread m_thread;
+    std::mutex m_mutex;
+    
     std::vector<Item> m_items;
     bool parseFeed(const std::string&);
 };

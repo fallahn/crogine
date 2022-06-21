@@ -49,6 +49,8 @@ namespace
 bool RSSFeed::fetch(const std::string& url)
 {
     m_items.clear();
+    m_fetchComplete = false;
+
 
     auto* curl = curl_easy_init();
     if (curl)
@@ -67,7 +69,14 @@ bool RSSFeed::fetch(const std::string& url)
         return parseFeed(buffer);
     }
 
+    m_fetchComplete = true;
     return false;
+}
+
+void RSSFeed::fetchAsync(const std::string& url)
+{
+    m_thread = std::thread(&RSSFeed::fetch, this, url);
+    m_thread.detach();
 }
 
 //private
@@ -76,6 +85,7 @@ bool RSSFeed::parseFeed(const std::string& src)
     if (src.empty())
     {
         LogE << "RSS source is empty" << std::endl;
+        m_fetchComplete = true;
         return false;
     }
 
@@ -83,24 +93,29 @@ bool RSSFeed::parseFeed(const std::string& src)
     if (!doc.load_buffer(src.c_str(), src.size()))
     {
         LogE << "Failed to parse returned string to XML" << std::endl;
+        m_fetchComplete = true;
         return false;
     }
 
     auto channel = doc.child("rss").child("channel");
-    for (auto item : channel.children("item"))
+
     {
-        auto& i = m_items.emplace_back();
+        std::scoped_lock<std::mutex> lock(m_mutex);
+        for (auto item : channel.children("item"))
+        {
+            auto& i = m_items.emplace_back();
 
-        i.title = item.child("title").child_value();
-        i.url = item.child("link").child_value();
-        i.date = item.child("pubDate").child_value();
-        i.description = item.child("description").child_value();
+            i.title = item.child("title").child_value();
+            i.url = item.child("link").child_value();
+            i.date = item.child("pubDate").child_value();
+            i.description = item.child("description").child_value();
 
-        cro::Util::String::replace(i.description, "&#039;", "'");
-        cro::Util::String::replace(i.description, "<p>", "");
-        cro::Util::String::replace(i.description, "</p>", "");
+            cro::Util::String::replace(i.description, "&#039;", "'");
+            cro::Util::String::replace(i.description, "<p>", "");
+            cro::Util::String::replace(i.description, "</p>", "");
+        }
     }
-
+    m_fetchComplete = true;
     return !m_items.empty();
 }
 

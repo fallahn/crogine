@@ -68,6 +68,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/ball/wedge01.wav",
 
         "assets/golf/sound/ball/holed.wav",
+        "assets/golf/sound/ball/near_holed.wav",
         "assets/golf/sound/ball/near_miss.wav",
         "assets/golf/sound/ball/splash.wav",
         "assets/golf/sound/ball/drop.wav",
@@ -396,7 +397,8 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         }
         else
         {
-            playSound(AudioID::NearMiss, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            playSoundDelayed(AudioID::NearMiss, data.position, 0.5f, 1.f, MixerChannel::Effects);
+            playSound(AudioID::NearHole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
         }
     }
         break;
