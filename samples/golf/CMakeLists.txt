@@ -21,7 +21,7 @@ if(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
 endif()
 
-SET(USE_RSS False CACHE STRING "Set to true to attempt to parse RSS newsfeed from itchIO. Requires libcurl")
+SET(USE_RSS False CACHE STRING "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl")
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
 SET (PROJECT_STATIC_RUNTIME FALSE)
@@ -35,7 +35,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
 endif()
 
 if(USE_RSS)
-  SET(CMAKE_CXX_FLAGS "-DUSE_RSS")
+  add_definitions(-DUSE_RSS)
 endif()
 
 SET(CMAKE_CXX_FLAGS_DEBUG "-g -DCRO_DEBUG_")
@@ -54,8 +54,8 @@ find_package(OpenGL REQUIRED)
 find_package(Bullet REQUIRED)
 
 if(USE_RSS)
-find_package(curl REQUIRED);
-#endif
+find_package(CURL REQUIRED)
+endif()
 
 if(NOT CROGINE_FOUND)
   #build it from source
@@ -82,6 +82,7 @@ include(${PROJECT_DIR}/CMakeLists.txt)
 include(${PROJECT_DIR}/golf/CMakeLists.txt)
 if(USE_RSS)
   include(${PROJECT_DIR}/rss/CMakeLists.txt)
+  SET(GOLF_SRC ${GOLF_SRC} ${RSS_SRC})
 endif()
 
 
@@ -118,10 +119,6 @@ if(APPLE AND MACOS_BUNDLE)
                  ${CMAKE_SOURCE_DIR}/icon.icns)
 
 
-  if(USE_RSS)
-    add_executable(${RSS_SRC})
-  endif()
-
   set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_ICON_FILE icon.icns)
 
 
@@ -133,9 +130,6 @@ else()
   add_executable(${PROJECT_NAME}
                  ${PROJECT_SRC}
                  ${GOLF_SRC})
-  if(USE_RSS)
-    add_executable(${RSS_SRC})
-  endif()
 endif()
 
 
@@ -148,7 +142,7 @@ target_link_libraries(${PROJECT_NAME}
   ${OPENGL_LIBRARIES})
 
 if(USE_RSS)
-  target_link_libraries(${CURL_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} ${CURL_LIBRARIES})
 endif()
 
 # install to the bundle
