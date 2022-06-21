@@ -41,11 +41,11 @@ source distribution.
 #include "golf/PuttingState.hpp"
 #include "golf/ClubhouseState.hpp"
 #include "golf/TrophyState.hpp"
+#include "golf/NewsState.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
 #include "golf/PacketIDs.hpp"
-#include "rss/Newsfeed.hpp"
 #include "LoadingScreen.hpp"
 #include "SplashScreenState.hpp"
 #include "ErrorCheck.hpp"
@@ -109,6 +109,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);
     m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
     m_stateStack.registerState<PauseState>(StateID::Pause, m_sharedData);
+    m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);

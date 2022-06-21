@@ -29,44 +29,49 @@ source distribution.
 
 #pragma once
 
-#ifdef USE_RSS
+#include "../StateIDs.hpp"
 
-#include <string>
-#include <vector>
+#include <crogine/core/State.hpp>
+#include <crogine/audio/AudioScape.hpp>
+#include <crogine/ecs/Scene.hpp>
 
-class RSSFeed final
+struct SharedStateData;
+
+class NewsState final : public cro::State
 {
 public:
-    /*!
-    \brief Contains the name and location (URL)
-    of a news item parsed from an RSS feed.
-    */
-    struct Item final
-    {
-        std::string title;
-        std::string url;
-        std::string date;
-        std::string description;
-    };
+    NewsState(cro::StateStack&, cro::State::Context, SharedStateData&);
 
-    /*!
-    \brief Attempts to fet items from the given feed
-    \returns false if unsuccessful, else true if the
-    items vector has been populated.
-    Clears any existing items, which remain cleared should
-    fetching a new feed fail.
-    */
-    bool fetch(const std::string& url);
+    bool handleEvent(const cro::Event&) override;
 
-    /*!
-    \brief Returns a vector of items parsed from the RSS feed.
-    This will be empty if fetch() returned false
-    */
-    const std::vector<Item>& getItems() const { return m_items; }
+    void handleMessage(const cro::Message&) override;
+
+    bool simulate(float) override;
+
+    void render() override;
+
+    cro::StateID getStateID() const override { return StateID::News; }
 
 private:
-    std::vector<Item> m_items;
-    bool parseFeed(const std::string&);
-};
 
-#endif
+    cro::Scene m_scene;
+    SharedStateData& m_sharedData;
+
+    cro::AudioScape m_menuSounds;
+    struct AudioID final
+    {
+        enum
+        {
+            Accept, Back,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
+
+    glm::vec2 m_viewScale;
+    cro::Entity m_rootNode;
+    void buildScene();
+
+    void quitState();
+};

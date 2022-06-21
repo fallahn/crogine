@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/Assert.hpp>
 #include <crogine/detail/Types.hpp>
 
 #include <SDL_rwops.h>
@@ -46,7 +47,7 @@ source distribution.
 namespace cro::Util::String
 {
     /*!
-    \brief Remove all isntances of c from line
+    \brief Remove all instances of c from line
     */
     static inline void removeChar(std::string& line, const char c)
     {
@@ -66,6 +67,25 @@ namespace cro::Util::String
             start = ++next;
             next = str.find_first_of(c, start);
             if (next > str.length()) next = std::string::npos;
+        }
+    }
+
+    /*!
+    \brief Replace all instances of s with r
+    https://stackoverflow.com/a/3418285/6740859
+    */
+    static inline void replace(std::string& str, const std::string& s, const std::string& r)
+    {
+        if (s.empty())
+        {
+            return;
+        }
+
+        std::size_t startPos = 0;
+        while ((startPos = str.find(s, startPos)) != std::string::npos) 
+        {
+            str.replace(startPos, s.length(), r);
+            startPos += r.length();
         }
     }
 

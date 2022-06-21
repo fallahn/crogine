@@ -34,6 +34,7 @@ source distribution.
 
 #include <curl/curl.h>
 #include <crogine/core/Log.hpp>
+#include <crogine/util/String.hpp>
 
 namespace
 {
@@ -90,8 +91,14 @@ bool RSSFeed::parseFeed(const std::string& src)
     {
         auto& i = m_items.emplace_back();
 
-        i.name = item.child("title").child_value();
+        i.title = item.child("title").child_value();
         i.url = item.child("link").child_value();
+        i.date = item.child("pubDate").child_value();
+        i.description = item.child("description").child_value();
+
+        cro::Util::String::replace(i.description, "&#039;", "'");
+        cro::Util::String::replace(i.description, "<p>", "");
+        cro::Util::String::replace(i.description, "</p>", "");
     }
 
     return !m_items.empty();

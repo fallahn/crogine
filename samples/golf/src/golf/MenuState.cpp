@@ -354,16 +354,17 @@ bool MenuState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::SplashScreen);
             break;
         case SDLK_KP_0:
-            cro::GameController::rumbleStart(0, 65000, 65000, 1000);
-            LogI << cro::GameController::getName(0) << std::endl;
+            requestStackPush(StateID::News);
+            //cro::GameController::rumbleStart(0, 65000, 65000, 1000);
+            //LogI << cro::GameController::getName(0) << std::endl;
             break;
         case SDLK_KP_1:
-            cro::GameController::rumbleStart(1, 65000, 65000, 1000);
-            LogI << cro::GameController::getName(1) << std::endl;
+            //cro::GameController::rumbleStart(1, 65000, 65000, 1000);
+            //LogI << cro::GameController::getName(1) << std::endl;
             break;
         case SDLK_KP_2:
-            cro::GameController::rumbleStart(2, 65000, 65000, 1000);
-            LogI << cro::GameController::getName(2) << std::endl;
+            //cro::GameController::rumbleStart(2, 65000, 65000, 1000);
+            //LogI << cro::GameController::getName(2) << std::endl;
             break;
         case SDLK_KP_9:
         {

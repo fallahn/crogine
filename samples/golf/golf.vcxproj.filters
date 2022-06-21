@@ -294,6 +294,9 @@
     <ClCompile Include="src\rss\pugixml.cpp">
       <Filter>Source Files\rss</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\NewsState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -580,6 +583,9 @@
     </ClInclude>
     <ClInclude Include="src\rss\pugixml.hpp">
       <Filter>Header Files\rss</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\NewsState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
