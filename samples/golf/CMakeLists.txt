@@ -21,6 +21,8 @@ if(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
 endif()
 
+SET(USE_RSS False CACHE STRING "Set to true to attempt to parse RSS newsfeed from itchIO. Requires libcurl")
+
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
 SET (PROJECT_STATIC_RUNTIME FALSE)
 
@@ -32,20 +34,28 @@ if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
   endif()
 endif()
 
-SET (CMAKE_CXX_FLAGS_DEBUG "-g -DCRO_DEBUG_")
-SET (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+if(USE_RSS)
+  SET(CMAKE_CXX_FLAGS "-DUSE_RSS")
+endif()
+
+SET(CMAKE_CXX_FLAGS_DEBUG "-g -DCRO_DEBUG_")
+SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 # We're using c++17
-SET (CMAKE_CXX_STANDARD 17)
-SET (CMAKE_CXX_STANDARD_REQUIRED ON)
+SET(CMAKE_CXX_STANDARD 17)
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-SET (OpenGL_GL_PREFERENCE "GLVND")
+SET(OpenGL_GL_PREFERENCE "GLVND")
 
 find_package(CROGINE REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 #TODO specify version 2.83
 find_package(Bullet REQUIRED)
+
+if(USE_RSS)
+find_package(curl REQUIRED);
+#endif
 
 if(NOT CROGINE_FOUND)
   #build it from source
@@ -63,12 +73,16 @@ include_directories(
   ${BULLET_INCLUDE_DIRS}
   src)
 
+if(USE_RSS)
+include_directories(${CURL_INCLUDE_DIR})
+endif()
+
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 include(${PROJECT_DIR}/golf/CMakeLists.txt)
-
-
-
+if(USE_RSS)
+  include(${PROJECT_DIR}/rss/CMakeLists.txt)
+endif()
 
 
 # If on apple, create a nice bundle
@@ -97,7 +111,17 @@ if(APPLE AND MACOS_BUNDLE)
       ${CMAKE_SOURCE_DIR}/assets PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
   set_source_files_properties(
       ${CMAKE_SOURCE_DIR}/icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
-  add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${PROJECT_SRC} ${GOLF_SRC} ${CMAKE_SOURCE_DIR}/assets ${CMAKE_SOURCE_DIR}/icon.icns)
+  add_executable(${PROJECT_NAME} MACOSX_BUNDLE 
+                 ${PROJECT_SRC} 
+                 ${GOLF_SRC} 
+                 ${CMAKE_SOURCE_DIR}/assets 
+                 ${CMAKE_SOURCE_DIR}/icon.icns)
+
+
+  if(USE_RSS)
+    add_executable(${RSS_SRC})
+  endif()
+
   set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_ICON_FILE icon.icns)
 
 
@@ -105,11 +129,13 @@ if(APPLE AND MACOS_BUNDLE)
 else()
 
 
-  # regular make files
+  #regular make files
   add_executable(${PROJECT_NAME}
                  ${PROJECT_SRC}
                  ${GOLF_SRC})
-
+  if(USE_RSS)
+    add_executable(${RSS_SRC})
+  endif()
 endif()
 
 
@@ -121,6 +147,9 @@ target_link_libraries(${PROJECT_NAME}
   ${BULLET_LIBRARIES}  
   ${OPENGL_LIBRARIES})
 
+if(USE_RSS)
+  target_link_libraries(${CURL_LIBRARIES})
+endif()
 
 # install to the bundle
 if(APPLE AND MACOS_BUNDLE)

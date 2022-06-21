@@ -67,6 +67,12 @@
     <Filter Include="Source Files\golf\server\directors">
       <UniqueIdentifier>{f9b88068-78c7-43b5-ae2e-d550da45d78a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\rss">
+      <UniqueIdentifier>{ef7b3139-894e-44fc-a3ea-0c51f24ad336}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\rss">
+      <UniqueIdentifier>{0d07744f-6e49-4edb-a849-8597724e7dc3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -281,6 +287,12 @@
     </ClCompile>
     <ClCompile Include="src\golf\PropFollowSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rss\Newsfeed.cpp">
+      <Filter>Source Files\rss</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rss\pugixml.cpp">
+      <Filter>Source Files\rss</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -559,6 +571,15 @@
     </ClInclude>
     <ClInclude Include="src\golf\PropFollowSystem.hpp">
       <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rss\Newsfeed.hpp">
+      <Filter>Header Files\rss</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rss\pugiconfig.hpp">
+      <Filter>Header Files\rss</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rss\pugixml.hpp">
+      <Filter>Header Files\rss</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

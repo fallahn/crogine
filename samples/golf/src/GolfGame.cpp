@@ -45,6 +45,7 @@ source distribution.
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
 #include "golf/PacketIDs.hpp"
+#include "rss/Newsfeed.hpp"
 #include "LoadingScreen.hpp"
 #include "SplashScreenState.hpp"
 #include "ErrorCheck.hpp"
