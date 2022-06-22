@@ -3503,7 +3503,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 //inflate this so that the message board is correct - the update will come
                 //in to assert this is correct afterwards
                 m_sharedData.connectionData[client].playerData[player].holeScores[m_currentHole]++;
-                showMessageBoard(MessageBoardID::HoleScore);
+                showMessageBoard(MessageBoardID::Gimme);
             }
             break;
         case PacketID::BallLanded:

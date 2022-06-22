@@ -124,17 +124,18 @@ void BallSystem::process(float dt)
         const auto& tx = entity.getComponent<cro::Transform>();
         auto rot = tx.getRotation();
         auto pos = tx.getWorldPosition();
-        btTransform btXf(btQuaternion(rot.x, rot.y, rot.z, rot.w), btVector3(pos.x, pos.y, pos.z));
+        btTransform btXf(btQuaternion(rot.x, rot.y, rot.z, rot.w), btVector3(pos.x, pos.y + Ball::Radius, pos.z));
         
         entity.getComponent<Ball>().collisionObject->setWorldTransform(btXf);
     }
 
-    //perform collisions
-    m_collisionWorld->performDiscreteCollisionDetection();
+    //perform collisions - TODO this breaks raycasting :(
+    // //probably because the ray is intersecting the ball - try filtering these.
+    //m_collisionWorld->performDiscreteCollisionDetection();
 
-    //TODO we ought to be able to optimise this a bit knowing only
-    //one ball is active at a time and that the collision test is
-    //only used when putting...
+    ////TODO we ought to be able to optimise this a bit knowing only
+    ////one ball is active at a time and that the collision test is
+    ////only used when putting...
     auto manifoldCount = m_collisionDispatcher->getNumManifolds();
     for (auto i = 0; i < manifoldCount; ++i)
     {

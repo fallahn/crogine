@@ -180,9 +180,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         {
         default: break;
         case GolfEvent::Gimme:
-            if (cro::Util::Random::value(0, 2) == 0)
+            if (cro::Util::Random::value(0, 2) != 0)
             {
-                playSoundDelayed(AudioID::Gimme, data.position, 1.6f, 1.f, MixerChannel::Voice);
+                playSoundDelayed(AudioID::Gimme, data.position, 0.6f, 1.f, MixerChannel::Voice);
             }
             break;
         case GolfEvent::BirdHit:
@@ -267,7 +267,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             switch (data.score)
             {
             default: 
-                playSoundDelayed(AudioID::NearMiss, data.position, 0.5f, 0.4f, MixerChannel::Effects);
+                //playSoundDelayed(AudioID::NearMiss, data.position, 0.5f, 0.4f, MixerChannel::Effects);
                 playSoundDelayed(AudioID::ScoreHole, glm::vec3(0.f), VoiceDelay, 1.f, MixerChannel::Voice);
                 break; 
             case ScoreID::HIO:

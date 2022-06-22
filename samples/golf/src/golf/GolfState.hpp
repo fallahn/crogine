@@ -293,7 +293,8 @@ private:
     enum class MessageBoardID
     {
         Bunker, Scrub, Water,
-        PlayerName, HoleScore
+        PlayerName, HoleScore,
+        Gimme
     };
     void showMessageBoard(MessageBoardID);
     void floatingMessage(const std::string&);

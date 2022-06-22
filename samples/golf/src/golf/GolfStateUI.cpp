@@ -1602,6 +1602,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
     {
     default: break;
     case MessageBoardID::HoleScore:
+    case MessageBoardID::Gimme:
     {
         std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
         auto overPar = score - m_holeData[m_currentHole].par;
@@ -1652,10 +1653,15 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
             }
         }
 
-        auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-        msg->type = GolfEvent::Scored;
-        msg->score = static_cast<std::uint8_t>(score);
-        msg->travelDistance = glm::length2(m_holeData[m_currentHole].pin - m_currentPlayer.position);
+        if (messageType == MessageBoardID::HoleScore)
+        {
+            //this triggers the VO which we only want if it went in the hole.
+            auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+            msg->type = GolfEvent::Scored;
+            msg->score = static_cast<std::uint8_t>(score);
+            msg->travelDistance = glm::length2(m_holeData[m_currentHole].pin - m_currentPlayer.position);
+        }
+
 
         if (score < ScoreID::Count)
         {
