@@ -106,11 +106,47 @@ BallSystem::BallSystem(cro::MessageBus& mb, bool drawDebug)
 BallSystem::~BallSystem()
 {
     clearCollisionObjects();
+
+    for (auto& ball : m_ballObjects)
+    {
+        m_collisionWorld->removeCollisionObject(ball.get());
+    }
 }
 
 //public
 void BallSystem::process(float dt)
 {
+    //update collision world with current ball transforms
+    //then do a collision pass to get overlaps
+    auto& entities = getEntities();
+    for (auto& entity : entities)
+    {
+        const auto& tx = entity.getComponent<cro::Transform>();
+        auto rot = tx.getRotation();
+        auto pos = tx.getWorldPosition();
+        btTransform btXf(btQuaternion(rot.x, rot.y, rot.z, rot.w), btVector3(pos.x, pos.y, pos.z));
+        
+        entity.getComponent<Ball>().collisionObject->setWorldTransform(btXf);
+    }
+
+    //perform collisions
+    m_collisionWorld->performDiscreteCollisionDetection();
+
+    //TODO we ought to be able to optimise this a bit knowing only
+    //one ball is active at a time and that the collision test is
+    //only used when putting...
+    auto manifoldCount = m_collisionDispatcher->getNumManifolds();
+    for (auto i = 0; i < manifoldCount; ++i)
+    {
+        auto manifold = m_collisionDispatcher->getManifoldByIndexInternal(i);
+        auto body0 = manifold->getBody0();
+        auto body1 = manifold->getBody1();
+
+        btManifoldPoint norm;
+    }
+
+
+
     //interpolate current strength/direction
     m_currentWindInterpTime = std::min(m_windInterpTime, m_currentWindInterpTime + dt);
     float interp = std::min(1.f, std::max(0.f, m_currentWindInterpTime / m_windInterpTime));
@@ -120,7 +156,6 @@ void BallSystem::process(float dt)
     CRO_ASSERT(!std::isnan(m_windDirection.x), "");
     CRO_ASSERT(!std::isnan(m_windDirTarget.x), "");
 
-    auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& ball = entity.getComponent<Ball>();
@@ -181,7 +216,7 @@ void BallSystem::process(float dt)
                 auto& tx = entity.getComponent<cro::Transform>();
                 auto position = tx.getPosition();
 
-                //attempts to trap na obscure NaN bug
+                //attempts to trap an obscure NaN bug
                 CRO_ASSERT(!std::isnan(position.x), "");
 
                 auto [terrain, normal, hitpoint, penetration] = getTerrain(position);
@@ -540,12 +575,6 @@ void BallSystem::doCollision(cro::Entity entity)
     auto pos = tx.getPosition();
     CRO_ASSERT(!std::isnan(pos.x), "");
 
-    //if (pos.y > 10.f)
-    //{
-    //    //skip test we're in the air (breaks if someone makes a tall mesh though...)
-    //    return;
-    //}
-
     const auto resetBall = [&](Ball& ball, Ball::State state, std::uint8_t terrain)
     {
         ball.velocity = glm::vec3(0.f);
@@ -716,6 +745,8 @@ void BallSystem::initCollisionWorld(bool drawDebug)
     m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
     m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionCfg.get());
 
+    m_ballShape = std::make_unique<btSphereShape>(Ball::Radius);
+
 #ifdef CRO_DEBUG_
     if (drawDebug)
     {
@@ -790,6 +821,24 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
     }
 
     return true;
+}
+
+void BallSystem::onEntityAdded(cro::Entity e)
+{
+    m_ballObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_ballShape.get());
+    e.getComponent<Ball>().collisionObject = m_ballObjects.back().get();
+    m_collisionWorld->addCollisionObject(m_ballObjects.back().get());
+}
+
+void BallSystem::onEntityRemoved(cro::Entity e)
+{
+    m_ballObjects.erase(std::remove_if(m_ballObjects.begin(), m_ballObjects.end(), 
+        [e](const std::unique_ptr<btPairCachingGhostObject>& p)
+        {
+            return p.get() == e.getComponent<Ball>().collisionObject;
+        }), m_ballObjects.end());
+
+    m_collisionWorld->removeCollisionObject(e.getComponent<Ball>().collisionObject);
 }
 
 //custom callback to return proper face normal (I wish we could cache these...)
