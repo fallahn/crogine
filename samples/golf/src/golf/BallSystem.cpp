@@ -60,6 +60,11 @@ namespace
     static constexpr float BallHoleDistance = (HoleRadius * Margin) * (HoleRadius * Margin);
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
     static constexpr float AngularVelocity = 46.5f; //rad/s at 1m/s vel. Used for rolling animation.
+
+    constexpr std::array GimmeRadii =
+    {
+        0.f, 0.65f * 0.65f, 1.f
+    };
 }
 
 const std::array<std::string, 5u> Ball::StateStrings = { "Idle", "Flight", "Putt", "Paused", "Reset" };
@@ -76,7 +81,8 @@ BallSystem::BallSystem(cro::MessageBus& mb, bool drawDebug)
     m_windStrengthTarget    (0.1f),
     m_windInterpTime        (1.f),
     m_currentWindInterpTime (0.f),
-    m_holeData              (nullptr)
+    m_holeData              (nullptr),
+    m_gimmeRadius           (0)
 {
     requireComponent<cro::Transform>();
     requireComponent<Ball>();
@@ -330,6 +336,11 @@ void BallSystem::process(float dt)
                         tx.setPosition(position);
                         //LogI << "Set terrain to hole" << std::endl;
                     }
+                    else if(len2 < GimmeRadii[m_gimmeRadius])
+                    {
+                        auto* msg2 = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
+                        msg2->type = GolfBallEvent::Gimme;
+                    }
 
                     msg->position = position;
 
@@ -423,9 +434,8 @@ void BallSystem::process(float dt)
                 msg->terrain = ball.terrain;
                 msg->position = position;
 
-                if (/*position. y < (m_holeData->pin.y - Ball::Radius)
-                    ||*/ ball.terrain == TerrainID::Hole
-                        || (len2 <= BallHoleDistance))
+                if (ball.terrain == TerrainID::Hole
+                        || (len2 <= (BallHoleDistance + GimmeRadii[m_gimmeRadius])))
                 {
                     //we're in the hole
                     msg->type = GolfBallEvent::Holed;
@@ -469,6 +479,11 @@ bool BallSystem::setHoleData(const HoleData& holeData, bool rebuildMesh)
     m_holeData = &holeData;
 
     return rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
+}
+
+void BallSystem::setGimmeRadius(std::uint8_t rad)
+{
+    m_gimmeRadius = std::min(std::uint8_t(2), rad);
 }
 
 BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const

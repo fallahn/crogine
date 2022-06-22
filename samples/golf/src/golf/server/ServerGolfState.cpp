@@ -53,11 +53,6 @@ namespace
 {
     constexpr std::uint8_t MaxStrokes = 12;
     const cro::Time TurnTime = cro::seconds(90.f);
-
-    constexpr std::array GimmeRadii =
-    {
-        0.f, 0.65f, 1.f
-    };
 }
 
 GolfState::GolfState(SharedData& sd)
@@ -128,22 +123,12 @@ void GolfState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<GolfBallEvent>();
         if (data.type == GolfBallEvent::TurnEnded)
         {
-            //check if we reached max strokes / inside the gimme
-            auto gimme = (glm::length(data.position - m_holeData[m_currentHole].pin) < GimmeRadii[m_sharedData.gimmeRadius]);
-
-            if (m_playerInfo[0].holeScore[m_currentHole] >= MaxStrokes
-                || gimme)
+            //check if we reached max strokes
+            if (m_playerInfo[0].holeScore[m_currentHole] >= MaxStrokes)
             {
                 //set the player as having holed the ball
                 m_playerInfo[0].position = m_holeData[m_currentHole].pin;
                 m_playerInfo[0].distanceToHole = 0.f;
-
-                if (gimme)
-                {
-                    m_playerInfo[0].holeScore[m_currentHole]++;
-                    std::uint16_t inf = (m_playerInfo[0].client << 8) | m_playerInfo[0].player;
-                    m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::Gimme, inf, net::NetFlag::Reliable);
-                }
             }
             else
             {
@@ -182,6 +167,12 @@ void GolfState::handleMessage(const cro::Message& msg)
             bu.terrain = data.terrain;
             bu.position = data.position;
             m_sharedData.host.broadcastPacket(PacketID::BallLanded, bu, net::NetFlag::Reliable);
+        }
+        else if (data.type == GolfBallEvent::Gimme)
+        {
+            m_playerInfo[0].holeScore[m_currentHole]++;
+            std::uint16_t inf = (m_playerInfo[0].client << 8) | m_playerInfo[0].player;
+            m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::Gimme, inf, net::NetFlag::Reliable);
         }
     }
 
@@ -808,7 +799,8 @@ void GolfState::initScene()
 {
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
-    m_mapDataValid = m_scene.addSystem<BallSystem>(mb)->setHoleData(m_holeData[0]);    
+    m_mapDataValid = m_scene.addSystem<BallSystem>(mb)->setHoleData(m_holeData[0]);
+    m_scene.getSystem<BallSystem>()->setGimmeRadius(m_sharedData.gimmeRadius);
     
     for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
     {

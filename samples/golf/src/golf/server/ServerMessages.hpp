@@ -57,7 +57,8 @@ struct GolfBallEvent final
         Landed,
         Foul,
         TurnEnded,
-        Holed
+        Holed,
+        Gimme
     }type = Landed;
     std::int32_t terrain = -1;
     float distance = 0.f;

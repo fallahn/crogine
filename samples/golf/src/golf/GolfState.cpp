@@ -2813,7 +2813,7 @@ void GolfState::buildScene()
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
     camEnt.getComponent<CameraFollower>().zoom.target = 0.1f;
     camEnt.getComponent<CameraFollower>().zoom.speed = 3.f;
-    camEnt.getComponent<CameraFollower>().targetOffset = { 0.f,1.5f,0.f };
+    camEnt.getComponent<CameraFollower>().targetOffset = { 0.f,0.65f,0.f };
     camEnt.addComponent<cro::AudioListener>();
     //this holds the water plane ent when active
     camEnt.addComponent<TargetInfo>();// .postProcess = &m_resources.shaders.get(ShaderID::Noise);
@@ -3499,6 +3499,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 auto player = (data & 0x0f);
 
                 showNotification(m_sharedData.connectionData[client].playerData[player].name + " took a Gimme");
+
+                //inflate this so that the message board is correct - the update will come
+                //in to assert this is correct afterwards
+                m_sharedData.connectionData[client].playerData[player].holeScores[m_currentHole]++;
+                showMessageBoard(MessageBoardID::HoleScore);
             }
             break;
         case PacketID::BallLanded:

@@ -351,7 +351,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_F4:
             requestStackClear();
-            requestStackPush(StateID::SplashScreen);
+            requestStackPush(StateID::PuttingRange);
             break;
         case SDLK_KP_0:
             requestStackPush(StateID::News);

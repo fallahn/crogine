@@ -419,7 +419,7 @@ bool PuttingState::simulate(float dt)
 
     m_inputParser.update(dt);
     m_gameScene.simulate(dt);
-    m_uiScene.simulate(dt);
+    //m_uiScene.simulate(dt);
 
     //auto hide the mouse if not paused
     if (m_mouseVisible
@@ -839,33 +839,28 @@ void PuttingState::createScene()
 
     //check data file - quit if missing or corrupt
     cro::ConfigFile cfg;
-    if (!cfg.loadFromFile("assets/golf/courses/driving.range"))
+    if (!cfg.loadFromFile("assets/golf/courses/putting.range"))
     {
         quitFail("Could Not Open Course Data");
         return;
     }
 
-    const auto& properties = cfg.getProperties();
-    for (const auto& p : properties)
-    {
-        const auto& name = p.getName();
-        if (name == "hole")
-        {
-            auto& data = m_holeData.emplace_back();
-            data.pin = p.getValue<glm::vec3>();
-            data.target = data.pin;
-            data.tee = PlayerPosition;
-            //TODO this should be parsed from the cmt file
-            data.modelPath = "assets/golf/models/driving_range.cmb"; //needed for ball system to load collision mesh
-            //TODO check ball system for which properties are needed
-        }
-    }
+    //const auto& properties = cfg.getProperties();
+    //for (const auto& p : properties)
+    //{
+    //    const auto& name = p.getName();
+    //    if (name == "pin")
+    //    {
+    //        auto& data = m_holeData.emplace_back();
+    //        data.pin = p.getValue<glm::vec3>();
+    //        data.target = data.pin;
+    //        data.tee = PlayerPosition;
+    //        //TODO this should be parsed from the cmt file
+    //        data.modelPath = "assets/golf/models/course_06/01.cmb"; //needed for ball system to load collision mesh
+    //        //TODO check ball system for which properties are needed
+    //    }
+    //}
 
-    if (m_holeData.empty())
-    {
-        quitFail("No Hole Data Found");
-        return;
-    }
 
     const auto& objects = cfg.getObjects();
     for (const auto& obj : objects)
@@ -974,11 +969,50 @@ void PuttingState::createScene()
                 }
             }
         }
+        else if (name == "hole")
+        {
+            glm::vec3 pin(0.f);
+            glm::vec3 target(0.f);
+            glm::vec3 tee(0.f);
+
+            const auto& props = obj.getProperties();
+            for (const auto& p : props)
+            {
+                if (p.getName() == "pin")
+                {
+                    pin = p.getValue<glm::vec3>();
+                }
+                else if (p.getName() == "target")
+                {
+                    target = p.getValue<glm::vec3>();
+                }
+                else if (p.getName() == "tee")
+                {
+                    tee = p.getValue<glm::vec3>();
+                }
+            }
+
+            if (pin != tee)
+            {
+                auto& data = m_holeData.emplace_back();
+                data.pin = pin;
+                data.target = target;
+                data.tee = tee;
+                //TODO this should be parsed from the cmt file
+                data.modelPath = "assets/golf/models/course_06/01.cmb"; //needed for ball system to load collision mesh
+            }
+        }
+    }
+
+    if (m_holeData.empty())
+    {
+        quitFail("No Hole Data Found");
+        return;
     }
 
     //load the course model
     cro::ModelDefinition md(m_resources);
-    if (!md.loadFromFile("assets/golf/models/driving_range.cmt"))
+    if (!md.loadFromFile("assets/golf/models/course_06/01.cmt"))
     {
         quitFail("Could Not Load Course Model");
         return;
@@ -1024,7 +1058,7 @@ void PuttingState::createScene()
     //create the billboards
     createFoliage(entity);
 
-    //tee marker
+    //tee marker - TODO use a different model (or build into the course model)
     md.loadFromFile("assets/golf/models/tee_balls.cmt");
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
@@ -1068,78 +1102,81 @@ void PuttingState::createScene()
     
     m_cameras[CameraID::Player] = camEnt;
 
-    static constexpr auto halfSize = RangeSize / 2.f;
-
-    struct TransitionPath final
-    {
-        cro::Util::Maths::Spline targetPath;
-        cro::Util::Maths::Spline cameraPath;
-
-        const float TotalTime = 10.f;
-        float currentTime = 0.f;
-    }path;
-
-    auto targetStart = glm::vec3(0.f, 4.5f, -160.f);
-    path.targetPath.addPoint(targetStart);
-    path.targetPath.addPoint(glm::vec3(0, 4.5f, -100.f));
-    path.targetPath.addPoint(glm::vec3(0, 12.5f, -halfSize.y));
-    path.targetPath.addPoint(glm::vec3(0.f, 4.5f, -halfSize.y));
-
-    auto eyeStart = glm::vec3(0.f, CameraPosition.y, -halfSize.y - 20.f);
-    path.cameraPath.addPoint(eyeStart);
-    path.cameraPath.addPoint(glm::vec3(0.f, 32.5f, -halfSize.y / 3.f));
-    path.cameraPath.addPoint(glm::vec3(0.f, 12.5f, halfSize.y / 2.f));
-    path.cameraPath.addPoint(CameraPosition);
-
-    auto tx = glm::inverse(glm::lookAt(eyeStart, targetStart, cro::Transform::Y_AXIS));
+    auto tx = glm::lookAt(m_holeData[0].tee + glm::vec3(0.f, 1.f, 0.f), m_holeData[0].target, cro::Transform::Y_AXIS);
     camEnt.getComponent<cro::Transform>().setLocalTransform(tx);
 
-    camEnt.addComponent<cro::Callback>().setUserData<TransitionPath>(path);
-    camEnt.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        auto& data = e.getComponent<cro::Callback>().getUserData<TransitionPath>();
-        float oldTime = data.currentTime;
-        data.currentTime = std::min(data.TotalTime, data.currentTime + dt);
+    //static constexpr auto halfSize = RangeSize / 2.f;
 
-        if (oldTime < data.TotalTime / 2.f
-            && data.currentTime > data.TotalTime / 2.f)
-        {
-            //play the music
-            e.getComponent<cro::AudioEmitter>().play();
-        }
+    //struct TransitionPath final
+    //{
+    //    cro::Util::Maths::Spline targetPath;
+    //    cro::Util::Maths::Spline cameraPath;
 
-        float progress = cro::Util::Easing::easeInOutQuad(data.currentTime / data.TotalTime);
+    //    const float TotalTime = 10.f;
+    //    float currentTime = 0.f;
+    //}path;
 
-        auto target = data.targetPath.getInterpolatedPoint(progress);
-        auto eye = data.cameraPath.getInterpolatedPoint(progress);
-        auto tx = glm::inverse(glm::lookAt(eye, target, cro::Transform::Y_AXIS));
+    //auto targetStart = glm::vec3(0.f, 4.5f, -160.f);
+    //path.targetPath.addPoint(targetStart);
+    //path.targetPath.addPoint(glm::vec3(0, 4.5f, -100.f));
+    //path.targetPath.addPoint(glm::vec3(0, 12.5f, -halfSize.y));
+    //path.targetPath.addPoint(glm::vec3(0.f, 4.5f, -halfSize.y));
 
-        e.getComponent<cro::Transform>().setLocalTransform(tx);
+    //auto eyeStart = glm::vec3(0.f, CameraPosition.y, -halfSize.y - 20.f);
+    //path.cameraPath.addPoint(eyeStart);
+    //path.cameraPath.addPoint(glm::vec3(0.f, 32.5f, -halfSize.y / 3.f));
+    //path.cameraPath.addPoint(glm::vec3(0.f, 12.5f, halfSize.y / 2.f));
+    //path.cameraPath.addPoint(CameraPosition);
 
-        if (data.currentTime == data.TotalTime)
-        {
-            e.getComponent<cro::Callback>().active = false;
+    //auto tx = glm::inverse(glm::lookAt(eyeStart, targetStart, cro::Transform::Y_AXIS));
+    //camEnt.getComponent<cro::Transform>().setLocalTransform(tx);
 
-            //position player sprite
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::PlayerAvatar;
-            cmd.action = [&](cro::Entity e, float)
-            {
-                e.getComponent<cro::Callback>().active = true;
-            };
-            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    //camEnt.addComponent<cro::Callback>().setUserData<TransitionPath>(path);
+    //camEnt.getComponent<cro::Callback>().function =
+    //    [&](cro::Entity e, float dt)
+    //{
+    //    auto& data = e.getComponent<cro::Callback>().getUserData<TransitionPath>();
+    //    float oldTime = data.currentTime;
+    //    data.currentTime = std::min(data.TotalTime, data.currentTime + dt);
 
-            //show menu
-            cmd.targetFlags = CommandID::UI::DrivingBoard;
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    //    if (oldTime < data.TotalTime / 2.f
+    //        && data.currentTime > data.TotalTime / 2.f)
+    //    {
+    //        //play the music
+    //        e.getComponent<cro::AudioEmitter>().play();
+    //    }
 
-            //background fade
-            m_summaryScreen.fadeEnt.getComponent<cro::Callback>().setUserData<float>(BackgroundAlpha);
-            m_summaryScreen.fadeEnt.getComponent<cro::Callback>().active = true;
-            m_summaryScreen.fadeEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, FadeDepth });
-        }
-    };
+    //    float progress = cro::Util::Easing::easeInOutQuad(data.currentTime / data.TotalTime);
+
+    //    auto target = data.targetPath.getInterpolatedPoint(progress);
+    //    auto eye = data.cameraPath.getInterpolatedPoint(progress);
+    //    auto tx = glm::inverse(glm::lookAt(eye, target, cro::Transform::Y_AXIS));
+
+    //    e.getComponent<cro::Transform>().setLocalTransform(tx);
+
+    //    if (data.currentTime == data.TotalTime)
+    //    {
+    //        e.getComponent<cro::Callback>().active = false;
+
+    //        //position player sprite
+    //        cro::Command cmd;
+    //        cmd.targetFlags = CommandID::PlayerAvatar;
+    //        cmd.action = [&](cro::Entity e, float)
+    //        {
+    //            e.getComponent<cro::Callback>().active = true;
+    //        };
+    //        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //        //show menu
+    //        cmd.targetFlags = CommandID::UI::DrivingBoard;
+    //        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //        //background fade
+    //        m_summaryScreen.fadeEnt.getComponent<cro::Callback>().setUserData<float>(BackgroundAlpha);
+    //        m_summaryScreen.fadeEnt.getComponent<cro::Callback>().active = true;
+    //        m_summaryScreen.fadeEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, FadeDepth });
+    //    }
+    //};
 
 
 
@@ -1214,8 +1251,10 @@ void PuttingState::createScene()
 
 
     //we only want these to happen if the scene creation was successful
-    createUI();
-    startTransition();
+    
+
+    //createUI(); //REMEMBER TO REENABLE SCENE UPDATES
+    //startTransition();
 }
 
 void PuttingState::createFoliage(cro::Entity terrainEnt)

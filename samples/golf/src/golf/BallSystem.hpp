@@ -96,6 +96,8 @@ public:
 
     bool setHoleData(const struct HoleData&, bool rebuildMesh = true);
 
+    void setGimmeRadius(std::uint8_t);
+
     struct TerrainResult final
     {
         std::uint8_t terrain = TerrainID::Scrub;
@@ -130,6 +132,7 @@ private:
     float m_currentWindInterpTime;
 
     const HoleData* m_holeData;
+    std::uint8_t m_gimmeRadius;
 
     void doCollision(cro::Entity);
     void updateWind();

@@ -113,7 +113,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
-    //m_stateStack.registerState<PuttingState>(StateID::PuttingRange, m_sharedData);
+    m_stateStack.registerState<PuttingState>(StateID::PuttingRange, m_sharedData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);

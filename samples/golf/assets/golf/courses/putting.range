@@ -1,13 +1,13 @@
 hole putting
 {
-    map="assets/golf/courses/course_0/putting.png"
-    model="assets/golf/models/course_0/putting.cmt"
+    map="assets/golf/courses/course_06/01.png"
+    model="assets/golf/models/course_06/01.cmt"
     par = 4
 
-    pin = 66.368668,0.499999,-27.937988
-
-    target = 53.480949,0.499999,-30.116741
-
-    tee = 38.298248,0.500001,-30.239090
-
+    hole 01
+    {
+        pin = 186.862473,0.833630,-102.132599
+        target = 187.401291,0.833630,-97.860649
+        tee = 186.204346,0.833630,-93.366760
+    }
 }
