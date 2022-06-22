@@ -2042,17 +2042,23 @@ void GolfState::loadAssets()
                                     auto audioEnt = m_gameScene.createEntity();
                                     audioEnt.addComponent<cro::Transform>();
                                     audioEnt.addComponent<cro::AudioEmitter>() = propAudio.getEmitter(emitterName);
+                                    auto baseVolume = audioEnt.getComponent<cro::AudioEmitter>().getVolume();
                                     audioEnt.addComponent<cro::CommandTarget>().ID = CommandID::AudioEmitter;
                                     audioEnt.addComponent<cro::Callback>().active = true;
                                     audioEnt.getComponent<cro::Callback>().setUserData<glm::vec3>(0.f);
                                     audioEnt.getComponent<cro::Callback>().function =
-                                        [&, ent](cro::Entity e, float)
+                                        [&, ent, baseVolume](cro::Entity e, float)
                                     {
                                         auto& prevPos = e.getComponent<cro::Callback>().getUserData<glm::vec3>();
                                         auto pos = ent.getComponent<cro::Transform>().getPosition();
                                         auto velocity = (pos - prevPos) * 60.f; //frame time
                                         prevPos = pos;
                                         e.getComponent<cro::AudioEmitter>().setVelocity(velocity);
+
+                                        const float speed = ent.getComponent<PropFollower>().speed + 0.001f; //prevent div0
+                                        float pitch = std::min(1.f, glm::length2(velocity) / (speed * speed));
+                                        e.getComponent<cro::AudioEmitter>().setPitch(pitch);
+                                        e.getComponent<cro::AudioEmitter>().setVolume((baseVolume * 0.1f) + (pitch * (baseVolume * 0.9f)));
                                     };
                                     ent.getComponent<cro::Transform>().addChild(audioEnt.getComponent<cro::Transform>());
                                     holeData.audioEntities.push_back(audioEnt);
@@ -5078,6 +5084,12 @@ void GolfState::setActiveCamera(std::int32_t camID)
             //ie if we're on the green cam don't switch
             //back to sky
             return;
+        }
+
+        //reset existing zoom
+        if (m_cameras[m_currentCamera].hasComponent<CameraFollower>())
+        {
+            m_cameras[m_currentCamera].getComponent<CameraFollower>().state = CameraFollower::Reset;
         }
 
         //set the water plane ent on the active camera

@@ -139,6 +139,18 @@ void CameraFollowSystem::process(float dt)
     for (auto entity : entities)
     {
         auto& follower = entity.getComponent<CameraFollower>();
+
+        if (follower.state == CameraFollower::Reset)
+        {
+            follower.zoom.fov = 1.f;
+            follower.zoom.progress = 0.f;
+            follower.zoom.done = false;
+            entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
+
+            follower.state = CameraFollower::Track;
+            continue;
+        }
+
         if (!follower.target.isValid())
         {
             continue;
@@ -235,14 +247,15 @@ void CameraFollowSystem::process(float dt)
                 tx.setLocalTransform(glm::inverse(lookAt));
             }
             break;
-        case CameraFollower::Reset:
+            //we always do this, above.
+        /*case CameraFollower::Reset:
             follower.zoom.fov = 1.f;
             follower.zoom.progress = 0.f;
             follower.zoom.done = false;
             entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
 
             follower.state = CameraFollower::Track;
-            break;
+            break;*/
         }
     }
 
