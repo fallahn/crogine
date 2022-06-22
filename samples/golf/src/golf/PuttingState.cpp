@@ -92,6 +92,10 @@ namespace
 #include "TransitionShader.inl"
 #include "MinimapShader.inl"
 #include "WireframeShader.inl"
+#include "BillboardShader.inl"
+#include "CloudShader.inl"
+#include "BeaconShader.inl"
+#include "WaterShader.inl"
 
 #ifdef CRO_DEBUG_
     std::int32_t debugFlags = 0;
@@ -157,6 +161,9 @@ PuttingState::PuttingState(cro::StateStack& stack, cro::State::Context context, 
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus()),
     m_viewScale         (1.f),
+    m_scaleBuffer       ("PixelScale", sizeof(float)),
+    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_windBuffer        ("WindValues", sizeof(WindData)),
     m_mouseVisible      (true),
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
@@ -245,6 +252,30 @@ bool PuttingState::handleEvent(const cro::Event& evt)
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
         }
         break;
+        case SDLK_KP_DIVIDE:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Ball;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                auto& ball = e.getComponent<Ball>();
+
+                if (ball.state == Ball::State::Idle)
+                {
+                    auto impulse = glm::normalize(m_holeData[0].target - m_holeData[0].tee);
+                    auto temp = -impulse.z;
+                    impulse.z = impulse.x;
+                    impulse.x = temp;
+
+                    ball.velocity = impulse;
+                    ball.state = Ball::State::Flight;
+                    ball.delay = 0.f;
+                    ball.startPoint = e.getComponent<cro::Transform>().getPosition();
+                }
+            };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+            break;
 #endif
         }
     }
@@ -415,11 +446,26 @@ void PuttingState::handleMessage(const cro::Message& msg)
 
 bool PuttingState::simulate(float dt)
 {
-    updateWindDisplay(m_gameScene.getSystem<BallSystem>()->getWindDirection());
+    auto windDir = m_gameScene.getSystem<BallSystem>()->getWindDirection();
+    updateWindDisplay(windDir);
+
+    static float elapsed = 0.f;
+    elapsed += dt;
+
+    m_windUpdate.currentWindSpeed += (windDir.y - m_windUpdate.currentWindSpeed) * dt;
+    m_windUpdate.currentWindVector += (windDir - m_windUpdate.currentWindVector) * dt;
+
+    WindData data;
+    data.direction[0] = m_windUpdate.currentWindVector.x;
+    data.direction[1] = m_windUpdate.currentWindSpeed;
+    data.direction[2] = m_windUpdate.currentWindVector.z;
+    data.elapsedTime = elapsed;
+    m_windBuffer.setData(&data);
+
 
     m_inputParser.update(dt);
     m_gameScene.simulate(dt);
-    //m_uiScene.simulate(dt);
+    m_uiScene.simulate(dt);
 
     //auto hide the mouse if not paused
     if (m_mouseVisible
@@ -438,6 +484,10 @@ bool PuttingState::simulate(float dt)
 
 void PuttingState::render()
 {
+    m_scaleBuffer.bind(0);
+    m_resolutionBuffer.bind(1);
+    m_windBuffer.bind(2);
+
     m_backgroundTexture.clear();
     m_gameScene.render();
 #ifdef CRO_DEBUG_
@@ -515,35 +565,53 @@ void PuttingState::loadAssets()
 {
     m_gameScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
 
+    std::string wobble;
+    if (m_sharedData.vertexSnap)
+    {
+        wobble = "#define WOBBLE\n";
+    }
+
     //models
-    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
-    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n");
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define TEXTURED\n#define SKINNED\n#define NOCHEX\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
 
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
 
     //materials
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
-    
+
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
-   
+
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
-    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
+    m_resolutionBuffer.addShader(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Course);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::Billboard);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
+
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
     m_materialIDs[MaterialID::Wireframe] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
@@ -552,6 +620,12 @@ void PuttingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::WireframeCulled, WireframeVertex, WireframeFragment, "#define CULLED\n");
     m_materialIDs[MaterialID::WireframeCulled] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulled));
     m_resources.materials.get(m_materialIDs[MaterialID::WireframeCulled]).blendMode = cro::Material::BlendMode::Alpha;
+
+    m_resources.shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define TEXTURED\n");
+    m_materialIDs[MaterialID::Beacon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Beacon));
+
+    m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag);
+    m_materialIDs[MaterialID::Horizon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Horizon));
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
@@ -1084,11 +1158,10 @@ void PuttingState::createScene()
         glCheck(glLineWidth(invScale));
 
         //update checker uniforms
-        for (auto [shader, uniform] : m_scaleUniforms)
-        {
-            glCheck(glUseProgram(shader));
-            glCheck(glUniform1f(uniform, invScale));
-        }
+        m_scaleBuffer.setData(&invScale);
+
+        glm::vec2 scaledRes = texSize / invScale;
+        m_resolutionBuffer.setData(&scaledRes);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
@@ -1102,8 +1175,9 @@ void PuttingState::createScene()
     
     m_cameras[CameraID::Player] = camEnt;
 
-    auto tx = glm::lookAt(m_holeData[0].tee + glm::vec3(0.f, 1.f, 0.f), m_holeData[0].target, cro::Transform::Y_AXIS);
-    camEnt.getComponent<cro::Transform>().setLocalTransform(tx);
+    auto tx = glm::lookAt(m_holeData[0].tee + glm::vec3(0.f, 0.5f, 0.f), m_holeData[0].target, cro::Transform::Y_AXIS);
+    camEnt.getComponent<cro::Transform>().setLocalTransform(glm::inverse(tx));
+    camEnt.getComponent<cro::Transform>().move(glm::normalize(m_holeData[0].tee - m_holeData[0].target));
 
     //static constexpr auto halfSize = RangeSize / 2.f;
 
@@ -1253,7 +1327,7 @@ void PuttingState::createScene()
     //we only want these to happen if the scene creation was successful
     
 
-    //createUI(); //REMEMBER TO REENABLE SCENE UPDATES
+    createUI();
     //startTransition();
 }
 
@@ -1710,7 +1784,7 @@ void PuttingState::createBall()
     }
 
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
+    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.003f, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(ballMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
@@ -1796,7 +1870,7 @@ void PuttingState::createBall()
 
     //point shadow seen from distance
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
+    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(shadowMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     entity.addComponent<cro::Callback>().active = true;

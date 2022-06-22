@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/UniformBuffer.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
 #include <unordered_map>
@@ -69,7 +70,15 @@ private:
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_backgroundTexture;
 
-    std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
+    cro::UniformBuffer m_scaleBuffer;
+    cro::UniformBuffer m_resolutionBuffer;
+    cro::UniformBuffer m_windBuffer;
+
+    struct WindUpdate final
+    {
+        float currentWindSpeed = 0.f;
+        glm::vec3 currentWindVector = glm::vec3(0.f);
+    }m_windUpdate;
 
     bool m_mouseVisible;
     cro::Clock m_mouseClock;
@@ -85,6 +94,9 @@ private:
             Hair,
             Wireframe,
             WireframeCulled,
+            Billboard,
+            Beacon,
+            Horizon,
 
             Count
         };
