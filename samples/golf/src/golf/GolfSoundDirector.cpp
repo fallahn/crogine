@@ -52,7 +52,9 @@ namespace
 
 GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
     : m_currentClient   (0),
-    m_currentPlayer     (0)
+    m_currentPlayer     (0),
+    m_honourID          (0),
+    m_newHole           (false)
 {
     //this must match with AudioID enum
     static const std::array<std::string, AudioID::Count> FilePaths =
@@ -111,6 +113,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/terrain/water02.wav",
         "assets/golf/sound/terrain/water03.wav",
 
+        "assets/golf/sound/holes/honour.wav",
         "assets/golf/sound/kudos/swing01.wav",
         "assets/golf/sound/kudos/swing02.wav",
         "assets/golf/sound/kudos/swing03.wav",
@@ -124,6 +127,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
 
         "assets/golf/sound/kudos/putt02.wav",
         "assets/golf/sound/kudos/putt01.wav",
+        "assets/golf/sound/holes/gimme.wav",
 
         "assets/golf/sound/ambience/burst.wav",
         "assets/golf/sound/holes/airmail.wav",
@@ -175,6 +179,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case GolfEvent::Gimme:
+            playSound(AudioID::Gimme, data.position).getComponent<cro::AudioEmitter>();
+            break;
         case GolfEvent::BirdHit:
             playSound(AudioID::Birds, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             break;
@@ -257,7 +264,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             switch (data.score)
             {
             default: 
-                //TODO this is probably way over par so play some sad sound
+                playSoundDelayed(AudioID::NearMiss, data.position, 0.5f, 0.4f, MixerChannel::Effects);
                 playSoundDelayed(AudioID::ScoreHole, glm::vec3(0.f), VoiceDelay, 1.f, MixerChannel::Voice);
                 break; 
             case ScoreID::HIO:
@@ -402,6 +409,15 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         }
     }
         break;
+    case MessageID::SceneMessage:
+    {
+        const auto& data = msg.getData<SceneEvent>();
+        if (data.type == SceneEvent::TransitionComplete)
+        {
+            m_newHole = true;
+        }
+    }
+        break;
     }
 }
 
@@ -421,6 +437,17 @@ void GolfSoundDirector::setActivePlayer(std::size_t client, std::size_t player)
 {
     m_currentClient = client;
     m_currentPlayer = player;
+
+    if (m_newHole)
+    {
+        std::int32_t honour = (client << 8) | player;
+        if (honour != m_honourID)
+        {
+            playSoundDelayed(AudioID::Honour, glm::vec3(0.f), 1.f, 1.f, MixerChannel::Voice);
+        }
+        m_honourID = honour;
+    }
+    m_newHole = false;
 }
 
 //private

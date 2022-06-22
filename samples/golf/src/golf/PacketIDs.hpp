@@ -88,6 +88,7 @@ namespace PacketID
         ActorSpawn, //< ActorInfo
         WindDirection, //< compressed vec3
         BallLanded, //< BallUpdate struct
+        Gimme, //< uint16 client << 8 | player turn was ended on a gimme
         TableInfo, //< TableInfo struct
         TargetID, //< uint16 billiards player OR'd ball ID to update the UI
 

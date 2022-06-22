@@ -206,6 +206,22 @@ static inline glm::quat rotationFromNormal(glm::vec3 normal)
     return glm::quat_cast(rotation);
 }
 
+static inline glm::mat4 lookFrom(glm::vec3 eye, glm::vec3 target, glm::vec3 up)
+{
+    auto z = glm::normalize(eye - target);
+    auto x = glm::normalize(glm::cross(up, z));
+    auto y = glm::cross(z, x);
+
+    auto rotation = glm::mat4(
+        x.x, y.x, z.x, 0.f,
+        x.y, y.y, z.y, 0.f,
+        x.z, y.z, z.z, 0.f,
+        0.f, 0.f, 0.f, 1.f
+    );
+
+    return rotation * glm::translate(glm::mat4(1.f), eye);
+}
+
 static inline glm::vec2 calcVPSize()
 {
     glm::vec2 size(GolfGame::getActiveTarget()->getSize());

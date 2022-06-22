@@ -71,7 +71,8 @@ struct GolfEvent final
         HoleWon,
         HoleDrawn,
         DroneHit,
-        BirdHit
+        BirdHit,
+        Gimme
     }type = HitBall;
 
     glm::vec3 position = glm::vec3(0.f);

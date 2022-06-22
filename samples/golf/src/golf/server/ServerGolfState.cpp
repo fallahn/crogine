@@ -129,12 +129,21 @@ void GolfState::handleMessage(const cro::Message& msg)
         if (data.type == GolfBallEvent::TurnEnded)
         {
             //check if we reached max strokes / inside the gimme
+            auto gimme = (glm::length(data.position - m_holeData[m_currentHole].pin) < GimmeRadii[m_sharedData.gimmeRadius]);
+
             if (m_playerInfo[0].holeScore[m_currentHole] >= MaxStrokes
-                || (glm::length(data.position - m_holeData[m_currentHole].pin) < GimmeRadii[m_sharedData.gimmeRadius]))
+                || gimme)
             {
                 //set the player as having holed the ball
                 m_playerInfo[0].position = m_holeData[m_currentHole].pin;
                 m_playerInfo[0].distanceToHole = 0.f;
+
+                if (gimme)
+                {
+                    m_playerInfo[0].holeScore[m_currentHole]++;
+                    std::uint16_t inf = (m_playerInfo[0].client << 8) | m_playerInfo[0].player;
+                    m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::Gimme, inf, net::NetFlag::Reliable);
+                }
             }
             else
             {

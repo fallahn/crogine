@@ -114,6 +114,7 @@ private:
             TerrainWater02,
             TerrainWater03,
 
+            Honour,
             NiceSwing01,
             NiceSwing02,
             NiceSwing03,
@@ -127,6 +128,7 @@ private:
 
             NicePutt01,
             NicePutt02,
+            Gimme,
 
             Burst,
             Airmail,
@@ -141,6 +143,8 @@ private:
     std::vector<cro::AudioScape> m_playerVoices;
     std::size_t m_currentClient;
     std::size_t m_currentPlayer;
+    std::size_t m_honourID;
+    bool m_newHole;
 
     cro::Entity playSound(std::int32_t, glm::vec3, float = 1.f);
     void playSoundDelayed(std::int32_t, glm::vec3, float, float = 1.f, std::uint8_t = 1/*MixerChannel::Effects*/);

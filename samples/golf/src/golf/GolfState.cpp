@@ -3483,6 +3483,18 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::AchievementGet:
             notifyAchievement(evt.packet.as<std::array<std::uint8_t, 2u>>());
             break;
+        case PacketID::Gimme:
+            {
+                auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                msg->type = GolfEvent::Gimme;
+
+                auto data = evt.packet.as<std::uint16_t>();
+                auto client = (data >> 8);
+                auto player = (data & 0x0f);
+
+                showNotification(m_sharedData.connectionData[client].playerData[player].name + " took a Gimme");
+            }
+            break;
         case PacketID::BallLanded:
         {
             auto update = evt.packet.as<BallUpdate>();

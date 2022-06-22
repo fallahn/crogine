@@ -162,8 +162,10 @@ void CameraFollowSystem::process(float dt)
 
             snapTarget(follower, target);
 
+            //auto lookAt = lookFrom(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
             auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
             tx.setLocalTransform(glm::inverse(lookAt));
+            
 
             //check the distance to the ball, and store it if closer than previous dist
             //and if we fall within the camera's radius
