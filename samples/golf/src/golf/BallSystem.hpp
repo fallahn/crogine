@@ -152,9 +152,6 @@ private:
     std::vector<float> m_vertexData;
     std::vector<std::vector<std::uint32_t>> m_indexData;
 
-    std::vector<std::unique_ptr<btPairCachingGhostObject>> m_ballObjects;
-    std::unique_ptr<btSphereShape> m_ballShape;
-
 #ifdef CRO_DEBUG_
     std::unique_ptr<BulletDebug> m_debugDraw;
 #endif
@@ -162,7 +159,4 @@ private:
     void initCollisionWorld(bool);
     void clearCollisionObjects();
     bool updateCollisionMesh(const std::string&);
-
-    void onEntityAdded(cro::Entity) override;
-    void onEntityRemoved(cro::Entity) override;
 };
