@@ -277,7 +277,7 @@ void NewsState::buildScene()
     menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, -26.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -8.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("Click title to see more (opens in your default browser)");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -335,11 +335,11 @@ void NewsState::buildScene()
         if (m_feed.fetchComplete())
         {
             const auto& items = m_feed.getItems();
-            glm::vec3 position(0.f, -44.f, 0.1f);
+            glm::vec3 position(0.f, -32.f, 0.1f);
 
             if (!items.empty())
             {
-                auto ent = createItem({ /*-17*/0.f, 100.f }, items[0].title, menuEntity);
+                auto ent = createItem({ /*-17*/0.f, 116.f }, items[0].title, menuEntity);
                 //ent.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
                 auto url = items[0].url;
                 ent.getComponent<cro::UIInput>().setGroup(MenuID::Main);
@@ -353,7 +353,7 @@ void NewsState::buildScene()
                         });
 
                 ent = m_scene.createEntity();
-                ent.addComponent<cro::Transform>().setPosition({ -170.f, 70.f, 0.1f });
+                ent.addComponent<cro::Transform>().setPosition({ -170.f, 100.f, 0.1f });
                 ent.addComponent<cro::Drawable2D>();
                 ent.addComponent<cro::Text>(smallFont).setString(items[0].date);
                 ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -372,7 +372,7 @@ void NewsState::buildScene()
 
 
                 ent = m_scene.createEntity();
-                ent.addComponent<cro::Transform>().setPosition({ -170.f, 50.f, 0.1f });
+                ent.addComponent<cro::Transform>().setPosition({ -170.f, 80.f, 0.1f });
                 ent.addComponent<cro::Drawable2D>();
                 ent.addComponent<cro::Text>(smallFont).setString(description);
                 ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
