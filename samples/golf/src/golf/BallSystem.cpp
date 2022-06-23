@@ -49,6 +49,11 @@ source distribution.
 
 namespace
 {
+    glm::vec3 btToGlm(btVector3 v)
+    {
+        return { v.getX(), v.getY(), v.getZ() };
+    }
+
     static constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
 
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
@@ -64,6 +69,15 @@ namespace
     constexpr std::array GimmeRadii =
     {
         0.f, 0.65f * 0.65f, 1.f
+    };
+
+    struct CollisionGroup final
+    {
+        enum
+        {
+            Ball = 1,
+            Terrain = 2
+        };
     };
 }
 
@@ -119,32 +133,72 @@ void BallSystem::process(float dt)
     //update collision world with current ball transforms
     //then do a collision pass to get overlaps
     auto& entities = getEntities();
-    for (auto& entity : entities)
-    {
-        const auto& tx = entity.getComponent<cro::Transform>();
-        auto rot = tx.getRotation();
-        auto pos = tx.getWorldPosition();
-        btTransform btXf(btQuaternion(rot.x, rot.y, rot.z, rot.w), btVector3(pos.x, pos.y + Ball::Radius, pos.z));
-        
-        entity.getComponent<Ball>().collisionObject->setWorldTransform(btXf);
-    }
+    //for (auto& entity : entities)
+    //{
+    //    const auto& tx = entity.getComponent<cro::Transform>();
+    //    auto rot = tx.getRotation();
+    //    auto pos = tx.getWorldPosition();
+    //    btTransform btXf(btQuaternion(rot.x, rot.y, rot.z, rot.w), btVector3(pos.x, pos.y + Ball::Radius, pos.z));
+    //    
+    //    entity.getComponent<Ball>().collisionObject->setWorldTransform(btXf);
+    //}
 
-    //perform collisions - TODO this breaks raycasting :(
-    // //probably because the ray is intersecting the ball - try filtering these.
+    ////perform collisions
     //m_collisionWorld->performDiscreteCollisionDetection();
 
     ////TODO we ought to be able to optimise this a bit knowing only
     ////one ball is active at a time and that the collision test is
     ////only used when putting...
-    auto manifoldCount = m_collisionDispatcher->getNumManifolds();
-    for (auto i = 0; i < manifoldCount; ++i)
-    {
-        auto manifold = m_collisionDispatcher->getManifoldByIndexInternal(i);
-        auto body0 = manifold->getBody0();
-        auto body1 = manifold->getBody1();
+    //auto manifoldCount = m_collisionDispatcher->getNumManifolds();
+    //for (auto i = 0; i < manifoldCount; ++i)
+    //{
+    //    auto manifold = m_collisionDispatcher->getManifoldByIndexInternal(i);
+    //    auto body0 = manifold->getBody0();
+    //    auto body1 = manifold->getBody1();
 
-        btManifoldPoint norm;
-    }
+    //    cro::Entity ballEnt;
+    //    bool pointA = false;
+    //    if (body0->getUserPointer() == nullptr)
+    //    {
+    //        ballEnt = getScene()->getEntity(body1->getUserIndex());
+    //    }
+    //    else
+    //    {
+    //        pointA = true;
+    //        ballEnt = getScene()->getEntity(body0->getUserIndex());
+    //    }                                                            
+
+    //    manifold->refreshContactPoints(body0->getWorldTransform(), body1->getWorldTransform());
+
+    //    auto& tx = ballEnt.getComponent<cro::Transform>();
+    //    auto& ball = ballEnt.getComponent<Ball>();
+
+    //    if (ball.state == Ball::State::Putt)
+    //    {
+    //        auto count = manifold->getNumContacts();
+    //        for (auto j = 0; j < count; ++j)
+    //        {
+    //            auto point = manifold->getContactPoint(j);
+    //            glm::vec3 normal;
+    //            if (pointA)
+    //            {
+    //                normal = btToGlm(-point.m_normalWorldOnB);
+    //            }
+    //            else
+    //            {
+    //                normal = btToGlm(point.m_normalWorldOnB);
+    //            }
+
+    //            //try to limit this to sides
+    //            //if (glm::dot(normal, cro::Transform::Y_AXIS) < 0.2f)
+    //            {
+    //                tx.move(normal * point.getDistance());
+    //                ball.velocity = glm::reflect(ball.velocity, normal);
+    //                ball.velocity *= 0.995f; //TODO this should be based on what we hit
+    //            }
+    //        }
+    //    }
+    //}
 
 
 
@@ -527,7 +581,7 @@ BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
     TerrainResult retVal;
 
     //casts a vertical ray 10m above/below the ball
-    static const btVector3 RayLength = { 0.f,  -20.f, 0.f };
+    static const btVector3 RayLength = { 0.f, -20.f, 0.f };
     btVector3 rayStart = { pos.x, pos.y, pos.z };
     rayStart -= (RayLength / 2.f);
     auto rayEnd = rayStart + RayLength;
@@ -818,7 +872,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
         m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
         m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
         m_groundObjects.back()->setUserIndex(static_cast<std::int32_t>(terrain)); // set the terrain type
-        m_collisionWorld->addCollisionObject(m_groundObjects.back().get());
+        m_collisionWorld->addCollisionObject(m_groundObjects.back().get(), CollisionGroup::Terrain, CollisionGroup::Ball);
     }
 
     return true;
@@ -828,7 +882,9 @@ void BallSystem::onEntityAdded(cro::Entity e)
 {
     m_ballObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_ballShape.get());
     e.getComponent<Ball>().collisionObject = m_ballObjects.back().get();
-    m_collisionWorld->addCollisionObject(m_ballObjects.back().get());
+    m_ballObjects.back().get()->setUserPointer(&e.getComponent<Ball>());
+    m_ballObjects.back().get()->setUserIndex(e.getIndex());
+    m_collisionWorld->addCollisionObject(m_ballObjects.back().get(), CollisionGroup::Ball, CollisionGroup::Terrain);
 }
 
 void BallSystem::onEntityRemoved(cro::Entity e)
@@ -855,8 +911,15 @@ btScalar RayResultCallback::addSingleResult(btCollisionWorld::LocalRayResult& ra
 
     m_closestHitFraction = rayResult.m_hitFraction;
     m_collisionObject = rayResult.m_collisionObject;
-    m_hitNormalWorld = getFaceNormal(rayResult);
-    m_hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
+    if (rayResult.m_collisionObject->getCollisionFlags() == CollisionGroup::Ball)
+    {
+        m_hitNormalWorld = getFaceNormal(rayResult);
+        m_hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
+    }
+    else
+    {
+        rayResult.m_collisionObject = nullptr; //remove the ball objects then hasHit() returns false
+    }
     return rayResult.m_hitFraction;
 }
 

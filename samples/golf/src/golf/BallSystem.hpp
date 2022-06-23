@@ -74,6 +74,7 @@ struct Ball final
     float lastStrokeDistance = 0.f;
     bool hadAir = false; //toggled when passing over hole
 
+    //used for wall collision when putting
     btPairCachingGhostObject* collisionObject = nullptr;
 };
 

@@ -263,12 +263,12 @@ bool PuttingState::handleEvent(const cro::Event& evt)
                 if (ball.state == Ball::State::Idle)
                 {
                     auto impulse = glm::normalize(m_holeData[0].target - m_holeData[0].tee);
-                    auto temp = -impulse.z;
-                    impulse.z = impulse.x;
-                    impulse.x = temp;
+                    auto temp = impulse.z;
+                    impulse.z = -impulse.x;
+                    impulse.x = temp + 0.1f;
 
-                    ball.velocity = impulse;
-                    ball.state = Ball::State::Flight;
+                    ball.velocity = impulse * 2.f;
+                    ball.state = Ball::State::Putt;
                     ball.delay = 0.f;
                     ball.startPoint = e.getComponent<cro::Transform>().getPosition();
                 }
@@ -2200,9 +2200,9 @@ void PuttingState::setHole(std::int32_t index)
 
     //reset ball position
     cmd.targetFlags = CommandID::Ball;
-    cmd.action = [](cro::Entity e, float)
+    cmd.action = [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Transform>().setPosition(PlayerPosition);
+        e.getComponent<cro::Transform>().setPosition(m_holeData[0].tee);
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
