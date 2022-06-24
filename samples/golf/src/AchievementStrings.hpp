@@ -76,6 +76,8 @@ namespace AchievementID
         Soaring,
 
         HoleInOneMillion,
+        GimmeFive,
+        GimmeTen,
 
         Count
     };
@@ -109,7 +111,9 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "practice_perfect",
     "all_of_a_twitter",
     "soaring",
-    "hole_in_one_million"
+    "hole_in_one_million",
+    "gimme_five",
+    "gimme_ten"
 };
 
 //appears on the notification
@@ -140,7 +144,9 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Practice Makes Perfect",
     "All of a Twitter",
     "Soaring",
-    "Hole In One Million"
+    "Hole In One Million",
+    "Gimme 5!",
+    "Gimme 10!"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -172,6 +178,8 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Get 18 Birdies", false),
     std::make_pair("Get an Eagle", false),
     std::make_pair("Hit the camera drone with a ball", false),
+    std::make_pair("Take five gimmies under the leather", false),
+    std::make_pair("Take ten gimmies under the putter", false),
 };
 
 //assuming tropies load correctly they are
@@ -218,7 +226,9 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldFigure,
     TrophyID::SilverFigure,
     TrophyID::GoldFigure,
-    TrophyID::Platinum
+    TrophyID::Platinum,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeFigure
 };
 
 namespace StatID
@@ -242,6 +252,9 @@ namespace StatID
         Birdies,
         Eagles,
         HIOs,
+
+        LeatherGimmies,
+        PutterGimmies,
 
         Count
     };
@@ -267,7 +280,10 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "time_on_the_range"
     "birdies",
     "eagles",
-    "hios"
+    "hios",
+
+    "leather_gimmies",
+    "putter_gimmies"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -285,7 +301,9 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Time spent at the Driving Range",
     "Birdies scored",
     "Eagles scored",
-    "Holes in one"
+    "Holes in one",
+    "Gimmies taken under the leather",
+    "Gimmies take under the putter"
 };
 
 struct StatType final
@@ -311,7 +329,9 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Time,
     StatType::Integer,
     StatType::Integer,
-    StatType::Integer
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
 };
 
 struct StatTrigger final

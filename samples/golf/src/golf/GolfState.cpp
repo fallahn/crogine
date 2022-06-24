@@ -3504,6 +3504,18 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 //in to assert this is correct afterwards
                 m_sharedData.connectionData[client].playerData[player].holeScores[m_currentHole]++;
                 showMessageBoard(MessageBoardID::Gimme);
+
+                if (client == m_sharedData.localConnectionData.connectionID)
+                {
+                    if (m_sharedData.gimmeRadius == 1)
+                    {
+                        Achievements::incrementStat(StatStrings[StatID::LeatherGimmies]);
+                    }
+                    else
+                    {
+                        Achievements::incrementStat(StatStrings[StatID::PutterGimmies]);
+                    }
+                }
             }
             break;
         case PacketID::BallLanded:

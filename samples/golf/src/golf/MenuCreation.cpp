@@ -1306,10 +1306,13 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
 
 
     //and these are used when creating the avatar window for CPU toggle
-    m_cpuOptionCallbacks[0] = uiSystem.addCallback([&](cro::Entity e) 
+    m_cpuOptionCallbacks[0] = uiSystem.addCallback([&, cursorEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
+
+            //hide the cursor
+            cursorEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
     m_cpuOptionCallbacks[1] = uiSystem.addCallback([&](cro::Entity e)
         {

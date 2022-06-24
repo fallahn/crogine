@@ -95,6 +95,14 @@ void DefaultAchievements::init()
     trigger = &StatTriggers[StatID::Birdies].emplace_back();
     trigger->achID = AchievementID::AllOfATwitter;
     trigger->threshold = 18;
+
+    trigger = &StatTriggers[StatID::LeatherGimmies].emplace_back();
+    trigger->achID = AchievementID::GimmeFive;
+    trigger->threshold = 5;
+
+    trigger = &StatTriggers[StatID::PutterGimmies].emplace_back();
+    trigger->achID = AchievementID::GimmeTen;
+    trigger->threshold = 10;
 }
 
 void DefaultAchievements::update()
