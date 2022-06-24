@@ -178,8 +178,8 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Get 18 Birdies", false),
     std::make_pair("Get an Eagle", false),
     std::make_pair("Hit the camera drone with a ball", false),
-    std::make_pair("Take five gimmies under the leather", false),
-    std::make_pair("Take ten gimmies under the putter", false),
+    std::make_pair("Take five gimmies inside the leather", false),
+    std::make_pair("Take ten gimmies inside the putter", false),
 };
 
 //assuming tropies load correctly they are
@@ -302,8 +302,8 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Birdies scored",
     "Eagles scored",
     "Holes in one",
-    "Gimmies taken under the leather",
-    "Gimmies take under the putter"
+    "Gimmies taken inside the leather",
+    "Gimmies taken inside the putter"
 };
 
 struct StatType final

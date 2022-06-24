@@ -399,6 +399,15 @@ bool GolfGame::initialise()
             {
                 cro::Util::String::parseURL("https://fallahn.itch.io/vga-golf");
             }
+            ImGui::NewLine();
+            ImGui::NewLine();
+            ImGui::NewLine();
+            ImGui::NewLine();
+            ImGui::NewLine();
+            ImGui::NewLine();
+            ImGui::NewLine();
+            ImGui::NewLine();
+            ImGui::Text("In memory of Liesbeth Penning");
         });
 
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
