@@ -66,6 +66,8 @@ namespace
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
     static constexpr float AngularVelocity = 46.5f; //rad/s at 1m/s vel. Used for rolling animation.
 
+    static constexpr float MinVelocitySqr = 0.005f;//0.04f
+
     constexpr std::array GimmeRadii =
     {
         0.f, 0.65f * 0.65f, 1.f
@@ -79,6 +81,25 @@ namespace
             Terrain = 2
         };
     };
+
+    struct SlopeData final
+    {
+        glm::vec3 direction = glm::vec3(0.f);
+        float strength = 0.f;
+    };
+
+    SlopeData getSlope(glm::vec3 normal)
+    {
+        auto slopeStrength = 1.f - glm::dot(normal, cro::Transform::Y_AXIS);
+        //normal is not always perfectly normalised - so hack around this with some leighway
+        if (slopeStrength > 0.001f)
+        {
+            auto tangent = glm::cross(normal, glm::normalize(glm::vec3(normal.x, 0.f, normal.z)));
+            auto slope = glm::normalize(glm::cross(tangent, normal));
+            return { slope, slopeStrength };
+        }
+        return SlopeData();
+    }
 }
 
 const std::array<std::string, 5u> Ball::StateStrings = { "Idle", "Flight", "Putt", "Paused", "Reset" };
@@ -287,19 +308,28 @@ void BallSystem::process(float dt)
                     }
                     ball.hadAir = false;
 
-                    //move by slope from surface normal
-                    auto velLength = glm::length(ball.velocity);
+
+                    /*
                     glm::vec3 slope = glm::vec3(terrainContact.normal.x, 0.f, terrainContact.normal.z) * 0.95f * smoothstep(0.35f, 4.5f, velLength);
-                    ball.velocity += slope;
+                    ball.velocity += slope;*/
+
+                   
 
                     //add wind - adding less wind the more the ball travels in the
                     //wind direction means we don't get blown forever
+                    auto velLength = glm::length(ball.velocity);
                     float windAmount = 1.f - glm::dot(m_windDirection, ball.velocity / velLength);
                     ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
 
-                    //add friction
-                    ball.velocity *= 0.985f;
 
+                    auto [slope, slopeStrength] = getSlope(terrainContact.normal);
+
+                    //add friction
+                    ball.velocity *= 0.985f + (slopeStrength * 0.05f);
+
+                    //move by slope from surface normal
+                    ball.velocity += slope * slopeStrength;
+                    CRO_ASSERT(!std::isnan(ball.velocity.x), "");
                 }
                 
 
@@ -315,7 +345,7 @@ void BallSystem::process(float dt)
 
                 //if we've slowed down or fallen more than the
                 //ball's diameter (radius??) stop the ball
-                if (vel2 < 0.04f
+                if (vel2 < MinVelocitySqr
                     || (terrainContact.penetration > (Ball::Radius * 2.5f)))
                 {
                     ball.velocity = glm::vec3(0.f);
@@ -470,6 +500,19 @@ void BallSystem::process(float dt)
                 updateWind(); //is a bit less random but at least stops the wind
                 //changing direction mid-stroke which is just annoying.
             }
+            else if (ball.terrain == TerrainID::Green)
+            {
+                //add alope and start moving if vel > min vel
+                auto terrainContact = getTerrain(entity.getComponent<cro::Transform>().getPosition());
+                auto [slope, slopeStrength] = getSlope(terrainContact.normal);
+
+                ball.velocity += slope * slopeStrength;
+                if (glm::length2(ball.velocity / 2.f) > MinVelocitySqr)
+                {
+                    ball.delay = 0.f;
+                    ball.state == Ball::State::Putt;
+                }
+            }
         }
             break;
         }
@@ -616,6 +659,10 @@ void BallSystem::doCollision(cro::Entity entity)
                 ball.velocity = glm::normalize(ball.velocity) * len * momentum; //fake physics to simulate momentum
                 ball.state = Ball::State::Putt;
                 ball.delay = 0.f;
+
+                auto [slope, slopeStrength] = getSlope(terrainResult.normal);
+                ball.velocity += slope * slopeStrength;
+
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
 
                 return;
