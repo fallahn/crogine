@@ -100,8 +100,13 @@ void PropFollowSystem::process(float dt)
                 auto axis = (follower.axis[0].position - follower.axis[1].position) / 2.f;
                 auto pos = axis + follower.axis[1].position;
 
-                auto result = m_collisionMesh.getTerrain(pos);
-                pos.y = result.height;
+                //some paths might be aircraft, such as a blimp, so
+                //only snap these below a threshold
+                if (pos.y < 15.f)
+                {
+                    auto result = m_collisionMesh.getTerrain(pos);
+                    pos.y = result.height;
+                }
 
                 entity.getComponent<cro::Transform>().setPosition(pos);
 

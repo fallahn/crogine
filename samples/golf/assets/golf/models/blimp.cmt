@@ -1,0 +1,33 @@
+model blimp
+{
+    mesh = assets/golf/models/blimp.cmb
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        blendmode = none
+        diffuse = "assets/golf/images/blimp.png"
+
+    }
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        subrect = 0.000000,0.000000,0.250000,0.023000
+        blendmode = none
+        diffuse = "assets/golf/images/blimp_sign.png"
+
+    }
+}

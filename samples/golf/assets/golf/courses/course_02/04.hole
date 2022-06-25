@@ -1,39 +1,21 @@
 hole 04
 {
-    map = "assets/golf/courses/course_02/04.png"
-    model = "assets/golf/models/course_02/04.cmt"
+    map="assets/golf/courses/course_02/04.png"
+    model="assets/golf/models/course_02/04.cmt"
     par = 3
 
     pin = 251.100739,1.999464,-142.066132
-    target = 146.78,2.04,-89.707
+
+    target = 146.780762,2.041837,-89.707184
+
     tee = 38.768112,0.864018,-35.364605
-
-    prop
-    {
-        model = "assets/golf/models/pine01.cmt"
-        position = 210.612564,2.398726,-90.189430
-        rotation = 0.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/pine02.cmt"
-        position = 217.147629,2.367812,-100.961174
-        rotation = 18.808399
-    }
-
-    prop
-    {
-        model = "assets/golf/models/view_platform.cmt"
-        position = 212.435242,2.295681,-95.766335
-        rotation = -720.135872
-    }
 
     prop
     {
         model = "assets/golf/models/fence01.cmt"
         position = 199.138290,2.007329,-94.463409
         rotation = -810.921841
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
@@ -41,6 +23,7 @@ hole 04
         model = "assets/golf/models/fence02.cmt"
         position = 200.986740,2.012028,-88.900269
         rotation = -411.143508
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
@@ -48,6 +31,7 @@ hole 04
         model = "assets/golf/models/fence02.cmt"
         position = 200.666870,2.012028,-99.657829
         rotation = -481.521585
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
@@ -55,6 +39,7 @@ hole 04
         model = "assets/golf/models/scoreboard.cmt"
         position = 205.495346,2.055051,-104.004013
         rotation = -149.063190
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
@@ -62,6 +47,7 @@ hole 04
         model = "assets/golf/models/crane_arm.cmt"
         position = 276.790497,2.011916,-168.272949
         rotation = 39.527724
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
@@ -69,11 +55,21 @@ hole 04
         model = "assets/golf/models/crane.cmt"
         position = 276.790497,2.011916,-168.272949
         rotation = -33.711813
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/view_platform.cmt"
+        position = 212.435242,2.295681,-95.766335
+        rotation = -720.135872
+        scale = 1.000000,1.000000,1.000000
     }
 
     crowd
     {
         position = 209.095673,2.295729,-101.494019
         rotation = -150.911473
-    }    
+    }
+
 }

@@ -5,14 +5,17 @@ hole 18
     par = 4
 
     pin = 27.500179,3.159639,-171.964966
+
     target = 50.129066,1.827841,-68.492004
+
     tee = 295.906616,3.195518,-40.131336
 
     prop
     {
         model = "assets/golf/models/menu_pavilion.cmt"
-        position = 76.305649,3.8,-121.080490
+        position = 76.305649,3.800000,-121.080490
         rotation = -56.770893
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
@@ -20,6 +23,7 @@ hole 18
         model = "assets/golf/models/willow01.cmt"
         position = 102.765518,3.494517,-46.430134
         rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
@@ -27,6 +31,7 @@ hole 18
         model = "assets/golf/models/fence01.cmt"
         position = 106.310608,1.837841,-41.626144
         rotation = -682.443001
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
@@ -34,6 +39,7 @@ hole 18
         model = "assets/golf/models/fence01.cmt"
         position = 108.199020,1.837841,-48.922226
         rotation = -618.393414
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
@@ -41,6 +47,7 @@ hole 18
         model = "assets/golf/models/fence02.cmt"
         position = 108.269600,1.837841,-44.937386
         rotation = -639.665926
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
@@ -48,6 +55,7 @@ hole 18
         model = "assets/golf/models/fence01.cmt"
         position = 184.260086,1.837841,-33.015804
         rotation = -894.204826
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
@@ -55,6 +63,7 @@ hole 18
         model = "assets/golf/models/fence01.cmt"
         position = 189.566040,1.837841,-55.105541
         rotation = -694.906404
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
@@ -62,6 +71,7 @@ hole 18
         model = "assets/golf/models/fence02.cmt"
         position = 185.707809,1.837841,-54.106579
         rotation = -716.178916
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop
@@ -69,6 +79,7 @@ hole 18
         model = "assets/golf/models/view_platform.cmt"
         position = 187.369614,2.329676,-30.059322
         rotation = -720.092041
+        scale = 1.000000,1.000000,1.000000
     }
 
     crowd
@@ -82,4 +93,80 @@ hole 18
         position = 15.059895,3.195562,-144.970978
         rotation = 92.347017
     }
+
+    crowd
+    {
+        position = 70.537041,3.195562,-114.913956
+        rotation = 92.347017
+
+        path
+        {
+            point = 53.060276,3.573882,-129.767410
+            point = 58.538971,3.573882,-123.775352
+            point = 61.337666,3.573882,-113.158981
+            point = 65.239891,3.573882,-102.857903
+            point = 71.559372,3.573882,-95.972519
+
+            loop = false
+            delay = 4.0
+            speed = 6.0
+        }
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 52.311401,3.331429,-126.081573
+        rotation = 2189.488015
+        scale = 0.974494,0.974494,0.974494
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 50.822254,3.348701,-129.560669
+        rotation = -1143.193177
+        scale = 1.042043,1.042043,1.042043
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 49.352558,3.348577,-133.110123
+        rotation = 1028.588194
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 48.049244,3.362652,-136.520920
+        rotation = 1789.874757
+        scale = 1.075708,1.075708,1.075708
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 69.388611,3.415526,-91.154434
+        rotation = 106.532669
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 72.502327,3.388343,-87.481018
+        rotation = -1121.315068
+        scale = 1.012783,1.012783,1.012783
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 67.404510,3.429234,-95.071388
+        rotation = -125.900900
+        scale = 1.019631,1.019631,1.019631
+    }
+
 }

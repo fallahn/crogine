@@ -182,11 +182,11 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         case GolfEvent::Gimme:
             //if (cro::Util::Random::value(0, 2) != 0)
             {
-                playSoundDelayed(AudioID::Gimme, data.position, 0.6f, 1.f, MixerChannel::Voice);
+                playSoundDelayed(AudioID::Gimme, data.position, 1.6f, 1.f, MixerChannel::Voice);
             }
             break;
         case GolfEvent::BirdHit:
-            playSound(AudioID::Birds, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            playSound(AudioID::Birds, data.position, 1.6f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             break;
         case GolfEvent::DroneHit:
             playSound(AudioID::Burst, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
