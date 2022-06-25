@@ -4,12 +4,68 @@ hole 13
     model="assets/golf/models/course_02/13.cmt"
     par = 4
 
+    pin = 76.875969,0.736959,-78.168037
+
+    target = 203.145996,2.010559,-107.512016
+
+    tee = 255.876343,2.543199,-148.894775
+
     prop
     {
-        model = "hole"
-        position = 0.000000,0.000000,-0.000000
-        rotation = 0.000000
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 61.817879,0.595159,-68.859505
+        rotation = 128.625758
         scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 217.113037,2.216703,-129.861328
+        rotation = -663.848320
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 213.907654,2.166080,-126.871887
+        rotation = -683.084942
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 209.539062,2.216703,-124.778259
+        rotation = -709.167032
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/willow01.cmt"
+        position = 209.451599,2.013130,-133.264725
+        rotation = -0.169688
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 59.502823,0.548198,-80.937721
+        rotation = 83.490668
+    }
+
+    crowd
+    {
+        position = 73.354256,0.775940,-62.397701
+        rotation = -203.216465
+    }
+
+    crowd
+    {
+        position = 210.872711,2.468730,-129.167572
+        rotation = 34.153465
     }
 
 }

@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2022, 6, 19),
+    "version": (2022, 6, 25),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -161,25 +161,31 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 
                 if "crowd" in modelName.lower():
                     WriteCrowd(file, worldLocation, worldRotation, ob)
-                elif modelName.lower() == "pin":
+                elif "pin" in modelName.lower():
                     if pinWritten == False:
                         WriteProperty(file, "pin", worldLocation)
                         pinWritten = True
-                elif modelName.lower() == "target":
+                    else:
+                        self.report({'WARNING'}, "Multiple pins selected")
+                elif "target" in modelName.lower():
                     if targetWritten == False:
                         WriteProperty(file, "target", worldLocation)
                         targetWritten = True
-                elif modelName.lower() == "tee":
+                    else:
+                        self.report({'WARNING'}, "Multiple targets selected")
+                elif "tee" in modelName.lower():
                     if teeWritten == False:
                         WriteProperty(file, "tee", worldLocation)
                         teeWritten = True
+                    else:
+                        self.report({'WARNING'}, "Multiple tees selected")
                 else:
                     if ob.type == 'MESH':
                         WriteProp(file, modelName, worldLocation, worldRotation, worldScale, ob)
                     elif ob.type == 'EMPTY':
                         if ob.get('type') is not None:
-                            if ob['type'] == 1:
-                            # is a particle emitter
+                            if ob['type'] == 1 and ob.parent is None:
+                            # is a particle emitter not parented to a prop
                                 if ob.get('path') is not None:
                                     WriteParticles(file, ob['path'], worldLocation)
                                 else:

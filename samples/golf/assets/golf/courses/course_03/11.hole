@@ -6,6 +6,38 @@ hole 11
 
     prop
     {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 151.925690,1.414520,-149.692368
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 144.807007,1.465396,-155.145462
+        rotation = -508.886299
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 112.724808,1.465396,-181.107254
+        rotation = 175.154066
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 119.959251,1.465396,-176.164490
+        rotation = -275.273528
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
         model = "assets/golf/models/view_platform.cmt"
         position = 50.961506,1.500008,-138.129303
         rotation = -114.558440

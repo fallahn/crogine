@@ -4565,7 +4565,12 @@ void GolfState::hitBall()
     auto yaw = m_inputParser.getYaw();
 
     //add hook/slice to yaw
-    yaw += MaxHook * m_inputParser.getHook();
+    auto hook = m_inputParser.getHook();
+    auto s = cro::Util::Maths::sgn(hook);
+    //TODO changing this func changes how accurate a player needs to be
+    //sine, quad, cubic, quart, quint in steepness order
+    hook = cro::Util::Easing::easeOutCubic(hook * s) * s;
+    yaw += MaxHook * hook;
 
     glm::vec3 impulse(1.f, 0.f, 0.f);
     auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
