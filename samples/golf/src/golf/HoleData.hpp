@@ -42,6 +42,7 @@ struct HoleData final
     glm::vec3 pin = glm::vec3(0.f);
     float distanceToPin = 0.f;
     std::int32_t par = 0;
+    bool puttFromTee = false;
     std::string mapPath;
     std::string modelPath;
     cro::Entity modelEntity;

@@ -2244,6 +2244,10 @@ void GolfState::loadAssets()
                 p.y = result.height;
             }
         }
+
+        //while we're here check if this is a putting
+        //course by looking to see if the tee is on the green
+        hole.puttFromTee = m_collisionMesh.getTerrain(hole.tee).terrain == TerrainID::Green;
     }
 
 
@@ -3931,8 +3935,8 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     m_currentMap.loadFromFile(m_holeData[m_currentHole].mapPath);
 
     //make sure we have the correct target position
-    m_cameras[CameraID::Player].getComponent<TargetInfo>().targetHeight = CameraStrokeHeight;
-    m_cameras[CameraID::Player].getComponent<TargetInfo>().targetOffset = CameraStrokeOffset;
+    m_cameras[CameraID::Player].getComponent<TargetInfo>().targetHeight = m_holeData[m_currentHole].puttFromTee ? CameraPuttHeight : CameraStrokeHeight;
+    m_cameras[CameraID::Player].getComponent<TargetInfo>().targetOffset = m_holeData[m_currentHole].puttFromTee ? CameraPuttOffset : CameraStrokeOffset;
     m_cameras[CameraID::Player].getComponent<TargetInfo>().targetLookAt = m_holeData[m_currentHole].target;
 
     //creates an entity which calls setCamPosition() in an
@@ -4780,7 +4784,11 @@ void GolfState::createTransition(const ActivePlayer& playerData)
         else
         {
             //target the pin if the target is too close
-            if (targetDist < /*5625*/2500) //remember this in len2
+            //TODO this is really to do with whether or not we're putting
+            //when this check happens, but it's unlikely to have
+            //a target on the green in other cases.
+            const float MinDist = m_holeData[m_currentHole].puttFromTee ? 9.f : 2500.f;
+            if (targetDist < MinDist) //remember this in len2
             {
                 targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
             }
@@ -4867,7 +4875,13 @@ void GolfState::startFlyBy()
     //static for lambda capture
     static constexpr float MoveSpeed = 50.f; //metres per sec
     static constexpr float MaxHoleDistance = 275.f; //this scales the move speed based on the tee-pin distance
-    const float SpeedMultiplier = (0.25f + ((m_holeData[m_currentHole].distanceToPin / MaxHoleDistance) * 0.75f));
+    float SpeedMultiplier = (0.25f + ((m_holeData[m_currentHole].distanceToPin / MaxHoleDistance) * 0.75f));
+    float heightMultiplier = 1.f;
+    if (m_holeData[m_currentHole].puttFromTee)
+    {
+        SpeedMultiplier /= 3.f;
+        heightMultiplier = 0.35f;
+    }
 
     struct FlyByTarget final
     {
@@ -4889,6 +4903,7 @@ void GolfState::startFlyBy()
     float rotation = std::atan2(-dir.z, dir.x);
     glm::quat q = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rotation, cro::Transform::Y_AXIS);
     glm::vec3 offset = q * BaseOffset;
+    offset.y *= heightMultiplier;
 
     //set initial transform to look at pin from offset position
     auto transform = glm::inverse(glm::lookAt(offset + holeData.pin, holeData.pin, cro::Transform::Y_AXIS));
@@ -4905,6 +4920,8 @@ void GolfState::startFlyBy()
         diff = (holeData.tee - holeData.pin) / 2.f;
     }
     diff.y = 10.f * SpeedMultiplier;
+
+
     transform[3] += glm::vec4(diff, 0.f);
     targetData.targets[2] = transform;
 

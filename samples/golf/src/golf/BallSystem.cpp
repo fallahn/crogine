@@ -67,6 +67,7 @@ namespace
     static constexpr float AngularVelocity = 46.5f; //rad/s at 1m/s vel. Used for rolling animation.
 
     static constexpr float MinVelocitySqr = 0.005f;//0.04f
+    static constexpr float GreenFriction = 0.985f;
 
     constexpr std::array GimmeRadii =
     {
@@ -117,6 +118,7 @@ BallSystem::BallSystem(cro::MessageBus& mb, bool drawDebug)
     m_windInterpTime        (1.f),
     m_currentWindInterpTime (0.f),
     m_holeData              (nullptr),
+    m_puttFromTee           (false),
     m_gimmeRadius           (0)
 {
     requireComponent<cro::Transform>();
@@ -320,27 +322,29 @@ void BallSystem::process(float dt)
                     float windAmount = 1.f - glm::dot(m_windDirection, ball.velocity / velLength);
                     ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
 
-#ifndef BUNS
-                    //slope strength (arcade version)
-                    glm::vec3 slope = glm::vec3(terrainContact.normal.x, 0.f, terrainContact.normal.z) * 0.95f * smoothstep(0.35f, 4.5f, velLength);
-                    ball.velocity += slope;
+                    if (!m_puttFromTee)
+                    {
+                        //slope strength (arcade version)
+                        glm::vec3 slope = glm::vec3(terrainContact.normal.x, 0.f, terrainContact.normal.z) * 0.95f * smoothstep(0.35f, 4.5f, velLength);
+                        ball.velocity += slope;
 
-                    //add friction
-                    ball.velocity *= 0.985f;
-#else
-                    //TODO only use this when we're mini putting
-                    //it's more accurate (ball runs back down a slope it went up)
-                    //but is really boring to play on the full siz courses
-                    auto [slope, slopeStrength] = getSlope(terrainContact.normal);
+                        //add friction
+                        ball.velocity *= GreenFriction;
+                    }
+                    else
+                    {
+                        //only use this when we're mini putting
+                        //it's more accurate (ball runs back down a slope it went up)
+                        //but is really boring to play on the full size courses
+                        auto [slope, slopeStrength] = getSlope(terrainContact.normal);
 
-                    //add friction
-                    ball.velocity *= 0.985f + (slopeStrength * 0.05f);
+                        //add friction
+                        ball.velocity *= GreenFriction + (slopeStrength * 0.05f);
 
-                    //move by slope from surface normal
-                    ball.velocity += slope * slopeStrength;
-                    CRO_ASSERT(!std::isnan(ball.velocity.x), "");
-#endif
-
+                        //move by slope from surface normal
+                        ball.velocity += slope * slopeStrength;
+                        CRO_ASSERT(!std::isnan(ball.velocity.x), "");
+                    }
                 }
                 
 
@@ -518,10 +522,12 @@ void BallSystem::process(float dt)
                 auto [slope, slopeStrength] = getSlope(terrainContact.normal);
 
                 ball.velocity += slope * slopeStrength;
-                if (glm::length2(ball.velocity / 2.f) > MinVelocitySqr)
+                ball.velocity *= GreenFriction;
+
+                if (glm::length2(ball.velocity/* / 5.f*/) > MinVelocitySqr)
                 {
                     ball.delay = 0.f;
-                    ball.state == Ball::State::Putt;
+                    ball.state = Ball::State::Putt;
                 }
             }
         }
@@ -856,6 +862,10 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
         m_groundObjects.back()->setUserIndex(static_cast<std::int32_t>(terrain)); // set the terrain type
         m_collisionWorld->addCollisionObject(m_groundObjects.back().get(), CollisionGroup::Terrain, CollisionGroup::Ball);
     }
+
+
+    m_puttFromTee = getTerrain(m_holeData->tee).terrain == TerrainID::Green;
+
 
     return true;
 }
