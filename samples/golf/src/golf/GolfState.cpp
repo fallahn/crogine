@@ -2689,10 +2689,35 @@ void GolfState::buildScene()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Tee;
     md.createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, material);
+    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     
     auto targetDir = m_holeData[m_currentHole].target - m_holeData[0].tee;
     m_camRotation = std::atan2(-targetDir.z, targetDir.x);
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
+
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        const auto& target = e.getComponent<cro::Callback>().getUserData<float>();
+        float scale = e.getComponent<cro::Transform>().getScale().x;
+        if (target < scale)
+        {
+            scale = std::max(target, scale - dt);
+        }
+        else
+        {
+            scale = std::min(target, scale + dt);
+        }
+
+        if (scale == target)
+        {
+            e.getComponent<cro::Callback>().active = false;
+        }
+        e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+    };
+
 
     auto teeEnt = entity;
 
@@ -2704,6 +2729,7 @@ void GolfState::buildScene()
     entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.2f);
     md.createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, material);
+    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     if (m_sharedData.localConnectionData.playerCount > 2
@@ -2715,6 +2741,7 @@ void GolfState::buildScene()
         entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 3.2f);
         md.createModel(entity);
         entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Ball]));
+        entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
         teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
@@ -3330,6 +3357,7 @@ void GolfState::spawnBall(const ActorInfo& info)
             m_gameScene.destroyEntity(e);
         }
         e.getComponent<cro::Model>().setHidden(ballEnt.getComponent<cro::Model>().isHidden());
+        e.getComponent<cro::Transform>().setScale(ballEnt.getComponent<cro::Transform>().getScale() * 1.3f);
     };
 
     //adding a ball model means we see something a bit more reasonable when close up
@@ -4098,6 +4126,16 @@ void GolfState::setCurrentHole(std::uint32_t hole)
         e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+    //tell the tee and its children to scale depending on if they should be visible
+    cmd.targetFlags = CommandID::Tee;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().setUserData<float>(m_holeData[m_currentHole].puttFromTee ? 0.f : 1.f);
+        e.getComponent<cro::Callback>().active = true;
+    };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
     //set green cam position
