@@ -4560,16 +4560,21 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
 void GolfState::hitBall()
 {
-    auto pitch = Clubs[getClub()].angle;// cro::Util::Const::PI / 4.f;
+    auto club = getClub();
+
+    auto pitch = Clubs[club].angle;// cro::Util::Const::PI / 4.f;
 
     auto yaw = m_inputParser.getYaw();
 
     //add hook/slice to yaw
     auto hook = m_inputParser.getHook();
-    auto s = cro::Util::Maths::sgn(hook);
-    //TODO changing this func changes how accurate a player needs to be
-    //sine, quad, cubic, quart, quint in steepness order
-    hook = cro::Util::Easing::easeOutCubic(hook * s) * s;
+    if (club != ClubID::Putter)
+    {
+        auto s = cro::Util::Maths::sgn(hook);
+        //TODO changing this func changes how accurate a player needs to be
+        //sine, quad, cubic, quart, quint in steepness order
+        hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
+    }
     yaw += MaxHook * hook;
 
     glm::vec3 impulse(1.f, 0.f, 0.f);
@@ -4577,7 +4582,7 @@ void GolfState::hitBall()
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
     impulse = glm::toMat3(rotation) * impulse;
 
-    impulse *= Clubs[getClub()].power * m_inputParser.getPower();
+    impulse *= Clubs[club].power * m_inputParser.getPower();
     impulse *= Dampening[m_currentPlayer.terrain];
 
 

@@ -310,8 +310,7 @@ void BallSystem::process(float dt)
 
 
                     /*
-                    glm::vec3 slope = glm::vec3(terrainContact.normal.x, 0.f, terrainContact.normal.z) * 0.95f * smoothstep(0.35f, 4.5f, velLength);
-                    ball.velocity += slope;*/
+                    */
 
                    
 
@@ -321,7 +320,17 @@ void BallSystem::process(float dt)
                     float windAmount = 1.f - glm::dot(m_windDirection, ball.velocity / velLength);
                     ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
 
+#ifndef BUNS
+                    //slope strength (arcade version)
+                    glm::vec3 slope = glm::vec3(terrainContact.normal.x, 0.f, terrainContact.normal.z) * 0.95f * smoothstep(0.35f, 4.5f, velLength);
+                    ball.velocity += slope;
 
+                    //add friction
+                    ball.velocity *= 0.985f;
+#else
+                    //TODO only use this when we're mini putting
+                    //it's more accurate (ball runs back down a slope it went up)
+                    //but is really boring to play on the full siz courses
                     auto [slope, slopeStrength] = getSlope(terrainContact.normal);
 
                     //add friction
@@ -330,6 +339,8 @@ void BallSystem::process(float dt)
                     //move by slope from surface normal
                     ball.velocity += slope * slopeStrength;
                     CRO_ASSERT(!std::isnan(ball.velocity.x), "");
+#endif
+
                 }
                 
 

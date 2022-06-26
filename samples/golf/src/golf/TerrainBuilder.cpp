@@ -856,7 +856,7 @@ void TerrainBuilder::threadFunc()
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
                 static constexpr float DashCount = 40.f; //actual div by TAU cos its sin but eh.
-                static constexpr float SlopeSpeed = -50.f;
+                static constexpr float SlopeSpeed = -20.f;
                 static constexpr std::int32_t AvgDistance = 5;
 
                 for (auto y = startY; y < startY + SlopeGridSize; ++y)
