@@ -523,7 +523,8 @@ void BallSystem::process(float dt)
                 updateWind(); //is a bit less random but at least stops the wind
                 //changing direction mid-stroke which is just annoying.
             }
-            else if (ball.terrain == TerrainID::Green)
+            else if (m_puttFromTee &&
+                ball.terrain == TerrainID::Green)
             {
                 //add alope and start moving if vel > min vel
                 auto terrainContact = getTerrain(entity.getComponent<cro::Transform>().getPosition());
