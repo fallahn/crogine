@@ -56,6 +56,7 @@ private:
             Grass, Water, Sand,
             Sparkle, HIO, Bird,
             Drone, Explode, Blades,
+            Puff,
 
             Count
         };

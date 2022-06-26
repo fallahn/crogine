@@ -4551,6 +4551,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     msg2->terrain = m_currentPlayer.terrain;
     msg2->type = GolfEvent::SetNewPlayer;
 
+    //this is just so that the particle director knows if we're on a new hole
+    if (m_currentPlayer.position == m_holeData[m_currentHole].tee)
+    {
+        msg2->travelDistance = -1.f;
+    }
+
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
 
 

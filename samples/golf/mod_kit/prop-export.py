@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2022, 6, 25),
+    "version": (2022, 6, 26),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -108,6 +108,13 @@ def WriteParticles(file, path, location):
     file.write("    }\n\n")
 
 
+def showMessageBox(message = "", title = "Message Box", icon = 'INFO'):
+
+    def draw(self, context):
+        self.layout.label(text = message)
+
+    bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
+
 
 class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
     '''Export object position and rotation info'''
@@ -195,6 +202,12 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 
         file.write("}")
         file.close()
+
+
+        if not pinWritten or not targetWritten or not teeWritten:
+            showMessageBox("Pin or other Tee data was missing from selection", "Warning", 'ERROR')
+
+
         return {'FINISHED'}
 
 

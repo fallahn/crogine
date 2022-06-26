@@ -350,6 +350,8 @@ void BallSystem::process(float dt)
 
                 //move by velocity
                 tx.move(ball.velocity * dt);
+
+                terrainContact = getTerrain(tx.getPosition());
                 ball.terrain = terrainContact.terrain; //TODO this will be wrong if the above movement changed the terrain
 
                 //spin based on velocity
@@ -408,6 +410,12 @@ void BallSystem::process(float dt)
                     CRO_ASSERT(!std::isnan(position.x), "");
                     CRO_ASSERT(!std::isnan(ball.velocity.x), "");
                 }
+                //makes the ball go bat shit crazy for some reason.
+                /*else if (terrainContact.penetration < 0.1f)
+                {
+                    ball.state = Ball::State::Flight;
+                    ball.delay = 0.f;
+                }*/
             }
             break;
         case Ball::State::Reset:
@@ -522,9 +530,9 @@ void BallSystem::process(float dt)
                 auto [slope, slopeStrength] = getSlope(terrainContact.normal);
 
                 ball.velocity += slope * slopeStrength;
-                ball.velocity *= GreenFriction;
+                ball.velocity *= GreenFriction + 0.001f;
 
-                if (glm::length2(ball.velocity/* / 5.f*/) > MinVelocitySqr)
+                if (glm::length2(ball.velocity / 1.1f) > MinVelocitySqr)
                 {
                     ball.delay = 0.f;
                     ball.state = Ball::State::Putt;

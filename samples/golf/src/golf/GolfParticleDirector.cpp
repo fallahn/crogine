@@ -31,6 +31,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "Terrain.hpp"
 #include "GameConsts.hpp"
+#include "BallSystem.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -55,6 +56,7 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr)
     m_emitterSettings[ParticleID::Drone].loadFromFile("assets/golf/particles/drone.cps", tr);
     m_emitterSettings[ParticleID::Explode].loadFromFile("assets/golf/particles/explode.cps", tr);
     m_emitterSettings[ParticleID::Blades].loadFromFile("assets/golf/particles/blades.cps", tr);
+    m_emitterSettings[ParticleID::Puff].loadFromFile("assets/golf/particles/puff.cps", tr);
 
     //hmm how to set smoothing on the texture?
     cro::SpriteSheet spriteSheet;
@@ -100,11 +102,13 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
                 break;
             }
         }
-        else if (data.type == GolfEvent::RequestNewPlayer)
+        else if (data.type == GolfEvent::SetNewPlayer)
         {
-            if (data.terrain != TerrainID::Green)
+            if (data.travelDistance == -1)
             {
-                //getEnt(ParticleID::Sparkle, data.position);
+                auto pos = data.position;
+                pos.y += (Ball::Radius * 2.f);
+                getEnt(ParticleID::Puff, pos);
             }
         }
         else if (data.type == GolfEvent::HoleInOne)
