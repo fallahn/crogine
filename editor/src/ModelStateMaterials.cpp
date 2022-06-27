@@ -326,6 +326,10 @@ void ModelState::exportMaterial() const
         file.addProperty("depth_test").setValue(matDef.depthTest);
         file.addProperty("double_sided").setValue(matDef.doubleSided);
         file.addProperty("use_mipmaps").setValue(matDef.useMipmaps);
+        file.addProperty("animated").setValue(matDef.animated);
+        file.addProperty("row_count").setValue(matDef.rowCount);
+        file.addProperty("col_count").setValue(matDef.colCount);
+        file.addProperty("framerate").setValue(matDef.frameRate);
 
         //textures
         auto getTextureName = [&](std::uint32_t id)
@@ -647,6 +651,22 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
         else if (name == "double_sided")
         {
             matDef.doubleSided = prop.getValue<bool>();
+        }
+        else if (name == "animated")
+        {
+            matDef.animated = prop.getValue<bool>();
+        }
+        else if (name == "row_count")
+        {
+            matDef.rowCount = std::max(1u, prop.getValue<std::uint32_t>());
+        }
+        else if (name == "col_count")
+        {
+            matDef.colCount = std::max(1u, prop.getValue<std::uint32_t>());
+        }
+        else if (name == "framerate")
+        {
+            matDef.frameRate = std::max(1.f, prop.getValue<float>());
         }
     }
 }
