@@ -655,6 +655,11 @@ static const std::string CelFragmentShader = R"(
 #endif
         if(alpha < 0.1) discard;
 #endif
+
+//float edge = dot(normal, viewDirection);
+//edge = step(0.01, edge);
+//FRAG_OUT.rgb *= edge;
+
     })";
 
 
