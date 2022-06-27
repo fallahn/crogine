@@ -12,6 +12,10 @@ model blimp
         depth_test = true
         double_sided = false
         use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/blimp.png"
 
@@ -25,7 +29,10 @@ model blimp
         depth_test = true
         double_sided = false
         use_mipmaps = false
-        subrect = 0.000000,0.000000,0.250000,0.023000
+        animated = true
+        row_count = 43
+        col_count = 4
+        framerate = 12.000000
         blendmode = none
         diffuse = "assets/golf/images/blimp_sign.png"
 

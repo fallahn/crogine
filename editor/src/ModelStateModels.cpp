@@ -370,6 +370,10 @@ void ModelState::saveModel(const std::string& path)
         obj->addProperty("depth_test").setValue(mat.depthTest);
         obj->addProperty("double_sided").setValue(mat.doubleSided);
         obj->addProperty("use_mipmaps").setValue(mat.useMipmaps);
+        obj->addProperty("animated").setValue(mat.animated);
+        obj->addProperty("row_count").setValue(mat.rowCount);
+        obj->addProperty("col_count").setValue(mat.colCount);
+        obj->addProperty("framerate").setValue(mat.frameRate);
 
         if (mat.useRimlighing)
         {

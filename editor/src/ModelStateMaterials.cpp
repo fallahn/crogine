@@ -178,7 +178,20 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
     {
         matDef.materialData.setProperty("u_subrect", matDef.subrect);
     }
+    else if (matDef.animated)
+    {
+        matDef.materialData.animation.frame.x = 0.f;
+        matDef.materialData.animation.frame.z = 1.f / matDef.colCount;
 
+        matDef.materialData.animation.frame.w = 1.f / matDef.rowCount;
+        matDef.materialData.animation.frame.y = 1.f - matDef.materialData.animation.frame.w;
+
+        matDef.materialData.animation.frameTime = 1.f / matDef.frameRate;
+
+        matDef.materialData.setProperty("u_subrect", matDef.materialData.animation.frame);
+    }
+
+    matDef.materialData.animation.active = matDef.animated;
     matDef.materialData.blendMode = matDef.blendMode;
     matDef.materialData.enableDepthTest = matDef.depthTest;
     matDef.materialData.doubleSided = matDef.doubleSided;
@@ -260,7 +273,7 @@ void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)
         def.shaderFlags |= cro::ShaderResource::RimLighting;
     }
 
-    if (def.useSubrect)
+    if (def.useSubrect || def.animated)
     {
         def.shaderFlags |= cro::ShaderResource::Subrects;
     }
@@ -307,6 +320,11 @@ void ModelState::exportMaterial() const
         const auto& matDef = m_materialDefs[m_selectedMaterial];
         auto name = matDef.name;
         std::replace(name.begin(), name.end(), ' ', '_');
+
+        /*
+        REMEMBER if we add more properties here they also need to
+        be added to ModelState::saveModel()
+        */
 
         cro::ConfigFile file("material_definition", name);
         file.addProperty("type").setValue(matDef.type);

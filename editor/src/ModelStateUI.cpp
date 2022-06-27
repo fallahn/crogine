@@ -1359,7 +1359,10 @@ void ModelState::drawInspector()
 
 
                     ImGui::NewLine();
-                    ImGui::Checkbox("Animated", &matDef.animated);
+                    if (ImGui::Checkbox("Animated", &matDef.animated))
+                    {
+                        applyMaterial = true;
+                    }
                     ImGui::SameLine();
                     helpMarker("If animated the material will attempt to split the UV coords by the number of row/columns (below) and cycle through them based on the current frame rate. Frames are sorted column first, top to bottom. Enabling this overrides any subrect setting.");
 
@@ -1369,6 +1372,8 @@ void ModelState::drawInspector()
                     {
                         rowCount = std::max(1, std::min(100, rowCount));
                         matDef.rowCount = rowCount;
+
+                        applyMaterial = matDef.animated;
                     }
                     ImGui::SameLine();
                     helpMarker("UVs are divided vertically by this value to create frames, does nothing if animation disabled.");
@@ -1378,6 +1383,8 @@ void ModelState::drawInspector()
                     {
                         colCount = std::max(1, std::min(100, colCount));
                         matDef.colCount = colCount;
+
+                        applyMaterial = matDef.animated;
                     }
                     ImGui::SameLine();
                     helpMarker("UVs are divided horizontally by this value to create frames, does nothing if animation disabled.");
@@ -1385,6 +1392,7 @@ void ModelState::drawInspector()
                     if (ImGui::InputFloat("Frame Rate", &matDef.frameRate))
                     {
                         matDef.frameRate = std::max(1.f, std::min(60.f, matDef.frameRate));
+                        applyMaterial = matDef.animated;
                     }
                     ImGui::PopItemWidth();
                 }

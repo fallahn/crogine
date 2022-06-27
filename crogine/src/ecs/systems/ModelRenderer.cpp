@@ -97,16 +97,18 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     }
 }
 
-void ModelRenderer::process(float)
+void ModelRenderer::process(float dt)
 {
-    if (m_useTreeQueries)
+    auto& entities = getEntities();
+    for (auto entity : entities)
     {
-        auto& entities = getEntities();
-        for (auto entity : entities)
+        auto& model = entity.getComponent<Model>();
+        model.updateMaterialAnimations(dt);
+
+        if (m_useTreeQueries)
         {
             if (!entity.destroyed())
             {
-                auto& model = entity.getComponent<Model>();
                 const auto& tx = entity.getComponent<Transform>();
                 auto worldPosition = tx.getWorldPosition();
                 auto worldBounds = model.getAABB();

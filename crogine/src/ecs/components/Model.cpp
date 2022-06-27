@@ -71,9 +71,11 @@ Model::Model(Mesh::Data data, Material::Data material)
     //sets all materials to given default
     bindMaterial(material);
     updateBounds();
-    for (auto& mat : m_materials[Mesh::IndexData::Final])
+
+    for (auto i = 0u; i < m_materials[Mesh::IndexData::Final].size(); ++i)
     {
-        mat = material;
+        m_materials[Mesh::IndexData::Final][i] = material;
+        initMaterialAnimation(i);
     }
 #ifdef PLATFORM_DESKTOP
 
@@ -213,11 +215,17 @@ void Model::setMaterial(std::size_t idx, Material::Data data)
     
     if (m_meshData.vbo)
     {
-        //CRO_ASSERT(m_meshData.vbo != 0, "Can't set a material until mesh has been added");
+        //remove any existing animations
+        m_animations.erase(std::remove_if(m_animations.begin(), m_animations.end(),
+            [idx](const std::pair<std::size_t, Material::Property*>& a)
+            {
+                return a.first == idx;
+            }), m_animations.end());
 
         //the order in which this happens is important!
         bindMaterial(data);
         m_materials[Mesh::IndexData::Final][idx] = data;
+        initMaterialAnimation(idx);
 #ifdef PLATFORM_DESKTOP
         updateVAO(idx, Mesh::IndexData::Final);
 #endif //DESKTOP
@@ -331,6 +339,38 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
 }
 
 //private
+void Model::initMaterialAnimation(std::size_t index)
+{
+    auto& material = m_materials[Mesh::IndexData::Final][index];
+    if (material.animation.active
+        && material.properties.count("u_subrect") != 0)
+    {
+        m_animations.emplace_back(std::make_pair(index, &material.properties.at("u_subrect").second));
+    }
+}
+
+void Model::updateMaterialAnimations(float dt)
+{
+    for (auto [index, prop] : m_animations)
+    {
+        auto& material = m_materials[Mesh::IndexData::Final][index];
+        material.animation.currentTime += dt;
+        if (material.animation.currentTime > material.animation.frameTime)
+        {
+            material.animation.currentTime -= material.animation.frameTime;
+            material.animation.frame.y -= material.animation.frame.w;
+
+            if (material.animation.frame.y < 0)
+            {
+                material.animation.frame.y = 1.f - material.animation.frame.w;
+                material.animation.frame.x = std::fmod(material.animation.frame.x + material.animation.frame.z, 1.f);
+            }
+
+            std::memcpy(prop->vecValue, &material.animation.frame, sizeof(glm::vec4));
+        }
+    }
+}
+
 void Model::bindMaterial(Material::Data& material)
 {
     //map attributes to material

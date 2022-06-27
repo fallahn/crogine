@@ -252,6 +252,10 @@ namespace cro
         using VAOPair = std::array<std::uint32_t, Mesh::IndexData::Pass::Count>;
         std::array<VAOPair, Mesh::IndexData::MaxBuffers> m_vaos = {};
 
+        std::vector<std::pair<std::size_t, Material::Property*>> m_animations;
+        void initMaterialAnimation(std::size_t);
+        void updateMaterialAnimations(float);
+
         void bindMaterial(Material::Data&);
         void updateBounds();
         
