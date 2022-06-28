@@ -11,8 +11,30 @@ model scoreboard
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/score_board_texture.png"
+
+    }
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = true
+        row_count = 12
+        col_count = 4
+        framerate = 12.000000
+        blendmode = none
+        diffuse = "assets/golf/images/score_board_animation.png"
 
     }
 }
