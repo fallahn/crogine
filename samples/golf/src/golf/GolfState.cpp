@@ -1233,10 +1233,11 @@ void GolfState::loadAssets()
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
 
 
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n#define CONTOUR\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
 
@@ -4504,9 +4505,9 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     //show or hide the slope indicator depending if we're on the green
     cmd.targetFlags = CommandID::SlopeIndicator;
-    cmd.action = [player](cro::Entity e, float)
+    cmd.action = [&,player](cro::Entity e, float)
     {
-        bool hidden = (player.terrain != TerrainID::Green);
+        bool hidden = !((player.terrain != TerrainID::Green) && !m_holeData[m_currentHole].puttFromTee);
 
         if (!hidden)
         {

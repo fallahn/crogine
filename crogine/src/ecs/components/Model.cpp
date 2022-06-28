@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 
 #include <algorithm>
+#include <cstring>
 
 using namespace cro;
 
