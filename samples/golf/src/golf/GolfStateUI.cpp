@@ -449,13 +449,19 @@ void GolfState::buildUI()
                 glm::vec2 offset = glm::vec2(2.f * -rotation);
                 m_flagQuad.setRotation(-rotation * 90.f);
 
+                auto aabb = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getAABB();
+                float width = aabb[1].x - aabb[0].x;
+                auto height = aabb[1].z - aabb[0].z;
+                m_minimapScale = std::max(1.f, std::min(std::floor(static_cast<float>(MapSize.x) / width), static_cast<float>(MapSize.y) / height));
 
                 //update render
                 auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
+                m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setScale(glm::vec3(m_minimapScale));
                 m_mapBuffer.clear(cro::Colour::Transparent);
                 m_gameScene.render();
                 m_mapBuffer.display();
                 m_gameScene.setActiveCamera(oldCam);
+                m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
 
                 m_mapQuad.setPosition(offset);
                 m_mapQuad.setColour(cro::Colour(0.396f,0.263f,0.184f));
@@ -466,8 +472,8 @@ void GolfState::buildUI()
                 m_mapQuad.setColour(cro::Colour::White);
                 m_mapQuad.draw();
 
-                auto holePos = m_holeData[m_currentHole].pin / 2.f;
-                m_flagQuad.setPosition({ holePos.x, -holePos.z });
+                auto holePos = toMinimapCoords(m_holeData[m_currentHole].pin);
+                m_flagQuad.setPosition({ holePos.x, holePos.y });
                 m_flagQuad.draw();
                 m_mapTexture.display();
 
@@ -552,10 +558,7 @@ void GolfState::buildUI()
         [&](cro::Entity e, float)
     {
         e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
-        auto pos = m_currentPlayer.position;
-        pos.y = -pos.z;
-        pos.z = 1.f;
-        e.getComponent<cro::Transform>().setPosition(pos / 2.f);
+        e.getComponent<cro::Transform>().setPosition(glm::vec3(toMinimapCoords(m_currentPlayer.position), 0.5f));
 
         if (!m_inputParser.getActive())
         {
@@ -567,13 +570,12 @@ void GolfState::buildUI()
             switch (club)
             {
             default: 
-                e.getComponent<cro::Transform>().setScale(glm::vec2(Clubs[club].target, 1.f));
+                e.getComponent<cro::Transform>().setScale(glm::vec2(Clubs[club].target * m_minimapScale, 1.f));
                 break;
             case ClubID::Putter:
                 e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 break;
             }
-            
         }
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2033,4 +2035,15 @@ void GolfState::updateMiniMap()
         m_mapCam.getComponent<cro::Camera>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+}
+
+glm::vec2 GolfState::toMinimapCoords(glm::vec3 worldPos) const
+{
+    auto origin = m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().getOrigin();
+    worldPos -= origin;
+    worldPos *= m_minimapScale;
+    worldPos += origin;
+    worldPos /= 2.f;
+
+    return { worldPos.x, -worldPos.z };
 }

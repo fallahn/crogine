@@ -325,6 +325,9 @@ private:
     cro::SimpleQuad m_flagQuad;
     void updateMiniMap();
 
+    float m_minimapScale; //how big the model was when drawn to minimap
+    glm::vec2 toMinimapCoords(glm::vec3) const;
+
     cro::Entity m_greenCam;
     cro::RenderTexture m_greenBuffer;
 

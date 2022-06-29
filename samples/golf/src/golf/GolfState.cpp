@@ -170,6 +170,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale         (1.f),
     m_scoreColumnCount  (2),
     m_readyQuitFlags    (0),
+    m_minimapScale      (1.f),
     m_hadFoul           (false)
 {
     m_inputParser.setMaxRotation(0.1f);
@@ -4351,10 +4352,9 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     cmd.targetFlags = CommandID::UI::MiniBall;
     cmd.action =
-        [player](cro::Entity e, float)
+        [&,player](cro::Entity e, float)
     {
-        auto pos = glm::vec3(player.position.x, -player.position.z, 0.1f);
-        e.getComponent<cro::Transform>().setPosition(pos / 2.f);
+        e.getComponent<cro::Transform>().setPosition(glm::vec3(toMinimapCoords(player.position), 0.1f));
 
         //play the callback animation
         e.getComponent<cro::Callback>().active = true;
@@ -4768,10 +4768,9 @@ void GolfState::updateActor(const ActorInfo& update)
 
         cmd.targetFlags = CommandID::UI::MiniBall;
         cmd.action =
-            [update](cro::Entity e, float)
+            [&, update](cro::Entity e, float)
         {
-            auto pos = glm::vec3(update.position.x, -update.position.z, 0.1f);
-            e.getComponent<cro::Transform>().setPosition(pos / 2.f); //need to tie into the fact the mini map is 1/2 scale
+            e.getComponent<cro::Transform>().setPosition(glm::vec3(toMinimapCoords(update.position), 0.1f));
             
             //set scale based on height
             static constexpr float MaxHeight = 40.f;
