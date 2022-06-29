@@ -1233,13 +1233,19 @@ void GolfState::loadAssets()
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
 
 
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n#define CONTOUR\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::CourseGrid, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n#define CONTOUR\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::CourseGrid);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+    auto* gridShader = shader; //used below when testing for putt holes.
 
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
     shader = &m_resources.shaders.get(ShaderID::Billboard);
@@ -2248,6 +2254,18 @@ void GolfState::loadAssets()
         //while we're here check if this is a putting
         //course by looking to see if the tee is on the green
         hole.puttFromTee = m_collisionMesh.getTerrain(hole.tee).terrain == TerrainID::Green;
+
+        if (hole.puttFromTee)
+        {
+            auto& model = hole.modelEntity.getComponent<cro::Model>();
+            auto matCount = model.getMeshData().submeshCount;
+            for (auto i = 0u; i < matCount; ++i)
+            {
+                auto mat = model.getMaterialData(cro::Mesh::IndexData::Final, i);
+                mat.setShader(*gridShader);
+                model.setMaterial(i, mat);
+            }
+        }
     }
 
 
@@ -4504,10 +4522,11 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     setActiveCamera(CameraID::Player);
 
     //show or hide the slope indicator depending if we're on the green
+    //or if we're on a putting map (in which case we're using thecontour material)
     cmd.targetFlags = CommandID::SlopeIndicator;
     cmd.action = [&,player](cro::Entity e, float)
     {
-        bool hidden = !((player.terrain != TerrainID::Green) && !m_holeData[m_currentHole].puttFromTee);
+        bool hidden = (player.terrain != TerrainID::Green) || m_holeData[m_currentHole].puttFromTee;
 
         if (!hidden)
         {

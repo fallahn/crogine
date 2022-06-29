@@ -386,6 +386,13 @@ void Model::bindMaterial(Material::Data& material)
             //calc the pointer offset for each attrib
             material.attribs[i][Material::Data::Offset] = static_cast<std::int32_t>(pointerOffset * sizeof(float));
         }
+        else
+        {
+            //reset the values in case we're re-mapping an existing material
+            //with a new shader
+            material.attribs[i][Material::Data::Size] = 0;
+            material.attribs[i][Material::Data::Offset] = 0;
+        }
         pointerOffset += m_meshData.attributes[i]; //count the offset regardless as the mesh may have more attributes than material
     }
 
@@ -398,7 +405,8 @@ void Model::bindMaterial(Material::Data& material)
         });
 
     //count attribs with size > 0
-    int i = 0;
+    std::int32_t i = 0;
+    material.attribCount = 0;
     while (material.attribs[i++][Material::Data::Size] != 0)
     {
         material.attribCount++;
