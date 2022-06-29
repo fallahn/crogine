@@ -7,10 +7,15 @@ model snooker_model
     {
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = true
+        smooth = false
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/billiards/pool_table_green.png"
 
