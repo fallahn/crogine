@@ -67,7 +67,15 @@ namespace
     static constexpr float AngularVelocity = 46.5f; //rad/s at 1m/s vel. Used for rolling animation.
 
     static constexpr float MinVelocitySqr = 0.005f;//0.04f
-    static constexpr float GreenFriction = 0.985f;
+
+    static constexpr std::array<float, TerrainID::Count> Friction =
+    {
+        0.1f, 0.9f,
+        0.985f, 0.1f,
+        0.001f, 0.001f,
+        0.98f,
+        0.f
+    };
 
     constexpr std::array GimmeRadii =
     {
@@ -310,10 +318,6 @@ void BallSystem::process(float dt)
                     }
                     ball.hadAir = false;
 
-
-                    /*
-                    */
-
                    
 
                     //add wind - adding less wind the more the ball travels in the
@@ -329,7 +333,7 @@ void BallSystem::process(float dt)
                         ball.velocity += slope;
 
                         //add friction
-                        ball.velocity *= GreenFriction;
+                        ball.velocity *= Friction[ball.terrain];
                     }
                     else
                     {
@@ -339,7 +343,7 @@ void BallSystem::process(float dt)
                         auto [slope, slopeStrength] = getSlope(terrainContact.normal);
 
                         //add friction
-                        ball.velocity *= GreenFriction + (slopeStrength * 0.05f);
+                        ball.velocity *= Friction[ball.terrain] + (slopeStrength * 0.05f);
 
                         //move by slope from surface normal
                         ball.velocity += slope * slopeStrength;
@@ -397,7 +401,6 @@ void BallSystem::process(float dt)
                         position.x = m_holeData->pin.x;
                         position.z = m_holeData->pin.z;
                         tx.setPosition(position);
-                        //LogI << "Set terrain to hole" << std::endl;
                     }
                     else if(len2 < GimmeRadii[m_gimmeRadius])
                     {
@@ -460,8 +463,12 @@ void BallSystem::process(float dt)
                         && terrain != TerrainID::Stone)
                     {
                         //move the ball a bit closer so we're not balancing on the edge
-                        ballPos += dir * 1.5f;
-                        res = getTerrain(ballPos);
+                        //but only if we're not on the green else we might get placed in the hole :)
+                        if (res.terrain != TerrainID::Green)
+                        {
+                            ballPos += dir * 1.5f;
+                            res = getTerrain(ballPos);
+                        }
 
                         ballPos = res.intersection;
                         tx.setPosition(ballPos);
@@ -526,12 +533,12 @@ void BallSystem::process(float dt)
             else if (m_puttFromTee &&
                 ball.terrain == TerrainID::Green)
             {
-                //add alope and start moving if vel > min vel
+                //add slope and start moving if vel > min vel
                 auto terrainContact = getTerrain(entity.getComponent<cro::Transform>().getPosition());
                 auto [slope, slopeStrength] = getSlope(terrainContact.normal);
 
                 ball.velocity += slope * slopeStrength;
-                ball.velocity *= GreenFriction + 0.001f;
+                ball.velocity *= Friction[TerrainID::Green] + 0.001f;
 
                 if (glm::length2(ball.velocity / 1.1f) > MinVelocitySqr)
                 {
