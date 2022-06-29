@@ -51,4 +51,21 @@ private:
     std::vector<BallInfo> m_ballLayout;
     std::size_t m_currentPlayer;
 
+
+    std::vector<std::int8_t> m_pocketsThisTurn;
+    std::int8_t m_firstCollision;
+
+    struct TurnFlags final
+    {
+        enum
+        {
+            Foul = 0x01,
+            Forfeit = 0x02
+        };
+    };
+    std::uint8_t m_turnFlags;
+
+
+    void summariseTurn();
+
 };
