@@ -390,6 +390,11 @@ static const std::string CelFragmentShader = R"(
     VARYING_IN vec2 v_texCoord;
 #endif
 
+#if defined (CONTOUR)
+    uniform float u_transparency;
+    uniform float u_minHeight = 0.0;
+    uniform float u_maxHeight = 1.0;
+#endif
 
 #if defined (NORMAL_MAP)
     uniform sampler2D u_normalMap;
@@ -664,10 +669,7 @@ static const std::string CelFragmentShader = R"(
 #endif
 
 #if defined(CONTOUR)
-    //TODO make this pin height +/- some amount
-    float minHeight = 0.8;
-    float maxHeight = 1.0;
-    float height = (v_worldPosition.y - minHeight) / (maxHeight - minHeight);
+    float height = (v_worldPosition.y - u_minHeight) / (u_maxHeight - u_minHeight);
     vec3 contourColour = mix(vec3(0.0,0.0,1.0), vec3(1.0,0.0,1.0), height);
 
     vec3 f = fract(v_worldPosition);// * 2.0);
@@ -689,7 +691,7 @@ static const std::string CelFragmentShader = R"(
     contourZ *= step(0.25, dashZ);
 
     vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
-    float fade = (1.0 - smoothstep(25.0, 49.0, dot(distance, distance))) * 0.75;
+    float fade = (1.0 - smoothstep(25.0, 49.0, dot(distance, distance))) * u_transparency * 0.75;
 
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourX * fade);

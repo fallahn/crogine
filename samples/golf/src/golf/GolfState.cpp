@@ -161,7 +161,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_windBuffer        ("WindValues", sizeof(WindData)),
     m_holeToModelRatio  (1.f),
     m_currentHole       (0),
-    m_terrainBuilder    (m_holeData),
+    m_terrainBuilder    (sd, m_holeData),
     m_audioPath         ("assets/golf/sound/ambience.xas"),
     m_currentCamera     (CameraID::Player),
     m_activeAvatar      (nullptr),
@@ -845,6 +845,14 @@ void GolfState::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //and putting grid
+                cmd.targetFlags = CommandID::SlopeIndicator;
+                cmd.action = [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Callback>().active = true;
+                };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
         }
     }
@@ -1125,6 +1133,8 @@ void GolfState::render()
 
     //then render scene
     //glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for... snow maybe?
+    glUseProgram(m_gridShader.shaderID);
+    glUniform1f(m_gridShader.transparency, m_sharedData.gridTransparency);
     m_gameSceneTexture.clear();
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -1137,6 +1147,9 @@ void GolfState::render()
     //update mini green if ball is there
     if (m_currentPlayer.terrain == TerrainID::Green)
     {
+        glUseProgram(m_gridShader.shaderID);
+        glUniform1f(m_gridShader.transparency, 0.f);
+
         auto oldCam = m_gameScene.setActiveCamera(m_greenCam);
         m_greenBuffer.clear();
         m_gameScene.render();
@@ -1246,6 +1259,10 @@ void GolfState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     auto* gridShader = shader; //used below when testing for putt holes.
+    m_gridShader.shaderID = shader->getGLHandle();
+    m_gridShader.transparency = shader->getUniformID("u_transparency");
+    m_gridShader.minHeight = shader->getUniformID("u_minHeight");
+    m_gridShader.maxHeight = shader->getUniformID("u_maxHeight");
 
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
     shader = &m_resources.shaders.get(ShaderID::Billboard);
@@ -3976,6 +3993,13 @@ void GolfState::setCurrentHole(std::uint32_t hole)
 
     m_currentHole = hole;
     startFlyBy(); //requires current hole
+
+    //set putting grid values
+    float height = m_holeData[m_currentHole].pin.y;
+    glUseProgram(m_gridShader.shaderID);
+    glUniform1f(m_gridShader.minHeight, height - 0.03f);
+    glUniform1f(m_gridShader.maxHeight, height + 0.08f);
+    glUseProgram(0);
 
     //map collision data
     m_currentMap.loadFromFile(m_holeData[m_currentHole].mapPath);

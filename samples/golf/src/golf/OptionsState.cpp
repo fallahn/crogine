@@ -1090,6 +1090,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         updateToolTip(e, ToolTipID::Units);
     };
 
+    //grid transparency
+    createLabel({ 204.f, 66.f }, "Grid Amount");
 
     auto createSlider = [&](glm::vec2 position)
     {
@@ -1210,7 +1212,22 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     };
     fovSlider.getComponent<cro::Transform>().addChild(tipEnt.getComponent<cro::Transform>());
 
-
+    //grid transparency
+    auto transPos = glm::vec2(280.f, 62.f);
+    auto transSlider = createSlider(transPos);
+    auto ud = SliderData(transPos, 91.f);
+    ud.onActivate =
+        [&](float distance)
+    {
+        m_sharedData.gridTransparency = distance;
+    };
+    transSlider.getComponent<cro::Callback>().setUserData<SliderData>(ud);
+    transSlider.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        const auto& [pos, width, _] = e.getComponent<cro::Callback>().getUserData<SliderData>();
+        e.getComponent<cro::Transform>().setPosition({ pos.x + (width * m_sharedData.gridTransparency), pos.y });
+    };
 
     //TODO this is repeated for each creation function - we could reduce this to one instance
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
@@ -1678,6 +1695,34 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    //prev/next grid transparency
+    entity = createHighlight(glm::vec2(262.f, 56.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.gridTransparency = std::max(0.f, m_sharedData.gridTransparency - 0.1f);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+    entity = createHighlight(glm::vec2(378.f, 56.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.gridTransparency = std::min(1.f, m_sharedData.gridTransparency + 0.1f);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+
 }
 
 void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)

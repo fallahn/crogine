@@ -166,6 +166,7 @@ struct SharedStateData final
     bool showBeacon = true;
     float beaconColour = 1.f; //normalised rotation
     bool imperialMeasurements = false;
+    float gridTransparency = 1.f;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

@@ -307,6 +307,15 @@ private:
     std::array<cro::Entity, 3u> m_trophies = {};
     std::array<cro::Entity, 3u> m_trophyLabels = {};
 
+    struct GridShader final
+    {
+        std::uint32_t shaderID = 0;
+        std::int32_t transparency = -1;
+        std::int32_t minHeight = -1;
+        std::int32_t maxHeight = -1;
+    }m_gridShader;
+
+
     //-----------
 
     cro::Entity m_mapCam;

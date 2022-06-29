@@ -654,6 +654,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.imperialMeasurements = prop.getValue<bool>();
                 }
+                else if (name == "grid_transparency")
+                {
+                    m_sharedData.gridTransparency = std::max(0.f, std::min(1.f, prop.getValue<float>()));
+                }
             }
         }
     }
@@ -709,6 +713,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("show_beacon").setValue(m_sharedData.showBeacon);
     cfg.addProperty("beacon_colour").setValue(m_sharedData.beaconColour);
     cfg.addProperty("imperial_measurements").setValue(m_sharedData.imperialMeasurements);
+    cfg.addProperty("grid_transparency").setValue(m_sharedData.gridTransparency);
     cfg.save(path);
 
 

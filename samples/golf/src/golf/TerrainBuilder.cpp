@@ -35,6 +35,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "VatFile.hpp"
 #include "VatAnimationSystem.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -143,8 +144,9 @@ namespace
     };
 }
 
-TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
-    : m_holeData    (hd),
+TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>& hd)
+    : m_sharedData  (sd),
+    m_holeData      (hd),
     m_currentHole   (0),
     m_swapIndex     (0),
     m_terrainBuffer ((MapSize.x * MapSize.y) / QuadsPerMetre),
@@ -457,8 +459,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         if (direction == 0)
         {
             //fade in
-            alpha = std::min(1.f, alpha + dt);
-            if (alpha == 1)
+            alpha = std::min(m_sharedData.gridTransparency, alpha + dt);
+            if (alpha == m_sharedData.gridTransparency)
             {
                 e.getComponent<cro::Callback>().active = false;
             }
