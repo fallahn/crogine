@@ -84,6 +84,9 @@ void BilliardsState::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case BilliardsEvent::BallReplaced:
+            spawnBall(addBall(data.position, data.first));
+            break;
         case BilliardsEvent::TargetAssigned:
         {
             std::uint16_t packetData = (data.first << 8) | data.second;
@@ -443,6 +446,8 @@ void BilliardsState::setNextPlayer(bool waitForAck)
 
     auto info = m_playerInfo[m_activeDirector->getCurrentPlayer()];
     info.targetID = m_activeDirector->getTargetID(playerPos);
+    info.score = m_activeDirector->getScore(m_activeDirector->getCurrentPlayer());
+    
     m_sharedData.host.broadcastPacket(packetID, info, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_turnTimer.restart();

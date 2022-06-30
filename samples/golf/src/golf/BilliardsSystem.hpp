@@ -70,7 +70,9 @@ struct SnookerID final
     {
         White, Red, 
         Yellow, Green, Brown,
-        Blue, Pink, Black
+        Blue, Pink, Black,
+
+        Count
     };
 };
 

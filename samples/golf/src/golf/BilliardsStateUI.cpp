@@ -157,6 +157,46 @@ void BilliardsState::createUI()
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto& menuFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    if (m_sharedData.courseIndex == 2)
+    {
+        //snooker so add scores...
+        auto createScore = [&, entity](glm::vec3 position, std::int32_t client, std::int32_t idx) mutable
+        {
+            auto ent = m_uiScene.createEntity();
+            ent.addComponent<cro::Transform>().setPosition(position + entity.getComponent<cro::Transform>().getOrigin());
+            ent.addComponent<cro::Drawable2D>();
+            ent.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+            ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            ent.getComponent<cro::Text>().setString("0");
+            ent.addComponent<cro::Callback>().active = true;
+            ent.getComponent<cro::Callback>().function =
+                [&, client, idx](cro::Entity e, float)
+            {
+                if (m_localPlayerInfo[client][idx].score > -1)
+                {
+                    e.getComponent<cro::Text>().setString(std::to_string(m_localPlayerInfo[client][idx].score));
+                }
+                centreText(e);
+            };
+            entity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+            return ent;
+        };
+
+        static constexpr float Padding = 14.f;
+        createScore(glm::vec3((-bounds.width / 2.f) - Padding, std::floor(bounds.height / 3.f), 0.1f), 0, 0);
+
+        if (m_sharedData.localConnectionData.playerCount == 2)
+        {
+            createScore(glm::vec3((bounds.width / 2.f) + Padding, std::floor(bounds.height / 3.f), 0.1f), 0, 1);
+        }
+        else
+        {
+            createScore(glm::vec3((bounds.width / 2.f) + Padding, std::floor(bounds.height / 3.f), 0.1f), 1, 0);
+        }
+    }
+
 
     auto createText = [&](const std::string& str, glm::vec2 relPos, glm::vec2 absPos)
     {

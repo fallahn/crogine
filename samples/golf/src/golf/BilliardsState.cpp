@@ -710,6 +710,7 @@ void BilliardsState::buildScene()
     //so we assume here that it's safe to load.
     
     float spectateOffset = 0.f; //spectator camera offset is based on the size of the table model
+    float overheadOffset = 0.f;
 
     std::string path = "assets/golf/tables/" + m_sharedData.mapDirectory + ".table";
     TableData tableData;
@@ -723,6 +724,7 @@ void BilliardsState::buildScene()
             md.createModel(entity);
 
             spectateOffset = entity.getComponent<cro::Model>().getMeshData().boundingBox[1].z * 1.5f;
+            overheadOffset = spectateOffset * 1.25f;
 
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::Table]);
             applyMaterialData(md, material);
@@ -791,7 +793,7 @@ void BilliardsState::buildScene()
 
     //spectate cam
     auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, spectateOffset });
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.8f * (spectateOffset / 1.6f), spectateOffset});
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
     camEnt.getComponent<CameraProperties>().farPlane = 7.f;
@@ -822,7 +824,7 @@ void BilliardsState::buildScene()
 
     //overhead cam
     camEnt = m_gameScene.createEntity();
-    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 2.f, 0.f });
+    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, overheadOffset, 0.f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -90.f * cro::Util::Const::degToRad);
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
@@ -1452,6 +1454,7 @@ void BilliardsState::updateGhost(const BilliardsUpdate& info)
 
 void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
 {
+    LOG("Diff score and play announcer", cro::Logger::Type::Info);
     m_localPlayerInfo[playerInfo.client][playerInfo.player].score = playerInfo.score;
 
     m_cameraController.getComponent<cro::Callback>().active = false;
@@ -1483,6 +1486,11 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
     if (result != balls.end())
     {
         m_localPlayerInfo[playerInfo.client][playerInfo.player].targetBall = result->getComponent<BilliardBall>().id;
+    }
+    else
+    {
+        //TODO only do this if snooker?
+        m_localPlayerInfo[playerInfo.client][playerInfo.player].targetBall = -1;
     }
 
     if (m_cueball.isValid())

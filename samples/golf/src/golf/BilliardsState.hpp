@@ -86,7 +86,7 @@ private:
 
     struct LocalPlayerInfo final
     {
-        std::int32_t score = 0;
+        std::int32_t score = -1;
         std::int8_t targetBall = -1;
     };
     std::array<std::array<LocalPlayerInfo, 2u>, 2u> m_localPlayerInfo = {};
