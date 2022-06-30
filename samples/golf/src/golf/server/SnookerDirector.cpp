@@ -378,5 +378,6 @@ void SnookerDirector::summariseTurn()
         getScene().destroyEntity(getCueball());
     }
 
+    m_turnFlags = 0;
     m_pocketsThisTurn.clear();
 }
