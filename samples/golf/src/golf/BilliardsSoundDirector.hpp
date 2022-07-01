@@ -69,6 +69,14 @@ private:
             Foul01,
             Foul02,
 
+            One,
+            Two,
+            Three,
+            Four,
+            Five,
+            Six,
+            Seven,
+
             Count
         };
     };

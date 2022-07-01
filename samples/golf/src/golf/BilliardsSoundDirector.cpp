@@ -51,7 +51,15 @@ BilliardsSoundDirector::BilliardsSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/billiards/announcer/start.wav",
         "assets/golf/sound/billiards/announcer/nice.wav",
         "assets/golf/sound/billiards/announcer/foul01.wav",
-        "assets/golf/sound/billiards/announcer/foul01.wav",
+        "assets/golf/sound/billiards/announcer/foul02.wav",
+
+        "assets/golf/sound/billiards/announcer/01.wav",
+        "assets/golf/sound/billiards/announcer/02.wav",
+        "assets/golf/sound/billiards/announcer/03.wav",
+        "assets/golf/sound/billiards/announcer/04.wav",
+        "assets/golf/sound/billiards/announcer/05.wav",
+        "assets/golf/sound/billiards/announcer/06.wav",
+        "assets/golf/sound/billiards/announcer/07.wav"
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -119,7 +127,10 @@ void BilliardsSoundDirector::handleMessage(const cro::Message& msg)
             playSound(AudioID::Foul01 + cro::Util::Random::value(0, 1), glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
             break;
         case BilliardBallEvent::Score:
-            //data.data;
+            if (data.data > 0 && data.data < 8)
+            {
+                playSound(AudioID::Foul02 + data.data, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+            }
             break;
         }
     }

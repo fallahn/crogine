@@ -608,7 +608,8 @@ void BilliardsState::createUI()
 void BilliardsState::showReadyNotify(const BilliardsPlayer& player)
 {
     auto score = player.score - m_localPlayerInfo[player.client][player.player].score;
-    if (score > 0)
+    if (player.score > 0
+        && score > 0)
     {
         auto* m = getContext().appInstance.getMessageBus().post<BilliardBallEvent>(MessageID::BilliardsMessage);
         m->type = BilliardBallEvent::Score;
