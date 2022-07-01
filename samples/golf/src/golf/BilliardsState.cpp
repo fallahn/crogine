@@ -1454,7 +1454,6 @@ void BilliardsState::updateGhost(const BilliardsUpdate& info)
 
 void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
 {
-    LOG("Diff score and play announcer", cro::Logger::Type::Info);
     m_localPlayerInfo[playerInfo.client][playerInfo.player].score = playerInfo.score;
 
     m_cameraController.getComponent<cro::Callback>().active = false;

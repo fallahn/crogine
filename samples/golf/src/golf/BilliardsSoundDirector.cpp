@@ -118,6 +118,9 @@ void BilliardsSoundDirector::handleMessage(const cro::Message& msg)
         case BilliardBallEvent::Foul:
             playSound(AudioID::Foul01 + cro::Util::Random::value(0, 1), glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
             break;
+        case BilliardBallEvent::Score:
+            //data.data;
+            break;
         }
     }
     else if (msg.id == cro::Message::SkeletalAnimationMessage)

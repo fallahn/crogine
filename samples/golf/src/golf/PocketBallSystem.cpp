@@ -39,7 +39,7 @@ namespace
 {
     constexpr float MaxXPos = (-100.f - ((BilliardBall::Radius * 2.f) * 8.f) + BilliardBall::Radius);
     constexpr float Acceleration = 0.7f;
-    constexpr std::int32_t MaxBalls = 15;
+    constexpr std::int32_t MaxBalls = 16;
 }
 
 PocketBallSystem::PocketBallSystem(cro::MessageBus& mb)

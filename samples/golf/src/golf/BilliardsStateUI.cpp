@@ -32,6 +32,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "CommandIDs.hpp"
 #include "PacketIDs.hpp"
+#include "MessageIDs.hpp"
 #include "NotificationSystem.hpp"
 #include "BilliardsSystem.hpp"
 #include "../AchievementStrings.hpp"
@@ -606,6 +607,16 @@ void BilliardsState::createUI()
 
 void BilliardsState::showReadyNotify(const BilliardsPlayer& player)
 {
+    auto score = player.score - m_localPlayerInfo[player.client][player.player].score;
+    if (score > 0)
+    {
+        auto* m = getContext().appInstance.getMessageBus().post<BilliardBallEvent>(MessageID::BilliardsMessage);
+        m->type = BilliardBallEvent::Score;
+        m->data = score;
+    }
+
+    m_localPlayerInfo[player.client][player.player].score = player.score;
+
     m_wantsNotify = (player.client == m_sharedData.localConnectionData.connectionID);
 
     cro::String msg = m_sharedData.connectionData[player.client].playerData[player.player].name + "'s Turn";

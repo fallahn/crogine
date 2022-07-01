@@ -245,7 +245,8 @@ void SnookerDirector::summariseTurn()
             }
 
             //mark for replacement if reds remain or not lowest colour
-            if (m_redBallCount > 0)
+            if (m_redBallCount > 0
+                && m_pocketsThisTurn[0] != CueBall)
             {
                 m_replaceBalls.push_back(m_pocketsThisTurn[0]);
                 m_currentTarget = TargetRed;
@@ -256,7 +257,7 @@ void SnookerDirector::summariseTurn()
                 {
                     m_lowestColour++;
                 }
-                else
+                else if (m_pocketsThisTurn[0] != CueBall)
                 {
                     m_replaceBalls.push_back(m_pocketsThisTurn[0]);
                 }
@@ -300,7 +301,8 @@ void SnookerDirector::summariseTurn()
                 m_scores[m_currentPlayer] += ball;
             }
 
-            if (m_redBallCount != 0)
+            if (m_redBallCount != 0
+                && ball != CueBall)
             {
                 //mark ball to be replaced
                 m_replaceBalls.push_back(ball);
@@ -313,7 +315,7 @@ void SnookerDirector::summariseTurn()
                 {
                     m_lowestColour++;
                 }
-                else
+                else if (ball != CueBall)
                 {
                     m_replaceBalls.push_back(ball);
                 }
@@ -384,17 +386,12 @@ void SnookerDirector::summariseTurn()
 
     if (m_turnFlags & TurnFlags::Foul)
     {
+        //resets cueball
+        getScene().destroyEntity(getCueball());
+
         auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
         msg->type = BilliardsEvent::Foul;
         msg->first = foulType;
-
-        if (foulType == BilliardsEvent::CueBallPot)
-        {
-            LogI << "BUNS" << std::endl;
-        }
-
-        //resets cueball
-        getScene().destroyEntity(getCueball());
     }
 
     m_turnFlags = 0;
