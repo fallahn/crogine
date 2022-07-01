@@ -6,3 +6,4 @@ Release
 Debug
 *.user
 imgui.ini
+.vs

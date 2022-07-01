@@ -36,6 +36,10 @@ struct PocketBall final
     std::int32_t id = -1;
     bool awake = true;
     float velocity = 0.f;
+
+    //tracks how many exist so we can
+    //pop the bottom ball to prevent overflow
+    std::uint32_t totalCount = 0;
 };
 
 class PocketBallSystem final : public cro::System
@@ -48,5 +52,5 @@ public:
     void removeBall(std::int8_t);
 
 private:
-
+    void onEntityAdded(cro::Entity) override;
 };

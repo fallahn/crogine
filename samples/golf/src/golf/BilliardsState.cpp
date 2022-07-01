@@ -220,7 +220,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::StrikeBall), net::NetFlag::Reliable);
             break;
         case SDLK_F4:
-            
+            //addPocketBall(1);
             break;
         case SDLK_HOME:
             m_gameScene.getSystem<BilliardsCollisionSystem>()->toggleDebug();
