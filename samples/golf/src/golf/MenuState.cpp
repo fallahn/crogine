@@ -486,11 +486,14 @@ bool MenuState::simulate(float dt)
 
     m_backgroundScene.simulate(dt);
     //processing these with options open only slows things down.
+#ifdef CRO_DEBUG_
     if (getStateCount() == 1)
+#endif
     {
         m_avatarScene.simulate(dt);
         m_uiScene.simulate(dt);
     }
+
     return true;
 }
 
