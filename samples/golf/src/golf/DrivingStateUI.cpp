@@ -35,8 +35,9 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "DrivingRangeDirector.hpp"
 #include "CloudSystem.hpp"
-#include "../Achievements.hpp"
-#include "../AchievementStrings.hpp"
+
+#include <Achievements.hpp>
+#include <AchievementStrings.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
 

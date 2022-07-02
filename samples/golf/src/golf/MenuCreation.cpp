@@ -36,9 +36,10 @@ source distribution.
 #include "Utility.hpp"
 #include "CommandIDs.hpp"
 #include "spooky2.hpp"
-#include "../AchievementStrings.hpp"
 #include "../ErrorCheck.hpp"
 #include "server/ServerPacketData.hpp"
+
+#include <AchievementStrings.hpp>
 
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/core/ConfigFile.hpp>

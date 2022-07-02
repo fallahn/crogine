@@ -34,8 +34,9 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
-#include "../AchievementStrings.hpp"
 #include "../GolfGame.hpp"
+
+#include <AchievementStrings.hpp>
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>

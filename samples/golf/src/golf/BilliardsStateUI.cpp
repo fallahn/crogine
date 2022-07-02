@@ -35,10 +35,10 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "NotificationSystem.hpp"
 #include "BilliardsSystem.hpp"
-#include "../AchievementStrings.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
 
+#include <AchievementStrings.hpp>
 #include <crogine/core/Mouse.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>

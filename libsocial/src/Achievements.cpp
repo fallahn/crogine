@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "Achievements.hpp"
+#include "../include/Achievements.hpp"
 
 #include <crogine/detail/Assert.hpp>
 

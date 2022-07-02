@@ -50,7 +50,8 @@ source distribution.
 #include "server/ServerMessages.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
-#include "../Achievements.hpp"
+
+#include <Achievements.hpp>
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/ConfigFile.hpp>

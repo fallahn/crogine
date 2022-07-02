@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "AchievementIDs.hpp"
+
 #include <string>
 #include <array>
 
@@ -40,49 +42,7 @@ the data (and we don't want to upset people by ruining their
 achievements!!)
 */
 
-namespace AchievementID
-{
-    enum
-    {
-        Unknown,
-        HoleInOne = 1,
-        BullsEye,
-        LongDistanceClara,
-        StrokeOfMidnight,
-        LeaderOfThePack,
-        PuttStar,
-        TopChip,
-        Boomerang,
-        BetterWithFriends,
 
-        BronzeStar,
-        SilverStar,
-        GoldStar,
-
-        CluedUp,
-        JoinTheClub,
-
-        StrokeOfGenius,
-        NoMatch,
-        SkinOfYourTeeth,
-
-        Socialiser,
-        Spots,
-        Stripes,
-        EasyPink,
-
-        PracticeMakesPerfect,
-        AllOfATwitter,
-        Soaring,
-
-        HoleInOneMillion,
-        GimmeFive,
-        GimmeTen,
-
-        Count
-    };
-    static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
-}
 
 static const std::array<std::string, AchievementID::Count> AchievementStrings = 
 {
@@ -230,36 +190,6 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::BronzeCup,
     TrophyID::BronzeFigure
 };
-
-namespace StatID
-{
-    enum
-    {
-        HolesPlayed,
-        PuttDistance,
-        StrokeDistance,
-
-        GoldAverage,
-        SilverAverage,
-        BronzeAverage,
-        TotalRounds,
-
-        EightballWon,
-        NineballWon,
-        SnookerWon,
-
-        TimeOnTheRange,
-        Birdies,
-        Eagles,
-        HIOs,
-
-        LeatherGimmies,
-        PutterGimmies,
-
-        Count
-    };
-    static_assert(Count <= 64, "Count exceeds maximum number of stats");
-}
 
 //these are indexed by the above, so do try to get them in the correct order ;)
 static const std::array<std::string, StatID::Count> StatStrings =

@@ -34,7 +34,8 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
-#include "../AchievementStrings.hpp"
+
+#include <AchievementStrings.hpp>
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/Mouse.hpp>

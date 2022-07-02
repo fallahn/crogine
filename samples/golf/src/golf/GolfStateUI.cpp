@@ -41,8 +41,9 @@ source distribution.
 #include "TrophyDisplaySystem.hpp"
 #include "PacketIDs.hpp"
 #include "../ErrorCheck.hpp"
-#include "../Achievements.hpp"
-#include "../AchievementStrings.hpp"
+
+#include <Achievements.hpp>
+#include <AchievementStrings.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
 

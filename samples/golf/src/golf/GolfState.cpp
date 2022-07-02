@@ -52,8 +52,9 @@ source distribution.
 #include "BeaconCallback.hpp"
 #include "SpectatorSystem.hpp"
 #include "PropFollowSystem.hpp"
-#include "../Achievements.hpp"
-#include "../AchievementStrings.hpp"
+
+#include <Achievements.hpp>
+#include <AchievementStrings.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/audio/AudioMixer.hpp>

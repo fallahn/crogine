@@ -204,9 +204,6 @@
     <ClCompile Include="src\golf\PuttingStateUI.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
-    <ClCompile Include="src\Achievements.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\DefaultAchievements.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
