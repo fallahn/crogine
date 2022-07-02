@@ -71,6 +71,7 @@ include_directories(
   ${SDL2_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
   ${BULLET_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/include
   src)
 
 if(USE_RSS)
@@ -78,8 +79,12 @@ include_directories(${CURL_INCLUDE_DIR})
 endif()
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+SET(SOCIAL_DIR ${PROJECT_DIR}/../../../libsocial/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 include(${PROJECT_DIR}/golf/CMakeLists.txt)
+include(${SOCIAL_DIR}/CMakeLists.txt)
+
+SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC})
 if(USE_RSS)
   include(${PROJECT_DIR}/rss/CMakeLists.txt)
   SET(GOLF_SRC ${GOLF_SRC} ${RSS_SRC})
