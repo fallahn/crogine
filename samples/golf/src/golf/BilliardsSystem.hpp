@@ -130,7 +130,7 @@ struct BilliardBall final : public btMotionState, public cro::Detail::NonResizea
     */
     std::int8_t id = 0;
     bool hadUpdate = false;
-    static constexpr float Mass = 0.156f;
+    static constexpr float Mass = 0.2f;// 0.156f;
     static constexpr float Radius = 0.0255f;
 
     std::int8_t getContact() const { return m_ballContact; }

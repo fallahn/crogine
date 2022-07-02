@@ -637,7 +637,7 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
     body->setCcdMotionThreshold(BilliardBall::Radius * 0.5f);
     body->setCcdSweptSphereRadius(BilliardBall::Radius);
     
-    //body->setAnisotropicFriction(m_ballShape->getAnisotropicRollingFrictionDirection(), btCollisionObject::CF_ANISOTROPIC_ROLLING_FRICTION);
+    body->setAnisotropicFriction(m_ballShape->getAnisotropicRollingFrictionDirection(), btCollisionObject::CF_ANISOTROPIC_ROLLING_FRICTION);
 
     m_collisionWorld->addRigidBody(body.get(), (1 << CollisionID::Ball), (1 << CollisionID::Table) | (1 << CollisionID::Cushion) | (1 << CollisionID::Ball));
 

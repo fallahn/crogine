@@ -74,6 +74,7 @@ public:
 
     virtual void init() {};
     virtual void update() {};
+    virtual void shutdown() {};
 
     virtual void registerAchievement(const std::string&) {}
     virtual void awardAchievement(const std::string&) = 0;
@@ -97,6 +98,8 @@ public:
     static void init(AchievementImpl&);
 
     static void update();
+
+    static void shutdown();
 
     static void registerAchievement(const std::string&);
 

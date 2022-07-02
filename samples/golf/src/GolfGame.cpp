@@ -554,6 +554,8 @@ bool GolfGame::initialise()
 
 void GolfGame::finalise()
 {
+    Achievements::shutdown();
+
     savePreferences();
 
     m_stateStack.clearStates();

@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 
+#include <crogine/util/Random.hpp>
+
 namespace
 {
     //table length 3.265 / 1.6325
@@ -54,7 +56,7 @@ namespace
 }
 
 SnookerDirector::SnookerDirector()
-    : m_currentPlayer   (0),
+    : m_currentPlayer   (cro::Util::Random::value(0, 1)),
     m_firstCollision    (0),
     m_turnFlags         (0),
     m_currentTarget     (TargetRed),

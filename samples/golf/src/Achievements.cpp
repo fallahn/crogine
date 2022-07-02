@@ -46,6 +46,12 @@ void Achievements::update()
     m_impl->update();
 }
 
+void Achievements::shutdown()
+{
+    CRO_ASSERT(m_impl, "Achievements have not been initialised!");
+    m_impl->shutdown();
+}
+
 void Achievements::registerAchievement(const std::string& name)
 {
     CRO_ASSERT(m_impl, "Achievements have not been initialised!");
