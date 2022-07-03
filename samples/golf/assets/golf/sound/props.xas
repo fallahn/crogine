@@ -31,4 +31,14 @@ audioscape props
         volume = 2.5
         pitch = 0.8
     }
+
+    emitter waterfall
+    {
+        path = "assets/golf/sound/ambience/waterfall.wav"
+        streaming = false
+        mixer_channel = 1
+        looped = true
+        attenuation = 0.2
+        volume = 0.5
+    }    
 }

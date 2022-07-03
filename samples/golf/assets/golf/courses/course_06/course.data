@@ -4,7 +4,7 @@ course course_06
     billboard_model = "assets/golf/models/shrubbery_cliffs.cmt"
     billboard_sprites = "assets/golf/sprites/shrubbery_cliffs.spt"
     instance_model = "assets/golf/models/reeds.cmt"
-    audio = "assets/golf/sound/ambience.xas"
+    audio = "assets/golf/sound/ambience_desert.xas"
     grass = 0.596,0.478,0.408
 
     title = "Terdiman Cliffs Putting Range"
