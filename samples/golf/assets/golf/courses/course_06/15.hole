@@ -90,10 +90,22 @@ hole 15
         rotation = -104.257145
     }
 
+    crowd
+    {
+        position = 136.603745,0.183167,-121.937630
+        rotation = 5.863062
+    }
+
+    crowd
+    {
+        position = 126.518494,0.183167,-91.383804
+        rotation = -221.578139
+    }
+
     particles
     {
         path = "assets/golf/particles/waterfall.cps"
-        position = 149.088211,-0.082256,-101.022766
+        position = 149.311844,-0.082256,-100.958633
     }
 
     target = 151.161865,0.183123,-94.051552

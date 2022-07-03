@@ -1,9 +1,11 @@
 course course_06
 {
-    skybox = "assets/golf/skyboxes/spring.sbf"
-    billboard_model = "assets/golf/models/shrubbery.cmt"
-    billboard_sprites = "assets/golf/sprites/shrubbery.spt"
+    skybox = "assets/golf/skyboxes/cliffs.sbf"
+    billboard_model = "assets/golf/models/shrubbery_cliffs.cmt"
+    billboard_sprites = "assets/golf/sprites/shrubbery_cliffs.spt"
+    instance_model = "assets/golf/models/reeds.cmt"
     audio = "assets/golf/sound/ambience.xas"
+    grass = 0.596,0.478,0.408
 
     title = "Terdiman Cliffs Putting Range"
     description = "A Putt Above The Rest"

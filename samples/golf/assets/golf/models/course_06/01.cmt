@@ -34,7 +34,7 @@ model 01
         col_count = 1
         framerate = 1.000000
         blendmode = none
-        diffuse = "assets/golf/images/green.png"
+        diffuse = "assets/golf/images/rough.png"
 
     }
     material Unlit
@@ -51,7 +51,7 @@ model 01
         col_count = 1
         framerate = 1.000000
         blendmode = none
-        diffuse = "assets/golf/images/rough.png"
+        diffuse = "assets/golf/images/mid_sand.png"
 
     }
     material Unlit
@@ -68,7 +68,7 @@ model 01
         col_count = 1
         framerate = 1.000000
         blendmode = none
-        diffuse = "assets/golf/images/scrub.png"
+        diffuse = "assets/golf/images/dark_sand.png"
 
     }
 }

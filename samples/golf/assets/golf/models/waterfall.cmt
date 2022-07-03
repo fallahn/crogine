@@ -23,17 +23,18 @@ model waterfall
     material Unlit
     {
         name = "Untitled"
-        colour = 1.000000,0.000000,1.000000,1.000000
-        smooth = true
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
         repeat = true
         depth_test = true
         double_sided = false
         use_mipmaps = false
-        animated = false
+        animated = true
         row_count = 1
-        col_count = 1
-        framerate = 1.000000
+        col_count = 6
+        framerate = 12.000000
         blendmode = none
+        diffuse = "assets/golf/images/waterfall.png"
 
     }
 }
