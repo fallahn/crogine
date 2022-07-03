@@ -530,22 +530,22 @@ void BallSystem::process(float dt)
                 updateWind(); //is a bit less random but at least stops the wind
                 //changing direction mid-stroke which is just annoying.
             }
-            else if (m_puttFromTee &&
-                ball.terrain == TerrainID::Green)
-            {
-                //add slope and start moving if vel > min vel
-                auto terrainContact = getTerrain(entity.getComponent<cro::Transform>().getPosition());
-                auto [slope, slopeStrength] = getSlope(terrainContact.normal);
+            //else if (m_puttFromTee &&
+            //    ball.terrain == TerrainID::Green)
+            //{
+            //    //add slope and start moving if vel > min vel
+            //    auto terrainContact = getTerrain(entity.getComponent<cro::Transform>().getPosition());
+            //    auto [slope, slopeStrength] = getSlope(terrainContact.normal);
 
-                ball.velocity += slope * slopeStrength;
-                ball.velocity *= Friction[TerrainID::Green] + 0.001f;
+            //    ball.velocity += slope * slopeStrength;
+            //    ball.velocity *= Friction[TerrainID::Green] + 0.001f;
 
-                if (glm::length2(ball.velocity / 1.1f) > MinVelocitySqr)
-                {
-                    ball.delay = 0.f;
-                    ball.state = Ball::State::Putt;
-                }
-            }
+            //    if (glm::length2(ball.velocity / 1.1f) > MinVelocitySqr)
+            //    {
+            //        ball.delay = 0.f;
+            //        ball.state = Ball::State::Putt;
+            //    }
+            //}
         }
             break;
         }

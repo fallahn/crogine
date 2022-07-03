@@ -5,6 +5,23 @@ model 01
 
     material Unlit
     {
+        name = "Water"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        blendmode = none
+        diffuse = "assets/golf/images/water.png"
+
+    }
+    material Unlit
+    {
         name = "green"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
@@ -12,21 +29,12 @@ model 01
         depth_test = true
         double_sided = false
         use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/green.png"
-
-    }
-    material Unlit
-    {
-        name = "scrub"
-        colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = false
-        repeat = true
-        depth_test = true
-        double_sided = false
-        use_mipmaps = false
-        blendmode = none
-        diffuse = "assets/golf/images/scrub.png"
 
     }
     material Unlit
@@ -38,8 +46,29 @@ model 01
         depth_test = true
         double_sided = false
         use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/rough.png"
+
+    }
+    material Unlit
+    {
+        name = "scrub"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        blendmode = none
+        diffuse = "assets/golf/images/scrub.png"
 
     }
 }

@@ -2,12 +2,104 @@ hole 01
 {
     map="assets/golf/courses/course_06/01.png"
     model="assets/golf/models/course_06/01.cmt"
-    par = 4
+    par = 3
 
-    pin = 186.862473,0.833630,-102.132599
+    prop
+    {
+        model = "assets/golf/models/leaderboard.cmt"
+        position = 168.817368,0.136342,-82.656151
+        rotation = 151.041025
+        scale = 0.500000,0.500000,0.500000
+    }
 
-    target = 187.590759,0.833631,-97.843712
+    prop
+    {
+        model = "assets/golf/models/bench01.cmt"
+        position = 183.322418,0.152166,-96.931404
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
 
-    tee = 186.204346,0.833630,-93.366760
+    prop
+    {
+        model = "assets//golf/models/bench03.cmt"
+        position = 181.689056,0.152168,-101.569099
+        rotation = 38.413824
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/rock_large.cmt"
+        position = 169.390457,0.103659,-99.047325
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/bench01.cmt"
+        position = 137.218063,0.152169,-118.142189
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/bench02.cmt"
+        position = 141.812469,0.152169,-117.738708
+        rotation = -17.661749
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/rock_large.cmt"
+        position = 147.389160,0.103659,-113.932159
+        rotation = 197.336339
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets//golf/models/bench03.cmt"
+        position = 130.433014,0.170136,-93.070114
+        rotation = 38.413824
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/waterfall.cmt"
+        position = 0.000000,0.000000,-0.000000
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/rock_wall.cmt"
+        position = 0.000000,0.000000,-0.000000
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 189.762436,0.183167,-91.830933
+        rotation = -104.257145
+    }
+
+    particles
+    {
+        path = "assets/golf/particles/waterfall.cps"
+        position = 149.088211,-0.082256,-101.022766
+    }
+
+    target = 187.208237,0.136754,-98.043587
+
+    tee = 186.204346,0.136752,-93.366760
+
+    pin = 186.862473,0.136752,-102.132599
 
 }
