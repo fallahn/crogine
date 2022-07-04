@@ -14,8 +14,8 @@ particle_system waterfall_top
     scale_affector = 0.000000
     size = 0.040000
     emit_rate = 10.000000
-    emit_count = 1
-    spawn_radius = 0.738000
+    emit_count = 4
+    spawn_radius = 0.403000
     spawn_offset = 0.000000,0.000000,0.000000
     release_count = 0
     inherit_rotation = true

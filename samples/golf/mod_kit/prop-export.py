@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2022, 6, 26),
+    "version": (2022, 7, 4),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -62,6 +62,15 @@ def WriteSpeaker(file, speaker):
     if speaker.get('name') is not None:
         file.write("        emitter = \"%s\"\n" % speaker['name'])
 
+    if speaker.parent is None:
+        location = speaker.location
+        file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
+
+
+def WriteSpeakerSolo(file, speaker):
+    file.write("    speaker\n    {\n")
+    WriteSpeaker(file, speaker)
+    file.write("    }\n\n")
 
 
 def WriteProp(file, modelName, location, rotation, scale, ob):
@@ -150,7 +159,7 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 
         for ob in bpy.context.selected_objects:
 
-            if ob.type == 'MESH' or ob.type == 'EMPTY':
+            if ob.type == 'MESH' or ob.type == 'EMPTY' or ob.type == 'SPEAKER':
 
                 modelName = ob.name
                 if ob.get('model_path') is not None:
@@ -197,8 +206,8 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                                     WriteParticles(file, ob['path'], worldLocation)
                                 else:
                                     WriteParticles(file, "path_missing", worldLocation)
-                    elif ob.type == 'SPEAKER':
-                        self.report({'INFO'}, "Found a speaker")
+                    elif ob.type == 'SPEAKER' and ob.parent is None:
+                        WriteSpeakerSolo(file, ob)
 
         file.write("}")
         file.close()

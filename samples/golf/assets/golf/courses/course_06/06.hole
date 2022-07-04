@@ -90,6 +90,12 @@ hole 06
         rotation = -104.257145
     }
 
+    particles
+    {
+        path = "assets/golf/particles/waterfall.cps"
+        position = 149.311844,-0.082256,-100.958633
+    }
+
     crowd
     {
         position = 136.603745,0.183167,-121.937630
@@ -102,10 +108,34 @@ hole 06
         rotation = -221.578139
     }
 
+    speaker
+    {
+        emitter = "waterfall"
+        position = 149.670593,0.386261,-100.953300
+    }
+
     particles
     {
-        path = "assets/golf/particles/waterfall.cps"
-        position = 149.311844,-0.082256,-100.958633
+        path = "assets/golf/particles/waterfall_top.cps"
+        position = 149.198975,2.546930,-100.960213
+    }
+
+    crowd
+    {
+        position = 175.897415,0.183167,-78.090820
+        rotation = -195.577028
+    }
+
+    speaker
+    {
+        emitter = "water_running"
+        position = 166.532043,-0.082257,-93.780510
+    }
+
+    speaker
+    {
+        emitter = "water_running"
+        position = 183.186722,-0.082257,-90.293434
     }
 
     target = 162.063492,0.185624,-99.005737

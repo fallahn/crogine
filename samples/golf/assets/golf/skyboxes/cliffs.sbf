@@ -27,4 +27,12 @@ skybox
         rotation = 361
         scale = 1,1,1
     }
+
+    prop
+    {
+        model = "assets/golf/models/skybox/sun_high.cmt"
+        position = 0,0,0
+        rotation = 40
+        scale = 1,1,1
+    }
 }
