@@ -52,10 +52,11 @@ source distribution.
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
 
-static constexpr float CameraStrokeHeight = 2.f;// 3.2f;// 2.6f;
-static constexpr float CameraPuttHeight = 0.3f;
-static constexpr float CameraStrokeOffset = 5.f;// 7.5f;// 5.1f;
-static constexpr float CameraPuttOffset = 0.8f;
+static constexpr float CameraStrokeHeight = 2.f;
+static constexpr float CameraPuttHeight = 0.6f;// 0.3f;
+static constexpr float CameraTeeMultiplier = 0.6f; //height reduced by this when not putting from tee
+static constexpr float CameraStrokeOffset = 5.f;
+static constexpr float CameraPuttOffset = 1.4f; //0.8f;
 static constexpr glm::vec3 CameraBystanderOffset = glm::vec3(7.f, 2.f, 7.f);
 
 static constexpr float GreenCamHeight = 3.f;

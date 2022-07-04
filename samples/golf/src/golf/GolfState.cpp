@@ -4255,7 +4255,7 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     //clamp above ground height and hole radius
     auto newPos = camEnt.getComponent<cro::Transform>().getPosition();
 
-    static constexpr float MinRad = 0.3f + CameraPuttOffset;
+    static constexpr float MinRad = 0.6f + CameraPuttOffset;
     static constexpr float MinRadSqr = MinRad * MinRad;
 
     auto holeDir = m_holeData[m_currentHole].pin - newPos;
@@ -4271,6 +4271,10 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
     //lower height as we get closer to hole
     heightMultiplier = std::min(1.f, std::max(0.f, holeDist / MinRadSqr));
+    if (!m_holeData[m_currentHole].puttFromTee)
+    {
+        heightMultiplier *= CameraTeeMultiplier;
+    }
 
     auto groundHeight = m_collisionMesh.getTerrain(newPos).height;
     newPos.y = std::max(groundHeight + (CameraPuttHeight * heightMultiplier), newPos.y);
@@ -4849,6 +4853,10 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     if (playerData.terrain == TerrainID::Green)
     {
         targetInfo.targetHeight = CameraPuttHeight;
+        if (!m_holeData[m_currentHole].puttFromTee)
+        {
+            targetInfo.targetHeight *= CameraTeeMultiplier;
+        }
         targetInfo.targetOffset = CameraPuttOffset;
     }
     else
