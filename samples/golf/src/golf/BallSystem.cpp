@@ -337,6 +337,9 @@ void BallSystem::process(float dt)
                     }
                     else
                     {
+                        //add wind again - this is intentional
+                        ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
+                        
                         //only use this when we're mini putting
                         //it's more accurate (ball runs back down a slope it went up)
                         //but is really boring to play on the full size courses
@@ -452,6 +455,13 @@ void BallSystem::process(float dt)
                 dir /= length;
                 std::int32_t maxDist = static_cast<std::int32_t>(length /*- 10.f*/);
 
+                //if we're on a putting course take smaller steps for better accuracy
+                if (m_puttFromTee)
+                {
+                    dir /= 4.f;
+                    maxDist *= 4;
+                }
+
                 for (auto i = 0; i < maxDist; ++i)
                 {
                     ballPos += dir;
@@ -480,7 +490,9 @@ void BallSystem::process(float dt)
                 if (terrain == TerrainID::Water
                     || terrain == TerrainID::Scrub)
                 {
-                    terrain = TerrainID::Fairway;
+                    //this is important else we'll end up trying to drive
+                    //down a putting course :facepalm:
+                    terrain = m_puttFromTee ? TerrainID::Green : TerrainID::Fairway;
                     tx.setPosition(m_holeData->tee);
                 }
 
