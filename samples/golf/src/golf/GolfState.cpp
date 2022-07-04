@@ -213,19 +213,26 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     ballEntity = {};
     useFreeCam = false;
 
-    /*registerWindow([&]()
-        {
-            if (ImGui::Begin("Network"))
-            {
-                ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Network"))
+    //        {
+    //            /*ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
 
-                for (const auto& c : m_sharedData.connectionData)
-                {
-                    ImGui::Text("Ping: %u", c.pingTime);
-                }
-            }
-            ImGui::End();
-        });*/
+    //            for (const auto& c : m_sharedData.connectionData)
+    //            {
+    //                ImGui::Text("Ping: %u", c.pingTime);
+    //            }*/
+
+    //            /*auto& zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>();
+    //            if (ImGui::SliderFloat("Zoom", &zoom.target, 0.1f, 1.f))
+    //            {
+    //                m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
+    //            }*/
+    //        }
+
+    //        ImGui::End();
+    //    });
 
     //registerWindow([&]()
     //    {
@@ -2813,7 +2820,7 @@ void GolfState::buildScene()
         }
     }
 
-    //update the 3D view
+    //update the 3D view - applied on player cam and transition cam
     auto updateView = [&](cro::Camera& cam)
     {
         auto vpSize = calcVPSize();
@@ -2833,12 +2840,39 @@ void GolfState::buildScene()
         glm::vec2 scaledRes = texSize / invScale;
         m_resolutionBuffer.setData(&scaledRes);
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x)/* * 1.25f*/);
+        //fetch this explicitly so the transition cam also gets the correct zoom
+        float zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().fov;
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad * zoom, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x));
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
     camEnt.getComponent<cro::Transform>().setPosition(m_holeData[0].pin);
+    camEnt.addComponent<CameraFollower::ZoomData>().target = 1.f; //used to set zoom when putting.
+    camEnt.addComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& cam = e.getComponent<cro::Camera>();
+        auto& zoom =  e.getComponent<CameraFollower::ZoomData>();
+        float diff = zoom.target - zoom.fov;
+
+        CRO_ASSERT(zoom.target > 0, "");
+
+        if (std::fabs(diff) > 0.001f)
+        {
+            zoom.fov += (diff * dt) * 3.f;
+        }
+        else
+        {
+            zoom.fov = zoom.target;
+            e.getComponent<cro::Callback>().active = false;
+        }
+
+        auto fov = m_sharedData.fov * cro::Util::Const::degToRad * zoom.fov;
+        cam.setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x));
+        m_cameras[CameraID::Transition].getComponent<cro::Camera>().setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x));
+    };
+
     m_cameras[CameraID::Player] = camEnt;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
@@ -4803,6 +4837,16 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 {
     float targetDistance = glm::length2(playerData.position - m_currentPlayer.position);
 
+    //set the target zoom on the player camera
+    float zoom = 1.f;
+    if (playerData.terrain == TerrainID::Green)
+    {
+        zoom = m_holeData[m_currentHole].puttFromTee ? PuttingZoom : GolfZoom;
+    }
+
+    m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().target = zoom;
+    m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
+
     //hide player avatar
     if (m_activeAvatar)
     {
@@ -4969,6 +5013,10 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
 void GolfState::startFlyBy()
 {
+    //reset the zoom if not putting from tee
+    m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().target = m_holeData[m_currentHole].puttFromTee ? PuttingZoom : 1.f;
+    m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
+
     m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(ShadowFarDistance);
 
     //static for lambda capture
