@@ -54,8 +54,6 @@ source distribution.
 
 namespace
 {
-    const std::string prefPath = cro::FileSystem::getConfigDirectory("crogine_editor") + "particle_editor.cfg";
-
     const float CamSpeed = 10.f;
 }
 
@@ -406,7 +404,7 @@ void ParticleState::setCamera(std::int32_t idx)
 void ParticleState::loadPrefs()
 {
     cro::ConfigFile cfg;
-    if (cfg.loadFromFile(prefPath))
+    if (cfg.loadFromFile(cro::App::getPreferencePath() + "particle_editor.cfg"))
     {
         const auto& props = cfg.getProperties();
         for (const auto& prop : props)
@@ -449,5 +447,5 @@ void ParticleState::savePrefs()
         cfg.addProperty("recent").setValue(*item);
     }
 
-    cfg.save(prefPath);
+    cfg.save(cro::App::getPreferencePath() + "particle_editor.cfg");
 }

@@ -44,14 +44,13 @@ source distribution.
 namespace
 {
     SharedStateData sharedData;
-    const std::string prefPath = cro::FileSystem::getConfigDirectory("crogine_editor") + "global.cfg";
 }
 
 MyApp::MyApp()
     : cro::App  (cro::Window::Resizable),
     m_stateStack({*this, getWindow()})
 {
-    setApplicationStrings("Trederia", "Crogine Editor");
+    setApplicationStrings("Trederia", "crogine_editor");
 
     m_stateStack.registerState<ModelState>(States::ID::ModelViewer, sharedData);
     m_stateStack.registerState<WorldState>(States::ID::WorldEditor, sharedData);
@@ -134,7 +133,7 @@ void MyApp::finalise()
 void MyApp::loadPrefs()
 {
     cro::ConfigFile prefs;
-    if (prefs.loadFromFile(prefPath))
+    if (prefs.loadFromFile(cro::App::getPreferencePath() + "global.cfg"))
     {
         const auto& props = prefs.getProperties();
         for (const auto& prop : props)
@@ -160,5 +159,5 @@ void MyApp::savePrefs()
     prefsOut.addProperty("working_dir", sharedData.workingDirectory);
     prefsOut.addProperty("skybox", sharedData.skymapTexture);
 
-    prefsOut.save(prefPath);
+    prefsOut.save(cro::App::getPreferencePath() + "global.cfg");
 }

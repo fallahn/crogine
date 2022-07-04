@@ -52,7 +52,6 @@ source distribution.
 
 namespace
 {
-    const std::string prefPath = cro::FileSystem::getConfigDirectory("crogine_editor") + "world_viewer.cfg";
     const float CamSpeed = 10.f;
 }
 
@@ -303,7 +302,7 @@ void WorldState::setupScene()
 void WorldState::loadPrefs()
 {
     cro::ConfigFile cfg;
-    if (cfg.loadFromFile(prefPath))
+    if (cfg.loadFromFile(cro::App::getPreferencePath() + "world_viewer.cfg"))
     {
         const auto& props = cfg.getProperties();
         for (const auto& prop : props)
@@ -324,5 +323,5 @@ void WorldState::savePrefs()
 
 
 
-    cfg.save(prefPath);
+    cfg.save(cro::App::getPreferencePath() + "world_viewer.cfg");
 }

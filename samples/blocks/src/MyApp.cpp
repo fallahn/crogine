@@ -50,6 +50,7 @@ namespace
 MyApp::MyApp()
     : m_stateStack({*this, getWindow()})
 {
+    setApplicationStrings("crogine", "blocks");
     m_stateStack.registerState<MenuState>(States::ID::MainMenu, m_sharedData);
     m_stateStack.registerState<GameState>(States::ID::Game, m_sharedData);
     m_stateStack.registerState<ErrorState>(States::ID::Error, m_sharedData);
@@ -101,7 +102,7 @@ bool MyApp::initialise()
 
     m_sharedData.clientConnection.netClient.create(4);
 
-    configPath = cro::FileSystem::getConfigDirectory("mp_game") + "settings.cfg";
+    configPath = getPreferencePath() + "settings.cfg";
     loadSettings();
 
     return true;

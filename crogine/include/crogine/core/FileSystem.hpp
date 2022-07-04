@@ -112,6 +112,7 @@ namespace cro
 
         /*!
         \brief Returns a path to the current user's config directory.
+        DEPRECATED Prefer cro::App::getPreferencePath() instead.
         Config files should generally be written to this directory, rather than the
         current working directory. Output is usually in the form of the following:
         \code
@@ -127,6 +128,7 @@ namespace cro
         \param appName Name of the current application used to create the appname directory
         \returns Above formatted string, or an empty string if something went wrong
         */
+        [[deprecated("Use cro::App::getPreferencePath() instead")]]
         static std::string getConfigDirectory(const std::string& appName);
 
         /*!
