@@ -110,6 +110,8 @@ public:
     };
     TerrainResult getTerrain(glm::vec3) const;
 
+    bool getPuttFromTee() const { return m_puttFromTee; }
+
 #ifdef CRO_DEBUG_
     void setDebugFlags(std::int32_t);
     void renderDebug(const glm::mat4&, glm::uvec2);

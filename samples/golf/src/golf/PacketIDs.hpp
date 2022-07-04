@@ -82,6 +82,7 @@ namespace PacketID
         HoleWon, //< uint16 client OR'd player winning a match or skins point
         FoulEvent, //< int8 BilliardsEvent foul reason - tells client to display a foul message
         GameEnd, //< uint8 seconds. tells clients to show scoreboard/countdown to lobby, or BilliardsPlayer of winner in billiards
+        MaxStrokes, //< player reached stroke limit (so client can print message)
 
         ActorAnimation, //< Tell player sprite to play the given anim with uint8 ID
         ActorUpdate, //< ActorInfo - ball interpolation

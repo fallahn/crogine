@@ -3528,6 +3528,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::MaxStrokes:
+            showNotification("Stroke Limit Reached.");
+            break;
         case PacketID::PingTime:
         {
             auto data = evt.packet.as<std::uint32_t>();

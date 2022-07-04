@@ -124,11 +124,14 @@ void GolfState::handleMessage(const cro::Message& msg)
         if (data.type == GolfBallEvent::TurnEnded)
         {
             //check if we reached max strokes
-            if (m_playerInfo[0].holeScore[m_currentHole] >= MaxStrokes)
+            auto maxStrokes = m_scene.getSystem<BallSystem>()->getPuttFromTee() ? MaxStrokes / 2 : MaxStrokes;
+            if (m_playerInfo[0].holeScore[m_currentHole] >= maxStrokes)
             {
                 //set the player as having holed the ball
                 m_playerInfo[0].position = m_holeData[m_currentHole].pin;
                 m_playerInfo[0].distanceToHole = 0.f;
+
+                m_sharedData.host.broadcastPacket(PacketID::MaxStrokes, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             else
             {
