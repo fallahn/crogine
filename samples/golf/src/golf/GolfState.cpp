@@ -2408,6 +2408,11 @@ void GolfState::loadAssets()
             player.holeScores.clear();
             player.holeScores.resize(holeStrings.size());
             std::fill(player.holeScores.begin(), player.holeScores.end(), 0);
+
+            /*player.totalTime = 0;
+            player.holeTimes.clear();
+            player.holeTimes.resize(holeStrings.size());
+            std::fill(player.holeTimes.begin(), player.holeTimes.end(), 0);*/
         }
     }
 
@@ -3760,6 +3765,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             msg->club = getClub();
             msg->travelDistance = glm::length2(update.position - m_currentPlayer.position);
             msg->pinDistance = glm::length2(update.position - m_holeData[m_currentHole].pin);
+
+            //m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeTimes[m_currentHole] += m_turnTimer.elapsed().asMilliseconds();
         }
             break;
         case PacketID::ClientDisconnected:
@@ -3920,6 +3927,17 @@ void GolfState::removeClient(std::uint8_t clientID)
 
 void GolfState::setCurrentHole(std::uint32_t hole)
 {
+    //update all the total hole times - TODO fix this
+    /*for (auto& conn : m_sharedData.connectionData)
+    {
+        for (auto i = 0; i < conn.playerCount; ++i)
+        {
+            conn.playerData[i].totalTime += conn.playerData[i].holeTimes[m_currentHole];
+            LogI << "Hole time: " << conn.playerData[i].holeTimes[m_currentHole] << std::endl;
+            LogI << "Total time: " << conn.playerData[i].totalTime << std::endl;
+        }
+    }*/
+
     updateScoreboard();
     m_hadFoul = false;
 
@@ -4431,6 +4449,8 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    m_turnTimer.restart();
+
     m_gameScene.getDirector<GolfSoundDirector>()->setActivePlayer(player.client, player.player);
     m_avatars[player.client][player.player].ballModel.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
 

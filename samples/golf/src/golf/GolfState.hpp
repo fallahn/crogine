@@ -118,6 +118,7 @@ private:
 
     InputParser m_inputParser;
     CPUGolfer m_cpuGolfer;
+    cro::Clock m_turnTimer;
 
     bool m_wantsGameState;
     cro::Clock m_readyClock; //pings ready state until ack'd
