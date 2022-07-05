@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "CommonConsts.hpp"
+#include "GameConsts.hpp"
 #include "PlayerAvatar.hpp"
 #include "Billboard.hpp"
 #include "SharedStateData.hpp"
@@ -117,9 +118,9 @@ private:
     std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
 
-    cro::UniformBuffer m_scaleBuffer;
-    cro::UniformBuffer m_resolutionBuffer;
-    cro::UniformBuffer m_windBuffer;
+    cro::UniformBuffer<float> m_scaleBuffer;
+    cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
+    cro::UniformBuffer<WindData> m_windBuffer;
 
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 

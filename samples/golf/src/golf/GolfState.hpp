@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "HoleData.hpp"
+#include "GameConsts.hpp"
 #include "InputParser.hpp"
 #include "TerrainBuilder.hpp"
 #include "CameraFollowSystem.hpp"
@@ -125,9 +126,9 @@ private:
     cro::RenderTexture m_trophySceneTexture;
     cro::CubemapTexture m_reflectionMap;
 
-    cro::UniformBuffer m_scaleBuffer;
-    cro::UniformBuffer m_resolutionBuffer;
-    cro::UniformBuffer m_windBuffer;
+    cro::UniformBuffer<float> m_scaleBuffer;
+    cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
+    cro::UniformBuffer<WindData> m_windBuffer;
 
     struct WindUpdate final
     {

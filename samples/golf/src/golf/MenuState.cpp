@@ -33,7 +33,6 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "Utility.hpp"
 #include "CommandIDs.hpp"
-#include "GameConsts.hpp"
 #include "MenuConsts.hpp"
 #include "MenuCallbacks.hpp"
 #include "PoissonDisk.hpp"
@@ -112,9 +111,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_backgroundScene   (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_avatarScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(ResolutionData)),
-    m_windBuffer        ("WindValues", sizeof(WindData)),
+    m_scaleBuffer       ("PixelScale"),
+    m_resolutionBuffer  ("ScaledResolution"),
+    m_windBuffer        ("WindValues"),
     m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu       (MenuID::Main),
     m_prevMenu          (MenuID::Main),
@@ -482,7 +481,7 @@ bool MenuState::simulate(float dt)
     wind.direction[1] = 0.5f;
     wind.direction[2] = 0.5f;
     wind.elapsedTime = accumTime;
-    m_windBuffer.setData(&wind);
+    m_windBuffer.setData(wind);
 
     m_backgroundScene.simulate(dt);
     //processing these with options open only slows things down.
@@ -863,11 +862,11 @@ void MenuState::createScene()
         auto texSize = winSize / scale;
 
         auto invScale = (maxScale + 1) - scale;
-        m_scaleBuffer.setData(&invScale);
+        m_scaleBuffer.setData(invScale);
 
         ResolutionData d;
         d.resolution = texSize / invScale;
-        m_resolutionBuffer.setData(&d);
+        m_resolutionBuffer.setData(d);
 
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 

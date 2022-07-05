@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "BilliardsInput.hpp"
+#include "GameConsts.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
@@ -106,8 +107,8 @@ private:
     cro::Entity m_targetBall;
     //cro::Shader m_gameSceneShader;
     //cro::Texture m_lutTexture;
-    cro::UniformBuffer m_scaleBuffer;
-    cro::UniformBuffer m_resolutionBuffer;
+    cro::UniformBuffer<float> m_scaleBuffer;
+    cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
     glm::vec2 m_viewScale;
 
     cro::ModelDefinition m_ballDefinition;

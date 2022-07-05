@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "MenuCallbacks.hpp"
 #include "CommonConsts.hpp"
+#include "GameConsts.hpp"
 #include "Billboard.hpp"
 #include "BilliardsSystem.hpp"
 
@@ -143,9 +144,9 @@ private:
 
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_backgroundTexture;
-    cro::UniformBuffer m_scaleBuffer;
-    cro::UniformBuffer m_resolutionBuffer;
-    cro::UniformBuffer m_windBuffer;
+    cro::UniformBuffer<float> m_scaleBuffer;
+    cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
+    cro::UniformBuffer<WindData> m_windBuffer;
     cro::CubemapTexture m_reflectionMap;
     cro::VideoPlayer m_arcadeVideo;
 

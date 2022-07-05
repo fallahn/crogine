@@ -30,7 +30,6 @@ source distribution.
 #include "PuttingState.hpp"
 #include "PoissonDisk.hpp"
 #include "SharedStateData.hpp"
-#include "GameConsts.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "FpsCameraSystem.hpp"
@@ -161,9 +160,9 @@ PuttingState::PuttingState(cro::StateStack& stack, cro::State::Context context, 
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus()),
     m_viewScale         (1.f),
-    m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(ResolutionData)),
-    m_windBuffer        ("WindValues", sizeof(WindData)),
+    m_scaleBuffer       ("PixelScale"),
+    m_resolutionBuffer  ("ScaledResolution"),
+    m_windBuffer        ("WindValues"),
     m_mouseVisible      (true),
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
@@ -460,7 +459,7 @@ bool PuttingState::simulate(float dt)
     data.direction[1] = m_windUpdate.currentWindSpeed;
     data.direction[2] = m_windUpdate.currentWindVector.z;
     data.elapsedTime = elapsed;
-    m_windBuffer.setData(&data);
+    m_windBuffer.setData(data);
 
 
     m_inputParser.update(dt);
@@ -1158,11 +1157,11 @@ void PuttingState::createScene()
         glCheck(glLineWidth(invScale));
 
         //update checker uniforms
-        m_scaleBuffer.setData(&invScale);
+        m_scaleBuffer.setData(invScale);
 
         ResolutionData d;
         d.resolution = texSize / invScale;
-        m_resolutionBuffer.setData(&d);
+        m_resolutionBuffer.setData(d);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

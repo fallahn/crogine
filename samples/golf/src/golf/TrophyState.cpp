@@ -32,7 +32,6 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
-#include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "../GolfGame.hpp"
 
@@ -100,8 +99,8 @@ TrophyState::TrophyState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_trophyScene       (ctx.appInstance.getMessageBus()),
     m_sharedData        (sd),
     m_trophyIndex       (1),
-    m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(ResolutionData)),
+    m_scaleBuffer       ("PixelScale"),
+    m_resolutionBuffer  ("ScaledResolution"),
     m_viewScale         (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -678,11 +677,11 @@ void TrophyState::buildScene()
         trophyEnt.getComponent<cro::Sprite>().setTexture(m_trophyTexture.getTexture());
         trophyEnt.getComponent<cro::Transform>().setOrigin({ textureSize.x / 2.f, textureSize.y / 2.f });
 
-        m_scaleBuffer.setData(&invScale);
+        m_scaleBuffer.setData(invScale);
 
         ResolutionData d;
         d.resolution = glm::vec2(textureSize) / invScale;
-        m_resolutionBuffer.setData(&d);
+        m_resolutionBuffer.setData(d);
     };
 
     entity = m_scene.createEntity();

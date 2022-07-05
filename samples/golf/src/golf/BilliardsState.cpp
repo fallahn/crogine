@@ -32,7 +32,6 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "CommandIDs.hpp"
 #include "MessageIDs.hpp"
-#include "GameConsts.hpp"
 #include "MenuConsts.hpp"
 #include "BilliardsSystem.hpp"
 #include "BilliardsClientCollision.hpp"
@@ -122,8 +121,8 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_gameScene         (ctx.appInstance.getMessageBus(), 512),
     m_uiScene           (ctx.appInstance.getMessageBus()),
     m_inputParser       (sd, ctx.appInstance.getMessageBus()),
-    m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(ResolutionData)),
+    m_scaleBuffer       ("PixelScale"),
+    m_resolutionBuffer  ("ScaledResolution"),
     m_viewScale         (2.f),
     m_ballDefinition    (m_resources),
     m_fleaDefinition    (m_resources),
@@ -1709,11 +1708,11 @@ void BilliardsState::resizeBuffers()
     /*glCheck(glPointSize(invScale * BallPointSize));*/
     glCheck(glLineWidth(invScale));
 
-    m_scaleBuffer.setData(&invScale);
+    m_scaleBuffer.setData(invScale);
 
     ResolutionData d;
     d.resolution = texSize / invScale;
-    m_resolutionBuffer.setData(&d);
+    m_resolutionBuffer.setData(d);
 
 
 

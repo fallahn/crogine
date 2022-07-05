@@ -33,7 +33,7 @@ source distribution.
 
 using namespace cro;
 
-UniformBuffer::UniformBuffer(const std::string& blockName, std::size_t dataSize)
+Detail::UniformBufferImpl::UniformBufferImpl(const std::string& blockName, std::size_t dataSize)
 	: m_blockName	(blockName),
 	m_bufferSize	(dataSize),
 	m_ubo			(0)
@@ -54,14 +54,14 @@ UniformBuffer::UniformBuffer(const std::string& blockName, std::size_t dataSize)
 
 }
 
-UniformBuffer::~UniformBuffer()
+Detail::UniformBufferImpl::~UniformBufferImpl()
 {
 #ifdef PLATFORM_DESKTOP
 	reset();
 #endif
 }
 
-UniformBuffer::UniformBuffer(UniformBuffer&& other) noexcept
+Detail::UniformBufferImpl::UniformBufferImpl(Detail::UniformBufferImpl&& other) noexcept
 	: m_blockName	(other.m_blockName),
 	m_bufferSize	(other.m_bufferSize),
 	m_ubo			(other.m_ubo)
@@ -75,7 +75,7 @@ UniformBuffer::UniformBuffer(UniformBuffer&& other) noexcept
 	other.m_shaders.clear();
 }
 
-const UniformBuffer& UniformBuffer::operator = (UniformBuffer&& other) noexcept
+const Detail::UniformBufferImpl& Detail::UniformBufferImpl::operator = (Detail::UniformBufferImpl&& other) noexcept
 {
 	if (&other != this)
 	{
@@ -97,20 +97,7 @@ const UniformBuffer& UniformBuffer::operator = (UniformBuffer&& other) noexcept
 }
 
 //public
-void UniformBuffer::setData(void* data)
-{
-#ifdef PLATFORM_DESKTOP
-	CRO_ASSERT(data, "");
-	CRO_ASSERT(m_bufferSize, "");
-	CRO_ASSERT(m_ubo, "");
-
-	glCheck(glBindBuffer(GL_UNIFORM_BUFFER, m_ubo));
-	glCheck(glBufferData(GL_UNIFORM_BUFFER, m_bufferSize, data, GL_DYNAMIC_DRAW));
-
-#endif // PLATFORM_DESKTOP
-}
-
-void UniformBuffer::addShader(const Shader& shader)
+void Detail::UniformBufferImpl::addShader(const Shader& shader)
 {
 #ifdef PLATFORM_DESKTOP
 	CRO_ASSERT(shader.getGLHandle(), "");
@@ -130,7 +117,7 @@ void UniformBuffer::addShader(const Shader& shader)
 #endif
 }
 
-void UniformBuffer::bind(std::uint32_t bindPoint)
+void Detail::UniformBufferImpl::bind(std::uint32_t bindPoint)
 {
 #ifdef PLATFORM_DESKTOP
 	CRO_ASSERT(bindPoint < GL_MAX_UNIFORM_BUFFER_BINDINGS, "");
@@ -146,8 +133,22 @@ void UniformBuffer::bind(std::uint32_t bindPoint)
 #endif
 }
 
+//protected
+void Detail::UniformBufferImpl::setData(const void* data)
+{
+#ifdef PLATFORM_DESKTOP
+	CRO_ASSERT(data, "");
+	CRO_ASSERT(m_bufferSize, "");
+	CRO_ASSERT(m_ubo, "");
+
+	glCheck(glBindBuffer(GL_UNIFORM_BUFFER, m_ubo));
+	glCheck(glBufferData(GL_UNIFORM_BUFFER, m_bufferSize, data, GL_DYNAMIC_DRAW));
+
+#endif // PLATFORM_DESKTOP
+}
+
 //private
-void UniformBuffer::reset()
+void Detail::UniformBufferImpl::reset()
 {
 #ifdef PLATFORM_DESKTOP
 	if (m_ubo)

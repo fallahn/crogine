@@ -30,7 +30,6 @@ source distribution.
 #include "DrivingState.hpp"
 #include "PoissonDisk.hpp"
 #include "SharedStateData.hpp"
-#include "GameConsts.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "FpsCameraSystem.hpp"
@@ -168,9 +167,9 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_skyScene          (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_viewScale         (1.f),
-    m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(ResolutionData)),
-    m_windBuffer        ("WindValues", sizeof(WindData)),
+    m_scaleBuffer       ("PixelScale"),
+    m_resolutionBuffer  ("ScaledResolution"),
+    m_windBuffer        ("WindValues"),
     m_mouseVisible      (true),
     m_targetIndex       (0),
     m_strokeCountIndex  (0),
@@ -490,7 +489,7 @@ bool DrivingState::simulate(float dt)
     data.direction[1] = m_windUpdate.currentWindSpeed;
     data.direction[2] = m_windUpdate.currentWindVector.z;
     data.elapsedTime = elapsed;
-    m_windBuffer.setData(&data);
+    m_windBuffer.setData(data);
 
     m_inputParser.update(dt);
     m_gameScene.simulate(dt);
@@ -1206,11 +1205,11 @@ void DrivingState::createScene()
         glCheck(glPointSize(invScale * BallPointSize));
         glCheck(glLineWidth(invScale));
 
-        m_scaleBuffer.setData(&invScale);
+        m_scaleBuffer.setData(invScale);
 
         ResolutionData d;
         d.resolution = texSize / invScale;
-        m_resolutionBuffer.setData(&d);
+        m_resolutionBuffer.setData(d);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 320.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

@@ -28,7 +28,6 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "GolfState.hpp"
-#include "GameConsts.hpp"
 #include "MenuConsts.hpp"
 #include "CommandIDs.hpp"
 #include "PacketIDs.hpp"
@@ -158,9 +157,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
     m_cpuGolfer         (m_inputParser, m_currentPlayer, m_collisionMesh),
     m_wantsGameState    (true),
-    m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(ResolutionData)),
-    m_windBuffer        ("WindValues", sizeof(WindData)),
+    m_scaleBuffer       ("PixelScale"),
+    m_resolutionBuffer  ("ScaledResolution"),
+    m_windBuffer        ("WindValues"),
     m_holeToModelRatio  (1.f),
     m_currentHole       (0),
     m_terrainBuilder    (sd, m_holeData),
@@ -1001,7 +1000,7 @@ bool GolfState::simulate(float dt)
             m_resolutionUpdate.resolutionData.nearFadeDistance = m_resolutionUpdate.targetFade;
         }
 
-        m_resolutionBuffer.setData(&m_resolutionUpdate.resolutionData);
+        m_resolutionBuffer.setData(m_resolutionUpdate.resolutionData);
     }
 
     //update time uniforms
@@ -1016,7 +1015,7 @@ bool GolfState::simulate(float dt)
     data.direction[1] = m_windUpdate.currentWindSpeed;
     data.direction[2] = m_windUpdate.currentWindVector.z;
     data.elapsedTime = elapsed;
-    m_windBuffer.setData(&data);
+    m_windBuffer.setData(data);
 
     glm::vec3 windVector(m_windUpdate.currentWindVector.x,
                         m_windUpdate.currentWindSpeed,
@@ -2855,10 +2854,10 @@ void GolfState::buildScene()
         glCheck(glPointSize(invScale * BallPointSize));
         glCheck(glLineWidth(invScale));
 
-        m_scaleBuffer.setData(&invScale);
+        m_scaleBuffer.setData(invScale);
 
         m_resolutionUpdate.resolutionData.resolution = texSize / invScale;
-        m_resolutionBuffer.setData(&m_resolutionUpdate.resolutionData);
+        m_resolutionBuffer.setData(m_resolutionUpdate.resolutionData);
 
         //fetch this explicitly so the transition cam also gets the correct zoom
         float zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().fov;
