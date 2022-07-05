@@ -4774,7 +4774,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     }
     else
     {
-        m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(DefaultSkycamPosition);
+        auto pos = m_holeData[m_currentHole].puttFromTee ? glm::vec3(0.f, 16.f, 0.f) : DefaultSkycamPosition;
+        m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(pos);
     }
 }
 

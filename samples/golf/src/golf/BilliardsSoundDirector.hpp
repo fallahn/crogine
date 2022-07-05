@@ -68,6 +68,8 @@ private:
             Compliment,
             Foul01,
             Foul02,
+            Lose,
+            Win,
 
             One,
             Two,

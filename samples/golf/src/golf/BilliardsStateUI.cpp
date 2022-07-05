@@ -823,6 +823,40 @@ void BilliardsState::showGameEnd(const BilliardsPlayer& player)
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::AudioEmitter>() = m_audioScape.getEmitter("applause");
         entity.getComponent<cro::AudioEmitter>().play();
+
+        //in a net game play win/lose audio
+        if (m_sharedData.localConnectionData.playerCount == 1)
+        {
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+            entity.getComponent<cro::Callback>().function =
+                [&, player](cro::Entity e, float dt)
+            {
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime -= dt;
+
+                if (currTime < 0)
+                {
+                    auto* msg = getContext().appInstance.getMessageBus().post<BilliardBallEvent>(MessageID::BilliardsMessage);
+                    msg->type = BilliardBallEvent::GameEnded;
+
+                    if (player.client == m_sharedData.clientConnection.connectionID)
+                    {
+                        //we win
+                        msg->data = 0;
+                    }
+                    else
+                    {
+                        //we lost :(
+                        msg->data = 1;
+                    }
+
+                    e.getComponent<cro::Callback>().active = true;
+                    m_uiScene.destroyEntity(e);
+                }
+            };
+        }
     }
 
     m_inputParser.setActive(false, false);

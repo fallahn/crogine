@@ -697,6 +697,7 @@ static const std::string CelFragmentShader = R"(
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourX * fade);
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourZ * fade);
+    FRAG_OUT.rgb += clamp(height, 0.0, 1.0) * 0.1;
 #endif
     })";
 

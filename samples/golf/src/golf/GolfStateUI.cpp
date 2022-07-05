@@ -859,6 +859,17 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 Achievements::awardAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
                 break;
             }
+
+            //message for audio director
+            auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+            msg->type = GolfEvent::RoundEnd;
+            msg->score = 0;
+        }
+        else if (m_statBoardScores.back().client == m_sharedData.clientConnection.connectionID)
+        {
+            auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+            msg->type = GolfEvent::RoundEnd;
+            msg->score = 1; //lose
         }
     }
     Achievements::incrementStat(StatStrings[StatID::TotalRounds]);

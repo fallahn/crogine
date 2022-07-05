@@ -91,6 +91,8 @@ private:
 
             Draw01,
             Draw02,
+            Win,
+            Lose,
 
             Applause,
             ApplausePlus,

@@ -72,7 +72,8 @@ struct GolfEvent final
         HoleDrawn,
         DroneHit,
         BirdHit,
-        Gimme
+        Gimme,
+        RoundEnd
     }type = HitBall;
 
     glm::vec3 position = glm::vec3(0.f);
@@ -142,7 +143,8 @@ struct BilliardBallEvent final
         PocketStart,
         PocketEnd,
         Foul,
-        Score
+        Score,
+        GameEnded
     }type = ShotTaken;
     std::int32_t data = -1; //collision ID
     float volume = 1.f;

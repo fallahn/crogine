@@ -52,6 +52,8 @@ BilliardsSoundDirector::BilliardsSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/billiards/announcer/nice.wav",
         "assets/golf/sound/billiards/announcer/foul01.wav",
         "assets/golf/sound/billiards/announcer/foul02.wav",
+        "assets/golf/sound/billiards/announcer/lose.wav",
+        "assets/golf/sound/billiards/announcer/win.wav",
 
         "assets/golf/sound/billiards/announcer/01.wav",
         "assets/golf/sound/billiards/announcer/02.wav",
@@ -130,6 +132,16 @@ void BilliardsSoundDirector::handleMessage(const cro::Message& msg)
             if (data.data > 0 && data.data < 8)
             {
                 playSound(AudioID::Foul02 + data.data, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+            }
+            break;
+        case BilliardBallEvent::GameEnded:
+            if (data.data == 0)
+            {
+                playSound(AudioID::Win, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+            }
+            else
+            {
+                playSound(AudioID::Lose, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
             }
             break;
         }

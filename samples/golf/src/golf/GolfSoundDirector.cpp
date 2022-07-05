@@ -90,6 +90,8 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
 
         "assets/golf/sound/holes/draw01.wav",
         "assets/golf/sound/holes/draw02.wav",
+        "assets/golf/sound/billiards/announcer/win.wav",
+        "assets/golf/sound/billiards/announcer/lose.wav",
 
         "assets/golf/sound/ball/applause.wav",
         "assets/golf/sound/ball/applause_plus.wav",
@@ -179,6 +181,16 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case GolfEvent::RoundEnd:
+            if (data.score == 0)
+            {
+                playSoundDelayed(AudioID::Win, data.position, 1.6f, 1.f, MixerChannel::Voice);
+            }
+            else
+            {
+                playSoundDelayed(AudioID::Lose, data.position, 1.6f, 1.f, MixerChannel::Voice);
+            }
+            break;
         case GolfEvent::Gimme:
             //if (cro::Util::Random::value(0, 2) != 0)
             {
