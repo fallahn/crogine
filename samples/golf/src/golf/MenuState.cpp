@@ -113,7 +113,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_backgroundScene   (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_avatarScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_resolutionBuffer  ("ScaledResolution", sizeof(ResolutionData)),
     m_windBuffer        ("WindValues", sizeof(WindData)),
     m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu       (MenuID::Main),
@@ -865,8 +865,9 @@ void MenuState::createScene()
         auto invScale = (maxScale + 1) - scale;
         m_scaleBuffer.setData(&invScale);
 
-        glm::vec2 scaledRes = texSize / invScale;
-        m_resolutionBuffer.setData(&scaledRes);
+        ResolutionData d;
+        d.resolution = texSize / invScale;
+        m_resolutionBuffer.setData(&d);
 
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 

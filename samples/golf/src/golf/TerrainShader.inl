@@ -53,6 +53,7 @@ static const std::string TerrainVertexShader = R"(
     layout (std140) uniform ScaledResolution
     {
         vec2 u_scaledResolution;
+        float u_fadeDistance;
     };
 
     VARYING_OUT vec3 v_normal;
@@ -209,6 +210,7 @@ static const std::string CelVertexShader = R"(
     layout (std140) uniform ScaledResolution
     {
         vec2 u_scaledResolution;
+        float u_nearFadeDistance;
     };
 
     VARYING_OUT float v_ditherAmount;
@@ -333,12 +335,12 @@ static const std::string CelVertexShader = R"(
         gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
 
 #if defined(DITHERED)
-        const float fadeDistance = 4.0;
-        const float nearFadeDistance = 2.0;
+        float fadeDistance = u_nearFadeDistance * 2.0;
+        //const float nearFadeDistance = 2.0;
         const float farFadeDistance = 360.f;
         float distance = length(worldPosition.xyz - u_cameraWorldPosition);
 
-        v_ditherAmount = pow(clamp((distance - nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
+        v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
         v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
 #endif
     })";

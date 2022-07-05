@@ -101,7 +101,7 @@ TrophyState::TrophyState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_sharedData        (sd),
     m_trophyIndex       (1),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_resolutionBuffer  ("ScaledResolution", sizeof(ResolutionData)),
     m_viewScale         (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -680,8 +680,9 @@ void TrophyState::buildScene()
 
         m_scaleBuffer.setData(&invScale);
 
-        glm::vec2 scaledRes = glm::vec2(textureSize) / invScale;
-        m_resolutionBuffer.setData(&scaledRes);
+        ResolutionData d;
+        d.resolution = glm::vec2(textureSize) / invScale;
+        m_resolutionBuffer.setData(&d);
     };
 
     entity = m_scene.createEntity();

@@ -162,7 +162,7 @@ PuttingState::PuttingState(cro::StateStack& stack, cro::State::Context context, 
     m_uiScene           (context.appInstance.getMessageBus()),
     m_viewScale         (1.f),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_resolutionBuffer  ("ScaledResolution", sizeof(ResolutionData)),
     m_windBuffer        ("WindValues", sizeof(WindData)),
     m_mouseVisible      (true),
     m_strokeCountIndex  (0),
@@ -1160,8 +1160,9 @@ void PuttingState::createScene()
         //update checker uniforms
         m_scaleBuffer.setData(&invScale);
 
-        glm::vec2 scaledRes = texSize / invScale;
-        m_resolutionBuffer.setData(&scaledRes);
+        ResolutionData d;
+        d.resolution = texSize / invScale;
+        m_resolutionBuffer.setData(&d);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

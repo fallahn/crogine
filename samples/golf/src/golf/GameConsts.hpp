@@ -114,10 +114,17 @@ struct MixerChannel final
     };
 };
 
+//data blocks for uniform buffer
 struct WindData final
 {
     float direction[3];
     float elapsedTime = 0.f;
+};
+
+struct ResolutionData final
+{
+    glm::vec2 resolution = glm::vec2(1.f);
+    float nearFadeDistance = 2.f;
 };
 
 struct ShaderID final

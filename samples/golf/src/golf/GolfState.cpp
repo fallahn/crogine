@@ -158,7 +158,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_cpuGolfer         (m_inputParser, m_currentPlayer, m_collisionMesh),
     m_wantsGameState    (true),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_resolutionBuffer  ("ScaledResolution", sizeof(ResolutionData)),
     m_windBuffer        ("WindValues", sizeof(WindData)),
     m_holeToModelRatio  (1.f),
     m_currentHole       (0),
@@ -2837,8 +2837,9 @@ void GolfState::buildScene()
 
         m_scaleBuffer.setData(&invScale);
 
-        glm::vec2 scaledRes = texSize / invScale;
-        m_resolutionBuffer.setData(&scaledRes);
+        ResolutionData d;
+        d.resolution = texSize / invScale;
+        m_resolutionBuffer.setData(&d);
 
         //fetch this explicitly so the transition cam also gets the correct zoom
         float zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().fov;

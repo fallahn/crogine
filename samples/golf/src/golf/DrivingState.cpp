@@ -169,7 +169,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_viewScale         (1.f),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_resolutionBuffer  ("ScaledResolution", sizeof(ResolutionData)),
     m_windBuffer        ("WindValues", sizeof(WindData)),
     m_mouseVisible      (true),
     m_targetIndex       (0),
@@ -1208,8 +1208,9 @@ void DrivingState::createScene()
 
         m_scaleBuffer.setData(&invScale);
 
-        glm::vec2 scaledRes = texSize / invScale;
-        m_resolutionBuffer.setData(&scaledRes);
+        ResolutionData d;
+        d.resolution = texSize / invScale;
+        m_resolutionBuffer.setData(&d);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 320.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

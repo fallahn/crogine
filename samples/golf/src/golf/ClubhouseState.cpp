@@ -113,7 +113,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_uiScene           (ctx.appInstance.getMessageBus()),
     m_tableScene        (ctx.appInstance.getMessageBus()),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_resolutionBuffer  ("ScaledResolution", sizeof(ResolutionData)),
     m_windBuffer        ("WindValues", sizeof(WindData)),
     m_tableIndex        (0),
     m_viewScale         (2.f),
@@ -1014,8 +1014,9 @@ void ClubhouseState::buildScene()
         auto invScale = (maxScale + 1) - scale;
         m_scaleBuffer.setData(&invScale);
 
-        glm::vec2 scaledRes = texSize / invScale;
-        m_resolutionBuffer.setData(&scaledRes);
+        ResolutionData d;
+        d.resolution = texSize / invScale;
+        m_resolutionBuffer.setData(&d);
 
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 

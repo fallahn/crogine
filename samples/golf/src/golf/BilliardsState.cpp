@@ -123,7 +123,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_uiScene           (ctx.appInstance.getMessageBus()),
     m_inputParser       (sd, ctx.appInstance.getMessageBus()),
     m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_resolutionBuffer  ("ScaledResolution", sizeof(ResolutionData)),
     m_viewScale         (2.f),
     m_ballDefinition    (m_resources),
     m_fleaDefinition    (m_resources),
@@ -1711,8 +1711,9 @@ void BilliardsState::resizeBuffers()
 
     m_scaleBuffer.setData(&invScale);
 
-    glm::vec2 scaledRes = texSize / invScale;
-    m_resolutionBuffer.setData(&scaledRes);
+    ResolutionData d;
+    d.resolution = texSize / invScale;
+    m_resolutionBuffer.setData(&d);
 
 
 
