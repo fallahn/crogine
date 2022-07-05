@@ -136,6 +136,12 @@ private:
         glm::vec3 windVector = glm::vec3(0.f);
     }m_windUpdate;
 
+    struct ResolutionUpdate final
+    {
+        ResolutionData resolutionData;
+        float targetFade = 2.f;
+    }m_resolutionUpdate;
+
     cro::Image m_currentMap; 
     float m_holeToModelRatio;
     std::vector<HoleData> m_holeData;

@@ -133,6 +133,7 @@ namespace
     glm::vec4 topSky;
     glm::vec4 bottomSky;
 
+
     constexpr float ShadowFarDistance = 50.f;
     constexpr float ShadowNearDistance = 20.f;
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
@@ -938,7 +939,6 @@ bool GolfState::simulate(float dt)
     m_waterEnt.getComponent<cro::Transform>().move(move * 10.f * dt);
 #endif
 
-
     if (m_sharedData.clientConnection.connected)
     {
         //these may have accumulated during loading
@@ -986,6 +986,22 @@ bool GolfState::simulate(float dt)
         //we've been disconnected somewhere - push error state
         m_sharedData.errorMessage = "Lost connection to host.";
         requestStackPush(StateID::Error);
+    }
+
+    //update the fade distance if needed
+    if (m_resolutionUpdate.targetFade != m_resolutionUpdate.resolutionData.nearFadeDistance)
+    {
+        float diff = m_resolutionUpdate.targetFade - m_resolutionUpdate.resolutionData.nearFadeDistance;
+        if (std::fabs(diff) > 0.001f)
+        {
+            m_resolutionUpdate.resolutionData.nearFadeDistance += (diff * dt);
+        }
+        else
+        {
+            m_resolutionUpdate.resolutionData.nearFadeDistance = m_resolutionUpdate.targetFade;
+        }
+
+        m_resolutionBuffer.setData(&m_resolutionUpdate.resolutionData);
     }
 
     //update time uniforms
@@ -2322,6 +2338,10 @@ void GolfState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
 
+    shader = &m_resources.shaders.get(ShaderID::Crowd);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+
     shader = &m_resources.shaders.get(ShaderID::Slope);
     m_windBuffer.addShader(*shader);
 
@@ -2837,9 +2857,8 @@ void GolfState::buildScene()
 
         m_scaleBuffer.setData(&invScale);
 
-        ResolutionData d;
-        d.resolution = texSize / invScale;
-        m_resolutionBuffer.setData(&d);
+        m_resolutionUpdate.resolutionData.resolution = texSize / invScale;
+        m_resolutionBuffer.setData(&m_resolutionUpdate.resolutionData);
 
         //fetch this explicitly so the transition cam also gets the correct zoom
         float zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().fov;
@@ -4349,6 +4368,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
     m_gameScene.getDirector<GolfSoundDirector>()->setActivePlayer(player.client, player.player);
     m_avatars[player.client][player.player].ballModel.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+
+    m_resolutionUpdate.targetFade = player.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
 
     updateScoreboard();
     showScoreboard(false);

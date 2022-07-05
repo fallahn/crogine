@@ -336,7 +336,6 @@ static const std::string CelVertexShader = R"(
 
 #if defined(DITHERED)
         float fadeDistance = u_nearFadeDistance * 2.0;
-        //const float nearFadeDistance = 2.0;
         const float farFadeDistance = 360.f;
         float distance = length(worldPosition.xyz - u_cameraWorldPosition);
 

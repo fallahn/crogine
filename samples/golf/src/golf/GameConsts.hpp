@@ -62,6 +62,9 @@ static constexpr glm::vec3 CameraBystanderOffset = glm::vec3(7.f, 2.f, 7.f);
 static constexpr float PuttingZoom = 0.93f;
 static constexpr float GolfZoom = 0.6f;
 
+static constexpr float GreenFadeDistance = 0.8f;
+static constexpr float CourseFadeDistance = 2.f;
+
 static constexpr float GreenCamHeight = 3.f;
 static constexpr float SkyCamHeight = 16.f;
 static constexpr glm::vec3 DefaultSkycamPosition(MapSize.x / 2.f, SkyCamHeight, -static_cast<float>(MapSize.y) / 2.f);
