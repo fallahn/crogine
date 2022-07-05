@@ -2086,17 +2086,22 @@ void GolfState::loadAssets()
                                 //and child audio
                                 if (propAudio.hasEmitter(emitterName))
                                 {
+                                    struct AudioCallbackData final
+                                    {
+                                        glm::vec3 prevPos = glm::vec3(0.f);
+                                        float fadeAmount = 0.f;
+                                    };
+
                                     auto audioEnt = m_gameScene.createEntity();
                                     audioEnt.addComponent<cro::Transform>();
                                     audioEnt.addComponent<cro::AudioEmitter>() = propAudio.getEmitter(emitterName);
                                     auto baseVolume = audioEnt.getComponent<cro::AudioEmitter>().getVolume();
                                     audioEnt.addComponent<cro::CommandTarget>().ID = CommandID::AudioEmitter;
-                                    audioEnt.addComponent<cro::Callback>().active = true;
-                                    audioEnt.getComponent<cro::Callback>().setUserData<glm::vec3>(0.f);
+                                    audioEnt.addComponent<cro::Callback>().setUserData<AudioCallbackData>();
                                     audioEnt.getComponent<cro::Callback>().function =
-                                        [&, ent, baseVolume](cro::Entity e, float)
+                                        [&, ent, baseVolume](cro::Entity e, float dt)
                                     {
-                                        auto& prevPos = e.getComponent<cro::Callback>().getUserData<glm::vec3>();
+                                        auto& [prevPos, fadeAmount] = e.getComponent<cro::Callback>().getUserData<AudioCallbackData>();
                                         auto pos = ent.getComponent<cro::Transform>().getPosition();
                                         auto velocity = (pos - prevPos) * 60.f; //frame time
                                         prevPos = pos;
@@ -2105,7 +2110,9 @@ void GolfState::loadAssets()
                                         const float speed = ent.getComponent<PropFollower>().speed + 0.001f; //prevent div0
                                         float pitch = std::min(1.f, glm::length2(velocity) / (speed * speed));
                                         e.getComponent<cro::AudioEmitter>().setPitch(pitch);
-                                        e.getComponent<cro::AudioEmitter>().setVolume((baseVolume * 0.1f) + (pitch * (baseVolume * 0.9f)));
+
+                                        fadeAmount = std::min(1.f, fadeAmount + dt);
+                                        e.getComponent<cro::AudioEmitter>().setVolume((baseVolume * 0.1f) + (pitch * (baseVolume * 0.9f)) * fadeAmount);
                                     };
                                     ent.getComponent<cro::Transform>().addChild(audioEnt.getComponent<cro::Transform>());
                                     holeData.audioEntities.push_back(audioEnt);
@@ -2196,6 +2203,48 @@ void GolfState::loadAssets()
                                 spline.addPoint(p);
                             }
                             hasSpectators = true;
+                        }
+                    }
+                    else if (name == "speaker")
+                    {
+                        std::string emitterName;
+                        glm::vec3 position = glm::vec3(0.f);
+
+                        const auto& speakerProps = obj.getProperties();
+                        for (const auto& speakerProp : speakerProps)
+                        {
+                            const auto& propName = speakerProp.getName();
+                            if (propName == "emitter")
+                            {
+                                emitterName = speakerProp.getValue<std::string>();
+                            }
+                            else if (propName == "position")
+                            {
+                                position = speakerProp.getValue<glm::vec3>();
+                            }
+                        }
+
+                        if (!emitterName.empty() &&
+                            propAudio.hasEmitter(emitterName))
+                        {
+                            auto emitterEnt = m_gameScene.createEntity();
+                            emitterEnt.addComponent<cro::Transform>().setPosition(position);
+                            emitterEnt.addComponent<cro::AudioEmitter>() = propAudio.getEmitter(emitterName);
+                            float baseVol = emitterEnt.getComponent<cro::AudioEmitter>().getVolume();
+                            emitterEnt.getComponent<cro::AudioEmitter>().setVolume(0.f);
+                            emitterEnt.addComponent<cro::Callback>().function =
+                                [baseVol](cro::Entity e, float dt)
+                            {
+                                auto vol = e.getComponent<cro::AudioEmitter>().getVolume();
+                                vol = std::min(baseVol, vol + dt);
+                                e.getComponent<cro::AudioEmitter>().setVolume(vol);
+
+                                if (vol == baseVol)
+                                {
+                                    e.getComponent<cro::Callback>().active = false;
+                                }
+                            };
+                            holeData.audioEntities.push_back(emitterEnt);
                         }
                     }
                 }
@@ -3987,6 +4036,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             for (auto audio : m_holeData[m_currentHole].audioEntities)
             {
                 audio.getComponent<cro::AudioEmitter>().play();
+                audio.getComponent<cro::Callback>().active = true;
             }
 
             //check hole for any crowd paths and assign any free
@@ -4042,7 +4092,23 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                 
                 for (auto i = 0u; i < audio->size(); ++i)
                 {
-                    m_gameScene.destroyEntity(audio->at(i));
+                    //m_gameScene.destroyEntity(audio->at(i));
+                    audio->at(i).getComponent<cro::Callback>().function =
+                        [&](cro::Entity e, float dt)
+                    {
+                        //fade out then remove oneself
+                        auto vol = e.getComponent<cro::AudioEmitter>().getVolume();
+                        vol = std::max(0.f, vol - dt);
+                        e.getComponent<cro::AudioEmitter>().setVolume(vol);
+
+                        if (vol == 0)
+                        {
+                            e.getComponent<cro::AudioEmitter>().stop();
+                            e.getComponent<cro::Callback>().active = false;
+                            m_gameScene.destroyEntity(e);
+                        }
+                    };
+                    audio->at(i).getComponent<cro::Callback>().active = true;
                 }
                 audio->clear();
             }
