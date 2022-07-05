@@ -16,7 +16,7 @@ audioscape props
         streaming = false
         mixer_channel = 4
         looped = true
-        attenuation = 0.45
+        attenuation = 0.65
         volume = 1.5
         pitch = 0.8
     }
@@ -38,7 +38,7 @@ audioscape props
         streaming = false
         mixer_channel = 1
         looped = true
-        attenuation = 0.2
+        attenuation = 0.3
         volume = 0.5
     }
 
@@ -47,8 +47,8 @@ audioscape props
         path = "assets/golf/sound/ambience/stream.wav"
         looped = true
         streaming = false
-        volume = 1.4
+        volume = 1
         mixer_channel = 1
-        attenuation = 0.2
+        attenuation = 0.25
     }
 }

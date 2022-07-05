@@ -131,7 +131,7 @@ void BilliardsSoundDirector::handleMessage(const cro::Message& msg)
         case BilliardBallEvent::Score:
             if (data.data > 0 && data.data < 8)
             {
-                playSound(AudioID::Foul02 + data.data, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+                playSound(AudioID::Win + data.data, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
             }
             break;
         case BilliardBallEvent::GameEnded:

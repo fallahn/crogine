@@ -6,6 +6,54 @@ hole 08
 
     prop
     {
+        model = "assets/golf/models/cactus01.cmt"
+        position = 170.050949,0.183790,-104.670044
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus01.cmt"
+        position = 137.144287,0.183790,-112.091835
+        rotation = -157.261072
+        scale = 1.051394,1.051394,1.051394
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus01.cmt"
+        position = 159.367996,0.183790,-89.307129
+        rotation = -61.068876
+        scale = 0.940924,0.940924,0.940924
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus02.cmt"
+        position = 142.845474,0.183594,-100.590866
+        rotation = -0.000000
+        scale = 0.716965,0.716965,0.716965
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus02.cmt"
+        position = 133.739883,0.183602,-109.657326
+        rotation = 44.777803
+        scale = 0.843945,0.843945,0.843945
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus02.cmt"
+        position = 182.921234,0.183606,-93.260185
+        rotation = 955.383935
+        scale = 0.998478,0.998477,0.998478
+    }
+
+    prop
+    {
         model = "assets/golf/models/leaderboard.cmt"
         position = 168.817368,0.136342,-82.656151
         rotation = 151.041025

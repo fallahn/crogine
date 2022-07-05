@@ -72,7 +72,7 @@ SnookerDirector::SnookerDirector()
     const glm::vec3 Spacing(-0.027f, 0.f, -0.0468f);
     std::int32_t cols = 1;
 #ifdef CRO_DEBUG_
-    const std::int32_t rows = 2;
+    const std::int32_t rows = 5;
 #else
     const std::int32_t rows = 5;
 #endif
