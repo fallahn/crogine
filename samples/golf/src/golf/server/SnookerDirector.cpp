@@ -72,7 +72,7 @@ SnookerDirector::SnookerDirector()
     const glm::vec3 Spacing(-0.027f, 0.f, -0.0468f);
     std::int32_t cols = 1;
 #ifdef CRO_DEBUG_
-    const std::int32_t rows = 5;
+    const std::int32_t rows = 2;
 #else
     const std::int32_t rows = 5;
 #endif
@@ -227,6 +227,17 @@ void SnookerDirector::summariseTurn()
             m_turnFlags |= TurnFlags::Foul;
             foulType = m_pocketsThisTurn[0] == CueBall ? BilliardsEvent::CueBallPot : BilliardsEvent::WrongBallPot;
         }
+        //process remaining balls to check for fouls
+        for (auto i = 1u; i < m_pocketsThisTurn.size(); ++i)
+        {
+            auto ball = m_pocketsThisTurn[i];
+
+            if (ball == CueBall)
+            {
+                m_turnFlags |= TurnFlags::Foul;
+                foulType = BilliardsEvent::CueBallPot;
+            }
+        }
         
         if (firstBall == TargetRed)
         {
@@ -263,31 +274,20 @@ void SnookerDirector::summariseTurn()
                 {
                     m_replaceBalls.push_back(m_pocketsThisTurn[0]);
                 }
-                m_currentTarget = (1 << m_lowestColour); //hm this will wrap around at the end of the game, is that ok?
+                m_currentTarget = (1 << m_lowestColour);
             }
         }
     }
 
-    //process remaining balls - once to check for fouls
-    for (auto i = 1u; i < m_pocketsThisTurn.size(); ++i)
-    {
-        auto ball = m_pocketsThisTurn[i];
 
-        if (ball == CueBall)
-        {
-            m_turnFlags |= TurnFlags::Foul;
-            foulType = BilliardsEvent::CueBallPot;
-        }
-    }
 
-    //then again to check scores
+    //then process remaining to check scores
     for (auto i = 1u; i < m_pocketsThisTurn.size(); ++i)
     {
         auto ball = m_pocketsThisTurn[i];
         if ((1 << ball) == TargetRed)
         {
             m_redBallCount--;
-            //m_currentTarget = TargetColour;
 
             if ((m_turnFlags & TurnFlags::Foul) == 0)
             {
@@ -308,7 +308,6 @@ void SnookerDirector::summariseTurn()
             {
                 //mark ball to be replaced
                 m_replaceBalls.push_back(ball);
-                //m_currentTarget = TargetRed;
             }
             else
             {

@@ -686,7 +686,7 @@ void BilliardsState::addSystems()
     m_gameScene.addSystem<cro::SpriteAnimator>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setNumCascades(1);
-    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(3.f);
+    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(4.f);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
