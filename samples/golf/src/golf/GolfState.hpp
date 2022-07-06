@@ -42,6 +42,7 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/ConsoleClient.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <crogine/ecs/Scene.hpp>
@@ -91,7 +92,7 @@ struct PlayerCallbackData final
     float reflectionOffset = 0.f;
 };
 
-class GolfState final : public cro::State, public cro::GuiClient
+class GolfState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
     GolfState(cro::StateStack&, cro::State::Context, struct SharedStateData&);

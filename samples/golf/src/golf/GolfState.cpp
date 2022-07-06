@@ -132,6 +132,7 @@ namespace
     glm::vec4 topSky;
     glm::vec4 bottomSky;
 
+    float godmode = 1.f;
 
     constexpr float ShadowFarDistance = 50.f;
     constexpr float ShadowNearDistance = 20.f;
@@ -174,6 +175,21 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_minimapScale      (1.f),
     m_hadFoul           (false)
 {
+    godmode = 1.f;
+    registerCommand("god", [](const std::string&)
+        {
+            if (godmode == 1)
+            {
+                godmode = 4.f;
+                cro::Console::print("godmode ON");
+            }
+            else
+            {
+                godmode = 1.f;
+                cro::Console::print("godmode OFF");
+            }
+        });
+
     m_inputParser.setMaxRotation(0.1f);
 
     context.mainWindow.loadResources([this]() {
@@ -2090,6 +2106,7 @@ void GolfState::loadAssets()
                                     {
                                         glm::vec3 prevPos = glm::vec3(0.f);
                                         float fadeAmount = 0.f;
+                                        float currentVolume = 0.f;
                                     };
 
                                     auto audioEnt = m_gameScene.createEntity();
@@ -2101,7 +2118,7 @@ void GolfState::loadAssets()
                                     audioEnt.getComponent<cro::Callback>().function =
                                         [&, ent, baseVolume](cro::Entity e, float dt)
                                     {
-                                        auto& [prevPos, fadeAmount] = e.getComponent<cro::Callback>().getUserData<AudioCallbackData>();
+                                        auto& [prevPos, fadeAmount, currentVolume] = e.getComponent<cro::Callback>().getUserData<AudioCallbackData>();
                                         auto pos = ent.getComponent<cro::Transform>().getPosition();
                                         auto velocity = (pos - prevPos) * 60.f; //frame time
                                         prevPos = pos;
@@ -2111,8 +2128,23 @@ void GolfState::loadAssets()
                                         float pitch = std::min(1.f, glm::length2(velocity) / (speed * speed));
                                         e.getComponent<cro::AudioEmitter>().setPitch(pitch);
 
+                                        //fades in when callback first started
                                         fadeAmount = std::min(1.f, fadeAmount + dt);
-                                        e.getComponent<cro::AudioEmitter>().setVolume((baseVolume * 0.1f) + (pitch * (baseVolume * 0.9f)) * fadeAmount);
+
+                                        //rather than just jump to volume, we move towards it for a
+                                        //smoother fade
+                                        auto targetVolume = (baseVolume * 0.1f) + (pitch * (baseVolume * 0.9f));
+                                        auto diff = targetVolume - currentVolume;
+                                        if (std::abs(diff) > 0.001f)
+                                        {
+                                            currentVolume += (diff * (dt * 4.f));
+                                        }
+                                        else
+                                        {
+                                            currentVolume = targetVolume;
+                                        }
+
+                                        e.getComponent<cro::AudioEmitter>().setVolume(currentVolume * fadeAmount);
                                     };
                                     ent.getComponent<cro::Transform>().addChild(audioEnt.getComponent<cro::Transform>());
                                     holeData.audioEntities.push_back(audioEnt);
@@ -2377,7 +2409,7 @@ void GolfState::loadAssets()
 
     m_terrainBuilder.create(m_resources, m_gameScene, theme);
 
-    //this will have loaded a series of shaders for which we need to capture some uniforms
+    //terrain builder will have loaded a series of shaders for which we need to capture some uniforms
     shader = &m_resources.shaders.get(ShaderID::Terrain);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -4825,7 +4857,7 @@ void GolfState::hitBall()
 
     impulse *= Clubs[club].power * m_inputParser.getPower();
     impulse *= Dampening[m_currentPlayer.terrain];
-
+    impulse *= godmode;
 
     InputUpdate update;
     update.clientID = m_sharedData.localConnectionData.connectionID;
