@@ -117,6 +117,10 @@ void MenuState::parseCourseDirectory()
 {
     static const std::string rootDir("assets/golf/courses");
     auto directories = cro::FileSystem::listDirectories(cro::FileSystem::getResourcePath() + rootDir);
+
+    //at least be consistent across platforms
+    std::sort(directories.begin(), directories.end(), [](const  std::string& a, const std::string& b) {return a < b; });
+
     for (const auto& dir : directories)
     {
         if (dir == "tutorial")
