@@ -33,6 +33,7 @@ source distribution.
 
 #include <string>
 #include <array>
+#include <vector>
 
 /*
 Note that the default achievement system only reserves space
@@ -73,7 +74,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "soaring",
     "hole_in_one_million",
     "gimme_five",
-    "gimme_ten"
+    "gimme_ten",
+    "day_job"
 };
 
 //appears on the notification
@@ -106,7 +108,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Soaring",
     "Hole In One Million",
     "Gimme 5!",
-    "Gimme 10!"
+    "Gimme 10!",
+    "Day Job"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -140,6 +143,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Hit the camera drone with a ball", false),
     std::make_pair("Take five gimmies inside the leather", false),
     std::make_pair("Take ten gimmies inside the putter", false),
+    std::make_pair("Total over 24 hours play time on the course", false),
 };
 
 //assuming tropies load correctly they are
@@ -188,10 +192,11 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldFigure,
     TrophyID::Platinum,
     TrophyID::BronzeCup,
-    TrophyID::BronzeFigure
+    TrophyID::BronzeFigure,
+    TrophyID::GoldCup
 };
 
-//these are indexed by the above, so do try to get them in the correct order ;)
+//these are indexed by StatID, so do try to get them in the correct order ;)
 static const std::array<std::string, StatID::Count> StatStrings =
 {
     "holes_played",
@@ -213,7 +218,9 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "hios",
 
     "leather_gimmies",
-    "putter_gimmies"
+    "putter_gimmies",
+
+    "time_on_the_course"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -233,7 +240,8 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Eagles scored",
     "Holes in one",
     "Gimmies taken inside the leather",
-    "Gimmies taken inside the putter"
+    "Gimmies taken inside the putter",
+    "Total time spent on a course"
 };
 
 struct StatType final
@@ -262,6 +270,7 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
     StatType::Integer,
+    StatType::Time
 };
 
 struct StatTrigger final

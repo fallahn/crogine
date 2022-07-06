@@ -103,6 +103,10 @@ void DefaultAchievements::init()
     trigger = &StatTriggers[StatID::PutterGimmies].emplace_back();
     trigger->achID = AchievementID::GimmeTen;
     trigger->threshold = 10;
+
+    trigger = &StatTriggers[StatID::TimeOnTheCourse].emplace_back();
+    trigger->achID = AchievementID::DayJob;
+    trigger->threshold = 24 * 60 * 60;
 }
 
 void DefaultAchievements::update()

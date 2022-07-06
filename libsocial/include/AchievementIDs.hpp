@@ -67,6 +67,7 @@ namespace AchievementID
         HoleInOneMillion,
         GimmeFive,
         GimmeTen,
+        DayJob,
 
         Count
     };
@@ -97,6 +98,8 @@ namespace StatID
 
         LeatherGimmies,
         PutterGimmies,
+
+        TimeOnTheCourse,
 
         Count
     };

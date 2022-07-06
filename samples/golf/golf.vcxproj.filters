@@ -482,12 +482,6 @@
     <ClInclude Include="src\golf\PuttingState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
-    <ClInclude Include="src\Achievements.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\AchievementStrings.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\DefaultAchievements.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>

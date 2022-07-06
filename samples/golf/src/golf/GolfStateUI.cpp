@@ -873,6 +873,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         }
     }
     Achievements::incrementStat(StatStrings[StatID::TotalRounds]);
+    Achievements::incrementStat(StatStrings[StatID::TimeOnTheCourse], m_sharedData.timeStats[0].totalTime / 1000);
 
     auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());
     float trophyStat = 1.f - (1.f / m_statBoardScores.size()); //in other words, 0 if we're the only player
