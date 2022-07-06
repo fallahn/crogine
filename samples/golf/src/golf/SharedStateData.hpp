@@ -60,9 +60,6 @@ struct PlayerData final
     std::uint8_t skinScore = 0;
     glm::vec3 currentTarget = glm::vec3(0.f);
 
-    //std::vector<std::int32_t> holeTimes; //millis
-    //std::int32_t totalTime = 0;
-
     bool isCPU = false;
 };
 
@@ -132,6 +129,13 @@ struct SharedStateData final
             :uid(i), modelPath(str) {}
     };
     std::vector<HairInfo> hairInfo;
+
+    struct TimeStats final
+    {
+        std::vector<std::int32_t> holeTimes; //millis
+        std::int32_t totalTime = 0;
+    };
+    std::array<TimeStats, ConnectionData::MaxPlayers> timeStats = {};
 
     //our local player data
     ConnectionData localConnectionData;

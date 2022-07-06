@@ -2408,14 +2408,16 @@ void GolfState::loadAssets()
             player.holeScores.clear();
             player.holeScores.resize(holeStrings.size());
             std::fill(player.holeScores.begin(), player.holeScores.end(), 0);
-
-            /*player.totalTime = 0;
-            player.holeTimes.clear();
-            player.holeTimes.resize(holeStrings.size());
-            std::fill(player.holeTimes.begin(), player.holeTimes.end(), 0);*/
         }
     }
 
+    for (auto& data : m_sharedData.timeStats)
+    {
+        data.totalTime = 0;
+        data.holeTimes.clear();
+        data.holeTimes.resize(holeStrings.size());
+        std::fill(data.holeTimes.begin(), data.holeTimes.end(), 0);
+    }
 }
 
 void GolfState::loadSpectators()
@@ -3766,7 +3768,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             msg->travelDistance = glm::length2(update.position - m_currentPlayer.position);
             msg->pinDistance = glm::length2(update.position - m_holeData[m_currentHole].pin);
 
-            //m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeTimes[m_currentHole] += m_turnTimer.elapsed().asMilliseconds();
+            if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+            {
+                m_sharedData.timeStats[m_currentPlayer.player].holeTimes[m_currentHole] += m_turnTimer.elapsed().asMilliseconds();
+            }
         }
             break;
         case PacketID::ClientDisconnected:
@@ -3927,16 +3932,11 @@ void GolfState::removeClient(std::uint8_t clientID)
 
 void GolfState::setCurrentHole(std::uint32_t hole)
 {
-    //update all the total hole times - TODO fix this
-    /*for (auto& conn : m_sharedData.connectionData)
+    //update all the total hole times
+    for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
-        for (auto i = 0; i < conn.playerCount; ++i)
-        {
-            conn.playerData[i].totalTime += conn.playerData[i].holeTimes[m_currentHole];
-            LogI << "Hole time: " << conn.playerData[i].holeTimes[m_currentHole] << std::endl;
-            LogI << "Total time: " << conn.playerData[i].totalTime << std::endl;
-        }
-    }*/
+        m_sharedData.timeStats[i].totalTime += m_sharedData.timeStats[i].holeTimes[m_currentHole];
+    }
 
     updateScoreboard();
     m_hadFoul = false;
