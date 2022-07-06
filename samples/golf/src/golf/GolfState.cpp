@@ -2137,7 +2137,7 @@ void GolfState::loadAssets()
                                         auto diff = targetVolume - currentVolume;
                                         if (std::abs(diff) > 0.001f)
                                         {
-                                            currentVolume += (diff * (dt * 4.f));
+                                            currentVolume += (diff * dt);
                                         }
                                         else
                                         {
@@ -4982,6 +4982,11 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     if (playerData.terrain == TerrainID::Green)
     {
         zoom = m_holeData[m_currentHole].puttFromTee ? PuttingZoom : GolfZoom;
+
+        //reduce the zoom within the final metre
+        float diff = 1.f - zoom;
+        const float dist = 1.f - std::min(1.f, glm::length(playerData.position - m_holeData[m_currentHole].pin));
+        zoom += diff * dist;
     }
 
     m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().target = zoom;
