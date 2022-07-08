@@ -309,6 +309,7 @@ void PracticeState::buildScene()
                     m_sharedData.hosting = true;
                     m_sharedData.tutorial = true;
                     m_sharedData.localConnectionData.playerCount = 1;
+                    m_sharedData.localConnectionData.playerData[0].isCPU = false;
 
                     //start a local server and connect
                     if (!m_sharedData.clientConnection.connected)

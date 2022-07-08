@@ -377,12 +377,10 @@ void TutorialState::buildScene()
     {
         str = "Press  to Continue";
 
-        cro::SpriteSheet spriteSheet;
-        spriteSheet.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
         auto buttonEnt = m_scene.createEntity();
         buttonEnt.addComponent<cro::Transform>().setPosition({ 40.f, -12.f, 0.1f });
         buttonEnt.addComponent<cro::Drawable2D>();
-        buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_a");
+        buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::A];
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
