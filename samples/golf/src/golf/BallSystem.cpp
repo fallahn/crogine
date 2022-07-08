@@ -742,7 +742,8 @@ void BallSystem::doCollision(cro::Entity entity)
         //these are only used for sound on client side
         //usage - ie driving range, so don't raise them
         //if the velocity is too low.
-        if (len2 > 0.05f)
+        if (len2 > 0.05f
+            || terrainResult.terrain == TerrainID::Scrub) //vel will be 0 in this case
         {
             auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
             msg->terrain = terrainResult.terrain;

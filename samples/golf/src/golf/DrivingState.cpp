@@ -314,6 +314,22 @@ void DrivingState::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
+    case MessageID::CollisionMessage:
+    {
+        const auto& data = msg.getData<CollisionEvent>();
+        if (data.terrain == TerrainID::Scrub)
+        {
+            if (cro::Util::Random::value(0, 2) == 0)
+            {
+                auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                msg2->type = GolfEvent::BirdHit;
+                msg2->position = data.position;
+                auto dir = data.position - m_cameras[m_currentCamera].getComponent<cro::Transform>().getPosition();
+                msg2->travelDistance = std::atan2(dir.z, dir.x);
+            }
+        }
+    }
+        break;
     case cro::Message::SkeletalAnimationMessage:
     {
         const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
@@ -580,7 +596,8 @@ void DrivingState::addSystems()
     m_gameScene.addSystem<CloudSystem>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(40.f);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(10.f);
+    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setNumCascades(1);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
