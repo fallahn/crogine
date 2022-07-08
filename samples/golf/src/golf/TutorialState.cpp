@@ -59,9 +59,18 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/util/String.hpp>
 
 namespace
 {
+    struct ButtonID final
+    {
+        enum
+        {
+            A,B,X,Y,Start,Select
+        };
+    };
+
     std::int32_t timeUniform = -1;
     std::uint32_t shaderID = 0;
 
@@ -250,6 +259,32 @@ void TutorialState::buildScene()
 
     m_audioScape.loadFromFile("assets/golf/sound/tutorial.xas", m_sharedData.sharedResources->audio);
 
+    
+    if (cro::GameController::getControllerCount() > 0)
+    {
+        cro::SpriteSheet spriteSheet;
+        spriteSheet.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
+
+        auto name = cro::Util::String::toLower(cro::GameController::getName(0));
+        if (name.find("sony") != std::string::npos)
+        {
+            m_buttonSprites[ButtonID::A] = spriteSheet.getSprite("cross");
+            m_buttonSprites[ButtonID::B] = spriteSheet.getSprite("circle");
+            m_buttonSprites[ButtonID::X] = spriteSheet.getSprite("square");
+            m_buttonSprites[ButtonID::Y] = spriteSheet.getSprite("triangle");
+            m_buttonSprites[ButtonID::Select] = spriteSheet.getSprite("sel_ps");
+            m_buttonSprites[ButtonID::Start] = spriteSheet.getSprite("start_ps");
+        }
+        else
+        {
+            m_buttonSprites[ButtonID::A] = spriteSheet.getSprite("button_a");
+            m_buttonSprites[ButtonID::B] = spriteSheet.getSprite("button_b");
+            m_buttonSprites[ButtonID::X] = spriteSheet.getSprite("button_x");
+            m_buttonSprites[ButtonID::Y] = spriteSheet.getSprite("button_y");
+            m_buttonSprites[ButtonID::Select] = spriteSheet.getSprite("button_select");
+            m_buttonSprites[ButtonID::Start] = spriteSheet.getSprite("button_start");
+        }
+    }
 
     //used to animate the slope line
     auto& shader = m_sharedData.sharedResources->shaders.get(ShaderID::TutorialSlope);
@@ -995,8 +1030,6 @@ void TutorialState::tutorialThree(cro::Entity root)
     */
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
-    cro::SpriteSheet buttonSprites;
-    buttonSprites.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
     cro::SpriteSheet uiSprites;
     uiSprites.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
 
@@ -1032,7 +1065,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         auto buttonEnt = m_scene.createEntity();
         buttonEnt.addComponent<cro::Transform>().setPosition({ 32.f, -12.f, 0.1f });
         buttonEnt.addComponent<cro::Drawable2D>();
-        buttonEnt.addComponent<cro::Sprite>() = buttonSprites.getSprite("button_a");
+        buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::A];
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1198,7 +1231,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         auto buttonEnt = m_scene.createEntity();
         buttonEnt.addComponent<cro::Transform>().setPosition({ 32.f, -11.f });
         buttonEnt.addComponent<cro::Drawable2D>();
-        buttonEnt.addComponent<cro::Sprite>() = buttonSprites.getSprite("button_a");
+        buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::A];
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1360,7 +1393,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         auto buttonEnt = m_scene.createEntity();
         buttonEnt.addComponent<cro::Transform>().setPosition({ 32.f, -11.f });
         buttonEnt.addComponent<cro::Drawable2D>();
-        buttonEnt.addComponent<cro::Sprite>() = buttonSprites.getSprite("button_a");
+        buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::A];
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
