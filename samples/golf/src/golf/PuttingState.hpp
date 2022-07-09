@@ -34,6 +34,7 @@ source distribution.
 #include "InputParser.hpp"
 #include "HoleData.hpp"
 #include "Billboard.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -41,6 +42,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/UniformBuffer.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
 #include <unordered_map>
@@ -69,7 +71,15 @@ private:
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_backgroundTexture;
 
-    std::vector<std::pair<std::int32_t, std::int32_t>> m_scaleUniforms;
+    cro::UniformBuffer<float> m_scaleBuffer;
+    cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
+    cro::UniformBuffer<WindData> m_windBuffer;
+
+    struct WindUpdate final
+    {
+        float currentWindSpeed = 0.f;
+        glm::vec3 currentWindVector = glm::vec3(0.f);
+    }m_windUpdate;
 
     bool m_mouseVisible;
     cro::Clock m_mouseClock;
@@ -85,6 +95,9 @@ private:
             Hair,
             Wireframe,
             WireframeCulled,
+            Billboard,
+            Beacon,
+            Horizon,
 
             Count
         };

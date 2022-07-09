@@ -201,7 +201,7 @@ void LoadingScreen::update()
 
         if (m_sharedData.clientConnection.connected)
         {
-            cro::NetEvent evt;
+            net::NetEvent evt;
             while (m_sharedData.clientConnection.netClient.pollEvent(evt))
             {
                 m_sharedData.clientConnection.eventBuffer.emplace_back(std::move(evt));

@@ -54,6 +54,7 @@ static const std::string BillboardVertexShader = R"(
     layout (std140) uniform ScaledResolution
     {
         vec2 u_scaledResolution;
+        float u_nearFadeDistance;
     };
 
     VARYING_OUT LOW vec4 v_colour;
@@ -102,13 +103,13 @@ static const std::string BillboardVertexShader = R"(
 
         v_colour = a_colour;
 
-        const float minDistance = 2.0;
-        const float nearFadeDistance = 10.0; //TODO make this a uniform
+        float fadeDistance = u_nearFadeDistance * 5.0;
         const float farFadeDistance = 300.f;
         float distance = length(position - u_cameraWorldPosition);
 
-        v_ditherAmount = pow(clamp((distance - minDistance) / nearFadeDistance, 0.0, 1.0), 5.0);
-        v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / nearFadeDistance, 0.0, 1.0);
+        v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 5.0);
+        v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
+
 
         v_colour.rgb *= (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 

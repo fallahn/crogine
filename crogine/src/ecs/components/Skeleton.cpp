@@ -35,16 +35,17 @@ source distribution.
 using namespace cro;
 
 Skeleton::Skeleton()
-    : m_playbackRate    (1.f),
-    m_currentAnimation  (0),
-    m_nextAnimation     (-1),
-    m_blendTime         (1.f),
-    m_currentBlendTime  (0.f),
-    m_frameTime         (1.f),
-    m_currentFrameTime  (0.f),
-    m_useInterpolation  (true),
-    m_frameSize         (0),
-    m_frameCount        (0)
+    : m_playbackRate        (1.f),
+    m_currentAnimation      (0),
+    m_nextAnimation         (-1),
+    m_blendTime             (1.f),
+    m_currentBlendTime      (0.f),
+    m_frameTime             (1.f),
+    m_currentFrameTime      (0.f),
+    m_useInterpolation      (true),
+    m_interpolationDistance (2500.f),
+    m_frameSize             (0),
+    m_frameCount            (0)
 {
 
 }

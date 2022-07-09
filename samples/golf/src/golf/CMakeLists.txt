@@ -36,17 +36,21 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/MenuCustomisation.cpp
   ${PROJECT_DIR}/golf/MenuSoundDirector.cpp
   ${PROJECT_DIR}/golf/MenuState.cpp
+  ${PROJECT_DIR}/golf/NewsState.cpp
   ${PROJECT_DIR}/golf/NotificationSystem.cpp
   ${PROJECT_DIR}/golf/OptionsState.cpp
   ${PROJECT_DIR}/golf/PauseState.cpp
   ${PROJECT_DIR}/golf/ParticleDirector.cpp
+  ${PROJECT_DIR}/golf/Path.cpp
   ${PROJECT_DIR}/golf/PlayerAvatar.cpp
   ${PROJECT_DIR}/golf/PocketBallSystem.cpp
   ${PROJECT_DIR}/golf/PracticeState.cpp
+  ${PROJECT_DIR}/golf/PropFollowSystem.cpp
   ${PROJECT_DIR}/golf/PuttingState.cpp
   ${PROJECT_DIR}/golf/PuttingStateUI.cpp
   ${PROJECT_DIR}/golf/SharedStateData.cpp
   ${PROJECT_DIR}/golf/SoundEffectsDirector.cpp
+  ${PROJECT_DIR}/golf/SpectatorSystem.cpp
   ${PROJECT_DIR}/golf/spooky2.cpp
   ${PROJECT_DIR}/golf/StudioCameraSystem.cpp
   ${PROJECT_DIR}/golf/TerrainBuilder.cpp

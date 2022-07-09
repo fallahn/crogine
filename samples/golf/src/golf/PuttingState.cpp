@@ -30,7 +30,6 @@ source distribution.
 #include "PuttingState.hpp"
 #include "PoissonDisk.hpp"
 #include "SharedStateData.hpp"
-#include "GameConsts.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "FpsCameraSystem.hpp"
@@ -92,6 +91,10 @@ namespace
 #include "TransitionShader.inl"
 #include "MinimapShader.inl"
 #include "WireframeShader.inl"
+#include "BillboardShader.inl"
+#include "CloudShader.inl"
+#include "BeaconShader.inl"
+#include "WaterShader.inl"
 
 #ifdef CRO_DEBUG_
     std::int32_t debugFlags = 0;
@@ -157,6 +160,9 @@ PuttingState::PuttingState(cro::StateStack& stack, cro::State::Context context, 
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus()),
     m_viewScale         (1.f),
+    m_scaleBuffer       ("PixelScale"),
+    m_resolutionBuffer  ("ScaledResolution"),
+    m_windBuffer        ("WindValues"),
     m_mouseVisible      (true),
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
@@ -245,6 +251,30 @@ bool PuttingState::handleEvent(const cro::Event& evt)
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
         }
         break;
+        case SDLK_KP_DIVIDE:
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Ball;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                auto& ball = e.getComponent<Ball>();
+
+                if (ball.state == Ball::State::Idle)
+                {
+                    auto impulse = glm::normalize(m_holeData[0].target - m_holeData[0].tee);
+                    auto temp = impulse.z;
+                    impulse.z = -impulse.x;
+                    impulse.x = temp + 0.1f;
+
+                    ball.velocity = impulse * 2.f;
+                    ball.state = Ball::State::Putt;
+                    ball.delay = 0.f;
+                    ball.startPoint = e.getComponent<cro::Transform>().getPosition();
+                }
+            };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+            break;
 #endif
         }
     }
@@ -353,7 +383,7 @@ void PuttingState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::UI::ClubName;
             cmd.action = [&](cro::Entity e, float)
             {
-                e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].name);
+                e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements));
 
                 auto dist = glm::length(PlayerPosition - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin) * 1.67f;
                 if (m_inputParser.getClub() < ClubID::NineIron &&
@@ -415,7 +445,22 @@ void PuttingState::handleMessage(const cro::Message& msg)
 
 bool PuttingState::simulate(float dt)
 {
-    updateWindDisplay(m_gameScene.getSystem<BallSystem>()->getWindDirection());
+    auto windDir = m_gameScene.getSystem<BallSystem>()->getWindDirection();
+    updateWindDisplay(windDir);
+
+    static float elapsed = 0.f;
+    elapsed += dt;
+
+    m_windUpdate.currentWindSpeed += (windDir.y - m_windUpdate.currentWindSpeed) * dt;
+    m_windUpdate.currentWindVector += (windDir - m_windUpdate.currentWindVector) * dt;
+
+    WindData data;
+    data.direction[0] = m_windUpdate.currentWindVector.x;
+    data.direction[1] = m_windUpdate.currentWindSpeed;
+    data.direction[2] = m_windUpdate.currentWindVector.z;
+    data.elapsedTime = elapsed;
+    m_windBuffer.setData(data);
+
 
     m_inputParser.update(dt);
     m_gameScene.simulate(dt);
@@ -438,6 +483,10 @@ bool PuttingState::simulate(float dt)
 
 void PuttingState::render()
 {
+    m_scaleBuffer.bind(0);
+    m_resolutionBuffer.bind(1);
+    m_windBuffer.bind(2);
+
     m_backgroundTexture.clear();
     m_gameScene.render();
 #ifdef CRO_DEBUG_
@@ -515,35 +564,53 @@ void PuttingState::loadAssets()
 {
     m_gameScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
 
+    std::string wobble;
+    if (m_sharedData.vertexSnap)
+    {
+        wobble = "#define WOBBLE\n";
+    }
+
     //models
-    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n");
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n");
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
-    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n");
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define TEXTURED\n#define SKINNED\n#define NOCHEX\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
 
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
 
     //materials
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
-    
+
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
-   
+
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
-    //m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
+    m_resolutionBuffer.addShader(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Course);
-    m_scaleUniforms.emplace_back(shader->getGLHandle(), shader->getUniformID("u_pixelScale"));
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::Billboard);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
+
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
     m_materialIDs[MaterialID::Wireframe] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));
@@ -552,6 +619,12 @@ void PuttingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::WireframeCulled, WireframeVertex, WireframeFragment, "#define CULLED\n");
     m_materialIDs[MaterialID::WireframeCulled] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulled));
     m_resources.materials.get(m_materialIDs[MaterialID::WireframeCulled]).blendMode = cro::Material::BlendMode::Alpha;
+
+    m_resources.shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define TEXTURED\n");
+    m_materialIDs[MaterialID::Beacon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Beacon));
+
+    m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag);
+    m_materialIDs[MaterialID::Horizon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Horizon));
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
@@ -839,33 +912,28 @@ void PuttingState::createScene()
 
     //check data file - quit if missing or corrupt
     cro::ConfigFile cfg;
-    if (!cfg.loadFromFile("assets/golf/courses/driving.range"))
+    if (!cfg.loadFromFile("assets/golf/courses/putting.range"))
     {
         quitFail("Could Not Open Course Data");
         return;
     }
 
-    const auto& properties = cfg.getProperties();
-    for (const auto& p : properties)
-    {
-        const auto& name = p.getName();
-        if (name == "hole")
-        {
-            auto& data = m_holeData.emplace_back();
-            data.pin = p.getValue<glm::vec3>();
-            data.target = data.pin;
-            data.tee = PlayerPosition;
-            //TODO this should be parsed from the cmt file
-            data.modelPath = "assets/golf/models/driving_range.cmb"; //needed for ball system to load collision mesh
-            //TODO check ball system for which properties are needed
-        }
-    }
+    //const auto& properties = cfg.getProperties();
+    //for (const auto& p : properties)
+    //{
+    //    const auto& name = p.getName();
+    //    if (name == "pin")
+    //    {
+    //        auto& data = m_holeData.emplace_back();
+    //        data.pin = p.getValue<glm::vec3>();
+    //        data.target = data.pin;
+    //        data.tee = PlayerPosition;
+    //        //TODO this should be parsed from the cmt file
+    //        data.modelPath = "assets/golf/models/course_06/01.cmb"; //needed for ball system to load collision mesh
+    //        //TODO check ball system for which properties are needed
+    //    }
+    //}
 
-    if (m_holeData.empty())
-    {
-        quitFail("No Hole Data Found");
-        return;
-    }
 
     const auto& objects = cfg.getObjects();
     for (const auto& obj : objects)
@@ -974,11 +1042,50 @@ void PuttingState::createScene()
                 }
             }
         }
+        else if (name == "hole")
+        {
+            glm::vec3 pin(0.f);
+            glm::vec3 target(0.f);
+            glm::vec3 tee(0.f);
+
+            const auto& props = obj.getProperties();
+            for (const auto& p : props)
+            {
+                if (p.getName() == "pin")
+                {
+                    pin = p.getValue<glm::vec3>();
+                }
+                else if (p.getName() == "target")
+                {
+                    target = p.getValue<glm::vec3>();
+                }
+                else if (p.getName() == "tee")
+                {
+                    tee = p.getValue<glm::vec3>();
+                }
+            }
+
+            if (pin != tee)
+            {
+                auto& data = m_holeData.emplace_back();
+                data.pin = pin;
+                data.target = target;
+                data.tee = tee;
+                //TODO this should be parsed from the cmt file
+                data.modelPath = "assets/golf/models/course_06/01.cmb"; //needed for ball system to load collision mesh
+            }
+        }
+    }
+
+    if (m_holeData.empty())
+    {
+        quitFail("No Hole Data Found");
+        return;
     }
 
     //load the course model
     cro::ModelDefinition md(m_resources);
-    if (!md.loadFromFile("assets/golf/models/driving_range.cmt"))
+    if (!md.loadFromFile("assets/golf/models/course_06/01.cmt"))
     {
         quitFail("Could Not Load Course Model");
         return;
@@ -1024,7 +1131,7 @@ void PuttingState::createScene()
     //create the billboards
     createFoliage(entity);
 
-    //tee marker
+    //tee marker - TODO use a different model (or build into the course model)
     md.loadFromFile("assets/golf/models/tee_balls.cmt");
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
@@ -1050,11 +1157,11 @@ void PuttingState::createScene()
         glCheck(glLineWidth(invScale));
 
         //update checker uniforms
-        for (auto [shader, uniform] : m_scaleUniforms)
-        {
-            glCheck(glUseProgram(shader));
-            glCheck(glUniform1f(uniform, invScale));
-        }
+        m_scaleBuffer.setData(invScale);
+
+        ResolutionData d;
+        d.resolution = texSize / invScale;
+        m_resolutionBuffer.setData(d);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
@@ -1068,78 +1175,82 @@ void PuttingState::createScene()
     
     m_cameras[CameraID::Player] = camEnt;
 
-    static constexpr auto halfSize = RangeSize / 2.f;
+    auto tx = glm::lookAt(m_holeData[0].tee + glm::vec3(0.f, 0.5f, 0.f), m_holeData[0].target, cro::Transform::Y_AXIS);
+    camEnt.getComponent<cro::Transform>().setLocalTransform(glm::inverse(tx));
+    camEnt.getComponent<cro::Transform>().move(glm::normalize(m_holeData[0].tee - m_holeData[0].target));
 
-    struct TransitionPath final
-    {
-        cro::Util::Maths::Spline targetPath;
-        cro::Util::Maths::Spline cameraPath;
+    //static constexpr auto halfSize = RangeSize / 2.f;
 
-        const float TotalTime = 10.f;
-        float currentTime = 0.f;
-    }path;
+    //struct TransitionPath final
+    //{
+    //    cro::Util::Maths::Spline targetPath;
+    //    cro::Util::Maths::Spline cameraPath;
 
-    auto targetStart = glm::vec3(0.f, 4.5f, -160.f);
-    path.targetPath.addPoint(targetStart);
-    path.targetPath.addPoint(glm::vec3(0, 4.5f, -100.f));
-    path.targetPath.addPoint(glm::vec3(0, 12.5f, -halfSize.y));
-    path.targetPath.addPoint(glm::vec3(0.f, 4.5f, -halfSize.y));
+    //    const float TotalTime = 10.f;
+    //    float currentTime = 0.f;
+    //}path;
 
-    auto eyeStart = glm::vec3(0.f, CameraPosition.y, -halfSize.y - 20.f);
-    path.cameraPath.addPoint(eyeStart);
-    path.cameraPath.addPoint(glm::vec3(0.f, 32.5f, -halfSize.y / 3.f));
-    path.cameraPath.addPoint(glm::vec3(0.f, 12.5f, halfSize.y / 2.f));
-    path.cameraPath.addPoint(CameraPosition);
+    //auto targetStart = glm::vec3(0.f, 4.5f, -160.f);
+    //path.targetPath.addPoint(targetStart);
+    //path.targetPath.addPoint(glm::vec3(0, 4.5f, -100.f));
+    //path.targetPath.addPoint(glm::vec3(0, 12.5f, -halfSize.y));
+    //path.targetPath.addPoint(glm::vec3(0.f, 4.5f, -halfSize.y));
 
-    auto tx = glm::inverse(glm::lookAt(eyeStart, targetStart, cro::Transform::Y_AXIS));
-    camEnt.getComponent<cro::Transform>().setLocalTransform(tx);
+    //auto eyeStart = glm::vec3(0.f, CameraPosition.y, -halfSize.y - 20.f);
+    //path.cameraPath.addPoint(eyeStart);
+    //path.cameraPath.addPoint(glm::vec3(0.f, 32.5f, -halfSize.y / 3.f));
+    //path.cameraPath.addPoint(glm::vec3(0.f, 12.5f, halfSize.y / 2.f));
+    //path.cameraPath.addPoint(CameraPosition);
 
-    camEnt.addComponent<cro::Callback>().setUserData<TransitionPath>(path);
-    camEnt.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        auto& data = e.getComponent<cro::Callback>().getUserData<TransitionPath>();
-        float oldTime = data.currentTime;
-        data.currentTime = std::min(data.TotalTime, data.currentTime + dt);
+    //auto tx = glm::inverse(glm::lookAt(eyeStart, targetStart, cro::Transform::Y_AXIS));
+    //camEnt.getComponent<cro::Transform>().setLocalTransform(tx);
 
-        if (oldTime < data.TotalTime / 2.f
-            && data.currentTime > data.TotalTime / 2.f)
-        {
-            //play the music
-            e.getComponent<cro::AudioEmitter>().play();
-        }
+    //camEnt.addComponent<cro::Callback>().setUserData<TransitionPath>(path);
+    //camEnt.getComponent<cro::Callback>().function =
+    //    [&](cro::Entity e, float dt)
+    //{
+    //    auto& data = e.getComponent<cro::Callback>().getUserData<TransitionPath>();
+    //    float oldTime = data.currentTime;
+    //    data.currentTime = std::min(data.TotalTime, data.currentTime + dt);
 
-        float progress = cro::Util::Easing::easeInOutQuad(data.currentTime / data.TotalTime);
+    //    if (oldTime < data.TotalTime / 2.f
+    //        && data.currentTime > data.TotalTime / 2.f)
+    //    {
+    //        //play the music
+    //        e.getComponent<cro::AudioEmitter>().play();
+    //    }
 
-        auto target = data.targetPath.getInterpolatedPoint(progress);
-        auto eye = data.cameraPath.getInterpolatedPoint(progress);
-        auto tx = glm::inverse(glm::lookAt(eye, target, cro::Transform::Y_AXIS));
+    //    float progress = cro::Util::Easing::easeInOutQuad(data.currentTime / data.TotalTime);
 
-        e.getComponent<cro::Transform>().setLocalTransform(tx);
+    //    auto target = data.targetPath.getInterpolatedPoint(progress);
+    //    auto eye = data.cameraPath.getInterpolatedPoint(progress);
+    //    auto tx = glm::inverse(glm::lookAt(eye, target, cro::Transform::Y_AXIS));
 
-        if (data.currentTime == data.TotalTime)
-        {
-            e.getComponent<cro::Callback>().active = false;
+    //    e.getComponent<cro::Transform>().setLocalTransform(tx);
 
-            //position player sprite
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::PlayerAvatar;
-            cmd.action = [&](cro::Entity e, float)
-            {
-                e.getComponent<cro::Callback>().active = true;
-            };
-            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    //    if (data.currentTime == data.TotalTime)
+    //    {
+    //        e.getComponent<cro::Callback>().active = false;
 
-            //show menu
-            cmd.targetFlags = CommandID::UI::DrivingBoard;
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    //        //position player sprite
+    //        cro::Command cmd;
+    //        cmd.targetFlags = CommandID::PlayerAvatar;
+    //        cmd.action = [&](cro::Entity e, float)
+    //        {
+    //            e.getComponent<cro::Callback>().active = true;
+    //        };
+    //        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-            //background fade
-            m_summaryScreen.fadeEnt.getComponent<cro::Callback>().setUserData<float>(BackgroundAlpha);
-            m_summaryScreen.fadeEnt.getComponent<cro::Callback>().active = true;
-            m_summaryScreen.fadeEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, FadeDepth });
-        }
-    };
+    //        //show menu
+    //        cmd.targetFlags = CommandID::UI::DrivingBoard;
+    //        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //        //background fade
+    //        m_summaryScreen.fadeEnt.getComponent<cro::Callback>().setUserData<float>(BackgroundAlpha);
+    //        m_summaryScreen.fadeEnt.getComponent<cro::Callback>().active = true;
+    //        m_summaryScreen.fadeEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, FadeDepth });
+    //    }
+    //};
 
 
 
@@ -1214,8 +1325,10 @@ void PuttingState::createScene()
 
 
     //we only want these to happen if the scene creation was successful
+    
+
     createUI();
-    startTransition();
+    //startTransition();
 }
 
 void PuttingState::createFoliage(cro::Entity terrainEnt)
@@ -1671,7 +1784,7 @@ void PuttingState::createBall()
     }
 
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
+    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.003f, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(ballMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
@@ -1757,7 +1870,7 @@ void PuttingState::createBall()
 
     //point shadow seen from distance
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
+    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(shadowMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     entity.addComponent<cro::Callback>().active = true;
@@ -2070,7 +2183,7 @@ void PuttingState::setHole(std::int32_t index)
     cmd.targetFlags = CommandID::UI::ClubName;
     cmd.action = [&, index](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].name);
+        e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements));
 
         auto dist = glm::length(PlayerPosition - m_holeData[index].pin) * 1.67f;
         if (m_inputParser.getClub() < ClubID::NineIron &&
@@ -2087,9 +2200,9 @@ void PuttingState::setHole(std::int32_t index)
 
     //reset ball position
     cmd.targetFlags = CommandID::Ball;
-    cmd.action = [](cro::Entity e, float)
+    cmd.action = [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Transform>().setPosition(PlayerPosition);
+        e.getComponent<cro::Transform>().setPosition(m_holeData[0].tee);
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

@@ -36,7 +36,9 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 
+#include <array>
 
 namespace cro
 {
@@ -74,6 +76,8 @@ private:
     std::vector<std::function<void()>> m_actionCallbacks;
     std::size_t m_currentAction;
     bool m_actionActive;
+
+    std::array<cro::Sprite, 6> m_buttonSprites = {};
 
     void buildScene();
 

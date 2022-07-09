@@ -32,12 +32,13 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "CommandIDs.hpp"
 #include "PacketIDs.hpp"
+#include "MessageIDs.hpp"
 #include "NotificationSystem.hpp"
 #include "BilliardsSystem.hpp"
-#include "../AchievementStrings.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
 
+#include <AchievementStrings.hpp>
 #include <crogine/core/Mouse.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -157,6 +158,46 @@ void BilliardsState::createUI()
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto& menuFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    if (m_sharedData.courseIndex == 2)
+    {
+        //snooker so add scores...
+        auto createScore = [&, entity](glm::vec3 position, std::int32_t client, std::int32_t idx) mutable
+        {
+            auto ent = m_uiScene.createEntity();
+            ent.addComponent<cro::Transform>().setPosition(position + entity.getComponent<cro::Transform>().getOrigin());
+            ent.addComponent<cro::Drawable2D>();
+            ent.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+            ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            ent.getComponent<cro::Text>().setString("0");
+            ent.addComponent<cro::Callback>().active = true;
+            ent.getComponent<cro::Callback>().function =
+                [&, client, idx](cro::Entity e, float)
+            {
+                if (m_localPlayerInfo[client][idx].score > -1)
+                {
+                    e.getComponent<cro::Text>().setString(std::to_string(m_localPlayerInfo[client][idx].score));
+                }
+                centreText(e);
+            };
+            entity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+            return ent;
+        };
+
+        static constexpr float Padding = 14.f;
+        createScore(glm::vec3((-bounds.width / 2.f) - Padding, std::floor(bounds.height / 3.f), 0.1f), 0, 0);
+
+        if (m_sharedData.localConnectionData.playerCount == 2)
+        {
+            createScore(glm::vec3((bounds.width / 2.f) + Padding, std::floor(bounds.height / 3.f), 0.1f), 0, 1);
+        }
+        else
+        {
+            createScore(glm::vec3((bounds.width / 2.f) + Padding, std::floor(bounds.height / 3.f), 0.1f), 1, 0);
+        }
+    }
+
 
     auto createText = [&](const std::string& str, glm::vec2 relPos, glm::vec2 absPos)
     {
@@ -566,6 +607,17 @@ void BilliardsState::createUI()
 
 void BilliardsState::showReadyNotify(const BilliardsPlayer& player)
 {
+    auto score = player.score - m_localPlayerInfo[player.client][player.player].score;
+    if (player.score > 0
+        && score > 0)
+    {
+        auto* m = getContext().appInstance.getMessageBus().post<BilliardBallEvent>(MessageID::BilliardsMessage);
+        m->type = BilliardBallEvent::Score;
+        m->data = score;
+    }
+
+    m_localPlayerInfo[player.client][player.player].score = player.score;
+
     m_wantsNotify = (player.client == m_sharedData.localConnectionData.connectionID);
 
     cro::String msg = m_sharedData.connectionData[player.client].playerData[player.player].name + "'s Turn";
@@ -771,6 +823,40 @@ void BilliardsState::showGameEnd(const BilliardsPlayer& player)
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::AudioEmitter>() = m_audioScape.getEmitter("applause");
         entity.getComponent<cro::AudioEmitter>().play();
+
+        //in a net game play win/lose audio
+        if (m_sharedData.localConnectionData.playerCount == 1)
+        {
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+            entity.getComponent<cro::Callback>().function =
+                [&, player](cro::Entity e, float dt)
+            {
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime -= dt;
+
+                if (currTime < 0)
+                {
+                    auto* msg = getContext().appInstance.getMessageBus().post<BilliardBallEvent>(MessageID::BilliardsMessage);
+                    msg->type = BilliardBallEvent::GameEnded;
+
+                    if (player.client == m_sharedData.clientConnection.connectionID)
+                    {
+                        //we win
+                        msg->data = 0;
+                    }
+                    else
+                    {
+                        //we lost :(
+                        msg->data = 1;
+                    }
+
+                    e.getComponent<cro::Callback>().active = true;
+                    m_uiScene.destroyEntity(e);
+                }
+            };
+        }
     }
 
     m_inputParser.setActive(false, false);
@@ -780,7 +866,7 @@ void BilliardsState::toggleQuitReady()
 {
     if (m_gameEnded)
     {
-        m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::ReadyQuit, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::ReadyQuit, m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 }
 

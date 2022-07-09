@@ -29,7 +29,6 @@ source distribution.
 
 #include "ClubhouseState.hpp"
 #include "SharedStateData.hpp"
-#include "GameConsts.hpp"
 #include "MenuConsts.hpp"
 #include "PacketIDs.hpp"
 #include "CommandIDs.hpp"
@@ -112,9 +111,9 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_backgroundScene   (ctx.appInstance.getMessageBus()),
     m_uiScene           (ctx.appInstance.getMessageBus()),
     m_tableScene        (ctx.appInstance.getMessageBus()),
-    m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
-    m_windBuffer        ("WindValues", sizeof(WindData)),
+    m_scaleBuffer       ("PixelScale"),
+    m_resolutionBuffer  ("ScaledResolution"),
+    m_windBuffer        ("WindValues"),
     m_tableIndex        (0),
     m_viewScale         (2.f),
     m_currentMenu       (MenuID::Main),
@@ -178,7 +177,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
             //auto ready up if host
             m_sharedData.clientConnection.netClient.sendPacket(
                 PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
-                cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
 
             //set the course selection menu
@@ -205,7 +204,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
             //send the initially selected map/course
             m_sharedData.mapDirectory = "pool"; //TODO read this from a list of parsed directories EG m_tables[m_sharedDirectory.courseIndex]
             auto data = serialiseString(m_sharedData.mapDirectory);
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
         }
         else
         {
@@ -401,7 +400,7 @@ bool ClubhouseState::simulate(float dt)
         }
         m_sharedData.clientConnection.eventBuffer.clear();
 
-        cro::NetEvent evt;
+        net::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
             //handle events
@@ -463,7 +462,7 @@ bool ClubhouseState::simulate(float dt)
     wind.direction[1] = 0.5f;
     wind.direction[2] = 0.5f;
     wind.elapsedTime = accumTime;
-    m_windBuffer.setData(&wind);
+    m_windBuffer.setData(wind);
 
     m_arcadeVideo.update(dt);
 
@@ -1012,10 +1011,11 @@ void ClubhouseState::buildScene()
         auto texSize = winSize / scale;
 
         auto invScale = (maxScale + 1) - scale;
-        m_scaleBuffer.setData(&invScale);
+        m_scaleBuffer.setData(invScale);
 
-        glm::vec2 scaledRes = texSize / invScale;
-        m_resolutionBuffer.setData(&scaledRes);
+        ResolutionData d;
+        d.resolution = texSize / invScale;
+        m_resolutionBuffer.setData(d);
 
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
@@ -1236,9 +1236,9 @@ void ClubhouseState::createTableScene()
     updateBallTexture();
 }
 
-void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
+void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
 {
-    if (evt.type == cro::NetEvent::PacketReceived)
+    if (evt.type == net::NetEvent::PacketReceived)
     {
         switch (evt.packet.getID())
         {
@@ -1272,11 +1272,11 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
 
             //send player details to server (name, skin)
             auto buffer = m_sharedData.localConnectionData.serialise();
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
             if (m_sharedData.tutorial)
             {
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             else
             {
@@ -1297,7 +1297,7 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
                 //auto ready up if hosting
                 m_sharedData.clientConnection.netClient.sendPacket(
                     PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
-                    cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
 
             LOG("Successfully connected to server", cro::Logger::Type::Info);
@@ -1444,7 +1444,7 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
             if (evt.packet.as<std::uint16_t>() == static_cast<std::uint16_t>(Server::GameMode::Billiards))
             {
                 //reply if we're the right mode
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientVersion, CURRENT_VER, cro::NetFlag::Reliable);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientVersion, CURRENT_VER, net::NetFlag::Reliable);
             }
             else
             {
@@ -1456,7 +1456,7 @@ void ClubhouseState::handleNetEvent(const cro::NetEvent& evt)
             break;
         }
     }
-    else if (evt.type == cro::NetEvent::ClientDisconnect)
+    else if (evt.type == net::NetEvent::ClientDisconnect)
     {
         m_sharedData.errorMessage = "Lost Connection To Host";
         requestStackPush(StateID::Error);

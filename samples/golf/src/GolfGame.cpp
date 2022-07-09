@@ -41,6 +41,7 @@ source distribution.
 #include "golf/PuttingState.hpp"
 #include "golf/ClubhouseState.hpp"
 #include "golf/TrophyState.hpp"
+#include "golf/NewsState.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
@@ -108,10 +109,11 @@ GolfGame::GolfGame()
     m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);
     m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
     m_stateStack.registerState<PauseState>(StateID::Pause, m_sharedData);
+    m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
-    //m_stateStack.registerState<PuttingState>(StateID::PuttingRange, m_sharedData);
+    m_stateStack.registerState<PuttingState>(StateID::PuttingRange, m_sharedData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
@@ -397,6 +399,15 @@ bool GolfGame::initialise()
             {
                 cro::Util::String::parseURL("https://fallahn.itch.io/vga-golf");
             }
+            ImGui::NewLine();
+            ImGui::NewLine();
+            ImGui::NewLine();
+            ImGui::NewLine();
+            ImGui::NewLine();
+            ImGui::NewLine();
+            ImGui::NewLine();
+            ImGui::NewLine();
+            ImGui::Text("In memory of Liesbeth Penning");
         });
 
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
@@ -454,6 +465,7 @@ bool GolfGame::initialise()
     md.loadFromFile("assets/golf/models/trophies/trophy05.cmt");
     md.loadFromFile("assets/golf/models/trophies/trophy06.cmt");
     md.loadFromFile("assets/golf/models/trophies/trophy07.cmt");
+    md.loadFromFile("assets/golf/models/trophies/trophy08.cmt");
 
     //set up the post process
     auto windowSize = cro::App::getWindow().getSize();
@@ -542,6 +554,8 @@ bool GolfGame::initialise()
 
 void GolfGame::finalise()
 {
+    Achievements::shutdown();
+
     savePreferences();
 
     m_stateStack.clearStates();
@@ -638,6 +652,14 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.beaconColour = std::fmod(prop.getValue<float>(), 1.f);
                 }
+                else if (name == "imperial_measurements")
+                {
+                    m_sharedData.imperialMeasurements = prop.getValue<bool>();
+                }
+                else if (name == "grid_transparency")
+                {
+                    m_sharedData.gridTransparency = std::max(0.f, std::min(1.f, prop.getValue<float>()));
+                }
             }
         }
     }
@@ -692,6 +714,8 @@ void GolfGame::savePreferences()
     cfg.addProperty("invert_y").setValue(m_sharedData.invertY);
     cfg.addProperty("show_beacon").setValue(m_sharedData.showBeacon);
     cfg.addProperty("beacon_colour").setValue(m_sharedData.beaconColour);
+    cfg.addProperty("imperial_measurements").setValue(m_sharedData.imperialMeasurements);
+    cfg.addProperty("grid_transparency").setValue(m_sharedData.gridTransparency);
     cfg.save(path);
 
 

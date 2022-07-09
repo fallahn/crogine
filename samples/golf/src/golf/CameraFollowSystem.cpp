@@ -47,6 +47,8 @@ source distribution.
 namespace
 {
     static constexpr float MaxTargetDiff = 25.f; //dist sqr
+
+    static constexpr float MaxOffsetDistance = 2500.f; //dist sqr
 }
 
 CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
@@ -137,6 +139,18 @@ void CameraFollowSystem::process(float dt)
     for (auto entity : entities)
     {
         auto& follower = entity.getComponent<CameraFollower>();
+
+        if (follower.state == CameraFollower::Reset)
+        {
+            follower.zoom.fov = 1.f;
+            follower.zoom.progress = 0.f;
+            follower.zoom.done = false;
+            entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
+
+            follower.state = CameraFollower::Track;
+            continue;
+        }
+
         if (!follower.target.isValid())
         {
             continue;
@@ -147,7 +161,11 @@ void CameraFollowSystem::process(float dt)
         default: break;
         case CameraFollower::Track:
         {
+            auto& tx = entity.getComponent<cro::Transform>();
+
             auto target = follower.target.getComponent<cro::Transform>().getPosition();
+            target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / MaxOffsetDistance);
+
             auto diff = target - follower.currentTarget;
 
             float diffMultiplier = std::min(1.f, std::max(0.f, glm::length2(diff) / MaxTargetDiff));
@@ -156,10 +174,10 @@ void CameraFollowSystem::process(float dt)
 
             snapTarget(follower, target);
 
-
-            auto& tx = entity.getComponent<cro::Transform>();
+            //auto lookAt = lookFrom(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
             auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
             tx.setLocalTransform(glm::inverse(lookAt));
+            
 
             //check the distance to the ball, and store it if closer than previous dist
             //and if we fall within the camera's radius
@@ -216,25 +234,28 @@ void CameraFollowSystem::process(float dt)
                     follower.state = CameraFollower::Track;
                 }
 
+                auto& tx = entity.getComponent<cro::Transform>();
                 auto target = follower.target.getComponent<cro::Transform>().getPosition();
+                target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / MaxOffsetDistance);
+
                 auto diff = target - follower.currentTarget;
                 follower.currentTarget += diff * (dt * (2.f + (2.f * follower.zoom.progress)));
 
                 snapTarget(follower, target);
 
-                auto& tx = entity.getComponent<cro::Transform>();
                 auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
                 tx.setLocalTransform(glm::inverse(lookAt));
             }
             break;
-        case CameraFollower::Reset:
+            //we always do this, above.
+        /*case CameraFollower::Reset:
             follower.zoom.fov = 1.f;
             follower.zoom.progress = 0.f;
             follower.zoom.done = false;
             entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
 
             follower.state = CameraFollower::Track;
-            break;
+            break;*/
         }
     }
 

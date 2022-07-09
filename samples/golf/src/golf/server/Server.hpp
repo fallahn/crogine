@@ -55,7 +55,7 @@ public:
     bool running() const { return m_running; }
     void stop();
 
-    void setHostID(std::uint32_t id);
+    void setHostID(std::uint64_t id);
 
     //note this is not atomic!
     void setPreferredIP(const std::string& ip) { m_preferredIP = ip; }
@@ -75,7 +75,7 @@ private:
 
     struct PendingConnection final
     {
-        cro::NetPeer peer;
+        net::NetPeer peer;
         cro::Clock connectionTime;
         static constexpr float Timeout = 15.f;
     };
@@ -84,9 +84,9 @@ private:
     void run();
 
     void checkPending();
-    void validatePeer(cro::NetPeer&);
+    void validatePeer(net::NetPeer&);
 
     //returns slot index, or >= MaxClients if full
-    std::uint8_t addClient(const cro::NetPeer&);
-    void removeClient(const cro::NetEvent&);
+    std::uint8_t addClient(const net::NetPeer&);
+    void removeClient(const net::NetEvent&);
 };

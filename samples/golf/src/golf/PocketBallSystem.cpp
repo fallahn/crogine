@@ -39,6 +39,7 @@ namespace
 {
     constexpr float MaxXPos = (-100.f - ((BilliardBall::Radius * 2.f) * 8.f) + BilliardBall::Radius);
     constexpr float Acceleration = 0.7f;
+    constexpr std::int32_t MaxBalls = 16;
 }
 
 PocketBallSystem::PocketBallSystem(cro::MessageBus& mb)
@@ -131,6 +132,32 @@ void PocketBallSystem::removeBall(std::int8_t id)
         {
             getScene()->destroyEntity(*it);
             break;
+        }
+    }
+}
+
+//private
+void PocketBallSystem::onEntityAdded(cro::Entity)
+{
+    bool wasRemoved = false;
+
+    auto& entities = getEntities();
+    for (auto entity : entities)
+    {
+        entity.getComponent<PocketBall>().totalCount++;
+        if (entity.getComponent<PocketBall>().totalCount == MaxBalls)
+        {
+            getScene()->destroyEntity(entity);
+            wasRemoved = true;
+        }
+    }
+
+    if (wasRemoved)
+    {
+        for (auto entity : entities)
+        {
+            entity.getComponent<PocketBall>().awake = true;
+            entity.getComponent<cro::AudioEmitter>().play();
         }
     }
 }

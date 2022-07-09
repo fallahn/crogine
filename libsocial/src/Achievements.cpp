@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "Achievements.hpp"
+#include "../include/Achievements.hpp"
 
 #include <crogine/detail/Assert.hpp>
 
@@ -44,6 +44,12 @@ void Achievements::update()
 {
     CRO_ASSERT(m_impl, "Achievements have not been initialised!");
     m_impl->update();
+}
+
+void Achievements::shutdown()
+{
+    CRO_ASSERT(m_impl, "Achievements have not been initialised!");
+    m_impl->shutdown();
 }
 
 void Achievements::registerAchievement(const std::string& name)

@@ -63,6 +63,8 @@ public:
 
     virtual std::uint32_t getTargetID(glm::vec3 position) const = 0; //server ID of look-at target
 
+    virtual std::int32_t getScore(std::size_t) const { return -1; }
+
 protected:
     cro::Entity getCueball() const { return m_cueball; }
 

@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "HoleData.hpp"
+#include "GameConsts.hpp"
 #include "InputParser.hpp"
 #include "TerrainBuilder.hpp"
 #include "CameraFollowSystem.hpp"
@@ -41,6 +42,7 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/ConsoleClient.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <crogine/ecs/Scene.hpp>
@@ -90,7 +92,7 @@ struct PlayerCallbackData final
     float reflectionOffset = 0.f;
 };
 
-class GolfState final : public cro::State, public cro::GuiClient
+class GolfState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
     GolfState(cro::StateStack&, cro::State::Context, struct SharedStateData&);
@@ -117,6 +119,7 @@ private:
 
     InputParser m_inputParser;
     CPUGolfer m_cpuGolfer;
+    cro::Clock m_turnTimer;
 
     bool m_wantsGameState;
     cro::Clock m_readyClock; //pings ready state until ack'd
@@ -125,9 +128,9 @@ private:
     cro::RenderTexture m_trophySceneTexture;
     cro::CubemapTexture m_reflectionMap;
 
-    cro::UniformBuffer m_scaleBuffer;
-    cro::UniformBuffer m_resolutionBuffer;
-    cro::UniformBuffer m_windBuffer;
+    cro::UniformBuffer<float> m_scaleBuffer;
+    cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
+    cro::UniformBuffer<WindData> m_windBuffer;
 
     struct WindUpdate final
     {
@@ -135,6 +138,12 @@ private:
         glm::vec3 currentWindVector = glm::vec3(0.f);
         glm::vec3 windVector = glm::vec3(0.f);
     }m_windUpdate;
+
+    struct ResolutionUpdate final
+    {
+        ResolutionData resolutionData;
+        float targetFade = 2.f;
+    }m_resolutionUpdate;
 
     cro::Image m_currentMap; 
     float m_holeToModelRatio;
@@ -185,12 +194,6 @@ private:
     std::array<std::unique_ptr<cro::ModelDefinition>, ModelID::Count> m_modelDefs = {};
     std::unordered_map<std::int32_t, std::unique_ptr<cro::ModelDefinition>> m_ballModels;
 
-    struct WaterShader final
-    {
-        std::uint32_t shaderID = 0;
-        std::int32_t timeUniform = 0;
-    }m_waterShader;
-
     struct BallResource final
     {
         std::int32_t materialID = -1;
@@ -201,7 +204,10 @@ private:
     std::string m_audioPath;
     std::string m_courseTitle;
 
+    std::vector<cro::Entity> m_spectatorModels;
+
     void loadAssets();
+    void loadSpectators();
     void addSystems();
     void buildScene();
     void initAudio();
@@ -211,7 +217,7 @@ private:
     void buildBow();
     void spawnBall(const struct ActorInfo&);
 
-    void handleNetEvent(const cro::NetEvent&);
+    void handleNetEvent(const net::NetEvent&);
     void removeClient(std::uint8_t);
 
     void setCurrentHole(std::uint32_t);
@@ -231,6 +237,7 @@ private:
     void setActiveCamera(std::int32_t);
     void setPlayerPosition(cro::Entity, glm::vec3);
 
+    cro::Entity m_drone;
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;
     void toggleFreeCam();
@@ -295,7 +302,8 @@ private:
     enum class MessageBoardID
     {
         Bunker, Scrub, Water,
-        PlayerName, HoleScore
+        PlayerName, HoleScore,
+        Gimme
     };
     void showMessageBoard(MessageBoardID);
     void floatingMessage(const std::string&);
@@ -308,6 +316,15 @@ private:
     std::array<cro::Entity, 3u> m_trophies = {};
     std::array<cro::Entity, 3u> m_trophyLabels = {};
 
+    struct GridShader final
+    {
+        std::uint32_t shaderID = 0;
+        std::int32_t transparency = -1;
+        std::int32_t minHeight = -1;
+        std::int32_t maxHeight = -1;
+    }m_gridShader;
+
+
     //-----------
 
     cro::Entity m_mapCam;
@@ -316,6 +333,9 @@ private:
     cro::SimpleQuad m_mapQuad;
     cro::SimpleQuad m_flagQuad;
     void updateMiniMap();
+
+    float m_minimapScale; //how big the model was when drawn to minimap
+    glm::vec2 toMinimapCoords(glm::vec3) const;
 
     cro::Entity m_greenCam;
     cro::RenderTexture m_greenBuffer;

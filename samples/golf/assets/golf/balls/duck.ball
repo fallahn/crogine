@@ -1,0 +1,7 @@
+ball 
+{
+    model = assets/golf/models/balls/ball_duck.cmt
+    tint = 0.949,0.812,0.361,1.0
+    uid = 4207596015
+
+}

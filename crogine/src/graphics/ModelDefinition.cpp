@@ -303,6 +303,8 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         bool enableDepthTest = true;
         bool doubleSided = false;
         bool createMipmaps = false;
+        Material::Data::Animation animation;
+
         const auto& properties = mat.getProperties();
         for (const auto& p : properties)
         {
@@ -334,6 +336,14 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
             else if (name == "subrect")
             {
                 if (!p.getValue<std::string>().empty())
+                {
+                    flags |= ShaderResource::Subrects;
+                }
+            }
+            else if (name == "animated")
+            {
+                animation.active = p.getValue<bool>();
+                if (animation.active)
                 {
                     flags |= ShaderResource::Subrects;
                 }
@@ -416,6 +426,22 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
             {
                 createMipmaps = p.getValue<bool>();
             }
+            else if (name == "col_count")
+            {
+                std::uint32_t cols = std::max(1u, std::min(100u, p.getValue<std::uint32_t>()));
+                animation.frame.z = 1.f / cols;
+            }
+            else if (name == "row_count")
+            {
+                std::uint32_t rows = std::max(1u, std::min(100u, p.getValue<std::uint32_t>()));
+                animation.frame.w = 1.f / rows;
+                animation.frame.y = 1.f - animation.frame.w;
+            }
+            else if (name == "framerate")
+            {
+                float rate = std::max(1.f, std::min(60.f, p.getValue<float>()));
+                animation.frameTime = 1.f / rate;
+            }
         }
 
         if (lockRotation)
@@ -440,6 +466,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         material.deferred = shaderType == ShaderResource::PBRDeferred;
         material.enableDepthTest = enableDepthTest;
         material.doubleSided = doubleSided;
+        material.animation = animation;
 
         //set a default mask colour - this is overwritten
         //below, if a custom property is found.
@@ -533,6 +560,13 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
                 clamp(subrect.w);
 
                 material.setProperty("u_subrect", subrect);
+            }
+            else if (name == "animated")
+            {
+                if (animation.active)
+                {
+                    material.setProperty("u_subrect", animation.frame);
+                }
             }
             else if (name == "colour")
             {

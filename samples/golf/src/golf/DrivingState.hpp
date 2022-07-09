@@ -34,6 +34,7 @@ source distribution.
 #include "InputParser.hpp"
 #include "HoleData.hpp"
 #include "Billboard.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
@@ -72,9 +73,9 @@ private:
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_backgroundTexture;
 
-    cro::UniformBuffer m_scaleBuffer;
-    cro::UniformBuffer m_resolutionBuffer;
-    cro::UniformBuffer m_windBuffer;
+    cro::UniformBuffer<float> m_scaleBuffer;
+    cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
+    cro::UniformBuffer<WindData> m_windBuffer;
 
     struct WindUpdate final
     {

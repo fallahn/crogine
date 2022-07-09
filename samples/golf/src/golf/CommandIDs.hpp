@@ -44,8 +44,9 @@ struct CommandID final
         SpectatorCam    = 0x100,
         PlayerAvatar    = 0x200,
         ParticleEmitter = 0x400,
-        Beacon          = 0x800,
-        StrokeArc       = 0x1000
+        AudioEmitter    = 0x800,
+        Beacon          = 0x1000,
+        StrokeArc       = 0x2000
     };
 
     struct UI final
@@ -92,7 +93,9 @@ struct CommandID final
             CourseHoles  = 0x800,
             CourseSelect = 0x1000,
             TitleText    = 0x2000,
-            ScoreType    = 0x4000
+            ScoreType    = 0x4000,
+            ScoreDesc    = 0x8000,
+            GimmeDesc    = 0x10000
         };
     };
 };

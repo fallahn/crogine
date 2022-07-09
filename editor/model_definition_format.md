@@ -122,7 +122,8 @@ Models in crogine are described in a text format that can be loaded via the `Mod
             //to remap the meshdata, animating textures by updating the subrect with frames
             //of an animation, or assigning variations of a texture to the same mesh data.
             //Note that the rectangle coordinates are normalised values given as 
-            //left, bottom, width, height.
+            //left, bottom, width, height. Note that this is ignored if a material's animated
+            //flag is set to true (see below)
             subrect = 0.5,0.0,0.5,0.5
 
             //depth testing can be disabled on a material, for example when rendering a wireframe
@@ -133,6 +134,22 @@ Models in crogine are described in a text format that can be loaded via the `Mod
             //Setting this to true will draw both sides of the geometry, for example when rendering
             //semi-transparent objects like glass, or objects which have no thickness to them.
             double_sided = false
+
+            //setting the animated property to true will cause the material texture to scroll
+            //through a set of frames defined by dividing the texture by the row_count and col_count
+            //properties. Animations play column first, top to bottom, then left to right. For example
+            //a row_count of 5 and col_count of 2 creates two columns totalling five frames.
+            //animations play on an endless loop. Note that setting this to true will override
+            //any subrect value with that of the subrect calculated by the row/col count.
+            animated = true
+
+            row_count = 5
+
+            col_count = 2
+
+            //framerate dictates at which rate the animation plays, this has an internal limitation
+            //of 60fps - higher values are clamped to this
+            framerate = 12.5
 
         }
 

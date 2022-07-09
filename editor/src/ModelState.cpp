@@ -73,8 +73,6 @@ namespace
 {
 #include "LightmapShader.inl"
 
-    const std::string prefPath = cro::FileSystem::getConfigDirectory("crogine_editor") + "model_viewer.cfg";
-
     const std::int32_t LightmapShaderID = 1;
 }
 
@@ -536,7 +534,7 @@ void ModelState::toggleFreecam()
 void ModelState::loadPrefs()
 {
     cro::ConfigFile prefs;
-    if (prefs.loadFromFile(prefPath))
+    if (prefs.loadFromFile(cro::App::getPreferencePath() + "model_viewer.cfg"))
     {
         const auto& props = prefs.getProperties();
         for (const auto& prop : props)
@@ -603,7 +601,7 @@ void ModelState::savePrefs()
     prefsOut.addProperty("export_dir", m_preferences.lastExportDirectory);
     prefsOut.addProperty("model_dir", m_preferences.lastModelDirectory);
 
-    if (prefsOut.save(prefPath))
+    if (prefsOut.save(cro::App::getPreferencePath() + "model_viewer.cfg"))
     {
         //notify so the global prefs are also written
         auto* msg = getContext().appInstance.getMessageBus().post<UIEvent>(MessageID::UIMessage);

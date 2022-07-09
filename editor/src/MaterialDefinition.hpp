@@ -81,6 +81,11 @@ struct MaterialDefinition final
     bool repeatTexture = true;
     bool useMipmaps = false;
 
+    bool animated = false;
+    float frameRate = 1.f;
+    std::uint32_t rowCount = 1;
+    std::uint32_t colCount = 1;
+
     cro::Material::BlendMode blendMode = cro::Material::BlendMode::None;
 
 

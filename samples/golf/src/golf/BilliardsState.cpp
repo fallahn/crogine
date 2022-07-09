@@ -32,7 +32,6 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "CommandIDs.hpp"
 #include "MessageIDs.hpp"
-#include "GameConsts.hpp"
 #include "MenuConsts.hpp"
 #include "BilliardsSystem.hpp"
 #include "BilliardsClientCollision.hpp"
@@ -40,6 +39,7 @@ source distribution.
 #include "NotificationSystem.hpp"
 #include "PocketBallSystem.hpp"
 #include "BilliardsSoundDirector.hpp"
+#include "MessageIDs.hpp"
 #include "server/ServerPacketData.hpp"
 #include "server/ServerMessages.hpp"
 #include "../ErrorCheck.hpp"
@@ -121,8 +121,8 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_gameScene         (ctx.appInstance.getMessageBus(), 512),
     m_uiScene           (ctx.appInstance.getMessageBus()),
     m_inputParser       (sd, ctx.appInstance.getMessageBus()),
-    m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_scaleBuffer       ("PixelScale"),
+    m_resolutionBuffer  ("ScaledResolution"),
     m_viewScale         (2.f),
     m_ballDefinition    (m_resources),
     m_fleaDefinition    (m_resources),
@@ -213,13 +213,13 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_F2:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::SpawnBall), cro::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::SpawnBall), net::NetFlag::Reliable);
             break;
         case SDLK_F3:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::StrikeBall), cro::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::StrikeBall), net::NetFlag::Reliable);
             break;
         case SDLK_F4:
-            
+            //addPocketBall(1);
             break;
         case SDLK_HOME:
             m_gameScene.getSystem<BilliardsCollisionSystem>()->toggleDebug();
@@ -257,7 +257,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             setActiveCamera(CameraID::Overhead);
             break;
         case SDLK_F6:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), cro::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
             break;
         case SDLK_F7:
         {
@@ -386,7 +386,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             input.client = m_sharedData.localConnectionData.connectionID;
             input.player = m_currentPlayer.player;
 
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
             if (m_activeCamera != CameraID::Overhead)
             {
@@ -416,7 +416,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             input.client = m_sharedData.localConnectionData.connectionID;
             input.player = m_currentPlayer.player;
 
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::BallPlaced, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::BallPlaced, input, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
         else if (data.type == BilliardBallEvent::ShotTaken)
         {
@@ -427,9 +427,9 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             input.client = m_sharedData.localConnectionData.connectionID;
             input.player = m_currentPlayer.player;
 
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);*/
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, net::NetFlag::Reliable, ConstVal::NetChannelReliable);*/
 
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ActorAnimation, std::uint8_t(1), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ActorAnimation, std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
             //hide free table sign if active
             cro::Command cmd;
@@ -468,7 +468,7 @@ bool BilliardsState::simulate(float dt)
         }
         m_sharedData.clientConnection.eventBuffer.clear();
 
-        cro::NetEvent evt;
+        net::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
             //handle events
@@ -479,7 +479,7 @@ bool BilliardsState::simulate(float dt)
         {
             if (m_readyClock.elapsed() > ReadyPingFreq)
             {
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientReady, m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable);
                 m_readyClock.restart();
             }
         }
@@ -530,7 +530,7 @@ bool BilliardsState::simulate(float dt)
             info.rotation = cro::Util::Net::compressQuat(rotation);
             info.timestamp = timestamp;
 
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::CueUpdate, info, cro::NetFlag::Unreliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::CueUpdate, info, net::NetFlag::Unreliable);
         }
     }
     /*else
@@ -686,7 +686,7 @@ void BilliardsState::addSystems()
     m_gameScene.addSystem<cro::SpriteAnimator>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setNumCascades(1);
-    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(3.f);
+    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(4.f);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
@@ -709,6 +709,7 @@ void BilliardsState::buildScene()
     //so we assume here that it's safe to load.
     
     float spectateOffset = 0.f; //spectator camera offset is based on the size of the table model
+    float overheadOffset = 0.f;
 
     std::string path = "assets/golf/tables/" + m_sharedData.mapDirectory + ".table";
     TableData tableData;
@@ -722,6 +723,7 @@ void BilliardsState::buildScene()
             md.createModel(entity);
 
             spectateOffset = entity.getComponent<cro::Model>().getMeshData().boundingBox[1].z * 1.5f;
+            overheadOffset = spectateOffset * 1.25f;
 
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::Table]);
             applyMaterialData(md, material);
@@ -790,7 +792,7 @@ void BilliardsState::buildScene()
 
     //spectate cam
     auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, spectateOffset });
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.8f * (spectateOffset / 1.6f), spectateOffset});
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -30.f * cro::Util::Const::degToRad);
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
     camEnt.getComponent<CameraProperties>().farPlane = 7.f;
@@ -821,7 +823,7 @@ void BilliardsState::buildScene()
 
     //overhead cam
     camEnt = m_gameScene.createEntity();
-    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, 2.f, 0.f });
+    camEnt.addComponent<cro::Transform>().setPosition({ 0.f, overheadOffset, 0.f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, -90.f * cro::Util::Const::degToRad);
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
@@ -1096,7 +1098,7 @@ void BilliardsState::buildScene()
 
     //TODO this wants to be done after any loading animation
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete,
-        m_sharedData.clientConnection.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_scaleBuffer.bind(0);
     m_resolutionBuffer.bind(1);
@@ -1154,11 +1156,33 @@ void BilliardsState::buildScene()
             }
         }
     };
+
+
+
+    //delayed message to announce start
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(3.5f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime -= dt;
+
+        if (currTime < 0)
+        {
+            auto* msg = getContext().appInstance.getMessageBus().post<BilliardBallEvent>(MessageID::BilliardsMessage);
+            msg->type = BilliardBallEvent::GameStarted;
+
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+    };
 }
 
-void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
+void BilliardsState::handleNetEvent(const net::NetEvent& evt)
 {
-    if (evt.type == cro::NetEvent::PacketReceived)
+    if (evt.type == net::NetEvent::PacketReceived)
     {
         switch (evt.packet.getID())
         {
@@ -1191,6 +1215,9 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
             else if(id < FoulStrings.size())
             {
                 showNotification(FoulStrings[id]);
+
+                auto* msg = getContext().appInstance.getMessageBus().post<BilliardBallEvent>(MessageID::BilliardsMessage);
+                msg->type = BilliardBallEvent::Foul;
             }
         }
             break;
@@ -1287,7 +1314,7 @@ void BilliardsState::handleNetEvent(const cro::NetEvent& evt)
             break;
         }
     }
-    else if (evt.type == cro::NetEvent::ClientDisconnect)
+    else if (evt.type == net::NetEvent::ClientDisconnect)
     {
         m_sharedData.errorMessage = "Disconnected From Server (Host Quit)";
         requestStackPush(StateID::Error);
@@ -1458,6 +1485,11 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
     {
         m_localPlayerInfo[playerInfo.client][playerInfo.player].targetBall = result->getComponent<BilliardBall>().id;
     }
+    else
+    {
+        //TODO only do this if snooker?
+        m_localPlayerInfo[playerInfo.client][playerInfo.player].targetBall = -1;
+    }
 
     if (m_cueball.isValid())
     {
@@ -1557,7 +1589,7 @@ void BilliardsState::sendReadyNotify()
     if (m_wantsNotify)
     {
         m_wantsNotify = false;
-        m_sharedData.clientConnection.netClient.sendPacket(PacketID::TurnReady, m_sharedData.localConnectionData.connectionID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::TurnReady, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 }
 
@@ -1676,10 +1708,11 @@ void BilliardsState::resizeBuffers()
     /*glCheck(glPointSize(invScale * BallPointSize));*/
     glCheck(glLineWidth(invScale));
 
-    m_scaleBuffer.setData(&invScale);
+    m_scaleBuffer.setData(invScale);
 
-    glm::vec2 scaledRes = texSize / invScale;
-    m_resolutionBuffer.setData(&scaledRes);
+    ResolutionData d;
+    d.resolution = texSize / invScale;
+    m_resolutionBuffer.setData(d);
 
 
 

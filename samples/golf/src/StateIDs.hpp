@@ -46,6 +46,7 @@ struct StateID final
         PuttingRange,
         Clubhouse,
         Billiards,
-        Trophy
+        Trophy,
+        News
     };
 };

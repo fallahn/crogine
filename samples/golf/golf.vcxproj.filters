@@ -67,6 +67,12 @@
     <Filter Include="Source Files\golf\server\directors">
       <UniqueIdentifier>{f9b88068-78c7-43b5-ae2e-d550da45d78a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\rss">
+      <UniqueIdentifier>{ef7b3139-894e-44fc-a3ea-0c51f24ad336}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\rss">
+      <UniqueIdentifier>{0d07744f-6e49-4edb-a849-8597724e7dc3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -198,9 +204,6 @@
     <ClCompile Include="src\golf\PuttingStateUI.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
-    <ClCompile Include="src\Achievements.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\DefaultAchievements.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -271,6 +274,24 @@
       <Filter>Source Files\golf\client\systems</Filter>
     </ClCompile>
     <ClCompile Include="src\golf\GolfStateDebug.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\SpectatorSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\Path.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\PropFollowSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rss\Newsfeed.cpp">
+      <Filter>Source Files\rss</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rss\pugixml.cpp">
+      <Filter>Source Files\rss</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\NewsState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
   </ItemGroup>
@@ -461,12 +482,6 @@
     <ClInclude Include="src\golf\PuttingState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
-    <ClInclude Include="src\Achievements.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\AchievementStrings.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\DefaultAchievements.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -535,6 +550,33 @@
     </ClInclude>
     <ClInclude Include="src\golf\BeaconCallback.hpp">
       <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\Networking.hpp">
+      <Filter>Header Files\golf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\Networking.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\SpectatorSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\Path.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PropFollowSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rss\Newsfeed.hpp">
+      <Filter>Header Files\rss</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rss\pugiconfig.hpp">
+      <Filter>Header Files\rss</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rss\pugixml.hpp">
+      <Filter>Header Files\rss</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\NewsState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

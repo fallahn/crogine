@@ -169,6 +169,9 @@ bool SplashState::handleEvent(const cro::Event& evt)
     {
         requestStackClear();
         requestStackPush(StateID::Menu);
+#ifdef USE_RSS
+        requestStackPush(StateID::News);
+#endif
     }
 
     m_uiScene.forwardEvent(evt);
@@ -198,6 +201,9 @@ bool SplashState::simulate(float dt)
     {
         requestStackClear();
         requestStackPush(StateID::Menu);
+#ifdef USE_RSS
+        requestStackPush(StateID::News);
+#endif
     }
 
     return false;

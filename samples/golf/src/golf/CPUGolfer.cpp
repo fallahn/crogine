@@ -91,7 +91,7 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     m_thinkTime         (0.f)
 {
 #ifdef CRO_DEBUG_
-    registerWindow([&]()
+    /*registerWindow([&]()
         {
             if (ImGui::Begin("CPU"))
             {
@@ -112,7 +112,7 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
                 ImGui::Text("Target Accuracy: %3.3f", m_targetAccuracy);
             }
             ImGui::End();
-        });
+        });*/
 #endif
 }
 
@@ -380,12 +380,12 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             distance *= -1.f;
             auto resultB = m_collisionMesh.getTerrain(centrePoint + distance);
 
-            static constexpr float MaxSlope = 0.025f; //~2.5cm diff in slope
+            static constexpr float MaxSlope = 0.025f; //~25cm diff in slope
 #ifdef CRO_DEBUG_
             debug.slope = resultA.height - resultB.height;
 #endif
             float slope = (resultA.height - resultB.height) / MaxSlope;
-            slopeCompensation = m_inputParser.getMaxRotation() * slope;
+            slopeCompensation = m_inputParser.getMaxRotation() * slope;// *0.15f;
             slopeCompensation *= distanceReduction; //reduce the effect nearer the hole
             greenCompensation *= distanceReduction;
         }

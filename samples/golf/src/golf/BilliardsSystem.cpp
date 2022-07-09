@@ -499,7 +499,8 @@ btRigidBody::btRigidBodyConstructionInfo BilliardsSystem::createBodyDef(std::int
     {
     default: break;
     case CollisionID::Table:
-        info.m_friction = 0.26f;
+        //info.m_friction = 0.26f;
+        info.m_friction = 0.3f;
         break;
     case CollisionID::Cushion:
         info.m_restitution = 1.f;// 0.5f;
@@ -507,14 +508,12 @@ btRigidBody::btRigidBodyConstructionInfo BilliardsSystem::createBodyDef(std::int
         break;
     case CollisionID::Ball:
         info.m_restitution = 0.5f;
-        //info.m_rollingFriction = 0.0013f;
         info.m_rollingFriction = 0.0025f;
-        //info.m_spinningFriction = 0.0013f;
-        info.m_spinningFriction = 0.00066f;
+        info.m_spinningFriction = 0.001f;// hmm if this is too high then the balls curve a lot, but too low and they never come to rest...
         //info.m_friction = 0.15f;
-        info.m_friction = 0.25f;
-        info.m_linearSleepingThreshold = 0.001f; //if this is 0 then we never sleep...
-        info.m_angularSleepingThreshold = 0.001f;
+        info.m_friction = 0.3f;
+        info.m_linearSleepingThreshold = 0.003f; //if this is 0 then we never sleep...
+        info.m_angularSleepingThreshold = 0.003f;
         break;
     }
 
@@ -638,7 +637,7 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
     body->setCcdMotionThreshold(BilliardBall::Radius * 0.5f);
     body->setCcdSweptSphereRadius(BilliardBall::Radius);
     
-    //body->setAnisotropicFriction(m_ballShape->getAnisotropicRollingFrictionDirection(), btCollisionObject::CF_ANISOTROPIC_ROLLING_FRICTION);
+    body->setAnisotropicFriction(m_ballShape->getAnisotropicRollingFrictionDirection(), btCollisionObject::CF_ANISOTROPIC_ROLLING_FRICTION);
 
     m_collisionWorld->addRigidBody(body.get(), (1 << CollisionID::Ball), (1 << CollisionID::Table) | (1 << CollisionID::Cushion) | (1 << CollisionID::Ball));
 

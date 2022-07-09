@@ -353,6 +353,7 @@ void ParticleSystem::process(float dt)
                     p.acceleration = settings.acceleration;
                     p.frameID = (settings.useRandomFrame && settings.frameCount > 1) ? cro::Util::Random::value(0, static_cast<std::int32_t>(settings.frameCount) - 1) : 0;
                     p.frameTime = 0.f;
+                    p.loopCount = settings.loopCount;
 
                     //spawn particle in world position
                     auto basePosition = tx.getWorldPosition();
@@ -363,12 +364,13 @@ void ParticleSystem::process(float dt)
                     p.position.y += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
                     p.position.z += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
 
-                    /*if (emitter.settings.inheritRotation)
+                    if (emitter.settings.inheritRotation)
                     {
-                        p.position -= basePosition;
+                        /*p.position -= basePosition;
                         p.position = rotation * glm::vec4(p.position, 1.f);
-                        p.position += basePosition;
-                    }*/
+                        p.position += basePosition;*/
+                        p.velocity = glm::vec3(tx.getWorldTransform() * glm::vec4(p.velocity, 0.0));
+                    }
 
                     auto offset = settings.spawnOffset;
                     offset *= worldScale;
@@ -416,6 +418,12 @@ void ParticleSystem::process(float dt)
                 if (p.frameTime > framerate)
                 {
                     p.frameID++;
+                    if (p.frameID == emitter.settings.frameCount
+                        && p.loopCount)
+                    {
+                        p.loopCount--;
+                        p.frameID = 0;
+                    }
                     p.frameTime -= framerate;
                 }
             }
@@ -437,7 +445,8 @@ void ParticleSystem::process(float dt)
         for (auto i = 0u; i < emitter.m_nextFreeParticle; ++i)
         {
             if (emitter.m_particles[i].lifetime < 0
-                || emitter.m_particles[i].frameID == emitter.settings.frameCount)
+                || ((emitter.m_particles[i].frameID == emitter.settings.frameCount)
+                    && (emitter.m_particles[i].loopCount == 0)))
             {
                 emitter.m_nextFreeParticle--;
                 std::swap(emitter.m_particles[i], emitter.m_particles[emitter.m_nextFreeParticle]);                
@@ -519,6 +528,12 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
     for(auto entity : entities)
     {
         const auto& emitter = entity.getComponent<ParticleEmitter>();
+
+        if ((emitter.m_renderFlags & cam.renderFlags) == 0)
+        {
+            continue;
+        }
+
         //bind emitter texture
         glCheck(glBindTexture(GL_TEXTURE_2D, emitter.settings.textureID));
         glCheck(glUniform1f(m_uniformIDs[UniformID::ParticleSize], emitter.settings.size));

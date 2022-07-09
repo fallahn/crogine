@@ -63,10 +63,11 @@ struct ThemeSettings final
     std::string cloudPath;
 };
 
+struct SharedStateData;
 class TerrainBuilder final : public cro::GuiClient
 {
 public:
-    explicit TerrainBuilder(const std::vector<HoleData>&);
+    TerrainBuilder(SharedStateData&, const std::vector<HoleData>&);
     ~TerrainBuilder();
 
     TerrainBuilder(const TerrainBuilder&) = delete;
@@ -81,10 +82,8 @@ public:
 
     void setSlopePosition(glm::vec3);
 
-    void updateTime(float);
-
 private:
-
+    SharedStateData& m_sharedData;
     const std::vector<HoleData>& m_holeData;
     std::size_t m_currentHole;
 
@@ -134,7 +133,6 @@ private:
     {
         cro::Mesh::Data* meshData = nullptr;
         std::int32_t positionUniform = -1;
-        std::int32_t timeUniform = -1;
         std::int32_t alphaUniform = -1;
         std::uint32_t shader = 0;
         cro::Entity entity;

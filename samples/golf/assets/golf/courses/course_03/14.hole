@@ -2,8 +2,39 @@ hole 14
 {
     map="assets/golf/courses/course_03/14.png"
     model="assets/golf/models/course_03/02.cmt"
-    par = 4
+    par = 3
 
+    prop
+    {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 151.925690,1.414520,-149.692368
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 144.807007,1.465396,-155.145462
+        rotation = -508.886299
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 112.724808,1.465396,-181.107254
+        rotation = 175.154066
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/tall_tree.cmt"
+        position = 119.959251,1.465396,-176.164490
+        rotation = -275.273528
+        scale = 1.000000,1.000000,1.000000
+    }
 
     prop
     {
@@ -225,4 +256,22 @@ hole 14
 
     target = 227.020996,1.500000,-68.833633
 
+    crowd
+    {
+        position = 130.518768,1.500045,-165.070831
+        rotation = -41.418608
+
+        path
+        {
+            point = 123.225517,1.500000,-174.075684
+            point = 128.223526,1.500000,-171.926727
+            point = 132.768753,1.500000,-168.142761
+            point = 136.735443,1.500000,-163.000473
+            point = 140.199051,1.500000,-159.417740
+
+            loop = false
+            delay = 4.0
+            speed = 6.0
+        }
+    }
 }

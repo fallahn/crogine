@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "MenuCallbacks.hpp"
 #include "CommonConsts.hpp"
+#include "GameConsts.hpp"
 #include "Billboard.hpp"
 #include "BilliardsSystem.hpp"
 
@@ -48,10 +49,19 @@ source distribution.
 
 #include <vector>
 
+#ifdef USE_GNS
+namespace gns
+{
+    struct NetEvent;
+}
+namespace net = gns;
+#else
 namespace cro
 {
     struct NetEvent;
 }
+namespace net = cro;
+#endif
 
 class ClubhouseState;
 struct ClubhouseContext final : public MenuContext
@@ -134,9 +144,9 @@ private:
 
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_backgroundTexture;
-    cro::UniformBuffer m_scaleBuffer;
-    cro::UniformBuffer m_resolutionBuffer;
-    cro::UniformBuffer m_windBuffer;
+    cro::UniformBuffer<float> m_scaleBuffer;
+    cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
+    cro::UniformBuffer<WindData> m_windBuffer;
     cro::CubemapTexture m_reflectionMap;
     cro::VideoPlayer m_arcadeVideo;
 
@@ -186,7 +196,7 @@ private:
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
 
-    void updateLobbyData(const cro::NetEvent&);
+    void updateLobbyData(const net::NetEvent&);
     void quitLobby();
 
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
@@ -196,7 +206,7 @@ private:
     void updateLobbyAvatars();
     void updateBallTexture();
 
-    void handleNetEvent(const cro::NetEvent&);
+    void handleNetEvent(const net::NetEvent&);
 
     friend struct ClubhouseContext;
 };

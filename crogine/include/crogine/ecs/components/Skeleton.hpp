@@ -348,6 +348,14 @@ namespace cro
         */
         void setInterpolationEnabled(bool enabled) { m_useInterpolation = enabled; }
 
+        /*!
+        \brief Sets the max distance from the camera to use interpolation.
+        Models further from this will still animate but the frames will skip
+        from one to the next without being interpolated in between.
+        Defaults to 50 units
+        */
+        void setMaxInterpolationDistance(float distance) { m_interpolationDistance = std::max(1.f, distance * distance); }
+
     private:
 
         float m_playbackRate;
@@ -361,6 +369,7 @@ namespace cro
         float m_frameTime;
         float m_currentFrameTime;
         bool m_useInterpolation;
+        float m_interpolationDistance;
 
         std::size_t m_frameSize; //joints in a frame
         std::size_t m_frameCount;

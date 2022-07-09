@@ -35,6 +35,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "VatFile.hpp"
 #include "VatAnimationSystem.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -143,8 +144,9 @@ namespace
     };
 }
 
-TerrainBuilder::TerrainBuilder(const std::vector<HoleData>& hd)
-    : m_holeData    (hd),
+TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>& hd)
+    : m_sharedData  (sd),
+    m_holeData      (hd),
     m_currentHole   (0),
     m_swapIndex     (0),
     m_terrainBuffer ((MapSize.x * MapSize.y) / QuadsPerMetre),
@@ -437,7 +439,6 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     resources.shaders.loadFromString(ShaderID::Slope, SlopeVertexShader, SlopeFragmentShader);
     auto& slopeShader = resources.shaders.get(ShaderID::Slope);
     m_slopeProperties.positionUniform = slopeShader.getUniformID("u_centrePosition");
-    m_slopeProperties.timeUniform = slopeShader.getUniformID("u_time");
     m_slopeProperties.alphaUniform = slopeShader.getUniformID("u_alpha");
     m_slopeProperties.shader = slopeShader.getGLHandle();
     materialID = resources.materials.add(slopeShader);
@@ -458,8 +459,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         if (direction == 0)
         {
             //fade in
-            alpha = std::min(1.f, alpha + dt);
-            if (alpha == 1)
+            alpha = std::min(m_sharedData.gridTransparency, alpha + dt);
+            if (alpha == m_sharedData.gridTransparency)
             {
                 e.getComponent<cro::Callback>().active = false;
             }
@@ -605,12 +606,6 @@ void TerrainBuilder::update(std::size_t holeIndex)
             m_wantsUpdate = true;
         }
     }
-}
-
-void TerrainBuilder::updateTime(float elapsed)
-{
-    glCheck(glUseProgram(m_slopeProperties.shader));
-    glCheck(glUniform1f(m_slopeProperties.timeUniform, elapsed));
 }
 
 void TerrainBuilder::setSlopePosition(glm::vec3 position)
@@ -863,8 +858,8 @@ void TerrainBuilder::threadFunc()
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
                 static constexpr float DashCount = 40.f; //actual div by TAU cos its sin but eh.
-                static constexpr float SlopeSpeed = -50.f;
-                static constexpr std::int32_t AvgDistance = 5;
+                const float SlopeSpeed = -20.f * (m_holeData[m_currentHole].puttFromTee ? 0.15f : 1.f);
+                const std::int32_t AvgDistance = m_holeData[m_currentHole].puttFromTee ? 1 : 5; //taking a long average on a small lumpy green will give wrong direction
 
                 for (auto y = startY; y < startY + SlopeGridSize; ++y)
                 {

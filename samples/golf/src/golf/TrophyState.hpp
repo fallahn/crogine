@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include "GameConsts.hpp"
 #include "../StateIDs.hpp"
 
 #include <crogine/core/State.hpp>
@@ -80,8 +81,8 @@ private:
     cro::CubemapTexture m_reflectionMap;
     std::vector<cro::Entity> m_trophyEnts;
 
-    cro::UniformBuffer m_scaleBuffer;
-    cro::UniformBuffer m_resolutionBuffer;
+    cro::UniformBuffer<float> m_scaleBuffer;
+    cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;

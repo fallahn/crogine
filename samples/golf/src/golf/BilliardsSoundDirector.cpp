@@ -47,6 +47,21 @@ BilliardsSoundDirector::BilliardsSoundDirector(cro::AudioResource& ar)
 
         "assets/golf/sound/billiards/pocket_start.wav",
         "assets/golf/sound/billiards/pocket_end.wav",
+
+        "assets/golf/sound/billiards/announcer/start.wav",
+        "assets/golf/sound/billiards/announcer/nice.wav",
+        "assets/golf/sound/billiards/announcer/foul01.wav",
+        "assets/golf/sound/billiards/announcer/foul02.wav",
+        "assets/golf/sound/billiards/announcer/lose.wav",
+        "assets/golf/sound/billiards/announcer/win.wav",
+
+        "assets/golf/sound/billiards/announcer/01.wav",
+        "assets/golf/sound/billiards/announcer/02.wav",
+        "assets/golf/sound/billiards/announcer/03.wav",
+        "assets/golf/sound/billiards/announcer/04.wav",
+        "assets/golf/sound/billiards/announcer/05.wav",
+        "assets/golf/sound/billiards/announcer/06.wav",
+        "assets/golf/sound/billiards/announcer/07.wav"
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -106,6 +121,28 @@ void BilliardsSoundDirector::handleMessage(const cro::Message& msg)
             auto ent = playSound(AudioID::PocketEnd, glm::vec3(0.f), data.volume);
             ent.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.15f));
         }
+            break;
+        case BilliardBallEvent::GameStarted:
+            playSound(AudioID::Start, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+            break;
+        case BilliardBallEvent::Foul:
+            playSound(AudioID::Foul01 + cro::Util::Random::value(0, 1), glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+            break;
+        case BilliardBallEvent::Score:
+            if (data.data > 0 && data.data < 8)
+            {
+                playSound(AudioID::Win + data.data, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+            }
+            break;
+        case BilliardBallEvent::GameEnded:
+            if (data.data == 0)
+            {
+                playSound(AudioID::Win, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+            }
+            else
+            {
+                playSound(AudioID::Lose, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+            }
             break;
         }
     }

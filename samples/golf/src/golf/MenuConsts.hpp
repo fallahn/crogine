@@ -54,6 +54,20 @@ static const std::array<std::string, 3u> ScoreTypes =
     "Stroke Play", "Match Play", "Skins"
 };
 
+static const std::array<std::string, 3u> ScoreDesc =
+{
+    "Player with the fewest total\nstrokes wins",
+    "Holes are scored individually.\nPlayer with the most holes\nwins",
+    "Holes are scored individually.\nWinner of the hole gets the\nskins pot, else the pot\nrolls over to the next hole."
+};
+
+static const std::array<std::string, 3u> GimmeString =
+{
+    "None",
+    "Inside the leather",
+    "Inside the putter"
+};
+
 static constexpr std::uint32_t LargeTextSize = 64;
 static constexpr std::uint32_t MediumTextSize = 32;
 static constexpr std::uint32_t SmallTextSize = 16;

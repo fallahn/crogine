@@ -49,12 +49,16 @@ static inline std::vector<std::uint8_t> serialiseString(const cro::String& str)
     std::uint8_t size = static_cast<std::uint8_t>(len * sizeof(std::uint32_t));
     std::vector<std::uint8_t> buffer(size + 1);
     buffer[0] = size;
-    std::memcpy(&buffer[1], workingString.data(), size);
+    
+    //if (size)
+    {
+        std::memcpy(&buffer[1], workingString.data(), size);
+    }
 
     return buffer;
 }
 
-static inline cro::String deserialiseString(const cro::NetEvent::Packet& packet)
+static inline cro::String deserialiseString(const net::NetEvent::Packet& packet)
 {
     CRO_ASSERT(packet.getSize() > 0, "TODO we need better error handling");
 
@@ -68,4 +72,29 @@ static inline cro::String deserialiseString(const cro::NetEvent::Packet& packet)
 
     cro::String str = cro::String::fromUtf32(buffer.begin(), buffer.end());
     return str;
+}
+
+static inline glm::mat4 lookFrom(const glm::vec3& eye, const glm::vec3 centre, const glm::vec3 up)
+{
+    //TODO this is still a lookAt - but surely wee can create a lookFrom
+    //directly without having to inverse this all the time??
+
+    const glm::vec3 f(glm::normalize(centre - eye));
+    const glm::vec3 s(glm::normalize(glm::cross(f, up)));
+    const glm::vec3 u(glm::cross(s, f));
+
+    glm::mat4 Result(1);
+    Result[0][0] = s.x;
+    Result[1][0] = s.y;
+    Result[2][0] = s.z;
+    Result[0][1] = u.x;
+    Result[1][1] = u.y;
+    Result[2][1] = u.z;
+    Result[0][2] = -f.x;
+    Result[1][2] = -f.y;
+    Result[2][2] = -f.z;
+    Result[3][0] = -glm::dot(s, eye);
+    Result[3][1] = -glm::dot(u, eye);
+    Result[3][2] = glm::dot(f, eye);
+    return Result;
 }

@@ -37,8 +37,8 @@ source distribution.
 //(model format changed between 120 -> 130)
 //(server layout updated 140 -> 150)
 //(skybox format changed 150 -> 160)
-static constexpr std::uint16_t CURRENT_VER = 160;
-static const std::string StringVer("1.6.0");
+static constexpr std::uint16_t CURRENT_VER = 170;
+static const std::string StringVer("1.7.0");
 
 namespace ScoreType
 {
@@ -82,12 +82,14 @@ namespace PacketID
         HoleWon, //< uint16 client OR'd player winning a match or skins point
         FoulEvent, //< int8 BilliardsEvent foul reason - tells client to display a foul message
         GameEnd, //< uint8 seconds. tells clients to show scoreboard/countdown to lobby, or BilliardsPlayer of winner in billiards
+        MaxStrokes, //< player reached stroke limit (so client can print message)
 
         ActorAnimation, //< Tell player sprite to play the given anim with uint8 ID
         ActorUpdate, //< ActorInfo - ball interpolation
         ActorSpawn, //< ActorInfo
         WindDirection, //< compressed vec3
         BallLanded, //< BallUpdate struct
+        Gimme, //< uint16 client << 8 | player turn was ended on a gimme
         TableInfo, //< TableInfo struct
         TargetID, //< uint16 billiards player OR'd ball ID to update the UI
 
@@ -109,6 +111,7 @@ namespace PacketID
         TurnReady, //< uint8 clientID - ready to take their turn - rebroadcast by server to tell all clients to clear messages
         MapInfo, //< serialised cro::String containing course directory
         ScoreType, //< uint8 ScoreType of golf game
+        GimmeRadius, //< uint8 gimme radius of golf
         LobbyReady, //< uint8 playerID uint8 0 false 1 true
         AchievementGet, //< uint8 client uint8 achievement id (always assume first player on client, as achievements are disabled other wise)
         CPUThink, //< uint8 0 if begin think, 1 end think

@@ -73,6 +73,9 @@ struct Ball final
     glm::vec3 startPoint = glm::vec3(0.f);
     float lastStrokeDistance = 0.f;
     bool hadAir = false; //toggled when passing over hole
+
+    //used for wall collision when putting
+    btPairCachingGhostObject* collisionObject = nullptr;
 };
 
 class BallSystem final : public cro::System
@@ -96,6 +99,8 @@ public:
 
     bool setHoleData(const struct HoleData&, bool rebuildMesh = true);
 
+    void setGimmeRadius(std::uint8_t);
+
     struct TerrainResult final
     {
         std::uint8_t terrain = TerrainID::Scrub;
@@ -104,6 +109,8 @@ public:
         float penetration = 0.f; //positive values are down into the ground
     };
     TerrainResult getTerrain(glm::vec3) const;
+
+    bool getPuttFromTee() const { return m_puttFromTee; }
 
 #ifdef CRO_DEBUG_
     void setDebugFlags(std::int32_t);
@@ -130,6 +137,8 @@ private:
     float m_currentWindInterpTime;
 
     const HoleData* m_holeData;
+    bool m_puttFromTee;
+    std::uint8_t m_gimmeRadius;
 
     void doCollision(cro::Entity);
     void updateWind();

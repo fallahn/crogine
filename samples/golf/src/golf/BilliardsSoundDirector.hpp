@@ -64,6 +64,21 @@ private:
             PocketStart,
             PocketEnd,
 
+            Start,
+            Compliment,
+            Foul01,
+            Foul02,
+            Lose,
+            Win,
+
+            One,
+            Two,
+            Three,
+            Four,
+            Five,
+            Six,
+            Seven,
+
             Count
         };
     };

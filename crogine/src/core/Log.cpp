@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/core/Log.hpp>
+#include <crogine/core/App.hpp>
 #include <crogine/core/Console.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/Types.hpp>
@@ -90,7 +91,8 @@ void Logger::log(const std::string& message, Type type, Output output)
     {
         //output to a log file
         RaiiRWops file;
-        file.file = SDL_RWFromFile("output.log", "a");
+        auto logPath = cro::App::getPreferencePath() + "output.log";
+        file.file = SDL_RWFromFile(logPath.c_str(), "a");
         if (file.file)
         {
             auto timeStamp = SysTime::timeString();

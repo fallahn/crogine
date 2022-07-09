@@ -29,8 +29,11 @@ source distribution.
 
 #pragma once
 
+#include "AchievementIDs.hpp"
+
 #include <string>
 #include <array>
+#include <vector>
 
 /*
 Note that the default achievement system only reserves space
@@ -40,45 +43,7 @@ the data (and we don't want to upset people by ruining their
 achievements!!)
 */
 
-namespace AchievementID
-{
-    enum
-    {
-        Unknown,
-        HoleInOne = 1,
-        BullsEye,
-        LongDistanceClara,
-        StrokeOfMidnight,
-        LeaderOfThePack,
-        PuttStar,
-        TopChip,
-        Boomerang,
-        BetterWithFriends,
 
-        BronzeStar,
-        SilverStar,
-        GoldStar,
-
-        CluedUp,
-        JoinTheClub,
-
-        StrokeOfGenius,
-        NoMatch,
-        SkinOfYourTeeth,
-
-        Socialiser,
-        Spots,
-        Stripes,
-        EasyPink,
-
-        PracticeMakesPerfect,
-        AllOfATwitter,
-        Soaring,
-
-        Count
-    };
-    static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
-}
 
 static const std::array<std::string, AchievementID::Count> AchievementStrings = 
 {
@@ -106,7 +71,11 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "easy_pink",
     "practice_perfect",
     "all_of_a_twitter",
-    "soaring"
+    "soaring",
+    "hole_in_one_million",
+    "gimme_five",
+    "gimme_ten",
+    "day_job"
 };
 
 //appears on the notification
@@ -136,7 +105,11 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Easy Pink",
     "Practice Makes Perfect",
     "All of a Twitter",
-    "Soaring"
+    "Soaring",
+    "Hole In One Million",
+    "Gimme 5!",
+    "Gimme 10!",
+    "Day Job"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -167,13 +140,17 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Spend an hour in total on the driving range", false),
     std::make_pair("Get 18 Birdies", false),
     std::make_pair("Get an Eagle", false),
+    std::make_pair("Hit the camera drone with a ball", false),
+    std::make_pair("Take five gimmies inside the leather", false),
+    std::make_pair("Take ten gimmies inside the putter", false),
+    std::make_pair("Total over 24 hours play time on the course", false),
 };
 
 //assuming tropies load correctly they are
 /*
 Gold, silver, bronze cup
 Gold, silver, bronze mannequin
-Pool
+Pool, Platinum
 */
 
 struct TrophyID final
@@ -182,14 +159,14 @@ struct TrophyID final
     {
         GoldCup, SilverCup, BronzeCup,
         GoldFigure, SilverFigure, BronzeFigure,
-        Pool
+        Pool, Platinum
     };
 };
 
 static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophies =
 {
     TrophyID::Pool,
-    TrophyID::GoldCup,
+    TrophyID::Platinum,
     TrophyID::SilverFigure,
     TrophyID::GoldFigure,
     TrophyID::BronzeFigure,
@@ -213,36 +190,13 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldFigure,
     TrophyID::SilverFigure,
     TrophyID::GoldFigure,
+    TrophyID::Platinum,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeFigure,
+    TrophyID::GoldCup
 };
 
-namespace StatID
-{
-    enum
-    {
-        HolesPlayed,
-        PuttDistance,
-        StrokeDistance,
-
-        GoldAverage,
-        SilverAverage,
-        BronzeAverage,
-        TotalRounds,
-
-        EightballWon,
-        NineballWon,
-        SnookerWon,
-
-        TimeOnTheRange,
-        Birdies,
-        Eagles,
-        HIOs,
-
-        Count
-    };
-    static_assert(Count <= 64, "Count exceeds maximum number of stats");
-}
-
-//these are indexed by the above, so do try to get them in the correct order ;)
+//these are indexed by StatID, so do try to get them in the correct order ;)
 static const std::array<std::string, StatID::Count> StatStrings =
 {
     "holes_played",
@@ -261,7 +215,12 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "time_on_the_range"
     "birdies",
     "eagles",
-    "hios"
+    "hios",
+
+    "leather_gimmies",
+    "putter_gimmies",
+
+    "time_on_the_course"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -279,7 +238,10 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Time spent at the Driving Range",
     "Birdies scored",
     "Eagles scored",
-    "Holes in one"
+    "Holes in one",
+    "Gimmies taken inside the leather",
+    "Gimmies taken inside the putter",
+    "Total time spent on a course"
 };
 
 struct StatType final
@@ -305,7 +267,10 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Time,
     StatType::Integer,
     StatType::Integer,
-    StatType::Integer
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Time
 };
 
 struct StatTrigger final

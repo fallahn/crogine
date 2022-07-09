@@ -29,7 +29,10 @@ source distribution.
 
 #pragma once
 
+#include "Path.hpp"
+
 #include <crogine/ecs/Entity.hpp>
+#include <crogine/util/Spline.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 struct HoleData final
@@ -39,12 +42,16 @@ struct HoleData final
     glm::vec3 pin = glm::vec3(0.f);
     float distanceToPin = 0.f;
     std::int32_t par = 0;
+    bool puttFromTee = false;
     std::string mapPath;
     std::string modelPath;
     cro::Entity modelEntity;
     std::vector<cro::Entity> propEntities;
     std::vector<cro::Entity> particleEntities;
+    std::vector<cro::Entity> audioEntities;
     std::vector<glm::mat4> crowdPositions;
+    std::vector<Path> crowdCurves;
+    std::vector<Path> propCurves;
 };
 
 static constexpr std::size_t MaxHoles = 18;

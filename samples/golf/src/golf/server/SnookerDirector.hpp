@@ -46,9 +46,37 @@ public:
 
     std::uint32_t getTargetID(glm::vec3) const override;
 
+    std::int32_t getScore(std::size_t player) const override { return m_scores[player]; }
+
 private:
 
     std::vector<BallInfo> m_ballLayout;
     std::size_t m_currentPlayer;
+    std::array<std::int32_t, 2u> m_scores = {};
+
+    std::vector<std::int8_t> m_pocketsThisTurn;
+    std::uint8_t m_firstCollision;
+
+    struct TurnFlags final
+    {
+        enum
+        {
+            Foul = 0x01,
+            Forfeit = 0x02
+        };
+    };
+    std::uint8_t m_turnFlags;
+
+    //unlike other games this can have multiple
+    //targets so we flag the target bits
+    static constexpr std::uint8_t TargetRed = 0x2;
+    static constexpr std::uint8_t TargetColour = ~0x3;
+    std::uint8_t m_currentTarget;
+
+    std::int8_t m_redBallCount;
+    std::int8_t m_lowestColour;
+    std::vector<std::int8_t> m_replaceBalls;
+
+    void summariseTurn();
 
 };

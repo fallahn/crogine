@@ -69,12 +69,17 @@ struct GolfEvent final
         DriveComplete,
         HoleInOne,
         HoleWon,
-        HoleDrawn
+        HoleDrawn,
+        DroneHit,
+        BirdHit,
+        Gimme,
+        RoundEnd
     }type = HitBall;
 
     glm::vec3 position = glm::vec3(0.f);
     float travelDistance = 0.f; //this is sqr
     float pinDistance = 0.f; //this is sqr
+    
     union
     {
         std::uint8_t terrain = 0;
@@ -102,7 +107,7 @@ struct CollisionEvent final
 {
     enum Type
     {
-        Begin, End
+        Begin, End, NearMiss
     }type = Begin;
     glm::vec3 position = glm::vec3(0.f);
     std::int32_t terrain = 0;
@@ -130,12 +135,16 @@ struct BilliardBallEvent final
 {
     enum
     {
+        GameStarted,
         ShotTaken,
         BallPlaced,
         Collision,
         TurnStarted,
         PocketStart,
-        PocketEnd
+        PocketEnd,
+        Foul,
+        Score,
+        GameEnded
     }type = ShotTaken;
     std::int32_t data = -1; //collision ID
     float volume = 1.f;

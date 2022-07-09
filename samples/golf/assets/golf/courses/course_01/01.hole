@@ -13,17 +13,18 @@ hole 01
         model = "assets/golf/models/boat01.cmt"
         position = 129.615753,-0.904872,-147.697449
         rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
     }
 
     crowd
     {
-        position = 33.260078,2.14644,-187.667694
+        position = 33.260078,2.146440,-187.667694
         rotation = -0.160858
     }
 
     crowd
     {
-        position = 23.153587,2.48889,-167.843842
+        position = 23.153587,2.488890,-167.843842
         rotation = 111.132167
     }
 }

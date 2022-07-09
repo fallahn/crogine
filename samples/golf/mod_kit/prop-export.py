@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2022, 6, 5),
+    "version": (2022, 7, 4),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -37,18 +37,40 @@ def WritePath(file, path):
 
     if path.get('loop') is not None:
         if path['loop'] == 0:
-            file.write("\n            loop = false\n")
+            file.write("\n            loop = false")
         else:
-            file.write("\n            loop = true\n")
+            file.write("\n            loop = true")
     else:
-        file.write("\n            loop = false\n")
+        file.write("\n            loop = false")
 
-    file.write("        }\n")
+
+    if path.get('delay') is not None:
+        file.write("\n            delay = %f" % path['delay'])
+    else:
+        file.write("\n            delay = 4.0")
+
+
+    if path.get('speed') is not None:
+        file.write("\n            speed = %f" % path['speed'])
+    else:
+        file.write("\n            speed = 6.0")        
+
+    file.write("\n        }\n")
 
 
 def WriteSpeaker(file, speaker):
-    print("TODO")
+    if speaker.get('name') is not None:
+        file.write("        emitter = \"%s\"\n" % speaker['name'])
 
+    if speaker.parent is None:
+        location = speaker.location
+        file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
+
+
+def WriteSpeakerSolo(file, speaker):
+    file.write("    speaker\n    {\n")
+    WriteSpeaker(file, speaker)
+    file.write("    }\n\n")
 
 
 def WriteProp(file, modelName, location, rotation, scale, ob):
@@ -76,10 +98,15 @@ def WriteProp(file, modelName, location, rotation, scale, ob):
     file.write("    }\n\n")
 
 
-def WriteCrowd(file, location, rotation):
+def WriteCrowd(file, location, rotation, ob):
     file.write("    crowd\n    {\n")
     file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
     file.write("        rotation = %f\n" % (rotation[2] * (180.0 / 3.141)))
+
+
+    if ob.parent is not None and ob.parent.type == 'CURVE':
+        WritePath(file, ob.parent)
+
     file.write("    }\n\n")
 
 
@@ -89,6 +116,13 @@ def WriteParticles(file, path, location):
     file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
     file.write("    }\n\n")
 
+
+def showMessageBox(message = "", title = "Message Box", icon = 'INFO'):
+
+    def draw(self, context):
+        self.layout.label(text = message)
+
+    bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
 
 
 class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
@@ -125,56 +159,64 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 
         for ob in bpy.context.selected_objects:
 
-            if ob.type == 'MESH' or ob.type == 'EMPTY':
+            if ob.type == 'MESH' or ob.type == 'EMPTY' or ob.type == 'SPEAKER':
 
                 modelName = ob.name
                 if ob.get('model_path') is not None:
                     modelName = ob['model_path']
 
-                worldLocation = None
-                worldRotation = None
-                worldScale = None
+                worldLocation = ob.location
+                worldRotation = ob.rotation_euler
+                worldScale = ob.scale
 
-                if ob.parent is None:
-                    worldLocation = ob.location
-                    worldRotation = ob.rotation_euler
-                    worldScale = ob.scale
-                else:
+                if ob.parent is not None and ob.parent.type == 'MESH':
                     worldLocation = ob.matrix_world @ ob.location
                     worldRotation = ob.matrix_world.to_euler('XYZ')
                     worldScale = vecMultiply(ob.parent.scale, ob.scale)
 
 
                 if "crowd" in modelName.lower():
-                    WriteCrowd(file, worldLocation, worldRotation)
-                elif modelName.lower() == "pin":
+                    WriteCrowd(file, worldLocation, worldRotation, ob)
+                elif "pin" in modelName.lower():
                     if pinWritten == False:
                         WriteProperty(file, "pin", worldLocation)
                         pinWritten = True
-                elif modelName.lower() == "target":
+                    else:
+                        self.report({'WARNING'}, "Multiple pins selected")
+                elif "target" in modelName.lower():
                     if targetWritten == False:
                         WriteProperty(file, "target", worldLocation)
                         targetWritten = True
-                elif modelName.lower() == "tee":
+                    else:
+                        self.report({'WARNING'}, "Multiple targets selected")
+                elif "tee" in modelName.lower():
                     if teeWritten == False:
                         WriteProperty(file, "tee", worldLocation)
                         teeWritten = True
+                    else:
+                        self.report({'WARNING'}, "Multiple tees selected")
                 else:
                     if ob.type == 'MESH':
                         WriteProp(file, modelName, worldLocation, worldRotation, worldScale, ob)
                     elif ob.type == 'EMPTY':
                         if ob.get('type') is not None:
-                            if ob['type'] == 1:
-                            # is a particle emitter
+                            if ob['type'] == 1 and ob.parent is None:
+                            # is a particle emitter not parented to a prop
                                 if ob.get('path') is not None:
                                     WriteParticles(file, ob['path'], worldLocation)
                                 else:
                                     WriteParticles(file, "path_missing", worldLocation)
-                    elif ob.type == 'SPEAKER':
-                        self.report({'INFO'}, "Found a speaker")
+                    elif ob.type == 'SPEAKER' and ob.parent is None:
+                        WriteSpeakerSolo(file, ob)
 
         file.write("}")
         file.close()
+
+
+        if not pinWritten or not targetWritten or not teeWritten:
+            showMessageBox("Pin or other Tee data was missing from selection", "Warning", 'ERROR')
+
+
         return {'FINISHED'}
 
 

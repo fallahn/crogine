@@ -53,6 +53,7 @@ static const std::string TerrainVertexShader = R"(
     layout (std140) uniform ScaledResolution
     {
         vec2 u_scaledResolution;
+        float u_fadeDistance;
     };
 
     VARYING_OUT vec3 v_normal;
@@ -132,7 +133,10 @@ static const std::string SlopeFragmentShader =
 R"(
     OUTPUT
 
-    uniform float u_time;
+    layout (std140) uniform WindValues
+    {
+        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
+    };    
     uniform float u_alpha;
 
     VARYING_IN vec4 v_colour;
@@ -142,7 +146,7 @@ R"(
 
     void main()
     {
-        float alpha = (sin(v_texCoord.x - (u_time * v_texCoord.y)) + 1.0) * 0.5;
+        float alpha = (sin(v_texCoord.x - ((u_windData.w * 10.f) * v_texCoord.y)) + 1.0) * 0.5;
         alpha = step(0.5, alpha);
 
         FRAG_OUT = v_colour;
@@ -201,11 +205,12 @@ static const std::string CelVertexShader = R"(
     layout (std140) uniform WindValues
     {
         vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };    
+    };
 
     layout (std140) uniform ScaledResolution
     {
         vec2 u_scaledResolution;
+        float u_nearFadeDistance;
     };
 
     VARYING_OUT float v_ditherAmount;
@@ -213,6 +218,7 @@ static const std::string CelVertexShader = R"(
     VARYING_OUT vec4 v_colour;
     VARYING_OUT vec3 v_cameraWorldPosition;
     VARYING_OUT vec3 v_worldPosition;
+
 #if defined (TEXTURED)
     VARYING_OUT vec2 v_texCoord;
 #endif
@@ -286,6 +292,7 @@ static const std::string CelVertexShader = R"(
         position.xz += (u_windData.xz * strength * 2.0) * totalScale;
 #endif
 #endif
+
         vec4 worldPosition = worldMatrix * position;
         v_worldPosition = worldPosition.xyz;
         //gl_Position = u_projectionMatrix * worldViewMatrix * position;
@@ -328,12 +335,11 @@ static const std::string CelVertexShader = R"(
         gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
 
 #if defined(DITHERED)
-        const float fadeDistance = 4.0;
-        const float nearFadeDistance = 2.0;
+        float fadeDistance = u_nearFadeDistance * 2.0;
         const float farFadeDistance = 360.f;
         float distance = length(worldPosition.xyz - u_cameraWorldPosition);
 
-        v_ditherAmount = pow(clamp((distance - nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
+        v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
         v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
 #endif
     })";
@@ -344,6 +350,11 @@ static const std::string CelFragmentShader = R"(
     layout (std140) uniform PixelScale
     {
         float u_pixelScale;
+    };
+
+    layout (std140) uniform WindValues
+    {
+        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
     };
 
 #if defined (RX_SHADOWS)
@@ -380,6 +391,11 @@ static const std::string CelFragmentShader = R"(
     VARYING_IN vec2 v_texCoord;
 #endif
 
+#if defined (CONTOUR)
+    uniform float u_transparency;
+    uniform float u_minHeight = 0.0;
+    uniform float u_maxHeight = 1.0;
+#endif
 
 #if defined (NORMAL_MAP)
     uniform sampler2D u_normalMap;
@@ -594,7 +610,7 @@ static const std::string CelFragmentShader = R"(
         //colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, amount);
         colour.rgb *= amount;
 #endif
-        vec3 viewDirection = normalize(v_cameraWorldPosition - v_worldPosition);
+        vec3 viewDirection = normalize(v_cameraWorldPosition - v_worldPosition.xyz);
 #if defined (SPECULAR)
         vec3 reflectDirection = reflect(-lightDirection, normal);
         float spec = pow(max(dot(viewDirection, reflectDirection), 0.50), 256.0);
@@ -651,6 +667,37 @@ static const std::string CelFragmentShader = R"(
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
 #endif
         if(alpha < 0.1) discard;
+#endif
+
+#if defined(CONTOUR)
+    float height = (v_worldPosition.y - u_minHeight) / (u_maxHeight - u_minHeight);
+    vec3 contourColour = mix(vec3(0.0,0.0,1.0), vec3(1.0,0.0,1.0), height);
+
+    vec3 f = fract(v_worldPosition);// * 2.0);
+    vec3 df = fwidth(v_worldPosition);// * 2.0);
+    vec3 g = step(df * u_pixelScale, f);
+    ////vec3 g = smoothstep(df * 1.0, df * 2.0, f);
+    //float contour = 1.0 - (g.x * g.y * g.z);
+
+    vec3 faceNormal = normalize(cross(dFdx(v_worldPosition), dFdy(v_worldPosition))) * 20.0;
+
+    float contourX = 1.0 - (g.y * g.z);
+
+    const float frequency = 40.0;
+    float dashX = (sin((mod(v_worldPosition.x, 1.0) * frequency) - (u_windData.w * faceNormal.x)) + 1.0) * 0.5;
+    contourX *= step(0.25, dashX);
+
+    float contourZ = 1.0 - (g.y * g.x);
+    float dashZ = (sin((mod(v_worldPosition.z + 0.5, 1.0) * frequency) - (u_windData.w * faceNormal.z)) + 1.0) * 0.5;
+    contourZ *= step(0.25, dashZ);
+
+    vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
+    float fade = (1.0 - smoothstep(36.0, 81.0, dot(distance, distance))) * u_transparency * 0.75;
+
+
+    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourX * fade);
+    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourZ * fade);
+    FRAG_OUT.rgb += clamp(height, 0.0, 1.0) * 0.1;
 #endif
     })";
 

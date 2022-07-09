@@ -137,7 +137,7 @@ void SkeletalAnimator::process(float dt)
                 //check distance to camera and check if actually in front
                 auto direction = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
                 if (glm::dot(direction, camDir) > 0
-                    && glm::length2(direction) < 250.f) //arbitrary distance of 50 units
+                    && glm::length2(direction) < skel.m_interpolationDistance)
                 {
                     float interpTime = skel.m_currentFrameTime / skel.m_frameTime;
                     interpolate(anim.currentFrame, nextFrame, interpTime, skel);

@@ -1356,8 +1356,48 @@ void ModelState::drawInspector()
                     {
                         applyMaterial = true;
                     }
+
+
+                    ImGui::NewLine();
+                    if (ImGui::Checkbox("Animated", &matDef.animated))
+                    {
+                        applyMaterial = true;
+                    }
+                    ImGui::SameLine();
+                    helpMarker("If animated the material will attempt to split the UV coords by the number of row/columns (below) and cycle through them based on the current frame rate. Frames are sorted column first, top to bottom. Enabling this overrides any subrect setting.");
+
+                    ImGui::PushItemWidth(100.f);
+                    std::int32_t rowCount = matDef.rowCount;
+                    if (ImGui::InputInt("Row Count", &rowCount))
+                    {
+                        rowCount = std::max(1, std::min(100, rowCount));
+                        matDef.rowCount = rowCount;
+
+                        applyMaterial = matDef.animated;
+                    }
+                    ImGui::SameLine();
+                    helpMarker("UVs are divided vertically by this value to create frames, does nothing if animation disabled.");
+
+                    std::int32_t colCount = matDef.colCount;
+                    if (ImGui::InputInt("Column Count", &colCount))
+                    {
+                        colCount = std::max(1, std::min(100, colCount));
+                        matDef.colCount = colCount;
+
+                        applyMaterial = matDef.animated;
+                    }
+                    ImGui::SameLine();
+                    helpMarker("UVs are divided horizontally by this value to create frames, does nothing if animation disabled.");
+
+                    if (ImGui::InputFloat("Frame Rate", &matDef.frameRate))
+                    {
+                        matDef.frameRate = std::max(1.f, std::min(60.f, matDef.frameRate));
+                        applyMaterial = matDef.animated;
+                    }
+                    ImGui::PopItemWidth();
                 }
-                if (matDef.useSubrect)
+
+                if (matDef.useSubrect || matDef.animated)
                 {
                     shaderFlags |= cro::ShaderResource::Subrects;
                 }

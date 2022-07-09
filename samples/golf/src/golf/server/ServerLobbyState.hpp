@@ -41,7 +41,7 @@ namespace sv
         explicit LobbyState(SharedData&);
 
         void handleMessage(const cro::Message&) override;
-        void netEvent(const cro::NetEvent&) override;
+        void netEvent(const net::NetEvent&) override;
         std::int32_t process(float) override;
 
         std::int32_t stateID() const override { return StateID::Lobby; }
@@ -52,6 +52,6 @@ namespace sv
 
         std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
-        void insertPlayerInfo(const cro::NetEvent&);
+        void insertPlayerInfo(const net::NetEvent&);
     };
 }

@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "BilliardsInput.hpp"
+#include "GameConsts.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
@@ -46,10 +47,19 @@ source distribution.
 #include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
+#ifdef USE_GNS
+namespace gns
+{
+    struct NetEvent;
+}
+namespace net = gns;
+#else
 namespace cro
 {
     struct NetEvent;
 }
+namespace net = cro;
+#endif
 
 struct SharedStateData;
 
@@ -77,7 +87,7 @@ private:
 
     struct LocalPlayerInfo final
     {
-        std::int32_t score = 0;
+        std::int32_t score = -1;
         std::int8_t targetBall = -1;
     };
     std::array<std::array<LocalPlayerInfo, 2u>, 2u> m_localPlayerInfo = {};
@@ -97,8 +107,8 @@ private:
     cro::Entity m_targetBall;
     //cro::Shader m_gameSceneShader;
     //cro::Texture m_lutTexture;
-    cro::UniformBuffer m_scaleBuffer;
-    cro::UniformBuffer m_resolutionBuffer;
+    cro::UniformBuffer<float> m_scaleBuffer;
+    cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
     glm::vec2 m_viewScale;
 
     cro::ModelDefinition m_ballDefinition;
@@ -166,7 +176,7 @@ private:
     void addSystems();
     void buildScene();
 
-    void handleNetEvent(const cro::NetEvent&);
+    void handleNetEvent(const net::NetEvent&);
     void removeClient(std::uint8_t);
     void spawnBall(const ActorInfo&);
     void updateBall(const BilliardsUpdate&);

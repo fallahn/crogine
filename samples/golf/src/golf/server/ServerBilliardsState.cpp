@@ -74,7 +74,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::SceneEvent>();
         if (data.event == cro::Message::SceneEvent::EntityDestroyed)
         {
-            m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, data.entityID, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::EntityRemoved, data.entityID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
     }
     else if (msg.id == MessageID::BilliardsMessage)
@@ -84,10 +84,13 @@ void BilliardsState::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case BilliardsEvent::BallReplaced:
+            spawnBall(addBall(data.position, data.first));
+            break;
         case BilliardsEvent::TargetAssigned:
         {
             std::uint16_t packetData = (data.first << 8) | data.second;
-            m_sharedData.host.broadcastPacket(PacketID::TargetID, packetData, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::TargetID, packetData, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
             break;
         case BilliardsEvent::PlayerSwitched:
@@ -97,7 +100,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             //raise forfeit message if necessary
             if (data.first == BilliardsEvent::Forfeit)
             {
-                m_sharedData.host.broadcastPacket(PacketID::FoulEvent, std::int8_t(BilliardsEvent::Forfeit), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_sharedData.host.broadcastPacket(PacketID::FoulEvent, std::int8_t(BilliardsEvent::Forfeit), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             //don't delete this scope...
             {
@@ -106,7 +109,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             }
             break;
         case BilliardsEvent::Foul:
-            m_sharedData.host.broadcastPacket(PacketID::FoulEvent, data.first, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::FoulEvent, data.first, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
         }        
     }
@@ -138,20 +141,20 @@ void BilliardsState::handleMessage(const cro::Message& msg)
     m_scene.forwardMessage(msg);
 }
 
-void BilliardsState::netEvent(const cro::NetEvent& evt)
+void BilliardsState::netEvent(const net::NetEvent& evt)
 {
-    if (evt.type == cro::NetEvent::PacketReceived)
+    if (evt.type == net::NetEvent::PacketReceived)
     {
         switch (evt.packet.getID())
         {
         default: break;
         case PacketID::ActorAnimation:
             //only animation is remote cue (at the moment)
-            m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, evt.packet.as<std::uint8_t>(), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, evt.packet.as<std::uint8_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
         case PacketID::CueUpdate:
             //just forward this to other client
-            m_sharedData.host.broadcastPacket(PacketID::CueUpdate, evt.packet.as<BilliardsUpdate>(), cro::NetFlag::Unreliable);
+            m_sharedData.host.broadcastPacket(PacketID::CueUpdate, evt.packet.as<BilliardsUpdate>(), net::NetFlag::Unreliable);
             break;
         case PacketID::BallPlaced:
         if (!m_scene.getSystem<BilliardsSystem>()->hasCueball())
@@ -205,7 +208,7 @@ void BilliardsState::netEvent(const cro::NetEvent& evt)
                 setNextPlayer(false);
             }
             //rebroadcast to tell clients to clear their UI
-            m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::TurnReady, std::uint8_t(255), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::TurnReady, std::uint8_t(255), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
         }
     }
@@ -230,7 +233,7 @@ void BilliardsState::netBroadcast()
                 info.serverID = entity.getIndex();
                 info.timestamp = timestamp;
                 
-                m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, cro::NetFlag::Unreliable);
+                m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Unreliable);
 
                 ball.hadUpdate = false;
             }
@@ -339,7 +342,7 @@ void BilliardsState::sendInitialGameState(std::uint8_t clientID)
     {
         if (!m_tableDataValid)
         {
-            m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ServerError, static_cast<std::uint8_t>(MessageType::MapNotFound), cro::NetFlag::Reliable);
+            m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ServerError, static_cast<std::uint8_t>(MessageType::MapNotFound), net::NetFlag::Reliable);
             return;
         }
 
@@ -358,13 +361,13 @@ void BilliardsState::sendInitialGameState(std::uint8_t clientID)
             info.timestamp = timestamp;
             info.state = ball.id;
 
-            m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ActorSpawn, info, cro::NetFlag::Reliable);
+            m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ActorSpawn, info, net::NetFlag::Reliable);
         }
 
         //and the table info such as the cueball spawn
         TableInfo info;
         info.cueballPosition = m_activeDirector->getCueballPosition();
-        m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::TableInfo, info, cro::NetFlag::Reliable);
+        m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::TableInfo, info, net::NetFlag::Reliable);
     }
 
     m_sharedData.clients[clientID].ready = true;
@@ -408,7 +411,7 @@ void BilliardsState::sendInitialGameState(std::uint8_t clientID)
     }
 }
 
-void BilliardsState::doServerCommand(const cro::NetEvent& evt)
+void BilliardsState::doServerCommand(const net::NetEvent& evt)
 {
 #ifdef CRO_DEBUG_
     switch (evt.packet.as<std::uint8_t>())
@@ -443,7 +446,9 @@ void BilliardsState::setNextPlayer(bool waitForAck)
 
     auto info = m_playerInfo[m_activeDirector->getCurrentPlayer()];
     info.targetID = m_activeDirector->getTargetID(playerPos);
-    m_sharedData.host.broadcastPacket(packetID, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    info.score = m_activeDirector->getScore(m_activeDirector->getCurrentPlayer());
+    
+    m_sharedData.host.broadcastPacket(packetID, info, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_turnTimer.restart();
 }
@@ -478,7 +483,7 @@ void BilliardsState::spawnBall(cro::Entity entity)
     info.state = entity.getComponent<BilliardBall>().id;
     info.timestamp = m_serverTime.elapsed().asMilliseconds();
 
-    m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, info, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, info, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 void BilliardsState::endGame(const BilliardsPlayer& winner)
@@ -502,7 +507,7 @@ void BilliardsState::endGame(const BilliardsPlayer& winner)
 
     m_gameStarted = false;
 
-    m_sharedData.host.broadcastPacket(PacketID::GameEnd, winner, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket(PacketID::GameEnd, winner, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 void BilliardsState::checkReadyQuit(std::uint8_t clientID)
@@ -531,7 +536,7 @@ void BilliardsState::checkReadyQuit(std::uint8_t clientID)
         }
     }
     //let clients know to update their display
-    m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::ReadyQuitStatus, broadcastFlags, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::ReadyQuitStatus, broadcastFlags, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     for (const auto& p : m_playerInfo)
     {

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -59,6 +59,7 @@ struct TargetInfo final
     glm::vec3 prevLookAt = glm::vec3(0.f);
 
     cro::Entity waterPlane;
+    cro::Shader* postProcess = nullptr;
 };
 
 struct CameraFollower final
@@ -75,6 +76,8 @@ struct CameraFollower final
     glm::vec3 holePosition = glm::vec3(0.f);
     glm::vec3 playerPosition = glm::vec3(0.f);
     float radius = 0.f; //camera becomes active when ball within this (should be ^2)
+
+    glm::vec3 targetOffset = glm::vec3(0.f); //aim is offset by this from target position
 
     std::int32_t id = -1;
 

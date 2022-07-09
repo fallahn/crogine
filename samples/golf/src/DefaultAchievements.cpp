@@ -95,6 +95,18 @@ void DefaultAchievements::init()
     trigger = &StatTriggers[StatID::Birdies].emplace_back();
     trigger->achID = AchievementID::AllOfATwitter;
     trigger->threshold = 18;
+
+    trigger = &StatTriggers[StatID::LeatherGimmies].emplace_back();
+    trigger->achID = AchievementID::GimmeFive;
+    trigger->threshold = 5;
+
+    trigger = &StatTriggers[StatID::PutterGimmies].emplace_back();
+    trigger->achID = AchievementID::GimmeTen;
+    trigger->threshold = 10;
+
+    trigger = &StatTriggers[StatID::TimeOnTheCourse].emplace_back();
+    trigger->achID = AchievementID::DayJob;
+    trigger->threshold = 24 * 60 * 60;
 }
 
 void DefaultAchievements::update()
@@ -422,7 +434,7 @@ DefaultAchievements::AchievementIcon::AchievementIcon(const AchievementData& dat
     m_titleText.setString("ACHIEVEMENT UNLOCKED!");
     m_titleText.setPosition({ 86.f, 54.f });
 
-    const std::int32_t width = 5; //number of icons per row
+    const std::int32_t width = 8; //number of icons per row
     auto x = data.id % width;
     auto y = data.id / width;
 

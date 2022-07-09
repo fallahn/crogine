@@ -52,11 +52,18 @@ source distribution.
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
 
-static constexpr float CameraStrokeHeight = 2.f;// 3.2f;// 2.6f;
-static constexpr float CameraPuttHeight = 0.3f;
-static constexpr float CameraStrokeOffset = 5.f;// 7.5f;// 5.1f;
-static constexpr float CameraPuttOffset = 0.8f;
+static constexpr float CameraStrokeHeight = 2.f;
+static constexpr float CameraPuttHeight = 0.6f;// 0.3f;
+static constexpr float CameraTeeMultiplier = 0.65f; //height reduced by this when not putting from tee
+static constexpr float CameraStrokeOffset = 5.f;
+static constexpr float CameraPuttOffset = 1.55f; //0.8f;
 static constexpr glm::vec3 CameraBystanderOffset = glm::vec3(7.f, 2.f, 7.f);
+
+static constexpr float PuttingZoom = 0.93f;
+static constexpr float GolfZoom = 0.59f;
+
+static constexpr float GreenFadeDistance = 0.8f;
+static constexpr float CourseFadeDistance = 2.f;
 
 static constexpr float GreenCamHeight = 3.f;
 static constexpr float SkyCamHeight = 16.f;
@@ -110,10 +117,17 @@ struct MixerChannel final
     };
 };
 
+//data blocks for uniform buffer
 struct WindData final
 {
     float direction[3];
     float elapsedTime = 0.f;
+};
+
+struct ResolutionData final
+{
+    glm::vec2 resolution = glm::vec2(1.f);
+    float nearFadeDistance = 2.f;
 };
 
 struct ShaderID final
@@ -137,6 +151,7 @@ struct ShaderID final
         Player,
         Hair,
         Course,
+        CourseGrid,
         Ball,
         Slope,
         Minimap,
@@ -147,7 +162,8 @@ struct ShaderID final
         Transition,
         Trophy,
         Beacon,
-        Bow
+        Bow,
+        Noise
     };
 };
 
@@ -203,6 +219,22 @@ static inline glm::quat rotationFromNormal(glm::vec3 normal)
     glm::vec3 rotationZ = glm::cross(rotationY, rotationX);
     glm::mat3 rotation(rotationX.x, rotationY.x, rotationZ.x, rotationX.y, rotationY.y, rotationZ.y, rotationX.z, rotationY.z, rotationZ.z);
     return glm::quat_cast(rotation);
+}
+
+static inline glm::mat4 lookFrom(glm::vec3 eye, glm::vec3 target, glm::vec3 up)
+{
+    auto z = glm::normalize(eye - target);
+    auto x = glm::normalize(glm::cross(up, z));
+    auto y = glm::cross(z, x);
+
+    auto rotation = glm::mat4(
+        x.x, y.x, z.x, 0.f,
+        x.y, y.y, z.y, 0.f,
+        x.z, y.z, z.z, 0.f,
+        0.f, 0.f, 0.f, 1.f
+    );
+
+    return rotation * glm::translate(glm::mat4(1.f), eye);
 }
 
 static inline glm::vec2 calcVPSize()
@@ -286,6 +318,7 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
         }
 
         dest.doubleSided = m->doubleSided;
+        dest.animation = m->animation;
     }
 }
 
@@ -528,4 +561,47 @@ static inline void createFallbackModel(cro::Entity target, cro::ResourceCollecti
     auto meshData = resources.meshes.getMesh(meshID);
 
     target.addComponent<cro::Model>(meshData, material);
+}
+
+static inline void formatDistanceString(float distance, cro::Text& target, bool imperial)
+{
+    static constexpr float ToYards = 1.094f;
+    static constexpr float ToFeet = 3.281f;
+    static constexpr float ToInches = 12.f;
+
+    if (imperial)
+    {
+        if (distance > 7) //TODO this should read the putter value
+        {
+            auto dist = static_cast<std::int32_t>(distance * ToYards);
+            target.setString("Pin: " + std::to_string(dist) + "yds");
+        }
+        else
+        {
+            distance *= ToFeet;
+            if (distance > 1)
+            {
+                auto dist = static_cast<std::int32_t>(distance);
+                target.setString("Distance: " + std::to_string(dist) + "ft");
+            }
+            else
+            {
+                auto dist = static_cast<std::int32_t>(distance * ToInches);
+                target.setString("Distance: " + std::to_string(dist) + "in");
+            }
+        }
+    }
+    else
+    {
+        if (distance > 5)
+        {
+            auto dist = static_cast<std::int32_t>(distance);
+            target.setString("Pin: " + std::to_string(dist) + "m");
+        }
+        else
+        {
+            auto dist = static_cast<std::int32_t>(distance * 100.f);
+            target.setString("Distance: " + std::to_string(dist) + "cm");
+        }
+    }
 }

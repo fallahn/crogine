@@ -30,9 +30,8 @@ source distribution.
 #pragma once
 
 #include "../CommonConsts.hpp"
+#include "Networking.hpp"
 
-#include <crogine/network/NetData.hpp>
-#include <crogine/network/NetHost.hpp>
 #include <crogine/core/MessageBus.hpp>
 #include <crogine/core/String.hpp>
 
@@ -57,7 +56,7 @@ namespace sv
         bool ready = false; //< player is ready to recieve game data, not lobby readiness (see GameState)
         bool mapLoaded = false;
         bool connected = false;
-        cro::NetPeer peer;
+        net::NetPeer peer;
         
         //TODO this is basically the same as the ConnectionData struct in client shared data
         static constexpr std::size_t MaxPlayers = 4;
@@ -67,13 +66,14 @@ namespace sv
 
     struct SharedData final
     {
-        cro::NetHost host;
+        net::NetHost host;
         std::array<sv::ClientConnection, ConstVal::MaxClients> clients;
         cro::MessageBus messageBus;
         cro::String mapDir;
         std::uint8_t scoreType = 0;
+        std::uint8_t gimmeRadius = 0;
 
-        std::atomic_uint32_t hostID = 0;
+        std::atomic_uint64_t hostID = 0;
     };
 
     namespace StateID
@@ -96,7 +96,7 @@ namespace sv
         virtual void handleMessage(const cro::Message&) = 0;
 
         //handle incoming network events
-        virtual void netEvent(const cro::NetEvent&) = 0;
+        virtual void netEvent(const net::NetEvent&) = 0;
         //broadcast network updates at 20Hz
         virtual void netBroadcast() {};
         //update scene logic at 62.5Hz (16ms)

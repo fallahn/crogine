@@ -33,7 +33,6 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "Utility.hpp"
 #include "CommandIDs.hpp"
-#include "GameConsts.hpp"
 #include "MenuConsts.hpp"
 #include "MenuCallbacks.hpp"
 #include "PoissonDisk.hpp"
@@ -112,9 +111,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_backgroundScene   (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_avatarScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
-    m_windBuffer        ("WindValues", sizeof(WindData)),
+    m_scaleBuffer       ("PixelScale"),
+    m_resolutionBuffer  ("ScaledResolution"),
+    m_windBuffer        ("WindValues"),
     m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu       (MenuID::Main),
     m_prevMenu          (MenuID::Main),
@@ -209,7 +208,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             //auto ready up if host
             m_sharedData.clientConnection.netClient.sendPacket(
                 PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
-                cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
 
             //set the course selection menu
@@ -236,7 +235,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             //send the initially selected map/course
             m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
             auto data = serialiseString(m_sharedData.mapDirectory);
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
         }
         else
         {
@@ -351,19 +350,20 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_F4:
             requestStackClear();
-            requestStackPush(StateID::SplashScreen);
+            requestStackPush(StateID::PuttingRange);
             break;
         case SDLK_KP_0:
-            cro::GameController::rumbleStart(0, 65000, 65000, 1000);
-            LogI << cro::GameController::getName(0) << std::endl;
+            requestStackPush(StateID::News);
+            //cro::GameController::rumbleStart(0, 65000, 65000, 1000);
+            //LogI << cro::GameController::getName(0) << std::endl;
             break;
         case SDLK_KP_1:
-            cro::GameController::rumbleStart(1, 65000, 65000, 1000);
-            LogI << cro::GameController::getName(1) << std::endl;
+            //cro::GameController::rumbleStart(1, 65000, 65000, 1000);
+            //LogI << cro::GameController::getName(1) << std::endl;
             break;
         case SDLK_KP_2:
-            cro::GameController::rumbleStart(2, 65000, 65000, 1000);
-            LogI << cro::GameController::getName(2) << std::endl;
+            //cro::GameController::rumbleStart(2, 65000, 65000, 1000);
+            //LogI << cro::GameController::getName(2) << std::endl;
             break;
         case SDLK_KP_9:
         {
@@ -465,7 +465,7 @@ bool MenuState::simulate(float dt)
         }
         m_sharedData.clientConnection.eventBuffer.clear();
 
-        cro::NetEvent evt;
+        net::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
             //handle events
@@ -481,15 +481,18 @@ bool MenuState::simulate(float dt)
     wind.direction[1] = 0.5f;
     wind.direction[2] = 0.5f;
     wind.elapsedTime = accumTime;
-    m_windBuffer.setData(&wind);
+    m_windBuffer.setData(wind);
 
     m_backgroundScene.simulate(dt);
     //processing these with options open only slows things down.
+#ifdef CRO_DEBUG_
     if (getStateCount() == 1)
+#endif
     {
         m_avatarScene.simulate(dt);
         m_uiScene.simulate(dt);
     }
+
     return true;
 }
 
@@ -859,10 +862,11 @@ void MenuState::createScene()
         auto texSize = winSize / scale;
 
         auto invScale = (maxScale + 1) - scale;
-        m_scaleBuffer.setData(&invScale);
+        m_scaleBuffer.setData(invScale);
 
-        glm::vec2 scaledRes = texSize / invScale;
-        m_resolutionBuffer.setData(&scaledRes);
+        ResolutionData d;
+        d.resolution = texSize / invScale;
+        m_resolutionBuffer.setData(d);
 
         m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
 
@@ -969,9 +973,9 @@ void MenuState::createClouds()
     }
 }
 
-void MenuState::handleNetEvent(const cro::NetEvent& evt)
+void MenuState::handleNetEvent(const net::NetEvent& evt)
 {
-    if (evt.type == cro::NetEvent::PacketReceived)
+    if (evt.type == net::NetEvent::PacketReceived)
     {
         switch (evt.packet.getID())
         {
@@ -1001,11 +1005,11 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
 
                 //send player details to server (name, skin)
                 auto buffer = m_sharedData.localConnectionData.serialise();
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                 if (m_sharedData.tutorial)
                 {
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
                 else
                 {
@@ -1026,7 +1030,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                     //auto ready up if hosting
                     m_sharedData.clientConnection.netClient.sendPacket(
                         PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
-                        cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
 
                 LOG("Successfully connected to server", cro::Logger::Type::Info);
@@ -1169,7 +1173,28 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
                     centreText(e);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::Menu::ScoreDesc;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(ScoreDesc[m_sharedData.scoreType]);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
+            break;
+        case PacketID::GimmeRadius:
+        {
+            m_sharedData.gimmeRadius = evt.packet.as<std::uint8_t>();
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Menu::GimmeDesc;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                e.getComponent<cro::Text>().setString(GimmeString[m_sharedData.gimmeRadius]);
+                centreText(e);
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
             break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())
@@ -1188,7 +1213,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
             if (evt.packet.as<std::uint16_t>() == static_cast<std::uint16_t>(Server::GameMode::Golf))
             {
                 //reply if we're the right mode
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientVersion, CURRENT_VER, cro::NetFlag::Reliable);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientVersion, CURRENT_VER, net::NetFlag::Reliable);
             }
             else
             {
@@ -1200,7 +1225,7 @@ void MenuState::handleNetEvent(const cro::NetEvent& evt)
         break;
         }
     }
-    else if (evt.type == cro::NetEvent::ClientDisconnect)
+    else if (evt.type == net::NetEvent::ClientDisconnect)
     {
         m_sharedData.errorMessage = "Lost Connection To Host";
         requestStackPush(StateID::Error);

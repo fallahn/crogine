@@ -30,9 +30,9 @@ source distribution.
 #pragma once
 
 #include "InputBinding.hpp"
+#include "Networking.hpp"
 #include "server/Server.hpp"
 
-#include <crogine/network/NetClient.hpp>
 #include <crogine/core/String.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/Texture.hpp>
@@ -74,7 +74,7 @@ struct ConnectionData final
     std::uint32_t pingTime = 0;
 
     std::vector<std::uint8_t> serialise() const;
-    bool deserialise(const cro::NetEvent::Packet&);
+    bool deserialise(const net::NetEvent::Packet&);
 };
 
 static constexpr float MinFOV = 60.f;
@@ -86,12 +86,12 @@ struct SharedStateData final
 
     struct ClientConnection final
     {
-        cro::NetClient netClient;
+        net::NetClient netClient;
         bool connected = false;
         bool ready = false;
         std::uint8_t connectionID = 4;
 
-        std::vector<cro::NetEvent> eventBuffer; //don't touch this while loading screen is active!!
+        std::vector<net::NetEvent> eventBuffer; //don't touch this while loading screen is active!!
     }clientConnection;
 
     //data of all players rx'd from server
@@ -130,6 +130,13 @@ struct SharedStateData final
     };
     std::vector<HairInfo> hairInfo;
 
+    struct TimeStats final
+    {
+        std::vector<std::int32_t> holeTimes; //millis
+        std::int32_t totalTime = 0;
+    };
+    std::array<TimeStats, ConnectionData::MaxPlayers> timeStats = {};
+
     //our local player data
     ConnectionData localConnectionData;
     cro::String targetIP = "255.255.255.255";
@@ -140,6 +147,7 @@ struct SharedStateData final
     //within which a file named data.course is sought
     cro::String mapDirectory = "course_01";
     std::uint8_t scoreType = 0;
+    std::uint8_t gimmeRadius = 0;
 
     //printed by the error state
     std::string errorMessage;
@@ -164,6 +172,8 @@ struct SharedStateData final
     bool invertY = false;
     bool showBeacon = true;
     float beaconColour = 1.f; //normalised rotation
+    bool imperialMeasurements = false;
+    float gridTransparency = 1.f;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

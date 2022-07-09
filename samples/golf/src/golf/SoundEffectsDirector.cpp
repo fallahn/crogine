@@ -44,7 +44,7 @@ SoundEffectsDirector::SoundEffectsDirector()
     : m_nextFreeEmitter(0)
 {
 #ifdef CRO_DEBUG_
-    registerWindow([&]()
+    /*registerWindow([&]()
         {
             if (ImGui::Begin("Flaps"))
             {
@@ -52,7 +52,7 @@ SoundEffectsDirector::SoundEffectsDirector()
                 ImGui::Text("Next Free Emitter %u", m_nextFreeEmitter);
             }
             ImGui::End();        
-        });
+        });*/
 #endif
 }
 

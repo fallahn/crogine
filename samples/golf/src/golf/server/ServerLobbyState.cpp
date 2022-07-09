@@ -70,9 +70,9 @@ void LobbyState::handleMessage(const cro::Message& msg)
     }
 }
 
-void LobbyState::netEvent(const cro::NetEvent& evt)
+void LobbyState::netEvent(const net::NetEvent& evt)
 {
-    if (evt.type == cro::NetEvent::PacketReceived)
+    if (evt.type == net::NetEvent::PacketReceived)
     {
         switch (evt.packet.getID())
         {
@@ -84,7 +84,7 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
         {
             std::uint16_t data = evt.packet.as<std::uint16_t>();
             m_readyState[((data & 0xff00) >> 8)] = (data & 0x00ff) ? true : false;
-            m_sharedData.host.broadcastPacket(PacketID::LobbyReady, data, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.host.broadcastPacket(PacketID::LobbyReady, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
             break;
         case PacketID::MapInfo:
@@ -93,7 +93,7 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
             {
                 m_sharedData.mapDir = deserialiseString(evt.packet);
                 //forward to all clients
-                m_sharedData.host.broadcastPacket(PacketID::MapInfo, evt.packet.getData(), evt.packet.getSize(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+                m_sharedData.host.broadcastPacket(PacketID::MapInfo, evt.packet.getData(), evt.packet.getSize(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
             }
         }
             break;
@@ -101,7 +101,14 @@ void LobbyState::netEvent(const cro::NetEvent& evt)
             if (evt.peer.getID() == m_sharedData.hostID)
             {
                 m_sharedData.scoreType = evt.packet.as<std::uint8_t>();
-                m_sharedData.host.broadcastPacket(PacketID::ScoreType, m_sharedData.scoreType, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_sharedData.host.broadcastPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
+        case PacketID::GimmeRadius:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.gimmeRadius = evt.packet.as<std::uint8_t>();
+                m_sharedData.host.broadcastPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             break;
         case PacketID::RequestGameStart:
@@ -125,7 +132,7 @@ std::int32_t LobbyState::process(float dt)
 }
 
 //private
-void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
+void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
 {
     //find the connection index
     std::uint8_t connectionID = 4;
@@ -159,7 +166,7 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
             else
             {
                 //reject the client
-                m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::BadData), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::BadData), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 
                 auto peer = evt.peer;
                 m_sharedData.host.disconnectLater(peer);
@@ -189,15 +196,15 @@ void LobbyState::insertPlayerInfo(const cro::NetEvent& evt)
             }
             auto buffer = cd.serialise();
 
-            m_sharedData.host.broadcastPacket(PacketID::LobbyUpdate, buffer.data(), buffer.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+            m_sharedData.host.broadcastPacket(PacketID::LobbyUpdate, buffer.data(), buffer.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
         }
 
         std::uint8_t ready = m_readyState[i] ? 1 : 0;
-        m_sharedData.host.broadcastPacket(PacketID::LobbyReady, std::uint16_t(std::uint8_t(i) << 8 | ready), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::LobbyReady, std::uint16_t(std::uint8_t(i) << 8 | ready), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         auto mapDir = serialiseString(m_sharedData.mapDir);
-        m_sharedData.host.broadcastPacket(PacketID::MapInfo, mapDir.data(), mapDir.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+        m_sharedData.host.broadcastPacket(PacketID::MapInfo, mapDir.data(), mapDir.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
-        m_sharedData.host.broadcastPacket(PacketID::ScoreType, m_sharedData.scoreType, cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 }

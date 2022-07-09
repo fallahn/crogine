@@ -265,6 +265,21 @@ namespace cro
             bool doubleSided = false;
 
             /*!
+            \brief Animation data used if material is animated
+            Note that this cannot be changed once it is assigned
+            to a Model, to apply updates the material needs to be
+            re-applied.
+            Frames are applied top->bottom, column by column.
+            */
+            struct Animation final
+            {
+                bool active = false;
+                glm::vec4 frame = glm::vec4(0.f);
+                float currentTime = 0.f;
+                float frameTime = 1.f;
+            }animation;
+
+            /*!
             \brief Applies a new shader to this material by updating the
             the uniform and vertex attribute maps
             */

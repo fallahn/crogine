@@ -7,8 +7,8 @@ table snooker
 
     spawn
     {
-        position = 0.000000,-1.215000
-        size = 0.648000,0.331650
+        position = 0.000000,-1.280620
+        size = 0.648000,0.301542
     }
 
     pocket

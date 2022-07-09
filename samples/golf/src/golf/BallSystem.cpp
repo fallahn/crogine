@@ -49,6 +49,11 @@ source distribution.
 
 namespace
 {
+    glm::vec3 btToGlm(btVector3 v)
+    {
+        return { v.getX(), v.getY(), v.getZ() };
+    }
+
     static constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
 
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
@@ -60,6 +65,50 @@ namespace
     static constexpr float BallHoleDistance = (HoleRadius * Margin) * (HoleRadius * Margin);
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
     static constexpr float AngularVelocity = 46.5f; //rad/s at 1m/s vel. Used for rolling animation.
+
+    static constexpr float MinVelocitySqr = 0.005f;//0.04f
+
+    static constexpr std::array<float, TerrainID::Count> Friction =
+    {
+        0.1f, 0.9f,
+        0.985f, 0.1f,
+        0.001f, 0.001f,
+        0.98f,
+        0.f
+    };
+
+    constexpr std::array GimmeRadii =
+    {
+        0.f, 0.65f * 0.65f, 1.f
+    };
+
+    struct CollisionGroup final
+    {
+        enum
+        {
+            Ball = 1,
+            Terrain = 2
+        };
+    };
+
+    struct SlopeData final
+    {
+        glm::vec3 direction = glm::vec3(0.f);
+        float strength = 0.f;
+    };
+
+    SlopeData getSlope(glm::vec3 normal)
+    {
+        auto slopeStrength = 1.f - glm::dot(normal, cro::Transform::Y_AXIS);
+        //normal is not always perfectly normalised - so hack around this with some leighway
+        if (slopeStrength > 0.001f)
+        {
+            auto tangent = glm::cross(normal, glm::normalize(glm::vec3(normal.x, 0.f, normal.z)));
+            auto slope = glm::normalize(glm::cross(tangent, normal));
+            return { slope, slopeStrength };
+        }
+        return SlopeData();
+    }
 }
 
 const std::array<std::string, 5u> Ball::StateStrings = { "Idle", "Flight", "Putt", "Paused", "Reset" };
@@ -76,7 +125,9 @@ BallSystem::BallSystem(cro::MessageBus& mb, bool drawDebug)
     m_windStrengthTarget    (0.1f),
     m_windInterpTime        (1.f),
     m_currentWindInterpTime (0.f),
-    m_holeData              (nullptr)
+    m_holeData              (nullptr),
+    m_puttFromTee           (false),
+    m_gimmeRadius           (0)
 {
     requireComponent<cro::Transform>();
     requireComponent<Ball>();
@@ -105,6 +156,8 @@ BallSystem::~BallSystem()
 //public
 void BallSystem::process(float dt)
 {
+    auto& entities = getEntities();
+    
     //interpolate current strength/direction
     m_currentWindInterpTime = std::min(m_windInterpTime, m_currentWindInterpTime + dt);
     float interp = std::min(1.f, std::max(0.f, m_currentWindInterpTime / m_windInterpTime));
@@ -114,7 +167,6 @@ void BallSystem::process(float dt)
     CRO_ASSERT(!std::isnan(m_windDirection.x), "");
     CRO_ASSERT(!std::isnan(m_windDirTarget.x), "");
 
-    auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& ball = entity.getComponent<Ball>();
@@ -175,10 +227,10 @@ void BallSystem::process(float dt)
                 auto& tx = entity.getComponent<cro::Transform>();
                 auto position = tx.getPosition();
 
-                //attempts to trap na obscure NaN bug
+                //attempts to trap an obscure NaN bug
                 CRO_ASSERT(!std::isnan(position.x), "");
 
-                auto [terrain, normal, hitpoint, penetration] = getTerrain(position);
+                auto terrainContact = getTerrain(position);
 
                 //test distance to pin
                 auto pinDir = m_holeData->pin - position;
@@ -227,7 +279,7 @@ void BallSystem::process(float dt)
                         //these are all just a wild stab
                         //destined for some tweaking - basically puts the ball back along its vector
                         //towards the hole while maintaining gravity. As if it bounced off the inside of the hole
-                        if (penetration > (Ball::Radius * 0.5f))
+                        if (terrainContact.penetration > (Ball::Radius * 0.5f))
                         {
                             ball.velocity *= -1.f;
                             ball.velocity.y *= -1.f;
@@ -235,11 +287,11 @@ void BallSystem::process(float dt)
                         else
                         {
                             //lets the ball continue travelling, ie overshoot
-                            auto bounceVel = glm::length2(ball.velocity) * 0.4f;// 0.2f;
+                            auto bounceVel = glm::length(ball.velocity) * 0.4f;// 0.2f;
                             ball.velocity *= 0.65f;// 0.15f;
                             ball.velocity.y = bounceVel;
 
-                            position.y += penetration;
+                            position.y += terrainContact.penetration;
                             tx.setPosition(position);
                         }
 
@@ -248,17 +300,17 @@ void BallSystem::process(float dt)
                     }
                     else
                     {
-                        if(penetration < 0) //above ground
+                        if(terrainContact.penetration < 0) //above ground
                         {
                             //we had a bump so add gravity
                             ball.velocity += Gravity * dt;
                         }
-                        else if (penetration > 0)
+                        else if (terrainContact.penetration > 0)
                         {
                             //we've sunk into the ground so correct
                             ball.velocity.y = 0.f;
 
-                            position.y += penetration;
+                            position.y += terrainContact.penetration;
                             tx.setPosition(position);
                         }
                         CRO_ASSERT(!std::isnan(position.x), "");
@@ -266,24 +318,48 @@ void BallSystem::process(float dt)
                     }
                     ball.hadAir = false;
 
-                    //move by slope from surface normal
-                    auto velLength = glm::length(ball.velocity);
-                    glm::vec3 slope = glm::vec3(normal.x, 0.f, normal.z) * 0.95f * smoothstep(0.35f, 4.5f, velLength);
-                    ball.velocity += slope;
+                   
 
                     //add wind - adding less wind the more the ball travels in the
                     //wind direction means we don't get blown forever
+                    auto velLength = glm::length(ball.velocity);
                     float windAmount = 1.f - glm::dot(m_windDirection, ball.velocity / velLength);
                     ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
 
-                    //add friction
-                    ball.velocity *= 0.985f;
+                    if (!m_puttFromTee)
+                    {
+                        //slope strength (arcade version)
+                        glm::vec3 slope = glm::vec3(terrainContact.normal.x, 0.f, terrainContact.normal.z) * 0.95f * smoothstep(0.35f, 4.5f, velLength);
+                        ball.velocity += slope;
+
+                        //add friction
+                        ball.velocity *= Friction[ball.terrain];
+                    }
+                    else
+                    {
+                        //add wind again - this is intentional
+                        ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
+                        
+                        //only use this when we're mini putting
+                        //it's more accurate (ball runs back down a slope it went up)
+                        //but is really boring to play on the full size courses
+                        auto [slope, slopeStrength] = getSlope(terrainContact.normal);
+
+                        //add friction
+                        ball.velocity *= Friction[ball.terrain] + (slopeStrength * 0.05f);
+
+                        //move by slope from surface normal
+                        ball.velocity += slope * slopeStrength;
+                        CRO_ASSERT(!std::isnan(ball.velocity.x), "");
+                    }
                 }
                 
 
                 //move by velocity
                 tx.move(ball.velocity * dt);
-                ball.terrain = terrain; //TODO this will be wrong if the above movement changed the terrain
+
+                terrainContact = getTerrain(tx.getPosition());
+                ball.terrain = terrainContact.terrain; //TODO this will be wrong if the above movement changed the terrain
 
                 //spin based on velocity
                 auto vel2 = glm::length2(ball.velocity);
@@ -293,8 +369,8 @@ void BallSystem::process(float dt)
 
                 //if we've slowed down or fallen more than the
                 //ball's diameter (radius??) stop the ball
-                if (vel2 < 0.04f
-                    || (penetration > (Ball::Radius * 2.5f)))
+                if (vel2 < MinVelocitySqr
+                    || (terrainContact.penetration > (Ball::Radius * 2.5f)))
                 {
                     ball.velocity = glm::vec3(0.f);
                     
@@ -321,14 +397,18 @@ void BallSystem::process(float dt)
 
                     auto* msg = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
                     msg->type = GolfBallEvent::Landed;
-                    msg->terrain = ((penetration > Ball::Radius)||(len2 < MinBallDistance)) ? TerrainID::Hole : ball.terrain;
+                    msg->terrain = ((terrainContact.penetration > Ball::Radius)||(len2 < MinBallDistance)) ? TerrainID::Hole : ball.terrain;
 
                     if (msg->terrain == TerrainID::Hole)
                     {
                         position.x = m_holeData->pin.x;
                         position.z = m_holeData->pin.z;
                         tx.setPosition(position);
-                        //LogI << "Set terrain to hole" << std::endl;
+                    }
+                    else if(len2 < GimmeRadii[m_gimmeRadius])
+                    {
+                        auto* msg2 = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
+                        msg2->type = GolfBallEvent::Gimme;
                     }
 
                     msg->position = position;
@@ -336,6 +416,12 @@ void BallSystem::process(float dt)
                     CRO_ASSERT(!std::isnan(position.x), "");
                     CRO_ASSERT(!std::isnan(ball.velocity.x), "");
                 }
+                //makes the ball go bat shit crazy for some reason.
+                /*else if (terrainContact.penetration < 0.1f)
+                {
+                    ball.state = Ball::State::Flight;
+                    ball.delay = 0.f;
+                }*/
             }
             break;
         case Ball::State::Reset:
@@ -369,6 +455,13 @@ void BallSystem::process(float dt)
                 dir /= length;
                 std::int32_t maxDist = static_cast<std::int32_t>(length /*- 10.f*/);
 
+                //if we're on a putting course take smaller steps for better accuracy
+                if (m_puttFromTee)
+                {
+                    dir /= 4.f;
+                    maxDist *= 4;
+                }
+
                 for (auto i = 0; i < maxDist; ++i)
                 {
                     ballPos += dir;
@@ -380,8 +473,12 @@ void BallSystem::process(float dt)
                         && terrain != TerrainID::Stone)
                     {
                         //move the ball a bit closer so we're not balancing on the edge
-                        ballPos += dir * 1.5f;
-                        res = getTerrain(ballPos);
+                        //but only if we're not on the green else we might get placed in the hole :)
+                        if (res.terrain != TerrainID::Green)
+                        {
+                            ballPos += dir * 1.5f;
+                            res = getTerrain(ballPos);
+                        }
 
                         ballPos = res.intersection;
                         tx.setPosition(ballPos);
@@ -393,7 +490,9 @@ void BallSystem::process(float dt)
                 if (terrain == TerrainID::Water
                     || terrain == TerrainID::Scrub)
                 {
-                    terrain = TerrainID::Fairway;
+                    //this is important else we'll end up trying to drive
+                    //down a putting course :facepalm:
+                    terrain = m_puttFromTee ? TerrainID::Green : TerrainID::Fairway;
                     tx.setPosition(m_holeData->tee);
                 }
 
@@ -423,9 +522,8 @@ void BallSystem::process(float dt)
                 msg->terrain = ball.terrain;
                 msg->position = position;
 
-                if (/*position. y < (m_holeData->pin.y - Ball::Radius)
-                    ||*/ ball.terrain == TerrainID::Hole
-                        || (len2 <= BallHoleDistance))
+                if (ball.terrain == TerrainID::Hole
+                        || (len2 <= (BallHoleDistance + GimmeRadii[m_gimmeRadius])))
                 {
                     //we're in the hole
                     msg->type = GolfBallEvent::Holed;
@@ -444,6 +542,22 @@ void BallSystem::process(float dt)
                 updateWind(); //is a bit less random but at least stops the wind
                 //changing direction mid-stroke which is just annoying.
             }
+            //else if (m_puttFromTee &&
+            //    ball.terrain == TerrainID::Green)
+            //{
+            //    //add slope and start moving if vel > min vel
+            //    auto terrainContact = getTerrain(entity.getComponent<cro::Transform>().getPosition());
+            //    auto [slope, slopeStrength] = getSlope(terrainContact.normal);
+
+            //    ball.velocity += slope * slopeStrength;
+            //    ball.velocity *= Friction[TerrainID::Green] + 0.001f;
+
+            //    if (glm::length2(ball.velocity / 1.1f) > MinVelocitySqr)
+            //    {
+            //        ball.delay = 0.f;
+            //        ball.state = Ball::State::Putt;
+            //    }
+            //}
         }
             break;
         }
@@ -471,12 +585,17 @@ bool BallSystem::setHoleData(const HoleData& holeData, bool rebuildMesh)
     return rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
 }
 
+void BallSystem::setGimmeRadius(std::uint8_t rad)
+{
+    m_gimmeRadius = std::min(std::uint8_t(2), rad);
+}
+
 BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
 {
     TerrainResult retVal;
 
     //casts a vertical ray 10m above/below the ball
-    static const btVector3 RayLength = { 0.f,  -20.f, 0.f };
+    static const btVector3 RayLength = { 0.f, -20.f, 0.f };
     btVector3 rayStart = { pos.x, pos.y, pos.z };
     rayStart -= (RayLength / 2.f);
     auto rayEnd = rayStart + RayLength;
@@ -524,12 +643,6 @@ void BallSystem::doCollision(cro::Entity entity)
     auto& tx = entity.getComponent<cro::Transform>();
     auto pos = tx.getPosition();
     CRO_ASSERT(!std::isnan(pos.x), "");
-
-    //if (pos.y > 10.f)
-    //{
-    //    //skip test we're in the air (breaks if someone makes a tall mesh though...)
-    //    return;
-    //}
 
     const auto resetBall = [&](Ball& ball, Ball::State state, std::uint8_t terrain)
     {
@@ -591,6 +704,10 @@ void BallSystem::doCollision(cro::Entity entity)
                 ball.velocity = glm::normalize(ball.velocity) * len * momentum; //fake physics to simulate momentum
                 ball.state = Ball::State::Putt;
                 ball.delay = 0.f;
+
+                auto [slope, slopeStrength] = getSlope(terrainResult.normal);
+                ball.velocity += slope * slopeStrength;
+
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
 
                 return;
@@ -625,7 +742,8 @@ void BallSystem::doCollision(cro::Entity entity)
         //these are only used for sound on client side
         //usage - ie driving range, so don't raise them
         //if the velocity is too low.
-        if (len2 > 0.05f)
+        if (len2 > 0.05f
+            || terrainResult.terrain == TerrainID::Scrub) //vel will be 0 in this case
         {
             auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
             msg->terrain = terrainResult.terrain;
@@ -771,11 +889,16 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
         m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
         m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
         m_groundObjects.back()->setUserIndex(static_cast<std::int32_t>(terrain)); // set the terrain type
-        m_collisionWorld->addCollisionObject(m_groundObjects.back().get());
+        m_collisionWorld->addCollisionObject(m_groundObjects.back().get(), CollisionGroup::Terrain, CollisionGroup::Ball);
     }
+
+
+    m_puttFromTee = getTerrain(m_holeData->tee).terrain == TerrainID::Green;
+
 
     return true;
 }
+
 
 //custom callback to return proper face normal (I wish we could cache these...)
 RayResultCallback::RayResultCallback(const btVector3& rayFromWorld, const btVector3& rayToWorld)
@@ -790,8 +913,15 @@ btScalar RayResultCallback::addSingleResult(btCollisionWorld::LocalRayResult& ra
 
     m_closestHitFraction = rayResult.m_hitFraction;
     m_collisionObject = rayResult.m_collisionObject;
-    m_hitNormalWorld = getFaceNormal(rayResult);
-    m_hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
+    if (rayResult.m_collisionObject->getCollisionFlags() == CollisionGroup::Ball)
+    {
+        m_hitNormalWorld = getFaceNormal(rayResult);
+        m_hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
+    }
+    else
+    {
+        rayResult.m_collisionObject = nullptr; //remove the ball objects then hasHit() returns false
+    }
     return rayResult.m_hitFraction;
 }
 

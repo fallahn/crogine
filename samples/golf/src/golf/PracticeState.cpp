@@ -309,6 +309,7 @@ void PracticeState::buildScene()
                     m_sharedData.hosting = true;
                     m_sharedData.tutorial = true;
                     m_sharedData.localConnectionData.playerCount = 1;
+                    m_sharedData.localConnectionData.playerData[0].isCPU = false;
 
                     //start a local server and connect
                     if (!m_sharedData.clientConnection.connected)
@@ -319,7 +320,7 @@ void PracticeState::buildScene()
                         cro::Clock clock;
                         while (clock.elapsed().asMilliseconds() < 500) {}
 
-                        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+                        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("127.0.0.1", ConstVal::GamePort);
 
                         if (!m_sharedData.clientConnection.connected)
                         {
@@ -336,7 +337,7 @@ void PracticeState::buildScene()
 
                             //set the course to tutorial
                             auto data = serialiseString(m_sharedData.mapDirectory);
-                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), cro::NetFlag::Reliable, ConstVal::NetChannelStrings);
+                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                             //now we wait for the server to send us the map name so we know the tutorial
                             //course has been set. Then the network event handler launches the game.

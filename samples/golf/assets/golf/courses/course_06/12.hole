@@ -1,0 +1,195 @@
+hole 12
+{
+    map="assets/golf/courses/course_06/01.png"
+    model="assets/golf/models/course_06/01.cmt"
+    par = 3
+
+    prop
+    {
+        model = "assets/golf/models/cactus01.cmt"
+        position = 170.050949,0.183790,-104.670044
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus01.cmt"
+        position = 137.144287,0.183790,-112.091835
+        rotation = -157.261072
+        scale = 1.051394,1.051394,1.051394
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus01.cmt"
+        position = 159.367996,0.183790,-89.307129
+        rotation = -61.068876
+        scale = 0.940924,0.940924,0.940924
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus02.cmt"
+        position = 142.845474,0.183594,-100.590866
+        rotation = -0.000000
+        scale = 0.716965,0.716965,0.716965
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus02.cmt"
+        position = 133.739883,0.183602,-109.657326
+        rotation = 44.777803
+        scale = 0.843945,0.843945,0.843945
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus02.cmt"
+        position = 182.921234,0.183606,-93.260185
+        rotation = 955.383935
+        scale = 0.998478,0.998477,0.998478
+    }
+
+    prop
+    {
+        model = "assets/golf/models/leaderboard.cmt"
+        position = 168.817368,0.136342,-82.656151
+        rotation = 151.041025
+        scale = 0.500000,0.500000,0.500000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/bench01.cmt"
+        position = 183.322418,0.152166,-96.931404
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets//golf/models/bench03.cmt"
+        position = 181.689056,0.152168,-101.569099
+        rotation = 38.413824
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/rock_large.cmt"
+        position = 169.390457,0.103659,-99.047325
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/bench01.cmt"
+        position = 137.218063,0.152169,-118.142189
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/bench02.cmt"
+        position = 141.812469,0.152169,-117.738708
+        rotation = -17.661749
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/rock_large.cmt"
+        position = 147.389160,0.103659,-113.932159
+        rotation = 197.336339
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets//golf/models/bench03.cmt"
+        position = 130.433014,0.170136,-93.070114
+        rotation = 38.413824
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/waterfall.cmt"
+        position = 0.000000,0.000000,-0.000000
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/rock_wall.cmt"
+        position = 0.000000,0.000000,-0.000000
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 189.762436,0.183167,-91.830933
+        rotation = -104.257145
+    }
+
+    particles
+    {
+        path = "assets/golf/particles/waterfall.cps"
+        position = 149.311844,-0.082256,-100.958633
+    }
+
+    crowd
+    {
+        position = 136.603745,0.183167,-121.937630
+        rotation = 5.863062
+    }
+
+    crowd
+    {
+        position = 126.518494,0.183167,-91.383804
+        rotation = -221.578139
+    }
+
+    speaker
+    {
+        emitter = "waterfall"
+        position = 149.670593,0.386261,-100.953300
+    }
+
+    particles
+    {
+        path = "assets/golf/particles/waterfall_top.cps"
+        position = 149.198975,2.546930,-100.960213
+    }
+
+    crowd
+    {
+        position = 175.897415,0.183167,-78.090820
+        rotation = -195.577028
+    }
+
+    speaker
+    {
+        emitter = "water_running"
+        position = 166.532043,-0.082257,-93.780510
+    }
+
+    speaker
+    {
+        emitter = "water_running"
+        position = 183.186722,-0.082257,-90.293434
+    }
+
+    target = 133.160095,0.131591,-104.487144
+
+    tee = 137.794403,0.183123,-100.762367
+
+    pin = 130.366516,0.183123,-108.211922
+
+}

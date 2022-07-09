@@ -112,7 +112,7 @@ private:
         enum
         {
             Volume, FOV, Pixel,
-            VertSnap, Beacon,
+            VertSnap, Beacon, Units,
             BeaconColour, MouseSpeed,
             Video, Controls,
             Achievements, Stats,

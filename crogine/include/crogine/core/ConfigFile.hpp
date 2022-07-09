@@ -216,6 +216,38 @@ namespace cro
         ie a path to a file in a bundle, or an absolute path to a file
         stored in a user directory such as Application Support. Does nothing
         on Windows or Linux.
+
+        This function will also attempt to parse json files passed to it, albeit
+        with a few limitations: arrays of strings are not supported, and arrays
+        of numbers are limited to four elements to fit into a vec2/3/4/Colour
+        type. As per the json spec multiple objects with the same name aren't
+        supported, however an array of objects will be parsed into a series
+        of objects with the same name as an array. For example:
+
+        "image" : [
+          {"width" : 4, "height" : 4, "name" : "potato"},
+          {"width" : 12, "height" : 60, "name" : "carrot"}
+        ]
+
+        will become
+
+        image
+        {
+            width = 4
+            height = 4
+            name = "potato"
+        }
+
+        image
+        {
+            width = 12
+            height = 60
+            name = "carrot"
+        }
+
+        Config files parsed from json will be written in the ConfigFile format
+        when written with save()
+
         \returns true on success, else false if something went wrong
         */
         bool loadFromFile(const std::string& path, bool relative = true);
@@ -229,6 +261,8 @@ namespace cro
         static NameValue getPropertyName(const std::string& line);
         static bool isProperty(const std::string& line);
         static void removeComment(std::string& line);
+
+        bool parseAsJson(SDL_RWops*);
 
         std::size_t write(SDL_RWops* file, std::uint16_t depth = 0u);
     };

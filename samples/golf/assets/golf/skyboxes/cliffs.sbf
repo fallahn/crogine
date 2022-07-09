@@ -1,0 +1,38 @@
+skybox
+{
+    sky_top = 0.723,0.847,0.792,1
+    sky_bottom = 1,0.973,0.882,1
+    clouds = "assets/golf/sprites/clouds.spt"
+
+    prop
+    {
+        model = "assets/golf/models/skybox/horizon_tall.cmt"
+        position = 0,0,0
+        rotation = 0
+        scale = 1,1,1
+    }
+
+    prop
+    {
+        model = "assets/golf/models/skybox/desert_hills.cmt"
+        position = 0,0,0
+        rotation = 0
+        scale = 1,1,1
+    }
+
+    prop
+    {
+        model = "assets/golf/models/skybox/clouds01.cmt"
+        position = 0,0,0
+        rotation = 361
+        scale = 1,1,1
+    }
+
+    prop
+    {
+        model = "assets/golf/models/skybox/sun_high.cmt"
+        position = 0,0,0
+        rotation = 40
+        scale = 1,1,1
+    }
+}

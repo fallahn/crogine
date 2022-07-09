@@ -154,9 +154,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>CRO_DEBUG_;_CRT_SECURE_NO_WARNINGS;_MBCS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_RSS;CRO_DEBUG_;_CRT_SECURE_NO_WARNINGS;_MBCS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\polyvox</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\libgns\include;$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\curl\include;$(SolutionDir)libsocial\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -164,8 +164,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Debug</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine-d.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;LinearMath_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\libgns\bin;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Debug;$(SolutionDir)extlibs\curl\debug\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libcurl_debug.lib;libgns-d.lib;crogine-d.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;LinearMath_Debug.lib;libsocial-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugASan|x64'">
@@ -265,9 +265,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_RSS;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\polyvox</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\curl\include;$(SolutionDir)extlibs\libgns\include;$(SolutionDir)libsocial\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -276,8 +276,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Release</AdditionalLibraryDirectories>
-      <AdditionalDependencies>crogine.lib;SDL2.lib;SDL2main.lib;BulletCollision.lib;BulletDynamics.lib;LinearMath.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Release;$(SolutionDir)extlibs\curl\release\lib;$(SolutionDir)extlibs\libgns\bin</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libsocial.lib;libgns.lib;libcurl.lib;crogine.lib;SDL2.lib;SDL2main.lib;BulletCollision.lib;BulletDynamics.lib;LinearMath.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-asan|x64'">
@@ -302,7 +302,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Achievements.cpp" />
     <ClCompile Include="src\DefaultAchievements.cpp" />
     <ClCompile Include="src\golf\BallSystem.cpp" />
     <ClCompile Include="src\golf\BilliardsClientCollision.cpp" />
@@ -338,13 +337,16 @@
     <ClCompile Include="src\golf\MenuCustomisation.cpp" />
     <ClCompile Include="src\golf\MenuSoundDirector.cpp" />
     <ClCompile Include="src\golf\MenuState.cpp" />
+    <ClCompile Include="src\golf\NewsState.cpp" />
     <ClCompile Include="src\golf\NotificationSystem.cpp" />
     <ClCompile Include="src\golf\OptionsState.cpp" />
     <ClCompile Include="src\golf\ParticleDirector.cpp" />
+    <ClCompile Include="src\golf\Path.cpp" />
     <ClCompile Include="src\golf\PauseState.cpp" />
     <ClCompile Include="src\golf\PlayerAvatar.cpp" />
     <ClCompile Include="src\golf\PocketBallSystem.cpp" />
     <ClCompile Include="src\golf\PracticeState.cpp" />
+    <ClCompile Include="src\golf\PropFollowSystem.cpp" />
     <ClCompile Include="src\golf\PuttingState.cpp" />
     <ClCompile Include="src\golf\PuttingStateUI.cpp" />
     <ClCompile Include="src\golf\server\EightballDirector.cpp" />
@@ -356,6 +358,7 @@
     <ClCompile Include="src\golf\server\SnookerDirector.cpp" />
     <ClCompile Include="src\golf\SharedStateData.cpp" />
     <ClCompile Include="src\golf\SoundEffectsDirector.cpp" />
+    <ClCompile Include="src\golf\SpectatorSystem.cpp" />
     <ClCompile Include="src\golf\spooky2.cpp" />
     <ClCompile Include="src\golf\StudioCameraSystem.cpp" />
     <ClCompile Include="src\golf\TerrainBuilder.cpp" />
@@ -369,12 +372,12 @@
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\GolfGame.cpp" />
+    <ClCompile Include="src\rss\Newsfeed.cpp" />
+    <ClCompile Include="src\rss\pugixml.cpp" />
     <ClCompile Include="src\SplashScreenState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="src\Achievements.hpp" />
-    <ClInclude Include="src\AchievementStrings.hpp" />
     <ClInclude Include="src\DefaultAchievements.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\golf\BallSystem.hpp" />
@@ -417,21 +420,26 @@
     <ClInclude Include="src\golf\MenuSoundDirector.hpp" />
     <ClInclude Include="src\golf\MenuState.hpp" />
     <ClInclude Include="src\golf\MessageIDs.hpp" />
+    <ClInclude Include="src\golf\Networking.hpp" />
+    <ClInclude Include="src\golf\NewsState.hpp" />
     <ClInclude Include="src\golf\NotificationSystem.hpp" />
     <ClInclude Include="src\golf\OptionsState.hpp" />
     <ClInclude Include="src\golf\PacketIDs.hpp" />
     <ClInclude Include="src\golf\ParticleDirector.hpp" />
+    <ClInclude Include="src\golf\Path.hpp" />
     <ClInclude Include="src\golf\PauseState.hpp" />
     <ClInclude Include="src\golf\PlayerAvatar.hpp" />
     <ClInclude Include="src\golf\PlayerColours.hpp" />
     <ClInclude Include="src\golf\PocketBallSystem.hpp" />
     <ClInclude Include="src\golf\PoissonDisk.hpp" />
     <ClInclude Include="src\golf\PracticeState.hpp" />
+    <ClInclude Include="src\golf\PropFollowSystem.hpp" />
     <ClInclude Include="src\golf\PuttingState.hpp" />
     <ClInclude Include="src\golf\RandNames.hpp" />
     <ClInclude Include="src\golf\ScoreStrings.hpp" />
     <ClInclude Include="src\golf\server\BilliardsDirector.hpp" />
     <ClInclude Include="src\golf\server\EightballDirector.hpp" />
+    <ClInclude Include="src\golf\server\Networking.hpp" />
     <ClInclude Include="src\golf\server\NineballDirector.hpp" />
     <ClInclude Include="src\golf\server\Server.hpp" />
     <ClInclude Include="src\golf\server\ServerBilliardsState.hpp" />
@@ -443,6 +451,7 @@
     <ClInclude Include="src\golf\server\SnookerDirector.hpp" />
     <ClInclude Include="src\golf\SharedStateData.hpp" />
     <ClInclude Include="src\golf\SoundEffectsDirector.hpp" />
+    <ClInclude Include="src\golf\SpectatorSystem.hpp" />
     <ClInclude Include="src\golf\spooky2.hpp" />
     <ClInclude Include="src\golf\StudioCameraSystem.hpp" />
     <ClInclude Include="src\golf\Terrain.hpp" />
@@ -457,6 +466,9 @@
     <ClInclude Include="src\golf\VatAnimationSystem.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\GolfGame.hpp" />
+    <ClInclude Include="src\rss\Newsfeed.hpp" />
+    <ClInclude Include="src\rss\pugiconfig.hpp" />
+    <ClInclude Include="src\rss\pugixml.hpp" />
     <ClInclude Include="src\SplashScreenState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
   </ItemGroup>

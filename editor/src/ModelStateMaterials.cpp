@@ -178,7 +178,20 @@ void ModelState::applyPreviewSettings(MaterialDefinition& matDef)
     {
         matDef.materialData.setProperty("u_subrect", matDef.subrect);
     }
+    else if (matDef.animated)
+    {
+        matDef.materialData.animation.frame.x = 0.f;
+        matDef.materialData.animation.frame.z = 1.f / matDef.colCount;
 
+        matDef.materialData.animation.frame.w = 1.f / matDef.rowCount;
+        matDef.materialData.animation.frame.y = 1.f - matDef.materialData.animation.frame.w;
+
+        matDef.materialData.animation.frameTime = 1.f / matDef.frameRate;
+
+        matDef.materialData.setProperty("u_subrect", matDef.materialData.animation.frame);
+    }
+
+    matDef.materialData.animation.active = matDef.animated;
     matDef.materialData.blendMode = matDef.blendMode;
     matDef.materialData.enableDepthTest = matDef.depthTest;
     matDef.materialData.doubleSided = matDef.doubleSided;
@@ -260,7 +273,7 @@ void ModelState::refreshMaterialThumbnail(MaterialDefinition& def)
         def.shaderFlags |= cro::ShaderResource::RimLighting;
     }
 
-    if (def.useSubrect)
+    if (def.useSubrect || def.animated)
     {
         def.shaderFlags |= cro::ShaderResource::Subrects;
     }
@@ -308,6 +321,11 @@ void ModelState::exportMaterial() const
         auto name = matDef.name;
         std::replace(name.begin(), name.end(), ' ', '_');
 
+        /*
+        REMEMBER if we add more properties here they also need to
+        be added to ModelState::saveModel()
+        */
+
         cro::ConfigFile file("material_definition", name);
         file.addProperty("type").setValue(matDef.type);
         file.addProperty("colour").setValue(matDef.colour.getVec4());
@@ -326,6 +344,10 @@ void ModelState::exportMaterial() const
         file.addProperty("depth_test").setValue(matDef.depthTest);
         file.addProperty("double_sided").setValue(matDef.doubleSided);
         file.addProperty("use_mipmaps").setValue(matDef.useMipmaps);
+        file.addProperty("animated").setValue(matDef.animated);
+        file.addProperty("row_count").setValue(matDef.rowCount);
+        file.addProperty("col_count").setValue(matDef.colCount);
+        file.addProperty("framerate").setValue(matDef.frameRate);
 
         //textures
         auto getTextureName = [&](std::uint32_t id)
@@ -647,6 +669,22 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
         else if (name == "double_sided")
         {
             matDef.doubleSided = prop.getValue<bool>();
+        }
+        else if (name == "animated")
+        {
+            matDef.animated = prop.getValue<bool>();
+        }
+        else if (name == "row_count")
+        {
+            matDef.rowCount = std::max(1u, prop.getValue<std::uint32_t>());
+        }
+        else if (name == "col_count")
+        {
+            matDef.colCount = std::max(1u, prop.getValue<std::uint32_t>());
+        }
+        else if (name == "framerate")
+        {
+            matDef.frameRate = std::max(1.f, prop.getValue<float>());
         }
     }
 }

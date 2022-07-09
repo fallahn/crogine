@@ -32,10 +32,10 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
-#include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
-#include "../AchievementStrings.hpp"
 #include "../GolfGame.hpp"
+
+#include <AchievementStrings.hpp>
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
@@ -99,8 +99,8 @@ TrophyState::TrophyState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_trophyScene       (ctx.appInstance.getMessageBus()),
     m_sharedData        (sd),
     m_trophyIndex       (1),
-    m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
+    m_scaleBuffer       ("PixelScale"),
+    m_resolutionBuffer  ("ScaledResolution"),
     m_viewScale         (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -677,10 +677,11 @@ void TrophyState::buildScene()
         trophyEnt.getComponent<cro::Sprite>().setTexture(m_trophyTexture.getTexture());
         trophyEnt.getComponent<cro::Transform>().setOrigin({ textureSize.x / 2.f, textureSize.y / 2.f });
 
-        m_scaleBuffer.setData(&invScale);
+        m_scaleBuffer.setData(invScale);
 
-        glm::vec2 scaledRes = glm::vec2(textureSize) / invScale;
-        m_resolutionBuffer.setData(&scaledRes);
+        ResolutionData d;
+        d.resolution = glm::vec2(textureSize) / invScale;
+        m_resolutionBuffer.setData(d);
     };
 
     entity = m_scene.createEntity();
@@ -775,7 +776,7 @@ void TrophyState::buildTrophyScene()
 
     //these ought to be loaded in the same order
     //as TrophyID in AchievementStrings.hpp
-    const std::array<std::string, 7> paths =
+    const std::array<std::string, 8> paths =
     {
         std::string("assets/golf/models/trophies/trophy01.cmt"),
         "assets/golf/models/trophies/trophy02.cmt",
@@ -784,6 +785,7 @@ void TrophyState::buildTrophyScene()
         "assets/golf/models/trophies/trophy05.cmt",
         "assets/golf/models/trophies/trophy06.cmt",
         "assets/golf/models/trophies/trophy07.cmt",
+        "assets/golf/models/trophies/trophy08.cmt",
     };
 
     auto trophyCallback =

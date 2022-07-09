@@ -53,6 +53,7 @@ struct ClientCollider final
     std::uint8_t terrain = 0;
     std::uint8_t state = 0;
     bool active = false;
+    bool nearHole = false;
 };
 
 class ClientCollisionSystem final : public cro::System 

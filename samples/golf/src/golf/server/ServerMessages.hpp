@@ -57,7 +57,8 @@ struct GolfBallEvent final
         Landed,
         Foul,
         TurnEnded,
-        Holed
+        Holed,
+        Gimme
     }type = Landed;
     std::int32_t terrain = -1;
     float distance = 0.f;
@@ -76,7 +77,8 @@ struct BilliardsEvent final
         PlayerSwitched,
         GameEnded,
         Foul,
-        TargetAssigned
+        TargetAssigned,
+        BallReplaced
     }type = Collision;
 
     enum
@@ -93,4 +95,5 @@ struct BilliardsEvent final
 
     std::int8_t first = -1; //ballA or foul reason
     std::int8_t second = -1; //ballB or pocketID
+    glm::vec3 position = glm::vec3(0.f); //only for ball placement
 };

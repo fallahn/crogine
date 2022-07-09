@@ -30,7 +30,6 @@ source distribution.
 #include "DrivingState.hpp"
 #include "PoissonDisk.hpp"
 #include "SharedStateData.hpp"
-#include "GameConsts.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "FpsCameraSystem.hpp"
@@ -50,7 +49,8 @@ source distribution.
 #include "server/ServerMessages.hpp"
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
-#include "../Achievements.hpp"
+
+#include <Achievements.hpp>
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -167,9 +167,9 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_skyScene          (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_viewScale         (1.f),
-    m_scaleBuffer       ("PixelScale", sizeof(float)),
-    m_resolutionBuffer  ("ScaledResolution", sizeof(glm::vec2)),
-    m_windBuffer        ("WindValues", sizeof(WindData)),
+    m_scaleBuffer       ("PixelScale"),
+    m_resolutionBuffer  ("ScaledResolution"),
+    m_windBuffer        ("WindValues"),
     m_mouseVisible      (true),
     m_targetIndex       (0),
     m_strokeCountIndex  (0),
@@ -314,6 +314,22 @@ void DrivingState::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
+    case MessageID::CollisionMessage:
+    {
+        const auto& data = msg.getData<CollisionEvent>();
+        if (data.terrain == TerrainID::Scrub)
+        {
+            if (cro::Util::Random::value(0, 2) == 0)
+            {
+                auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                msg2->type = GolfEvent::BirdHit;
+                msg2->position = data.position;
+                auto dir = data.position - m_cameras[m_currentCamera].getComponent<cro::Transform>().getPosition();
+                msg2->travelDistance = std::atan2(dir.z, dir.x);
+            }
+        }
+    }
+        break;
     case cro::Message::SkeletalAnimationMessage:
     {
         const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
@@ -371,7 +387,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::UI::ClubName;
             cmd.action = [&](cro::Entity e, float)
             {
-                e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].name);
+                e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements));
 
                 auto dist = glm::length(PlayerPosition - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin) * 1.67f;
                 if (m_inputParser.getClub() < ClubID::NineIron &&
@@ -444,6 +460,28 @@ void DrivingState::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //and the measurement settings
+                cmd.targetFlags = CommandID::UI::ClubName;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements));
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //update distance to hole
+                cmd.targetFlags = CommandID::UI::PinDistance;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    float ballDist = 
+                        glm::length(PlayerPosition - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin);
+                    formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
+
+                    auto bounds = cro::Text::getLocalBounds(e);
+                    bounds.width = std::floor(bounds.width / 2.f);
+                    e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
         }
     }
@@ -467,7 +505,7 @@ bool DrivingState::simulate(float dt)
     data.direction[1] = m_windUpdate.currentWindSpeed;
     data.direction[2] = m_windUpdate.currentWindVector.z;
     data.elapsedTime = elapsed;
-    m_windBuffer.setData(&data);
+    m_windBuffer.setData(data);
 
     m_inputParser.update(dt);
     m_gameScene.simulate(dt);
@@ -558,7 +596,8 @@ void DrivingState::addSystems()
     m_gameScene.addSystem<CloudSystem>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(40.f);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(10.f);
+    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setNumCascades(1);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
@@ -1150,7 +1189,7 @@ void DrivingState::createScene()
 
     //and sky detail
     std::string skybox = "assets/golf/skyboxes/";
-    auto skyboxes = cro::FileSystem::listFiles(skybox);
+    auto skyboxes = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + skybox);
     if (!skyboxes.empty())
     {
         skybox += skyboxes[cro::Util::Random::value(0u, skyboxes.size() - 1)];
@@ -1183,10 +1222,11 @@ void DrivingState::createScene()
         glCheck(glPointSize(invScale * BallPointSize));
         glCheck(glLineWidth(invScale));
 
-        m_scaleBuffer.setData(&invScale);
+        m_scaleBuffer.setData(invScale);
 
-        glm::vec2 scaledRes = texSize / invScale;
-        m_resolutionBuffer.setData(&scaledRes);
+        ResolutionData d;
+        d.resolution = texSize / invScale;
+        m_resolutionBuffer.setData(d);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 320.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
@@ -1344,7 +1384,7 @@ void DrivingState::createScene()
     //emulate facing north with sun more or less behind player
     auto sunEnt = m_gameScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -65.f * cro::Util::Const::degToRad);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -35.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -15.f * cro::Util::Const::degToRad);
 
 
     //we only want these to happen if the scene creation was successful
@@ -1988,20 +2028,10 @@ void DrivingState::createBall()
             cmd.action = [&, pos](cro::Entity e, float)
             {
                 //if we're on the green convert to cm
-                std::int32_t distance = 0;
                 float ballDist = 
                     glm::length(pos - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin);
 
-                if (ballDist > 5)
-                {
-                    distance = static_cast<std::int32_t>(ballDist);
-                    e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
-                }
-                else
-                {
-                    distance = static_cast<std::int32_t>(ballDist * 100.f);
-                    e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "cm");
-                }
+                formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
 
                 auto bounds = cro::Text::getLocalBounds(e);
                 bounds.width = std::floor(bounds.width / 2.f);
@@ -2395,7 +2425,7 @@ void DrivingState::setHole(std::int32_t index)
     cmd.targetFlags = CommandID::UI::ClubName;
     cmd.action = [&, index](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].name);
+        e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements));
 
         auto dist = glm::length(PlayerPosition - m_holeData[index].pin) * 1.67f;
         if (m_inputParser.getClub() < ClubID::NineIron &&
@@ -2431,11 +2461,8 @@ void DrivingState::setHole(std::int32_t index)
     cmd.targetFlags = CommandID::UI::PinDistance;
     cmd.action = [&, index](cro::Entity e, float)
     {
-        //if we're on the green convert to cm
         float ballDist = glm::length(PlayerPosition - m_holeData[index].pin);
-        
-        auto distance = static_cast<std::int32_t>(ballDist);
-        e.getComponent<cro::Text>().setString("Distance: " + std::to_string(distance) + "m");
+        formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
 
         auto bounds = cro::Text::getLocalBounds(e);
         bounds.width = std::floor(bounds.width / 2.f);
