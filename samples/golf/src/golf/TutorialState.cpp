@@ -748,7 +748,7 @@ void TutorialState::tutorialOne(cro::Entity root)
 
     spriteSheet.loadFromFile("assets/golf/sprites/main_menu.spt", m_sharedData.sharedResources->textures);
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 117.f, 64.f, 0.001f });
+    entity.addComponent<cro::Transform>().setPosition({ 207.f, 64.f, 0.001f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag");
     entity.addComponent<cro::SpriteAnimation>().play(0);
