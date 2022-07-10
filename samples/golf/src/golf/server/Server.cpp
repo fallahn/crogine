@@ -58,7 +58,7 @@ Server::~Server()
 }
 
 //public
-void Server::launch(std::size_t maxConnections, GameMode gameMode)
+void Server::launch(std::size_t maxConnections, std::int32_t gameMode)
 {
     //stop any existing instance first
     stop();

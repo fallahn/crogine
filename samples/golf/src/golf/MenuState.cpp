@@ -107,6 +107,7 @@ MainMenuContext::MainMenuContext(MenuState* state)
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
+    m_matchMaking       (context.appInstance.getMessageBus()),
     m_cursor            (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_backgroundScene   (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
@@ -447,6 +448,22 @@ void MenuState::handleMessage(const cro::Message& msg)
             && data.id == StateID::Keyboard)
         {
             applyTextEdit();
+        }
+    }
+    else if (msg.id == MatchMaking::MessageID)
+    {
+        const auto& data = msg.getData<MatchMaking::Message>();
+        switch (data.type)
+        {
+        default:
+        case MatchMaking::Message::Error:
+            break;
+        case MatchMaking::Message::GameCreated:
+            finaliseGameCreate();
+        break;
+        case MatchMaking::Message::LobbyJoined:
+            finaliseGameJoin();
+            break;
         }
     }
 
@@ -1230,6 +1247,108 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         m_sharedData.errorMessage = "Lost Connection To Host";
         requestStackPush(StateID::Error);
     }
+}
+
+void MenuState::finaliseGameCreate()
+{
+#ifdef USE_GNS
+    //gns only supports 127.0.0.1 for loopback, but to report correct local IP with enet we need 255.255.255.255
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("127.0.0.1", ConstVal::GamePort);
+#else
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+#endif
+    if (!m_sharedData.clientConnection.connected)
+    {
+        m_sharedData.serverInstance.stop();
+        m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
+            + std::to_string(ConstVal::GamePort)
+            + " is allowed through\nany firewalls or NAT";
+        requestStackPush(StateID::Error);
+    }
+    else
+    {
+        //make sure the server knows we're the host
+        m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
+
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Menu::ReadyButton;
+        cmd.action = [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Sprite>() = m_sprites[SpriteID::StartGame];
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        cmd.targetFlags = CommandID::Menu::ServerInfo;
+        cmd.action = [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Text>().setString(
+                "Hosting on: " + m_sharedData.clientConnection.netClient.getPeer().getAddress() + ":"
+                + std::to_string(ConstVal::GamePort));
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        //enable the course selection in the lobby
+        addCourseSelectButtons();
+
+        //send a UI refresh to correctly place buttons
+        glm::vec2 size(GolfGame::getActiveTarget()->getSize());
+        cmd.targetFlags = CommandID::Menu::UIElement;
+        cmd.action =
+            [&, size](cro::Entity e, float)
+        {
+            const auto& element = e.getComponent<UIElement>();
+            auto pos = element.absolutePosition;
+            pos += element.relativePosition * size / m_viewScale;
+
+            pos.x = std::floor(pos.x);
+            pos.y = std::floor(pos.y);
+
+            e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+        //send the initially selected map/course
+        m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
+        auto data = serialiseString(m_sharedData.mapDirectory);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+        //and scoring type
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
+}
+
+void MenuState::finaliseGameJoin()
+{
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
+    if (!m_sharedData.clientConnection.connected)
+    {
+        m_sharedData.errorMessage = "Could not connect to server";
+        requestStackPush(StateID::Error);
+    }
+
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Menu::ReadyButton;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyUp];
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::Menu::ServerInfo;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Text>().setString("Connected to: " + m_sharedData.targetIP + ":" + std::to_string(ConstVal::GamePort));
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //disable the course selection in the lobby
+    cmd.targetFlags = CommandID::Menu::CourseSelect;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        m_uiScene.destroyEntity(e);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void MenuState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)

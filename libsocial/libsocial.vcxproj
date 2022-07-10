@@ -139,9 +139,11 @@
     <ClInclude Include="include\AchievementIDs.hpp" />
     <ClInclude Include="include\Achievements.hpp" />
     <ClInclude Include="include\AchievementStrings.hpp" />
+    <ClInclude Include="include\MatchMaking.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Achievements.cpp" />
+    <ClCompile Include="src\MatchMaking.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

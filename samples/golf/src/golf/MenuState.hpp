@@ -37,6 +37,8 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "MenuCallbacks.hpp"
 
+#include <MatchMaking.hpp>
+
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/Cursor.hpp>
 #include <crogine/core/State.hpp>
@@ -81,6 +83,7 @@ public:
 
 private:
     SharedStateData& m_sharedData;
+    MatchMaking m_matchMaking;
     cro::Cursor m_cursor;
     cro::ResourceCollection m_resources;
 
@@ -234,6 +237,10 @@ private:
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createPlayerConfigMenu();
+
+    //message handlers for completing connection
+    void finaliseGameCreate();
+    void finaliseGameJoin();
 
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);
