@@ -30,11 +30,12 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
-#include "../ResourceIDs.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+
+#include <array>
 
 namespace cro
 {
@@ -60,6 +61,8 @@ private:
     cro::Scene m_uiScene;
 
     cro::ResourceCollection m_resources;
+
+    std::array<cro::Entity, 2u> m_models;
 
     void addSystems();
     void loadAssets();
