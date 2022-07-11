@@ -103,15 +103,15 @@ namespace
 //wind
             float time = (u_windData.w * 15.0) + gl_VertexID;
             float x = sin(time * 2.0) / 8.0;
-            float y = cos(time);
+            float y = cos(time) / 2.0;
             vec3 windOffset = vec3(x, y, x);
 
             vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
             float dirStrength = dot(v_normal, windDir);
 
-            /*vec2 rot = vec2(sin(dirStrength), cos(dirStrength));
+            vec2 rot = vec2(sin(x * u_windData.y), cos(x * u_windData.y));
             v_rotation[0] = vec2(rot.y, -rot.x);
-            v_rotation[1]= rot;*/
+            v_rotation[1]= rot;
 
 
             dirStrength += 1.0;
@@ -180,9 +180,9 @@ namespace
         void main()
         {
             float amount = dot(normalize(v_normal), -u_lightDirection);
-            amount *= 2.0;
+            /*amount *= 2.0;
             amount = round(amount);
-            amount /= 2.0;
+            amount /= 2.0;*/
             amount = 0.4 + (amount * 0.6);
 
             //vec4 colour = v_colour;
@@ -191,8 +191,8 @@ namespace
 
 
             vec2 coord = gl_PointCoord.xy;
-            //coord = v_rotation * (coord - vec2(0.5));
-            //coord += vec2(0.5);
+            coord = v_rotation * (coord - vec2(0.5));
+            coord += vec2(0.5);
 
             vec4 textureColour = TEXTURE(u_texture, coord);
             if(textureColour.a < 0.3) discard;
@@ -475,6 +475,7 @@ void BushState::loadModel(const std::string& path)
             meshData.indexData[i].primitiveType = GL_POINTS;
         }
         entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(materialID));
+        //entity.getComponent<cro::Model>().setMaterial(1, m_resources.materials.get(materialID));
     }
     else
     {
