@@ -57,8 +57,13 @@ namespace
 
         uniform vec4 u_clipPlane;
 
-        uniform float u_leafSize = 100.0;
+        uniform float u_leafSize = 150.0;
         uniform float u_randAmount = 0.2;
+
+        layout (std140) uniform WindValues
+        {
+            vec4 u_windData; //dirX, strength, dirZ, elapsedTime
+        };
 
         VARYING_OUT vec3 v_normal;
         VARYING_OUT vec4 v_colour;
@@ -69,6 +74,7 @@ namespace
             return fract(sin(dot(position, vec2(12.9898, 4.1414))) * 43758.5453);
         }
 
+        const float MaxWindOffset = 0.1f;
 
         void main()
         {
@@ -76,19 +82,41 @@ namespace
             vec4 position = a_position;
             position.xyz += (a_normal * offset);
 
+
             v_normal = u_normalMatrix * a_normal;
             v_colour = a_colour * (1.0 - (u_randAmount - offset)); //darken less offset leaves
 
             gl_ClipDistance[0] = dot(a_position, u_clipPlane);
 
             vec4 worldPos = u_worldMatrix * position;
+
+//wind
+            float time = (u_windData.w * 15.0) + gl_VertexID;
+            float x = sin(time * 2.0) / 8.0;
+            float y = cos(time);
+            vec3 windOffset = vec3(x, y, x);
+
+            vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
+            float dirStrength = dot(v_normal, windDir);
+            dirStrength += 1.0;
+            dirStrength /= 2.0;
+
+            windOffset += windDir * u_windData.y * dirStrength * 4.0;
+            worldPos.xyz += windOffset * MaxWindOffset * u_windData.y;
             gl_Position = u_viewProjectionMatrix * worldPos;
 
-            float pointSize = u_leafSize + (u_leafSize * offset);
+
+//size calc
+            float variation = rand(-vec2(gl_VertexID));
+            variation = 0.5 + (0.5 * variation);
+
+            float pointSize = u_leafSize + ((u_leafSize * 2.0) * offset);
+            pointSize *= variation;
             pointSize *= 0.6 + (0.4 * dot(v_normal, normalize(u_cameraWorldPosition - worldPos.xyz)));
             
+            //shrink with perspective/distance
             //TODO this needs to know viewport height if letterboxing (ie anything but 1.0)
-            pointSize *= (u_projectionMatrix[1][1] / gl_Position.w); //shrink with perspective/distance
+            pointSize *= (u_projectionMatrix[1][1] / gl_Position.w);
 
             gl_PointSize = pointSize;
         })";
@@ -103,21 +131,52 @@ namespace
         VARYING_IN vec3 v_normal;
         VARYING_IN vec4  v_colour;
 
+
+        vec3 rgb2hsv(vec3 c)
+        {
+            vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+            vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+            vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+            float d = q.x - min(q.w, q.y);
+            float e = 1.0e-10;
+            return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+        }
+
+        vec3 hsv2rgb(vec3 c)
+        {
+            vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+            vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+            return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+        }
+
+        vec3 complementaryColour(vec3 c)
+        {
+            vec3 a = rgb2hsv(c);
+            a.x += 0.25;
+            a.z *= 0.5;
+            c = hsv2rgb(a);
+            return c;
+        }
+
+
+
         void main()
         {
             float amount = dot(normalize(v_normal), -u_lightDirection);
             amount *= 2.0;
             amount = round(amount);
             amount /= 2.0;
-            amount = 0.6 + (amount * 0.4);
+            amount = 0.4 + (amount * 0.6);
 
-            vec4 colour = v_colour;
-            colour.rgb *= amount;
+            //vec4 colour = v_colour;
+            //colour.rgb *= amount;
+            vec3 colour = mix(complementaryColour(v_colour.rgb), v_colour.rgb, amount);
 
             vec4 textureColour = TEXTURE(u_texture, gl_PointCoord.xy);
             if(textureColour.a < 0.3) discard;
 
-            FRAG_OUT = colour * textureColour;
+            FRAG_OUT = vec4(colour, 1.0) * textureColour;
         })";
 
     struct ShaderID final
@@ -129,7 +188,7 @@ namespace
     };
 
     std::int32_t materialID = -1;
-    float leafSize = 100.f;
+    float leafSize = 150.f;
     float randomAmount = 0.2f;
 
     struct ShaderUniforms final
@@ -141,12 +200,16 @@ namespace
 
     float rotation = 0.f;
     cro::Texture* leafTexture = nullptr;
+
+    WindData windData;
+    float windRotation = 0.f;
 }
 
 BushState::BushState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
     m_gameScene     (context.appInstance.getMessageBus()),
-    m_uiScene       (context.appInstance.getMessageBus())
+    m_uiScene       (context.appInstance.getMessageBus()),
+    m_windBuffer    ("u_windData")
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -178,6 +241,14 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
                 {
                     glUseProgram(shaderUniform.shaderID);
                     glUniform1f(shaderUniform.randomness, randomAmount);
+                }
+
+                ImGui::SliderFloat("Wind Strength", &windData.direction[1], 0.1f, 1.f);
+                if (ImGui::SliderFloat("Wind Direction", &windRotation, 0.f, cro::Util::Const::TAU))
+                {
+                    auto dir = glm::rotate(glm::quat(0.f, 0.f, 0.f, 1.f), windRotation, cro::Transform::Y_AXIS) * glm::vec3(-1.f, 0.f, 0.f);
+                    windData.direction[0] = dir.x;
+                    windData.direction[2] = dir.z;
                 }
 
                 if (ImGui::Button("Load Texture"))
@@ -271,6 +342,9 @@ bool BushState::simulate(float dt)
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().move(movement);
 
 
+    windData.elapsedTime += dt;
+    m_windBuffer.setData(windData);
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -278,6 +352,8 @@ bool BushState::simulate(float dt)
 
 void BushState::render()
 {
+    m_windBuffer.bind(0);
+
     glEnable(GL_PROGRAM_POINT_SIZE);
     m_gameScene.render();
     m_uiScene.render();
@@ -297,7 +373,7 @@ void BushState::loadAssets()
     auto* shader = &m_resources.shaders.get(ShaderID::Bush);
     materialID = m_resources.materials.add(*shader);
 
-    auto& texture = m_resources.textures.get("assets/bush/leaf01.png");
+    auto& texture = m_resources.textures.get("assets/bush/leaf03.png");
     texture.setSmooth(false);
     leafTexture = &texture;
 

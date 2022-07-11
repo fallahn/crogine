@@ -34,9 +34,16 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <array>
+
+struct WindData final
+{
+    float direction[3] = { 1.f, 0.1f, 0.f };
+    float elapsedTime = 0.f;
+};
 
 namespace cro
 {
@@ -62,6 +69,7 @@ private:
     cro::Scene m_uiScene;
 
     cro::ResourceCollection m_resources;
+    cro::UniformBuffer<WindData> m_windBuffer;
 
     std::array<cro::Entity, 2u> m_models;
 
