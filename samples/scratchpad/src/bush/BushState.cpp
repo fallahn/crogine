@@ -338,22 +338,31 @@ void BushState::handleMessage(const cro::Message& msg)
 
 bool BushState::simulate(float dt)
 {
+    static constexpr float Speed = 4.f;
     glm::vec3 movement(0.f);
     if (cro::Keyboard::isKeyPressed(SDLK_w))
     {
-        movement.z -= dt;
+        movement.z -= dt * Speed;
     }
     if (cro::Keyboard::isKeyPressed(SDLK_s))
     {
-        movement.z += dt;
+        movement.z += dt * Speed;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_q))
+    {
+        movement.y += dt * Speed;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_e))
+    {
+        movement.y -= dt * Speed;
     }
     if (cro::Keyboard::isKeyPressed(SDLK_a))
     {
-        movement.x -= dt;
+        movement.x -= dt * Speed;
     }
     if (cro::Keyboard::isKeyPressed(SDLK_d))
     {
-        movement.x += dt;
+        movement.x += dt * Speed;
     }
 
     if (auto len2 = glm::length2(movement); len2 > 1)
@@ -454,27 +463,30 @@ void BushState::loadModel(const std::string& path)
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile(path))
     {
+        //TODO read model bounding box and place apart as appropriate
+
 
         //base model on left
         cro::Entity entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ -1.5f, 0.f, 0.f });
+        entity.addComponent<cro::Transform>().setPosition({ -2.5f, 0.f, 0.f });
         md.createModel(entity);
         m_models[0] = entity;
 
         //same model with bush shader
         entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 1.5f, 0.f, 0.f });
+        entity.addComponent<cro::Transform>().setPosition({ 2.5f, 0.f, 0.f });
         md.createModel(entity);
         m_models[1] = entity;
 
         auto& meshData = entity.getComponent<cro::Model>().getMeshData();
         meshData.primitiveType = GL_POINTS;
 
-        for (auto i = 0u; i < meshData.submeshCount; ++i)
+        /*for (auto i = 0u; i < meshData.submeshCount; ++i)
         {
             meshData.indexData[i].primitiveType = GL_POINTS;
-        }
-        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(materialID));
+        }*/
+        meshData.indexData[1].primitiveType = GL_POINTS;
+        entity.getComponent<cro::Model>().setMaterial(1, m_resources.materials.get(materialID));
         //entity.getComponent<cro::Model>().setMaterial(1, m_resources.materials.get(materialID));
     }
     else

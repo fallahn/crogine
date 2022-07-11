@@ -5,7 +5,7 @@ model short_tree
 
     material VertexLit
     {
-        mask_colour = 1.000000,1.000000,0.000000,1.000000
+        mask_colour = 0.015686,0.000000,0.000000,1.000000
         name = "Untitled"
         colour = 1.000000,0.999990,1.000000,1.000000
         smooth = true
