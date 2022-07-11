@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 #include <array>
 
@@ -42,7 +43,7 @@ namespace cro
     struct Camera;
 }
 
-class BushState final : public cro::State
+class BushState final : public cro::State, public cro::GuiClient
 {
 public:
     BushState(cro::StateStack&, cro::State::Context);
@@ -71,4 +72,6 @@ private:
 
     //assigned to camera resize callback
     void updateView(cro::Camera&);
+
+    void loadModel(const std::string&);
 };
