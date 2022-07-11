@@ -49,6 +49,12 @@
     <Filter Include="Source Files\vats">
       <UniqueIdentifier>{d9fb1f13-e861-4d76-bbdd-c9a975c9392c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\bush">
+      <UniqueIdentifier>{889680a7-5c0a-42b6-acb3-97c5ccb40d43}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\bush">
+      <UniqueIdentifier>{2253f590-fe42-454c-affe-9474fdf9786b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -128,6 +134,9 @@
     </ClCompile>
     <ClCompile Include="src\vats\VatFile.cpp">
       <Filter>Source Files\vats</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bush\BushState.cpp">
+      <Filter>Source Files\bush</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -235,6 +244,9 @@
     </ClInclude>
     <ClInclude Include="src\vats\VatFile.hpp">
       <Filter>Header Files\vats</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bush\BushState.hpp">
+      <Filter>Header Files\bush</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
