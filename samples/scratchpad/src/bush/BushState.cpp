@@ -67,6 +67,7 @@ namespace
 
         VARYING_OUT vec3 v_normal;
         VARYING_OUT vec4 v_colour;
+        VARYING_OUT mat2 v_rotation;
 
 
         float rand(vec2 position)
@@ -78,10 +79,19 @@ namespace
 
         void main()
         {
-            float offset = rand(vec2(gl_VertexID)) * u_randAmount;
+            float randVal = rand(vec2(gl_VertexID));
+            float offset = randVal * u_randAmount;
             vec4 position = a_position;
             position.xyz += (a_normal * offset);
 
+//rotates tex coords - TODO apply the wind direction?
+            float rotation = randVal * 2.0;
+            rotation -= 1.0;
+            rotation *= 0.15;
+
+            /*vec2 rot = vec2(sin(rotation), cos(rotation));
+            v_rotation[0] = vec2(rot.y, -rot.x);
+            v_rotation[1]= rot;*/
 
             v_normal = u_normalMatrix * a_normal;
             v_colour = a_colour * (1.0 - (u_randAmount - offset)); //darken less offset leaves
@@ -98,6 +108,12 @@ namespace
 
             vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
             float dirStrength = dot(v_normal, windDir);
+
+            /*vec2 rot = vec2(sin(dirStrength), cos(dirStrength));
+            v_rotation[0] = vec2(rot.y, -rot.x);
+            v_rotation[1]= rot;*/
+
+
             dirStrength += 1.0;
             dirStrength /= 2.0;
 
@@ -129,8 +145,8 @@ namespace
         uniform vec3 u_lightDirection;
 
         VARYING_IN vec3 v_normal;
-        VARYING_IN vec4  v_colour;
-
+        VARYING_IN vec4 v_colour;
+        VARYING_IN mat2 v_rotation;
 
         vec3 rgb2hsv(vec3 c)
         {
@@ -173,7 +189,12 @@ namespace
             //colour.rgb *= amount;
             vec3 colour = mix(complementaryColour(v_colour.rgb), v_colour.rgb, amount);
 
-            vec4 textureColour = TEXTURE(u_texture, gl_PointCoord.xy);
+
+            vec2 coord = gl_PointCoord.xy;
+            //coord = v_rotation * (coord - vec2(0.5));
+            //coord += vec2(0.5);
+
+            vec4 textureColour = TEXTURE(u_texture, coord);
             if(textureColour.a < 0.3) discard;
 
             FRAG_OUT = vec4(colour, 1.0) * textureColour;
