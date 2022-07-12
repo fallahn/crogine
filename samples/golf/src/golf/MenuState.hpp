@@ -78,7 +78,7 @@ public:
 
     enum MenuID
     {
-        Dummy, Main, Avatar, Join, Lobby, PlayerConfig, Count
+        Dummy, Main, Avatar, Join, Lobby, PlayerConfig, ConfirmQuit, Count
     };
 
 private:
