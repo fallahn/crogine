@@ -765,6 +765,36 @@ void TutorialState::tutorialOne(cro::Entity root)
     title.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), 64.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("super");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, std::floor(bounds.height * 0.7f) });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds, title](cro::Entity e, float dt)
+    {
+        auto [_, state] = title.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+
+        if (state == 1)
+        {
+            auto crop = e.getComponent<cro::Drawable2D>().getCroppingArea();
+            crop.height = bounds.height;
+            crop.width = std::min(bounds.width, crop.width + (bounds.width * dt));
+            e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+        }
+        else if(title.destroyed())
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_scene.destroyEntity(e);
+        }
+    };
+    title.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
     //activates first tips
     m_actionCallbacks.push_back([bgMover, title]() mutable
         {

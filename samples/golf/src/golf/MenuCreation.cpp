@@ -396,6 +396,33 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::SpriteAnimation>().play(0);
     titleEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), bounds.height, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({0.f, 0.f, 0.f, 0.f});
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("super");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, std::floor(bounds.height * 0.7f) });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [bounds, titleEnt](cro::Entity e, float dt)
+    {
+        if (!titleEnt.getComponent<cro::Callback>().active)
+        {
+            auto crop = e.getComponent<cro::Drawable2D>().getCroppingArea();
+            crop.height = bounds.height;
+            crop.width = std::min(bounds.width, crop.width + (bounds.width * dt));
+            e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+
+            if (crop.width == bounds.width)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+    };
+    titleEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     //menu text background
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 26.f, -0.1f });

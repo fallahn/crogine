@@ -1188,12 +1188,12 @@ void DrivingState::createScene()
     createFoliage(entity);
 
     //and sky detail
-    std::string skybox = "assets/golf/skyboxes/";
-    auto skyboxes = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + skybox);
-    if (!skyboxes.empty())
-    {
-        skybox += skyboxes[cro::Util::Random::value(0u, skyboxes.size() - 1)];
-    }
+    std::string skybox = "assets/golf/skyboxes/spring.sbf";
+    //auto skyboxes = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + skybox);
+    //if (!skyboxes.empty())
+    //{
+    //    skybox += skyboxes[cro::Util::Random::value(0u, skyboxes.size() - 1)];
+    //}
     auto cloudPath = loadSkybox(skybox, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
     createClouds(cloudPath);
 
