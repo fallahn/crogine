@@ -87,6 +87,7 @@ namespace
         float destination = 0.f;
         cro::Entity otherEnt;
         cro::Entity instancedEnt; //entity containing instanced geometry
+        std::array<cro::Entity, 2u> shrubberyEnts; //instanced shrubbery
         std::vector<cro::Entity>* crowdEnts = nullptr;
     };
 
@@ -373,6 +374,27 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 m_instancedEntities[i] = childEnt;
             }
 
+            //instanced shrubs - TODO replace this with proper shrubbery
+            /*if (reedsDef.loadFromFile("assets/golf/models/pine01.cmt", true))
+            {
+                auto material = resources.materials.get(reedMaterialID);
+
+                auto childEnt = scene.createEntity();
+                childEnt.addComponent<cro::Transform>();
+                reedsDef.createModel(childEnt);
+
+                for (auto j = 0u; j < reedsDef.getMaterialCount(); ++j)
+                {
+                    applyMaterialData(reedsDef, material, j);
+                    childEnt.getComponent<cro::Model>().setMaterial(j, material);
+                }
+                childEnt.getComponent<cro::Model>().setHidden(true);
+                childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+                entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
+                m_instancedShrubs[i][0] = childEnt;
+            }*/
+
+
             //create entities to render instanced crowd models
             //TODO will breaking this up for better culling opportunity benefit perf?
             for (const auto& p : spectatorPaths)
@@ -542,6 +564,8 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.destination = -MaxShrubOffset;
                 swapData.otherEnt = m_billboardEntities[first];
                 swapData.instancedEnt = m_instancedEntities[second];
+                swapData.shrubberyEnts[0] = m_instancedShrubs[second][0];
+                swapData.shrubberyEnts[1] = m_instancedShrubs[second][1];
                 swapData.crowdEnts = &m_crowdEntities[second];
                 swapData.currentTime = 0.f;
                 m_billboardEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
@@ -553,6 +577,18 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 {
                     m_instancedEntities[first].getComponent<cro::Model>().setHidden(false);
                     m_instancedEntities[first].getComponent<cro::Model>().setInstanceTransforms(m_instanceTransforms);
+                    m_instanceTransforms.clear();
+                }
+
+                for (auto i = 0u; i < 2u; ++i)
+                {
+                    if (!m_shrubTransforms[i].empty()
+                        && m_instancedShrubs[first][i].isValid())
+                    {
+                        m_instancedShrubs[first][i].getComponent<cro::Model>().setHidden(false);
+                        m_instancedShrubs[first][i].getComponent<cro::Model>().setInstanceTransforms(m_shrubTransforms[i]);
+                        m_shrubTransforms[i].clear();
+                    }
                 }
 
                 //crowd instances
@@ -661,7 +697,9 @@ void TerrainBuilder::threadFunc()
     {
         if (m_wantsUpdate)
         {
+            //should be empty anyway because we clear after assigning them
             m_instanceTransforms.clear();
+            //m_shrubTransforms.clear();
 
             //we checked the file validity when the game starts.
             //if the map file is broken now something more drastic happened...
@@ -757,18 +795,38 @@ void TerrainBuilder::threadFunc()
 
                             if (!isNearProp)
                             {
-                                float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
-                                auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)]);
-                                bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards
-                                bb.size *= scale;
-                                
-                                if (cro::Util::Random::value(0, 1) == 0)
+                                static std::size_t shrubIdx = 0;
+                                auto currIndex = shrubIdx % 2;
+
+                                if (m_instancedShrubs[0][currIndex].isValid())
                                 {
-                                    //flip billboard
-                                    auto rect = bb.textureRect;
-                                    bb.textureRect.left = rect.left + rect.width;
-                                    bb.textureRect.width = -rect.width;
+                                    glm::vec3 position(x, height - 0.05f, -y);
+                                    float rotation = static_cast<float>(cro::Util::Random::value(0, 36) * 10) * cro::Util::Const::degToRad;
+                                    float scale = static_cast<float>(cro::Util::Random::value(8, 12)) / 10.f;
+
+
+                                    auto& mat4 = m_shrubTransforms[currIndex].emplace_back(1.f);
+                                    mat4 = glm::translate(mat4, position);
+                                    mat4 = glm::rotate(mat4, rotation, cro::Transform::Y_AXIS);
+                                    mat4 = glm::scale(mat4, glm::vec3(scale));
                                 }
+                                else
+                                {
+                                    //no model loaded for this theme, so fall back to billboard
+                                    float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+                                    auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)]);
+                                    bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards
+                                    bb.size *= scale;
+                                    
+                                    if (cro::Util::Random::value(0, 1) == 0)
+                                    {
+                                        //flip billboard
+                                        auto rect = bb.textureRect;
+                                        bb.textureRect.left = rect.left + rect.width;
+                                        bb.textureRect.width = -rect.width;
+                                    }
+                                }
+                                shrubIdx++;                                
                             }
                         }
                     }
