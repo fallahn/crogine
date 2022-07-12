@@ -898,7 +898,7 @@ void MenuState::createScene()
     updateView(cam);
 
     //camEnt.getComponent<cro::Transform>().setPosition({ -17.8273, 4.9, 25.0144 });
-    camEnt.getComponent<cro::Transform>().setPosition({ -18.3, 4.9, 23.3144 });
+    camEnt.getComponent<cro::Transform>().setPosition({ -18.3f, 5.2f, 23.3144f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -31.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
 
@@ -907,9 +907,8 @@ void MenuState::createScene()
     camEnt.getComponent<cro::AudioEmitter>().play();
 
     auto sunEnt = m_backgroundScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, /*-0.967f*/-40.56f * cro::Util::Const::degToRad);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, /*-0.967f*/-40.56f * cro::Util::Const::degToRad);
-    //sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -80.7f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -40.56f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -39.f * cro::Util::Const::degToRad);
 
     //set up cam / models for ball preview
     createBallScene();    

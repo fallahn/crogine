@@ -378,7 +378,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
     entity.addComponent<UIElement>().absolutePosition = { 0.f, 0.f };
-    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.75f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.72f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
 
     entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f });

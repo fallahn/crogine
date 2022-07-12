@@ -87,7 +87,7 @@ namespace
     constexpr glm::vec3 HiddenPosition(-10000.f);
 
     constexpr float HighlightOffset = 0.2f;
-    constexpr float TextOffset = 0.1f;
+    constexpr float TextOffset = 0.15f;
 
     constexpr float ToolTipDepth = CameraDepth - 0.8f;
 
@@ -1775,6 +1775,15 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
 
+    bool usePS = false;
+    if (cro::GameController::getControllerCount() != 0)
+    {
+        auto name = cro::Util::String::toLower(cro::GameController::getName(0));
+        if (name.find("sony") != std::string::npos)
+        {
+            usePS = true;
+        }
+    }
 
     auto createHighlight = [&, infoEnt](glm::vec2 position, std::int32_t keyIndex)
     {
@@ -1834,7 +1843,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 236.f, 32.f, HighlightOffset });
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("extra_buttons");
+        entity.addComponent<cro::Sprite>() = usePS ? spriteSheet.getSprite("extra_buttons_ps") : spriteSheet.getSprite("extra_buttons");
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
     else
@@ -1851,6 +1860,15 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         };
     }
 
+    //display a PS controller if we found one
+    if (usePS)
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({236.f, 14.f, HighlightOffset / 2.f});
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("controller_ps");
+        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
 
     //prev club
     auto entity = createHighlight(glm::vec2(258.f, 96.f), InputBinding::PrevClub);
