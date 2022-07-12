@@ -1793,6 +1793,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             {
                 e.getComponent<cro::Callback>().active = false;
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::ConfirmQuit);
+                m_currentMenu = MenuID::ConfirmQuit;
             }
         }
         else
@@ -1802,6 +1803,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             if (data.progress == 0)
             {
                 e.getComponent<cro::Callback>().active = false;
+                m_currentMenu = MenuID::Lobby;
+
                 if (data.quitWhenDone)
                 {
                     quitLobby();
@@ -1865,14 +1868,16 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     centreText(entity);
     confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 44.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString("This will end the game.");
+    entity.addComponent<cro::Text>(smallFont).setString("This kick all players.");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Magenta);
     centreText(entity);
     confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto messageEnt = entity;
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) - 20.f, 26.f, 0.1f });
@@ -1902,6 +1907,17 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     centreText(entity);
     confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //stash this so we can access it from the even handler (escape to ignore etc)
+    quitConfirmCallback = [&, confirmEnt, shadeEnt]() mutable
+    {
+        confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::Out;
+        confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().quitWhenDone = false;
+        confirmEnt.getComponent<cro::Callback>().active = true;
+        shadeEnt.getComponent<cro::Callback>().active = true;
+        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+    };
+
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) + 20.f, 26.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
@@ -1915,22 +1931,30 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = exit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, confirmEnt, shadeEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
-                    confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::Out;
-                    confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().quitWhenDone = false;
-                    confirmEnt.getComponent<cro::Callback>().active = true;
-                    shadeEnt.getComponent<cro::Callback>().active = true;
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                    quitConfirmCallback();
                 }
             });
     centreText(entity);
     confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //back
+    enterConfirmCallback = [&, confirmEnt, shadeEnt, messageEnt]() mutable
+    {
+        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+        confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::In;
+        confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().quitWhenDone = false;
+        confirmEnt.getComponent<cro::Callback>().active = true;
+        shadeEnt.getComponent<cro::Callback>().active = true;
+
+        messageEnt.getComponent<cro::Text>().setFillColour(m_sharedData.hosting ? TextNormalColour : cro::Colour::Transparent);
+
+        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+    };
+
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -1944,17 +1968,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, confirmEnt, shadeEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-                    confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::In;
-                    confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().quitWhenDone = false;
-                    confirmEnt.getComponent<cro::Callback>().active = true;
-                    shadeEnt.getComponent<cro::Callback>().active = true;
-
-                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                    enterConfirmCallback();
                 }
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());

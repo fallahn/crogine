@@ -153,6 +153,10 @@ private:
     std::size_t m_prevMenu; //used to resore active menu when completing text entry
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {}; //each menu transform, attatched to root node.
 
+    //hack to quit the lobby confirm menu from event input
+    std::function<void()> enterConfirmCallback;
+    std::function<void()> quitConfirmCallback;
+
     struct TextEdit final
     {
         cro::String* string = nullptr;

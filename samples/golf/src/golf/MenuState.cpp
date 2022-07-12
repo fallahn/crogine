@@ -321,12 +321,15 @@ bool MenuState::handleEvent(const cro::Event& evt)
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
             break;
         case MenuID::Lobby:
-            quitLobby();
+            enterConfirmCallback();
             break;
         case MenuID::PlayerConfig:
             applyTextEdit();
             showPlayerConfig(false, m_activePlayerAvatar);
             updateLocalAvatars(m_avatarCallbacks.first, m_avatarCallbacks.second);
+            break;
+        case MenuID::ConfirmQuit:
+            quitConfirmCallback();
             break;
         }
     };
