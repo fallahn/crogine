@@ -82,4 +82,6 @@ private:
     void updateView(cro::Camera&);
 
     void loadModel(const std::string&);
+    void loadPreset(const std::string&);
+    void savePreset(const std::string&);
 };

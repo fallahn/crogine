@@ -7,8 +7,8 @@ model short_tree
     {
         mask_colour = 0.015686,0.000000,0.000000,1.000000
         name = "Untitled"
-        colour = 1.000000,0.999990,1.000000,1.000000
-        smooth = true
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
         repeat = true
         depth_test = true
         double_sided = false
@@ -17,8 +17,8 @@ model short_tree
         row_count = 1
         col_count = 1
         framerate = 1.000000
-        vertex_coloured = true
         blendmode = none
+        diffuse = "assets/bush/trunk_small.png"
 
     }
     material Unlit

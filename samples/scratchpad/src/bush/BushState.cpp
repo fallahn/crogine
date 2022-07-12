@@ -30,6 +30,7 @@ source distribution.
 #include "BushState.hpp"
 
 #include <crogine/gui/Gui.hpp>
+#include <crogine/core/ConfigFile.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
 
@@ -137,6 +138,7 @@ namespace
 
         uniform sampler2D u_texture;
         uniform vec3 u_lightDirection;
+        uniform vec3 u_colour = vec3(1.0);
 
         VARYING_IN vec3 v_normal;
         VARYING_IN vec4 v_colour;
@@ -176,8 +178,11 @@ namespace
             amount = round(amount);
             amount /= 2.0;
             amount = 0.4 + (amount * 0.6);
-
+#if defined(VERTEX_COLOURED)
             vec3 colour = mix(complementaryColour(v_colour.rgb), v_colour.rgb, amount);
+#else
+            vec3 colour = mix(complementaryColour(u_colour.rgb), u_colour.rgb, amount);
+#endif
 
             vec2 coord = gl_PointCoord.xy;
             coord = v_rotation * (coord - vec2(0.5));
@@ -215,10 +220,16 @@ namespace
             vec4 worldPosition = u_worldMatrix * a_position;
 
 
+            float time = (u_windData.w * 15.0);
+            float x = sin(time * 2.0) / 8.0;
+            float y = cos(time) / 2.0;
+            vec3 windOffset = vec3(x, y, x) * a_colour.b * 0.1;
+
+
             vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
             float dirStrength = a_colour.b;
 
-            vec3 windOffset = windDir * u_windData.y * dirStrength;// * 2.0;
+            windOffset += windDir * u_windData.y * dirStrength;// * 2.0;
             worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
 
 
@@ -264,14 +275,24 @@ namespace
     std::int32_t bushMaterial = -1;
     std::int32_t branchMaterial = -1;
 
-    float leafSize = 150.f;
-    float randomAmount = 0.2f;
+    struct TreesetData final
+    {
+        float leafSize = 150.f;
+        float randomAmount = 0.2f;
+        glm::vec3 colour = glm::vec3(1.f);
+
+        std::string modelPath;
+        std::string texturePath;
+
+    }treeset;
+    std::string lastTreeset = "untitled.tst";
 
     struct ShaderUniforms final
     {
         std::uint32_t shaderID = 0;
         std::int32_t size = -1;
         std::int32_t randomness = -1;
+        std::int32_t colour = -1;
     }shaderUniform;
 
     float rotation = 0.f;
@@ -306,21 +327,45 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
                         loadModel(path);
                     }
                 }
-
-                if (ImGui::SliderFloat("Leaf Size", &leafSize, 1.f, 500.f))
+                ImGui::SameLine();
+                if (ImGui::Button("Open Preset"))
                 {
-                    glUseProgram(shaderUniform.shaderID);
-                    glUniform1f(shaderUniform.size, leafSize);
+                    auto path = cro::FileSystem::openFileDialogue("", "tst");
+                    if (!path.empty())
+                    {
+                        loadPreset(path);
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Save Preset"))
+                {
+                    auto path = cro::FileSystem::saveFileDialogue(lastTreeset, "tst");
+                    if (!path.empty())
+                    {
+                        savePreset(path);
+                    }
                 }
 
-                if (ImGui::SliderFloat("Randomness", &randomAmount, 0.f, 1.f))
+                if (ImGui::SliderFloat("Leaf Size", &treeset.leafSize, 1.f, 500.f))
                 {
                     glUseProgram(shaderUniform.shaderID);
-                    glUniform1f(shaderUniform.randomness, randomAmount);
+                    glUniform1f(shaderUniform.size, treeset.leafSize);
+                }
+
+                if (ImGui::SliderFloat("Randomness", &treeset.randomAmount, 0.f, 1.f))
+                {
+                    glUseProgram(shaderUniform.shaderID);
+                    glUniform1f(shaderUniform.randomness, treeset.randomAmount);
+                }
+
+                if (ImGui::ColorEdit3("Colour", &treeset.colour[0]))
+                {
+                    glUseProgram(shaderUniform.shaderID);
+                    glUniform3f(shaderUniform.colour, treeset.colour.r, treeset.colour.g, treeset.colour.b);
                 }
 
                 ImGui::SliderFloat("Wind Strength", &windData.direction[1], 0.1f, 1.f);
-                if (ImGui::SliderFloat("Wind Direction", &windRotation, 0.f, cro::Util::Const::TAU))
+                if (ImGui::SliderFloat("Wind Direction", &windRotation, 0.f, cro::Util::Const::PI))
                 {
                     auto dir = glm::rotate(glm::quat(0.f, 0.f, 0.f, 1.f), windRotation, cro::Transform::Y_AXIS) * glm::vec3(-1.f, 0.f, 0.f);
                     windData.direction[0] = dir.x;
@@ -333,6 +378,7 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
                     if (!path.empty())
                     {
                         leafTexture->loadFromFile(path);
+                        treeset.texturePath = cro::FileSystem::getFileName(path);
                     }
                 }
                 ImGui::SameLine();
@@ -355,6 +401,18 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
 
             }        
             ImGui::End();
+
+            /*if (ImGui::Begin("Flaps"))
+            {
+                ImGui::SliderFloat("Wind Strength", &windData.direction[1], 0.1f, 1.f);
+                if (ImGui::SliderFloat("Wind Direction", &windRotation, cro::Util::Const::PI, cro::Util::Const::TAU))
+                {
+                    auto dir = glm::rotate(glm::quat(0.f, 0.f, 0.f, 1.f), windRotation, cro::Transform::Y_AXIS) * glm::vec3(-1.f, 0.f, 0.f);
+                    windData.direction[0] = dir.x;
+                    windData.direction[2] = dir.z;
+                }
+            }
+            ImGui::End();*/
         });
     context.appInstance.setClearColour(cro::Colour::CornflowerBlue);
 }
@@ -461,6 +519,7 @@ void BushState::loadAssets()
     auto& texture = m_resources.textures.get("assets/bush/leaf03.png");
     texture.setSmooth(false);
     leafTexture = &texture;
+    treeset.texturePath = "leaf03.png";
 
     auto& material = m_resources.materials.get(bushMaterial);
     material.setProperty("u_texture", texture);
@@ -468,12 +527,15 @@ void BushState::loadAssets()
     shaderUniform.shaderID = shader->getGLHandle();
     shaderUniform.randomness = shader->getUniformID("u_randAmount");
     shaderUniform.size = shader->getUniformID("u_leafSize");
-
+    shaderUniform.colour = shader->getUniformID("u_colour");
 
 
     m_resources.shaders.loadFromString(ShaderID::Branch, BranchVertex, BranchFragment);
     shader = &m_resources.shaders.get(ShaderID::Branch);
     branchMaterial = m_resources.materials.add(*shader);
+
+    auto& mat2 = m_resources.materials.get(branchMaterial);
+    mat2.setProperty("u_texture", m_resources.textures.get("assets/bush/trunk_small.png"));
 }
 
 void BushState::createScene()
@@ -558,9 +620,78 @@ void BushState::loadModel(const std::string& path)
             meshData.indexData[0].primitiveType = GL_POINTS;
             entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(bushMaterial));
         }
+
+        treeset.modelPath = cro::FileSystem::getFileName(path);
     }
     else
     {
         cro::FileSystem::showMessageBox("Error", "Failed opening model");
+        treeset = {};
+    }
+}
+
+void BushState::loadPreset(const std::string& path)
+{
+    auto workingDir = cro::FileSystem::getFilePath(path);
+
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile(path))
+    {
+        treeset = {};
+
+        const auto& props = cfg.getProperties();
+        for (const auto& p : props)
+        {
+            const auto& name = p.getName();
+            if (name == "model")
+            {
+                treeset.modelPath = workingDir + p.getValue<std::string>();
+            }
+            else if (name == "texture")
+            {
+                treeset.texturePath = workingDir + p.getValue<std::string>();
+            }
+            else if (name == "colour")
+            {
+                treeset.colour = p.getValue<glm::vec3>();
+                for (auto i = 0; i < 3; ++i)
+                {
+                    treeset.colour[i] = std::min(1.f, std::max(0.f, treeset.colour[i]));
+                }
+            }
+            else if (name == "randomness")
+            {
+                treeset.randomAmount = std::max(treeset.randomAmount, std::min(1.f, p.getValue<float>()));
+            }
+            else if (name == "leaf_size")
+            {
+                treeset.leafSize = std::max(treeset.leafSize, std::min(500.f, p.getValue<float>()));
+            }
+        }
+
+        loadModel(treeset.modelPath);
+        leafTexture->loadFromFile(treeset.texturePath);
+
+        glUseProgram(shaderUniform.shaderID);
+        glUniform1f(shaderUniform.randomness, treeset.randomAmount);
+        glUniform1f(shaderUniform.size, treeset.leafSize);
+        glUniform3f(shaderUniform.colour, treeset.colour.r, treeset.colour.g, treeset.colour.b);
+
+        lastTreeset = path;
+    }
+}
+
+void BushState::savePreset(const std::string& path)
+{
+    cro::ConfigFile cfg("shrub");
+    cfg.addProperty("model").setValue(treeset.modelPath);
+    cfg.addProperty("texture").setValue(treeset.texturePath);
+    cfg.addProperty("colour").setValue(treeset.colour);
+    cfg.addProperty("randomness").setValue(treeset.randomAmount);
+    cfg.addProperty("leaf_size").setValue(treeset.leafSize);
+
+    if (cfg.save(path))
+    {
+        lastTreeset = path;
     }
 }
