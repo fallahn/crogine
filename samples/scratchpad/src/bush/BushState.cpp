@@ -84,15 +84,6 @@ namespace
             vec4 position = a_position;
             position.xyz += (a_normal * offset);
 
-//rotates tex coords - TODO apply the wind direction?
-            float rotation = randVal * 2.0;
-            rotation -= 1.0;
-            rotation *= 0.15;
-
-            /*vec2 rot = vec2(sin(rotation), cos(rotation));
-            v_rotation[0] = vec2(rot.y, -rot.x);
-            v_rotation[1]= rot;*/
-
             v_normal = u_normalMatrix * a_normal;
             v_colour = a_colour * (1.0 - (u_randAmount - offset)); //darken less offset leaves
 
@@ -133,6 +124,9 @@ namespace
             //shrink with perspective/distance
             //TODO this needs to know viewport height if letterboxing (ie anything but 1.0)
             pointSize *= (u_projectionMatrix[1][1] / gl_Position.w);
+
+            //TODO we should scale by model matrix but we can't extract
+            //this easily if there are rotations (and there are.)
 
             gl_PointSize = pointSize;
         })";
@@ -175,20 +169,15 @@ namespace
             return c;
         }
 
-
-
         void main()
         {
             float amount = dot(normalize(v_normal), -u_lightDirection);
-            /*amount *= 2.0;
+            amount *= 2.0;
             amount = round(amount);
-            amount /= 2.0;*/
+            amount /= 2.0;
             amount = 0.4 + (amount * 0.6);
 
-            //vec4 colour = v_colour;
-            //colour.rgb *= amount;
             vec3 colour = mix(complementaryColour(v_colour.rgb), v_colour.rgb, amount);
-
 
             vec2 coord = gl_PointCoord.xy;
             coord = v_rotation * (coord - vec2(0.5));
@@ -200,15 +189,81 @@ namespace
             FRAG_OUT = vec4(colour, 1.0) * textureColour;
         })";
 
+    std::string BranchVertex = R"(
+        ATTRIBUTE vec4 a_position;
+        ATTRIBUTE vec4 a_colour;
+        ATTRIBUTE vec3 a_normal;
+        ATTRIBUTE vec2 a_texCoord0;
+
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_viewProjectionMatrix;
+        uniform mat3 u_normalMatrix;
+        uniform vec4 u_clipPlane;
+
+        layout (std140) uniform WindValues
+        {
+            vec4 u_windData; //dirX, strength, dirZ, elapsedTime
+        };
+
+        VARYING_OUT vec2 v_texCoord;
+        VARYING_OUT vec3 v_normal;
+
+        const float MaxWindOffset = 0.2;
+
+        void main()
+        {
+            vec4 worldPosition = u_worldMatrix * a_position;
+
+
+            vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
+            float dirStrength = a_colour.b;
+
+            vec3 windOffset = windDir * u_windData.y * dirStrength;// * 2.0;
+            worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+
+
+            gl_Position = u_viewProjectionMatrix * worldPosition;
+            gl_ClipDistance[0] = dot(u_clipPlane, a_position);
+
+            v_texCoord = a_texCoord0;
+            v_normal = u_normalMatrix * a_normal;
+        })";
+
+    std::string BranchFragment = R"(
+        OUTPUT
+
+        uniform sampler2D u_texture;
+        uniform vec3 u_lightDirection;
+
+        VARYING_IN vec2 v_texCoord;
+        VARYING_IN vec3 v_normal;
+
+        void main()
+        {
+            vec4 colour = TEXTURE(u_texture, v_texCoord);
+
+            float amount = dot(normalize(v_normal), -u_lightDirection);
+            amount *= 2.0;
+            amount = round(amount);
+            amount /= 2.0;
+            amount = 0.6 + (amount * 0.4);
+
+            colour.rgb *= amount;
+            FRAG_OUT = colour;
+        })";
+
     struct ShaderID final
     {
         enum
         {
-            Bush
+            Bush,
+            Branch
         };
     };
 
-    std::int32_t materialID = -1;
+    std::int32_t bushMaterial = -1;
+    std::int32_t branchMaterial = -1;
+
     float leafSize = 150.f;
     float randomAmount = 0.2f;
 
@@ -230,7 +285,7 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
-    m_windBuffer    ("u_windData")
+    m_windBuffer    ("WindValues")
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -401,18 +456,24 @@ void BushState::loadAssets()
 {
     m_resources.shaders.loadFromString(ShaderID::Bush, BushVertex, BushFragment);
     auto* shader = &m_resources.shaders.get(ShaderID::Bush);
-    materialID = m_resources.materials.add(*shader);
+    bushMaterial = m_resources.materials.add(*shader);
 
     auto& texture = m_resources.textures.get("assets/bush/leaf03.png");
     texture.setSmooth(false);
     leafTexture = &texture;
 
-    auto& material = m_resources.materials.get(materialID);
+    auto& material = m_resources.materials.get(bushMaterial);
     material.setProperty("u_texture", texture);
 
     shaderUniform.shaderID = shader->getGLHandle();
     shaderUniform.randomness = shader->getUniformID("u_randAmount");
     shaderUniform.size = shader->getUniformID("u_leafSize");
+
+
+
+    m_resources.shaders.loadFromString(ShaderID::Branch, BranchVertex, BranchFragment);
+    shader = &m_resources.shaders.get(ShaderID::Branch);
+    branchMaterial = m_resources.materials.add(*shader);
 }
 
 void BushState::createScene()
@@ -463,31 +524,40 @@ void BushState::loadModel(const std::string& path)
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile(path))
     {
-        //TODO read model bounding box and place apart as appropriate
-
-
         //base model on left
         cro::Entity entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ -2.5f, 0.f, 0.f });
+        entity.addComponent<cro::Transform>();
         md.createModel(entity);
         m_models[0] = entity;
 
         //same model with bush shader
         entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 2.5f, 0.f, 0.f });
+        entity.addComponent<cro::Transform>();
         md.createModel(entity);
         m_models[1] = entity;
+
+        float radius = m_models[0].getComponent<cro::Model>().getMeshData().boundingSphere.radius;
+        radius *= 1.1f;
+        m_models[0].getComponent<cro::Transform>().setPosition({ -radius, -radius, 0.f });
+        m_models[1].getComponent<cro::Transform>().setPosition({ radius, -radius, 0.f });
+
+        m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, radius * 2.f });
 
         auto& meshData = entity.getComponent<cro::Model>().getMeshData();
         meshData.primitiveType = GL_POINTS;
 
-        /*for (auto i = 0u; i < meshData.submeshCount; ++i)
+        //fudgy but it'll do to prove it works.
+        if (meshData.submeshCount > 1)
         {
-            meshData.indexData[i].primitiveType = GL_POINTS;
-        }*/
-        meshData.indexData[1].primitiveType = GL_POINTS;
-        entity.getComponent<cro::Model>().setMaterial(1, m_resources.materials.get(materialID));
-        //entity.getComponent<cro::Model>().setMaterial(1, m_resources.materials.get(materialID));
+            meshData.indexData[1].primitiveType = GL_POINTS;
+            entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(branchMaterial));
+            entity.getComponent<cro::Model>().setMaterial(1, m_resources.materials.get(bushMaterial));
+        }
+        else
+        {
+            meshData.indexData[0].primitiveType = GL_POINTS;
+            entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(bushMaterial));
+        }
     }
     else
     {
