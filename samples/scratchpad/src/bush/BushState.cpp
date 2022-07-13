@@ -146,15 +146,16 @@ namespace
             float pointSize = u_leafSize + ((u_leafSize * 2.0) * offset);
             pointSize *= variation;
 
-            vec3 eyeDir = normalize(u_cameraWorldPosition - worldPosition.xyz);
-            float facingAmount = dot(v_normal, eyeDir);
+            vec3 camForward = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
+            
+            float facingAmount = dot(v_normal, camForward);
             pointSize *= 0.5 + (0.5 * facingAmount);
             
-            //shrink 'backfacing' to as small as possible
+            //shrink 'backfacing' to zero
             pointSize *= step(0.0, facingAmount); 
             
             //we use the camera's forward vector to shrink any points out of view to zero
-            vec3 camForward = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
+            vec3 eyeDir = normalize(u_cameraWorldPosition - worldPosition.xyz);
             pointSize *= clamp(dot(eyeDir, (camForward)), 0.0, 1.0);
 
             
@@ -658,8 +659,8 @@ void BushState::render()
 void BushState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setNumCascades(1);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setNumCascades(1);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 }
 
