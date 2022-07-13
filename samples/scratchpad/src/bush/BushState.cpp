@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
@@ -611,11 +612,11 @@ bool BushState::simulate(float dt)
     {
         movement.z += dt * Speed;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_q))
+    if (cro::Keyboard::isKeyPressed(SDLK_SPACE))
     {
         movement.y += dt * Speed;
     }
-    if (cro::Keyboard::isKeyPressed(SDLK_e))
+    if (cro::Keyboard::isKeyPressed(SDLK_LCTRL))
     {
         movement.y -= dt * Speed;
     }
@@ -657,6 +658,7 @@ void BushState::render()
 void BushState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setNumCascades(1);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 }
@@ -692,9 +694,6 @@ void BushState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
 
-    auto& mat2 = m_resources.materials.get(branchMaterial);
-    mat2.setProperty("u_texture", m_resources.textures.get("assets/bush/trunk_small.png"));
-
 
     struct Transform final
     {
@@ -707,12 +706,12 @@ void BushState::loadAssets()
 
     const std::array transforms =
     {
-        Transform(glm::vec3(2.f, 0.f, 1.f), glm::vec3(1.f), 1.f),
-        Transform(glm::vec3(-2.f, 0.f, 1.f), glm::vec3(1.2f), 3.f),
+        Transform(glm::vec3(2.f, 0.f, 10.f), glm::vec3(1.f), 1.f),
+        Transform(glm::vec3(-2.f, 0.f, 10.f), glm::vec3(1.2f), 3.f),
         Transform(glm::vec3(0.f, 0.f, -3.f), glm::vec3(0.85f), 4.5f),
         Transform(glm::vec3(4.f, 0.f, -2.f), glm::vec3(0.5f), 5.5f),
         Transform(glm::vec3(-4.f, 0.f, -2.f), glm::vec3(1.85f), 2.5f),
-        Transform(glm::vec3(0.f, 0.f, 4.f), glm::vec3(1.1f), 4.f),
+        Transform(glm::vec3(0.f, 0.f, 24.f), glm::vec3(1.1f), 4.f),
     };
 
     for (const auto& t : transforms)
@@ -726,10 +725,30 @@ void BushState::loadAssets()
 
 void BushState::createScene()
 {
-    //this is called when the window is resized to automatically update the camera's matrices/viewport
+    //placeholder to help visialise player size
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/bush/player_box.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+
+        float offset = entity.getComponent<cro::Model>().getMeshData().boundingBox[0].y;
+        entity.getComponent<cro::Transform>().setOrigin({ 0.f, offset, 0.f });
+    }
+
+    if (md.loadFromFile("assets/bush/ground_plane.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+    }
+
+
     auto camEnt = m_gameScene.getActiveCamera();
     updateView(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&BushState::updateView, this, std::placeholders::_1);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 6.f });
 
 
@@ -789,7 +808,7 @@ void BushState::loadModel(const std::string& path)
 
         float radius = m_models[0].getComponent<cro::Model>().getMeshData().boundingSphere.radius;
         radius *= 1.1f;
-        m_models[0].getComponent<cro::Transform>().setPosition({ -radius, -radius, 0.f });
+        m_models[0].getComponent<cro::Transform>().setPosition({ -radius, 0.f, 0.f });
 
 
         //same model with bush shader (instanced)
@@ -798,10 +817,10 @@ void BushState::loadModel(const std::string& path)
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
         m_models[1] = entity;
-        m_models[1].getComponent<cro::Transform>().setPosition({ radius, -radius, 0.f });
+        m_models[1].getComponent<cro::Transform>().setPosition({ radius, 0.f, 0.f });
         m_models[1].getComponent<cro::Model>().setInstanceTransforms(m_instanceTransforms);
 
-        m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, radius * 2.f });
+        m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, radius, radius * 2.f });
 
         auto& meshData = entity.getComponent<cro::Model>().getMeshData();
         meshData.primitiveType = GL_POINTS;
@@ -810,8 +829,15 @@ void BushState::loadModel(const std::string& path)
         if (meshData.submeshCount > 1)
         {
             meshData.indexData[1].primitiveType = GL_POINTS;
-            entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(branchMaterial));
             entity.getComponent<cro::Model>().setMaterial(1, m_resources.materials.get(bushMaterial));
+
+            auto mat = m_resources.materials.get(branchMaterial);
+            if (md.getMaterial(0)->properties.count("u_diffuseMap"))
+            {
+                cro::TextureID tid(md.getMaterial(0)->properties.at("u_diffuseMap").second.textureID);
+                mat.setProperty("u_texture", tid);
+            }
+            entity.getComponent<cro::Model>().setMaterial(0, mat);
         }
         else
         {

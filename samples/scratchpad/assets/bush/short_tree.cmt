@@ -1,7 +1,7 @@
 model short_tree
 {
     mesh = assets/bush/short_tree.cmb
-    cast_shadows = false
+    cast_shadows = true
 
     material VertexLit
     {
@@ -19,6 +19,7 @@ model short_tree
         framerate = 1.000000
         blendmode = none
         diffuse = "assets/bush/trunk_small.png"
+        rx_shadows = true
 
     }
     material Unlit
