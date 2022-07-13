@@ -50,10 +50,16 @@ namespace
         ATTRIBUTE vec4 a_colour;
         ATTRIBUTE vec3 a_normal;
 
+    #if defined(INSTANCING)
+        ATTRIBUTE mat4 a_instanceWorldMatrix;
+        ATTRIBUTE mat3 a_instanceNormalMatrix;
+    #else
+        uniform mat3 u_normalMatrix;
+    #endif
         uniform mat4 u_worldMatrix;
+        uniform mat4 u_viewMatrix;
         uniform mat4 u_viewProjectionMatrix;
         uniform mat4 u_projectionMatrix;
-        uniform mat3 u_normalMatrix;
         uniform vec3 u_cameraWorldPosition;
 
         uniform vec4 u_clipPlane;
@@ -90,17 +96,25 @@ namespace
         {
             int UID = gl_InstanceID << 16 | (gl_VertexID & 0x0000ffff);
 
+        #if defined (INSTANCING)
+            mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
+            mat3 normalMatrix = mat3(u_worldMatrix) * a_instanceNormalMatrix;            
+        #else
+            mat4 worldMatrix = u_worldMatrix;
+            mat3 normalMatrix = u_normalMatrix;
+        #endif
+
             float randVal = rand(vec2(UID));
             float offset = randVal * u_randAmount;
             vec4 position = a_position;
             position.xyz += (a_normal * offset);
 
-            v_normal = u_normalMatrix * a_normal;
+            v_normal = normalMatrix * a_normal;
             v_colour = a_colour * (1.0 - (u_randAmount - offset)); //darken less offset leaves
 
             gl_ClipDistance[0] = dot(a_position, u_clipPlane);
 
-            vec4 worldPosition = u_worldMatrix * position;
+            vec4 worldPosition = worldMatrix * position;
 
 //wind
             float time = (u_windData.w * 15.0) + UID;
@@ -130,13 +144,25 @@ namespace
 
             float pointSize = u_leafSize + ((u_leafSize * 2.0) * offset);
             pointSize *= variation;
-            pointSize *= 0.6 + (0.4 * dot(v_normal, normalize(u_cameraWorldPosition - worldPosition.xyz)));
+
+            vec3 eyeDir = normalize(u_cameraWorldPosition - worldPosition.xyz);
+            float facingAmount = dot(v_normal, eyeDir);
+            pointSize *= 0.5 + (0.5 * facingAmount);
+            
+            //shrink 'backfacing' to as small as possible
+            pointSize *= step(0.0, facingAmount); 
+            
+            //we use the camera's forward vector to shrink any points out of view to zero
+            vec3 camForward = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
+            pointSize *= clamp(dot(eyeDir, (camForward)), 0.0, 1.0);
+
             
             //shrink with perspective/distance and scale to world units
             pointSize *= u_targetHeight * (u_projectionMatrix[1][1] / gl_Position.w);
 
-            //TODO we should scale by model matrix but we can't extract
-            //this easily if there are rotations (and there are.)
+            //we scale point size by model matrix but it assumes all axis are
+            //scaled equally ,as we only use the X axis
+            pointSize *= length(worldMatrix[0].xyz);
 
             gl_PointSize = pointSize;
 
@@ -262,9 +288,15 @@ namespace
         ATTRIBUTE vec3 a_normal;
         ATTRIBUTE vec2 a_texCoord0;
 
+    #if defined(INSTANCING)
+        ATTRIBUTE mat4 a_instanceWorldMatrix;
+        ATTRIBUTE mat3 a_instanceNormalMatrix;
+    #else
+        uniform mat3 u_normalMatrix;
+    #endif
+
         uniform mat4 u_worldMatrix;
         uniform mat4 u_viewProjectionMatrix;
-        uniform mat3 u_normalMatrix;
         uniform vec4 u_clipPlane;
         uniform vec3 u_cameraWorldPosition;
 
@@ -287,7 +319,15 @@ namespace
 
         void main()
         {
-            vec4 worldPosition = u_worldMatrix * a_position;
+        #if defined (INSTANCING)
+            mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
+            mat3 normalMatrix = mat3(u_worldMatrix) * a_instanceNormalMatrix;            
+        #else
+            mat4 worldMatrix = u_worldMatrix;
+            mat3 normalMatrix = u_normalMatrix;
+        #endif
+
+            vec4 worldPosition = worldMatrix * a_position;
 
             float time = (u_windData.w * 15.0) + gl_InstanceID;
             float x = sin(time * 2.0) / 8.0;
@@ -306,7 +346,7 @@ namespace
             gl_ClipDistance[0] = dot(u_clipPlane, a_position);
 
             v_texCoord = a_texCoord0;
-            v_normal = u_normalMatrix * a_normal;
+            v_normal = normalMatrix * a_normal;
 
 //proximity fade
             float fadeDistance = u_nearFadeDistance * 2.0;
@@ -623,7 +663,7 @@ void BushState::addSystems()
 
 void BushState::loadAssets()
 {
-    m_resources.shaders.loadFromString(ShaderID::Bush, BushVertex, BushFragment);
+    m_resources.shaders.loadFromString(ShaderID::Bush, BushVertex, BushFragment, "#define INSTANCING\n");
     auto* shader = &m_resources.shaders.get(ShaderID::Bush);
     bushMaterial = m_resources.materials.add(*shader);
 
@@ -645,7 +685,7 @@ void BushState::loadAssets()
     shaderUniform.targetHeight = shader->getUniformID("u_targetHeight");
 
 
-    m_resources.shaders.loadFromString(ShaderID::Branch, BranchVertex, BranchFragment);
+    m_resources.shaders.loadFromString(ShaderID::Branch, BranchVertex, BranchFragment, "#define INSTANCING\n");
     shader = &m_resources.shaders.get(ShaderID::Branch);
     branchMaterial = m_resources.materials.add(*shader);
 
@@ -654,6 +694,34 @@ void BushState::loadAssets()
 
     auto& mat2 = m_resources.materials.get(branchMaterial);
     mat2.setProperty("u_texture", m_resources.textures.get("assets/bush/trunk_small.png"));
+
+
+    struct Transform final
+    {
+        Transform(glm::vec3 t, glm::vec3 s, float r)
+            : position(t), scale(s), rotation(r) {}
+        glm::vec3 position = glm::vec3(0.f);
+        glm::vec3 scale = glm::vec3(1.f);
+        float rotation = 0.f;
+    };
+
+    const std::array transforms =
+    {
+        Transform(glm::vec3(2.f, 0.f, 1.f), glm::vec3(1.f), 1.f),
+        Transform(glm::vec3(-2.f, 0.f, 1.f), glm::vec3(1.2f), 3.f),
+        Transform(glm::vec3(0.f, 0.f, -3.f), glm::vec3(0.85f), 4.5f),
+        Transform(glm::vec3(4.f, 0.f, -2.f), glm::vec3(0.5f), 5.5f),
+        Transform(glm::vec3(-4.f, 0.f, -2.f), glm::vec3(1.85f), 2.5f),
+        Transform(glm::vec3(0.f, 0.f, 4.f), glm::vec3(1.1f), 4.f),
+    };
+
+    for (const auto& t : transforms)
+    {
+        auto& mat = m_instanceTransforms.emplace_back(1.f);
+        mat = glm::translate(mat, t.position);
+        mat = glm::rotate(mat, t.rotation, cro::Transform::Y_AXIS);
+        mat = glm::scale(mat, t.scale);
+    }
 }
 
 void BushState::createScene()
@@ -719,16 +787,19 @@ void BushState::loadModel(const std::string& path)
         md.createModel(entity);
         m_models[0] = entity;
 
-        //same model with bush shader
+        float radius = m_models[0].getComponent<cro::Model>().getMeshData().boundingSphere.radius;
+        radius *= 1.1f;
+        m_models[0].getComponent<cro::Transform>().setPosition({ -radius, -radius, 0.f });
+
+
+        //same model with bush shader (instanced)
+        md.loadFromFile(path, true);
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
         m_models[1] = entity;
-
-        float radius = m_models[0].getComponent<cro::Model>().getMeshData().boundingSphere.radius;
-        radius *= 1.1f;
-        m_models[0].getComponent<cro::Transform>().setPosition({ -radius, -radius, 0.f });
         m_models[1].getComponent<cro::Transform>().setPosition({ radius, -radius, 0.f });
+        m_models[1].getComponent<cro::Model>().setInstanceTransforms(m_instanceTransforms);
 
         m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, radius * 2.f });
 

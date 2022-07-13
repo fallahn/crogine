@@ -79,6 +79,7 @@ private:
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
 
     std::array<cro::Entity, 2u> m_models;
+    std::vector<glm::mat4> m_instanceTransforms;
 
     void addSystems();
     void loadAssets();
