@@ -57,8 +57,9 @@ namespace
         uniform vec3 u_cameraWorldPosition;
 
         uniform vec4 u_clipPlane;
+        uniform float u_targetHeight; //height of the render target multiplied by its viewport, ie height of the renderable area
 
-        uniform float u_leafSize = 150.0;
+        uniform float u_leafSize = 0.25; //world units, in this case metres
         uniform float u_randAmount = 0.2;
 
         layout (std140) uniform WindValues
@@ -124,7 +125,7 @@ namespace
             
             //shrink with perspective/distance
             //TODO this needs to know viewport height if letterboxing (ie anything but 1.0)
-            pointSize *= (u_projectionMatrix[1][1] / gl_Position.w);
+            pointSize *= u_targetHeight * (u_projectionMatrix[1][1] / gl_Position.w);
 
             //TODO we should scale by model matrix but we can't extract
             //this easily if there are rotations (and there are.)
@@ -277,7 +278,7 @@ namespace
 
     struct TreesetData final
     {
-        float leafSize = 150.f;
+        float leafSize = 0.25f; //metres
         float randomAmount = 0.2f;
         glm::vec3 colour = glm::vec3(1.f);
 
@@ -293,6 +294,7 @@ namespace
         std::int32_t size = -1;
         std::int32_t randomness = -1;
         std::int32_t colour = -1;
+        std::int32_t targetHeight = -1;
     }shaderUniform;
 
     float rotation = 0.f;
@@ -346,7 +348,7 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
                     }
                 }
 
-                if (ImGui::SliderFloat("Leaf Size", &treeset.leafSize, 1.f, 500.f))
+                if (ImGui::SliderFloat("Leaf Size", &treeset.leafSize, 0.01f, 1.f))
                 {
                     glUseProgram(shaderUniform.shaderID);
                     glUniform1f(shaderUniform.size, treeset.leafSize);
@@ -516,10 +518,10 @@ void BushState::loadAssets()
     auto* shader = &m_resources.shaders.get(ShaderID::Bush);
     bushMaterial = m_resources.materials.add(*shader);
 
-    auto& texture = m_resources.textures.get("assets/bush/leaf03.png");
+    auto& texture = m_resources.textures.get("assets/bush/leaf05.png");
     texture.setSmooth(false);
     leafTexture = &texture;
-    treeset.texturePath = "leaf03.png";
+    treeset.texturePath = "leaf05.png";
 
     auto& material = m_resources.materials.get(bushMaterial);
     material.setProperty("u_texture", texture);
@@ -528,6 +530,7 @@ void BushState::loadAssets()
     shaderUniform.randomness = shader->getUniformID("u_randAmount");
     shaderUniform.size = shader->getUniformID("u_leafSize");
     shaderUniform.colour = shader->getUniformID("u_colour");
+    shaderUniform.targetHeight = shader->getUniformID("u_targetHeight");
 
 
     m_resources.shaders.loadFromString(ShaderID::Branch, BranchVertex, BranchFragment);
@@ -564,9 +567,14 @@ void BushState::updateView(cro::Camera& cam3D)
     size.x = 1.f;
 
     //90 deg in x (glm expects fov in y)
-    cam3D.setPerspective(50.6f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 140.f);
+    cam3D.setPerspective(50.6f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 40.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
+
+    //set the correct renderable height in the shader
+    auto targetHeight = static_cast<float>(cro::App::getWindow().getSize().y) * size.y;
+    glUseProgram(shaderUniform.shaderID);
+    glUniform1f(shaderUniform.targetHeight, targetHeight);
 
     //update the UI camera to match the new screen size
     auto& cam2D = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
@@ -645,11 +653,11 @@ void BushState::loadPreset(const std::string& path)
             const auto& name = p.getName();
             if (name == "model")
             {
-                treeset.modelPath = workingDir + p.getValue<std::string>();
+                treeset.modelPath = p.getValue<std::string>();
             }
             else if (name == "texture")
             {
-                treeset.texturePath = workingDir + p.getValue<std::string>();
+                treeset.texturePath = p.getValue<std::string>();
             }
             else if (name == "colour")
             {
@@ -665,12 +673,12 @@ void BushState::loadPreset(const std::string& path)
             }
             else if (name == "leaf_size")
             {
-                treeset.leafSize = std::max(treeset.leafSize, std::min(500.f, p.getValue<float>()));
+                treeset.leafSize = std::max(treeset.leafSize, std::min(1.f, p.getValue<float>()));
             }
         }
 
-        loadModel(treeset.modelPath);
-        leafTexture->loadFromFile(treeset.texturePath);
+        loadModel(workingDir + treeset.modelPath);
+        leafTexture->loadFromFile(workingDir + treeset.texturePath);
 
         glUseProgram(shaderUniform.shaderID);
         glUniform1f(shaderUniform.randomness, treeset.randomAmount);
@@ -689,6 +697,11 @@ void BushState::savePreset(const std::string& path)
     cfg.addProperty("colour").setValue(treeset.colour);
     cfg.addProperty("randomness").setValue(treeset.randomAmount);
     cfg.addProperty("leaf_size").setValue(treeset.leafSize);
+
+    //TODO these are just placeholders as we can't easily determine
+    //programatically which material indices should have which shader
+    cfg.addProperty("branch_index").setValue(0);
+    cfg.addProperty("leaf_index").setValue(1);
 
     if (cfg.save(path))
     {
