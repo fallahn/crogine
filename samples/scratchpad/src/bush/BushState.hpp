@@ -45,6 +45,12 @@ struct WindData final
     float elapsedTime = 0.f;
 };
 
+struct ResolutionData final
+{
+    glm::vec2 resolution = glm::vec2(1.f);
+    float nearFadeDistance = 2.f;
+};
+
 namespace cro
 {
     struct Camera;
@@ -70,6 +76,7 @@ private:
 
     cro::ResourceCollection m_resources;
     cro::UniformBuffer<WindData> m_windBuffer;
+    cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
 
     std::array<cro::Entity, 2u> m_models;
 

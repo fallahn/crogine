@@ -67,6 +67,13 @@ namespace
             vec4 u_windData; //dirX, strength, dirZ, elapsedTime
         };
 
+        layout (std140) uniform ScaledResolution
+        {
+            vec2 u_scaledResolution;
+            float u_nearFadeDistance;
+        };
+
+        VARYING_OUT float v_ditherAmount;
         VARYING_OUT vec3 v_normal;
         VARYING_OUT vec4 v_colour;
         VARYING_OUT mat2 v_rotation;
@@ -93,7 +100,7 @@ namespace
 
             gl_ClipDistance[0] = dot(a_position, u_clipPlane);
 
-            vec4 worldPos = u_worldMatrix * position;
+            vec4 worldPosition = u_worldMatrix * position;
 
 //wind
             float time = (u_windData.w * 15.0) + UID;
@@ -113,8 +120,8 @@ namespace
             dirStrength /= 2.0;
 
             windOffset += windDir * u_windData.y * dirStrength * 4.0;
-            worldPos.xyz += windOffset * MaxWindOffset * u_windData.y;
-            gl_Position = u_viewProjectionMatrix * worldPos;
+            worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+            gl_Position = u_viewProjectionMatrix * worldPosition;
 
 
 //size calc
@@ -123,16 +130,24 @@ namespace
 
             float pointSize = u_leafSize + ((u_leafSize * 2.0) * offset);
             pointSize *= variation;
-            pointSize *= 0.6 + (0.4 * dot(v_normal, normalize(u_cameraWorldPosition - worldPos.xyz)));
+            pointSize *= 0.6 + (0.4 * dot(v_normal, normalize(u_cameraWorldPosition - worldPosition.xyz)));
             
-            //shrink with perspective/distance
-            //TODO this needs to know viewport height if letterboxing (ie anything but 1.0)
+            //shrink with perspective/distance and scale to world units
             pointSize *= u_targetHeight * (u_projectionMatrix[1][1] / gl_Position.w);
 
             //TODO we should scale by model matrix but we can't extract
             //this easily if there are rotations (and there are.)
 
             gl_PointSize = pointSize;
+
+//proximity fade
+            float fadeDistance = u_nearFadeDistance * 2.0;
+            const float farFadeDistance = 360.f;
+            float distance = length(worldPosition.xyz - u_cameraWorldPosition);
+
+            v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
+            v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
+
         })";
 
     const std::string BushFragment = 
@@ -143,9 +158,44 @@ namespace
         uniform vec3 u_lightDirection;
         uniform vec3 u_colour = vec3(1.0);
 
+        VARYING_IN float v_ditherAmount;
         VARYING_IN vec3 v_normal;
         VARYING_IN vec4 v_colour;
         VARYING_IN mat2 v_rotation;
+
+        //function based on example by martinsh.blogspot.com
+        const int MatrixSize = 8;
+        float findClosest(int x, int y, float c0)
+        {
+            /* 8x8 Bayer ordered dithering */
+            /* pattern. Each input pixel */
+            /* is scaled to the 0..63 range */
+            /* before looking in this table */
+            /* to determine the action. */
+
+            const int dither[64] = int[64](
+             0, 32, 8, 40, 2, 34, 10, 42, 
+            48, 16, 56, 24, 50, 18, 58, 26, 
+            12, 44, 4, 36, 14, 46, 6, 38, 
+            60, 28, 52, 20, 62, 30, 54, 22, 
+             3, 35, 11, 43, 1, 33, 9, 41, 
+            51, 19, 59, 27, 49, 17, 57, 25,
+            15, 47, 7, 39, 13, 45, 5, 37,
+            63, 31, 55, 23, 61, 29, 53, 21 );
+
+            float limit = 0.0;
+            if (x < MatrixSize)
+            {
+                limit = (dither[y * MatrixSize + x] + 1) / 64.0;
+            }
+
+            if (c0 < limit)
+            {
+                return 0.0;
+            }
+            return 1.0;
+        }
+
 
         vec3 rgb2hsv(vec3 c)
         {
@@ -185,14 +235,23 @@ namespace
             vec3 colour = mix(complementaryColour(v_colour.rgb), v_colour.rgb, amount);
 #else
             vec3 colour = mix(complementaryColour(u_colour.rgb), u_colour.rgb, amount);
+            //multiply by v_colour.a to darken on leaf depth - looks nice but not used
 #endif
 
             vec2 coord = gl_PointCoord.xy;
             coord = v_rotation * (coord - vec2(0.5));
             coord += vec2(0.5);
 
+//use texture and dither amount to see if we discard
             vec4 textureColour = TEXTURE(u_texture, coord);
-            if(textureColour.a < 0.3) discard;
+
+            vec2 xy = gl_FragCoord.xy; // / u_pixelScale;
+            int x = int(mod(xy.x, MatrixSize));
+            int y = int(mod(xy.y, MatrixSize));
+
+            float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+            if (textureColour.a * alpha < 0.3) discard;
+
 
             FRAG_OUT = vec4(colour, 1.0) * textureColour;
         })";
@@ -207,12 +266,20 @@ namespace
         uniform mat4 u_viewProjectionMatrix;
         uniform mat3 u_normalMatrix;
         uniform vec4 u_clipPlane;
+        uniform vec3 u_cameraWorldPosition;
 
         layout (std140) uniform WindValues
         {
             vec4 u_windData; //dirX, strength, dirZ, elapsedTime
         };
 
+        layout (std140) uniform ScaledResolution
+        {
+            vec2 u_scaledResolution;
+            float u_nearFadeDistance;
+        };
+
+        VARYING_OUT float v_ditherAmount;
         VARYING_OUT vec2 v_texCoord;
         VARYING_OUT vec3 v_normal;
 
@@ -221,7 +288,6 @@ namespace
         void main()
         {
             vec4 worldPosition = u_worldMatrix * a_position;
-
 
             float time = (u_windData.w * 15.0) + gl_InstanceID;
             float x = sin(time * 2.0) / 8.0;
@@ -241,6 +307,14 @@ namespace
 
             v_texCoord = a_texCoord0;
             v_normal = u_normalMatrix * a_normal;
+
+//proximity fade
+            float fadeDistance = u_nearFadeDistance * 2.0;
+            const float farFadeDistance = 360.f;
+            float distance = length(worldPosition.xyz - u_cameraWorldPosition);
+
+            v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
+            v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
         })";
 
     std::string BranchFragment = R"(
@@ -249,8 +323,36 @@ namespace
         uniform sampler2D u_texture;
         uniform vec3 u_lightDirection;
 
+        VARYING_IN float v_ditherAmount;
         VARYING_IN vec2 v_texCoord;
         VARYING_IN vec3 v_normal;
+
+        //function based on example by martinsh.blogspot.com
+        const int MatrixSize = 8;
+        float findClosest(int x, int y, float c0)
+        {
+            const int dither[64] = int[64](
+             0, 32, 8, 40, 2, 34, 10, 42, 
+            48, 16, 56, 24, 50, 18, 58, 26, 
+            12, 44, 4, 36, 14, 46, 6, 38, 
+            60, 28, 52, 20, 62, 30, 54, 22, 
+             3, 35, 11, 43, 1, 33, 9, 41, 
+            51, 19, 59, 27, 49, 17, 57, 25,
+            15, 47, 7, 39, 13, 45, 5, 37,
+            63, 31, 55, 23, 61, 29, 53, 21 );
+
+            float limit = 0.0;
+            if (x < MatrixSize)
+            {
+                limit = (dither[y * MatrixSize + x] + 1) / 64.0;
+            }
+
+            if (c0 < limit)
+            {
+                return 0.0;
+            }
+            return 1.0;
+        }
 
         void main()
         {
@@ -264,6 +366,13 @@ namespace
 
             colour.rgb *= amount;
             FRAG_OUT = colour;
+
+            vec2 xy = gl_FragCoord.xy; // / u_pixelScale;
+            int x = int(mod(xy.x, MatrixSize));
+            int y = int(mod(xy.y, MatrixSize));
+
+            float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+            if (alpha < 0.1) discard;
         })";
 
     struct ShaderID final
@@ -307,10 +416,11 @@ namespace
 }
 
 BushState::BushState(cro::StateStack& stack, cro::State::Context context)
-    : cro::State    (stack, context),
-    m_gameScene     (context.appInstance.getMessageBus()),
-    m_uiScene       (context.appInstance.getMessageBus()),
-    m_windBuffer    ("WindValues")
+    : cro::State        (stack, context),
+    m_gameScene         (context.appInstance.getMessageBus()),
+    m_uiScene           (context.appInstance.getMessageBus()),
+    m_windBuffer        ("WindValues"),
+    m_resolutionBuffer  ("ScaledResolution")
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -386,11 +496,7 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
                     }
                 }
                 ImGui::SameLine();
-                ImGui::Image(*leafTexture, { 32.f, 32.f }, { 0.f, 1.f }, { 1.f, 0.f });
-
-                ImGui::Separator();
-                ImGui::Text("If model appears black there's no vertex colour.");
-
+                ImGui::Image(*leafTexture, { 32.f, 32.f }, { 0.f, 0.f }, { 1.f, 1.f });
 
 
                 ImGui::NewLine();
@@ -500,6 +606,7 @@ bool BushState::simulate(float dt)
 void BushState::render()
 {
     m_windBuffer.bind(0);
+    m_resolutionBuffer.bind(1);
 
     glEnable(GL_PROGRAM_POINT_SIZE);
     m_gameScene.render();
@@ -520,6 +627,9 @@ void BushState::loadAssets()
     auto* shader = &m_resources.shaders.get(ShaderID::Bush);
     bushMaterial = m_resources.materials.add(*shader);
 
+    m_windBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+
     auto& texture = m_resources.textures.get("assets/bush/leaf05.png");
     texture.setSmooth(false);
     leafTexture = &texture;
@@ -538,6 +648,9 @@ void BushState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Branch, BranchVertex, BranchFragment);
     shader = &m_resources.shaders.get(ShaderID::Branch);
     branchMaterial = m_resources.materials.add(*shader);
+
+    m_windBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
 
     auto& mat2 = m_resources.materials.get(branchMaterial);
     mat2.setProperty("u_texture", m_resources.textures.get("assets/bush/trunk_small.png"));
@@ -577,6 +690,10 @@ void BushState::updateView(cro::Camera& cam3D)
     auto targetHeight = static_cast<float>(cro::App::getWindow().getSize().y) * size.y;
     glUseProgram(shaderUniform.shaderID);
     glUniform1f(shaderUniform.targetHeight, targetHeight);
+
+    ResolutionData rd;
+    rd.resolution = cro::App::getWindow().getSize();
+    m_resolutionBuffer.setData(rd);
 
     //update the UI camera to match the new screen size
     auto& cam2D = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
