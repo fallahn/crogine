@@ -95,8 +95,9 @@ private:
     std::vector<glm::mat4> m_instanceTransforms;
     std::array<cro::Entity, 2u> m_instancedEntities = {};
 
-    std::array<std::vector<glm::mat4>, 2u> m_shrubTransforms;
-    std::array<std::array<cro::Entity, 2u>, 2u> m_instancedShrubs = {};
+    static constexpr std::size_t MaxShrubInstances = 4;
+    std::array<std::vector<glm::mat4>, MaxShrubInstances> m_shrubTransforms;
+    std::array<std::array<cro::Entity, MaxShrubInstances>, 2u> m_instancedShrubs = {};
 
 
     std::array<std::vector<cro::Entity>, 2u> m_crowdEntities = {};

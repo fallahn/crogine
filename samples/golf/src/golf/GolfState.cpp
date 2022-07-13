@@ -2417,6 +2417,7 @@ void GolfState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::CelTexturedInstanced);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Crowd);
     m_scaleBuffer.addShader(*shader);

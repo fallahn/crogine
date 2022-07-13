@@ -81,7 +81,9 @@ namespace
 
         void main()
         {
-            float randVal = rand(vec2(gl_VertexID));
+            int UID = gl_InstanceID << 16 | (gl_VertexID & 0x0000ffff);
+
+            float randVal = rand(vec2(UID));
             float offset = randVal * u_randAmount;
             vec4 position = a_position;
             position.xyz += (a_normal * offset);
@@ -94,7 +96,7 @@ namespace
             vec4 worldPos = u_worldMatrix * position;
 
 //wind
-            float time = (u_windData.w * 15.0) + gl_VertexID;
+            float time = (u_windData.w * 15.0) + UID;
             float x = sin(time * 2.0) / 8.0;
             float y = cos(time) / 2.0;
             vec3 windOffset = vec3(x, y, x);
@@ -116,7 +118,7 @@ namespace
 
 
 //size calc
-            float variation = rand(-vec2(gl_VertexID));
+            float variation = rand(-vec2(UID));
             variation = 0.5 + (0.5 * variation);
 
             float pointSize = u_leafSize + ((u_leafSize * 2.0) * offset);
@@ -221,7 +223,7 @@ namespace
             vec4 worldPosition = u_worldMatrix * a_position;
 
 
-            float time = (u_windData.w * 15.0);
+            float time = (u_windData.w * 15.0) + gl_InstanceID;
             float x = sin(time * 2.0) / 8.0;
             float y = cos(time) / 2.0;
             vec3 windOffset = vec3(x, y, x) * a_colour.b * 0.1;

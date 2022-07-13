@@ -2098,7 +2098,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     }
     else
     {
-        str = "Welcome To Video Golf!";
+        str = "Welcome To Super Video Golf!";
     }
 
     entity = m_uiScene.createEntity();

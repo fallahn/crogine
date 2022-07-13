@@ -87,7 +87,7 @@ namespace
         float destination = 0.f;
         cro::Entity otherEnt;
         cro::Entity instancedEnt; //entity containing instanced geometry
-        std::array<cro::Entity, 2u> shrubberyEnts; //instanced shrubbery
+        std::array<cro::Entity, 4> shrubberyEnts; //instanced shrubbery
         std::vector<cro::Entity>* crowdEnts = nullptr;
     };
 
@@ -290,7 +290,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto billboardMatID = resources.materials.add(billboardShader);
 
     //custom shader for instanced plants
-    resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
+    resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
     auto reedMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CelTexturedInstanced));
 
     //and VATs shader for crowd
@@ -375,24 +375,27 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             }
 
             //instanced shrubs - TODO replace this with proper shrubbery
-            /*if (reedsDef.loadFromFile("assets/golf/models/pine01.cmt", true))
-            {
-                auto material = resources.materials.get(reedMaterialID);
+            //for (auto j = 0; j < /*MaxShrubInstances*/1; ++j)
+            //{
+            //    if (reedsDef.loadFromFile("assets/golf/models/palm01.cmt", true))
+            //    {
+            //        auto material = resources.materials.get(reedMaterialID);
 
-                auto childEnt = scene.createEntity();
-                childEnt.addComponent<cro::Transform>();
-                reedsDef.createModel(childEnt);
+            //        auto childEnt = scene.createEntity();
+            //        childEnt.addComponent<cro::Transform>();
+            //        reedsDef.createModel(childEnt);
 
-                for (auto j = 0u; j < reedsDef.getMaterialCount(); ++j)
-                {
-                    applyMaterialData(reedsDef, material, j);
-                    childEnt.getComponent<cro::Model>().setMaterial(j, material);
-                }
-                childEnt.getComponent<cro::Model>().setHidden(true);
-                childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
-                entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
-                m_instancedShrubs[i][0] = childEnt;
-            }*/
+            //        for (auto k = 0u; k < reedsDef.getMaterialCount(); ++k)
+            //        {
+            //            applyMaterialData(reedsDef, material, k);
+            //            childEnt.getComponent<cro::Model>().setMaterial(k, material);
+            //        }
+            //        childEnt.getComponent<cro::Model>().setHidden(true);
+            //        childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+            //        entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
+            //        m_instancedShrubs[i][j] = childEnt;
+            //    }
+            //}
 
 
             //create entities to render instanced crowd models
@@ -564,8 +567,11 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.destination = -MaxShrubOffset;
                 swapData.otherEnt = m_billboardEntities[first];
                 swapData.instancedEnt = m_instancedEntities[second];
-                swapData.shrubberyEnts[0] = m_instancedShrubs[second][0];
-                swapData.shrubberyEnts[1] = m_instancedShrubs[second][1];
+                for (auto i = 0u; i < m_instancedShrubs[second].size(); ++i)
+                {
+                    //TODO only iterate over as many as there are active
+                    swapData.shrubberyEnts[i] = m_instancedShrubs[second][i];
+                }
                 swapData.crowdEnts = &m_crowdEntities[second];
                 swapData.currentTime = 0.f;
                 m_billboardEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
@@ -580,7 +586,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
                     m_instanceTransforms.clear();
                 }
 
-                for (auto i = 0u; i < 2u; ++i)
+                for (auto i = 0u; i < MaxShrubInstances; ++i)
                 {
                     if (!m_shrubTransforms[i].empty()
                         && m_instancedShrubs[first][i].isValid())
@@ -796,14 +802,13 @@ void TerrainBuilder::threadFunc()
                             if (!isNearProp)
                             {
                                 static std::size_t shrubIdx = 0;
-                                auto currIndex = shrubIdx % 2;
+                                auto currIndex = shrubIdx % MaxShrubInstances;
 
                                 if (m_instancedShrubs[0][currIndex].isValid())
                                 {
                                     glm::vec3 position(x, height - 0.05f, -y);
                                     float rotation = static_cast<float>(cro::Util::Random::value(0, 36) * 10) * cro::Util::Const::degToRad;
                                     float scale = static_cast<float>(cro::Util::Random::value(8, 12)) / 10.f;
-
 
                                     auto& mat4 = m_shrubTransforms[currIndex].emplace_back(1.f);
                                     mat4 = glm::translate(mat4, position);
@@ -814,7 +819,7 @@ void TerrainBuilder::threadFunc()
                                 {
                                     //no model loaded for this theme, so fall back to billboard
                                     float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
-                                    auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)]);
+                                    auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[BillboardID::Tree01 + currIndex]);
                                     bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards
                                     bb.size *= scale;
                                     
