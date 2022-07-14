@@ -144,6 +144,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\MeshData.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\MeshResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\MultiRenderTexture.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\Palette.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostChromeAB.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostProcess.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\postprocess\PostVertex.hpp" />
@@ -334,6 +335,7 @@
     <ClCompile Include="..\crogine\src\graphics\MeshData.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MeshResource.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MultiRenderTexture.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\Palette.cpp" />
     <ClCompile Include="..\crogine\src\graphics\postprocess\PostChromeAB.cpp" />
     <ClCompile Include="..\crogine\src\graphics\postprocess\PostProcess.cpp" />
     <ClCompile Include="..\crogine\src\graphics\PrimitiveBuilders.cpp" />

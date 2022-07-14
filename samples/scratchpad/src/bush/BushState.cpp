@@ -554,17 +554,17 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
             }        
             ImGui::End();
 
-            /*if (ImGui::Begin("Flaps"))
+            if (ImGui::Begin("Flaps"))
             {
-                ImGui::SliderFloat("Wind Strength", &windData.direction[1], 0.1f, 1.f);
+                /*ImGui::SliderFloat("Wind Strength", &windData.direction[1], 0.1f, 1.f);
                 if (ImGui::SliderFloat("Wind Direction", &windRotation, cro::Util::Const::PI, cro::Util::Const::TAU))
                 {
                     auto dir = glm::rotate(glm::quat(0.f, 0.f, 0.f, 1.f), windRotation, cro::Transform::Y_AXIS) * glm::vec3(-1.f, 0.f, 0.f);
                     windData.direction[0] = dir.x;
                     windData.direction[2] = dir.z;
-                }
+                }*/
             }
-            ImGui::End();*/
+            ImGui::End();
         });
     context.appInstance.setClearColour(cro::Colour::CornflowerBlue);
 }

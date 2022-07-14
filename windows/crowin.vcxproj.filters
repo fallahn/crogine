@@ -684,6 +684,9 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\VideoPlayer.hpp">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\Palette.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1134,6 +1137,9 @@
       <Filter>Source Files\audio\sound system</Filter>
     </ClCompile>
     <ClCompile Include="..\crogine\src\graphics\VideoPlayer.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\graphics\Palette.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>

@@ -111,6 +111,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/graphics/MeshResource.cpp
   ${PROJECT_DIR}/graphics/ModelDefinition.cpp
   ${PROJECT_DIR}/graphics/MultiRenderTexture.cpp
+  ${PROJECT_DIR}/graphics/Palette.cpp
   ${PROJECT_DIR}/graphics/PrimitiveBuilders.cpp
   ${PROJECT_DIR}/graphics/RenderTarget.cpp
   ${PROJECT_DIR}/graphics/RenderTexture.cpp
