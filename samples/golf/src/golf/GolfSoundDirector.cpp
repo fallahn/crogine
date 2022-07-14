@@ -380,6 +380,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     //you're poop.
                     playSound(AudioID::TerrainScrub01, glm::vec3(0.f));
                 }
+
+                if (data.club == ClubID::Putter
+                    && (data.terrain == TerrainID::Water || data.terrain == TerrainID::Scrub))
+                {
+                    //assume we putt off the green on a putting course
+                    playSound(AudioID::TerrainWater03, glm::vec3(0.f));
+                }
             }
             break;
         }
