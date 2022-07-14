@@ -265,8 +265,7 @@ void TutorialState::buildScene()
         cro::SpriteSheet spriteSheet;
         spriteSheet.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
 
-        auto name = cro::Util::String::toLower(cro::GameController::getName(0));
-        if (name.find("sony") != std::string::npos)
+        if (cro::GameController::hasPSLayout(0))
         {
             m_buttonSprites[ButtonID::A] = spriteSheet.getSprite("cross");
             m_buttonSprites[ButtonID::B] = spriteSheet.getSprite("circle");
