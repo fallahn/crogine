@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/graphics/Palette.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
 
@@ -455,6 +456,8 @@ namespace
 
     WindData windData;
     float windRotation = 0.f;
+
+    cro::Palette palette;
 }
 
 BushState::BushState(cro::StateStack& stack, cro::State::Context context)
@@ -520,6 +523,35 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
                     glUniform3f(shaderUniform.colour, treeset.colour.r, treeset.colour.g, treeset.colour.b);
                 }
 
+                if (ImGui::Button("Load Palette"))
+                {
+                    auto path = cro::FileSystem::openFileDialogue("", "ase");
+                    if (!path.empty())
+                    {
+                        palette.loadFromFile(path);
+                    }
+                }
+                auto i = 0;
+                for (const auto& swatch : palette.getSwatches())
+                {
+                    for (const auto& colour : swatch.colours)
+                    {
+                        ImVec4 c(colour.getVec4());
+                        if (ImGui::ColorButton(std::to_string(i).c_str(), c))
+                        {
+                            treeset.colour = { c.x, c.y, c.z };
+                            glUseProgram(shaderUniform.shaderID);
+                            glUniform3f(shaderUniform.colour, c.x, c.y, c.z);
+                        }
+
+                        if ((i++ % 12) != 11)
+                        {
+                            ImGui::SameLine();
+                        }
+                    }
+                }
+                ImGui::NewLine();
+                ImGui::Separator();
                 ImGui::SliderFloat("Wind Strength", &windData.direction[1], 0.1f, 1.f);
                 if (ImGui::SliderFloat("Wind Direction", &windRotation, 0.f, cro::Util::Const::PI))
                 {
@@ -554,19 +586,21 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
             }        
             ImGui::End();
 
-            if (ImGui::Begin("Flaps"))
-            {
-                /*ImGui::SliderFloat("Wind Strength", &windData.direction[1], 0.1f, 1.f);
-                if (ImGui::SliderFloat("Wind Direction", &windRotation, cro::Util::Const::PI, cro::Util::Const::TAU))
-                {
-                    auto dir = glm::rotate(glm::quat(0.f, 0.f, 0.f, 1.f), windRotation, cro::Transform::Y_AXIS) * glm::vec3(-1.f, 0.f, 0.f);
-                    windData.direction[0] = dir.x;
-                    windData.direction[2] = dir.z;
-                }*/
-            }
-            ImGui::End();
+            //if (ImGui::Begin("Flaps"))
+            //{
+            //    /*ImGui::SliderFloat("Wind Strength", &windData.direction[1], 0.1f, 1.f);
+            //    if (ImGui::SliderFloat("Wind Direction", &windRotation, cro::Util::Const::PI, cro::Util::Const::TAU))
+            //    {
+            //        auto dir = glm::rotate(glm::quat(0.f, 0.f, 0.f, 1.f), windRotation, cro::Transform::Y_AXIS) * glm::vec3(-1.f, 0.f, 0.f);
+            //        windData.direction[0] = dir.x;
+            //        windData.direction[2] = dir.z;
+            //    }*/
+            //}
+            //ImGui::End();
         });
     context.appInstance.setClearColour(cro::Colour::CornflowerBlue);
+
+    palette.loadFromFile("assets/bush/colordome-32.ase");
 }
 
 //public
