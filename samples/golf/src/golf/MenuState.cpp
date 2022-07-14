@@ -870,6 +870,7 @@ void MenuState::createScene()
     auto entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("music");
     entity.getComponent<cro::AudioEmitter>().play();
+    entity.getComponent<cro::AudioEmitter>().setLooped(true);
 
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
