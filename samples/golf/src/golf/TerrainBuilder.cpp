@@ -375,7 +375,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             }
 
             //instanced shrubs - TODO replace this with proper shrubbery
-            //for (auto j = 0; j < /*MaxShrubInstances*/1; ++j)
+            //for (auto j = 0; j < /*MaxShrubInstances*/4; ++j)
             //{
             //    if (reedsDef.loadFromFile("assets/golf/models/palm01.cmt", true))
             //    {
@@ -804,7 +804,10 @@ void TerrainBuilder::threadFunc()
                                 static std::size_t shrubIdx = 0;
                                 auto currIndex = shrubIdx % MaxShrubInstances;
 
-                                if (m_instancedShrubs[0][currIndex].isValid())
+                                bool quality = m_sharedData.treeQuality == 2 || (m_sharedData.treeQuality == 1 && (shrubIdx % 2) == 0);
+
+                                if (m_instancedShrubs[0][currIndex].isValid()
+                                    && quality)
                                 {
                                     glm::vec3 position(x, height - 0.05f, -y);
                                     float rotation = static_cast<float>(cro::Util::Random::value(0, 36) * 10) * cro::Util::Const::degToRad;
@@ -817,7 +820,7 @@ void TerrainBuilder::threadFunc()
                                 }
                                 else
                                 {
-                                    //no model loaded for this theme, so fall back to billboard
+                                    //no model loaded for this theme or quality setting prevents it, so fall back to billboard
                                     float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
                                     auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[BillboardID::Tree01 + currIndex]);
                                     bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards
@@ -831,7 +834,7 @@ void TerrainBuilder::threadFunc()
                                         bb.textureRect.width = -rect.width;
                                     }
                                 }
-                                shrubIdx++;                                
+                                shrubIdx++;
                             }
                         }
                     }
