@@ -31,7 +31,7 @@ source distribution.
 
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/FileSystem.hpp>
-#include <crogine/detail/glm/vec4.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
 #include <string>
 #include <vector>
@@ -40,7 +40,7 @@ struct Treeset final
 {
     std::string modelPath;
     std::string texturePath;
-    glm::vec4 colour = glm::vec4(1.f);
+    glm::vec3 colour = glm::vec3(1.f);
     float randomness = 0.2f;
     float leafSize = 0.2f;
 
@@ -81,7 +81,7 @@ struct Treeset final
             }
             else if (name == "colour")
             {
-                colour = p.getValue<glm::vec4>();
+                colour = p.getValue<glm::vec3>();
             }
             else if (name == "randomness")
             {

@@ -1160,6 +1160,7 @@ void GolfState::render()
     //don't want to test against skybox depth values.
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
+    glCheck(glEnable(GL_PROGRAM_POINT_SIZE));
     m_gameScene.render();
     cam.reflectionBuffer.display();
 
@@ -1172,12 +1173,12 @@ void GolfState::render()
     skyCam.viewport = oldVP;
 
     //then render scene
-    //glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //bah I forget what this is for... snow maybe?
     glUseProgram(m_gridShader.shaderID);
     glUniform1f(m_gridShader.transparency, m_sharedData.gridTransparency);
     m_gameSceneTexture.clear();
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
+    glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //needed for tree leaves (and because particle system resets it, hum)
     m_gameScene.render();
 #ifdef CRO_DEBUG_
     m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
@@ -2435,8 +2436,15 @@ void GolfState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::Slope);
     m_windBuffer.addShader(*shader);
 
-    //TODO apply all three buffers to both branch and leaf shaders.
+    shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
 
+    shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
 
     createClouds(theme.cloudPath);
     if (cro::SysTime::now().months() == 6)
@@ -2959,6 +2967,13 @@ void GolfState::buildScene()
 
         m_resolutionUpdate.resolutionData.resolution = texSize / invScale;
         m_resolutionBuffer.setData(m_resolutionUpdate.resolutionData);
+
+
+        //this lets the shader scale leaf billboards correctly
+        auto targetHeight = texSize.y;// static_cast<float>(cro::App::getWindow().getSize().y);
+        glUseProgram(m_resources.shaders.get(ShaderID::TreesetLeaf).getGLHandle());
+        glUniform1f(m_resources.shaders.get(ShaderID::TreesetLeaf).getUniformID("u_targetHeight"), targetHeight);
+
 
         //fetch this explicitly so the transition cam also gets the correct zoom
         float zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().fov;

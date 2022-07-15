@@ -50,7 +50,7 @@ R"(
     uniform vec3 u_cameraWorldPosition;
 
     uniform vec4 u_clipPlane;
-    uniform float u_targetHeight; //height of the render target multiplied by its viewport, ie height of the renderable area
+    uniform float u_targetHeight = 300.0; //height of the render target multiplied by its viewport, ie height of the renderable area
 
     uniform float u_leafSize = 0.25; //world units, in this case metres
     uniform float u_randAmount = 0.2;
@@ -161,14 +161,13 @@ R"(
 
         v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
         v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
-
     })";
 
 const std::string BushFragment =
 R"(
     OUTPUT
 
-    uniform sampler2D u_texture;
+    uniform sampler2D u_diffuseMap;
     uniform vec3 u_lightDirection;
     uniform vec3 u_colour = vec3(1.0);
 
@@ -262,7 +261,7 @@ R"(
         coord += vec2(0.5);
 
 //use texture and dither amount to see if we discard
-        vec4 textureColour = TEXTURE(u_texture, coord);
+        vec4 textureColour = TEXTURE(u_diffuseMap, coord);
 
         vec2 xy = gl_FragCoord.xy / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
@@ -353,7 +352,7 @@ std::string BranchVertex = R"(
 std::string BranchFragment = R"(
     OUTPUT
 
-    uniform sampler2D u_texture;
+    uniform sampler2D u_diffuseMap;
     uniform vec3 u_lightDirection;
 
     layout (std140) uniform PixelScale
@@ -394,7 +393,7 @@ std::string BranchFragment = R"(
 
     void main()
     {
-        vec4 colour = TEXTURE(u_texture, v_texCoord);
+        vec4 colour = TEXTURE(u_diffuseMap, v_texCoord);
 
         float amount = dot(normalize(v_normal), -u_lightDirection);
         amount *= 2.0;

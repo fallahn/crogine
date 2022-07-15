@@ -295,6 +295,12 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
     auto reedMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CelTexturedInstanced));
 
+    resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n");
+    auto branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
+
+    resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushFragment, "#define INSTANCING\n");
+    auto leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
+
     //and VATs shader for crowd
     resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define NOCHEX\n#define TEXTURED\n");
     auto crowdMaterialID = resources.materials.add(resources.shaders.get(ShaderID::Crowd));
@@ -305,7 +311,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     //create billboard/instanced entities
     cro::ModelDefinition billboardDef(resources);
-    cro::ModelDefinition reedsDef(resources);
+    cro::ModelDefinition shrubDef(resources);
     cro::ModelDefinition crowdDef(resources);
     std::int32_t i = 0;
 
@@ -357,17 +363,17 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             //create a child entity for instanced geometry
             std::string instancePath = theme.instancePath.empty() ? "assets/golf/models/reeds_large.cmt" : theme.instancePath;
 
-            if (reedsDef.loadFromFile(instancePath, true))
+            if (shrubDef.loadFromFile(instancePath, true))
             {
                 auto material = resources.materials.get(reedMaterialID);
 
                 auto childEnt = scene.createEntity();
                 childEnt.addComponent<cro::Transform>();
-                reedsDef.createModel(childEnt);
+                shrubDef.createModel(childEnt);
 
-                for (auto j = 0u; j < reedsDef.getMaterialCount(); ++j)
+                for (auto j = 0u; j < shrubDef.getMaterialCount(); ++j)
                 {
-                    applyMaterialData(reedsDef, material, j);
+                    applyMaterialData(shrubDef, material, j);
                     childEnt.getComponent<cro::Model>().setMaterial(j, material);
                 }
                 childEnt.getComponent<cro::Model>().setHidden(true);
@@ -379,19 +385,33 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             //instanced shrubs
             for (auto j = 0; j < std::min(ThemeSettings::MaxTreeSets, theme.treesets.size()); ++j)
             {
-                if (reedsDef.loadFromFile(theme.treesets[j].modelPath, true))
+                if (shrubDef.loadFromFile(theme.treesets[j].modelPath, true))
                 {
-                    auto material = resources.materials.get(reedMaterialID);
-
                     auto childEnt = scene.createEntity();
                     childEnt.addComponent<cro::Transform>();
-                    reedsDef.createModel(childEnt);
+                    shrubDef.createModel(childEnt);
 
-                    for (auto k = 0u; k < reedsDef.getMaterialCount(); ++k)
+                    for (auto idx : theme.treesets[j].branchIndices)
                     {
-                        applyMaterialData(reedsDef, material, k);
-                        childEnt.getComponent<cro::Model>().setMaterial(k, material);
+                        auto material = resources.materials.get(branchMaterialID);
+                        applyMaterialData(shrubDef, material, idx);
+                        childEnt.getComponent<cro::Model>().setMaterial(idx, material);
                     }
+
+                    auto& meshData = childEnt.getComponent<cro::Model>().getMeshData();
+                    for (auto idx : theme.treesets[j].leafIndices)
+                    {
+                        auto material = resources.materials.get(leafMaterialID);
+                        material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                        material.setProperty("u_leafSize", theme.treesets[j].leafSize);
+                        material.setProperty("u_randAmount", theme.treesets[j].randomness);
+                        material.setProperty("u_colour", theme.treesets[j].colour);
+
+                        meshData.indexData[idx].primitiveType = GL_POINTS;
+
+                        childEnt.getComponent<cro::Model>().setMaterial(idx, material);
+                    }
+
                     childEnt.getComponent<cro::Model>().setHidden(true);
                     childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
                     entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
@@ -813,7 +833,7 @@ void TerrainBuilder::threadFunc()
                                 {
                                     glm::vec3 position(x, height - 0.05f, -y);
                                     float rotation = static_cast<float>(cro::Util::Random::value(0, 36) * 10) * cro::Util::Const::degToRad;
-                                    float scale = static_cast<float>(cro::Util::Random::value(8, 12)) / 10.f;
+                                    float scale = static_cast<float>(cro::Util::Random::value(16, 20)) / 10.f;
 
                                     auto& mat4 = m_shrubTransforms[currIndex].emplace_back(1.f);
                                     mat4 = glm::translate(mat4, position);
