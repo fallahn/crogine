@@ -122,6 +122,8 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
         RenderTarget::m_bufferStack[0] = this;
         setViewport({ 0, 0, static_cast<std::int32_t>(width), static_cast<std::int32_t>(height) });
         setView(FloatRect(getViewport()));
+
+        m_previousWindowSize = { width, height };
     }
     return true;
 }
@@ -431,6 +433,26 @@ void Window::setCursor(const Cursor* cursor)
 const Cursor* Window::getCursor() const
 {
     return m_cursor;
+}
+
+void Window::setWindowedSize(glm::uvec2 size)
+{
+    SDL_DisplayMode dm;
+    SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_window), &dm);
+    if (dm.w == m_previousWindowSize.x
+        && dm.h == m_previousWindowSize.y)
+    {
+        m_previousWindowSize = { 640u, 480u };
+    }
+    else
+    {
+        m_previousWindowSize = size;
+    }
+}
+
+glm::uvec2 Window::getWindowedSize() const
+{
+    return m_previousWindowSize;
 }
 
 //private

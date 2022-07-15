@@ -67,7 +67,11 @@ R"(
     };
 
     VARYING_OUT float v_ditherAmount;
+    #if defined(HQ)    
     VARYING_OUT vec3 v_normal;
+    #else
+    flat VARYING_OUT vec3 v_normal;
+    #endif
     VARYING_OUT vec4 v_colour;
     VARYING_OUT mat2 v_rotation;
 
@@ -193,7 +197,11 @@ R"(
     };
 
     VARYING_IN float v_ditherAmount;
+    #if defined(HQ)    
     VARYING_IN vec3 v_normal;
+    #else
+    flat VARYING_IN vec3 v_normal;
+    #endif
     VARYING_IN vec4 v_colour;
     VARYING_IN mat2 v_rotation;
 

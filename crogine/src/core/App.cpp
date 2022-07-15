@@ -258,8 +258,9 @@ void App::run()
     LogI << "Using SDL " << (int)v.major << "." << (int)v.minor << "." << (int)v.patch << std::endl;
 
     auto settings = loadSettings();
+    glm::uvec2 size = settings.fullscreen ? settings.windowedSize : glm::uvec2(settings.width, settings.height);
 
-    if (m_window.create(settings.width, settings.height, "crogine game", m_windowStyleFlags))
+    if (m_window.create(size.x, size.y, "crogine game", m_windowStyleFlags))
     {
         //load opengl - TODO choose which loader to use based on
         //current platform, ie mobile or desktop
@@ -637,6 +638,10 @@ App::WindowSettings App::loadSettings()
             {
                 settings.useMultisampling = prop.getValue<bool>();
             }
+            else if (prop.getName() == "window_size")
+            {
+                settings.windowedSize = prop.getValue<glm::vec2>();
+            }
         }
 
         //load mixer settings
@@ -691,6 +696,7 @@ void App::saveSettings()
     saveSettings.addProperty("fullscreen").setValue(m_window.isFullscreen());
     saveSettings.addProperty("vsync").setValue(m_window.getVsyncEnabled());
     saveSettings.addProperty("multisample").setValue(m_window.getMultisamplingEnabled());
+    saveSettings.addProperty("window_size").setValue(m_window.getWindowedSize());
 
     auto* aObj = saveSettings.addObject("audio");
     aObj->addProperty("master", std::to_string(AudioMixer::getMasterVolume()));

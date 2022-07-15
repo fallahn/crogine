@@ -227,6 +227,7 @@ namespace cro
             bool fullscreen = false;
             bool vsync = true;
             bool useMultisampling = false;
+            glm::vec2 windowedSize = glm::vec2(0.f);
         };
         WindowSettings loadSettings();
 
