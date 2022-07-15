@@ -165,7 +165,8 @@ struct ShaderID final
         Bow,
         Noise,
         TreesetLeaf,
-        TreesetBranch
+        TreesetBranch,
+        TreesetShadow
     };
 };
 

@@ -174,6 +174,10 @@ struct SharedStateData final
     float beaconColour = 1.f; //normalised rotation
     bool imperialMeasurements = false;
     float gridTransparency = 1.f;
+    enum TreeQuality
+    {
+        Low, Medium, High
+    };
     std::int32_t treeQuality = 2;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc

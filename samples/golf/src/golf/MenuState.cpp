@@ -273,30 +273,35 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //cro::App::getWindow().setCursor(&m_cursor);
 
 #ifdef CRO_DEBUG_
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("Debug"))
-    //        {
-    //            /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
-    //            /*float x = static_cast<float>(AvatarThumbSize.x);
-    //            float y = static_cast<float>(AvatarThumbSize.y);
-    //            ImGui::Image(m_avatarThumbs[0].getTexture(), {x,y}, {0,1}, {1,0});
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_avatarThumbs[1].getTexture(), { x,y }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_avatarThumbs[2].getTexture(), { x,y }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
-    //            //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
-    //            //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-    //        }
-    //        ImGui::End();
-    //    });
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Debug"))
+            {
+                /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
+                /*float x = static_cast<float>(AvatarThumbSize.x);
+                float y = static_cast<float>(AvatarThumbSize.y);
+                ImGui::Image(m_avatarThumbs[0].getTexture(), {x,y}, {0,1}, {1,0});
+                ImGui::SameLine();
+                ImGui::Image(m_avatarThumbs[1].getTexture(), { x,y }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_avatarThumbs[2].getTexture(), { x,y }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
+                //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
+                //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+
+                if (ImGui::InputInt("Tree Quality", &m_sharedData.treeQuality))
+                {
+                    m_sharedData.treeQuality = std::max(0, std::min(2, m_sharedData.treeQuality));
+                }
+            }
+            ImGui::End();
+        });
 #endif
 }
 

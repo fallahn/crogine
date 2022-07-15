@@ -2436,6 +2436,9 @@ void GolfState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::Slope);
     m_windBuffer.addShader(*shader);
 
+    shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
+    m_windBuffer.addShader(*shader);
+
     shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);

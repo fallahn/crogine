@@ -71,11 +71,12 @@ static const std::string ShadowVertex = R"(
         uniform float u_offsetMultiplier;
     #endif
 
-#if defined(WIND_WARP)
+#if defined(WIND_WARP) || defined(TREE_WARP)
         layout (std140) uniform WindValues
         {
             vec4 u_windData; //dirX, strength, dirZ, elapsedTime
         };
+        const float MaxWindOffset = 0.2;
 #endif
 
     #if defined (MOBILE)
@@ -137,10 +138,56 @@ static const std::string ShadowVertex = R"(
             position.x += sin((u_windData.w * (xFreq)) + worldMatrix[3].x) * totalScale;
             position.z += sin((u_windData.w * (yFreq)) + worldMatrix[3].z) * totalScale;
             position.xz += (u_windData.xz * strength * 2.0) * totalScale;
+    #elif defined(TREE_WARP)
+        
+            float time = (u_windData.w * 15.0) + gl_InstanceID;
+            float x = sin(time * 2.0) / 8.0;
+            float y = cos(time) / 2.0;
+            vec3 windOffset = vec3(x, y, x) * a_colour.b * 0.1;
+
+            vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
+            float dirStrength = a_colour.b;
+
+            windOffset += windDir * u_windData.y * dirStrength;
+            vec4 worldPosition = worldMatrix * position;
+            worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+
+            //this only works if shadows are instanced...
+            gl_Position = u_projectionMatrix * u_viewMatrix * worldPosition;
+
+    #endif
+
+    #if defined(LEAF_SIZE)
+        /*float pointSize = 10.3;
+        vec3 camForward = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
+            
+        /*float facingAmount = dot(v_normal, camForward);
+        pointSize *= 0.5 + (0.5 * facingAmount);
+            
+        //shrink 'backfacing' to zero
+        pointSize *= step(0.0, facingAmount); 
+            
+        //we use the camera's forward vector to shrink any points out of view to zero
+        vec3 eyeDir = normalize(u_cameraWorldPosition - worldPosition.xyz);
+        pointSize *= clamp(dot(eyeDir, (camForward)), 0.0, 1.0);*/
+
+            
+        //shrink with perspective/distance and scale to world units
+        pointSize *= (u_projectionMatrix[1][1] / gl_Position.w);
+        //pointSize *= u_targetHeight * (u_projectionMatrix[1][1] / gl_Position.w);
+
+        //we scale point size by model matrix but it assumes all axis are
+        //scaled equally ,as we only use the X axis
+        pointSize *= length(worldMatrix[0].xyz);
+
+        gl_PointSize = pointSize;*/
+
     #endif
 
 
+    #if !defined(TREE_WARP)
             gl_Position = wvp * position;
+    #endif
 
         #if defined (MOBILE)
             v_position = gl_Position;

@@ -94,7 +94,9 @@ R"(
         float randVal = rand(vec2(UID));
         float offset = randVal * u_randAmount;
         vec4 position = a_position;
+    #if defined(HQ)
         position.xyz += (a_normal * offset);
+    #endif
 
         v_normal = normalMatrix * a_normal;
         v_colour = a_colour * (1.0 - (u_randAmount - offset)); //darken less offset leaves
@@ -104,6 +106,7 @@ R"(
         vec4 worldPosition = worldMatrix * position;
 
 //wind
+    #if defined (HQ)
         float time = (u_windData.w * 15.0) + UID;
         float x = sin(time * 2.0) / 8.0;
         float y = cos(time) / 2.0;
@@ -116,16 +119,29 @@ R"(
         v_rotation[0] = vec2(rot.y, -rot.x);
         v_rotation[1]= rot;
 
-
         dirStrength += 1.0;
         dirStrength /= 2.0;
 
-        windOffset += windDir * u_windData.y * dirStrength * 4.0;
+        windOffset += windDir * u_windData.y * dirStrength * 2.0;
         worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+    #else
+        float time = (u_windData.w * 15.0) + gl_InstanceID;
+        float x = sin(time * 2.0) / 8.0;
+        float y = cos(time) / 2.0;
+        vec3 windOffset = vec3(x, y, x) * a_colour.b * 0.1;
+
+
+        vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
+        float dirStrength = a_colour.b;
+
+        windOffset += windDir * u_windData.y * dirStrength;
+        worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+    #endif
         gl_Position = u_viewProjectionMatrix * worldPosition;
 
 
 //size calc
+    #if defined(HQ)
         float variation = rand(-vec2(UID));
         variation = 0.5 + (0.5 * variation);
 
@@ -153,7 +169,7 @@ R"(
         pointSize *= length(worldMatrix[0].xyz);
 
         gl_PointSize = pointSize;
-
+    #endif
 //proximity fade
         float fadeDistance = u_nearFadeDistance * 2.0;
         const float farFadeDistance = 360.f;
@@ -261,8 +277,11 @@ R"(
         coord += vec2(0.5);
 
 //use texture and dither amount to see if we discard
+#if defined(HQ)
         vec4 textureColour = TEXTURE(u_diffuseMap, coord);
-
+#else
+        vec4 textureColour = vec4(1.0);
+#endif
         vec2 xy = gl_FragCoord.xy / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
