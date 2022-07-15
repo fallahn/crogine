@@ -163,7 +163,9 @@ struct ShaderID final
         Trophy,
         Beacon,
         Bow,
-        Noise
+        Noise,
+        TreesetLeaf,
+        TreesetBranch
     };
 };
 

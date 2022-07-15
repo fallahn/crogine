@@ -31,6 +31,7 @@ source distribution.
 
 #include "HoleData.hpp"
 #include "Billboard.hpp"
+#include "Treeset.hpp"
 
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Entity.hpp>
@@ -61,6 +62,9 @@ struct ThemeSettings final
     cro::Colour grassTint = cro::Colour(0.123f, 0.246f, 0.207f, 1.f);
     std::string instancePath;
     std::string cloudPath;
+
+    static constexpr std::size_t MaxTreeSets = 4;
+    std::vector<Treeset> treesets;
 };
 
 struct SharedStateData;

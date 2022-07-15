@@ -63,6 +63,8 @@ namespace
 {
 #include "TerrainShader.inl"
 #include "ShadowMapping.inl"
+#include "TreeShader.inl"
+
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler
     static constexpr float TreeDensity = 4.f;
@@ -374,28 +376,28 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 m_instancedEntities[i] = childEnt;
             }
 
-            //instanced shrubs - TODO replace this with proper shrubbery
-            //for (auto j = 0; j < /*MaxShrubInstances*/4; ++j)
-            //{
-            //    if (reedsDef.loadFromFile("assets/golf/models/palm01.cmt", true))
-            //    {
-            //        auto material = resources.materials.get(reedMaterialID);
+            //instanced shrubs
+            for (auto j = 0; j < std::min(ThemeSettings::MaxTreeSets, theme.treesets.size()); ++j)
+            {
+                if (reedsDef.loadFromFile(theme.treesets[j].modelPath, true))
+                {
+                    auto material = resources.materials.get(reedMaterialID);
 
-            //        auto childEnt = scene.createEntity();
-            //        childEnt.addComponent<cro::Transform>();
-            //        reedsDef.createModel(childEnt);
+                    auto childEnt = scene.createEntity();
+                    childEnt.addComponent<cro::Transform>();
+                    reedsDef.createModel(childEnt);
 
-            //        for (auto k = 0u; k < reedsDef.getMaterialCount(); ++k)
-            //        {
-            //            applyMaterialData(reedsDef, material, k);
-            //            childEnt.getComponent<cro::Model>().setMaterial(k, material);
-            //        }
-            //        childEnt.getComponent<cro::Model>().setHidden(true);
-            //        childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
-            //        entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
-            //        m_instancedShrubs[i][j] = childEnt;
-            //    }
-            //}
+                    for (auto k = 0u; k < reedsDef.getMaterialCount(); ++k)
+                    {
+                        applyMaterialData(reedsDef, material, k);
+                        childEnt.getComponent<cro::Model>().setMaterial(k, material);
+                    }
+                    childEnt.getComponent<cro::Model>().setHidden(true);
+                    childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+                    entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
+                    m_instancedShrubs[i][j] = childEnt;
+                }
+            }
 
 
             //create entities to render instanced crowd models

@@ -1769,6 +1769,15 @@ void GolfState::loadAssets()
         {
             theme.instancePath = prop.getValue<std::string>();
         }
+        else if (name == "treeset")
+        {
+            Treeset ts;
+            if (ts.loadFromFile(prop.getValue<std::string>())
+                && theme.treesets.size() < ThemeSettings::MaxTreeSets)
+            {
+                theme.treesets.push_back(ts);
+            }
+        }
     }
     
     theme.cloudPath = loadSkybox(skyboxPath, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
@@ -2425,6 +2434,9 @@ void GolfState::loadAssets()
 
     shader = &m_resources.shaders.get(ShaderID::Slope);
     m_windBuffer.addShader(*shader);
+
+    //TODO apply all three buffers to both branch and leaf shaders.
+
 
     createClouds(theme.cloudPath);
     if (cro::SysTime::now().months() == 6)

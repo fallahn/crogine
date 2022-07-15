@@ -942,7 +942,7 @@ void BushState::loadPreset(const std::string& path)
 
 void BushState::savePreset(const std::string& path)
 {
-    cro::ConfigFile cfg("shrub");
+    cro::ConfigFile cfg("treeset");
     cfg.addProperty("model").setValue(treeset.modelPath);
     cfg.addProperty("texture").setValue(treeset.texturePath);
     cfg.addProperty("colour").setValue(treeset.colour);

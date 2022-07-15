@@ -457,6 +457,7 @@
     <ClInclude Include="src\golf\Terrain.hpp" />
     <ClInclude Include="src\golf\TerrainBuilder.hpp" />
     <ClInclude Include="src\golf\TextAnimCallback.hpp" />
+    <ClInclude Include="src\golf\Treeset.hpp" />
     <ClInclude Include="src\golf\TrophyDisplaySystem.hpp" />
     <ClInclude Include="src\golf\TrophyState.hpp" />
     <ClInclude Include="src\golf\TutorialDirector.hpp" />
@@ -482,6 +483,7 @@
     <None Include="src\golf\ShadowMapping.inl" />
     <None Include="src\golf\TerrainShader.inl" />
     <None Include="src\golf\TransitionShader.inl" />
+    <None Include="src\golf\TreeShader.inl" />
     <None Include="src\golf\TutorialShaders.inl" />
     <None Include="src\golf\WaterShader.inl" />
     <None Include="src\golf\WireframeShader.inl" />

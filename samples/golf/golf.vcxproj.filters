@@ -578,6 +578,9 @@
     <ClInclude Include="src\golf\NewsState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\Treeset.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\WaterShader.inl">
@@ -614,6 +617,9 @@
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
     <None Include="src\golf\BeaconShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\TreeShader.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
   </ItemGroup>
