@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <array>
@@ -89,6 +90,11 @@ private:
         std::int32_t activeMaterial = 0;
     };
     std::vector<MaterialSlot> m_materials;
+
+
+    cro::RenderTexture m_billboardTexture;
+    cro::Entity m_billboardCamera;
+
 
     void addSystems();
     void loadAssets();

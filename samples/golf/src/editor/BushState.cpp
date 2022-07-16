@@ -33,11 +33,14 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/graphics/Palette.hpp>
 
+#include <crogine/audio/AudioMixer.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
 
@@ -92,6 +95,10 @@ namespace
     cro::Palette palette;
 
     glm::vec2 rootRotation = glm::vec2(0.f);
+
+    //we'll assume 64px per metre
+    constexpr float PixelsPerMetre = 64.f;
+    const glm::uvec2 BillboardTargetSize(320, 448);
 }
 
 BushState::BushState(cro::StateStack& stack, cro::State::Context context)
@@ -132,7 +139,25 @@ bool BushState::handleEvent(const cro::Event& evt)
         default: break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
-            requestStackPop();
+        {
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+            {
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime = std::min(1.f, currTime + (dt * 2.f));
+
+                cro::AudioMixer::setPrefadeVolume(currTime, MixerChannel::Vehicles);
+
+                if (currTime == 1)
+                {
+                    requestStackPop();
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            };
+        }
             break;
         }
     }
@@ -219,18 +244,24 @@ bool BushState::simulate(float dt)
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
-    return false;
+    return true;
 }
 
 void BushState::render()
 {
-    m_backgroundQuad.draw();
-
     m_windBuffer.bind(0);
     m_resolutionBuffer.bind(1);
     m_scaleBuffer.bind(2);
 
     glEnable(GL_PROGRAM_POINT_SIZE);
+
+    auto oldCam = m_gameScene.setActiveCamera(m_billboardCamera);
+    m_billboardTexture.clear(cro::Colour::Transparent);
+    m_gameScene.render();
+    m_billboardTexture.display();
+
+    m_gameScene.setActiveCamera(oldCam);
+    m_backgroundQuad.draw();
     m_gameScene.render();
     m_uiScene.render();
 }
@@ -239,6 +270,7 @@ void BushState::render()
 void BushState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setNumCascades(1);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
@@ -311,10 +343,36 @@ void BushState::loadAssets()
         mat = glm::rotate(mat, t.rotation, cro::Transform::Y_AXIS);
         mat = glm::scale(mat, t.scale);
     }
+
+
+
+    //used to render billboards from models
+    m_billboardTexture.create(BillboardTargetSize.x, BillboardTargetSize.y);
+
 }
 
 void BushState::createScene()
 {
+    //totally unnecessary fade out for audio :)
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::max(0.f, currTime - (dt * 2.f));
+
+        cro::AudioMixer::setPrefadeVolume(currTime, MixerChannel::Vehicles);
+
+        if (currTime == 0)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+    };
+
+
     m_root = m_gameScene.createEntity();
     m_root.addComponent<cro::Transform>();
 
@@ -353,6 +411,14 @@ void BushState::createScene()
     auto sun = m_gameScene.getSunlight();
     sun.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 35.f * cro::Util::Const::degToRad);
     sun.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -35.f * cro::Util::Const::degToRad);
+
+
+
+    //ortho cam for billboard view
+    glm::vec2 camSize = glm::vec2(BillboardTargetSize) / PixelsPerMetre;
+    m_billboardCamera = m_gameScene.createEntity();
+    m_billboardCamera.addComponent<cro::Transform>().setPosition({0.f, 0.f, 3.f});
+    m_billboardCamera.addComponent<cro::Camera>().setOrthographic(-(camSize.x) / 2.f, camSize.x / 2.f, 0.f, camSize.y, 0.1f, 10.f);
 }
 
 void BushState::updateView(cro::Camera& cam3D)
@@ -433,8 +499,6 @@ void BushState::drawUI()
 
         ImGui::EndMainMenuBar();
     }
-
-
 
     if (ImGui::Begin("Properties"))
     {
@@ -543,6 +607,29 @@ void BushState::drawUI()
 
     }
     ImGui::End();
+
+    if (ImGui::Begin("Billboard"))
+    {
+        ImGui::Image(m_billboardTexture.getTexture(), {300.f, 400.f}, {0.f, 1.f}, {1.f, 0.f});
+
+        if (ImGui::Button("Reset Rotation"))
+        {
+            rootRotation = glm::vec2(0.f);
+            m_root.getComponent<cro::Transform>().setRotation(glm::mat4(1.f));
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Save Image"))
+        {
+            auto path = cro::FileSystem::saveFileDialogue("", "png");
+            if (!path.empty())
+            {
+                m_billboardTexture.saveToFile(path);
+            }
+        }
+    }
+    ImGui::End();
 }
 
 void BushState::loadModel(const std::string& path)
@@ -611,6 +698,8 @@ void BushState::loadModel(const std::string& path)
         m_models[2].getComponent<cro::Model>().setHidden(true);
 
         treeset.modelPath = cro::FileSystem::getFileName(path);
+
+        m_billboardCamera.getComponent<cro::Transform>().setPosition({ radius, 0.f, 9.f });
     }
     else
     {
@@ -701,8 +790,6 @@ void BushState::loadPreset(const std::string& path)
                     m_materials[i].activeMaterial ? GL_POINTS : GL_TRIANGLES;
             }
         }
-
-
 
 
         glUseProgram(shaderUniform.shaderID);
