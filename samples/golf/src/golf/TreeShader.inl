@@ -156,13 +156,13 @@ R"(
         vec3 eyeDir = normalize(u_cameraWorldPosition - worldPosition.xyz);
             
         float facingAmount = dot(v_normal, camForward);
-        //pointSize *= 0.5 + (0.5 * facingAmount);
+        pointSize *= 0.8 + (0.2 * facingAmount);
             
         //shrink 'backfacing' to zero
         pointSize *= step(0.0, facingAmount); 
             
         //we use the camera's forward vector to shrink any points out of view to zero
-        pointSize *= clamp(dot(eyeDir, (camForward)), 0.0, 1.0);
+        pointSize *= step(0.0, clamp(dot(eyeDir, (camForward)), 0.0, 1.0));
 
             
         //shrink with perspective/distance and scale to world units
@@ -348,10 +348,10 @@ std::string BranchVertex = R"(
 
         vec4 worldPosition = worldMatrix * a_position;
 
-        float time = (u_windData.w * 15.0) + gl_InstanceID;
+        float time = (u_windData.w * 5.0) + gl_InstanceID;
         float x = sin(time * 2.0) / 8.0;
         float y = cos(time) / 2.0;
-        vec3 windOffset = vec3(x, y, x) * a_colour.b * 0.1;
+        vec3 windOffset = vec3(x, 0.0, x + y) * a_colour.b * 0.5;
 
 
         vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
@@ -430,6 +430,7 @@ std::string BranchFragment = R"(
 
         colour.rgb *= amount;
         FRAG_OUT = colour;
+
 
         vec2 xy = gl_FragCoord.xy / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));

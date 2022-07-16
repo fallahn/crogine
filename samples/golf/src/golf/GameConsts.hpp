@@ -120,7 +120,7 @@ struct MixerChannel final
 //data blocks for uniform buffer
 struct WindData final
 {
-    float direction[3];
+    float direction[3] = {1.f, 0.f, 0.f};
     float elapsedTime = 0.f;
 };
 

@@ -272,6 +272,14 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //for some reason this immediately unsets itself
     //cro::App::getWindow().setCursor(&m_cursor);
 
+    registerCommand("tree_ed", [&](const std::string&) 
+        {
+            if (getStateCount() == 1)
+            {
+                requestStackPush(StateID::Bush);
+            }
+        });
+
 #ifdef CRO_DEBUG_
     registerWindow([&]() 
         {
@@ -360,6 +368,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_F4:
             requestStackClear();
             requestStackPush(StateID::PuttingRange);
+            break;
+        case SDLK_F9:
+            requestStackPush(StateID::Bush);
             break;
         case SDLK_KP_0:
             requestStackPush(StateID::News);

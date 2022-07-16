@@ -102,6 +102,11 @@ namespace cro
         \brief Sets the Texture to be used when rendering
         */
         void setTexture(const Texture& texture);
+
+        /*!
+        \brief Returns a pointer to the active texture if there is one
+        */
+        const Texture* getTexture() const;
         
         /*!
         \brief Sets the OpenGL primitive type with which to
@@ -131,6 +136,7 @@ namespace cro
         std::uint32_t m_vertexCount;
 
         std::uint32_t m_textureID;
+        const Texture* m_texture;
         Material::BlendMode m_blendMode;
 
         struct ShaderUniforms final

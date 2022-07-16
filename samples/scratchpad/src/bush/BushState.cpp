@@ -478,6 +478,7 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
         {
             if (ImGui::Begin("Window of bunnage"))
             {
+                ImGui::Text("NOTE THAT THIS IS A PROTOTYPE\nAND DEVELOPMENT HAS BEEN MOVED\nTO GOLF PROJECT");
                 if (ImGui::Button("Open Model"))
                 {
                     auto path = cro::FileSystem::openFileDialogue("", "cmt");

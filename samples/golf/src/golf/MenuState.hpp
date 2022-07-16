@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/core/Cursor.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/core/String.hpp>
+#include <crogine/core/ConsoleClient.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -64,7 +65,7 @@ struct MainMenuContext final : public MenuContext
     explicit MainMenuContext(MenuState*);
 };
 
-class MenuState final : public cro::State, public cro::GuiClient
+class MenuState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
     MenuState(cro::StateStack&, cro::State::Context, SharedStateData&);
