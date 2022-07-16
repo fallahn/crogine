@@ -111,7 +111,8 @@ struct Treeset final
             return false;
         }
 
-        if (!cro::FileSystem::fileExists(texturePath))
+        if (!leafIndices.empty() &&
+            !cro::FileSystem::fileExists(texturePath))
         {
             LogE << fileName << ": no file exists at texture path" << std::endl;
             return false;

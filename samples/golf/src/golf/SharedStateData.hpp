@@ -178,7 +178,7 @@ struct SharedStateData final
     {
         Low, Medium, High
     };
-    std::int32_t treeQuality = 2;
+    std::int32_t treeQuality = Low;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

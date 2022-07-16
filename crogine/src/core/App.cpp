@@ -258,7 +258,7 @@ void App::run()
     LogI << "Using SDL " << (int)v.major << "." << (int)v.minor << "." << (int)v.patch << std::endl;
 
     auto settings = loadSettings();
-    glm::uvec2 size = settings.fullscreen ? settings.windowedSize : glm::uvec2(settings.width, settings.height);
+    glm::uvec2 size = settings.fullscreen ? glm::uvec2(settings.windowedSize) : glm::uvec2(settings.width, settings.height);
 
     if (m_window.create(size.x, size.y, "crogine game", m_windowStyleFlags))
     {

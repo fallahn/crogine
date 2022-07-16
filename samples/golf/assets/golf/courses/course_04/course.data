@@ -7,6 +7,7 @@ course course_04
     grass = 0.909,0.89,0.713,1
     grass_tint = 0.909, 0.909, 0.773, 1.0
     instance_model = "assets/golf/models/rock.cmt"
+    treeset = "assets/golf/treesets/palm_tree.tst"
 
     title = "Roving Sands, East Nerringham"
     description = "Cup Your Balls at the Beach"

@@ -111,7 +111,7 @@ R"(
 
 //wind
     #if defined (HQ)
-        float time = (u_windData.w * 15.0) + UID;
+        float time = (u_windData.w * 5.0) + UID;
         float x = sin(time * 2.0) / 8.0;
         float y = cos(time) / 2.0;
         vec3 windOffset = vec3(x, y, x);
@@ -153,15 +153,15 @@ R"(
         pointSize *= variation;
 
         vec3 camForward = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
+        vec3 eyeDir = normalize(u_cameraWorldPosition - worldPosition.xyz);
             
         float facingAmount = dot(v_normal, camForward);
-        pointSize *= 0.5 + (0.5 * facingAmount);
+        //pointSize *= 0.5 + (0.5 * facingAmount);
             
         //shrink 'backfacing' to zero
         pointSize *= step(0.0, facingAmount); 
             
         //we use the camera's forward vector to shrink any points out of view to zero
-        vec3 eyeDir = normalize(u_cameraWorldPosition - worldPosition.xyz);
         pointSize *= clamp(dot(eyeDir, (camForward)), 0.0, 1.0);
 
             
@@ -169,7 +169,7 @@ R"(
         pointSize *= u_targetHeight * (u_projectionMatrix[1][1] / gl_Position.w);
 
         //we scale point size by model matrix but it assumes all axis are
-        //scaled equally ,as we only use the X axis
+        //scaled equally, as we only use the X axis
         pointSize *= length(worldMatrix[0].xyz);
 
         gl_PointSize = pointSize;

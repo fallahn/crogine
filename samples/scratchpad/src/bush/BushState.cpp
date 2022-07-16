@@ -861,23 +861,19 @@ void BushState::loadModel(const std::string& path)
         meshData.primitiveType = GL_POINTS;
 
         //fudgy but it'll do to prove it works.
+        auto mat = m_resources.materials.get(branchMaterial);
+        if (md.getMaterial(0)->properties.count("u_diffuseMap"))
+        {
+            cro::TextureID tid(md.getMaterial(0)->properties.at("u_diffuseMap").second.textureID);
+            mat.setProperty("u_texture", tid);
+        }
+        entity.getComponent<cro::Model>().setMaterial(0, mat);
+
+
         if (meshData.submeshCount > 1)
         {
             meshData.indexData[1].primitiveType = GL_POINTS;
             entity.getComponent<cro::Model>().setMaterial(1, m_resources.materials.get(bushMaterial));
-
-            auto mat = m_resources.materials.get(branchMaterial);
-            if (md.getMaterial(0)->properties.count("u_diffuseMap"))
-            {
-                cro::TextureID tid(md.getMaterial(0)->properties.at("u_diffuseMap").second.textureID);
-                mat.setProperty("u_texture", tid);
-            }
-            entity.getComponent<cro::Model>().setMaterial(0, mat);
-        }
-        else
-        {
-            meshData.indexData[0].primitiveType = GL_POINTS;
-            entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(bushMaterial));
         }
 
         treeset.modelPath = cro::FileSystem::getFileName(path);
