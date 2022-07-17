@@ -118,7 +118,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
-    m_stateStack.registerState<BushState>(StateID::Bush);
+    m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
 }
 
 //public

@@ -129,6 +129,14 @@ namespace
                     swapData.instancedEnt.getComponent<cro::Model>().setHidden(true);
                 }
 
+                for (auto ent : swapData.shrubberyEnts)
+                {
+                    if (ent.isValid())
+                    {
+                        ent.getComponent<cro::Model>().setHidden(true);
+                    }
+                }
+
                 if (swapData.crowdEnts)
                 {
                     auto& ents = *swapData.crowdEnts;
@@ -605,11 +613,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.destination = -MaxShrubOffset;
                 swapData.otherEnt = m_billboardEntities[first];
                 swapData.instancedEnt = m_instancedEntities[second];
-                for (auto i = 0u; i < m_instancedShrubs[second].size(); ++i)
-                {
-                    //TODO only iterate over as many as there are active
-                    swapData.shrubberyEnts[i] = m_instancedShrubs[second][i];
-                }
+                swapData.shrubberyEnts = m_instancedShrubs[second];
                 swapData.crowdEnts = &m_crowdEntities[second];
                 swapData.currentTime = 0.f;
                 m_billboardEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);

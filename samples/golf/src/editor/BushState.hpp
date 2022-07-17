@@ -47,10 +47,11 @@ namespace cro
     struct Camera;
 }
 
+struct SharedStateData;
 class BushState final : public cro::State, public cro::GuiClient
 {
 public:
-    BushState(cro::StateStack&, cro::State::Context);
+    BushState(cro::StateStack&, cro::State::Context, const SharedStateData&);
     ~BushState() = default;
 
     cro::StateID getStateID() const override { return StateID::Bush; }
@@ -61,7 +62,7 @@ public:
     void render() override;
 
 private:
-
+    const SharedStateData& m_sharedData;
     cro::SimpleQuad m_backgroundQuad;
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;

@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "BushState.hpp"
+#include "../golf/SharedStateData.hpp"
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -101,8 +102,9 @@ namespace
     const glm::uvec2 BillboardTargetSize(320, 448);
 }
 
-BushState::BushState(cro::StateStack& stack, cro::State::Context context)
+BushState::BushState(cro::StateStack& stack, cro::State::Context context, const SharedStateData& sd)
     : cro::State        (stack, context),
+    m_sharedData        (sd),
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus()),
     m_windBuffer        ("WindValues"),
@@ -285,8 +287,9 @@ void BushState::loadAssets()
 
     m_scaleBuffer.setData(1.f);
 
+    std::string hq = m_sharedData.treeQuality == SharedStateData::High ? "#define HQ\n" : "";
 
-    m_resources.shaders.loadFromString(BushShaderID::Bush, BushVertex, BushFragment, "#define INSTANCING\n#define HQ\n");
+    m_resources.shaders.loadFromString(BushShaderID::Bush, BushVertex, BushFragment, "#define INSTANCING\n" + hq);
     auto* shader = &m_resources.shaders.get(BushShaderID::Bush);
     bushMaterial = m_resources.materials.add(*shader);
 
@@ -597,9 +600,11 @@ void BushState::drawUI()
 
                     for (auto j = 1u; j < m_models.size(); ++j)
                     {
+                        auto primitiveType = m_sharedData.treeQuality == SharedStateData::High ? GL_POINTS : GL_TRIANGLES;
+
                         m_models[j].getComponent<cro::Model>().setMaterial(i, m_materials[i].materials[m_materials[i].activeMaterial]);
                         m_models[j].getComponent<cro::Model>().getMeshData().indexData[i].primitiveType =
-                            m_materials[i].activeMaterial ? GL_POINTS : GL_TRIANGLES;
+                            m_materials[i].activeMaterial ? primitiveType : GL_TRIANGLES;
                     }
                 }
             }
@@ -785,9 +790,11 @@ void BushState::loadPreset(const std::string& path)
         {
             for (auto i = 0u; i < m_materials.size(); ++i)
             {
+                auto primitiveType = m_sharedData.treeQuality == SharedStateData::High ? GL_POINTS : GL_TRIANGLES;
+
                 m_models[j].getComponent<cro::Model>().setMaterial(i, m_materials[i].materials[m_materials[i].activeMaterial]);
                 m_models[j].getComponent<cro::Model>().getMeshData().indexData[i].primitiveType =
-                    m_materials[i].activeMaterial ? GL_POINTS : GL_TRIANGLES;
+                    m_materials[i].activeMaterial ? primitiveType : GL_TRIANGLES;
             }
         }
 
