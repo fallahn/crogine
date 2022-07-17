@@ -418,7 +418,7 @@ void BushState::createScene()
     glm::vec2 camSize = glm::vec2(BillboardTargetSize) / PixelsPerMetre;
     m_billboardCamera = m_gameScene.createEntity();
     m_billboardCamera.addComponent<cro::Transform>().setPosition({0.f, 0.f, 3.f});
-    m_billboardCamera.addComponent<cro::Camera>().setOrthographic(-(camSize.x) / 2.f, camSize.x / 2.f, 0.f, camSize.y, 0.1f, 10.f);
+    m_billboardCamera.addComponent<cro::Camera>().setOrthographic(-(camSize.x) / 2.f, camSize.x / 2.f, 0.f, camSize.y, 0.1f, 16.f);
 }
 
 void BushState::updateView(cro::Camera& cam3D)

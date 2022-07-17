@@ -17,9 +17,9 @@ model short_tree
         row_count = 1
         col_count = 1
         framerate = 1.000000
+        rx_shadows = true
         blendmode = none
         diffuse = "assets/golf/treesets/trunk_small.png"
-        rx_shadows = true
 
     }
     material Unlit

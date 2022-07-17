@@ -82,6 +82,7 @@ R"(
     }
 
     const float MaxWindOffset = 0.1f;
+    const float Amp = 0.02;
 
     void main()
     {
@@ -106,6 +107,12 @@ R"(
         v_colour = a_colour * (1.0 - (u_randAmount - offset)); //darken less offset leaves
 
         gl_ClipDistance[0] = dot(a_position, u_clipPlane);
+
+    #if !defined(HQ)
+        float t = (u_windData.w * 15.0) + gl_InstanceID + gl_VertexID;
+        float highFreq = sin(t) * Amp * a_colour.r;
+        position.y += highFreq * (0.2 + (0.8 * u_windData.y));
+    #endif
 
         vec4 worldPosition = worldMatrix * position;
 
