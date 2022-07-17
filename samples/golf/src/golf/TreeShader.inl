@@ -106,8 +106,6 @@ R"(
         v_normal = normalMatrix * a_normal;
         v_colour = a_colour * (1.0 - (u_randAmount - offset)); //darken less offset leaves
 
-        gl_ClipDistance[0] = dot(a_position, u_clipPlane);
-
     #if !defined(HQ)
         float t = (u_windData.w * 15.0) + gl_InstanceID + gl_VertexID;
         float highFreq = sin(t) * Amp * a_colour.r;
@@ -153,7 +151,7 @@ R"(
 
 //size calc
     #if defined(HQ)
-        float variation = rand(-vec2(UID));
+        float variation = rand(-vec2(gl_VertexID));
         variation = 0.5 + (0.5 * variation);
 
         float pointSize = u_leafSize + ((u_leafSize * 2.0) * offset);
@@ -166,7 +164,8 @@ R"(
         pointSize *= 0.8 + (0.2 * facingAmount);
             
         //shrink 'backfacing' to zero
-        pointSize *= step(0.0, facingAmount); 
+        //pointSize *= step(0.0, facingAmount);
+        pointSize *= smoothstep(-0.2, 0.0, facingAmount);
             
         //we use the camera's forward vector to shrink any points out of view to zero
         pointSize *= step(0.0, clamp(dot(eyeDir, (camForward)), 0.0, 1.0));
@@ -188,6 +187,8 @@ R"(
 
         v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
         v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
+
+        gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
     })";
 
 const std::string BushFragment =
@@ -378,7 +379,7 @@ std::string BranchVertex = R"(
 
 
         gl_Position = u_viewProjectionMatrix * worldPosition;
-        gl_ClipDistance[0] = dot(u_clipPlane, a_position);
+        gl_ClipDistance[0] = dot(u_clipPlane, worldPosition);
 
         v_texCoord = a_texCoord0;
         v_normal = normalMatrix * a_normal;

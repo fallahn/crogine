@@ -100,6 +100,7 @@ namespace
     //we'll assume 64px per metre
     constexpr float PixelsPerMetre = 64.f;
     const glm::uvec2 BillboardTargetSize(320, 448);
+    float billboardScaleMultiplier = 0.46f;
 }
 
 BushState::BushState(cro::StateStack& stack, cro::State::Context context, const SharedStateData& sd)
@@ -257,11 +258,16 @@ void BushState::render()
 
     glEnable(GL_PROGRAM_POINT_SIZE);
 
+
+    glUseProgram(shaderUniform.shaderID);
+    glUniform1f(shaderUniform.size, billboardScaleMultiplier * treeset.leafSize);
     auto oldCam = m_gameScene.setActiveCamera(m_billboardCamera);
     m_billboardTexture.clear(cro::Colour::Transparent);
     m_gameScene.render();
     m_billboardTexture.display();
 
+    glUseProgram(shaderUniform.shaderID);
+    glUniform1f(shaderUniform.size, treeset.leafSize);
     m_gameScene.setActiveCamera(oldCam);
     m_backgroundQuad.draw();
     m_gameScene.render();
@@ -449,7 +455,6 @@ void BushState::updateView(cro::Camera& cam3D)
     auto& cam2D = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam2D.viewport = cam3D.viewport;
 
-
     //resize the background quad
     m_backgroundQuad.setScale(cro::App::getWindow().getSize() / glm::uvec2(m_backgroundQuad.getSize()));
 }
@@ -616,6 +621,8 @@ void BushState::drawUI()
     if (ImGui::Begin("Billboard"))
     {
         ImGui::Image(m_billboardTexture.getTexture(), {300.f, 400.f}, {0.f, 1.f}, {1.f, 0.f});
+
+        ImGui::SliderFloat("Leaf Scale", &billboardScaleMultiplier, 0.1f, 1.f);
 
         if (ImGui::Button("Reset Rotation"))
         {

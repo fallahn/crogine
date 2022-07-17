@@ -5,6 +5,9 @@ course course_02
     billboard_sprites = "assets/golf/sprites/shrubbery.spt"
     audio = "assets/golf/sound/ambience.xas"
 
+    treeset = "assets/golf/treesets/birch_tree01.tst"
+    treeset = "assets/golf/treesets/birch_tree02.tst"
+
     title = "Sunny Cove, Weald & Hedgeways"
     description = "The Finest Gravel You'll Ever Tread"
 
