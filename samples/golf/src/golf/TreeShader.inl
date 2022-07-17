@@ -335,6 +335,7 @@ std::string BranchVertex = R"(
     VARYING_OUT vec3 v_normal;
 
     const float MaxWindOffset = 0.2;
+    const float Amp = 0.02; //metres
 
     void main()
     {
@@ -346,9 +347,17 @@ std::string BranchVertex = R"(
         mat3 normalMatrix = u_normalMatrix;
     #endif
 
-        vec4 worldPosition = worldMatrix * a_position;
+//red channel is high freq done in local space
+        vec4 position = a_position;
 
-        float time = (u_windData.w * 5.0) + gl_InstanceID;
+        float time = (u_windData.w * 15.0) + gl_InstanceID + gl_VertexID;
+        float highFreq = sin(time) * Amp * a_colour.r;
+        position.y += highFreq * (0.2 + (0.8 * u_windData.y));
+
+//blue channel is 'bend' in world space
+        vec4 worldPosition = worldMatrix * position;
+
+        time = (u_windData.w * 5.0) + gl_InstanceID;
         float x = sin(time * 2.0) / 8.0;
         float y = cos(time) / 2.0;
         vec3 windOffset = vec3(x, 0.0, x + y) * a_colour.b * 0.5;
