@@ -74,6 +74,7 @@ R"(
     #endif
     VARYING_OUT vec4 v_colour;
     VARYING_OUT mat2 v_rotation;
+    VARYING_OUT float v_darkenAmount;
 
 
     float rand(vec2 position)
@@ -116,7 +117,7 @@ R"(
 
 //wind
     #if defined (HQ)
-        float time = (u_windData.w * 5.0) + UID;
+        float time = (u_windData.w * 5.0) + gl_InstanceID + gl_VertexID;
         float x = sin(time * 2.0) / 8.0;
         float y = cos(time) / 2.0;
         vec3 windOffset = vec3(x, y, x);
@@ -188,6 +189,8 @@ R"(
         v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
         v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
 
+        v_darkenAmount = (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
+
         gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
     })";
 
@@ -212,6 +215,7 @@ R"(
     #endif
     VARYING_IN vec4 v_colour;
     VARYING_IN mat2 v_rotation;
+    VARYING_IN float v_darkenAmount;
 
     //function based on example by martinsh.blogspot.com
     const int MatrixSize = 8;
@@ -305,6 +309,7 @@ R"(
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
         if (textureColour.a * alpha < 0.3) discard;
 
+        textureColour.rgb *= v_darkenAmount;
 
         FRAG_OUT = vec4(colour, 1.0) * textureColour;
     })";
@@ -341,6 +346,7 @@ std::string BranchVertex = R"(
     VARYING_OUT float v_ditherAmount;
     VARYING_OUT vec2 v_texCoord;
     VARYING_OUT vec3 v_normal;
+    VARYING_OUT float v_darkenAmount;
 
     const float MaxWindOffset = 0.2;
     const float Amp = 0.02; //metres
@@ -391,6 +397,8 @@ std::string BranchVertex = R"(
 
         v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
         v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
+
+        v_darkenAmount = (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
     })";
 
 std::string BranchFragment = R"(
@@ -407,6 +415,7 @@ std::string BranchFragment = R"(
     VARYING_IN float v_ditherAmount;
     VARYING_IN vec2 v_texCoord;
     VARYING_IN vec3 v_normal;
+    VARYING_IN float v_darkenAmount;
 
     //function based on example by martinsh.blogspot.com
     const int MatrixSize = 8;
@@ -445,7 +454,7 @@ std::string BranchFragment = R"(
         amount /= 2.0;
         amount = 0.6 + (amount * 0.4);
 
-        colour.rgb *= amount;
+        colour.rgb *= amount * v_darkenAmount;
         FRAG_OUT = colour;
 
 

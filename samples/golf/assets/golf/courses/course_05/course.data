@@ -6,6 +6,9 @@ course course_05
     audio = "assets/golf/sound/ambience.xas"
     instance_model = "assets/golf/models/bush01.cmt"
 
+    treeset = "assets/golf/treesets/maple01.tst"
+    treeset = "assets/golf/treesets/maple02.tst"
+
     title = "Grove Bank, Mont Torville"
     description = "It's a long drive home."
 

@@ -1,11 +1,10 @@
-model short_tree
+model maple02
 {
-    mesh = assets/golf/treesets/short_tree.cmb
+    mesh = assets/golf/treesets/pine02.cmb
     cast_shadows = true
 
-    material VertexLit
+    material Unlit
     {
-        mask_colour = 0.015686,0.000000,0.000000,1.000000
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
@@ -17,15 +16,14 @@ model short_tree
         row_count = 1
         col_count = 1
         framerate = 1.000000
-        rx_shadows = true
         blendmode = none
-        diffuse = "assets/golf/treesets/trunk_small.png"
+        diffuse = "assets/golf/treesets/maple01.png"
 
     }
     material Unlit
     {
         name = "Untitled"
-        colour = 1.000000,0.999990,1.000000,1.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
         repeat = true
         depth_test = true
@@ -35,7 +33,6 @@ model short_tree
         row_count = 1
         col_count = 1
         framerate = 1.000000
-        vertex_coloured = true
         blendmode = none
 
     }
