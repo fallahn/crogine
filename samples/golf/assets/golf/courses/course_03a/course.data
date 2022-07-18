@@ -5,6 +5,9 @@ course course_03a
     billboard_sprites = "assets/golf/sprites/shrubbery.spt"
     audio = "assets/golf/sound/ambience.xas"
 
+    treeset = "assets/golf/treesets/birch_tree01.tst"
+    treeset = "assets/golf/treesets/birch_tree02.tst"
+
     title = "Old Stemmer's Lane Pitch 'n' Putt"
     description = "Front 9 Holes"
 

@@ -700,6 +700,7 @@ void BushState::loadModel(const std::string& path)
 
                 m_materials[j].materials[0] = mat;
                 m_materials[j].materials[1] = m_resources.materials.get(bushMaterial);
+                m_materials[j].materials[1].doubleSided = true;
             }
 
             m_models[i] = entity;
@@ -754,11 +755,11 @@ void BushState::loadPreset(const std::string& path)
             }
             else if (name == "randomness")
             {
-                treeset.randomAmount = std::max(treeset.randomAmount, std::min(1.f, p.getValue<float>()));
+                treeset.randomAmount = std::max(0.02f, std::min(1.f, p.getValue<float>()));
             }
             else if (name == "leaf_size")
             {
-                treeset.leafSize = std::max(treeset.leafSize, std::min(1.f, p.getValue<float>()));
+                treeset.leafSize = std::max(0.01f, std::min(1.f, p.getValue<float>()));
             }
             else if (name == "branch_index")
             {

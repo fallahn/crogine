@@ -1748,7 +1748,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             {
                 if (activated(evt))
                 {
-                    m_sharedData.treeQuality = (m_sharedData.treeQuality + 2) % 3;
+                    m_sharedData.treeQuality = 0;// (m_sharedData.treeQuality + 2) % 3;
                     treeQualityText.getComponent<cro::Text>().setString(TreeLabels[m_sharedData.treeQuality]);
                     centreText(treeQualityText);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
@@ -1761,7 +1761,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             {
                 if (activated(evt))
                 {
-                    m_sharedData.treeQuality = (m_sharedData.treeQuality + 1) % 3;
+                    m_sharedData.treeQuality = 2;// (m_sharedData.treeQuality + 1) % 3;
                     treeQualityText.getComponent<cro::Text>().setString(TreeLabels[m_sharedData.treeQuality]);
                     centreText(treeQualityText);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();

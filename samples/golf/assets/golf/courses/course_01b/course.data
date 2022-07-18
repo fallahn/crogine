@@ -5,6 +5,11 @@ course course_01b
     billboard_sprites = "assets/golf/sprites/shrubbery.spt"
     audio = "assets/golf/sound/ambience.xas"
 
+    treeset = "assets/golf/treesets/birch_tree01.tst"
+    treeset = "assets/golf/treesets/birch_tree02.tst"
+    treeset = "assets/golf/treesets/pine_tree01.tst"
+    treeset = "assets/golf/treesets/pine_tree02.tst"
+
     title = "Westington links, Isle of Pendale"
     description = "Back 9 holes"
 

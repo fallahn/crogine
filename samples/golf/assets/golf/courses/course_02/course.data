@@ -7,6 +7,8 @@ course course_02
 
     treeset = "assets/golf/treesets/birch_tree01.tst"
     treeset = "assets/golf/treesets/birch_tree02.tst"
+    treeset = "assets/golf/treesets/pine_tree01.tst"
+    treeset = "assets/golf/treesets/pine_tree02.tst"
 
     title = "Sunny Cove, Weald & Hedgeways"
     description = "The Finest Gravel You'll Ever Tread"

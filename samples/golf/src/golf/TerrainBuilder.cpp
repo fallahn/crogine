@@ -428,6 +428,10 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                                 material.setProperty("u_leafSize", theme.treesets[j].leafSize);
                                 material.setProperty("u_randAmount", theme.treesets[j].randomness);
                             }
+                            else
+                            {
+                                material.doubleSided = true; //hides the cracks that may appear. A bit.
+                            }
                             material.setProperty("u_colour", theme.treesets[j].colour);
 
 

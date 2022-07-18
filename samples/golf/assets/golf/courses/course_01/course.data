@@ -7,8 +7,8 @@ course course_01
 
     treeset = "assets/golf/treesets/birch_tree01.tst"
     treeset = "assets/golf/treesets/birch_tree02.tst"
-    treeset = "assets/golf/treesets/green_tree.tst"
-    treeset = "assets/golf/treesets/green_tree.tst"
+    treeset = "assets/golf/treesets/pine_tree01.tst"
+    treeset = "assets/golf/treesets/pine_tree02.tst"
 
 
     title = "Westington links, Isle of Pendale"
