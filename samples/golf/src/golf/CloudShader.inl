@@ -171,6 +171,6 @@ R"(
         int y = int(mod(xy.y, MatrixSize));
         float alpha = findClosest(x, y, amount);
 
-        if(alpha < 0.1) discard;
+        if(alpha * FRAG_OUT.a < 0.18) discard;
     }
 )";

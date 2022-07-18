@@ -1652,7 +1652,7 @@ void DrivingState::createClouds(const std::string& cloudPath)
             bounds.height /= PixelPerMetre;
             entity.getComponent<cro::Transform>().setOrigin({bounds.width / 2.f, bounds.height / 2.f, 0.f});
 
-            float scale = static_cast<float>(cro::Util::Random::value(8, 20));
+            float scale = static_cast<float>(cro::Util::Random::value(4, 10));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
             entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
             //entity.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, 180.f * cro::Util::Const::degToRad);
