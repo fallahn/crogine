@@ -77,7 +77,7 @@ void SpectatorSystem::process(float dt)
             {
                 auto targetPos = spectator.path->getPoint(spectator.target);
                 auto segmentIndex = spectator.target - std::max(0, spectator.direction);
-                float speed = spectator.path->getSpeedMultiplier(segmentIndex) * (spectator.walkSpeed / spectator.path->getLength());
+                float speed = spectator.path->getSpeedMultiplier(segmentIndex) * (spectator.WalkSpeed / spectator.path->getLength());
 
                 //separate paths in opposition directions
                 auto offset = glm::normalize(spectator.path->getPoints().back() - spectator.path->getPoints().front()) * static_cast<float>(spectator.direction);

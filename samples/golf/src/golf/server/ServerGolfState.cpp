@@ -115,6 +115,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 //we should quit this state? If no one is
                 //connected we could be on our way out anyway
+                m_returnValue = sv::StateID::Lobby;
             }
         }
     }

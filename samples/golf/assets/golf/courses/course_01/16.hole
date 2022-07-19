@@ -56,29 +56,6 @@ hole 16
         scale = 1.000000,1.000000,1.000000
     }
 
-    prop
-    {
-        model = "assets/golf/models/pine02.cmt"
-        position = 301.533539,1.303465,-23.857628
-        rotation = 0.000090
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/reeds_large.cmt"
-        position = 297.529266,2.188387,-25.813911
-        rotation = 24.304127
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/reeds.cmt"
-        position = 296.510010,2.064225,-27.608538
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
 
     crowd
     {
@@ -96,14 +73,6 @@ hole 16
     {
         position = 79.513847,1.800045,-155.595047
         rotation = -45.686345
-    }
-
-    prop
-    {
-        model = "assets/golf/models/pine01.cmt"
-        position = 291.177155,1.954564,-16.395086
-        rotation = 0.000000
-        scale = 0.766107,0.766107,0.766107
     }
 
     prop

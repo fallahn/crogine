@@ -44,7 +44,8 @@ source distribution.
 Server::Server()
     : m_maxConnections  (ConstVal::MaxClients),
     m_running           (false),
-    m_gameMode          (GameMode::None)
+    m_gameMode          (GameMode::None),
+    m_clientCount       (0)
 {
 
 }
@@ -177,6 +178,11 @@ void Server::run()
         }
 
         checkPending();
+
+        //TODO fix this - we have to wait for at least
+        //one connection to happen first
+        
+        //m_running = m_clientCount != 0;
 
         //network broadcasts
         netAccumulatedTime += netFrameClock.restart();
@@ -319,6 +325,8 @@ std::uint8_t Server::addClient(const net::NetPeer& peer)
             msg->clientID = i;
             msg->type = ConnectionEvent::Connected;
 
+            m_clientCount++;
+
             break;
         }
     }
@@ -353,5 +361,7 @@ void Server::removeClient(const net::NetEvent& evt)
         //broadcast to all connected clients
         m_sharedData.host.broadcastPacket(PacketID::ClientDisconnected, static_cast<std::uint8_t>(playerID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         LOG("Client disconnected", cro::Logger::Type::Info);
+
+        m_clientCount--;
     }
 }

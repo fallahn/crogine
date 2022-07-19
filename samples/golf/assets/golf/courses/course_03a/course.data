@@ -7,6 +7,8 @@ course course_03a
 
     treeset = "assets/golf/treesets/birch_tree01.tst"
     treeset = "assets/golf/treesets/birch_tree02.tst"
+    treeset = "assets/golf/treesets/pine_tree01.tst"
+    treeset = "assets/golf/treesets/pine_tree02.tst"
 
     title = "Old Stemmer's Lane Pitch 'n' Putt"
     description = "Front 9 Holes"

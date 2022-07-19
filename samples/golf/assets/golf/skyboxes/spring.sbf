@@ -7,7 +7,7 @@ skybox
     prop
     {
         model = "assets/golf/models/skybox/horizon01.cmt"
-        position = 0,0,0
+        position = 0,0.01,0
         rotation = 0
         scale = 1,1,1
     }
@@ -15,7 +15,7 @@ skybox
     prop
     {
         model = "assets/golf/models/skybox/hills.cmt"
-        position = 0,0,0
+        position = 0,-0.01,0
         rotation = 0
         scale = 1,1,1
     }

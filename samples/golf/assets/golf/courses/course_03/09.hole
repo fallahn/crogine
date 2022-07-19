@@ -390,31 +390,6 @@ hole 09
         scale = 1.000000,1.000000,1.000000
     }
 
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 161.047134,1.200001,-116.500198
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 167.238953,1.199999,-123.492020
-        rotation = -23.307939
-        scale = 1.160726,1.160726,1.160726
-    }
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 164.891220,1.200001,-117.921951
-        rotation = 31.753157
-        scale = 0.924445,0.924445,0.924445
-    }
-
-
     tee = 177.879944,1.470805,-156.919373
     target = 205.324081,1.470805,-169.034363
     pin = 225.350906,1.475301,-174.720993

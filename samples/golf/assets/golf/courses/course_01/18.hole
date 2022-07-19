@@ -76,30 +76,6 @@ hole 18
 
     prop
     {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 159.985138,3.264455,-150.294174
-        rotation = -0.174923
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 153.547531,3.264455,-149.906754
-        rotation = -55.671442
-        scale = 0.896262,0.896262,0.896262
-    }
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 206.632172,4.869328,-169.353485
-        rotation = -33.650870
-        scale = 0.923248,0.923248,0.923248
-    }
-
-    prop
-    {
         model = "assets/golf/models/jetty.cmt"
         position = 234.757034,-0.163734,-184.424744
         rotation = 21.907947
@@ -133,11 +109,11 @@ hole 18
 
         path
         {
-            point = 167.798828,3.953922,-157.257355
-            point = 174.767975,3.953922,-157.741425
-            point = 179.389297,3.953922,-161.715485
-            point = 190.842529,3.953922,-162.136108
-            point = 195.506165,3.953922,-166.892761
+            point = 168.521301,5.609801,-154.085052
+            point = 175.490448,5.609801,-154.569122
+            point = 180.111771,5.609801,-158.543182
+            point = 191.565002,5.609801,-158.963806
+            point = 196.228638,5.609801,-163.720459
 
             loop = false
             delay = 4.0
@@ -148,7 +124,7 @@ hole 18
     prop
     {
         model = "assets/golf/models/tall_tree.cmt"
-        position = 165.676697,4.562266,-159.802383
+        position = 161.565552,3.424641,-150.706299
         rotation = -1.741111
         scale = 1.000000,1.000000,1.000000
     }
@@ -156,7 +132,7 @@ hole 18
     prop
     {
         model = "assets/golf/models/tall_tree.cmt"
-        position = 167.153076,4.117679,-155.178802
+        position = 168.724152,3.915464,-153.421951
         rotation = -1.741111
         scale = 1.000000,1.000000,1.000000
     }
@@ -172,7 +148,7 @@ hole 18
     prop
     {
         model = "assets/golf/models/tall_tree.cmt"
-        position = 194.618195,4.983173,-168.925110
+        position = 203.034744,5.203482,-164.365540
         rotation = -1.741111
         scale = 1.000000,1.000000,1.000000
     }

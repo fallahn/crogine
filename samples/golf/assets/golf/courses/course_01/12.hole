@@ -44,22 +44,6 @@ hole 12
 
     prop
     {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 103.200027,2.130662,-161.820892
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 96.131882,2.023819,-160.362473
-        rotation = -61.880921
-        scale = 0.845854,0.845854,0.845854
-    }
-
-    prop
-    {
         model = "assets/golf/models/fence01.cmt"
         position = 95.147217,1.270000,-156.845184
         rotation = 0.000000

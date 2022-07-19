@@ -23,22 +23,8 @@ hole 14
 
     prop
     {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 51.035168,1.679726,-152.139740
-        rotation = 0.000000
-    }
-
-    prop
-    {
         model = "assets/golf/models/driving_shed.cmt"
         position = 53.636566,1.679725,-148.326950
         rotation = -219.511330
-    }
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 56.637779,1.679726,-144.911011
-        rotation = -25.632549
     }
 }

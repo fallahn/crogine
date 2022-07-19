@@ -83,11 +83,12 @@ R"(
     }
 
     const float MaxWindOffset = 0.1f;
-    const float Amp = 0.02;
+    const float Amp = 0.01;
 
     void main()
     {
-        int UID = gl_InstanceID << 16 | (gl_VertexID & 0x0000ffff);
+        //int UID = gl_InstanceID << 16 | (gl_VertexID & 0x0000ffff);
+        int UID = gl_InstanceID + gl_VertexID;
 
     #if defined (INSTANCING)
         mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;

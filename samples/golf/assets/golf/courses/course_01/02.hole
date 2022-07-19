@@ -50,20 +50,6 @@ hole 02
 
     prop
     {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 140.753281,1.698383,-135.438858
-        rotation = -0.035147
-    }
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 146.388657,1.698383,-132.966751
-        rotation = -134.587547
-    }
-
-    prop
-    {
         model = "assets/golf/models/fence01.cmt"
         position = 149.104080,1.580259,-131.193222
         rotation = -707.780625

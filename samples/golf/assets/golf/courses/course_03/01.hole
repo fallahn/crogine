@@ -390,30 +390,6 @@ hole 01
         scale = 1.000000,1.000000,1.000000
     }
 
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 161.047134,1.200001,-116.500198
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 167.238953,1.199999,-123.492020
-        rotation = -23.307939
-        scale = 1.160726,1.160726,1.160726
-    }
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 164.891220,1.200001,-117.921951
-        rotation = 31.753157
-        scale = 0.924445,0.924445,0.924445
-    }
-
     tee = 26.903702,1.200000,-22.253664
     target = 55.729744,1.200001,-30.710119
     pin = 78.664833,1.206082,-42.020958

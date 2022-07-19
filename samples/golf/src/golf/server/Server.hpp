@@ -84,6 +84,8 @@ private:
     };
     std::vector<PendingConnection> m_pendingConnections;
 
+    std::size_t m_clientCount;
+
     void run();
 
     void checkPending();
