@@ -290,7 +290,7 @@ void GolfState::createClouds(const std::string& cloudPath)
             bounds.height /= PixelPerMetre;
             entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
 
-            float scale = static_cast<float>(cro::Util::Random::value(1, 4));
+            float scale = static_cast<float>(cro::Util::Random::value(1, 2));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
             entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
             entity.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, 180.f * cro::Util::Const::degToRad);
