@@ -639,8 +639,8 @@ void TerrainBuilder::update(std::size_t holeIndex)
                     {
                         m_instancedShrubs[first][i].getComponent<cro::Model>().setHidden(false);
                         m_instancedShrubs[first][i].getComponent<cro::Model>().setInstanceTransforms(m_shrubTransforms[i]);
-                        m_shrubTransforms[i].clear();
                     }
+                    m_shrubTransforms[i].clear();
                 }
 
                 //crowd instances
@@ -751,6 +751,10 @@ void TerrainBuilder::threadFunc()
         {
             //should be empty anyway because we clear after assigning them
             m_instanceTransforms.clear();
+            for (auto& tx : m_shrubTransforms)
+            {
+                tx.clear();
+            }
 
             //we checked the file validity when the game starts.
             //if the map file is broken now something more drastic happened...

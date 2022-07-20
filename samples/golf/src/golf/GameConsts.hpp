@@ -79,7 +79,7 @@ static constexpr float WaterLevel = -0.02f;
 static constexpr float TerrainLevel = WaterLevel - 0.03f;
 static constexpr float MaxTerrainHeight = 4.5f;
 
-static constexpr float FlagRaiseDistance = 3.5f * 3.5f;
+static constexpr float FlagRaiseDistance = 3.f * 3.f;
 static constexpr float PlayerShadowOffset = 0.04f;
 
 static constexpr float MinPixelScale = 1.f;

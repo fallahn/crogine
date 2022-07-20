@@ -3023,7 +3023,7 @@ void GolfState::buildScene()
     camEnt.getComponent<TargetInfo>().targetLookAt = m_holeData[0].target;
     cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     cam.reflectionBuffer.setSmooth(true);
-    cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+    cam.shadowMapBuffer.create(ShadowMapSize * 2, ShadowMapSize * 2);
 ;
 
     //create an overhead camera
@@ -3045,7 +3045,7 @@ void GolfState::buildScene()
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
-    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize / 2, ShadowMapSize / 2);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 80.f * 80.f;
@@ -3565,7 +3565,7 @@ void GolfState::spawnBall(const ActorInfo& info)
             m_gameScene.destroyEntity(e);
         }
         e.getComponent<cro::Model>().setHidden(ballEnt.getComponent<cro::Model>().isHidden());
-        e.getComponent<cro::Transform>().setScale(ballEnt.getComponent<cro::Transform>().getScale() * 0.9f);
+        e.getComponent<cro::Transform>().setScale(ballEnt.getComponent<cro::Transform>().getScale() * 0.95f);
     };
 
     //adding a ball model means we see something a bit more reasonable when close up

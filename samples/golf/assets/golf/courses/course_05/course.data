@@ -14,7 +14,7 @@ course course_05
     title = "Grove Bank, Mont Torville"
     description = "It's a long drive home."
 
-    hole = "assets/golf/courses/course_05/05.hole"
+    hole = "assets/golf/courses/course_05/01.hole"
     hole = "assets/golf/courses/course_05/02.hole"
     hole = "assets/golf/courses/course_05/03.hole"
     hole = "assets/golf/courses/course_05/04.hole"
