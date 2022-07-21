@@ -102,7 +102,9 @@ struct SpriteAnimID final
     enum
     {
         Swing = 0,
-        Medal
+        Medal,
+        BillboardSwing,
+        BillboardRewind
     };
 };
 

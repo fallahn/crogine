@@ -134,6 +134,8 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/ambience/burst.wav",
         "assets/golf/sound/holes/airmail.wav",
         "assets/golf/sound/ambience/birds01.wav",
+        "assets/golf/sound/ambience/billboard_swing.wav",
+        "assets/golf/sound/ambience/billboard_rewind.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -175,6 +177,23 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         }
     }
     break;
+    case cro::Message::SkeletalAnimationMessage:
+    {
+        const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
+        if (data.userType == SpriteAnimID::BillboardRewind)
+        {
+            auto sound = playSound(AudioID::BillboardRewind, data.position, 0.7f);
+            sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            sound.getComponent<cro::AudioEmitter>().setRolloff(0.75f);
+        }
+        else if (data.userType == SpriteAnimID::BillboardSwing)
+        {
+            auto sound = playSound(AudioID::BillboardSwing, data.position, 0.7f);
+            sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            sound.getComponent<cro::AudioEmitter>().setRolloff(0.75f);
+        }
+    }
+        break;
     case MessageID::GolfMessage:
     {
         const auto& data = msg.getData<GolfEvent>();

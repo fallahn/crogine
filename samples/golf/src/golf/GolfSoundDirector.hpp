@@ -135,6 +135,8 @@ private:
             Burst,
             Airmail,
             Birds,
+            BillboardSwing,
+            BillboardRewind,
 
             Count
         };
