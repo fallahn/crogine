@@ -169,7 +169,7 @@ hole 09
         model = "assets/golf/models/scoreboard.cmt"
         position = 94.598297,1.245083,-72.362579
         rotation = -179.773306
-        scale = 1.000000,1.000000,1.000000
+        scale = 0.500000,0.500000,0.500000
     }
 
     prop

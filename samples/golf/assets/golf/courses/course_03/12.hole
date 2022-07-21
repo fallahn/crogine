@@ -169,7 +169,7 @@ hole 12
         model = "assets/golf/models/scoreboard.cmt"
         position = 221.551285,1.510002,-61.827408
         rotation = -194.997022
-        scale = 1.000000,1.000000,1.000000
+        scale = 0.500000,0.500000,0.500000
     }
 
     prop
