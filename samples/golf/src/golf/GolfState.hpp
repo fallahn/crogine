@@ -210,7 +210,7 @@ private:
     void loadSpectators();
     void addSystems();
     void buildScene();
-    void initAudio();
+    void initAudio(bool loadTrees);
 
     void createWeather(); //weather.cpp
     void createClouds(const std::string&);
