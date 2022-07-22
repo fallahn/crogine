@@ -720,7 +720,32 @@ void MenuState::createScene()
     if (md.loadFromFile("assets/golf/models/phone_box.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 8.2f, 0.f, 13.8f });
+        entity.addComponent<cro::Transform>().setPosition({ 8.2f, 0.f, 13.2f });
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.9f));
+        md.createModel(entity);
+
+        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+    }
+
+    if (md.loadFromFile("assets/golf/models/garden_bench.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 12.2f, 0.f, 13.6f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+    }
+
+    if (md.loadFromFile("assets/golf/models/sign_post.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -10.f, 0.f, 12.f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -150.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
         texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
@@ -734,7 +759,7 @@ void MenuState::createScene()
         {
             glm::vec3(7.2f, 0.f, 12.f),
             glm::vec3(7.2f, 0.f, 3.5f),
-            glm::vec3(-10.5f, 0.f, 12.5f),
+            //glm::vec3(-10.5f, 0.f, 12.5f),
             glm::vec3(-8.2f, 0.f, 3.5f)
         };
 

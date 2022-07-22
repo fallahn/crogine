@@ -183,7 +183,7 @@ R"(
         gl_PointSize = pointSize;
     #endif
 //proximity fade
-        float fadeDistance = u_nearFadeDistance * 2.0;
+        float fadeDistance = u_nearFadeDistance * 5.0;//2.0; //I forget what this magic number was for. Lesson learned?
         const float farFadeDistance = 360.f;
         float distance = length(worldPosition.xyz - u_cameraWorldPosition);
 
@@ -392,7 +392,7 @@ std::string BranchVertex = R"(
         v_normal = normalMatrix * a_normal;
 
 //proximity fade
-        float fadeDistance = u_nearFadeDistance * 2.0;
+        float fadeDistance = u_nearFadeDistance * 5.0;//2.0;
         const float farFadeDistance = 360.f;
         float distance = length(worldPosition.xyz - u_cameraWorldPosition);
 
