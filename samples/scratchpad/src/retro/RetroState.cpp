@@ -206,7 +206,7 @@ void RetroState::loadAssets()
 void RetroState::createScene()
 {
     cro::ModelDefinition md(m_resources);
-    if (md.loadFromFile("assets/retro/flat_sphere.cmt"))
+    if (md.loadFromFile("assets/retro/head.cmt"))
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -5.f });

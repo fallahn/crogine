@@ -104,7 +104,8 @@ void ClientCollisionSystem::process(float)
             //or a near miss
             if (oldNear 
                 && !collider.nearHole 
-                && collider.terrain == TerrainID::Green)
+                && collider.terrain == TerrainID::Green
+                /*&& result.height >= (position.y - (Ball::Radius / 2.f))*/)
             {
                 auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
                 msg->type = CollisionEvent::NearMiss;

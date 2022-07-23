@@ -447,7 +447,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 playSound(AudioID::Hole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             }
         }
-        else
+        else if (data.type == CollisionEvent::NearMiss)
         {
             playSoundDelayed(AudioID::NearMiss, data.position, 0.5f, 1.f, MixerChannel::Effects);
             //playSound(AudioID::NearHole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
