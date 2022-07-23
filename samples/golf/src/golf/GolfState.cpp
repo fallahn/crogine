@@ -2474,7 +2474,7 @@ void GolfState::loadAssets()
         std::fill(data.holeTimes.begin(), data.holeTimes.end(), 0);
     }
 
-    initAudio(!theme.treesets.empty());
+    initAudio(theme.treesets.size() > 2);
 }
 
 void GolfState::loadSpectators()

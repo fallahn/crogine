@@ -55,6 +55,12 @@
     <Filter Include="Source Files\bush">
       <UniqueIdentifier>{2253f590-fe42-454c-affe-9474fdf9786b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\retro">
+      <UniqueIdentifier>{bf543ff4-667b-42d1-9b27-fce58fce6cfe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\retro">
+      <UniqueIdentifier>{59514787-ad20-4f97-8c62-2f279eabcfe0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -137,6 +143,9 @@
     </ClCompile>
     <ClCompile Include="src\bush\BushState.cpp">
       <Filter>Source Files\bush</Filter>
+    </ClCompile>
+    <ClCompile Include="src\retro\RetroState.cpp">
+      <Filter>Source Files\retro</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -247,6 +256,9 @@
     </ClInclude>
     <ClInclude Include="src\bush\BushState.hpp">
       <Filter>Header Files\bush</Filter>
+    </ClInclude>
+    <ClInclude Include="src\retro\RetroState.hpp">
+      <Filter>Header Files\retro</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

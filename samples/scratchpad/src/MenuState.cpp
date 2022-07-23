@@ -342,6 +342,19 @@ void MenuState::createScene()
                 }
             });
 
+    //retro button
+    textPos.y -= MenuSpacing;
+    entity = createButton("Retro Shading", textPos);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(States::ScratchPad::Retro);
+                }
+            });
+
     //quit button
     textPos.y -= MenuSpacing * 2.f;
     entity = createButton("Quit", textPos);
