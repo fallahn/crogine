@@ -33,14 +33,18 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 
 namespace cro
 {
     struct Camera;
 }
 
-class RetroState final : public cro::State
+class RetroState final : public cro::State, public cro::GuiClient
 {
 public:
     RetroState(cro::StateStack&, cro::State::Context);
@@ -59,6 +63,9 @@ private:
     cro::Scene m_uiScene;
 
     cro::ResourceCollection m_resources;
+    cro::Texture m_paletteTexture;
+    cro::RenderTexture m_renderTexture;
+    cro::SimpleQuad m_quad;
 
     void addSystems();
     void loadAssets();

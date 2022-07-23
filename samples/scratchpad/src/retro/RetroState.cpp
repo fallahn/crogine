@@ -33,17 +33,97 @@ source distribution.
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/util/Constants.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace
 {
+    const std::string ShaderVertex = R"(
+    ATTRIBUTE vec4 a_position;
+    ATTRIBUTE vec4 a_colour;
+    ATTRIBUTE vec3 a_normal;
 
+    uniform mat4 u_worldMatrix;
+    uniform mat4 u_viewProjectionMatrix;
+    uniform mat3 u_normalMatrix;
+
+    VARYING_OUT vec3 v_normal;
+    VARYING_OUT float v_colourIndex;
+
+    void main()
+    {
+        gl_Position = u_viewProjectionMatrix * u_worldMatrix * a_position;
+
+        v_normal = u_normalMatrix * a_normal;
+        v_colourIndex = a_colour.r;
+    })";
+
+
+    const std::string ShaderFragment = R"(
+    OUTPUT
+
+    uniform sampler2D u_palette;
+
+    VARYING_IN vec3 v_normal;
+    VARYING_IN float v_colourIndex;
+
+
+    const vec3 LightDir = vec3(1.0, 1.0, 1.0);
+    const float PixelSize = 1.0;
+
+    void main()
+    {
+        float lightAmount = dot(normalize(v_normal), normalize(LightDir));
+        lightAmount *= 2.0;
+        lightAmount = round(lightAmount);
+        lightAmount /= 2.0;
+
+        float check = mod((floor(gl_FragCoord.x / PixelSize) + floor(gl_FragCoord.y / PixelSize)), 2.0);
+        check *= 2.0;
+        check -= 1.0;
+        lightAmount += 0.01 * check; //TODO this magic number should be based on the palette texture size, but it'll do as long as it's enough to push the coord in the correct direction.
+
+        vec2 coord = vec2(v_colourIndex, lightAmount);
+        vec3 colour = TEXTURE(u_palette, coord).rgb;
+
+        FRAG_OUT = vec4(colour, 1.0);
+    })";
+
+    struct RetroShader final
+    {
+        enum
+        {
+            Ball
+        };
+    };
+
+    struct ShaderProperties final
+    {
+        std::uint32_t ID = 0;
+        std::int32_t palette = -1;
+    }shaderProperties;
+
+
+
+    struct RetroMaterial final
+    {
+        enum
+        {
+            Ball,
+
+            Count
+        };
+    };
+
+    std::array<std::int32_t, RetroMaterial::Count> MaterialIDs = {};
 }
 
 RetroState::RetroState(cro::StateStack& stack, cro::State::Context context)
@@ -87,7 +167,11 @@ bool RetroState::simulate(float dt)
 
 void RetroState::render()
 {
+    m_renderTexture.clear();
     m_gameScene.render();
+    m_renderTexture.display();
+
+    m_quad.draw();
     m_uiScene.render();
 }
 
@@ -95,13 +179,28 @@ void RetroState::render()
 void RetroState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 }
 
 void RetroState::loadAssets()
 {
+    m_paletteTexture.loadFromFile("assets/retro/palette01.png");
+    m_paletteTexture.setRepeated(false);
 
+    m_resources.shaders.loadFromString(RetroShader::Ball, ShaderVertex, ShaderFragment);
+    auto* shader = &m_resources.shaders.get(RetroShader::Ball);
+
+    shaderProperties.ID = shader->getGLHandle();
+    shaderProperties.palette = shader->getUniformID("u_palette");
+
+    MaterialIDs[RetroMaterial::Ball] = m_resources.materials.add(*shader);
+
+
+    m_renderTexture.create(480, 270);
+    m_quad.setTexture(m_renderTexture.getTexture());
+    m_quad.setScale(glm::vec2(4.f));
 }
 
 void RetroState::createScene()
@@ -112,6 +211,18 @@ void RetroState::createScene()
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -5.f });
         md.createModel(entity);
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+        {
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+            e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, dt / 2.f);
+        };
+
+        auto material = m_resources.materials.get(MaterialIDs[RetroMaterial::Ball]);
+        material.setProperty("u_palette", m_paletteTexture);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
     }
 
 
@@ -124,7 +235,28 @@ void RetroState::createScene()
 
 void RetroState::createUI()
 {
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Window of happiness"))
+            {
+                ImGui::Image(m_paletteTexture, { 256.f, 32.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
+                if (ImGui::Button("Swap Palette"))
+                {
+                    static std::size_t pathIndex = 0;
+                    pathIndex = (pathIndex + 1) % 2;
+
+                    std::array<std::string, 2u> paths =
+                    {
+                        "assets/retro/palette01.png",
+                        "assets/retro/palette02.png"
+                    };
+
+                    m_paletteTexture.loadFromFile(paths[pathIndex]);
+                }
+            }
+            ImGui::End();        
+        });
 }
 
 void RetroState::updateView(cro::Camera& cam3D)
