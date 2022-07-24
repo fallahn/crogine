@@ -97,7 +97,7 @@ hole 15
         model = "assets/golf/models/leaderboard.cmt"
         position = 7.609956,1.498571,-159.294495
         rotation = 107.869029
-        scale = 1.000000,1.000000,1.000000
+        scale = 0.500000,0.500000,0.500000
     }
 
     prop
@@ -137,7 +137,7 @@ hole 15
         model = "assets/golf/models/scoreboard.cmt"
         position = 138.561066,1.510002,-42.705544
         rotation = -16.157311
-        scale = 0.500000,0.500000,0.500000
+        scale = 1.000000,1.000000,1.000000
     }
 
     prop

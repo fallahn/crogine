@@ -273,7 +273,7 @@ hole 08
         model = "assets/golf/models/leaderboard.cmt"
         position = 245.998810,1.198576,-177.385803
         rotation = -87.224488
-        scale = 1.000000,1.000000,1.000000
+        scale = 0.500000,0.500000,0.500000
     }
 
     prop

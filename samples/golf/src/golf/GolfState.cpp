@@ -2332,16 +2332,26 @@ void GolfState::loadAssets()
                 entity.getComponent<cro::Callback>().function =
                     [&,lb](cro::Entity e, float)
                 {
-                    auto currentHole = e.getComponent<cro::Callback>().getUserData<std::size_t>();
-                    if (currentHole != m_currentHole)
+                    //the leaderboard might get tidies up on hole change
+                    //so remove this ent if that's the case
+                    if (lb.destroyed())
                     {
-                        if (m_currentHole > 8)
-                        {
-                            e.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", glm::vec4(0.f, 0.f, 1.f, 0.5f));
-                        }
+                        e.getComponent<cro::Callback>().active = false;
+                        m_gameScene.destroyEntity(e);
                     }
-                    currentHole = m_currentHole;
-                    e.getComponent<cro::Model>().setHidden(lb.getComponent<cro::Model>().isHidden());
+                    else
+                    {
+                        auto currentHole = e.getComponent<cro::Callback>().getUserData<std::size_t>();
+                        if (currentHole != m_currentHole)
+                        {
+                            if (m_currentHole > 8)
+                            {
+                                e.getComponent<cro::Model>().setMaterialProperty(0, "u_subrect", glm::vec4(0.f, 0.f, 1.f, 0.5f));
+                            }
+                        }
+                        currentHole = m_currentHole;
+                        e.getComponent<cro::Model>().setHidden(lb.getComponent<cro::Model>().isHidden());
+                    }
                 };
                 entity.getComponent<cro::Model>().setHidden(true);
 
