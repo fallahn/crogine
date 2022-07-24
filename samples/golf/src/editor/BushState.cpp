@@ -101,6 +101,9 @@ namespace
     constexpr float PixelsPerMetre = 64.f;
     const glm::uvec2 BillboardTargetSize(320, 448);
     float billboardScaleMultiplier = 0.46f;
+
+
+    std::uint64_t RenderFlagsBillboard = 1;
 }
 
 BushState::BushState(cro::StateStack& stack, cro::State::Context context, const SharedStateData& sd)
@@ -396,6 +399,7 @@ void BushState::createScene()
 
         float offset = entity.getComponent<cro::Model>().getMeshData().boundingBox[0].y;
         entity.getComponent<cro::Transform>().setOrigin({ 0.f, offset, 0.f });
+        entity.getComponent<cro::Model>().setRenderFlags(~RenderFlagsBillboard);
 
         m_root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
@@ -428,6 +432,7 @@ void BushState::createScene()
     m_billboardCamera = m_gameScene.createEntity();
     m_billboardCamera.addComponent<cro::Transform>().setPosition({0.f, 0.f, 3.f});
     m_billboardCamera.addComponent<cro::Camera>().setOrthographic(-(camSize.x) / 2.f, camSize.x / 2.f, 0.f, camSize.y, 0.1f, 16.f);
+    m_billboardCamera.getComponent<cro::Camera>().renderFlags = RenderFlagsBillboard;
 }
 
 void BushState::updateView(cro::Camera& cam3D)
@@ -449,6 +454,7 @@ void BushState::updateView(cro::Camera& cam3D)
 
     ResolutionData rd;
     rd.resolution = cro::App::getWindow().getSize();
+    rd.nearFadeDistance = 0.2f;
     m_resolutionBuffer.setData(rd);
 
     //update the UI camera to match the new screen size
@@ -663,6 +669,7 @@ void BushState::loadModel(const std::string& path)
         cro::Entity entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
+        entity.getComponent<cro::Model>().setRenderFlags(~RenderFlagsBillboard);
         m_models[0] = entity;
 
         float radius = m_models[0].getComponent<cro::Model>().getMeshData().boundingSphere.radius;
