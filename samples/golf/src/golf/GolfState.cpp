@@ -1781,6 +1781,32 @@ void GolfState::loadAssets()
         }
     }
     
+    //use old sprites if user so wishes
+    if (m_sharedData.treeQuality == SharedStateData::Classic)
+    {
+        std::string classicModel;
+        std::string classicSprites;
+
+        //assume we have the correct file extension, because it's an invalid path anyway if not.
+        classicModel = theme.billboardModel.substr(0,theme.billboardModel.find_last_of('.')) + "_low.cmt";
+        classicSprites = theme.billboardSprites.substr(0,theme.billboardSprites.find_last_of('.')) + "_low.spt";
+
+        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + classicModel))
+        {
+            classicModel.clear();
+        }
+        if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + classicSprites))
+        {
+            classicSprites.clear();
+        }
+
+        if (!classicModel.empty() && !classicSprites.empty())
+        {
+            theme.billboardModel = classicModel;
+            theme.billboardSprites = classicSprites;
+        }
+    }
+
     theme.cloudPath = loadSkybox(skyboxPath, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
 
 #ifdef CRO_DEBUG_
@@ -2446,18 +2472,21 @@ void GolfState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::Slope);
     m_windBuffer.addShader(*shader);
 
-    shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
-    m_windBuffer.addShader(*shader);
+    if (m_sharedData.treeQuality == SharedStateData::High)
+    {
+        shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
+        m_windBuffer.addShader(*shader);
 
-    shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
-    m_scaleBuffer.addShader(*shader);
-    m_resolutionBuffer.addShader(*shader);
-    m_windBuffer.addShader(*shader);
+        shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
+        m_scaleBuffer.addShader(*shader);
+        m_resolutionBuffer.addShader(*shader);
+        m_windBuffer.addShader(*shader);
 
-    shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
-    m_scaleBuffer.addShader(*shader);
-    m_resolutionBuffer.addShader(*shader);
-    m_windBuffer.addShader(*shader);
+        shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
+        m_scaleBuffer.addShader(*shader);
+        m_resolutionBuffer.addShader(*shader);
+        m_windBuffer.addShader(*shader);
+    }
 
     createClouds(theme.cloudPath);
     if (cro::SysTime::now().months() == 6)
@@ -2985,9 +3014,12 @@ void GolfState::buildScene()
 
 
         //this lets the shader scale leaf billboards correctly
-        auto targetHeight = texSize.y;// static_cast<float>(cro::App::getWindow().getSize().y);
-        glUseProgram(m_resources.shaders.get(ShaderID::TreesetLeaf).getGLHandle());
-        glUniform1f(m_resources.shaders.get(ShaderID::TreesetLeaf).getUniformID("u_targetHeight"), targetHeight);
+        if (m_sharedData.treeQuality == SharedStateData::High)
+        {
+            auto targetHeight = texSize.y;
+            glUseProgram(m_resources.shaders.get(ShaderID::TreesetLeaf).getGLHandle());
+            glUniform1f(m_resources.shaders.get(ShaderID::TreesetLeaf).getUniformID("u_targetHeight"), targetHeight);
+        }
 
         //fetch this explicitly so the transition cam also gets the correct zoom
         float zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().fov;

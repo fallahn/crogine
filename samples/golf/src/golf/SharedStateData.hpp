@@ -176,7 +176,7 @@ struct SharedStateData final
     float gridTransparency = 1.f;
     enum TreeQuality
     {
-        Low, Medium, High
+        Classic, Low, High
     };
     std::int32_t treeQuality = Low;
 

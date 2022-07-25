@@ -303,20 +303,21 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
     auto reedMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CelTexturedInstanced));
 
-    resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n");
-    auto branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
 
-    std::string bushQuality;
+    std::int32_t branchMaterialID = 0;
+    std::int32_t leafMaterialID = 0;
+    std::int32_t treeShadowMaterialID = 0;
     if (m_sharedData.treeQuality == SharedStateData::High)
     {
-        bushQuality = "#define HQ\n";
+        resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n");
+        branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
+
+        resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushFragment, "#define INSTANCING\n#define HQ\n");
+        leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
+
+        resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n");
+        treeShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetShadow));
     }
-    resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushFragment, "#define INSTANCING\n" + bushQuality);
-    auto leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
-
-    resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n");
-    auto treeShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetShadow));
-
     //and VATs shader for crowd
     resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define NOCHEX\n#define TEXTURED\n");
     auto crowdMaterialID = resources.materials.add(resources.shaders.get(ShaderID::Crowd));
@@ -399,7 +400,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             }
 
             //instanced shrubs
-            if (m_sharedData.treeQuality != SharedStateData::Low)
+            if (m_sharedData.treeQuality == SharedStateData::High)
             {
                 for (auto j = 0; j < std::min(ThemeSettings::MaxTreeSets, theme.treesets.size()); ++j)
                 {
@@ -421,17 +422,17 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                         for (auto idx : theme.treesets[j].leafIndices)
                         {
                             auto material = resources.materials.get(leafMaterialID);
-                            if (m_sharedData.treeQuality == SharedStateData::High)
-                            {
+                            /*if (m_sharedData.treeQuality == SharedStateData::High)
+                            {*/
                                 meshData.indexData[idx].primitiveType = GL_POINTS;
                                 material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
                                 material.setProperty("u_leafSize", theme.treesets[j].leafSize);
                                 material.setProperty("u_randAmount", theme.treesets[j].randomness);
-                            }
-                            else
-                            {
-                                material.doubleSided = true; //hides the cracks that may appear. A bit.
-                            }
+                            //}
+                            //else
+                            //{
+                            //    material.doubleSided = true; //hides the cracks that may appear. A bit.
+                            //}
                             material.setProperty("u_colour", theme.treesets[j].colour);
 
 
@@ -856,7 +857,7 @@ void TerrainBuilder::threadFunc()
                                 //bool quality = m_sharedData.treeQuality == 2 || (m_sharedData.treeQuality == 1 && (shrubIdx % 2) == 0);
 
                                 if (m_instancedShrubs[0][currIndex].isValid()
-                                    && m_sharedData.treeQuality != SharedStateData::Low)
+                                    && m_sharedData.treeQuality == SharedStateData::High)
                                 {
                                     glm::vec3 position(x, height - 0.05f, -y);
                                     float rotation = static_cast<float>(cro::Util::Random::value(0, 36) * 10) * cro::Util::Const::degToRad;
