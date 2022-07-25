@@ -307,16 +307,22 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     std::int32_t branchMaterialID = 0;
     std::int32_t leafMaterialID = 0;
     std::int32_t treeShadowMaterialID = 0;
+    std::int32_t leafShadowMaterialID = 0;
     if (m_sharedData.treeQuality == SharedStateData::High)
     {
-        resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n");
+        std::string wobble = m_sharedData.vertexSnap ? "#define WOBBLE\n" : "";
+
+        resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n" + wobble);
         branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
 
-        resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushFragment, "#define INSTANCING\n#define HQ\n");
+        resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushFragment, "#define INSTANCING\n#define HQ\n" + wobble);
         leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
 
-        resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n");
+        resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n" + wobble);
         treeShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetShadow));
+
+        resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define LEAF_SIZE\n" + wobble);
+        leafShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeafShadow));
     }
     //and VATs shader for crowd
     resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define NOCHEX\n#define TEXTURED\n");
@@ -422,22 +428,17 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                         for (auto idx : theme.treesets[j].leafIndices)
                         {
                             auto material = resources.materials.get(leafMaterialID);
-                            /*if (m_sharedData.treeQuality == SharedStateData::High)
-                            {*/
-                                meshData.indexData[idx].primitiveType = GL_POINTS;
-                                material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
-                                material.setProperty("u_leafSize", theme.treesets[j].leafSize);
-                                material.setProperty("u_randAmount", theme.treesets[j].randomness);
-                            //}
-                            //else
-                            //{
-                            //    material.doubleSided = true; //hides the cracks that may appear. A bit.
-                            //}
+                            meshData.indexData[idx].primitiveType = GL_POINTS;
+                            material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                            material.setProperty("u_leafSize", theme.treesets[j].leafSize);
+                            material.setProperty("u_randAmount", theme.treesets[j].randomness);
                             material.setProperty("u_colour", theme.treesets[j].colour);
-
-
                             childEnt.getComponent<cro::Model>().setMaterial(idx, material);
-                            childEnt.getComponent<cro::Model>().setShadowMaterial(idx, resources.materials.get(treeShadowMaterialID));
+
+                            material = resources.materials.get(leafShadowMaterialID);
+                            //material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                            material.setProperty("u_leafSize", theme.treesets[j].leafSize);
+                            childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
                         }
 
                         childEnt.getComponent<cro::Model>().setHidden(true);

@@ -168,7 +168,8 @@ struct ShaderID final
         Noise,
         TreesetLeaf,
         TreesetBranch,
-        TreesetShadow
+        TreesetShadow,
+        TreesetLeafShadow
     };
 };
 

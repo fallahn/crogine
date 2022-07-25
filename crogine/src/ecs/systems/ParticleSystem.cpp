@@ -596,7 +596,7 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glDisable(GL_BLEND));
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDepthMask(GL_TRUE));
-    DISABLE_POINT_SPRITES;
+    //DISABLE_POINT_SPRITES;
 
     glCheck(glPointSize(pointSize));
 }

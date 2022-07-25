@@ -148,7 +148,19 @@ R"(
         windOffset += windDir * u_windData.y * dirStrength;
         worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
     #endif
+
+#if defined(WOBBLE)
+        vec4 vertPos = u_viewProjectionMatrix * worldPosition;
+        vertPos.xyz /= vertPos.w;
+        vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
+        vertPos.xy = floor(vertPos.xy);
+        vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
+        vertPos.xyz *= vertPos.w;
+
+        gl_Position = vertPos;
+#else
         gl_Position = u_viewProjectionMatrix * worldPosition;
+#endif
 
 
 //size calc
@@ -385,7 +397,20 @@ std::string BranchVertex = R"(
         worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
 
 
+#if defined(WOBBLE)
+        vec4 vertPos = u_viewProjectionMatrix * worldPosition;
+        vertPos.xyz /= vertPos.w;
+        vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
+        vertPos.xy = floor(vertPos.xy);
+        vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
+        vertPos.xyz *= vertPos.w;
+
+        gl_Position = vertPos;
+#else
         gl_Position = u_viewProjectionMatrix * worldPosition;
+#endif
+
+
         gl_ClipDistance[0] = dot(u_clipPlane, worldPosition);
 
         v_texCoord = a_texCoord0;
