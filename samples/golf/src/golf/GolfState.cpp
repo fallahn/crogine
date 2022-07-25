@@ -145,6 +145,9 @@ namespace
         float targetHeight = 0.f;
         float currentHeight = 0.f;
     };
+
+    constexpr float MaxRotation = 0.1f;
+    constexpr float MaxPuttRotation = 0.2f;
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -189,8 +192,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 cro::Console::print("godmode OFF");
             }
         });
-
-    m_inputParser.setMaxRotation(0.1f);
 
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -4262,6 +4263,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
     };
 
     m_currentHole = hole;
+    m_inputParser.setMaxRotation(m_holeData[m_currentHole].puttFromTee ? MaxPuttRotation : MaxRotation);
     startFlyBy(); //requires current hole
 
     //set putting grid values
