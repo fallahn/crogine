@@ -75,7 +75,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "hole_in_one_million",
     "gimme_five",
     "gimme_ten",
-    "day_job"
+    "day_job",
+    "big_putts"
 };
 
 //appears on the notification
@@ -109,7 +110,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Hole In One Million",
     "Gimme 5!",
     "Gimme 10!",
-    "Day Job"
+    "Day Job",
+    "I Like Big Putts"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -144,6 +146,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Take five gimmies inside the leather", false),
     std::make_pair("Take ten gimmies inside the putter", false),
     std::make_pair("Total over 24 hours play time on the course", false),
+    std::make_pair("Sink 15 long putts", false),
 };
 
 //assuming tropies load correctly they are
@@ -193,6 +196,7 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::Platinum,
     TrophyID::BronzeCup,
     TrophyID::BronzeFigure,
+    TrophyID::GoldCup,
     TrophyID::GoldCup
 };
 
@@ -220,7 +224,8 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "leather_gimmies",
     "putter_gimmies",
 
-    "time_on_the_course"
+    "time_on_the_course",
+    "long_putts"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -241,7 +246,8 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Holes in one",
     "Gimmies taken inside the leather",
     "Gimmies taken inside the putter",
-    "Total time spent on a course"
+    "Total time spent on a course",
+    "Long putts sunk"
 };
 
 struct StatType final
@@ -270,7 +276,8 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
     StatType::Integer,
-    StatType::Time
+    StatType::Time,
+    StatType::Integer
 };
 
 struct StatTrigger final

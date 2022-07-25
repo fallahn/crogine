@@ -45,6 +45,8 @@ source distribution.
 
 #include <crogine/util/Random.hpp>
 
+#include <AchievementStrings.hpp>
+
 namespace
 {
     constexpr float VoiceDelay = 0.5f;
@@ -337,9 +339,11 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             {
                 playSoundDelayed(AudioID::ApplausePlus, glm::vec3(0.f), 1.2f, MixerChannel::Effects);
 
+                //sunk an extra long putt
                 if (data.club == ClubID::Putter)
                 {
                     playSoundDelayed(cro::Util::Random::value(AudioID::NicePutt01, AudioID::NicePutt02), glm::vec3(0.f), 2.2f, MixerChannel::Voice);
+                    Achievements::incrementStat(StatStrings[StatID::LongPutts]);
                 }
             }
 

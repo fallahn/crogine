@@ -68,6 +68,7 @@ namespace AchievementID
         GimmeFive,
         GimmeTen,
         DayJob,
+        BigPutts,
 
         Count
     };
@@ -100,6 +101,7 @@ namespace StatID
         PutterGimmies,
 
         TimeOnTheCourse,
+        LongPutts,
 
         Count
     };
