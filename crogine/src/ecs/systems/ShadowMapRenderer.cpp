@@ -118,11 +118,13 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         //only covers the first part of the frustum...
         //TODO implement the rest as cascaded shadows
         float farPlane = std::min(camera.m_farPlane, m_maxDistance) / m_cascadeCount;
-        //float farPlane = camera.m_farPlane;
-        float xNear = camera.m_nearPlane * tanHalfFOVX;
-        float xFar = farPlane * tanHalfFOVX;
-        float yNear = camera.m_nearPlane * tanHalfFOVY;
-        float yFar = farPlane * tanHalfFOVY;
+        
+        static constexpr float Embiggenment = 1.2f;
+
+        float xNear = (camera.m_nearPlane * tanHalfFOVX) * Embiggenment;
+        float xFar = (farPlane * tanHalfFOVX)* Embiggenment;
+        float yNear = (camera.m_nearPlane * tanHalfFOVY)* Embiggenment;
+        float yFar = (farPlane * tanHalfFOVY)* Embiggenment;
 
         std::array frustumCorners =
         {

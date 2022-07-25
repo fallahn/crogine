@@ -31,6 +31,7 @@ source distribution.
 
 #include "StateIDs.hpp"
 
+#include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -85,7 +86,11 @@ private:
     bool m_showPreferences;
     bool m_showNewSprite;
 
+    cro::Clock m_doubleClickClock;
+
     void initScene();
+    glm::vec2 getRelativePosition(glm::vec2);
+    void setBoundsPosition(glm::vec2);
 
     void openSprite(const std::string&);
     void save();

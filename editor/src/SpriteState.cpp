@@ -48,6 +48,7 @@ source distribution.
 namespace
 {
 	bool dragEnabled = false;
+	const cro::Time DoubleClickTime = cro::milliseconds(300);
 }
 
 SpriteState::SpriteState(cro::StateStack& stack, cro::State::Context ctx, SharedStateData& sd)
@@ -86,21 +87,15 @@ bool SpriteState::handleEvent(const cro::Event& evt)
 			position.y = std::floor(position.y);
 			m_entities[EntityID::Root].getComponent<cro::Transform>().setPosition(position);
 		}
-		else if (dragEnabled && m_activeSprite)
+		else if ((evt.motion.state & SDL_BUTTON_LEFT)
+			&& cro::Keyboard::isKeyPressed(SDLK_LSHIFT))
 		{
-			auto position = m_entities[EntityID::Bounds].getComponent<cro::Transform>().getPosition();
-			glm::vec3 movement(static_cast<float>(evt.motion.xrel), -static_cast<float>(evt.motion.yrel), 0.f);
-			movement /= m_entities[EntityID::Root].getComponent<cro::Transform>().getScale();
-			position += movement;
-
-			position.x = std::floor(position.x);
-			position.y = std::floor(position.y);
-			m_entities[EntityID::Bounds].getComponent<cro::Transform>().setPosition(position);
-
-			auto bounds = m_entities[EntityID::Bounds].getComponent<cro::Drawable2D>().getLocalBounds();
-			bounds.left = position.x;
-			bounds.bottom = position.y;
-			m_activeSprite->second.setTextureRect(bounds);
+			if (m_activeSprite)
+			{
+				glm::vec2 mousePos(evt.motion.x, cro::App::getWindow().getSize().y - evt.motion.y);
+				auto relPos = getRelativePosition(mousePos);
+				setBoundsPosition(relPos);
+			}
 		}
 	}
 	else if (evt.type == SDL_MOUSEWHEEL)
@@ -120,16 +115,6 @@ bool SpriteState::handleEvent(const cro::Event& evt)
 		relPos *= scale;
 		m_entities[EntityID::Root].getComponent<cro::Transform>().setPosition(mousePos - relPos);
 	}
-	else if (evt.type == SDL_MOUSEBUTTONDOWN)
-	{
-		/*auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
-		auto bounds = m_entities[EntityID::Bounds].getComponent<cro::Drawable2D>().getLocalBounds();
-		bounds = m_entities[EntityID::Bounds].getComponent<cro::Transform>().getWorldTransform() * bounds;
-		if (bounds.contains(mousePos))
-		{
-			dragEnabled = true;
-		}*/
-	}
 	else if (evt.type == SDL_MOUSEBUTTONUP)
 	{
 		if (evt.button.button == SDL_BUTTON_LEFT)
@@ -138,20 +123,14 @@ bool SpriteState::handleEvent(const cro::Event& evt)
 
 			if (m_activeSprite)
 			{
-				auto bounds = m_activeSprite->second.getTextureRect();
-				glm::vec2 texSize(m_activeSprite->second.getTexture()->getSize());
-
-				auto pos = glm::vec2(bounds.left, bounds.bottom);
-				LogI << pos << std::endl;
-				pos.x = std::max(0.f, std::min(pos.x, texSize.x - bounds.width));
-				pos.y = std::max(0.f, std::min(pos.y, texSize.y - bounds.height));
-				m_entities[EntityID::Bounds].getComponent<cro::Transform>().setPosition(pos);
-				LogI << pos << std::endl;
-
-				bounds.left = pos.x;
-				bounds.bottom = pos.y;
-				m_activeSprite->second.setTextureRect(bounds);
+				if (m_doubleClickClock.elapsed() < DoubleClickTime)
+				{
+					glm::vec2 mousePos(evt.button.x, cro::App::getWindow().getSize().y - evt.button.y);
+					auto relPos = getRelativePosition(mousePos);
+					setBoundsPosition(relPos);
+				}
 			}
+			m_doubleClickClock.restart();
 		}
 	}
 	else if (evt.type == SDL_QUIT)
@@ -218,4 +197,26 @@ void SpriteState::initScene()
 	m_entities[EntityID::Bounds].addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
 	m_entities[EntityID::Bounds].addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
 	m_entities[EntityID::Root].getComponent<cro::Transform>().addChild(m_entities[EntityID::Bounds].getComponent<cro::Transform>());
+}
+
+glm::vec2 SpriteState::getRelativePosition(glm::vec2 mousePos)
+{
+	auto relPos = mousePos - glm::vec2(m_entities[EntityID::Root].getComponent<cro::Transform>().getPosition());
+	relPos /= glm::vec2(m_entities[EntityID::Root].getComponent<cro::Transform>().getScale());
+	return relPos;
+}
+
+void SpriteState::setBoundsPosition(glm::vec2 relPos)
+{
+	auto bounds = m_activeSprite->second.getTextureRect();
+	glm::vec2 texSize(m_activeSprite->second.getTexture()->getSize());
+
+	if (relPos.x > 0 && relPos.x < (texSize.x - bounds.width)
+		&& relPos.y > 0 && relPos.y < (texSize.y - bounds.height))
+	{
+		bounds.left = relPos.x;
+		bounds.bottom = relPos.y;
+		m_activeSprite->second.setTextureRect(bounds);
+		updateBoundsEntity();
+	}
 }
