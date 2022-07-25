@@ -76,7 +76,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "gimme_five",
     "gimme_ten",
     "day_job",
-    "big_putts"
+    "big_putts",
+    "golfin_dolphin"
 };
 
 //appears on the notification
@@ -111,7 +112,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Gimme 5!",
     "Gimme 10!",
     "Day Job",
-    "I Like Big Putts"
+    "I Like Big Putts",
+    "Golfin' Dolphin"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -147,6 +149,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Take ten gimmies inside the putter", false),
     std::make_pair("Total over 24 hours play time on the course", false),
     std::make_pair("Sink 15 long putts", false),
+    std::make_pair("Hit a water trap on 5 different rounds", false),
 };
 
 //assuming tropies load correctly they are
@@ -197,7 +200,8 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::BronzeCup,
     TrophyID::BronzeFigure,
     TrophyID::GoldCup,
-    TrophyID::GoldCup
+    TrophyID::GoldCup,
+    TrophyID::BronzeFigure
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
@@ -225,7 +229,8 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "putter_gimmies",
 
     "time_on_the_course",
-    "long_putts"
+    "long_putts",
+    "water_traps"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -247,7 +252,8 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Gimmies taken inside the leather",
     "Gimmies taken inside the putter",
     "Total time spent on a course",
-    "Long putts sunk"
+    "Long putts sunk",
+    "Rounds Where Water Were Traps Hit"
 };
 
 struct StatType final
@@ -277,6 +283,7 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
     StatType::Time,
+    StatType::Integer,
     StatType::Integer
 };
 

@@ -69,6 +69,7 @@ namespace AchievementID
         GimmeTen,
         DayJob,
         BigPutts,
+        GolfinDolphin,
 
         Count
     };
@@ -102,6 +103,7 @@ namespace StatID
 
         TimeOnTheCourse,
         LongPutts,
+        WaterTraps,
 
         Count
     };

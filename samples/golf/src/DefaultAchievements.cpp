@@ -111,6 +111,10 @@ void DefaultAchievements::init()
     trigger = &StatTriggers[StatID::LongPutts].emplace_back();
     trigger->achID = AchievementID::BigPutts;
     trigger->threshold = 15;
+
+    trigger = &StatTriggers[StatID::WaterTraps].emplace_back();
+    trigger->achID = AchievementID::GolfinDolphin;
+    trigger->threshold = 5;
 }
 
 void DefaultAchievements::update()
