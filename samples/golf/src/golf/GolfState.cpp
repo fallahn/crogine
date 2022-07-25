@@ -1178,7 +1178,7 @@ void GolfState::render()
     m_gameSceneTexture.clear();
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
-    glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //needed for tree leaves (and because particle system resets it, hum)
+    //glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //needed for tree leaves (and because particle system resets it, hum)
     m_gameScene.render();
 #ifdef CRO_DEBUG_
     m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());

@@ -65,7 +65,7 @@ private:
     const SharedStateData& m_sharedData;
     cro::SimpleQuad m_backgroundQuad;
     cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
+    cro::Scene m_skyScene;
 
     cro::ResourceCollection m_resources;
     cro::UniformBuffer<WindData> m_windBuffer;
@@ -96,6 +96,7 @@ private:
     cro::RenderTexture m_billboardTexture;
     cro::Entity m_billboardCamera;
 
+    bool m_editSkybox;
 
     void addSystems();
     void loadAssets();
@@ -109,4 +110,7 @@ private:
     void loadModel(const std::string&);
     void loadPreset(const std::string&);
     void savePreset(const std::string&);
+    void loadSkyboxFile();
+    void saveSkyboxFile();
+    void addSkyboxModel();
 };

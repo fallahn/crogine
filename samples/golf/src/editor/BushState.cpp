@@ -77,6 +77,7 @@ namespace
 
     }treeset;
     std::string lastTreeset = "untitled.tst";
+    std::string lastSkybox = "untitled.sbf";
 
     struct ShaderUniforms final
     {
@@ -104,16 +105,20 @@ namespace
 
 
     std::uint64_t RenderFlagsBillboard = 1;
+
+    cro::Colour skyMid = cro::Colour::White;
+    cro::Colour skyTop = cro::Colour::CornflowerBlue;
 }
 
 BushState::BushState(cro::StateStack& stack, cro::State::Context context, const SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
     m_gameScene         (context.appInstance.getMessageBus()),
-    m_uiScene           (context.appInstance.getMessageBus()),
+    m_skyScene          (context.appInstance.getMessageBus()),
     m_windBuffer        ("WindValues"),
     m_resolutionBuffer  ("ScaledResolution"),
-    m_scaleBuffer       ("PixelScale")
+    m_scaleBuffer       ("PixelScale"),
+    m_editSkybox        (false)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -185,6 +190,9 @@ bool BushState::handleEvent(const cro::Event& evt)
                 auto q = glm::quat_cast(glm::rotate(rotation, rootRotation.x, cro::Transform::X_AXIS));
 
                 m_root.getComponent<cro::Transform>().setRotation(q);
+
+                rotation = glm::rotate(glm::mat4(1.f), -rootRotation.y, cro::Transform::Y_AXIS);
+                m_skyScene.getActiveCamera().getComponent<cro::Transform>().setRotation(glm::quat_cast(rotation));
             }
             else
             {
@@ -199,14 +207,14 @@ bool BushState::handleEvent(const cro::Event& evt)
     }
 
     m_gameScene.forwardEvent(evt);
-    m_uiScene.forwardEvent(evt);
+    m_skyScene.forwardEvent(evt);
     return false;
 }
 
 void BushState::handleMessage(const cro::Message& msg)
 {
     m_gameScene.forwardMessage(msg);
-    m_uiScene.forwardMessage(msg);
+    m_skyScene.forwardMessage(msg);
 }
 
 bool BushState::simulate(float dt)
@@ -249,7 +257,7 @@ bool BushState::simulate(float dt)
     m_windBuffer.setData(windData);
 
     m_gameScene.simulate(dt);
-    m_uiScene.simulate(dt);
+    m_skyScene.simulate(dt);
     return true;
 }
 
@@ -273,8 +281,11 @@ void BushState::render()
     glUniform1f(shaderUniform.size, treeset.leafSize);
     m_gameScene.setActiveCamera(oldCam);
     m_backgroundQuad.draw();
+
+
+    m_skyScene.render();
+    glClear(GL_DEPTH_BUFFER_BIT);
     m_gameScene.render();
-    m_uiScene.render();
 }
 
 //private
@@ -285,11 +296,15 @@ void BushState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setNumCascades(1);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+
+    m_skyScene.addSystem<cro::CallbackSystem>(mb);
+    m_skyScene.addSystem<cro::CameraSystem>(mb);
+    m_skyScene.addSystem<cro::ModelRenderer>(mb);
 }
 
 void BushState::loadAssets()
 {
-    m_resources.textures.setFallbackColour(cro::Colour::CornflowerBlue);
+    m_resources.textures.setFallbackColour(cro::Colour::Black);
     auto& quadTex = m_resources.textures.get(std::numeric_limits<std::uint32_t>::max());
     m_backgroundQuad.setScale(cro::App::getWindow().getSize() / quadTex.getSize());
     m_backgroundQuad.setTexture(quadTex);
@@ -361,6 +376,10 @@ void BushState::loadAssets()
     //used to render billboards from models
     m_billboardTexture.create(BillboardTargetSize.x, BillboardTargetSize.y);
 
+
+
+    m_skyScene.enableSkybox();
+    m_skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
 }
 
 void BushState::createScene()
@@ -457,12 +476,13 @@ void BushState::updateView(cro::Camera& cam3D)
     rd.nearFadeDistance = 0.2f;
     m_resolutionBuffer.setData(rd);
 
-    //update the UI camera to match the new screen size
-    auto& cam2D = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
-    cam2D.viewport = cam3D.viewport;
-
     //resize the background quad
     m_backgroundQuad.setScale(cro::App::getWindow().getSize() / glm::uvec2(m_backgroundQuad.getSize()));
+
+    //and update skybox cam
+    auto& skyCam = m_skyScene.getActiveCamera().getComponent<cro::Camera>();
+    skyCam.viewport = cam3D.viewport;
+    skyCam.setPerspective(cam3D.getFOV(), cam3D.getAspectRatio(), 0.5f, 14.f);
 }
 
 void BushState::drawUI()
@@ -507,6 +527,13 @@ void BushState::drawUI()
                     requestStackPop();
                 }
             }
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("View"))
+        {
+            ImGui::MenuItem("Skybox Editor", nullptr, &m_editSkybox);
 
             ImGui::EndMenu();
         }
@@ -648,6 +675,90 @@ void BushState::drawUI()
         }
     }
     ImGui::End();
+
+    if (m_editSkybox)
+    {
+        if (ImGui::Begin("Skybox"))
+        {
+            if (ImGui::Button("Load Skybox"))
+            {
+                loadSkyboxFile();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Save Skybox"))
+            {
+                saveSkyboxFile();
+            }
+
+            //hacky but should be ok if there are not too many models in
+            //the skybox scene.
+            std::vector<cro::Entity> items;
+            for (auto e : m_skyScene.getSystem<cro::ModelRenderer>()->getEntities())
+            {
+                if (!e.getLabel().empty())
+                {
+                    items.push_back(e);
+                }
+            }
+            int k = 0;
+            for (auto item : items)
+            {
+                ImGui::Text("%s", item.getLabel().c_str());
+                ImGui::SameLine();
+                std::string label = "Remove##" + std::to_string(k++);
+                if (ImGui::Button(label.c_str()))
+                {
+                    m_skyScene.destroyEntity(item);
+                }
+            }
+            if (ImGui::Button("Add Model"))
+            {
+                addSkyboxModel();
+            }
+            ImGui::NewLine();
+
+            auto i = 0;
+            ImGui::Text("Sky Top");
+            for (const auto& swatch : palette.getSwatches())
+            {
+                for (const auto& colour : swatch.colours)
+                {
+                    ImVec4 c(colour.getVec4());
+                    if (ImGui::ColorButton(std::to_string(i).c_str(), c))
+                    {
+                        skyTop = cro::Colour(c.x, c.y, c.z);
+                        m_skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
+                    }
+
+                    if ((i++ % 12) != 11)
+                    {
+                        ImGui::SameLine();
+                    }
+                }
+            }
+            ImGui::Separator();
+            i = 120;
+            ImGui::Text("Sky Bottom");
+            for (const auto& swatch : palette.getSwatches())
+            {
+                for (const auto& colour : swatch.colours)
+                {
+                    ImVec4 c(colour.getVec4());
+                    if (ImGui::ColorButton(std::to_string(i).c_str(), c))
+                    {
+                        skyMid = cro::Colour(c.x, c.y, c.z);
+                        m_skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
+                    }
+
+                    if ((i++ % 12) != 11)
+                    {
+                        ImGui::SameLine();
+                    }
+                }
+            }
+        }
+        ImGui::End();
+    }
 }
 
 void BushState::loadModel(const std::string& path)
@@ -848,5 +959,75 @@ void BushState::savePreset(const std::string& path)
     if (cfg.save(path))
     {
         lastTreeset = path;
+    }
+}
+
+void BushState::loadSkyboxFile()
+{
+    auto path = cro::FileSystem::openFileDialogue("", "sbf");
+    if (!path.empty())
+    {
+        auto ents = m_skyScene.getSystem<cro::ModelRenderer>()->getEntities();
+        for (auto e : ents)
+        {
+            m_skyScene.destroyEntity(e);
+        }
+
+        loadSkybox(path, m_skyScene, m_resources, -1);
+        const auto& colours = m_skyScene.getSkyboxColours();
+        skyMid = colours.middle;
+        skyTop = colours.top;
+
+        lastSkybox = cro::FileSystem::getFileName(path);
+    }
+}
+
+void BushState::saveSkyboxFile()
+{
+    auto path = cro::FileSystem::saveFileDialogue("assets/golf/skyboxes/" + lastSkybox, "sbf");
+    if (!path.empty())
+    {
+        cro::ConfigFile cfg;
+        cfg.addProperty("sky_top").setValue(skyTop);
+        cfg.addProperty("sky_bottom").setValue(skyMid);
+
+        //TODO add path to cloud sprite sheet
+
+        std::string modelPath = "assets/golf/models/skybox/";
+        auto ents = m_skyScene.getSystem<cro::ModelRenderer>()->getEntities();
+        for (auto e : ents)
+        {
+            if (!e.getLabel().empty())
+            {
+                //TODO need to be able to rotate the models around Y
+                glm::vec3 pos = e.getComponent<cro::Transform>().getPosition();
+                float rotation = glm::eulerAngles(e.getComponent<cro::Transform>().getRotation()).y * cro::Util::Const::radToDeg;
+                glm::vec3 scale = e.getComponent<cro::Transform>().getScale();
+
+                auto* prop = cfg.addObject("prop");
+                prop->addProperty("model").setValue(modelPath + e.getLabel());
+                prop->addProperty("position").setValue(pos);
+                prop->addProperty("rotation").setValue(rotation);
+                prop->addProperty("scale").setValue(scale);
+            }
+        }
+
+        cfg.save(path);
+    }
+}
+
+void BushState::addSkyboxModel()
+{
+    auto path = cro::FileSystem::openFileDialogue("", "cmt");
+    if (!path.empty())
+    {
+        cro::ModelDefinition md(m_resources);
+        if (md.loadFromFile(path))
+        {
+            auto entity = m_skyScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            entity.setLabel(cro::FileSystem::getFileName(path));
+            md.createModel(entity);
+        }
     }
 }

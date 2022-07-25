@@ -521,13 +521,17 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
             entity.addComponent<cro::Transform>().setPosition(model.position);
             entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, model.rotation * cro::Util::Const::degToRad);
             entity.getComponent<cro::Transform>().setScale(model.scale);
+            entity.setLabel(cro::FileSystem::getFileName(model.path));
             md.createModel(entity);
 
-            auto material = resources.materials.get(materialID);
-            for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+            if (materialID > -1)
             {
-                applyMaterialData(md, material, i);
-                entity.getComponent<cro::Model>().setMaterial(i, material);
+                auto material = resources.materials.get(materialID);
+                for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+                {
+                    applyMaterialData(md, material, i);
+                    entity.getComponent<cro::Model>().setMaterial(i, material);
+                }
             }
 
             //add auto rotation if this model is set to > 360
