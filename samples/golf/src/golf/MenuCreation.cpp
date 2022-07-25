@@ -1161,7 +1161,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+            [&, menuEntity](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1189,6 +1189,26 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                         menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Join;
                         menuEntity.getComponent<cro::Callback>().active = true;
                     }
+
+                    //kludgy way of temporarily disabling this button to prevent double clicks
+                    auto defaultCallback = e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp];
+                    e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0;
+
+                    auto tempEnt = m_uiScene.createEntity();
+                    tempEnt.addComponent<cro::Callback>().active = true;
+                    tempEnt.getComponent<cro::Callback>().setUserData<std::pair<std::uint32_t, float>>(defaultCallback, 0.f);
+                    tempEnt.getComponent<cro::Callback>().function =
+                        [&, e](cro::Entity t, float dt) mutable
+                    {
+                        auto& [cb, currTime] = t.getComponent<cro::Callback>().getUserData<std::pair<std::uint32_t, float>>();
+                        currTime += dt;
+                        if (currTime > 1)
+                        {
+                            e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = cb;
+                            t.getComponent<cro::Callback>().active = false;
+                            m_uiScene.destroyEntity(t);
+                        }
+                    };
                 }
             });
     entity.getComponent<UIElement>().absolutePosition.x = -bounds.width;
@@ -1515,7 +1535,8 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1528,6 +1549,25 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     {
                         m_matchMaking.joinGame(0);
                     }
+
+                    auto defaultCallback = e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown];
+                    e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = 0;
+
+                    auto tempEnt = m_uiScene.createEntity();
+                    tempEnt.addComponent<cro::Callback>().active = true;
+                    tempEnt.getComponent<cro::Callback>().setUserData<std::pair<std::uint32_t, float>>(defaultCallback, 0.f);
+                    tempEnt.getComponent<cro::Callback>().function =
+                        [&, e](cro::Entity t, float dt) mutable
+                    {
+                        auto& [cb, currTime] = t.getComponent<cro::Callback>().getUserData<std::pair<std::uint32_t, float>>();
+                        currTime += dt;
+                        if (currTime > 1)
+                        {
+                            e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = cb;
+                            t.getComponent<cro::Callback>().active = false;
+                            m_uiScene.destroyEntity(t);
+                        }
+                    };
                 }
             });
     
