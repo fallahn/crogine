@@ -1,8 +1,7 @@
 course course_06
 {
     skybox = "assets/golf/skyboxes/cliffs.sbf"
-    billboard_model = "assets/golf/models/shrubbery_cliffs.cmt"
-    billboard_sprites = "assets/golf/sprites/shrubbery_cliffs.spt"
+    shrubbery = "assets/golf/shrubs/cliffs.shb"
     instance_model = "assets/golf/models/rock.cmt"
     audio = "assets/golf/sound/ambience_desert.xas"
     grass = 0.596,0.478,0.408

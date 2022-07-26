@@ -1758,6 +1758,26 @@ void GolfState::loadAssets()
         {
             theme.billboardSprites = prop.getValue<std::string>();
         }
+        else if (name == "shrubbery")
+        {
+            cro::ConfigFile shrubbery;
+            if (shrubbery.loadFromFile(prop.getValue<std::string>()))
+            {
+                const auto& shrubProps = shrubbery.getProperties();
+                for (const auto& sp : shrubProps)
+                {
+                    const auto& shrubName = sp.getName();
+                    if (shrubName == "model")
+                    {
+                        theme.billboardModel = sp.getValue<std::string>();
+                    }
+                    else if (shrubName == "sprite")
+                    {
+                        theme.billboardSprites = sp.getValue<std::string>();
+                    }
+                }
+            }
+        }
         else if (name == "grass")
         {
             theme.grassColour = prop.getValue<cro::Colour>();

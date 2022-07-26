@@ -37,6 +37,7 @@ source distribution.
 //(model format changed between 120 -> 130)
 //(server layout updated 140 -> 150)
 //(skybox format changed 150 -> 160)
+//(hole count became game rule 170 -> 180)
 static constexpr std::uint16_t CURRENT_VER = 180;
 static const std::string StringVer("1.8.0");
 

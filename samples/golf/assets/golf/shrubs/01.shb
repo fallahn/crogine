@@ -1,0 +1,5 @@
+shrub
+{
+    model = "assets/golf/models/shrubbery.cmt"
+    sprite = "assets/golf/sprites/shrubbery.spt"
+}

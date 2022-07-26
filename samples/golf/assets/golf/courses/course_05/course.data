@@ -1,8 +1,7 @@
 course course_05
 {
     skybox = "assets/golf/skyboxes/dusk.sbf"
-    billboard_model = "assets/golf/models/shrubbery04.cmt"
-    billboard_sprites = "assets/golf/sprites/shrubbery04.spt"
+    shrubbery = "assets/golf/shrubs/04.shb"
     audio = "assets/golf/sound/ambience.xas"
     instance_model = "assets/golf/models/bush01.cmt"
 
