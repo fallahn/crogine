@@ -1205,7 +1205,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                     cmd.targetFlags = CommandID::Menu::CourseDesc;
-                    cmd.action = [course](cro::Entity e, float)
+                    cmd.action = [](cro::Entity e, float)
                     {
                         e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
                         e.getComponent<cro::Text>().setString("Course Data Not Found");
@@ -1220,8 +1220,16 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-                    //TODO should we un-ready the client to prevent the host launching
-                    //if we don't have this course?
+                    //un-ready the client to prevent the host launching
+                    //if we don't have this course
+                    if (!m_sharedData.hosting) //this should be implicit, but hey
+                    {
+                        //m_readyState is updated when we get this back from the server
+                        std::uint8_t ready = 0;
+                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady,
+                            std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),
+                            net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    }
                 }
             }
         }
@@ -1263,7 +1271,6 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::HoleCount:
         {
             m_sharedData.holeCount = evt.packet.as<std::uint8_t>();
-            //LogI << cro::FileSystem::getFileName(__FILE__) << ", " << __LINE__ << ": update UI" << std::endl;
 
             cro::Command cmd;
             cmd.targetFlags = CommandID::Menu::CourseHoles;
