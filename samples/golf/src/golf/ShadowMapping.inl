@@ -50,6 +50,7 @@ static const std::string ShadowVertex = R"(
     #endif
 
     #if defined(SKINNED)
+        #define MAX_BONES 64
         ATTRIBUTE vec4 a_boneIndices;
         ATTRIBUTE vec4 a_boneWeights;
         uniform mat4 u_boneMatrices[MAX_BONES];

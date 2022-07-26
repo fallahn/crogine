@@ -636,4 +636,11 @@ void GolfSoundDirector::applaud()
         e.getComponent<VatAnimation>().applaud();
     };
     getScene().getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::Spectator;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().setUserData<bool>(true);
+    };
+    getScene().getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

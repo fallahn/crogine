@@ -51,6 +51,7 @@ source distribution.
 #include "BeaconCallback.hpp"
 #include "SpectatorSystem.hpp"
 #include "PropFollowSystem.hpp"
+#include "SpectatorAnimCallback.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -426,6 +427,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
             cmd.action = [](cro::Entity e, float)
             {
                 e.getComponent<VatAnimation>().applaud();
+            };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            cmd.targetFlags = CommandID::Spectator;
+            cmd.action = [](cro::Entity e, float)
+            {
+                e.getComponent<cro::Callback>().setUserData<bool>(true);
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
@@ -2072,9 +2080,24 @@ void GolfState::loadAssets()
                                     auto& skel = ent.getComponent<cro::Skeleton>();
                                     if (!skel.getAnimations().empty())
                                     {
-                                        ent.getComponent<cro::Skeleton>().play(0);
-                                        skel.getAnimations()[0].looped = true;
-                                        skel.setMaxInterpolationDistance(100.f);
+                                        //this is the default behaviour
+                                        const auto& anims = skel.getAnimations();
+                                        if (anims.size() == 1)
+                                        {
+                                            ent.getComponent<cro::Skeleton>().play(0);
+                                            skel.getAnimations()[0].looped = true;
+                                            skel.setMaxInterpolationDistance(100.f);
+                                        }
+                                        //however spectator models need fancier animation
+                                        //control... and probably a smaller interp distance
+                                        else
+                                        {
+                                            //TODO we could improve this by disabling when hidden?
+                                            ent.addComponent<cro::Callback>().active = true;
+                                            ent.getComponent<cro::Callback>().function = SpectatorCallback(anims);
+                                            ent.getComponent<cro::Callback>().setUserData<bool>(false);
+                                            ent.addComponent<cro::CommandTarget>().ID = CommandID::Spectator;
+                                        }
                                     }
                                 }
                                 else
@@ -2553,7 +2576,6 @@ void GolfState::loadSpectators()
 
                         glm::vec4 rect((1.f / 3.f) * j, 0.f, (1.f / 3.f), 1.f);
                         material.setProperty("u_subrect", rect);
-
                         entity.getComponent<cro::Model>().setMaterial(0, material);
 
                         auto& skel = entity.getComponent<cro::Skeleton>();
@@ -4246,7 +4268,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                         model.getComponent<cro::Skeleton>().play(spectator.anims[Spectator::AnimID::Idle]);
 #ifdef CRO_DEBUG_
                         model.getComponent<cro::Skeleton>().setInterpolationEnabled(false);
-                        model.getComponent<cro::ShadowCaster>().active = false;
+                        //model.getComponent<cro::ShadowCaster>().active = false;
 #endif
                         model.getComponent<cro::Transform>().setPosition(curve.getPoint(spectator.target));
                         m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().addChild(model.getComponent<cro::Transform>());

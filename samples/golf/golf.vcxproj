@@ -453,6 +453,7 @@
     <ClInclude Include="src\golf\server\SnookerDirector.hpp" />
     <ClInclude Include="src\golf\SharedStateData.hpp" />
     <ClInclude Include="src\golf\SoundEffectsDirector.hpp" />
+    <ClInclude Include="src\golf\SpectatorAnimCallback.hpp" />
     <ClInclude Include="src\golf\SpectatorSystem.hpp" />
     <ClInclude Include="src\golf\spooky2.hpp" />
     <ClInclude Include="src\golf\StudioCameraSystem.hpp" />

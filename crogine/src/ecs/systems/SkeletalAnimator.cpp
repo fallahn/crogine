@@ -106,7 +106,9 @@ void SkeletalAnimator::process(float dt)
                 {
                     if (!anim.looped)
                     {
-                        anim.playbackRate = 0.f;
+                        /*anim.playbackRate = 0.f;
+                        anim.stop*/
+                        skel.stop();
                         
                         auto* msg = postMessage<Message::SkeletalAnimationEvent>(Message::SkeletalAnimationMessage);
                         msg->userType = Message::SkeletalAnimationEvent::Stopped;

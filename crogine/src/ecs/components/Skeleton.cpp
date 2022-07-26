@@ -38,6 +38,7 @@ Skeleton::Skeleton()
     : m_playbackRate        (1.f),
     m_currentAnimation      (0),
     m_nextAnimation         (-1),
+    m_state                 (Stopped),
     m_blendTime             (1.f),
     m_currentBlendTime      (0.f),
     m_frameTime             (1.f),
@@ -60,9 +61,9 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
         return;
     }
 
-    m_playbackRate = rate;
     if (idx != m_currentAnimation)
     {
+        //blend if we're already playing
         m_nextAnimation = static_cast<std::int32_t>(idx);
         m_blendTime = blendingTime;
         m_currentBlendTime = 0.f;
@@ -72,6 +73,8 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
         m_animations[idx].playbackRate = rate;
         m_animations[idx].currentFrame = m_animations[idx].startFrame;
     }
+    m_playbackRate = rate;
+    m_state = Playing;
 }
 
 void Skeleton::prevFrame()
@@ -114,12 +117,13 @@ void Skeleton::stop()
 {
     CRO_ASSERT(!m_animations.empty(), "");
     m_animations[m_currentAnimation].playbackRate = 0.f;
+    m_state = Stopped;
 }
 
 Skeleton::State Skeleton::getState() const
 {
     CRO_ASSERT(!m_animations.empty(), "");
-    return m_animations[m_currentAnimation].playbackRate == 0 ? Stopped : Playing;
+    return m_state;
 }
 
 void Skeleton::addAnimation(const SkeletalAnim& anim)

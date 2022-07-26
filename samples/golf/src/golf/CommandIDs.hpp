@@ -46,7 +46,8 @@ struct CommandID final
         ParticleEmitter = 0x400,
         AudioEmitter    = 0x800,
         Beacon          = 0x1000,
-        StrokeArc       = 0x2000
+        StrokeArc       = 0x2000,
+        Spectator       = 0x4000
     };
 
     struct UI final

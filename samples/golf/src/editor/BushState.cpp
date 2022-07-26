@@ -130,7 +130,6 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
         {
             drawUI();
         });
-    context.appInstance.setClearColour(cro::Colour::CornflowerBlue);
 
     palette.loadFromFile("mod_kit/colordome-32.ase");
 }

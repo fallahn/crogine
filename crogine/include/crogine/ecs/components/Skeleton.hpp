@@ -362,6 +362,7 @@ namespace cro
 
         std::int32_t m_currentAnimation;
         std::int32_t m_nextAnimation;
+        State m_state;
 
         float m_blendTime;
         float m_currentBlendTime;

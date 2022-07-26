@@ -77,7 +77,7 @@ void SpectatorSystem::process(float dt)
             {
                 auto targetPos = spectator.path->getPoint(spectator.target);
                 auto segmentIndex = spectator.target - std::max(0, spectator.direction);
-                float speed = spectator.path->getSpeedMultiplier(segmentIndex) * (spectator.WalkSpeed / spectator.path->getLength());
+                float speed = spectator.path->getSpeedMultiplier(segmentIndex) * (spectator.WalkSpeed/* / spectator.path->getLength()*/);
 
                 //separate paths in opposition directions
                 auto offset = glm::normalize(spectator.path->getPoints().back() - spectator.path->getPoints().front()) * static_cast<float>(spectator.direction);
@@ -128,7 +128,7 @@ void SpectatorSystem::process(float dt)
                 auto dir = targetPos - tx.getPosition();
                 spectator.velocity += glm::normalize(dir) * speed;
                 spectator.velocity /= 2.f;
-                tx.move(spectator.velocity);
+                tx.move(spectator.velocity * dt);
 
                 spectator.targetRotation = std::atan2(-spectator.velocity.z, spectator.velocity.x) + ((cro::Util::Const::PI / 2.f));
                 spectator.rotation += cro::Util::Maths::shortestRotation(spectator.rotation, spectator.targetRotation) * (dt * 6.f);

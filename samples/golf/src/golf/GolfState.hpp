@@ -167,6 +167,7 @@ private:
             CelTextured,
             CelTexturedSkinned,
             ShadowMap,
+            ShadowMapSkinned,
             Leaderboard,
             Player,
             Hair,
