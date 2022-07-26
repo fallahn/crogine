@@ -307,6 +307,13 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 {
                     m_sharedData.treeQuality = std::max(0, std::min(2, m_sharedData.treeQuality));
                 }
+
+                int hc = m_sharedData.holeCount;
+                if (ImGui::InputInt("Hole Count", &hc))
+                {
+                    m_sharedData.holeCount = std::min(2, std::max(0, hc));
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable);
+                }
             }
             ImGui::End();
         });
@@ -1255,6 +1262,12 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 centreText(e);
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+            break;
+        case PacketID::HoleCount:
+        {
+            m_sharedData.holeCount = evt.packet.as<std::uint8_t>();
+            LogI << cro::FileSystem::getFileName(__FILE__) << ", " << __LINE__ << ": update UI" << std::endl;
         }
             break;
         case PacketID::ServerError:

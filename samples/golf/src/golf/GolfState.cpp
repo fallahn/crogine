@@ -1841,6 +1841,20 @@ void GolfState::loadAssets()
         error = true;
     }
 
+    //check the rules and truncate hole list
+    //if requested - 1 front holes, 1 back holes
+    if (m_sharedData.holeCount == 1)
+    {
+        auto size = std::max(std::size_t(1), holeStrings.size() / 2);
+        holeStrings.resize(size);
+    }
+    else if (m_sharedData.holeCount == 2)
+    {
+        auto start = holeStrings.size() / 2;
+        std::vector<std::string> newStrings(holeStrings.begin() + start, holeStrings.end());
+        holeStrings.swap(newStrings);
+    }
+
     cro::ConfigFile holeCfg;
     cro::ModelDefinition modelDef(m_resources);
     std::string prevHoleString;

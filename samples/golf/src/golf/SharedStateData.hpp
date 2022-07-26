@@ -148,6 +148,7 @@ struct SharedStateData final
     cro::String mapDirectory = "course_01";
     std::uint8_t scoreType = 0;
     std::uint8_t gimmeRadius = 0;
+    std::uint8_t holeCount = 0; //0-1-2 all, front, back
 
     //printed by the error state
     std::string errorMessage;
