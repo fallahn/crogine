@@ -141,6 +141,8 @@ private:
         std::uint32_t nextRadius = 0;
         std::uint32_t prevCourse = 0;
         std::uint32_t nextCourse = 0;
+        std::uint32_t prevHoleCount = 0;
+        std::uint32_t nextHoleCount = 0;
         std::uint32_t selected = 0;
         std::uint32_t unselected = 0;
         std::uint32_t showTip = 0;
@@ -199,7 +201,7 @@ private:
         cro::String directory;
         cro::String title = "Untitled";
         cro::String description = "No Description"; 
-        cro::String holeCount = "0";
+        std::array<cro::String, 3u> holeCount = {};
     };
     std::vector<CourseData> m_courseData;
     void parseCourseDirectory();

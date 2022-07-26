@@ -307,13 +307,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 {
                     m_sharedData.treeQuality = std::max(0, std::min(2, m_sharedData.treeQuality));
                 }
-
-                int hc = m_sharedData.holeCount;
-                if (ImGui::InputInt("Hole Count", &hc))
-                {
-                    m_sharedData.holeCount = std::min(2, std::max(0, hc));
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable);
-                }
             }
             ImGui::End();
         });
@@ -1192,9 +1185,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                     cmd.targetFlags = CommandID::Menu::CourseHoles;
-                    cmd.action = [data](cro::Entity e, float)
+                    cmd.action = [&,data](cro::Entity e, float)
                     {
-                        e.getComponent<cro::Text>().setString(data->holeCount);
+                        e.getComponent<cro::Text>().setString(data->holeCount[m_sharedData.holeCount]);
                         centreText(e);
                     };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -1226,6 +1219,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         e.getComponent<cro::Text>().setString(" ");
                     };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                    //TODO should we un-ready the client to prevent the host launching
+                    //if we don't have this course?
                 }
             }
         }
@@ -1267,7 +1263,31 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::HoleCount:
         {
             m_sharedData.holeCount = evt.packet.as<std::uint8_t>();
-            LogI << cro::FileSystem::getFileName(__FILE__) << ", " << __LINE__ << ": update UI" << std::endl;
+            //LogI << cro::FileSystem::getFileName(__FILE__) << ", " << __LINE__ << ": update UI" << std::endl;
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Menu::CourseHoles;
+            if (auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
+                [&](const CourseData& cd)
+                {
+                    return cd.directory == m_sharedData.mapDirectory;
+                }); data != m_courseData.cend())
+            {
+                cmd.action = [&, data](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(data->holeCount[m_sharedData.holeCount]);
+                    centreText(e);
+                };
+            }
+            else
+            {
+                cmd.action = [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(" ");
+                    centreText(e);
+                };
+            }
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
             break;
         case PacketID::ServerError:
