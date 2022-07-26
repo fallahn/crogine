@@ -14,4 +14,5 @@ course course_07
     description = "Badger Free Since 1812"
 
     hole = "assets/golf/courses/course_07/01.hole"
+    hole = "assets/golf/courses/course_07/02.hole"
 }
