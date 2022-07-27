@@ -2,7 +2,7 @@ course course_07
 {
     skybox = "assets/golf/skyboxes/autumn.sbf"
     shrubbery = "assets/golf/shrubs/autumn.shb"
-    audio = "assets/golf/sound/ambience.xas"
+    audio = "assets/golf/sound/ambience_autumn.xas"
 
     treeset = "assets/golf/treesets/oak_tree01.tst"
     treeset = "assets/golf/treesets/oak_tree02.tst"

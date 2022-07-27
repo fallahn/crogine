@@ -96,6 +96,9 @@ private:
     cro::RenderTexture m_billboardTexture;
     cro::Entity m_billboardCamera;
 
+    cro::RenderTexture m_thumbnailTexture;
+    cro::Entity m_thumbnailCamera;
+
     bool m_editSkybox;
 
     void addSystems();
@@ -113,4 +116,6 @@ private:
     void loadSkyboxFile();
     void saveSkyboxFile();
     void addSkyboxModel();
+
+    void createThumbnails();
 };

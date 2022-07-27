@@ -105,6 +105,7 @@ namespace
 
 
     std::uint64_t RenderFlagsBillboard = 1;
+    std::uint64_t RenderFlagsThumbnail = 2;
 
     cro::Colour skyMid = cro::Colour::White;
     cro::Colour skyTop = cro::Colour::CornflowerBlue;
@@ -375,7 +376,8 @@ void BushState::loadAssets()
     //used to render billboards from models
     m_billboardTexture.create(BillboardTargetSize.x, BillboardTargetSize.y);
 
-
+    //used to render thumbnails of hole models
+    m_thumbnailTexture.create(160, 100);
 
     m_skyScene.enableSkybox();
     m_skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
@@ -417,7 +419,7 @@ void BushState::createScene()
 
         float offset = entity.getComponent<cro::Model>().getMeshData().boundingBox[0].y;
         entity.getComponent<cro::Transform>().setOrigin({ 0.f, offset, 0.f });
-        entity.getComponent<cro::Model>().setRenderFlags(~RenderFlagsBillboard);
+        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlagsBillboard | RenderFlagsThumbnail));
 
         m_root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
@@ -427,6 +429,7 @@ void BushState::createScene()
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
+        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlagsBillboard | RenderFlagsThumbnail));
 
         m_root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
@@ -436,6 +439,7 @@ void BushState::createScene()
     updateView(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&BushState::updateView, this, std::placeholders::_1);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
+    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlagsThumbnail;
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 6.f });
 
 
@@ -451,6 +455,15 @@ void BushState::createScene()
     m_billboardCamera.addComponent<cro::Transform>().setPosition({0.f, 0.f, 3.f});
     m_billboardCamera.addComponent<cro::Camera>().setOrthographic(-(camSize.x) / 2.f, camSize.x / 2.f, 0.f, camSize.y, 0.1f, 16.f);
     m_billboardCamera.getComponent<cro::Camera>().renderFlags = RenderFlagsBillboard;
+
+
+    //ortho cam for creating thumbnails
+    m_thumbnailCamera = m_gameScene.createEntity();
+    m_thumbnailCamera.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 0.f });
+    m_thumbnailCamera.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+    m_thumbnailCamera.addComponent<cro::Camera>().setOrthographic(0.f, 320.f, 0.f, 200.f, -0.1f, 20.f);
+    m_thumbnailCamera.getComponent<cro::Camera>().viewport = { 0.f, 0.f, 1.f, 1.f };
+    m_thumbnailCamera.getComponent<cro::Camera>().renderFlags = RenderFlagsThumbnail;
 }
 
 void BushState::updateView(cro::Camera& cam3D)
@@ -533,6 +546,17 @@ void BushState::drawUI()
         if (ImGui::BeginMenu("View"))
         {
             ImGui::MenuItem("Skybox Editor", nullptr, &m_editSkybox);
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Edit"))
+        {
+            if (ImGui::MenuItem("Create Thumbs")
+                && cro::FileSystem::showMessageBox("Are You Sure?", "This may take some time, and window may\nbecome unresponsive. Please be\npatient.", cro::FileSystem::ButtonType::YesNo))
+            {
+                createThumbnails();
+            }
 
             ImGui::EndMenu();
         }
@@ -675,6 +699,12 @@ void BushState::drawUI()
     }
     ImGui::End();
 
+    if (ImGui::Begin("Thumbnail"))
+    {
+        ImGui::Image(m_thumbnailTexture.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    }
+    ImGui::End();
+
     if (m_editSkybox)
     {
         if (ImGui::Begin("Skybox"))
@@ -779,7 +809,7 @@ void BushState::loadModel(const std::string& path)
         cro::Entity entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
-        entity.getComponent<cro::Model>().setRenderFlags(~RenderFlagsBillboard);
+        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlagsBillboard | RenderFlagsThumbnail));
         m_models[0] = entity;
 
         float radius = m_models[0].getComponent<cro::Model>().getMeshData().boundingSphere.radius;
@@ -797,7 +827,8 @@ void BushState::loadModel(const std::string& path)
             entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>();
             md.createModel(entity);
-            
+            entity.getComponent<cro::Model>().setRenderFlags(~RenderFlagsThumbnail);
+
             m_root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             entity.getComponent<cro::Transform>().setPosition({ radius, 0.f, 0.f });
 
@@ -1029,4 +1060,104 @@ void BushState::addSkyboxModel()
             md.createModel(entity);
         }
     }
+}
+
+void BushState::createThumbnails()
+{
+    if (!cro::FileSystem::directoryExists("assets/golf/thumbs"))
+    {
+        LogI << "creating directory..." << std::endl;
+        cro::FileSystem::createDirectory("assets/golf/thumbs");
+    }
+
+    std::vector<std::string> inPaths;
+    std::vector<std::string> outPaths;
+
+    auto dirs = cro::FileSystem::listDirectories("assets/golf/courses");
+    for (auto dir : dirs)
+    {
+        auto path = "assets/golf/courses/" + dir + "/course.data";
+        if (cro::FileSystem::fileExists(path))
+        {
+            inPaths.push_back(path);
+
+            path = "assets/golf/thumbs/" + dir;
+            if (!cro::FileSystem::directoryExists(path))
+            {
+                LogI << "creating directory..." << std::endl;
+                cro::FileSystem::createDirectory(path);
+            }
+            outPaths.push_back(path);
+        }
+    }
+
+    cro::ModelDefinition md(m_resources);
+    auto oldCam = m_gameScene.setActiveCamera(m_thumbnailCamera);
+    for(auto i = 0u; i < inPaths.size(); ++i)
+    {
+        const auto& inPath = inPaths[i];
+        const auto& outPath = outPaths[i];
+
+        cro::ConfigFile cfg;
+        if (cfg.loadFromFile(inPath))
+        {
+            std::vector<std::string> holes;
+            const auto& props = cfg.getProperties();
+            for (const auto& p : props)
+            {
+                if (p.getName() == "hole")
+                {
+                    holes.push_back(p.getValue<std::string>());
+                }
+            }
+
+            for (const auto& hole : holes)
+            {
+                cro::ConfigFile holeFile;
+                holeFile.loadFromFile(hole);
+
+                if (auto* model = holeFile.findProperty("model"); model != nullptr)
+                {
+                    auto modelPath = model->getValue<std::string>();
+
+                    if (md.loadFromFile(modelPath))
+                    {
+                        auto entity = m_gameScene.createEntity();
+                        entity.addComponent<cro::Transform>().setOrigin({160.f, 0.f, -100.f});
+                        entity.getComponent<cro::Transform>().setPosition({160.f, 0.f, -100.f});
+                        md.createModel(entity);
+                        entity.getComponent<cro::Model>().setRenderFlags(RenderFlagsThumbnail);
+
+                        const auto& bounds = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+                        auto size = bounds[1] - bounds[0];
+                        float scale = 1.f;
+                        if (size.x > size.z)
+                        {
+                            scale = std::floor(320.f / size.x);
+                        }
+                        else
+                        {
+                            scale = std::floor(200.f / size.z);
+                        }
+                        entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+
+                        m_gameScene.simulate(0.f);
+
+                        m_thumbnailTexture.clear(cro::Colour::Transparent);
+                        m_gameScene.render();
+                        m_thumbnailTexture.display();
+
+                        auto fileName = cro::FileSystem::getFileName(modelPath);
+                        fileName = fileName.substr(0, fileName.find_last_of('.'));
+                        m_thumbnailTexture.saveToFile(outPath + "/" + fileName + ".png");
+
+                        m_gameScene.destroyEntity(entity);
+                        m_gameScene.simulate(0.f);
+                    }
+                }
+            }
+        }
+
+    }
+    m_gameScene.setActiveCamera(oldCam);
 }
