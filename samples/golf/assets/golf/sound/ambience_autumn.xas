@@ -75,7 +75,7 @@ audioscape ambience
         path = "assets/golf/sound/ambience/church.ogg"
         looped = false
         streaming = true
-        volume = 1
+        volume = 0.7
         attenuation = 0
         mixer_channel = 1
     }
