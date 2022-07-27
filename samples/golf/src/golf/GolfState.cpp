@@ -1168,7 +1168,7 @@ void GolfState::render()
     //don't want to test against skybox depth values.
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
-    glCheck(glEnable(GL_PROGRAM_POINT_SIZE));
+    //glCheck(glEnable(GL_PROGRAM_POINT_SIZE));
     m_gameScene.render();
     cam.reflectionBuffer.display();
 

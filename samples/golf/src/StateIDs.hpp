@@ -48,6 +48,7 @@ struct StateID final
         Billiards,
         Trophy,
         News,
-        Bush
+        Bush,
+        Playlist
     };
 };

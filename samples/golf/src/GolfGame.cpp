@@ -42,6 +42,7 @@ source distribution.
 #include "golf/ClubhouseState.hpp"
 #include "golf/TrophyState.hpp"
 #include "golf/NewsState.hpp"
+#include "golf/PlaylistState.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
@@ -118,6 +119,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
+    m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
 }
 
@@ -454,7 +456,7 @@ bool GolfGame::initialise()
 
     cro::SpriteSheet s;
     s.loadFromFile("assets/golf/sprites/options.spt", m_sharedData.sharedResources->textures);
-    s.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
+    s.loadFromFile("assets/golf/sprites/facilities_menu.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/scoreboard.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/tutorial.spt", m_sharedData.sharedResources->textures);

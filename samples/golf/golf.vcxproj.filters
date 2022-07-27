@@ -297,6 +297,9 @@
     <ClCompile Include="src\editor\BushState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\PlaylistState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -589,6 +592,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\SpectatorAnimCallback.hpp">
       <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PlaylistState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

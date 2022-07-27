@@ -38,6 +38,8 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "../GolfGame.hpp"
 
+#include <AchievementStrings.hpp>
+
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/graphics/Image.hpp>
@@ -241,12 +243,12 @@ void PracticeState::buildScene()
    
     //background
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/facilities_menu.spt", m_sharedData.sharedResources->textures);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("message_board");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
@@ -295,7 +297,7 @@ void PracticeState::buildScene()
     };
 
     //tutorial button
-    entity = createItem(glm::vec2(0.f, 16.f), "Tutorial", menuEntity);
+    entity = createItem(glm::vec2(0.f, 28.f), "Tutorial", menuEntity);
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) 
@@ -347,7 +349,7 @@ void PracticeState::buildScene()
             });
 
     //driving range
-    entity = createItem(glm::vec2(0.f, 6.f), "Driving Range", menuEntity);
+    entity = createItem(glm::vec2(0.f, 18.f), "Driving Range", menuEntity);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -358,20 +360,41 @@ void PracticeState::buildScene()
                 }
             });
 
-    //putting practice - we'll come back to this later
-    /*entity = createItem(glm::vec2(0.f, -4.f), "Putting Practice", menuEntity);
+    //course editor
+    entity = createItem(glm::vec2(0.f, 8.f), "Course Editor", menuEntity);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
                 if (activated(evt))
                 {
                     requestStackClear();
-                    requestStackPush(StateID::PuttingRange);
+                    requestStackPush(StateID::Playlist);
                 }
-            });*/
+            });
+
+
+    if (Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
+    {
+        entity = createItem(glm::vec2(0.f, -2.f), "Clubhouse", menuEntity);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        //also used as table index so reset this in case
+                        //the current value is greater than the number of tables...
+                        m_sharedData.courseIndex = 0;
+
+                        requestStackClear();
+                        requestStackPush(StateID::Clubhouse);
+
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::Socialiser]);
+                    }
+                });
+    }
 
     //back button
-    entity = createItem(glm::vec2(0.f, -16.f), "Back", menuEntity);
+    entity = createItem(glm::vec2(0.f, -28.f), "Back", menuEntity);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
             {

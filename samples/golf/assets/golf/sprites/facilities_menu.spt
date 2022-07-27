@@ -1,0 +1,13 @@
+spritesheet facilities_menu
+{
+    src = "assets/golf/images/facilities.png"
+    smooth = false
+    repeat = false
+
+    sprite background
+    {
+        bounds = 0.000000,0.000000,152.000000,112.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+}
