@@ -19,6 +19,7 @@ placeholders.blend - Blender asset library of prop placeholders for creating hol
 post_process.frag - template fragment shader for creating post process effects.
 prop-export.py - Export script for Blender written in python. Used to export the positions of prop models and crowds in the `*.hole` format.
 skybox.blend - 3D skybox models.
+wind_colours.ase - A palette used for painting the vertex data of tree models. See [`course_format.md`](course_format.md)
 
 
 

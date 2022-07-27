@@ -17,7 +17,7 @@ model 01
         col_count = 1
         framerate = 1.000000
         blendmode = none
-        diffuse = "assets/golf/images/bunker.png"
+        diffuse = "assets/golf/images/light_sand.png"
 
     }
     material Unlit
