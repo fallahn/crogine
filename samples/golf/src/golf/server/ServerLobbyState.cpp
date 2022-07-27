@@ -213,5 +213,7 @@ void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
         m_sharedData.host.broadcastPacket(PacketID::MapInfo, mapDir.data(), mapDir.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
         m_sharedData.host.broadcastPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 }

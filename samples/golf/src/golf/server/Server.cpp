@@ -285,7 +285,7 @@ void Server::validatePeer(net::NetPeer& peer)
 
     if (result != m_pendingConnections.end())
     {
-        if (auto i = addClient(peer); i >= /*ConstVal::MaxClients*/m_maxConnections)
+        if (auto i = addClient(peer); i >= m_maxConnections)
         {
             //tell client server is full
             m_sharedData.host.sendPacket(peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerFull), net::NetFlag::Reliable, ConstVal::NetChannelReliable);

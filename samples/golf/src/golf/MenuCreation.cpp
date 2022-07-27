@@ -169,7 +169,7 @@ void MenuState::parseCourseDirectory()
                 data.directory = dir;
                 data.holeCount[0] = "All " + std::to_string(std::min(holeCount, 18)) + " holes";
                 data.holeCount[1] = "Front " + std::to_string(std::max(holeCount / 2, 1));
-                data.holeCount[2] = "Back " + std::to_string(std::min((holeCount / 2) + 1, 9));
+                data.holeCount[2] = "Back " + std::to_string(std::min(holeCount - (holeCount / 2), 9));
             }
         }
     }
