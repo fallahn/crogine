@@ -1008,7 +1008,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         float temp = diff.z;
         diff.z = diff.x;
         diff.x = -temp;
-        pos += diff * 1.5f;
+        pos += diff * 2.f;
 
         m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(pos);
     }

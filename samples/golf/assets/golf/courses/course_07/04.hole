@@ -1,0 +1,92 @@
+hole 04
+{
+    map="assets/golf/courses/course_07/04.png"
+    model="assets/golf/models/course_07/04.cmt"
+    par = 4
+
+    pin = 37.044937,1.838602,-70.764305
+
+    target = 145.072281,1.846880,-66.137100
+
+    tee = 296.168213,1.846879,-167.935516
+
+    prop
+    {
+        model = "assets/golf/models/lamp_post.cmt"
+        position = 272.579437,1.844873,-116.241776
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/rubbish_bin.cmt"
+        position = 272.607208,1.847182,-116.746826
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/sign_post.cmt"
+        position = 47.131611,1.844873,-96.668159
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 58.928734,1.768023,-96.402092
+        rotation = -3.591966
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/rock_large.cmt"
+        position = 43.801674,1.772283,-97.071053
+        rotation = -139.989730
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 32.294121,1.846925,-49.326889
+        rotation = 166.313778
+    }
+
+    crowd
+    {
+        position = 18.839655,1.846925,-81.574928
+        rotation = 60.411845
+    }
+
+    prop
+    {
+        model = "assets/golf/models/boat02.cmt"
+        position = 245.623810,-0.697450,-46.578472
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 283.096283,1.846925,-128.478607
+        rotation = -119.277645
+
+        path
+        {
+            point = 274.634949,1.846880,-117.371841
+            point = 278.977875,1.846880,-131.341003
+            point = 287.399933,1.846880,-144.820694
+            point = 299.130585,1.846880,-158.218781
+            point = 307.924286,1.846880,-165.779236
+
+            loop = false
+            delay = 4.0
+            speed = 6.0
+        }
+    }
+
+}
