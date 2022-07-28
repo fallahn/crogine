@@ -105,5 +105,7 @@ private:
     void buildScene();
     void buildUI();
 
+    void updateNinePatch(cro::Entity);
+
     void quitState();
 };

@@ -254,6 +254,7 @@ void PlaylistState::addSystems()
 
 void PlaylistState::loadAssets()
 {
+    //materials
     m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag);
     auto* shader = &m_resources.shaders.get(ShaderID::Horizon);
     m_materialIDs[MaterialID::Horizon] = m_resources.materials.add(*shader);
@@ -263,6 +264,16 @@ void PlaylistState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(*shader);
+
+
+    //audio - TODO do we need to keep the audio scape as a member?
+    m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
+    m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
+    m_audioEnts[AudioID::Back] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+
+    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 }
 
 void PlaylistState::buildScene()
@@ -324,7 +335,7 @@ void PlaylistState::buildScene()
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setOrigin({0.f, -1.5f, -12.f});
+    camEnt.getComponent<cro::Transform>().setOrigin({0.f, -0.5f, -12.f});
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -15.f * cro::Util::Const::degToRad);
 
     static constexpr std::uint32_t ReflectionMapSize = 1024u;
@@ -353,14 +364,6 @@ void PlaylistState::buildScene()
 
 void PlaylistState::buildUI()
 {
-    m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
-    m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
-    m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
-    m_audioEnts[AudioID::Back] = m_uiScene.createEntity();
-    m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
-
-    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
     //renders main scene
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -2.f });
@@ -371,7 +374,15 @@ void PlaylistState::buildUI()
     auto rootNode = m_uiScene.createEntity();
     rootNode.addComponent<cro::Transform>();
 
-    auto updateView = [&, rootNode](cro::Camera& cam) mutable
+
+    //use a 9-patch to create the tab view background
+    auto ninePatch = m_uiScene.createEntity();
+    ninePatch.addComponent<cro::Transform>().setPosition({0.f, 0.f, -0.5f});
+    ninePatch.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    ninePatch.getComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get("assets/golf/images/tab_patch.png"));
+    rootNode.getComponent<cro::Transform>().addChild(ninePatch.getComponent<cro::Transform>());
+
+    auto updateView = [&, rootNode, ninePatch](cro::Camera& cam) mutable
     {
         glm::vec2 size(GolfGame::getActiveTarget()->getSize());
 
@@ -382,7 +393,9 @@ void PlaylistState::buildUI()
 
         m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
-        rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
+        //rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
+
+        updateNinePatch(ninePatch); //requires scale to be set above
 
         //updates any text objects / buttons with a relative position
         cro::Command cmd;
@@ -409,12 +422,208 @@ void PlaylistState::buildUI()
     updateView(entity.getComponent<cro::Camera>());
 }
 
+void PlaylistState::updateNinePatch(cro::Entity entity)
+{
+    static constexpr float NinePatchSize = 4.f; //size of a 'patch' in the texture
+    
+    //0    2
+    //|  / |
+    //| /  |
+    //1    3
+
+    constexpr float PatchU = 1.f / 3.f;
+    constexpr float PatchV = 1.f / 3.f;
+
+    constexpr std::array<glm::vec2, 36u> PatchUVs =
+    {
+        //TL, Bl, TR, BR
+        glm::vec2(0.f, 1.f),
+        glm::vec2(0.f, PatchV * 2.f),
+        glm::vec2(PatchU, 1.f),
+        glm::vec2(PatchU, PatchV * 2.f),
+
+        glm::vec2(0.f, PatchV),
+        glm::vec2(0.f, 0.f),
+        glm::vec2(PatchU, PatchV),
+        glm::vec2(PatchU, 0.f),
+
+        glm::vec2(PatchU * 2.f, 1.f),
+        glm::vec2(PatchU * 2.f, PatchV * 2.f),
+        glm::vec2(1.f, 1.f),
+        glm::vec2(1.f, PatchV * 2.f),
+
+        glm::vec2(PatchU * 2.f, PatchV),
+        glm::vec2(PatchU * 2.f, 0.f),
+        glm::vec2(1.f, PatchV),
+        glm::vec2(1.f, 0.f),
+
+        //T, B, L, R
+        glm::vec2(PatchU, 1.f),
+        glm::vec2(PatchU, PatchV * 2.f),
+        glm::vec2(PatchU * 2.f, 1.f),
+        glm::vec2(PatchU * 2.f, PatchV * 2.f),
+
+        glm::vec2(PatchU, PatchV),
+        glm::vec2(PatchU, 0.f),
+        glm::vec2(PatchU * 2.f, PatchV),
+        glm::vec2(PatchU * 2.f, 0.f),
+        
+        glm::vec2(0.f, PatchV * 2.f),
+        glm::vec2(0.f, PatchV),
+        glm::vec2(PatchU, PatchV * 2.f),
+        glm::vec2(PatchU, PatchV),
+
+        glm::vec2(PatchU * 2.f, PatchV * 2.f),
+        glm::vec2(PatchU * 2.f, PatchV),
+        glm::vec2(1.f, PatchV * 2.f),
+        glm::vec2(1.f, PatchV),
+
+        //Centre
+        glm::vec2(PatchU, PatchV * 2.f),
+        glm::vec2(PatchU, PatchV),
+        glm::vec2(PatchU * 2.f, PatchV * 2.f),
+        glm::vec2(PatchU * 2.f, PatchV),
+    };
+
+    glm::vec2 texSize = entity.getComponent<cro::Drawable2D>().getTexture()->getSize();
+    const float PatchWidth = std::floor(texSize.x / 3.f);
+    const float PatchHeight = std::floor(texSize.y / 3.f);
+
+    auto size = glm::vec2(cro::App::getWindow().getSize()) / m_viewScale;
+    size.x = std::floor(size.x);
+    size.y = std::floor(size.y / 4.f);
+
+    std::array<glm::vec2, 36> positions =
+    {
+        //TL, Bl, TR, BR
+        glm::vec2(0.f, size.y),
+        glm::vec2(0.f, size.y - PatchHeight),
+        glm::vec2(PatchWidth, size.y),
+        glm::vec2(PatchWidth, size.y - PatchHeight),
+
+        glm::vec2(0.f, PatchHeight),
+        glm::vec2(0.f, 0.f),
+        glm::vec2(PatchWidth, PatchHeight),
+        glm::vec2(PatchWidth, 0.f),
+
+        glm::vec2(size.x - PatchWidth, size.y),
+        glm::vec2(size.x - PatchWidth, size.y - PatchHeight),
+        glm::vec2(size.x, size.y),
+        glm::vec2(size.x, size.y - PatchHeight),
+
+        glm::vec2(size.x - PatchWidth, PatchHeight),
+        glm::vec2(size.x - PatchWidth, 0.f),
+        glm::vec2(size.x, PatchHeight),
+        glm::vec2(size.x, 0.f),
+
+        //T, B, L, R
+        glm::vec2(PatchWidth, size.y),
+        glm::vec2(PatchWidth, size.y - PatchHeight),
+        glm::vec2(size.x - PatchWidth, size.y),
+        glm::vec2(size.x - PatchWidth, size.y - PatchHeight),
+
+        glm::vec2(PatchWidth, PatchHeight),
+        glm::vec2(PatchWidth, 0.f),
+        glm::vec2(size.x - PatchWidth, PatchHeight),
+        glm::vec2(size.x - PatchWidth, 0.f),
+
+        glm::vec2(0.f, size.y - PatchHeight),
+        glm::vec2(0.f, PatchHeight),
+        glm::vec2(PatchWidth, size.y - PatchHeight),
+        glm::vec2(PatchWidth, PatchHeight),
+
+        glm::vec2(size.x - PatchWidth, size.y - PatchHeight),
+        glm::vec2(size.x - PatchWidth, PatchHeight),
+        glm::vec2(size.x, size.y - PatchHeight),
+        glm::vec2(size.x, PatchHeight),
+
+        //Center
+        glm::vec2(PatchWidth, size.y - PatchHeight),
+        glm::vec2(PatchWidth, PatchHeight),
+        glm::vec2(size.x - PatchWidth, size.y - PatchHeight),
+        glm::vec2(size.x - PatchWidth, PatchHeight),
+    };
+
+    //would be so much smarter to index the verts instead of duping them
+    //but we're in it up to our beards now.
+    entity.getComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(positions[0], PatchUVs[0]),
+            cro::Vertex2D(positions[1], PatchUVs[1]),
+            cro::Vertex2D(positions[2], PatchUVs[2]),
+            cro::Vertex2D(positions[1], PatchUVs[1]),
+            cro::Vertex2D(positions[3], PatchUVs[3]),
+            cro::Vertex2D(positions[2], PatchUVs[2]),
+
+
+            cro::Vertex2D(positions[4], PatchUVs[4]),
+            cro::Vertex2D(positions[5], PatchUVs[5]),
+            cro::Vertex2D(positions[6], PatchUVs[6]),
+            cro::Vertex2D(positions[5], PatchUVs[5]),
+            cro::Vertex2D(positions[7], PatchUVs[7]),
+            cro::Vertex2D(positions[6], PatchUVs[6]),
+
+
+            cro::Vertex2D(positions[8],  PatchUVs[8]),
+            cro::Vertex2D(positions[9],  PatchUVs[9]),
+            cro::Vertex2D(positions[10], PatchUVs[10]),
+            cro::Vertex2D(positions[9],  PatchUVs[9]),
+            cro::Vertex2D(positions[11], PatchUVs[11]),
+            cro::Vertex2D(positions[10], PatchUVs[10]),
+
+
+            cro::Vertex2D(positions[12], PatchUVs[12]),
+            cro::Vertex2D(positions[13], PatchUVs[13]),
+            cro::Vertex2D(positions[14], PatchUVs[14]),
+            cro::Vertex2D(positions[13], PatchUVs[13]),
+            cro::Vertex2D(positions[15], PatchUVs[15]),
+            cro::Vertex2D(positions[14], PatchUVs[14]),
+
+
+            cro::Vertex2D(positions[16], PatchUVs[16]),
+            cro::Vertex2D(positions[17], PatchUVs[17]),
+            cro::Vertex2D(positions[18], PatchUVs[18]),
+            cro::Vertex2D(positions[17], PatchUVs[17]),
+            cro::Vertex2D(positions[19], PatchUVs[19]),
+            cro::Vertex2D(positions[18], PatchUVs[18]),
+
+
+            cro::Vertex2D(positions[20], PatchUVs[20]),
+            cro::Vertex2D(positions[21], PatchUVs[21]),
+            cro::Vertex2D(positions[22], PatchUVs[22]),
+            cro::Vertex2D(positions[21], PatchUVs[21]),
+            cro::Vertex2D(positions[23], PatchUVs[23]),
+            cro::Vertex2D(positions[22], PatchUVs[22]),
+
+
+            cro::Vertex2D(positions[24], PatchUVs[24]),
+            cro::Vertex2D(positions[25], PatchUVs[25]),
+            cro::Vertex2D(positions[26], PatchUVs[26]),
+            cro::Vertex2D(positions[25], PatchUVs[25]),
+            cro::Vertex2D(positions[27], PatchUVs[27]),
+            cro::Vertex2D(positions[26], PatchUVs[26]),
+
+
+            cro::Vertex2D(positions[28], PatchUVs[28]),
+            cro::Vertex2D(positions[29], PatchUVs[29]),
+            cro::Vertex2D(positions[30], PatchUVs[30]),
+            cro::Vertex2D(positions[29], PatchUVs[29]),
+            cro::Vertex2D(positions[31], PatchUVs[31]),
+            cro::Vertex2D(positions[30], PatchUVs[30]),
+
+
+            cro::Vertex2D(positions[32], PatchUVs[32]),
+            cro::Vertex2D(positions[33], PatchUVs[33]),
+            cro::Vertex2D(positions[34], PatchUVs[34]),
+            cro::Vertex2D(positions[33], PatchUVs[33]),
+            cro::Vertex2D(positions[35], PatchUVs[35]),
+            cro::Vertex2D(positions[34], PatchUVs[34])
+        });
+}
+
 void PlaylistState::quitState()
 {
     //TODO some sort of confirmation, make sure everything is saved
     requestStackClear();
     requestStackPush(StateID::Menu);
-
-    //m_rootNode.getComponent<cro::Callback>().active = true;
-    //m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }
