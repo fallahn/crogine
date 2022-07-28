@@ -4,12 +4,6 @@ course course_07
     shrubbery = "assets/golf/shrubs/autumn.shb"
     audio = "assets/golf/sound/ambience_autumn.xas"
 
-    treeset = "assets/golf/treesets/oak_tree01.tst"
-    treeset = "assets/golf/treesets/oak_tree02.tst"
-    treeset = "assets/golf/treesets/bush01.tst"
-    treeset = "assets/golf/treesets/bush02.tst"
-
-
     title = "Dackel's Run, Beneslavia"
     description = "Badger Free Since 1812"
 

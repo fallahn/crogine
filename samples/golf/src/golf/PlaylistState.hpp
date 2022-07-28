@@ -99,7 +99,6 @@ private:
     std::array<std::size_t, MaterialID::Count> m_materialIDs = {};
 
     glm::vec2 m_viewScale;
-    cro::Entity m_rootNode;
     
     void addSystems();
     void loadAssets();

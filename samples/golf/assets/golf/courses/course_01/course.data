@@ -4,12 +4,6 @@ course course_01
     shrubbery = "assets/golf/shrubs/01.shb"
     audio = "assets/golf/sound/ambience.xas"
 
-    treeset = "assets/golf/treesets/birch_tree01.tst"
-    treeset = "assets/golf/treesets/birch_tree02.tst"
-    treeset = "assets/golf/treesets/pine_tree01.tst"
-    treeset = "assets/golf/treesets/pine_tree02.tst"
-
-
     title = "Westington links, Isle of Pendale"
     description = "Where We Swing a Stick At Our Balls"
 

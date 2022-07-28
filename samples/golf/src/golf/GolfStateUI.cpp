@@ -1004,8 +1004,11 @@ void GolfState::showCountdown(std::uint8_t seconds)
         auto camPos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
         camPos.y = pos.y;
 
-        auto diff = pos - camPos;
-        pos += diff;
+        auto diff = glm::normalize(pos - camPos);
+        float temp = diff.z;
+        diff.z = diff.x;
+        diff.x = -temp;
+        pos += diff * 1.5f;
 
         m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(pos);
     }

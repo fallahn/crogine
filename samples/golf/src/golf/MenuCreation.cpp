@@ -657,7 +657,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 });
 
         //facilities menu
-        entity = createButton("Facilities");
+        entity = createButton("19th Hole");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
                 {

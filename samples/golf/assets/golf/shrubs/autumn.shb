@@ -2,4 +2,9 @@ shrub
 {
     model = "assets/golf/models/shrubbery_autumn.cmt"
     sprite = "assets/golf/sprites/shrubbery_autumn.spt"
+
+    treeset = "assets/golf/treesets/oak_tree01.tst"
+    treeset = "assets/golf/treesets/oak_tree02.tst"
+    treeset = "assets/golf/treesets/bush01.tst"
+    treeset = "assets/golf/treesets/bush02.tst"    
 }

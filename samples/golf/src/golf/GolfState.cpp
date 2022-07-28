@@ -578,6 +578,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
 #ifdef CRO_DEBUG_
     m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
+    /*if (evt.type == SDL_MOUSEBUTTONDOWN)
+    {
+        if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            auto wp = m_gameScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(glm::vec2(evt.button.x, evt.button.y));
+            LogI << glm::length(wp = m_holeData[m_currentHole].pin);
+        }
+    }*/
 #endif
 
     m_gameScene.forwardEvent(evt);
@@ -1750,14 +1758,6 @@ void GolfState::loadAssets()
         {
             skyboxPath = prop.getValue<std::string>();
         }
-        else if (name == "billboard_model")
-        {
-            theme.billboardModel = prop.getValue<std::string>();
-        }
-        else if (name == "billboard_sprites")
-        {
-            theme.billboardSprites = prop.getValue<std::string>();
-        }
         else if (name == "shrubbery")
         {
             cro::ConfigFile shrubbery;
@@ -1774,6 +1774,15 @@ void GolfState::loadAssets()
                     else if (shrubName == "sprite")
                     {
                         theme.billboardSprites = sp.getValue<std::string>();
+                    }
+                    else if (shrubName == "treeset")
+                    {
+                        Treeset ts;
+                        if (theme.treesets.size() < ThemeSettings::MaxTreeSets
+                            && ts.loadFromFile(sp.getValue<std::string>()))
+                        {
+                            theme.treesets.push_back(ts);
+                        }
                     }
                 }
             }
@@ -1797,15 +1806,6 @@ void GolfState::loadAssets()
         else if (name == "instance_model")
         {
             theme.instancePath = prop.getValue<std::string>();
-        }
-        else if (name == "treeset")
-        {
-            Treeset ts;
-            if (ts.loadFromFile(prop.getValue<std::string>())
-                && theme.treesets.size() < ThemeSettings::MaxTreeSets)
-            {
-                theme.treesets.push_back(ts);
-            }
         }
     }
     

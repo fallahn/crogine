@@ -102,7 +102,7 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
             addSystems();
             loadAssets();
             buildScene();
-            //buildUI();
+            buildUI();
         });
 }
 
@@ -118,7 +118,9 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
     if (evt.type == SDL_KEYUP)
     {
         if (evt.key.keysym.sym == SDLK_BACKSPACE
+#ifndef CRO_DEBUG_
             || evt.key.keysym.sym == SDLK_ESCAPE
+#endif
             || evt.key.keysym.sym == SDLK_p)
         {
             quitState();
@@ -175,7 +177,6 @@ bool PlaylistState::simulate(float dt)
     dstCam.viewport = srcCam.viewport;
     dstCam.setPerspective(srcCam.getFOV(), srcCam.getAspectRatio(), 0.5f, 14.f);
 
-    //auto rotation = glm::eulerAngles(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getRotation()).y;
     m_skyboxScene.getActiveCamera().getComponent<cro::Transform>().setRotation(
         m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation());
 
@@ -220,12 +221,12 @@ void PlaylistState::render()
 
 
 
-    //m_gameSceneTexture.clear();
+    m_gameSceneTexture.clear();
     m_skyboxScene.render();
 
     glClear(GL_DEPTH_BUFFER_BIT);
     m_gameScene.render();
-    //m_gameSceneTexture.display();
+    m_gameSceneTexture.display();
 
     m_uiScene.render();
 }
@@ -242,11 +243,12 @@ void PlaylistState::addSystems()
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
     m_uiScene.addSystem<cro::UISystem>(mb);
+    m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::SpriteAnimationSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
-    //m_uiScene.addSystem<cro::RenderSystem2D>(mb);
+    m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::AudioPlayerSystem>(mb);
 }
 
@@ -269,11 +271,13 @@ void PlaylistState::buildScene()
     //TODO load clouds (??)
 
     //water plane
-    auto meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(24.f, 30));
+    auto meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(48.f, 30));
     auto waterEnt = m_gameScene.createEntity();
     waterEnt.addComponent<cro::Transform>();
     waterEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
-    waterEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::Water]));
+    auto material = m_resources.materials.get(m_materialIDs[MaterialID::Water]);
+    material.setProperty("u_radius", 48.f);
+    waterEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     m_gameScene.setWaterLevel(WaterLevel);
     m_skyboxScene.setWaterLevel(WaterLevel);
     m_skyboxScene.getActiveCamera().getComponent<cro::Camera>().reflectionBuffer.create(2, 2);
@@ -315,13 +319,13 @@ void PlaylistState::buildScene()
             glUniform1f(m_resources.shaders.get(ShaderID::TreesetLeaf).getUniformID("u_targetHeight"), targetHeight);
         }
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 25.f);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 55.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setOrigin({0.f, -2.5f, -15.f});
-    //camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -25.f * cro::Util::Const::degToRad);
+    camEnt.getComponent<cro::Transform>().setOrigin({0.f, -1.5f, -12.f});
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -15.f * cro::Util::Const::degToRad);
 
     static constexpr std::uint32_t ReflectionMapSize = 1024u;
     auto& cam = camEnt.getComponent<cro::Camera>();
@@ -330,12 +334,15 @@ void PlaylistState::buildScene()
     cam.resizeCallback = updateView;
     updateView(cam);
 
-    camEnt.addComponent<cro::Callback>().active = true;
-    camEnt.getComponent<cro::Callback>().function =
+    auto rootEnt = m_gameScene.createEntity();
+    rootEnt.addComponent<cro::Transform>();
+    rootEnt.addComponent<cro::Callback>().active = true;
+    rootEnt.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.1f);
     };
+    rootEnt.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
 
 
     //light direction
@@ -346,8 +353,6 @@ void PlaylistState::buildScene()
 
 void PlaylistState::buildUI()
 {
-    LogW << "Use game scene buffer for rendering!!" << std::endl;
-
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
     m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
@@ -356,244 +361,15 @@ void PlaylistState::buildUI()
 
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-    struct RootCallbackData final
-    {
-        enum
-        {
-            FadeIn, FadeOut
-        }state = FadeIn;
-        float currTime = 0.f;
-    };
+    //renders main scene
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -2.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>().setTexture(m_gameSceneTexture.getTexture());
 
+    //attach UI to this so we have a single root scale
     auto rootNode = m_uiScene.createEntity();
     rootNode.addComponent<cro::Transform>();
-    rootNode.addComponent<cro::Callback>().active = true;
-    rootNode.getComponent<cro::Callback>().setUserData<RootCallbackData>();
-    rootNode.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<RootCallbackData>();
-
-        switch (state)
-        {
-        default: break;
-        case RootCallbackData::FadeIn:
-            currTime = std::min(1.f, currTime + (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
-            if (currTime == 1)
-            {
-                state = RootCallbackData::FadeOut;
-                e.getComponent<cro::Callback>().active = false;
-            }
-            break;
-        case RootCallbackData::FadeOut:
-            currTime = std::max(0.f, currTime - (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
-            if (currTime == 0)
-            {
-                requestStackPop();
-            }
-            break;
-        }
-
-    };
-
-    m_rootNode = rootNode;
-
-
-    //quad to darken the screen
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.4f });
-    entity.addComponent<cro::Drawable2D>().getVertexData() =
-    {
-        cro::Vertex2D(glm::vec2(-0.5f, 0.5f), cro::Colour::Black),
-        cro::Vertex2D(glm::vec2(-0.5f), cro::Colour::Black),
-        cro::Vertex2D(glm::vec2(0.5f), cro::Colour::Black),
-        cro::Vertex2D(glm::vec2(0.5f, -0.5f), cro::Colour::Black)
-    };
-    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, rootNode](cro::Entity e, float)
-    {
-        auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-        e.getComponent<cro::Transform>().setScale(size);
-        e.getComponent<cro::Transform>().setPosition(size / 2.f);
-
-        auto scale = rootNode.getComponent<cro::Transform>().getScale().x;
-        scale = std::min(1.f, scale / m_viewScale.x);
-
-        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-        for (auto& v : verts)
-        {
-            v.colour.setAlpha(BackgroundAlpha * scale);
-        }
-    };
-
-
-    //background
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
-
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("message_board");
-    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-    rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
-
-    auto menuEntity = m_uiScene.createEntity();
-    menuEntity.addComponent<cro::Transform>();
-    rootNode.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
-
-    auto confirmEntity = m_uiScene.createEntity();
-    confirmEntity.addComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
-    rootNode.getComponent<cro::Transform>().addChild(confirmEntity.getComponent<cro::Transform>());
-
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
-    auto& uiSystem = *m_uiScene.getSystem<cro::UISystem>();
-
-    auto selectedID = uiSystem.addCallback(
-        [](cro::Entity e) mutable
-        {
-            e.getComponent<cro::Text>().setFillColour(TextGoldColour);
-            e.getComponent<cro::AudioEmitter>().play();
-            e.getComponent<cro::Callback>().setUserData<float>(0.f);
-            e.getComponent<cro::Callback>().active = true;
-        });
-    auto unselectedID = uiSystem.addCallback(
-        [](cro::Entity e)
-        {
-            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        });
-
-    auto createItem = [&](glm::vec2 position, const std::string label, cro::Entity parent)
-    {
-        auto e = m_uiScene.createEntity();
-        e.addComponent<cro::Transform>().setPosition(position);
-        e.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-        e.addComponent<cro::Drawable2D>();
-        e.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
-        e.getComponent<cro::Text>().setString(label);
-        e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        centreText(e);
-        e.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(e);
-        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
-        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
-
-        e.addComponent<cro::Callback>().setUserData<float>(0.f);
-        e.getComponent<cro::Callback>().function = MenuTextCallback();
-
-        parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
-        return e;
-    };
-
-    //options button
-    entity = createItem(glm::vec2(0.f, 10.f), "Options", menuEntity);
-    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
-            {
-                if (activated(evt))
-                {
-                    requestStackPush(StateID::Options);
-                }
-            });
-
-    //return to game
-    entity = createItem(glm::vec2(0.f), "Return To Game", menuEntity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
-            {
-                if (activated(evt))
-                {
-                    quitState();
-                }
-            });
-
-    //quit button
-    entity = createItem(glm::vec2(0.f, -10.f), "Quit", menuEntity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
-            {
-                if (activated(evt))
-                {
-                    confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
-                    menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
-
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Confirm);
-                }
-            });
-
-
-    //confirmation buttons
-    entity = createItem(glm::vec2(-20.f, -12.f), "No", confirmEntity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Confirm);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
-            {
-                if (activated(evt))
-                {
-                    menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
-                    confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
-
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
-                }
-            });
-
-
-    entity = createItem(glm::vec2(20.f, -12.f), "Yes", confirmEntity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Confirm);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
-            {
-                if (activated(evt))
-                {
-                    //this is a kludge which tells the
-                    //menu state to remove any existing connection/server instance
-                    //rather than disconnecting here which would raise an error message
-                    m_sharedData.tutorial = true;
-
-                    requestStackClear();
-                    //requestStackPush(StateID::Menu);
-                    if (m_sharedData.baseState != StateID::Clubhouse)
-                    {
-                        requestStackPush(StateID::Menu);
-                    }
-                    else
-                    {
-                        requestStackPush(StateID::Clubhouse);
-                    }
-                }
-            });
-
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 12.f));
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setString("Are You Sure?");
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    centreText(entity);
-    confirmEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    if (m_sharedData.hosting
-        && !m_sharedData.tutorial)
-    {
-        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 2.f));
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
-        entity.getComponent<cro::Text>().setString("This Will Kick All Players");
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        centreText(entity);
-        confirmEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    }
-
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {

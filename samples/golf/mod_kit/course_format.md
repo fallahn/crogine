@@ -13,7 +13,6 @@ A course folder should contain one file with the name `course.data`. It has the 
         grass_tint = 1.0, 1.0, 0.5, 1 //affects the colour of the noise applied to the grass colour. This is optional, by default just darkens the grass colour
         audio = "assets/golf/sound/ambience.xas" //optional path to a crogine audioscape file for environment sounds (see below)
 
-        treeset = "assets/golf/treesets/bush01.tst" //up to 4 optional treesets used to describe the surrounding scenery. See Treesets below
 
         title = "St. Billybob's links, Isle of Wibble" //course title, shown in the game lobby
         description = "This is a test course. Why not have a play?" //a brief description, shown in the game lobby
@@ -140,18 +139,35 @@ As of 1.8.0 typing `tree_ed` into the console when at the game menu opens the tr
 
 
 ###### Shrubbery (since 1.8.0)
-Up to and including version 1.7.0 shrubbery billboards were defined by two files in the the `course.data` file. These can been moved to a single file with the following format:
+Up to and including version 1.7.0 shrubbery billboards were defined by two files in the the `course.data` file. These have been moved to a single file with the following format:
 
     shrub
     {
-        model = "assets/golf/models/shrubbery_autumn.cmt"
-        sprite = "assets/golf/sprites/shrubbery_autumn.spt"
+        model = "assets/golf/models/shrubbery_autumn.cmt" //billboard model file
+        sprite = "assets/golf/sprites/shrubbery_autumn.spt" //sprite sheet defining billboard sizes at 64px per metre.
+
+        treeset = "assets/golf/treesets/oak.tst" //path to a treeset file - see below
     }
 
-Shrub files have the extension `*.shb` and should be stored in `assets/golf/shrubs`. The layout of the `.cmt` and `.spt` file remain unchanged.
+Shrub files have the extension `*.shb` and should be stored in `assets/golf/shrubs`. The `.cmt` file is a standard billboard definition file - see the crogine model definition format. The `.spt` file is a crogine format sprite sheet, which defines a specific set of sprites:
+
+ - grass01
+ - grass02
+ - hedge01
+ - hedge02
+ - flowers01
+ - flowers02
+ - flowers03
+ - tree01
+ - tree02
+ - tree03
+ - tree04
+
+The sprites are mapped to the billboards at 64 pixels per metre (game unit). The tree sprites will be substituted with a treeset if it is available and the tree quality is set to 'high' in the game options. It is also possible to supply a second model and spritesheet definition for 'classic' rendering - ie when the game option for tree quality is set to 'classic'. To do this add a second definition file for each with the same name appended with `_low`. For example `shrubbery_autumm_low.cmt` and `shrubbery_autumn_low.spt`. These are automatically loaded by the game if they are found.
+
 
 ###### Treesets (since 1.8.0)
-Treesets can be used to define 3D models to render trees instead of the default billboarded trees. These are optional and, if omitted from `course.data`, will fall back to drawing tree01-tree04 as defined in the shrub sprite file. As treesets are added they replace their corresponding sprite, so for example if two treesets are added to the `course.data` file then sprites tree01 and tree02 will not be drawn. Tree03 and tree04 will still appear as the shrub file defines them.
+Treesets can be used to define 3D models to render trees instead of the default billboarded trees. These are optional and, if omitted from the shrubbery file, will fall back to drawing tree01-tree04 as defined in the shrub sprite sheet. As treesets are added they replace their corresponding sprite, so for example if two treesets are added to the shrubbery file then sprites tree01 and tree02 will not be drawn. Tree03 and tree04 will still appear as the shrub file defines them.
 
 
     treeset 

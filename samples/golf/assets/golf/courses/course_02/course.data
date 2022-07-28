@@ -4,11 +4,6 @@ course course_02
     shrubbery = "assets/golf/shrubs/01.shb"
     audio = "assets/golf/sound/ambience.xas"
 
-    treeset = "assets/golf/treesets/birch_tree01.tst"
-    treeset = "assets/golf/treesets/birch_tree02.tst"
-    treeset = "assets/golf/treesets/pine_tree01.tst"
-    treeset = "assets/golf/treesets/pine_tree02.tst"
-
     title = "Sunny Cove, Weald & Hedgeways"
     description = "The Finest Gravel You'll Ever Tread"
 
