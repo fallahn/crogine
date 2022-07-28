@@ -87,6 +87,18 @@ private:
     };
     std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
+    struct MenuID final
+    {
+        enum
+        {
+            Skybox, Shrubbery,
+            Holes, FileSystem,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, MenuID::Count> m_menuEntities = {};
+
     struct MaterialID final
     {
         enum
@@ -100,10 +112,22 @@ private:
 
     glm::vec2 m_viewScale;
     
+    struct CourseData final
+    {
+        std::string skyboxPath;
+    }m_courseData;
+    std::vector<std::string> m_skyboxes;
+    std::size_t m_skyboxIndex;
+
     void addSystems();
     void loadAssets();
     void buildScene();
     void buildUI();
+
+    void createSkyboxMenu(cro::Entity, std::uint32_t selected, std::uint32_t unselected);
+    void createShrubberyMenu(cro::Entity);
+    void createHoleMenu(cro::Entity);
+    void createFileSystemMenu(cro::Entity);
 
     void updateNinePatch(cro::Entity);
 

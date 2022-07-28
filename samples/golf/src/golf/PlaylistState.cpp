@@ -74,13 +74,9 @@ namespace
 {
 #include "WaterShader.inl"
 
-    struct MenuID final
-    {
-        enum
-        {
-            Main, Confirm
-        };
-    };
+    const std::string SkyboxPath = "assets/golf/skyboxes/";
+
+    constexpr float TabAreaHeight = 0.25f; //percent of screen
 }
 
 PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -92,7 +88,8 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_scaleBuffer       ("PixelScale"),
     m_resolutionBuffer  ("ScaledResolution"),
     m_windBuffer        ("WindValues"),
-    m_viewScale         (2.f)
+    m_viewScale         (2.f),
+    m_skyboxIndex       (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -235,6 +232,7 @@ void PlaylistState::render()
 void PlaylistState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_skyboxScene.addSystem<cro::CallbackSystem>(mb);
     m_skyboxScene.addSystem<cro::CameraSystem>(mb);
     m_skyboxScene.addSystem<cro::ModelRenderer>(mb);
 
@@ -278,9 +276,6 @@ void PlaylistState::loadAssets()
 
 void PlaylistState::buildScene()
 {
-    auto cloudPath = loadSkybox("assets/golf/skyboxes/spring.sbf", m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon]);
-    //TODO load clouds (??)
-
     //water plane
     auto meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(48.f, 30));
     auto waterEnt = m_gameScene.createEntity();
@@ -346,7 +341,7 @@ void PlaylistState::buildScene()
     updateView(cam);
 
     auto rootEnt = m_gameScene.createEntity();
-    rootEnt.addComponent<cro::Transform>();
+    rootEnt.addComponent<cro::Transform>().setPosition({0.f, -1.f, 0.f});
     rootEnt.addComponent<cro::Callback>().active = true;
     rootEnt.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
@@ -374,7 +369,6 @@ void PlaylistState::buildUI()
     auto rootNode = m_uiScene.createEntity();
     rootNode.addComponent<cro::Transform>();
 
-
     //use a 9-patch to create the tab view background
     auto ninePatch = m_uiScene.createEntity();
     ninePatch.addComponent<cro::Transform>().setPosition({0.f, 0.f, -0.5f});
@@ -393,13 +387,12 @@ void PlaylistState::buildUI()
 
         m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
-        //rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
 
         updateNinePatch(ninePatch); //requires scale to be set above
 
         //updates any text objects / buttons with a relative position
         cro::Command cmd;
-        cmd.targetFlags = CommandID::Menu::UIElement;
+        cmd.targetFlags = CommandID::UI::UIElement;
         cmd.action =
             [&, size](cro::Entity e, float)
         {
@@ -420,6 +413,128 @@ void PlaylistState::buildUI()
     entity.addComponent<cro::Camera>().resizeCallback = updateView;
     m_uiScene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
+
+
+    auto textSelected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e)
+        {
+            e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        });
+    auto textUnelected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        });
+
+
+    createSkyboxMenu(rootNode, textSelected, textUnelected);
+    createShrubberyMenu(rootNode);
+    createHoleMenu(rootNode);
+    createFileSystemMenu(rootNode);
+
+    //TODO load sprite sheet and crate tab bar for each menu
+
+
+
+}
+
+void PlaylistState::createSkyboxMenu(cro::Entity rootNode, std::uint32_t selected, std::uint32_t unselected)
+{
+    m_menuEntities[MenuID::Skybox] = m_uiScene.createEntity();
+    rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::Skybox].addComponent<cro::Transform>());
+
+    m_skyboxes = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + SkyboxPath);
+    //TODO we want as good a way as possible to validate the files...
+    m_skyboxes.erase(std::remove_if(m_skyboxes.begin(), m_skyboxes.end(), 
+        [](const std::string& box)
+        {
+            return cro::FileSystem::getFileExtension(box) != ".sbf";
+        }), m_skyboxes.end());
+    //just to make consistent across platforms
+    std::sort(m_skyboxes.begin(), m_skyboxes.end());
+
+    auto scrollNode = m_uiScene.createEntity();
+    scrollNode.addComponent<cro::Transform>();
+    scrollNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    scrollNode.addComponent<UIElement>().absolutePosition = { 8.f, 0.f };
+    scrollNode.getComponent<UIElement>().relativePosition = { 0.f, TabAreaHeight * 0.92f };
+    m_menuEntities[MenuID::Skybox].getComponent<cro::Transform>().addChild(scrollNode.getComponent<cro::Transform>());
+
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    glm::vec2 position(0.f);
+    for (auto i = 0u; i < m_skyboxes.size(); ++i)
+    {
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString(m_skyboxes[i]);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+
+        entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Skybox);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&, i](cro::Entity, const cro::ButtonEvent& evt)
+                {
+                    if (activated(evt))
+                    {
+                        const auto& ents = m_skyboxScene.getSystem<cro::ModelRenderer>()->getEntities();
+                        for (auto e : ents)
+                        {
+                            m_skyboxScene.destroyEntity(e);
+                        }
+
+                        loadSkybox(SkyboxPath + m_skyboxes[i], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+                        m_skyboxIndex = i;
+                        m_courseData.skyboxPath = SkyboxPath + m_skyboxes[i];
+                    }                
+                });
+
+        position.y -= 10.f;
+        scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
+
+    if (!m_skyboxes.empty())
+    {
+        m_skyboxIndex = 0;
+        auto cloudPath = loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+        //TODO load clouds (??)
+
+        m_courseData.skyboxPath = SkyboxPath + m_skyboxes[m_skyboxIndex];
+    }
+}
+
+void PlaylistState::createShrubberyMenu(cro::Entity rootNode)
+{
+    m_menuEntities[MenuID::Shrubbery] = m_uiScene.createEntity();
+    rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::Shrubbery].addComponent<cro::Transform>());
+
+
+    m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+}
+
+void PlaylistState::createHoleMenu(cro::Entity rootNode)
+{
+    m_menuEntities[MenuID::Holes] = m_uiScene.createEntity();
+    rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::Holes].addComponent<cro::Transform>());
+
+
+    m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+}
+
+void PlaylistState::createFileSystemMenu(cro::Entity rootNode)
+{
+    m_menuEntities[MenuID::FileSystem] = m_uiScene.createEntity();
+    rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::FileSystem].addComponent<cro::Transform>());
+
+
+    m_menuEntities[MenuID::FileSystem].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 }
 
 void PlaylistState::updateNinePatch(cro::Entity entity)
@@ -491,7 +606,7 @@ void PlaylistState::updateNinePatch(cro::Entity entity)
 
     auto size = glm::vec2(cro::App::getWindow().getSize()) / m_viewScale;
     size.x = std::floor(size.x);
-    size.y = std::floor(size.y / 4.f);
+    size.y = std::floor(size.y * TabAreaHeight);
 
     std::array<glm::vec2, 36> positions =
     {
