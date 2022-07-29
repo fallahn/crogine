@@ -52,8 +52,9 @@ using namespace cro;
 
 ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
     : System(mb, typeid(ShadowMapRenderer)),
-    m_maxDistance (100.f),
-    m_cascadeCount(3)
+    m_maxDistance       (100.f),
+    m_cascadeCount      (1),
+    m_frustumExtension  (1.6f)
 {
     requireComponent<cro::Model>();
     requireComponent<cro::Transform>();
@@ -154,6 +155,24 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             minZ = std::min(minZ, lp.z);
             maxZ = std::max(maxZ, lp.z);
         }
+
+        /*if (minZ < 0)
+        {
+            minZ *= m_frustumExtension;
+        }
+        else
+        {
+            minZ /= m_frustumExtension;
+        }
+
+        if (maxZ < 0)
+        {
+            maxZ /= m_frustumExtension;
+        }
+        else
+        {
+            maxZ *= m_frustumExtension;
+        }*/
 
         //convert to ortho projection
         camera.shadowProjectionMatrix = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
