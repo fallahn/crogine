@@ -303,10 +303,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
                 //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
 
-                if (ImGui::InputInt("Tree Quality", &m_sharedData.treeQuality))
-                {
-                    m_sharedData.treeQuality = std::max(0, std::min(2, m_sharedData.treeQuality));
-                }
+                ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
         });

@@ -413,12 +413,13 @@ static const std::string CelFragmentShader = R"(
 #if defined(RX_SHADOWS)
     VARYING_IN LOW vec4 v_lightWorldPosition;
 
+    const float Bias = 0.001; //0.005
     float shadowAmount(LOW vec4 lightWorldPos)
     {
         vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
         projectionCoords = projectionCoords * 0.5 + 0.5;
         float depthSample = TEXTURE(u_shadowMap, projectionCoords.xy).r;
-        float currDepth = projectionCoords.z - 0.005;
+        float currDepth = projectionCoords.z - Bias;
 
         if (currDepth > 1.0)
         {
@@ -625,12 +626,12 @@ static const std::string CelFragmentShader = R"(
 
 #if defined (RX_SHADOWS)
         FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition);
-        /*if(v_lightWorldPosition.w > 0.0)
+        if(v_lightWorldPosition.w > 0.0)
         {
             vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
             if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
             FRAG_OUT.rgb += vec3(0.0,0.0,0.5);
-        }*/
+        }
 #endif
 
 #if defined (ADD_NOISE)

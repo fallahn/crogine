@@ -277,12 +277,12 @@ void PlaylistState::loadAssets()
 void PlaylistState::buildScene()
 {
     //water plane
-    auto meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(48.f, 30));
+    auto meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(100.f, 30));
     auto waterEnt = m_gameScene.createEntity();
-    waterEnt.addComponent<cro::Transform>();
+    waterEnt.addComponent<cro::Transform>().setPosition({0.f, WaterLevel, 0.f});
     waterEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::Water]);
-    material.setProperty("u_radius", 48.f);
+    material.setProperty("u_radius", 100.f);
     waterEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     m_gameScene.setWaterLevel(WaterLevel);
     m_skyboxScene.setWaterLevel(WaterLevel);
@@ -292,7 +292,12 @@ void PlaylistState::buildScene()
     cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/cart.cmt");
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({0.f, 1.f, 0.f});
+    md.createModel(entity);
+
+    md.loadFromFile("assets/golf/models/island.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
     md.createModel(entity);
 
 
@@ -325,7 +330,7 @@ void PlaylistState::buildScene()
             glUniform1f(m_resources.shaders.get(ShaderID::TreesetLeaf).getUniformID("u_targetHeight"), targetHeight);
         }
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 55.f);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 115.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 

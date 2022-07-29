@@ -123,8 +123,8 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
         m_activeCameras.push_back(camEnt);
 
-        //TODO create a projction for each cascade section
-        auto projection = glm::perspective(camera.getFOV(), camera.getAspectRatio(), camera.getNearPlane(), std::min(camera.getFarPlane(), m_maxDistance) / m_cascadeCount);
+        //TODO create a projection for each cascade section
+        auto projection = glm::perspective(camera.getFOV(), camera.getAspectRatio(), camera.getNearPlane(), std::min(camera.getFarPlane(), m_maxDistance)/* / m_cascadeCount*/);
         auto frustumCorners = getFrustumWorldCorners(projection, camera.getPass(Camera::Pass::Final).viewMatrix);
 
         auto centre = glm::vec3(0.f);
