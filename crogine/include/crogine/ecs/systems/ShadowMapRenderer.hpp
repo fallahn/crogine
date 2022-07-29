@@ -100,7 +100,6 @@ namespace cro
     private:
         float m_maxDistance;
         std::int32_t m_cascadeCount;
-        float m_frustumExtension; //< how much to expand the light frustae by (multiple)
         
         std::vector<Entity> m_activeCameras;
         std::vector<std::vector<std::pair<Entity, float>>> m_drawLists;

@@ -184,15 +184,15 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
         if (data.userType == SpriteAnimID::BillboardRewind)
         {
-            auto sound = playSound(AudioID::BillboardRewind, data.position, 0.7f);
+            auto sound = playSound(AudioID::BillboardRewind, data.position, 0.75f);
             sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-            sound.getComponent<cro::AudioEmitter>().setRolloff(0.75f);
+            sound.getComponent<cro::AudioEmitter>().setRolloff(0.65f);
         }
         else if (data.userType == SpriteAnimID::BillboardSwing)
         {
-            auto sound = playSound(AudioID::BillboardSwing, data.position, 0.7f);
+            auto sound = playSound(AudioID::BillboardSwing, data.position, 0.75f);
             sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-            sound.getComponent<cro::AudioEmitter>().setRolloff(0.75f);
+            sound.getComponent<cro::AudioEmitter>().setRolloff(0.65f);
         }
     }
         break;
