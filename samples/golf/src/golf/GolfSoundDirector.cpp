@@ -138,6 +138,11 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/ambience/birds01.wav",
         "assets/golf/sound/ambience/billboard_swing.wav",
         "assets/golf/sound/ambience/billboard_rewind.wav",
+
+        "assets/golf/sound/ambience/foot01.wav",
+        "assets/golf/sound/ambience/foot02.wav",
+        "assets/golf/sound/ambience/foot03.wav",
+        "assets/golf/sound/ambience/foot04.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -184,15 +189,22 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
         if (data.userType == SpriteAnimID::BillboardRewind)
         {
-            auto sound = playSound(AudioID::BillboardRewind, data.position, 0.75f);
+            auto sound = playSound(AudioID::BillboardRewind, data.position, 1.2f);
             sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             sound.getComponent<cro::AudioEmitter>().setRolloff(0.65f);
         }
         else if (data.userType == SpriteAnimID::BillboardSwing)
         {
-            auto sound = playSound(AudioID::BillboardSwing, data.position, 0.75f);
+            auto sound = playSound(AudioID::BillboardSwing, data.position, 1.2f);
             sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             sound.getComponent<cro::AudioEmitter>().setRolloff(0.65f);
+        }
+        else if (data.userType == SpriteAnimID::Footstep)
+        {
+            auto sound = playSound(cro::Util::Random::value(AudioID::Foot01, AudioID::Foot04), data.position, 0.3f);
+            sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            sound.getComponent<cro::AudioEmitter>().setRolloff(0.74f);
+            sound.getComponent<cro::AudioEmitter>().setPitch(1.f + cro::Util::Random::value(-0.2f, 0.2f));
         }
     }
         break;

@@ -302,8 +302,6 @@ void PlaylistState::loadAssets()
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
-
-    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 }
 
 void PlaylistState::buildScene()

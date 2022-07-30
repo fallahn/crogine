@@ -137,6 +137,10 @@ private:
             Birds,
             BillboardSwing,
             BillboardRewind,
+            Foot01,
+            Foot02,
+            Foot03,
+            Foot04,
 
             Count
         };
