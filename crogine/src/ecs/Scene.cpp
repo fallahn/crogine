@@ -82,8 +82,8 @@ namespace
         uniform LOW vec3 u_midColour;
         uniform LOW vec3 u_lightColour;
 
-        uniform float u_stepStart = 0.49;
-        uniform float u_stepEnd = 0.51;
+        uniform float u_stepStart = 0.495;
+        uniform float u_stepEnd = 0.505;
 
         VARYING_IN vec3 v_texCoords;
 
@@ -98,7 +98,7 @@ namespace
             amount += 1.0;
             amount /= 2.0;
 
-            vec3 top = mix(u_midColour, u_lightColour, smoothstep(u_stepEnd, 0.55, amount));
+            vec3 top = mix(u_midColour, u_lightColour, smoothstep(u_stepEnd, 0.545, amount));
             FRAG_OUT = vec4(mix(u_darkColour, top, smoothstep(u_stepStart, u_stepEnd, amount)), 1.0);
 
         })";

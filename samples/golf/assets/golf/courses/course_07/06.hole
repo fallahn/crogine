@@ -21,7 +21,7 @@ hole 06
     prop
     {
         model = "assets/golf/models/jetty.cmt"
-        position = 110.328217,0.208593,-90.693527
+        position = 110.602623,-0.227150,-89.753700
         rotation = 11.953811
         scale = 1.000000,1.000000,1.000000
     }
@@ -80,8 +80,8 @@ hole 06
 
     crowd
     {
-        position = 84.272659,1.423210,-68.557777
-        rotation = 50.209699
+        position = 84.701538,1.423210,-67.557060
+        rotation = 57.530239
     }
 
     prop

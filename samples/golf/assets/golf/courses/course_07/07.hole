@@ -1,0 +1,152 @@
+hole 07
+{
+    map="assets/golf/courses/course_07/07.png"
+    model="assets/golf/models//course_07/07.cmt"
+    par = 4
+
+    pin = 289.957458,1.467902,-32.728302
+
+    target = 141.958160,1.453481,-71.169670
+
+    tee = 23.430618,1.453481,-174.961365
+
+    prop
+    {
+        model = "assets/golf/models/boat01.cmt"
+        position = 96.199677,-1.062750,-137.596405
+        rotation = 119.913232
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/jetty.cmt"
+        position = 89.776062,-0.336678,-143.070465
+        rotation = -59.659508
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lamp_post.cmt"
+        position = 83.162743,1.451474,-143.279205
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/driving_shed.cmt"
+        position = 282.505219,1.453481,-74.627876
+        rotation = -32.486571
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/rock_large.cmt"
+        position = 284.257324,1.405218,-70.987595
+        rotation = -164.851159
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/log.cmt"
+        position = 275.103851,1.452761,-77.140190
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 279.863922,1.453525,-71.754364
+        rotation = -26.937190
+    }
+
+    crowd
+    {
+        position = 304.540527,1.453526,-46.587864
+        rotation = -66.148326
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 178.823639,0.046922,-79.874763
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 180.380630,0.041009,-77.043190
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 175.323502,0.046922,-81.456390
+        rotation = -137.842583
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 172.268356,0.041009,-82.509056
+        rotation = -137.842583
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/speed_boat.cmt"
+        position = 99.647087,0.189645,-182.698608
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+
+        path
+        {
+            point = 7.021492,0.000000,-212.056244
+            point = 36.397018,0.000000,-209.600662
+            point = 62.225609,0.000000,-198.868896
+            point = 84.961990,0.000000,-170.493378
+            point = 108.971634,0.000000,-144.937210
+            point = 121.413216,0.000000,-138.934692
+            point = 142.803986,0.000000,-146.028564
+            point = 158.628815,0.000000,-176.586838
+            point = 175.654114,0.000000,-202.343079
+            point = 210.032166,0.000000,-205.289764
+            point = 267.874603,0.000000,-196.886246
+            point = 301.270416,0.000000,-188.810135
+            point = 317.313507,0.000000,-174.185822
+            point = 323.534302,0.000000,-162.944748
+            point = 332.156097,0.000000,-158.251877
+            point = 342.414948,0.000000,-165.127487
+            point = 349.072296,0.000000,-192.629929
+            point = 342.265259,0.000000,-222.327835
+            point = 323.455750,0.000000,-237.652618
+            point = 285.227325,0.000000,-239.995224
+            point = 113.337105,0.000000,-240.213501
+            point = 22.644539,0.000000,-240.540909
+            point = -12.190451,0.000000,-237.383591
+            point = -26.418762,0.000000,-227.830322
+            point = -31.705517,0.000000,-211.947113
+            point = -27.340050,0.000000,-202.015671
+            point = -18.936527,0.000000,-198.523300
+            point = -7.695452,0.000000,-201.251724
+            point = 6.274041,0.000000,-211.837967
+
+            loop = true
+            delay = 0.000000
+            speed = 20.000000
+        }
+        emitter = "boat"
+        particles = "assets/golf/particles/sprinkler.cps"
+    }
+
+}

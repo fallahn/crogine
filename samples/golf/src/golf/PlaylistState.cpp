@@ -33,6 +33,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "TextAnimCallback.hpp"
+#include "PoissonDisk.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/core/Window.hpp>
@@ -73,6 +74,7 @@ source distribution.
 namespace
 {
 #include "WaterShader.inl"
+#include "TerrainShader.inl"
 
     const std::string SkyboxPath = "assets/golf/skyboxes/";
 
@@ -264,6 +266,36 @@ void PlaylistState::loadAssets()
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(*shader);
 
 
+    std::string wobble;
+    if (m_sharedData.vertexSnap)
+    {
+        wobble = "#define WOBBLE\n";
+    }
+
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::Cel);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define NOCHEX\n#define SUBRECT\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::CelTextured);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::Course);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
+
+
+
+
+
     //audio - TODO do we need to keep the audio scape as a member?
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
     m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
@@ -290,15 +322,50 @@ void PlaylistState::buildScene()
 
     //island
     cro::ModelDefinition md(m_resources);
-    md.loadFromFile("assets/golf/models/cart.cmt");
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({0.f, 1.f, 0.f});
-    md.createModel(entity);
+    if (md.loadFromFile("assets/golf/models/cart.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 1.f, 0.f });
+        md.createModel(entity);
 
-    md.loadFromFile("assets/golf/models/island.cmt");
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
-    md.createModel(entity);
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        for (auto i = 1u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+        {
+            applyMaterialData(md, material, i);
+            entity.getComponent<cro::Model>().setMaterial(i, material);
+        }
+    }
+
+    if (md.loadFromFile("assets/golf/models/island.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
+        md.createModel(entity);
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
+        for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+        {
+            applyMaterialData(md, material, i);
+            entity.getComponent<cro::Model>().setMaterial(i, material);
+        }
+
+        m_collisionMesh.updateCollisionMesh(entity.getComponent<cro::Model>().getMeshData());
+    }
+
+
+
+    //distributions
+    static constexpr float GrassDensity = 1.7f;
+    static constexpr float TreeDensity = 4.f;
+
+    //this matches the image, but the output then needs to be scaled down 5x and offet to centre
+    static constexpr std::array MinBounds = { 0.f, 0.f };
+    static constexpr std::array MaxBounds = { static_cast<float>(MapSize.x), static_cast<float>(MapSize.y) };
+
+    auto seed = static_cast<std::uint32_t>(std::time(nullptr));
+    auto grass = pd::PoissonDiskSampling(GrassDensity, MinBounds, MaxBounds, 30u, seed);
+    auto trees = pd::PoissonDiskSampling(TreeDensity, MinBounds, MaxBounds);
+    auto flowers = pd::PoissonDiskSampling(TreeDensity * 0.5f, MinBounds, MaxBounds, 30u, seed / 2);
 
 
     //3D camera
@@ -369,6 +436,7 @@ void PlaylistState::buildUI()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -2.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>().setTexture(m_gameSceneTexture.getTexture());
+    auto sceneEnt = entity;
 
     //attach UI to this so we have a single root scale
     auto rootNode = m_uiScene.createEntity();
@@ -381,7 +449,7 @@ void PlaylistState::buildUI()
     ninePatch.getComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get("assets/golf/images/tab_patch.png"));
     rootNode.getComponent<cro::Transform>().addChild(ninePatch.getComponent<cro::Transform>());
 
-    auto updateView = [&, rootNode, ninePatch](cro::Camera& cam) mutable
+    auto updateView = [&, sceneEnt, rootNode, ninePatch](cro::Camera& cam) mutable
     {
         glm::vec2 size(GolfGame::getActiveTarget()->getSize());
 
@@ -394,6 +462,12 @@ void PlaylistState::buildUI()
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
 
         updateNinePatch(ninePatch); //requires scale to be set above
+
+        //resets the sprite size with the updated texture size
+        glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);
+        sceneEnt.getComponent<cro::Transform>().setScale(courseScale);
+        sceneEnt.getComponent<cro::Sprite>().setTexture(m_gameSceneTexture.getTexture());
+
 
         //updates any text objects / buttons with a relative position
         cro::Command cmd;

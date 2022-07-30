@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "GameConsts.hpp"
+#include "CollisionMesh.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
@@ -65,6 +66,8 @@ private:
 
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_gameSceneTexture;
+
+    CollisionMesh m_collisionMesh;
 
     cro::UniformBuffer<float> m_scaleBuffer;
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
@@ -104,11 +107,13 @@ private:
         enum
         {
             Horizon, Water,
+            Cel, CelTextured,
+            Course,
 
             Count
         };
     };
-    std::array<std::size_t, MaterialID::Count> m_materialIDs = {};
+    std::array<std::int32_t, MaterialID::Count> m_materialIDs = {};
 
     glm::vec2 m_viewScale;
     

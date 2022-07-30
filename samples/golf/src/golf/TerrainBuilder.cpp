@@ -69,7 +69,6 @@ namespace
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler
     static constexpr float TreeDensity = 4.f;
 
-    //TODO for grass billboard we could shrink the area slightly as we prefer trees further away
     static constexpr std::array MinBounds = { 0.f, 0.f };
     static constexpr std::array MaxBounds = { static_cast<float>(MapSize.x), static_cast<float>(MapSize.y) };
 
