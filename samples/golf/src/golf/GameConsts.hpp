@@ -104,7 +104,8 @@ struct SpriteAnimID final
         Swing = 0,
         Medal,
         BillboardSwing,
-        BillboardRewind
+        BillboardRewind,
+        Footstep
     };
 };
 

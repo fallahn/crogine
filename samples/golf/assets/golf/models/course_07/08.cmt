@@ -1,6 +1,6 @@
-model 06
+model 08
 {
-    mesh = assets/golf/models/course_07/06.cmb
+    mesh = assets/golf/models/course_07/08.cmb
     cast_shadows = false
 
     material Unlit
@@ -86,24 +86,6 @@ model 06
         framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/scrub.png"
-
-    }
-    material Unlit
-    {
-        name = "stone"
-        colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = false
-        repeat = true
-        depth_test = true
-        double_sided = false
-        use_mipmaps = false
-        animated = false
-        row_count = 1
-        col_count = 1
-        framerate = 1.000000
-        rx_shadows = true
-        blendmode = none
-        diffuse = "assets/golf/images/stone.png"
 
     }
     material Unlit
