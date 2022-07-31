@@ -2118,7 +2118,7 @@ void GolfState::loadAssets()
                                         const auto& anims = skel.getAnimations();
                                         if (anims.size() == 1)
                                         {
-                                            ent.getComponent<cro::Skeleton>().play(0);
+                                            //ent.getComponent<cro::Skeleton>().play(0); // don't play this until unhidden
                                             skel.getAnimations()[0].looped = true;
                                             skel.setMaxInterpolationDistance(100.f);
                                         }
@@ -2132,7 +2132,7 @@ void GolfState::loadAssets()
                                             ent.getComponent<cro::Callback>().setUserData<bool>(false);
                                             ent.addComponent<cro::CommandTarget>().ID = CommandID::Spectator;
 
-                                            skel.setMaxInterpolationDistance(100.f);
+                                            skel.setMaxInterpolationDistance(80.f);
                                         }
                                     }
                                 }
@@ -4266,6 +4266,12 @@ void GolfState::setCurrentHole(std::uint32_t hole)
             for (auto prop : m_holeData[m_currentHole].propEntities)
             {
                 prop.getComponent<cro::Model>().setHidden(false);
+
+                if (prop.hasComponent<cro::Skeleton>()
+                    && !prop.getComponent<cro::Skeleton>().getAnimations().empty())
+                {
+                    prop.getComponent<cro::Skeleton>().play(0);
+                }
             }
 
             for (auto particle : m_holeData[m_currentHole].particleEntities)
