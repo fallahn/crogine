@@ -376,6 +376,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //setActiveCamera(2);
             showCountdown(10);
             break;
+        case SDLK_KP_MULTIPLY:
+            m_activeAvatar->ballModel.getComponent<InterpolationComponent<InterpolationType::Linear>>().dumpPositions();
+            break;
         case SDLK_PAGEUP:
         {
             cro::Command cmd;
