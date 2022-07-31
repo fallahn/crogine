@@ -154,7 +154,7 @@ void ClientCollisionSystem::process(float)
             }
         };
 
-        static constexpr float CollisionLevel = 0.35f;
+        static constexpr float CollisionLevel = 0.45f;
         float currentLevel = position.y - result.height;
 
         std::int32_t direction = 0;
