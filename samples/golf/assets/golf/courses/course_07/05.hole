@@ -129,7 +129,7 @@ hole 05
     prop
     {
         model = "assets/golf/models/spectators/sitting/03.cmt"
-        position = 190.825226,0.493092,-166.043304
+        position = 190.755417,0.493092,-165.776443
         rotation = 0.000000
         scale = 1.000000,1.000000,1.000000
     }

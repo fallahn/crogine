@@ -20,6 +20,6 @@ model 04
         blendmode = none
         diffuse = "assets/golf/crowd/crowd04.png"
         skinned = true
-
+        rx_shadows = false
     }
 }

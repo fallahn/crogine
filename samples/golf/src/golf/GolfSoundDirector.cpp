@@ -519,6 +519,7 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
         auto ent = getNextEntity();
         ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
         ent.getComponent<cro::AudioEmitter>().setVolume(volume);
+        ent.getComponent<cro::AudioEmitter>().setPitch(1.f);
         ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
         ent.getComponent<cro::AudioEmitter>().play();
         ent.getComponent<cro::Transform>().setPosition(position);
@@ -610,6 +611,7 @@ cro::Entity GolfSoundDirector::playAvatarSound(std::int32_t idx, const std::stri
     auto ent = getNextEntity();
     ent.getComponent<cro::AudioEmitter>() = m_playerVoices[idx].getEmitter(emitterName);
     ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+    ent.getComponent<cro::AudioEmitter>().setPitch(1.f);
     ent.getComponent<cro::AudioEmitter>().play();
     ent.getComponent<cro::Transform>().setPosition(position);
     return ent;
