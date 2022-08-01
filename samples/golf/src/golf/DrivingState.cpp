@@ -696,7 +696,14 @@ void DrivingState::loadAssets()
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", m_resources.textures);
+    if (m_sharedData.treeQuality == SharedStateData::Classic)
+    {
+        spriteSheet.loadFromFile("assets/golf/sprites/shrubbery_low.spt", m_resources.textures);
+    }
+    else
+    {
+        spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", m_resources.textures);
+    }
     m_billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
     m_billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
     m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("flowers01"));
@@ -1518,7 +1525,9 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     };
 
     cro::ModelDefinition md(m_resources);
-    static const std::string shrubPath("assets/golf/models/shrubbery.cmt");
+    const std::string shrubPath = m_sharedData.treeQuality == SharedStateData::Classic ?
+        ("assets/golf/models/shrubbery_low.cmt") :
+        ("assets/golf/models/shrubbery.cmt");
 
     //sides
     for (auto i = 0u; i < ChunkCount; ++i)

@@ -583,7 +583,14 @@ void ClubhouseState::loadResources()
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", m_resources.textures);
+    if (m_sharedData.treeQuality == SharedStateData::Classic)
+    {
+        spriteSheet.loadFromFile("assets/golf/sprites/shrubbery_low.spt", m_resources.textures);
+    }
+    else
+    {
+        spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", m_resources.textures);
+    }
     m_billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
     m_billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
     m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("flowers01"));
@@ -592,6 +599,7 @@ void ClubhouseState::loadResources()
     m_billboardTemplates[BillboardID::Tree01] = spriteToBillboard(spriteSheet.getSprite("tree01"));
     m_billboardTemplates[BillboardID::Tree02] = spriteToBillboard(spriteSheet.getSprite("tree02"));
     m_billboardTemplates[BillboardID::Tree03] = spriteToBillboard(spriteSheet.getSprite("tree03"));
+    m_billboardTemplates[BillboardID::Tree04] = spriteToBillboard(spriteSheet.getSprite("tree04"));
 
 
 
@@ -866,7 +874,10 @@ void ClubhouseState::buildScene()
 
 
     //billboards
-    if (md.loadFromFile("assets/golf/models/shrubbery.cmt"))
+    auto shrubPath = m_sharedData.treeQuality == SharedStateData::Classic ?
+        "assets/golf/models/shrubbery_low.cmt" :
+        "assets/golf/models/shrubbery.cmt";
+    if (md.loadFromFile(shrubPath))
     {
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>();

@@ -1300,7 +1300,7 @@ void GolfState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Player] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
@@ -1701,15 +1701,27 @@ void GolfState::loadAssets()
     //used when parsing holes
     auto addCrowd = [&](HoleData& holeData, glm::vec3 position, float rotation)
     {
+        constexpr auto MapOrigin = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
+
         //used by terrain builder to created instanced geom
         glm::vec3 offsetPos(-8.f, 0.f, 0.f);
         for (auto i = 0; i < 16; ++i)
         {
-            auto tx = glm::translate(glm::mat4(1.f), position - glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f));
+            auto tx = glm::translate(glm::mat4(1.f), position - MapOrigin);
             tx = glm::rotate(tx, (rotation * cro::Util::Const::degToRad), glm::vec3(0.f, 1.f, 0.f));
             tx = glm::translate(tx, offsetPos);
-            tx = glm::rotate(tx, cro::Util::Random::value(-0.25f, 0.25f), glm::vec3(0.f, 1.f, 0.f));
-            
+
+            /*auto holeDir = holeData.pin - (glm::vec3(tx[3]) + MapOrigin);
+            if (float len = glm::length2(holeDir); len < 1600.f)
+            {
+                rotation = std::atan2(-holeDir.z, holeDir.x) - ((rotation - 90.f) * cro::Util::Const::degToRad);
+                tx = glm::rotate(tx, rotation, glm::vec3(0.f, 1.f, 0.f));
+            }
+            else*/
+            {
+                tx = glm::rotate(tx, cro::Util::Random::value(-0.25f, 0.25f), glm::vec3(0.f, 1.f, 0.f));
+            }
+
             float scale = static_cast<float>(cro::Util::Random::value(95, 110)) / 100.f;
             tx = glm::scale(tx, glm::vec3(scale));
 
