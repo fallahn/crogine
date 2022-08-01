@@ -2087,19 +2087,22 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     }
                     else
                     {
-                        //toggle readyness
-                        std::uint8_t ready = m_readyState[m_sharedData.clientConnection.connectionID] ? 0 : 1;
-                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady, 
-                            std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),
-                            net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        //toggle readyness but only if the selected course is locally available
+                        if (!m_sharedData.mapDirectory.empty())
+                        {
+                            std::uint8_t ready = m_readyState[m_sharedData.clientConnection.connectionID] ? 0 : 1;
+                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady,
+                                std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),
+                                net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-                        if (ready)
-                        {
-                            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                        }
-                        else
-                        {
-                            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                            if (ready)
+                            {
+                                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                            }
+                            else
+                            {
+                                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                            }
                         }
                     }
                 }

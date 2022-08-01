@@ -1202,6 +1202,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 }
                 else
                 {
+                    m_sharedData.mapDirectory = "";
+
                     //print to UI course is missing
                     cro::Command cmd;
                     cmd.targetFlags = CommandID::Menu::CourseTitle;
