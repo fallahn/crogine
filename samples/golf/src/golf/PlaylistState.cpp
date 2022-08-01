@@ -580,6 +580,13 @@ void PlaylistState::buildUI()
     createHoleMenu(rootNode);
     createFileSystemMenu(rootNode);
 
+
+    m_animationIDs[AnimationID::TabHoles] = spriteSheet.getAnimationIndex("holes", "tab_bar");
+    m_animationIDs[AnimationID::TabSkybox] = spriteSheet.getAnimationIndex("skybox", "tab_bar");
+    m_animationIDs[AnimationID::TabSaveLoad] = spriteSheet.getAnimationIndex("load_save", "tab_bar");
+    m_animationIDs[AnimationID::TabShrubs] = spriteSheet.getAnimationIndex("shrubs", "tab_bar");
+
+
     //TODO add buttons to this to update image and
     //show/hide correct menu
     auto tabEnt = m_uiScene.createEntity();
@@ -588,12 +595,12 @@ void PlaylistState::buildUI()
     tabEnt.addComponent<UIElement>().relativePosition = { 0.f, TabAreaHeight };
     tabEnt.addComponent<cro::Drawable2D>();
     tabEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_bar");
+    tabEnt.addComponent<cro::SpriteAnimation>().play(m_animationIDs[AnimationID::TabSkybox]);
     rootNode.getComponent<cro::Transform>().addChild(tabEnt.getComponent<cro::Transform>());
 
-    m_animationIDs[AnimationID::TabHoles] = spriteSheet.getAnimationIndex("holes", "tab_bar");
-    m_animationIDs[AnimationID::TabSkybox] = spriteSheet.getAnimationIndex("hskybox", "tab_bar");
-    m_animationIDs[AnimationID::TabSaveLoad] = spriteSheet.getAnimationIndex("load_save", "tab_bar");
-    m_animationIDs[AnimationID::TabShrubs] = spriteSheet.getAnimationIndex("shrubs", "tab_bar");
+
+    //TODO ACTUALLY we probably want prev/next buttons so there
+    //are fewer to update and easier to hook with controller buttons
 }
 
 void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuData)
@@ -821,6 +828,8 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode)
     m_menuEntities[MenuID::Shrubbery] = m_uiScene.createEntity();
     rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::Shrubbery].addComponent<cro::Transform>());
 
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
 
     m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 }
@@ -830,6 +839,8 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode)
     m_menuEntities[MenuID::Holes] = m_uiScene.createEntity();
     rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::Holes].addComponent<cro::Transform>());
 
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::Holes);
 
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 }
@@ -839,6 +850,8 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode)
     m_menuEntities[MenuID::FileSystem] = m_uiScene.createEntity();
     rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::FileSystem].addComponent<cro::Transform>());
 
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
 
     m_menuEntities[MenuID::FileSystem].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 }
