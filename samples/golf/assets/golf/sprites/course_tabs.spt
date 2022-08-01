@@ -4,33 +4,10 @@ spritesheet course_tabs
     smooth = false
     repeat = false
 
+
     sprite scroll_highlight
     {
         bounds = 91.000000,87.000000,11.000000,11.000000
-        colour = 1.000000,1.000000,1.000000,1.000000
-
-    }
-    sprite tab_highlight
-    {
-        bounds = 3.000000,88.000000,70.000000,18.000000
-        colour = 1.000000,1.000000,1.000000,1.000000
-
-    }
-    sprite skybox
-    {
-        bounds = 0.000000,0.000000,400.000000,21.000000
-        colour = 1.000000,1.000000,1.000000,1.000000
-
-    }
-    sprite holes
-    {
-        bounds = 0.000000,42.000000,400.000000,21.000000
-        colour = 1.000000,1.000000,1.000000,1.000000
-
-    }
-    sprite shrubs
-    {
-        bounds = 0.000000,21.000000,400.000000,21.000000
         colour = 1.000000,1.000000,1.000000,1.000000
 
     }
@@ -40,16 +17,57 @@ spritesheet course_tabs
         colour = 1.000000,1.000000,1.000000,1.000000
 
     }
-    sprite save_load
-    {
-        bounds = 0.000000,63.000000,400.000000,21.000000
-        colour = 1.000000,1.000000,1.000000,1.000000
-
-    }
     sprite scroll_up
     {
         bounds = 79.000000,99.000000,9.000000,9.000000
         colour = 1.000000,1.000000,1.000000,1.000000
 
+    }
+
+
+    sprite tab_highlight
+    {
+        bounds = 3.000000,88.000000,70.000000,18.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+
+
+    sprite tab_bar
+    {
+        bounds = 0.000000,0.000000,400.000000,21.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+        animation skybox
+        {
+            frame = 0.000000,0.000000,400.000000,21.000000
+
+            loop = true
+            framerate = 100
+        }
+
+        animation holes
+        {
+            frame = 0.000000,42.000000,400.000000,21.000000
+
+            loop = true
+            framerate = 100
+        }
+
+        animation shrubs
+        {
+            frame = 0.000000,21.000000,400.000000,21.000000
+
+            loop = true
+            framerate = 100
+        }
+
+        animation save_load
+        {
+            frame = 0.000000,63.000000,400.000000,21.000000
+
+            loop = true
+            framerate = 100
+        }
     }
 }

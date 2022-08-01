@@ -79,6 +79,22 @@ namespace
     const std::string SkyboxPath = "assets/golf/skyboxes/";
 
     constexpr float TabAreaHeight = 0.25f; //percent of screen
+
+    cro::Entity createHighlight(cro::Scene& scene, const cro::SpriteSheet& spriteSheet)
+    {
+        auto entity = scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("scroll_highlight");
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+
+        auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -0.3f });
+
+        entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+
+        return entity;
+    }
 }
 
 PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -120,7 +136,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
 #ifndef CRO_DEBUG_
             || evt.key.keysym.sym == SDLK_ESCAPE
 #endif
-            || evt.key.keysym.sym == SDLK_p)
+            )
         {
             quitState();
             return false;
@@ -142,6 +158,36 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
         {
             quitState();
             return false;
+        }
+    }
+
+    else if (evt.type == SDL_MOUSEWHEEL)
+    {
+        if (evt.wheel.y > 0)
+        {
+            cro::ButtonEvent fakeEvent;
+            fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+            fakeEvent.button.button = SDL_BUTTON_LEFT;
+
+            //up
+            auto menuID = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
+            if (menuID == MenuID::Skybox)
+            {
+                m_callbacks[CallbackID::SkyScrollUp](cro::Entity(), fakeEvent);
+            }
+        }
+        else if (evt.wheel.y < 0)
+        {
+            cro::ButtonEvent fakeEvent;
+            fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+            fakeEvent.button.button = SDL_BUTTON_LEFT;
+
+            //down
+            auto menuID = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
+            if (menuID == MenuID::Skybox)
+            {
+                m_callbacks[CallbackID::SkyScrollDown](cro::Entity(), fakeEvent);
+            }
         }
     }
 
@@ -243,6 +289,7 @@ void PlaylistState::addSystems()
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
     m_uiScene.addSystem<cro::UISystem>(mb);
+    m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::SpriteAnimationSystem>(mb);
@@ -498,32 +545,65 @@ void PlaylistState::buildUI()
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
         });
-    auto textUnelected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+    auto textUnselected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
             e.getComponent<cro::Text>().setFillColour(TextNormalColour);
         });
 
 
-    createSkyboxMenu(rootNode, textSelected, textUnelected);
+    auto highlightSelected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e)
+        {
+            e.getComponent<cro::Callback>().active = true;
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        });
+    auto highlightUnelected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/course_tabs.spt", m_resources.textures);
+
+    MenuData md;
+    md.textSelected = textSelected;
+    md.textUnselected = textUnselected;
+    md.scrollSelected = highlightSelected;
+    md.scrollUnselected = highlightUnelected;
+    md.spriteSheet = &spriteSheet;
+
+    createSkyboxMenu(rootNode, md);
     createShrubberyMenu(rootNode);
     createHoleMenu(rootNode);
     createFileSystemMenu(rootNode);
 
-    //TODO load sprite sheet and crate tab bar for each menu
+    //TODO add buttons to this to update image and
+    //show/hide correct menu
+    auto tabEnt = m_uiScene.createEntity();
+    tabEnt.addComponent<cro::Transform>();
+    tabEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    tabEnt.addComponent<UIElement>().relativePosition = { 0.f, TabAreaHeight };
+    tabEnt.addComponent<cro::Drawable2D>();
+    tabEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_bar");
+    rootNode.getComponent<cro::Transform>().addChild(tabEnt.getComponent<cro::Transform>());
 
-
-
+    m_animationIDs[AnimationID::TabHoles] = spriteSheet.getAnimationIndex("holes", "tab_bar");
+    m_animationIDs[AnimationID::TabSkybox] = spriteSheet.getAnimationIndex("hskybox", "tab_bar");
+    m_animationIDs[AnimationID::TabSaveLoad] = spriteSheet.getAnimationIndex("load_save", "tab_bar");
+    m_animationIDs[AnimationID::TabShrubs] = spriteSheet.getAnimationIndex("shrubs", "tab_bar");
 }
 
-void PlaylistState::createSkyboxMenu(cro::Entity rootNode, std::uint32_t selected, std::uint32_t unselected)
+void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuData)
 {
     m_menuEntities[MenuID::Skybox] = m_uiScene.createEntity();
     rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::Skybox].addComponent<cro::Transform>());
 
     m_skyboxes = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + SkyboxPath);
     //TODO we want as good a way as possible to validate the files...
-    m_skyboxes.erase(std::remove_if(m_skyboxes.begin(), m_skyboxes.end(), 
+    m_skyboxes.erase(std::remove_if(m_skyboxes.begin(), m_skyboxes.end(),
         [](const std::string& box)
         {
             return cro::FileSystem::getFileExtension(box) != ".sbf";
@@ -531,13 +611,24 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, std::uint32_t selecte
     //just to make consistent across platforms
     std::sort(m_skyboxes.begin(), m_skyboxes.end());
 
+    m_menuEntities[MenuID::Skybox].addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    m_menuEntities[MenuID::Skybox].addComponent<UIElement>().absolutePosition = { 8.f, -8.f };
+    m_menuEntities[MenuID::Skybox].getComponent<UIElement>().relativePosition = { 0.f, TabAreaHeight };
+    
     auto scrollNode = m_uiScene.createEntity();
     scrollNode.addComponent<cro::Transform>();
-    scrollNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    scrollNode.addComponent<UIElement>().absolutePosition = { 8.f, 0.f };
-    scrollNode.getComponent<UIElement>().relativePosition = { 0.f, TabAreaHeight * 0.92f };
     m_menuEntities[MenuID::Skybox].getComponent<cro::Transform>().addChild(scrollNode.getComponent<cro::Transform>());
 
+    static constexpr float ItemSpacing = 10.f;
+    struct ScrollData final
+    {
+        explicit ScrollData(std::size_t ic) : itemCount(ic) {}
+        const std::size_t itemCount = 0;
+
+        std::size_t currIndex = 0;
+        std::size_t targetIndex = 0;
+        glm::vec3 basePosition = glm::vec3(0.f);
+    };
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     glm::vec2 position(0.f);
@@ -550,10 +641,45 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, std::uint32_t selecte
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
 
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+        {
+            auto cropRect = m_croppingArea;
+            auto localBounds = e.getComponent<cro::Drawable2D>().getLocalBounds();
+            auto pos = e.getComponent<cro::Transform>().getWorldPosition();
+            cropRect.left -= pos.x;
+            cropRect.bottom -= pos.y;
+            cropRect.bottom -= localBounds.bottom + localBounds.height;
+            e.getComponent<cro::Drawable2D>().setCroppingArea(cropRect);
+        };
+
         entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Skybox);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&,i, scrollNode](cro::Entity e) mutable
+                {
+                    e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+                    auto pos = e.getComponent<cro::Transform>().getWorldPosition();
+                    pos.y -= ItemSpacing / 2.f;
+                    if (!m_croppingArea.contains(pos))
+                    {
+                        cro::ButtonEvent fakeEvent;
+                        fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+                        fakeEvent.button.button = SDL_BUTTON_LEFT;
+
+                        if (pos.y < m_croppingArea.bottom)
+                        {
+                            m_callbacks[CallbackID::SkyScrollDown](cro::Entity(), fakeEvent);
+                        }
+                        else if (pos.y > (m_croppingArea.bottom + m_croppingArea.height))
+                        {
+                            scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = i;
+                        }
+                    }
+                });
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.textUnselected;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback(
                 [&, i](cro::Entity, const cro::ButtonEvent& evt)
@@ -569,14 +695,117 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, std::uint32_t selecte
                         loadSkybox(SkyboxPath + m_skyboxes[i], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon]);
                         m_skyboxIndex = i;
                         m_courseData.skyboxPath = SkyboxPath + m_skyboxes[i];
-                    }                
+                    }
                 });
 
-        position.y -= 10.f;
+        position.y -= ItemSpacing;
         scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
+    //scroll callbacks
+    ScrollData scrollData(m_skyboxes.size());
 
+    scrollData.basePosition = scrollNode.getComponent<cro::Transform>().getPosition();
+
+    scrollNode.addComponent<cro::Callback>().setUserData<ScrollData>(scrollData);
+    scrollNode.getComponent<cro::Callback>().active = true;
+    scrollNode.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<ScrollData>();
+
+        auto targetPos = data.basePosition;
+        targetPos.y += ItemSpacing * data.targetIndex;
+
+        auto movement = targetPos - e.getComponent<cro::Transform>().getPosition();
+        if (glm::length2(movement) > 1)
+        {
+            e.getComponent<cro::Transform>().move(movement * (dt * 10.f));
+        }
+        else
+        {
+            e.getComponent<cro::Transform>().setPosition(targetPos);
+            data.currIndex = data.targetIndex;
+        }
+    };
+
+
+    m_callbacks[CallbackID::SkyScrollDown] =
+        [&, scrollNode](cro::Entity, const cro::ButtonEvent& evt) mutable
+    {
+        if (activated(evt))
+        {
+            auto& data = scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>();
+            data.targetIndex = std::min(data.targetIndex + 1, data.itemCount - 1);
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
+    };
+    m_callbacks[CallbackID::SkyScrollUp] = 
+        [&, scrollNode](cro::Entity , const cro::ButtonEvent& evt) mutable
+    {
+        if (activated(evt))
+        {
+            auto& data = scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>();
+            if (data.currIndex > 0)
+            {
+                data.targetIndex = data.currIndex - 1;
+            }
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
+    };
+
+    //scroll buttons
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("scroll_up");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+       
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.2f;
+    entity.getComponent<UIElement>().absolutePosition = { -bounds.width * 3.f, -std::floor(bounds.height * 1.25f) };
+    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    auto buttonEnt = entity;
+    m_menuEntities[MenuID::Skybox].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = createHighlight(m_uiScene, *menuData.spriteSheet);
+    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, });
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Skybox);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(m_callbacks[CallbackID::SkyScrollUp]);
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("scroll_down");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.2f;
+    entity.getComponent<UIElement>().absolutePosition = { -bounds.width * 3.f, std::floor(bounds.height * 2.f) };
+    entity.getComponent<UIElement>().relativePosition = { 1.f, -TabAreaHeight };
+    buttonEnt = entity;
+    m_menuEntities[MenuID::Skybox].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    entity = createHighlight(m_uiScene, *menuData.spriteSheet);
+    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, });
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Skybox);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(m_callbacks[CallbackID::SkyScrollDown]);
+
+
+    //load default skybox if found
     if (!m_skyboxes.empty())
     {
         m_skyboxIndex = 0;
@@ -811,6 +1040,9 @@ void PlaylistState::updateNinePatch(cro::Entity entity)
             cro::Vertex2D(positions[35], PatchUVs[35]),
             cro::Vertex2D(positions[34], PatchUVs[34])
         });
+
+    size *= m_viewScale;
+    m_croppingArea = { 6.f * m_viewScale.x, 6.f * m_viewScale.y, size.x - (12.f * m_viewScale.x), size.y - (12.f * m_viewScale.y) };
 }
 
 void PlaylistState::quitState()

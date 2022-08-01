@@ -42,6 +42,11 @@ source distribution.
 
 struct SharedStateData;
 
+namespace cro
+{
+    class SpriteSheet;
+}
+
 class PlaylistState final : public cro::State
 {
 public:
@@ -124,12 +129,48 @@ private:
     std::vector<std::string> m_skyboxes;
     std::size_t m_skyboxIndex;
 
+    struct CallbackID final
+    {
+        enum
+        {
+            SkyScrollUp,
+            SkyScrollDown,
+
+            Count
+        };
+    };
+    std::array<std::function<void(cro::Entity, const cro::ButtonEvent&)>, CallbackID::Count> m_callbacks = {};
+
+
+    struct AnimationID final
+    {
+        enum
+        {
+            TabSkybox,
+            TabHoles,
+            TabShrubs,
+            TabSaveLoad,
+
+            Count
+        };
+    };
+    std::array<std::size_t, AnimationID::Count> m_animationIDs = {};
+    cro::FloatRect m_croppingArea;
+
     void addSystems();
     void loadAssets();
     void buildScene();
     void buildUI();
 
-    void createSkyboxMenu(cro::Entity, std::uint32_t selected, std::uint32_t unselected);
+    struct MenuData final
+    {
+        std::uint32_t scrollSelected = 0;
+        std::uint32_t scrollUnselected = 0;
+        std::uint32_t textSelected = 0;
+        std::uint32_t textUnselected = 0;
+        cro::SpriteSheet* spriteSheet = nullptr;
+    };
+    void createSkyboxMenu(cro::Entity, const MenuData&);
     void createShrubberyMenu(cro::Entity);
     void createHoleMenu(cro::Entity);
     void createFileSystemMenu(cro::Entity);
