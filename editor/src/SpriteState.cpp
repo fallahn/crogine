@@ -203,6 +203,8 @@ glm::vec2 SpriteState::getRelativePosition(glm::vec2 mousePos)
 {
 	auto relPos = mousePos - glm::vec2(m_entities[EntityID::Root].getComponent<cro::Transform>().getPosition());
 	relPos /= glm::vec2(m_entities[EntityID::Root].getComponent<cro::Transform>().getScale());
+	relPos.x = std::floor(relPos.x);
+	relPos.y = std::floor(relPos.y);
 	return relPos;
 }
 
