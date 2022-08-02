@@ -294,6 +294,9 @@ bool PlaylistState::simulate(float dt)
 {
     static WindData windData;
     windData.elapsedTime += dt;
+    windData.direction[0] = 1.f;
+    windData.direction[1] = 0.6f;
+
     m_windBuffer.setData(windData);
 
     m_gameScene.simulate(dt);
@@ -1368,9 +1371,30 @@ void PlaylistState::loadShrubbery(const std::string& path)
         }
 
         //TODO load tree sets
+        std::vector<std::vector<glm::mat4>> transforms;
         for (const auto& ts : treesets)
         {
+            transforms.emplace_back();
+        }
 
+        //TODO instead of doing this for each missing treeset
+        //stash the position and use it to create the relevant
+        //billboard model in its place.
+        if (!transforms.empty())
+        {
+            for (auto i = 0u; i < m_treeDistribution.size(); ++i)
+            {
+                glm::mat4 t = glm::translate(glm::mat4(1.f), m_treeDistribution[i]);
+                transforms[i % transforms.size()].push_back(t);
+            }
+
+            for (auto i = 0u; i < transforms.size(); ++i)
+            {
+                if (shrubbery.treesetEnts[i].isValid())
+                {
+                    shrubbery.treesetEnts[i].getComponent<cro::Model>().setInstanceTransforms(transforms[i]);
+                }
+            }
         }
     }
 
