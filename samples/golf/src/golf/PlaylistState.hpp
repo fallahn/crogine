@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Model.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
@@ -140,9 +141,40 @@ private:
     std::vector<std::string> m_shrubs;
     std::size_t m_shrubIndex;
 
-    std::array<cro::Entity, 2u> m_billboardEnts = {}; //high q and classic
-    std::array<cro::Entity, 2u> m_treeBillboardEnts = {};
-    std::array<cro::Entity, 4u> m_treesetEnts = {};
+    struct Shrubbery final
+    {
+        std::array<cro::Entity, 2u> billboardEnts = {}; //high q and classic
+        std::array<cro::Entity, 2u> treeBillboardEnts = {};
+        std::array<cro::Entity, 4u> treesetEnts = {};
+
+        void hide()
+        {
+            for (auto e : billboardEnts)
+            {
+                if (e.isValid())
+                {
+                    e.getComponent<cro::Model>().setHidden(true);
+                }
+            }
+
+            for (auto e : treeBillboardEnts)
+            {
+                if (e.isValid())
+                {
+                    e.getComponent<cro::Model>().setHidden(true);
+                }
+            }
+
+            for (auto e : treesetEnts)
+            {
+                if (e.isValid())
+                {
+                    e.getComponent<cro::Model>().setHidden(true);
+                }
+            }
+        }
+    };
+    std::vector<Shrubbery> m_shrubberyModels;
 
     struct CallbackID final
     {
@@ -195,7 +227,7 @@ private:
 
     std::int32_t m_currentTab;
     void setActiveTab(std::int32_t);
-    void loadShrubbery();
+    void loadShrubbery(const std::string&);
     void applyShrubQuality();
     void updateNinePatch(cro::Entity);
 

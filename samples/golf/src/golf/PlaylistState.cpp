@@ -1154,23 +1154,32 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
                     if (activated(evt)
                         && m_shrubIndex != i)
                     {
+                        for (auto& shrub : m_shrubberyModels)
+                        {
+                            shrub.hide();
+                        }
+
                         m_shrubIndex = i;
                         m_courseData.shrubPath = ShrubPath + m_shrubs[i];
-                        loadShrubbery();
+                        applyShrubQuality();
                         updateInfo();
                     }
                 });
 
         position.y -= ItemSpacing;
         scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        loadShrubbery(ShrubPath + m_shrubs[i]);
+        m_shrubberyModels[i].hide();
     }
 
     //load default shrub if found
     if (!m_shrubs.empty())
     {
         m_shrubIndex = 0;
-        loadShrubbery();
         m_courseData.shrubPath = ShrubPath + m_shrubs[m_shrubIndex];
+
+        applyShrubQuality();
     }
 
     //TODO add button for toggling quality setting
@@ -1225,38 +1234,13 @@ void PlaylistState::setActiveTab(std::int32_t index)
     m_tabEntities[MenuID::Dummy].getComponent<cro::SpriteAnimation>().play(m_animationIDs[index]);
 }
 
-void PlaylistState::loadShrubbery()
+void PlaylistState::loadShrubbery(const std::string& path)
 {
-    //clear out existing
-    for(auto e : m_billboardEnts)
-    {
-        if (e.isValid())
-        {
-            m_gameScene.destroyEntity(e);
-        }
-    }
-
-    for(auto e : m_treeBillboardEnts)
-    {
-        if (e.isValid())
-        {
-            m_gameScene.destroyEntity(e);
-        }
-    }
-
-    for (auto e : m_treesetEnts)
-    {
-        if (e.isValid())
-        {
-            m_gameScene.destroyEntity(e);
-        }
-    }
-    m_treesetEnts = {  };
-
-
+    auto& shrubbery = m_shrubberyModels.emplace_back();
+    
     //parse shrub file and look for valid paths
     cro::ConfigFile shrubFile;
-    if (shrubFile.loadFromFile(ShrubPath + m_shrubs[m_shrubIndex]))
+    if (shrubFile.loadFromFile(path))
     {
         std::string billboardModel;
         std::string billboardSprite;
@@ -1335,10 +1319,10 @@ void PlaylistState::loadShrubbery()
                             collection.addBillboard(bb);
                         }
                     }
-                    m_billboardEnts[outIndex] = entity;
+                    shrubbery.billboardEnts[outIndex] = entity;
 
                     //trees are separate as we might want treesets instead
-                    md.loadFromFile(modelPath); //reload to create unique VBO - TODO will we end up with loads of VBOs if we keep swapping shrubs?
+                    md.loadFromFile(modelPath); //reload to create unique VBO
                     entity = m_gameScene.createEntity();
                     entity.addComponent<cro::Transform>();
                     md.createModel(entity);
@@ -1348,17 +1332,19 @@ void PlaylistState::loadShrubbery()
                     {
                         auto& collection = entity.getComponent<cro::BillboardCollection>();
 
-                        for (auto pos : m_treeDistribution)
+                        for (auto i = 0u; i < m_treeDistribution.size(); ++i)
                         {
+                            auto pos = m_treeDistribution[i];
                             float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
 
-                            auto bb = billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)];
+                            auto idx = BillboardID::Tree01 + (i % ((BillboardID::Tree04 + 1) - BillboardID::Tree01));
+                            auto bb = billboardTemplates[idx];
                             bb.position = pos;
                             bb.size *= scale;
                             collection.addBillboard(bb);
                         }
                     }
-                    m_treeBillboardEnts[outIndex] = entity;
+                    shrubbery.treeBillboardEnts[outIndex] = entity;
                 }
             }
         };
@@ -1377,8 +1363,8 @@ void PlaylistState::loadShrubbery()
         }
         else
         {
-            m_billboardEnts[1] = m_billboardEnts[0];
-            m_treeBillboardEnts[1] = m_treeBillboardEnts[0];
+            shrubbery.billboardEnts[1] = shrubbery.billboardEnts[0];
+            shrubbery.treeBillboardEnts[1] = shrubbery.treeBillboardEnts[0];
         }
 
         //TODO load tree sets
@@ -1394,23 +1380,25 @@ void PlaylistState::loadShrubbery()
 
 void PlaylistState::applyShrubQuality()
 {
+    auto& shrubbery = m_shrubberyModels[m_shrubIndex];
+
     switch (m_sharedData.treeQuality)
     {
     default: break;
     case SharedStateData::Classic:
-        if (m_billboardEnts[0].isValid())
+        if (shrubbery.billboardEnts[0].isValid())
         {
-            m_billboardEnts[0].getComponent<cro::Model>().setHidden(true);
-            m_billboardEnts[1].getComponent<cro::Model>().setHidden(false);
+            shrubbery.billboardEnts[0].getComponent<cro::Model>().setHidden(true);
+            shrubbery.billboardEnts[1].getComponent<cro::Model>().setHidden(false);
         }
 
-        if (m_treeBillboardEnts[0].isValid())
+        if (shrubbery.treeBillboardEnts[0].isValid())
         {
-            m_treeBillboardEnts[0].getComponent<cro::Model>().setHidden(true);
-            m_treeBillboardEnts[1].getComponent<cro::Model>().setHidden(false);
+            shrubbery.treeBillboardEnts[0].getComponent<cro::Model>().setHidden(true);
+            shrubbery.treeBillboardEnts[1].getComponent<cro::Model>().setHidden(false);
         }
 
-        for (auto e : m_treesetEnts)
+        for (auto e : shrubbery.treesetEnts)
         {
             if (e.isValid())
             {
@@ -1419,19 +1407,19 @@ void PlaylistState::applyShrubQuality()
         }
         break;
     case SharedStateData::Low:
-        if (m_billboardEnts[0].isValid())
+        if (shrubbery.billboardEnts[0].isValid())
         {
-            m_billboardEnts[0].getComponent<cro::Model>().setHidden(false);
-            m_billboardEnts[1].getComponent<cro::Model>().setHidden(m_billboardEnts[1] != m_billboardEnts[0]);
+            shrubbery.billboardEnts[0].getComponent<cro::Model>().setHidden(false);
+            shrubbery.billboardEnts[1].getComponent<cro::Model>().setHidden(shrubbery.billboardEnts[1] != shrubbery.billboardEnts[0]);
         }
 
-        if (m_treeBillboardEnts[0].isValid())
+        if (shrubbery.treeBillboardEnts[0].isValid())
         {
-            m_treeBillboardEnts[0].getComponent<cro::Model>().setHidden(false);
-            m_treeBillboardEnts[1].getComponent<cro::Model>().setHidden(m_treeBillboardEnts[1] != m_treeBillboardEnts[0]);
+            shrubbery.treeBillboardEnts[0].getComponent<cro::Model>().setHidden(false);
+            shrubbery.treeBillboardEnts[1].getComponent<cro::Model>().setHidden(shrubbery.treeBillboardEnts[1] != shrubbery.treeBillboardEnts[0]);
         }
 
-        for (auto e : m_treesetEnts)
+        for (auto e : shrubbery.treesetEnts)
         {
             if (e.isValid())
             {
@@ -1440,20 +1428,20 @@ void PlaylistState::applyShrubQuality()
         }
         break;
     case SharedStateData::High:
-        if (m_billboardEnts[0].isValid())
+        if (shrubbery.billboardEnts[0].isValid())
         {
-            m_billboardEnts[0].getComponent<cro::Model>().setHidden(false);
-            m_billboardEnts[1].getComponent<cro::Model>().setHidden(m_billboardEnts[1] != m_billboardEnts[0]);
+            shrubbery.billboardEnts[0].getComponent<cro::Model>().setHidden(false);
+            shrubbery.billboardEnts[1].getComponent<cro::Model>().setHidden(shrubbery.billboardEnts[1] != shrubbery.billboardEnts[0]);
         }
 
-        if (m_treeBillboardEnts[0].isValid())
+        if (shrubbery.treeBillboardEnts[0].isValid())
         {
             //TODO how do we handle partial treesets (ie < 4) where we mix billboards and models?
-            m_treeBillboardEnts[0].getComponent<cro::Model>().setHidden(!m_treesetEnts.empty());
-            m_treeBillboardEnts[1].getComponent<cro::Model>().setHidden(true);
+            shrubbery.treeBillboardEnts[0].getComponent<cro::Model>().setHidden(!shrubbery.treesetEnts.empty());
+            shrubbery.treeBillboardEnts[1].getComponent<cro::Model>().setHidden(true);
         }
 
-        for (auto e : m_treesetEnts)
+        for (auto e : shrubbery.treesetEnts)
         {
             if (e.isValid())
             {
