@@ -4,10 +4,21 @@ spritesheet course_tabs
     smooth = false
     repeat = false
 
+    sprite tab_highlight
+    {
+        bounds = 3.000000,88.000000,70.000000,18.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
 
+    }
     sprite scroll_highlight
     {
         bounds = 91.000000,87.000000,11.000000,11.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite scroll_right
+    {
+        bounds = 107.000000,99.000000,9.000000,9.000000
         colour = 1.000000,1.000000,1.000000,1.000000
 
     }
@@ -17,22 +28,18 @@ spritesheet course_tabs
         colour = 1.000000,1.000000,1.000000,1.000000
 
     }
+    sprite scroll_left
+    {
+        bounds = 107.000000,87.000000,9.000000,9.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
     sprite scroll_up
     {
         bounds = 79.000000,99.000000,9.000000,9.000000
         colour = 1.000000,1.000000,1.000000,1.000000
 
     }
-
-
-    sprite tab_highlight
-    {
-        bounds = 3.000000,88.000000,70.000000,18.000000
-        colour = 1.000000,1.000000,1.000000,1.000000
-
-    }
-
-
     sprite tab_bar
     {
         bounds = 0.000000,0.000000,400.000000,21.000000
@@ -40,34 +47,35 @@ spritesheet course_tabs
 
         animation skybox
         {
+            framerate = 100.000000
+            loop = true
+            loop_start = 0
             frame = 0.000000,0.000000,400.000000,21.000000
 
-            loop = true
-            framerate = 100
         }
-
         animation holes
         {
+            framerate = 100.000000
+            loop = true
+            loop_start = 0
             frame = 0.000000,42.000000,400.000000,21.000000
 
-            loop = true
-            framerate = 100
         }
-
         animation shrubs
         {
+            framerate = 100.000000
+            loop = true
+            loop_start = 0
             frame = 0.000000,21.000000,400.000000,21.000000
 
-            loop = true
-            framerate = 100
         }
-
         animation save_load
         {
+            framerate = 100.000000
+            loop = true
+            loop_start = 0
             frame = 0.000000,63.000000,400.000000,21.000000
 
-            loop = true
-            framerate = 100
         }
     }
 }
