@@ -34,6 +34,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "PoissonDisk.hpp"
+#include "Billboard.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/core/Window.hpp>
@@ -62,10 +63,12 @@ source distribution.
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/BillboardSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
@@ -75,10 +78,45 @@ namespace
 {
 #include "WaterShader.inl"
 #include "TerrainShader.inl"
+#include "BillboardShader.inl"
 
     const std::string SkyboxPath = "assets/golf/skyboxes/";
+    const std::string ShrubPath = "assets/golf/shrubs/";
 
     constexpr float TabAreaHeight = 0.25f; //percent of screen
+    constexpr float ItemSpacing = 10.f;
+    
+    struct ScrollData final
+    {
+        explicit ScrollData(std::size_t ic) : itemCount(ic) {}
+        const std::size_t itemCount = 0;
+
+        std::size_t currIndex = 0;
+        std::size_t targetIndex = 0;
+        glm::vec3 basePosition = glm::vec3(0.f);
+    };
+
+    struct ScrollNodeCallback final
+    {
+        void operator ()(cro::Entity e, float dt)
+        {
+            auto& data = e.getComponent<cro::Callback>().getUserData<ScrollData>();
+
+            auto targetPos = data.basePosition;
+            targetPos.y += ItemSpacing * data.targetIndex;
+
+            auto movement = targetPos - e.getComponent<cro::Transform>().getPosition();
+            if (glm::length2(movement) > 1)
+            {
+                e.getComponent<cro::Transform>().move(movement * (dt * 10.f));
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setPosition(targetPos);
+                data.currIndex = data.targetIndex;
+            }
+        };
+    };
 
     cro::Entity createHighlight(cro::Scene& scene, const cro::SpriteSheet& spriteSheet)
     {
@@ -108,6 +146,7 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_windBuffer        ("WindValues"),
     m_viewScale         (2.f),
     m_skyboxIndex       (0),
+    m_shrubIndex        (0),
     m_currentTab        (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -120,6 +159,21 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
             buildScene();
             buildUI();
         });
+
+#ifdef CRO_DEBUG_
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("buns"))
+            {
+                if (ImGui::InputInt("Tree Q", &m_sharedData.treeQuality))
+                {
+                    m_sharedData.treeQuality = std::max(0, std::min(2, m_sharedData.treeQuality));
+                    applyShrubQuality();
+                }
+            }
+            ImGui::End();
+        });
+#endif
 }
 
 //public
@@ -197,6 +251,10 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             {
                 m_callbacks[CallbackID::SkyScrollUp](cro::Entity(), fakeEvent);
             }
+            else if (menuID == MenuID::Shrubbery)
+            {
+                m_callbacks[CallbackID::ShrubScrollUp](cro::Entity(), fakeEvent);
+            }
         }
         else if (evt.wheel.y < 0)
         {
@@ -209,6 +267,10 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             if (menuID == MenuID::Skybox)
             {
                 m_callbacks[CallbackID::SkyScrollDown](cro::Entity(), fakeEvent);
+            }
+            else if (menuID == MenuID::Shrubbery)
+            {
+                m_callbacks[CallbackID::ShrubScrollDown](cro::Entity(), fakeEvent);
             }
         }
     }
@@ -307,6 +369,7 @@ void PlaylistState::addSystems()
     m_skyboxScene.addSystem<cro::ModelRenderer>(mb);
 
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
+    m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
@@ -361,8 +424,12 @@ void PlaylistState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
-
-
+    m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
+    shader = &m_resources.shaders.get(ShaderID::Billboard);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
 
 
     //audio - TODO do we need to keep the audio scape as a member?
@@ -425,15 +492,34 @@ void PlaylistState::buildScene()
     static constexpr float GrassDensity = 1.7f;
     static constexpr float TreeDensity = 4.f;
 
-    //this matches the image, but the output then needs to be scaled down 5x and offet to centre
     static constexpr std::array MinBounds = { 0.f, 0.f };
-    static constexpr std::array MaxBounds = { static_cast<float>(MapSize.x), static_cast<float>(MapSize.y) };
+    static constexpr std::array MaxBounds = { static_cast<float>(MapSize.x) / 5.f, static_cast<float>(MapSize.y) / 5.f };
 
     auto seed = static_cast<std::uint32_t>(std::time(nullptr));
     auto grass = pd::PoissonDiskSampling(GrassDensity, MinBounds, MaxBounds, 30u, seed);
     auto trees = pd::PoissonDiskSampling(TreeDensity, MinBounds, MaxBounds);
     auto flowers = pd::PoissonDiskSampling(TreeDensity * 0.5f, MinBounds, MaxBounds, 30u, seed / 2);
 
+    auto distributionToWorldPoints = 
+        [&](const std::vector<std::array<float, 2u>>& dist, std::vector<glm::vec3>& output, std::int32_t terrainID)
+    {
+        constexpr glm::vec3 offset(-32.f, 0.f, 20.f);
+        for (const auto& p : dist)
+        {
+            glm::vec3 position(p[0], 0.f, -p[1]);
+            position += offset;
+            auto result = m_collisionMesh.getTerrain(position);
+            if (result.terrain == terrainID
+                && result.height > WaterLevel)
+            {
+                position.y = result.height;
+                output.push_back(position);
+            }
+        }
+    };
+    distributionToWorldPoints(grass, m_grassDistribution, TerrainID::Rough);
+    distributionToWorldPoints(trees, m_treeDistribution, TerrainID::Scrub);
+    distributionToWorldPoints(flowers, m_flowerDistribution, TerrainID::Scrub);
 
     //3D camera
     auto updateView = [&](cro::Camera& cam)
@@ -469,7 +555,7 @@ void PlaylistState::buildScene()
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setOrigin({0.f, -0.5f, -12.f});
+    camEnt.getComponent<cro::Transform>().setPosition({0.f, 2.5f, 15.f});
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -15.f * cro::Util::Const::degToRad);
 
     static constexpr std::uint32_t ReflectionMapSize = 1024u;
@@ -480,7 +566,7 @@ void PlaylistState::buildScene()
     updateView(cam);
 
     auto rootEnt = m_gameScene.createEntity();
-    rootEnt.addComponent<cro::Transform>().setPosition({0.f, -1.f, 0.f});
+    rootEnt.addComponent<cro::Transform>().setPosition({ 0.f, 1.f, 0.f });
     rootEnt.addComponent<cro::Callback>().active = true;
     rootEnt.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
@@ -598,7 +684,7 @@ void PlaylistState::buildUI()
     md.spriteSheet = &spriteSheet;
 
     createSkyboxMenu(rootNode, md);
-    createShrubberyMenu(rootNode);
+    createShrubberyMenu(rootNode, md);
     createHoleMenu(rootNode);
     createFileSystemMenu(rootNode);
 
@@ -668,7 +754,8 @@ void PlaylistState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        setActiveTab(MenuID::Skybox);
+        setActiveTab(MenuID::Shrubbery);
+        //setActiveTab(MenuID::Skybox);
         e.getComponent<cro::Callback>().active = false;
         m_uiScene.destroyEntity(e);
     };
@@ -718,6 +805,12 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     //just to make consistent across platforms
     std::sort(m_skyboxes.begin(), m_skyboxes.end());
 
+    if (m_skyboxes.empty())
+    {
+        m_skyboxes.push_back("No skybox files found");
+        return;
+    }
+
     m_menuEntities[MenuID::Skybox].addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     m_menuEntities[MenuID::Skybox].addComponent<UIElement>().absolutePosition = { 8.f, -8.f };
     m_menuEntities[MenuID::Skybox].getComponent<UIElement>().relativePosition = { 0.f, TabAreaHeight };
@@ -726,17 +819,6 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     scrollNode.addComponent<cro::Transform>();
     m_menuEntities[MenuID::Skybox].getComponent<cro::Transform>().addChild(scrollNode.getComponent<cro::Transform>());
 
-    static constexpr float ItemSpacing = 10.f;
-    struct ScrollData final
-    {
-        explicit ScrollData(std::size_t ic) : itemCount(ic) {}
-        const std::size_t itemCount = 0;
-
-        std::size_t currIndex = 0;
-        std::size_t targetIndex = 0;
-        glm::vec3 basePosition = glm::vec3(0.f);
-    };
-
     //scroll callbacks
     ScrollData scrollData(m_skyboxes.size());
 
@@ -744,26 +826,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
 
     scrollNode.addComponent<cro::Callback>().setUserData<ScrollData>(scrollData);
     scrollNode.getComponent<cro::Callback>().active = true;
-    scrollNode.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        auto& data = e.getComponent<cro::Callback>().getUserData<ScrollData>();
-
-        auto targetPos = data.basePosition;
-        targetPos.y += ItemSpacing * data.targetIndex;
-
-        auto movement = targetPos - e.getComponent<cro::Transform>().getPosition();
-        if (glm::length2(movement) > 1)
-        {
-            e.getComponent<cro::Transform>().move(movement * (dt * 10.f));
-        }
-        else
-        {
-            e.getComponent<cro::Transform>().setPosition(targetPos);
-            data.currIndex = data.targetIndex;
-        }
-    };
-
+    scrollNode.getComponent<cro::Callback>().function = ScrollNodeCallback();
 
     m_callbacks[CallbackID::SkyScrollDown] =
         [&, scrollNode](cro::Entity, const cro::ButtonEvent& evt) mutable
@@ -912,9 +975,6 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
         scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
-   
-
-
     //load default skybox if found
     if (!m_skyboxes.empty())
     {
@@ -926,15 +986,194 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     }
 }
 
-void PlaylistState::createShrubberyMenu(cro::Entity rootNode)
+void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& menuData)
 {
     m_menuEntities[MenuID::Shrubbery] = m_uiScene.createEntity();
     rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::Shrubbery].addComponent<cro::Transform>());
 
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
+    m_shrubs = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + ShrubPath);
+    m_shrubs.erase(std::remove_if(m_shrubs.begin(), m_shrubs.end(),
+        [](const std::string& box)
+        {
+            return cro::FileSystem::getFileExtension(box) != ".shb";
+        }), m_shrubs.end());
+    //just to make consistent across platforms
+    std::sort(m_shrubs.begin(), m_shrubs.end());
 
+    if (m_shrubs.empty())
+    {
+        m_shrubs.push_back("No shrub files found");
+        return;
+    }
+
+    m_menuEntities[MenuID::Shrubbery].addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    m_menuEntities[MenuID::Shrubbery].addComponent<UIElement>().absolutePosition = { 8.f, -8.f };
+    m_menuEntities[MenuID::Shrubbery].getComponent<UIElement>().relativePosition = { 0.f, TabAreaHeight };
     m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+
+
+    auto scrollNode = m_uiScene.createEntity();
+    scrollNode.addComponent<cro::Transform>();
+    m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(scrollNode.getComponent<cro::Transform>());
+
+    //scroll callbacks
+    ScrollData scrollData(m_shrubs.size());
+
+    scrollData.basePosition = scrollNode.getComponent<cro::Transform>().getPosition();
+
+    scrollNode.addComponent<cro::Callback>().setUserData<ScrollData>(scrollData);
+    scrollNode.getComponent<cro::Callback>().active = true;
+    scrollNode.getComponent<cro::Callback>().function = ScrollNodeCallback();
+
+    m_callbacks[CallbackID::ShrubScrollDown] =
+        [&, scrollNode](cro::Entity, const cro::ButtonEvent& evt) mutable
+    {
+        if (activated(evt))
+        {
+            auto& data = scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>();
+            data.targetIndex = std::min(data.targetIndex + 1, data.itemCount - 1);
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
+    };
+    m_callbacks[CallbackID::ShrubScrollUp] =
+        [&, scrollNode](cro::Entity, const cro::ButtonEvent& evt) mutable
+    {
+        if (activated(evt))
+        {
+            auto& data = scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>();
+            if (data.currIndex > 0)
+            {
+                data.targetIndex = data.currIndex - 1;
+            }
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
+    };
+
+    //scroll buttons
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("scroll_up");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.2f;
+    entity.getComponent<UIElement>().absolutePosition = { -bounds.width * 3.f, -std::floor(bounds.height * 1.25f) };
+    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    auto buttonEnt = entity;
+    m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createHighlight(m_uiScene, *menuData.spriteSheet);
+    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, });
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(m_callbacks[CallbackID::ShrubScrollUp]);
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("scroll_down");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.2f;
+    entity.getComponent<UIElement>().absolutePosition = { -bounds.width * 3.f, std::floor(bounds.height * 2.f) };
+    entity.getComponent<UIElement>().relativePosition = { 1.f, -TabAreaHeight };
+    buttonEnt = entity;
+    m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createHighlight(m_uiScene, *menuData.spriteSheet);
+    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, });
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(m_callbacks[CallbackID::ShrubScrollDown]);
+
+    //list of shrub items
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    glm::vec2 position(0.f);
+    for (auto i = 0u; i < m_shrubs.size(); ++i)
+    {
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString(m_shrubs[i]);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+        {
+            auto cropRect = m_croppingArea;
+            auto localBounds = e.getComponent<cro::Drawable2D>().getLocalBounds();
+            auto pos = e.getComponent<cro::Transform>().getWorldPosition();
+            cropRect.left -= pos.x;
+            cropRect.bottom -= pos.y;
+            cropRect.bottom -= localBounds.bottom + localBounds.height;
+            e.getComponent<cro::Drawable2D>().setCroppingArea(cropRect);
+        };
+
+        entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&, i, scrollNode](cro::Entity e) mutable
+                {
+                    e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+                    auto pos = e.getComponent<cro::Transform>().getWorldPosition();
+                    pos.y -= ItemSpacing / 2.f;
+                    if (!m_croppingArea.contains(pos))
+                    {
+                        cro::ButtonEvent fakeEvent;
+                        fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+                        fakeEvent.button.button = SDL_BUTTON_LEFT;
+
+                        if (pos.y < m_croppingArea.bottom)
+                        {
+                            m_callbacks[CallbackID::ShrubScrollDown](cro::Entity(), fakeEvent);
+                        }
+                        else if (pos.y > (m_croppingArea.bottom + m_croppingArea.height))
+                        {
+                            scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = i;
+                        }
+                    }
+                });
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.textUnselected;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&, i](cro::Entity, const cro::ButtonEvent& evt)
+                {
+                    if (activated(evt)
+                        && m_shrubIndex != i)
+                    {
+                        m_shrubIndex = i;
+                        m_courseData.shrubPath = ShrubPath + m_shrubs[i];
+                        loadShrubbery();
+                        updateInfo();
+                    }
+                });
+
+        position.y -= ItemSpacing;
+        scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
+    //load default shrub if found
+    if (!m_shrubs.empty())
+    {
+        m_shrubIndex = 0;
+        loadShrubbery();
+        m_courseData.shrubPath = ShrubPath + m_shrubs[m_shrubIndex];
+    }
+
+    //TODO add button for toggling quality setting
 }
 
 void PlaylistState::createHoleMenu(cro::Entity rootNode)
@@ -979,10 +1218,250 @@ void PlaylistState::setActiveTab(std::int32_t index)
             m_menuEntities[i].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         }
     }
+
     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(index);
 
     //we've stashed the tab graphic entity in here.
     m_tabEntities[MenuID::Dummy].getComponent<cro::SpriteAnimation>().play(m_animationIDs[index]);
+}
+
+void PlaylistState::loadShrubbery()
+{
+    //clear out existing
+    for(auto e : m_billboardEnts)
+    {
+        if (e.isValid())
+        {
+            m_gameScene.destroyEntity(e);
+        }
+    }
+
+    for(auto e : m_treeBillboardEnts)
+    {
+        if (e.isValid())
+        {
+            m_gameScene.destroyEntity(e);
+        }
+    }
+
+    for (auto e : m_treesetEnts)
+    {
+        if (e.isValid())
+        {
+            m_gameScene.destroyEntity(e);
+        }
+    }
+    m_treesetEnts = {  };
+
+
+    //parse shrub file and look for valid paths
+    cro::ConfigFile shrubFile;
+    if (shrubFile.loadFromFile(ShrubPath + m_shrubs[m_shrubIndex]))
+    {
+        std::string billboardModel;
+        std::string billboardSprite;
+        std::vector<std::string> treesets;
+
+        const auto& props = shrubFile.getProperties();
+        for (const auto& p : props)
+        {
+            const auto& name = p.getName();
+            if (name == "model")
+            {
+                billboardModel = p.getValue<std::string>();
+            }
+            else if (name == "sprite")
+            {
+                billboardSprite = p.getValue<std::string>();
+            }
+            else if (name == "treeset")
+            {
+                treesets.push_back(p.getValue<std::string>());
+            }
+        }
+
+        //TODO do we want to bail if some info is missing? or just load what we can?
+        auto setBillboards = [&](const std::string& modelPath, const std::string& spritePath, std::size_t outIndex)
+        {
+            cro::SpriteSheet spriteSheet;
+            if (spriteSheet.loadFromFile(spritePath, m_resources.textures))
+            {
+                std::array<cro::Billboard, BillboardID::Count> billboardTemplates = {};
+                billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
+                billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
+                billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("flowers01"));
+                billboardTemplates[BillboardID::Flowers02] = spriteToBillboard(spriteSheet.getSprite("flowers02"));
+                billboardTemplates[BillboardID::Flowers03] = spriteToBillboard(spriteSheet.getSprite("flowers03"));
+                billboardTemplates[BillboardID::Bush01] = spriteToBillboard(spriteSheet.getSprite("hedge01"));
+                billboardTemplates[BillboardID::Bush02] = spriteToBillboard(spriteSheet.getSprite("hedge02"));
+
+                billboardTemplates[BillboardID::Tree01] = spriteToBillboard(spriteSheet.getSprite("tree01"));
+                billboardTemplates[BillboardID::Tree02] = spriteToBillboard(spriteSheet.getSprite("tree02"));
+                billboardTemplates[BillboardID::Tree03] = spriteToBillboard(spriteSheet.getSprite("tree03"));
+                billboardTemplates[BillboardID::Tree04] = spriteToBillboard(spriteSheet.getSprite("tree04"));
+
+                cro::ModelDefinition md(m_resources);
+                if (md.loadFromFile(modelPath))
+                {
+                    auto entity = m_gameScene.createEntity();
+                    entity.addComponent<cro::Transform>();
+                    md.createModel(entity);
+
+                    auto billboardMat = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+                    applyMaterialData(md, billboardMat);
+                    entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
+
+                    if (entity.hasComponent<cro::BillboardCollection>())
+                    {
+                        auto& collection = entity.getComponent<cro::BillboardCollection>();
+
+                        for (auto pos : m_grassDistribution)
+                        {
+                            float scale = static_cast<float>(cro::Util::Random::value(8, 11)) / 10.f;
+
+                            auto bb = billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)];
+                            bb.position = pos;
+                            bb.size *= scale;
+                            collection.addBillboard(bb);
+                        }
+
+                        for (auto pos : m_flowerDistribution)
+                        {
+                            float scale = static_cast<float>(cro::Util::Random::value(8, 11)) / 10.f;
+
+                            auto bb = billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Bush02)];
+                            bb.position = pos;
+                            bb.size *= scale;
+                            collection.addBillboard(bb);
+                        }
+                    }
+                    m_billboardEnts[outIndex] = entity;
+
+                    //trees are separate as we might want treesets instead
+                    md.loadFromFile(modelPath); //reload to create unique VBO - TODO will we end up with loads of VBOs if we keep swapping shrubs?
+                    entity = m_gameScene.createEntity();
+                    entity.addComponent<cro::Transform>();
+                    md.createModel(entity);
+                    entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
+
+                    if (entity.hasComponent<cro::BillboardCollection>())
+                    {
+                        auto& collection = entity.getComponent<cro::BillboardCollection>();
+
+                        for (auto pos : m_treeDistribution)
+                        {
+                            float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+
+                            auto bb = billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)];
+                            bb.position = pos;
+                            bb.size *= scale;
+                            collection.addBillboard(bb);
+                        }
+                    }
+                    m_treeBillboardEnts[outIndex] = entity;
+                }
+            }
+        };
+
+        setBillboards(billboardModel, billboardSprite, 0);
+
+        //check if a low quality version is available and load that, else duplicate the
+        //current billboard ents into the low Q slot.
+        billboardModel = billboardModel.substr(0, billboardModel.find_last_of('.')) + "_low.cmt";
+        billboardSprite = billboardSprite.substr(0, billboardSprite.find_last_of('.')) + "_low.spt";
+
+        if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + billboardModel)
+            && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + billboardSprite))
+        {
+            setBillboards(billboardModel, billboardSprite, 1);
+        }
+        else
+        {
+            m_billboardEnts[1] = m_billboardEnts[0];
+            m_treeBillboardEnts[1] = m_treeBillboardEnts[0];
+        }
+
+        //TODO load tree sets
+        for (const auto& ts : treesets)
+        {
+
+        }
+    }
+
+    //show/hide appropriate ent based on tree quality setting
+    applyShrubQuality();
+}
+
+void PlaylistState::applyShrubQuality()
+{
+    switch (m_sharedData.treeQuality)
+    {
+    default: break;
+    case SharedStateData::Classic:
+        if (m_billboardEnts[0].isValid())
+        {
+            m_billboardEnts[0].getComponent<cro::Model>().setHidden(true);
+            m_billboardEnts[1].getComponent<cro::Model>().setHidden(false);
+        }
+
+        if (m_treeBillboardEnts[0].isValid())
+        {
+            m_treeBillboardEnts[0].getComponent<cro::Model>().setHidden(true);
+            m_treeBillboardEnts[1].getComponent<cro::Model>().setHidden(false);
+        }
+
+        for (auto e : m_treesetEnts)
+        {
+            if (e.isValid())
+            {
+                e.getComponent<cro::Model>().setHidden(true);
+            }
+        }
+        break;
+    case SharedStateData::Low:
+        if (m_billboardEnts[0].isValid())
+        {
+            m_billboardEnts[0].getComponent<cro::Model>().setHidden(false);
+            m_billboardEnts[1].getComponent<cro::Model>().setHidden(m_billboardEnts[1] != m_billboardEnts[0]);
+        }
+
+        if (m_treeBillboardEnts[0].isValid())
+        {
+            m_treeBillboardEnts[0].getComponent<cro::Model>().setHidden(false);
+            m_treeBillboardEnts[1].getComponent<cro::Model>().setHidden(m_treeBillboardEnts[1] != m_treeBillboardEnts[0]);
+        }
+
+        for (auto e : m_treesetEnts)
+        {
+            if (e.isValid())
+            {
+                e.getComponent<cro::Model>().setHidden(true);
+            }
+        }
+        break;
+    case SharedStateData::High:
+        if (m_billboardEnts[0].isValid())
+        {
+            m_billboardEnts[0].getComponent<cro::Model>().setHidden(false);
+            m_billboardEnts[1].getComponent<cro::Model>().setHidden(m_billboardEnts[1] != m_billboardEnts[0]);
+        }
+
+        if (m_treeBillboardEnts[0].isValid())
+        {
+            //TODO how do we handle partial treesets (ie < 4) where we mix billboards and models?
+            m_treeBillboardEnts[0].getComponent<cro::Model>().setHidden(!m_treesetEnts.empty());
+            m_treeBillboardEnts[1].getComponent<cro::Model>().setHidden(true);
+        }
+
+        for (auto e : m_treesetEnts)
+        {
+            if (e.isValid())
+            {
+                e.getComponent<cro::Model>().setHidden(false);
+            }
+        }
+        break;
+    }
 }
 
 void PlaylistState::updateNinePatch(cro::Entity entity)
@@ -1190,7 +1669,8 @@ void PlaylistState::updateNinePatch(cro::Entity entity)
 void PlaylistState::updateInfo()
 {
     const std::string info =
-        "Skybox: " + m_skyboxes[m_skyboxIndex];
+        "Skybox: " + m_skyboxes[m_skyboxIndex] +
+        "\nShrubs: " + m_shrubs[m_shrubIndex];
 
     m_infoEntity.getComponent<cro::Text>().setString(info);
 }

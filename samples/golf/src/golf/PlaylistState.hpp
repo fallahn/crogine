@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 struct SharedStateData;
 
@@ -47,7 +48,7 @@ namespace cro
     class SpriteSheet;
 }
 
-class PlaylistState final : public cro::State
+class PlaylistState final : public cro::State, public cro::GuiClient
 {
 public:
     PlaylistState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -115,7 +116,7 @@ private:
         {
             Horizon, Water,
             Cel, CelTextured,
-            Course,
+            Course, Billboard,
 
             Count
         };
@@ -127,9 +128,21 @@ private:
     struct CourseData final
     {
         std::string skyboxPath;
+        std::string shrubPath;
     }m_courseData;
     std::vector<std::string> m_skyboxes;
     std::size_t m_skyboxIndex;
+
+    std::vector<glm::vec3> m_grassDistribution;
+    std::vector<glm::vec3> m_flowerDistribution;
+    std::vector<glm::vec3> m_treeDistribution;
+
+    std::vector<std::string> m_shrubs;
+    std::size_t m_shrubIndex;
+
+    std::array<cro::Entity, 2u> m_billboardEnts = {}; //high q and classic
+    std::array<cro::Entity, 2u> m_treeBillboardEnts = {};
+    std::array<cro::Entity, 4u> m_treesetEnts = {};
 
     struct CallbackID final
     {
@@ -137,6 +150,9 @@ private:
         {
             SkyScrollUp,
             SkyScrollDown,
+
+            ShrubScrollUp,
+            ShrubScrollDown,
 
             Count
         };
@@ -156,7 +172,7 @@ private:
             Count
         };
     };
-    std::array<std::size_t, AnimationID::Count> m_animationIDs = {};
+    std::array<std::int32_t, AnimationID::Count> m_animationIDs = {};
     cro::FloatRect m_croppingArea;
 
     void addSystems();
@@ -173,12 +189,14 @@ private:
         cro::SpriteSheet* spriteSheet = nullptr;
     };
     void createSkyboxMenu(cro::Entity, const MenuData&);
-    void createShrubberyMenu(cro::Entity);
+    void createShrubberyMenu(cro::Entity, const MenuData&);
     void createHoleMenu(cro::Entity);
     void createFileSystemMenu(cro::Entity);
 
     std::int32_t m_currentTab;
     void setActiveTab(std::int32_t);
+    void loadShrubbery();
+    void applyShrubQuality();
     void updateNinePatch(cro::Entity);
 
     cro::Entity m_infoEntity;
