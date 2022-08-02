@@ -432,7 +432,8 @@ void BallSystem::process(float dt)
             auto ballPos = tx.getPosition();
             
             //hold ball under water until reset
-            if (ball.terrain == TerrainID::Water)
+            if (ball.terrain == TerrainID::Water
+                || ball.terrain == TerrainID::Scrub) //collision actually resets this to scrub even with water
             {
                 ballPos.y = -0.5f;
                 tx.setPosition(ballPos);

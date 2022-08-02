@@ -102,10 +102,12 @@ private:
             Skybox, Shrubbery,
             Holes, FileSystem,
 
+            Dummy,
             Count
         };
     };
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {};
+    std::array<cro::Entity, MenuID::Count> m_tabEntities = {};
 
     struct MaterialID final
     {
@@ -141,14 +143,14 @@ private:
     };
     std::array<std::function<void(cro::Entity, const cro::ButtonEvent&)>, CallbackID::Count> m_callbacks = {};
 
-
+    //really we should be using menu ID here
     struct AnimationID final
     {
         enum
         {
             TabSkybox,
-            TabHoles,
             TabShrubs,
+            TabHoles,
             TabSaveLoad,
 
             Count
@@ -175,6 +177,8 @@ private:
     void createHoleMenu(cro::Entity);
     void createFileSystemMenu(cro::Entity);
 
+    std::int32_t m_currentTab;
+    void setActiveTab(std::int32_t);
     void updateNinePatch(cro::Entity);
 
     void quitState();
