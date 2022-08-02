@@ -181,5 +181,8 @@ private:
     void setActiveTab(std::int32_t);
     void updateNinePatch(cro::Entity);
 
+    cro::Entity m_infoEntity;
+    void updateInfo();
+
     void quitState();
 };

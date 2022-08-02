@@ -133,14 +133,27 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-#ifndef CRO_DEBUG_
-            || evt.key.keysym.sym == SDLK_ESCAPE
-#endif
-            )
+        switch (evt.key.keysym.sym)
         {
+        default: break;
+        case SDLK_BACKSPACE:
+#ifndef CRO_DEBUG_
+        case SDLK_ESCAPE:
+#endif
             quitState();
             return false;
+        case SDLK_1:
+            setActiveTab(0);
+            break;
+        case SDLK_2:
+            setActiveTab(1);
+            break;
+        case SDLK_3:
+            setActiveTab(2);
+            break;
+        case SDLK_4:
+            setActiveTab(3);
+            break;
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP
@@ -659,6 +672,35 @@ void PlaylistState::buildUI()
         e.getComponent<cro::Callback>().active = false;
         m_uiScene.destroyEntity(e);
     };
+
+
+    //displays info about current selections
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().relativePosition = { 0.f, 1.f };
+    entity.getComponent<UIElement>().absolutePosition = { 4.f, -12.f };
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_infoEntity = entity;
+    updateInfo();
+
+
+    //TODO when we know what size this is make some nicer artwork
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -2.f, 4.f, -0.1f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha)),
+            cro::Vertex2D(glm::vec2(0.f, -80.f), cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha)),
+            cro::Vertex2D(glm::vec2(150.f, 0.f), cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha)),
+            cro::Vertex2D(glm::vec2(150.f, -80.f), cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha))
+        });
+    m_infoEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuData)
@@ -861,6 +903,8 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
                         loadSkybox(SkyboxPath + m_skyboxes[i], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon]);
                         m_skyboxIndex = i;
                         m_courseData.skyboxPath = SkyboxPath + m_skyboxes[i];
+
+                        updateInfo();
                     }
                 });
 
@@ -1141,6 +1185,14 @@ void PlaylistState::updateNinePatch(cro::Entity entity)
 
     size *= m_viewScale;
     m_croppingArea = { 6.f * m_viewScale.x, 6.f * m_viewScale.y, size.x - (12.f * m_viewScale.x), size.y - (12.f * m_viewScale.y) };
+}
+
+void PlaylistState::updateInfo()
+{
+    const std::string info =
+        "Skybox: " + m_skyboxes[m_skyboxIndex];
+
+    m_infoEntity.getComponent<cro::Text>().setString(info);
 }
 
 void PlaylistState::quitState()
