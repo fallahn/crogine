@@ -1106,7 +1106,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //shadow quality
-    auto shadowLabel = createLabel({ 265.f, 34.f }, "High Quality Shadows");
+    auto shadowLabel = createLabel({ 204.f, 34.f }, "Shadow Quality");
     //shadowLabel.addComponent<cro::Callback>().active = true;
     //shadowLabel.getComponent<cro::Callback>().function =
     //    [&](cro::Entity e, float)
@@ -1566,7 +1566,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     glUseProgram(shaderID);
     glUniform1f(uniformID, m_sharedData.beaconColour);
 
-    entity = createHighlight(glm::vec2(114.f, 9.f));
+    entity = createHighlight(glm::vec2(113.f, 9.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&, shaderID, uniformID](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -1653,7 +1653,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     centreText(shaderLabel);
 
     //prev/next post process
-    entity = createHighlight(glm::vec2(262.f, 89.f));
+    entity = createHighlight(glm::vec2(263.f, 89.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&, shaderLabel](cro::Entity e, cro::ButtonEvent evt) mutable
             {
@@ -1722,7 +1722,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //prev/next grid transparency
-    entity = createHighlight(glm::vec2(262.f, 57.f));
+    entity = createHighlight(glm::vec2(263.f, 57.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
             {
