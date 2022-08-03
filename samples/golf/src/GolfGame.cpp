@@ -670,6 +670,10 @@ void GolfGame::loadPreferences()
                     std::int32_t quality = std::min(2, std::max(0, prop.getValue<std::int32_t>()));
                     m_sharedData.treeQuality = quality;
                 }
+                else if (name == "hq_shadows")
+                {
+                    m_sharedData.hqShadows = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -727,6 +731,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("imperial_measurements").setValue(m_sharedData.imperialMeasurements);
     cfg.addProperty("grid_transparency").setValue(m_sharedData.gridTransparency);
     cfg.addProperty("tree_quality").setValue(m_sharedData.treeQuality);
+    cfg.addProperty("hq_shadows").setValue(m_sharedData.hqShadows);
     cfg.save(path);
 
 

@@ -495,11 +495,11 @@ void PlaylistState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::BranchShadow] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define LEAF_SIZE\n#define ALPHA_CLIP\n" + wobble);
+    std::string alphaClip = m_sharedData.hqShadows ? "#define ALPHA_CLIP\n" : "";
+    m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::LeafShadow] = m_resources.materials.add(*shader);
-    m_sharedData.treeQuality;
 
 
     //audio - TODO do we need to keep the audio scape as a member?
@@ -1574,7 +1574,10 @@ void PlaylistState::loadShrubbery(const std::string& path)
                         shrubbery.treesetEnts[i].getComponent<cro::Model>().setMaterial(idx, material);
 
                         material = m_resources.materials.get(m_materialIDs[MaterialID::LeafShadow]);
-                        material.setProperty("u_diffuseMap", m_resources.textures.get(treesets[i].texturePath));
+                        if (m_sharedData.hqShadows)
+                        {
+                            material.setProperty("u_diffuseMap", m_resources.textures.get(treesets[i].texturePath));
+                        }
                         material.setProperty("u_leafSize", treesets[i].leafSize);
                         shrubbery.treesetEnts[i].getComponent<cro::Model>().setShadowMaterial(idx, material);
                     }
