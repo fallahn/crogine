@@ -62,6 +62,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
@@ -81,6 +82,7 @@ namespace
 #include "TerrainShader.inl"
 #include "BillboardShader.inl"
 #include "TreeShader.inl"
+#include "ShadowMapping.inl"
 
     const std::string SkyboxPath = "assets/golf/skyboxes/";
     const std::string ShrubPath = "assets/golf/shrubs/";
@@ -155,7 +157,7 @@ namespace
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
 
         auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -0.3f });
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f), -0.3f });
 
         entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
 
@@ -189,18 +191,14 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
         });
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]()
+    /*registerWindow([&]()
         {
             if (ImGui::Begin("buns"))
             {
-                if (ImGui::InputInt("Tree Q", &m_sharedData.treeQuality))
-                {
-                    m_sharedData.treeQuality = std::max(0, std::min(2, m_sharedData.treeQuality));
-                    applyShrubQuality();
-                }
+                
             }
             ImGui::End();
-        });
+        });*/
 #endif
 }
 
@@ -403,6 +401,7 @@ void PlaylistState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(50.f);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
     m_uiScene.addSystem<cro::UISystem>(mb);
@@ -476,6 +475,18 @@ void PlaylistState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Leaf] = m_resources.materials.add(*shader);
+    m_sharedData.treeQuality;
+
+    m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::BranchShadow] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define LEAF_SIZE\n#define ALPHA_CLIP\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::LeafShadow] = m_resources.materials.add(*shader);
+    m_sharedData.treeQuality;
 
 
     //audio - TODO do we need to keep the audio scape as a member?
@@ -589,12 +600,9 @@ void PlaylistState::buildScene()
 
 
         //this lets the shader scale leaf billboards correctly
-        if (m_sharedData.treeQuality == SharedStateData::High)
-        {
-            auto targetHeight = texSize.y;
-            glUseProgram(m_resources.shaders.get(ShaderID::TreesetLeaf).getGLHandle());
-            glUniform1f(m_resources.shaders.get(ShaderID::TreesetLeaf).getUniformID("u_targetHeight"), targetHeight);
-        }
+        auto targetHeight = texSize.y;
+        glUseProgram(m_resources.shaders.get(ShaderID::TreesetLeaf).getGLHandle());
+        glUniform1f(m_resources.shaders.get(ShaderID::TreesetLeaf).getUniformID("u_targetHeight"), targetHeight);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 115.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
@@ -605,9 +613,11 @@ void PlaylistState::buildScene()
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -15.f * cro::Util::Const::degToRad);
 
     static constexpr std::uint32_t ReflectionMapSize = 1024u;
+    static constexpr std::uint32_t ShadowMapSize = 2048u;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     cam.reflectionBuffer.setSmooth(true);
+    cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.resizeCallback = updateView;
     updateView(cam);
 
@@ -800,8 +810,8 @@ void PlaylistState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        setActiveTab(MenuID::Shrubbery);
-        //setActiveTab(MenuID::Skybox);
+        //setActiveTab(MenuID::Shrubbery);
+        setActiveTab(MenuID::Skybox);
         e.getComponent<cro::Callback>().active = false;
         m_uiScene.destroyEntity(e);
     };
@@ -913,7 +923,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     m_menuEntities[MenuID::Skybox].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = createHighlight(m_uiScene, *menuData.spriteSheet);
-    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, });
+    entity.getComponent<cro::Transform>().setPosition({ 4.f, 4.f, });
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Skybox);
@@ -936,7 +946,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     m_menuEntities[MenuID::Skybox].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = createHighlight(m_uiScene, *menuData.spriteSheet);
-    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, });
+    entity.getComponent<cro::Transform>().setPosition({ 4.f, 4.f, });
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Skybox);
@@ -1042,8 +1052,9 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
         return;
     }
 
+    static constexpr float RootOffset = 8.f;
     m_menuEntities[MenuID::Shrubbery].addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    m_menuEntities[MenuID::Shrubbery].addComponent<UIElement>().absolutePosition = { 8.f, -8.f };
+    m_menuEntities[MenuID::Shrubbery].addComponent<UIElement>().absolutePosition = { RootOffset, -8.f };
     m_menuEntities[MenuID::Shrubbery].getComponent<UIElement>().relativePosition = { 0.f, TabAreaHeight };
     m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 
@@ -1100,7 +1111,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = createHighlight(m_uiScene, *menuData.spriteSheet);
-    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, });
+    entity.getComponent<cro::Transform>().setPosition({ 4.f, 4.f });
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
@@ -1123,7 +1134,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = createHighlight(m_uiScene, *menuData.spriteSheet);
-    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, });
+    entity.getComponent<cro::Transform>().setPosition({ 4.f, 4.f });
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
@@ -1208,7 +1219,103 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
         applyShrubQuality();
     }
 
-    //TODO add button for toggling quality setting
+    //buttons for toggling quality setting
+    static const std::array<std::string, 3u> Labels =
+    {
+        "Classic", "Low", "High"
+    };
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Tree Quality");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
+    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 38.f };
+    centreText(entity);
+    m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(Labels[m_sharedData.treeQuality]);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
+    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 24.f };
+    centreText(entity);
+    m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto labelEnt = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("scroll_left");
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
+    entity.getComponent<UIElement>().absolutePosition = { -30.f - RootOffset, 16.f };
+    m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto scrollEnt = entity;
+
+    bounds = menuData.spriteSheet->getSprite("scroll_highlight").getTextureBounds();
+    entity = createHighlight(m_uiScene, *menuData.spriteSheet);
+    entity.getComponent<cro::Transform>().setPosition({ 4.f, 4.f });
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, labelEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.treeQuality = (m_sharedData.treeQuality + 2) % 3;
+                    labelEnt.getComponent<cro::Text>().setString(Labels[m_sharedData.treeQuality]);
+                    centreText(labelEnt);
+                    applyShrubQuality();
+                }
+            });
+    scrollEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("scroll_right");
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
+    entity.getComponent<UIElement>().absolutePosition = { 21.f - RootOffset, 16.f };
+    m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    scrollEnt = entity;
+
+    entity = createHighlight(m_uiScene, *menuData.spriteSheet);
+    entity.getComponent<cro::Transform>().setPosition({ 4.f, 4.f });
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, labelEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.treeQuality = (m_sharedData.treeQuality + 1) % 3;
+                    labelEnt.getComponent<cro::Text>().setString(Labels[m_sharedData.treeQuality]);
+                    centreText(labelEnt);
+                    applyShrubQuality();
+                }
+            });
+    scrollEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void PlaylistState::createHoleMenu(cro::Entity rootNode)
@@ -1427,7 +1534,7 @@ void PlaylistState::loadShrubbery(const std::string& path)
                         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Branch]);
                         applyMaterialData(md, material, idx);
                         shrubbery.treesetEnts[i].getComponent<cro::Model>().setMaterial(idx, material);
-                        //shrubbery.treesetEnts[i].getComponent<cro::Model>().setShadowMaterial(idx, m_resources.materials.get(treeShadowMaterialID));
+                        shrubbery.treesetEnts[i].getComponent<cro::Model>().setShadowMaterial(idx, m_resources.materials.get(m_materialIDs[MaterialID::BranchShadow]));
                     }
 
                     auto& meshData = shrubbery.treesetEnts[i].getComponent<cro::Model>().getMeshData();
@@ -1441,10 +1548,10 @@ void PlaylistState::loadShrubbery(const std::string& path)
                         material.setProperty("u_colour", treesets[i].colour);
                         shrubbery.treesetEnts[i].getComponent<cro::Model>().setMaterial(idx, material);
 
-                        /*material = m_resources.materials.get(leafShadowMaterialID);
+                        material = m_resources.materials.get(m_materialIDs[MaterialID::LeafShadow]);
                         material.setProperty("u_diffuseMap", m_resources.textures.get(treesets[i].texturePath));
                         material.setProperty("u_leafSize", treesets[i].leafSize);
-                        shrubbery.treesetEnts[i].getComponent<cro::Model>().setShadowMaterial(idx, material);*/
+                        shrubbery.treesetEnts[i].getComponent<cro::Model>().setShadowMaterial(idx, material);
                     }
 
                     transforms.emplace_back();

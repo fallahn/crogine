@@ -596,8 +596,8 @@ void DrivingState::addSystems()
     m_gameScene.addSystem<CloudSystem>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(10.f);
-    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setNumCascades(1);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(30.f);
+    //m_gameScene.getSystem<cro::ShadowMapRenderer>()->setNumCascades(1);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);

@@ -119,6 +119,7 @@ private:
             Cel, CelTextured,
             Course, Billboard,
             Branch, Leaf,
+            BranchShadow, LeafShadow,
 
             Count
         };
