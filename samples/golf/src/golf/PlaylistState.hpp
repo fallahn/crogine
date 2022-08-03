@@ -118,6 +118,7 @@ private:
             Horizon, Water,
             Cel, CelTextured,
             Course, Billboard,
+            Branch, Leaf,
 
             Count
         };

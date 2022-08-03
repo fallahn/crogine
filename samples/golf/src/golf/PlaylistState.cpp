@@ -35,6 +35,7 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "PoissonDisk.hpp"
 #include "Billboard.hpp"
+#include "Treeset.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/core/Window.hpp>
@@ -79,6 +80,7 @@ namespace
 #include "WaterShader.inl"
 #include "TerrainShader.inl"
 #include "BillboardShader.inl"
+#include "TreeShader.inl"
 
     const std::string SkyboxPath = "assets/golf/skyboxes/";
     const std::string ShrubPath = "assets/golf/shrubs/";
@@ -348,6 +350,7 @@ void PlaylistState::render()
     m_windBuffer.bind(1);
     m_resolutionBuffer.bind(2);
 
+    glEnable(GL_PROGRAM_POINT_SIZE);
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     auto oldVP = cam.viewport;
@@ -460,6 +463,20 @@ void PlaylistState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Branch] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushFragment, "#define INSTANCING\n#define HQ\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Leaf] = m_resources.materials.add(*shader);
+
 
     //audio - TODO do we need to keep the audio scape as a member?
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
@@ -541,7 +558,7 @@ void PlaylistState::buildScene()
             if (result.terrain == terrainID
                 && result.height > WaterLevel)
             {
-                position.y = result.height;
+                position.y = result.height - 0.05f;
                 output.push_back(position);
             }
         }
@@ -1253,7 +1270,8 @@ void PlaylistState::loadShrubbery(const std::string& path)
     {
         std::string billboardModel;
         std::string billboardSprite;
-        std::vector<std::string> treesets;
+        std::vector<std::string> treesetPaths;
+        constexpr std::size_t MaxTreesets = 4;
 
         const auto& props = shrubFile.getProperties();
         for (const auto& p : props)
@@ -1269,7 +1287,10 @@ void PlaylistState::loadShrubbery(const std::string& path)
             }
             else if (name == "treeset")
             {
-                treesets.push_back(p.getValue<std::string>());
+                if (treesetPaths.size() < MaxTreesets)
+                {
+                    treesetPaths.push_back(p.getValue<std::string>());
+                }
             }
         }
 
@@ -1362,13 +1383,13 @@ void PlaylistState::loadShrubbery(const std::string& path)
 
         //check if a low quality version is available and load that, else duplicate the
         //current billboard ents into the low Q slot.
-        billboardModel = billboardModel.substr(0, billboardModel.find_last_of('.')) + "_low.cmt";
-        billboardSprite = billboardSprite.substr(0, billboardSprite.find_last_of('.')) + "_low.spt";
+        auto billboardModelLow = billboardModel.substr(0, billboardModel.find_last_of('.')) + "_low.cmt";
+        auto billboardSpriteLow = billboardSprite.substr(0, billboardSprite.find_last_of('.')) + "_low.spt";
 
-        if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + billboardModel)
-            && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + billboardSprite))
+        if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + billboardModelLow)
+            && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + billboardSpriteLow))
         {
-            setBillboards(billboardModel, billboardSprite, 1);
+            setBillboards(billboardModelLow, billboardSpriteLow, 1);
         }
         else
         {
@@ -1376,31 +1397,112 @@ void PlaylistState::loadShrubbery(const std::string& path)
             shrubbery.treeBillboardEnts[1] = shrubbery.treeBillboardEnts[0];
         }
 
-        //TODO load tree sets
+        //load tree sets
+        std::vector<Treeset> treesets;
         std::vector<std::vector<glm::mat4>> transforms;
-        for (const auto& ts : treesets)
+        for (const auto& ts : treesetPaths)
         {
-            transforms.emplace_back();
+            Treeset treeset;
+            if (treeset.loadFromFile(ts))
+            {
+                transforms.emplace_back();
+                treesets.push_back(treeset);
+            }
         }
 
-        //TODO instead of doing this for each missing treeset
-        //stash the position and use it to create the relevant
-        //billboard model in its place.
-        if (!transforms.empty())
+        cro::ModelDefinition md(m_resources);
+        for (auto i = 0u; i < MaxTreesets; ++i)
         {
-            for (auto i = 0u; i < m_treeDistribution.size(); ++i)
+            if (i < treesets.size())
             {
-                glm::mat4 t = glm::translate(glm::mat4(1.f), m_treeDistribution[i]);
-                transforms[i % transforms.size()].push_back(t);
-            }
-
-            for (auto i = 0u; i < transforms.size(); ++i)
-            {
-                if (shrubbery.treesetEnts[i].isValid())
+                //load treeset
+                if (md.loadFromFile(treesets[i].modelPath), true)
                 {
-                    shrubbery.treesetEnts[i].getComponent<cro::Model>().setInstanceTransforms(transforms[i]);
+                    shrubbery.treesetEnts[i] = m_gameScene.createEntity();
+                    shrubbery.treesetEnts[i].addComponent<cro::Transform>();
+                    md.createModel(shrubbery.treesetEnts[i]);
+
+                    for (auto idx : treesets[i].branchIndices)
+                    {
+                        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Branch]);
+                        applyMaterialData(md, material, idx);
+                        shrubbery.treesetEnts[i].getComponent<cro::Model>().setMaterial(idx, material);
+                        //shrubbery.treesetEnts[i].getComponent<cro::Model>().setShadowMaterial(idx, m_resources.materials.get(treeShadowMaterialID));
+                    }
+
+                    auto& meshData = shrubbery.treesetEnts[i].getComponent<cro::Model>().getMeshData();
+                    for (auto idx : treesets[i].leafIndices)
+                    {
+                        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Leaf]);
+                        meshData.indexData[idx].primitiveType = GL_POINTS;
+                        material.setProperty("u_diffuseMap", m_resources.textures.get(treesets[i].texturePath));
+                        material.setProperty("u_leafSize", treesets[i].leafSize);
+                        material.setProperty("u_randAmount", treesets[i].randomness);
+                        material.setProperty("u_colour", treesets[i].colour);
+                        shrubbery.treesetEnts[i].getComponent<cro::Model>().setMaterial(idx, material);
+
+                        /*material = m_resources.materials.get(leafShadowMaterialID);
+                        material.setProperty("u_diffuseMap", m_resources.textures.get(treesets[i].texturePath));
+                        material.setProperty("u_leafSize", treesets[i].leafSize);
+                        shrubbery.treesetEnts[i].getComponent<cro::Model>().setShadowMaterial(idx, material);*/
+                    }
+
+                    transforms.emplace_back();
                 }
             }
+            else
+            {
+                //create billboard in place
+                if (md.loadFromFile(billboardModel))
+                {
+                    shrubbery.treesetEnts[i] = m_gameScene.createEntity();
+                    shrubbery.treesetEnts[i].addComponent<cro::Transform>();
+                    md.createModel(shrubbery.treesetEnts[i]);
+                }
+            }
+        }
+
+        cro::SpriteSheet spriteSheet;
+        spriteSheet.loadFromFile(billboardSprite, m_resources.textures);
+
+        for (auto i = 0u; i < m_treeDistribution.size(); ++i)
+        {
+            auto idx = i % MaxTreesets;
+            if (idx < treesets.size())
+            {
+                //add to instance positions
+                auto tx = glm::translate(glm::mat4(1.f), m_treeDistribution[i]);
+
+                float scale = static_cast<float>(cro::Util::Random::value(16, 20)) / 10.f;
+                tx = glm::scale(tx, glm::vec3(scale));
+
+                transforms[idx].push_back(tx);
+            }
+            else
+            {
+                const std::array<std::string, 4u> TreeNames =
+                {
+                    "tree01",
+                    "tree02",
+                    "tree03",
+                    "tree04",
+                };
+
+                //add a billboard
+                auto bb = spriteToBillboard(spriteSheet.getSprite(TreeNames[idx]));
+                bb.size *= static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+                bb.position = m_treeDistribution[i];
+
+                if (shrubbery.treesetEnts[idx].hasComponent<cro::BillboardCollection>())
+                {
+                    shrubbery.treesetEnts[idx].getComponent<cro::BillboardCollection>().addBillboard(bb);
+                }
+            }
+        }
+
+        for (auto i = 0u; i < treesets.size(); ++i)
+        {
+            shrubbery.treesetEnts[i].getComponent<cro::Model>().setInstanceTransforms(transforms[i]);
         }
     }
 
