@@ -98,7 +98,7 @@ namespace
             amount += 1.0;
             amount /= 2.0;
 
-            vec3 top = mix(u_midColour, u_lightColour, smoothstep(u_stepEnd, 0.545, amount));
+            vec3 top = mix(u_midColour, u_lightColour, smoothstep(u_stepEnd, /*0.545*/u_stepEnd + 0.03, amount));
             FRAG_OUT = vec4(mix(u_darkColour, top, smoothstep(u_stepStart, u_stepEnd, amount)), 1.0);
 
         })";

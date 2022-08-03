@@ -118,6 +118,32 @@ namespace
         };
     };
 
+    struct ListItemCallback final
+    {
+        const cro::FloatRect& croppingArea;
+        ListItemCallback(const cro::FloatRect& c)
+            : croppingArea(c) {}
+
+        void operator ()(cro::Entity e, float)
+        {
+            auto cropRect = croppingArea;
+            auto localBounds = e.getComponent<cro::Drawable2D>().getLocalBounds();
+            auto pos = e.getComponent<cro::Transform>().getWorldPosition();
+            cropRect.left -= pos.x;
+            cropRect.bottom -= pos.y;
+            cropRect.bottom -= localBounds.bottom + localBounds.height;
+            e.getComponent<cro::Drawable2D>().setCroppingArea(cropRect);
+
+            float scale = 1.f;
+            pos.y -= (localBounds.height / 2.f);
+            if (!croppingArea.contains(pos))
+            {
+                scale = 0.f;
+            }
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        }
+    };
+
     cro::Entity createHighlight(cro::Scene& scene, const cro::SpriteSheet& spriteSheet)
     {
         auto entity = scene.createEntity();
@@ -916,17 +942,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
 
         entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float)
-        {
-            auto cropRect = m_croppingArea;
-            auto localBounds = e.getComponent<cro::Drawable2D>().getLocalBounds();
-            auto pos = e.getComponent<cro::Transform>().getWorldPosition();
-            cropRect.left -= pos.x;
-            cropRect.bottom -= pos.y;
-            cropRect.bottom -= localBounds.bottom + localBounds.height;
-            e.getComponent<cro::Drawable2D>().setCroppingArea(cropRect);
-        };
+        entity.getComponent<cro::Callback>().function = ListItemCallback(m_croppingArea);
 
         entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Skybox);
@@ -1112,17 +1128,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
 
         entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float)
-        {
-            auto cropRect = m_croppingArea;
-            auto localBounds = e.getComponent<cro::Drawable2D>().getLocalBounds();
-            auto pos = e.getComponent<cro::Transform>().getWorldPosition();
-            cropRect.left -= pos.x;
-            cropRect.bottom -= pos.y;
-            cropRect.bottom -= localBounds.bottom + localBounds.height;
-            e.getComponent<cro::Drawable2D>().setCroppingArea(cropRect);
-        };
+        entity.getComponent<cro::Callback>().function = ListItemCallback(m_croppingArea);
 
         entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);

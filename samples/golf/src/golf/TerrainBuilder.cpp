@@ -320,7 +320,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n" + wobble);
         treeShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetShadow));
 
-        resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define LEAF_SIZE\n" + wobble);
+        resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define LEAF_SIZE\n#define ALPHA_CLIP\n" + wobble);
         leafShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeafShadow));
     }
     //and VATs shader for crowd
@@ -435,7 +435,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                             childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
                             material = resources.materials.get(leafShadowMaterialID);
-                            //material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                            material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
                             material.setProperty("u_leafSize", theme.treesets[j].leafSize);
                             childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
                         }

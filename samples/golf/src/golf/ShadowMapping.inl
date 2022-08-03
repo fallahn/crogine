@@ -236,7 +236,12 @@ const static std::string ShadowFragment = R"(
 
         void main()
         {
-            if(texture(u_diffuseMap, v_texCoord0).a < 0.5) discard;
+#if defined(LEAF_SIZE)
+        vec2 coord = gl_PointCoord;
+#else
+        vec2 coord = v_texCoord0;
+#endif
+            if(texture(u_diffuseMap, coord).a < 0.5) discard;
         }
         #else
 
