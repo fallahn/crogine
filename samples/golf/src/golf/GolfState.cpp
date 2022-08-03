@@ -675,27 +675,31 @@ void GolfState::handleMessage(const cro::Message& msg)
         }
         else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
         {
-            //delayed ent to restore player cam
-            auto entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().setUserData<float>(1.f);
-            entity.getComponent<cro::Callback>().function =
-                [&](cro::Entity e, float dt)
+            if (m_activeAvatar &&
+                data.entity == m_activeAvatar->model)
             {
-                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-                currTime -= dt;
-
-                if (currTime < 0)
+                //delayed ent to restore player cam
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+                entity.getComponent<cro::Callback>().function =
+                    [&](cro::Entity e, float dt)
                 {
-                    if (m_currentCamera == CameraID::Bystander)
-                    {
-                        setActiveCamera(CameraID::Player);
-                    }
+                    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                    currTime -= dt;
 
-                    e.getComponent<cro::Callback>().active = false;
-                    m_gameScene.destroyEntity(e);
-                }
-            };
+                    if (currTime < 0)
+                    {
+                        if (m_currentCamera == CameraID::Bystander)
+                        {
+                            setActiveCamera(CameraID::Player);
+                        }
+
+                        e.getComponent<cro::Callback>().active = false;
+                        m_gameScene.destroyEntity(e);
+                    }
+                };
+            }
         }
     }
     break;
@@ -4325,7 +4329,7 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                         model.getComponent<cro::Skeleton>().play(spectator.anims[Spectator::AnimID::Idle]);
 #ifdef CRO_DEBUG_
                         model.getComponent<cro::Skeleton>().setInterpolationEnabled(false);
-                        //model.getComponent<cro::ShadowCaster>().active = false;
+                        model.getComponent<cro::ShadowCaster>().active = false;
 #endif
                         model.getComponent<cro::Transform>().setPosition(curve.getPoint(spectator.target));
                         m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().addChild(model.getComponent<cro::Transform>());

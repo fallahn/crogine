@@ -318,7 +318,7 @@ void PauseState::buildScene()
             });
 
     //return to game
-    entity = createItem(glm::vec2(0.f), "Return To Game", menuEntity);
+    entity = createItem(glm::vec2(0.f), "Return", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -330,7 +330,7 @@ void PauseState::buildScene()
             });
 
     //quit button
-    entity = createItem(glm::vec2(0.f, -10.f), "Quit", menuEntity);
+    entity = createItem(glm::vec2(0.f, -10.f), "Quit To Menu", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable

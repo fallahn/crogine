@@ -86,6 +86,8 @@ namespace
 
     const std::string SkyboxPath = "assets/golf/skyboxes/";
     const std::string ShrubPath = "assets/golf/shrubs/";
+    const std::string CoursePath = "assets/golf/courses/";
+    const std::string ThumbPath = "assets/golf/thumbs/";
 
     constexpr float TabAreaHeight = 0.25f; //percent of screen
     constexpr float ItemSpacing = 10.f;
@@ -217,9 +219,6 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_BACKSPACE:
-#ifndef CRO_DEBUG_
-        case SDLK_ESCAPE:
-#endif
             quitState();
             return false;
         case SDLK_1:
@@ -234,6 +233,11 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
         case SDLK_4:
             setActiveTab(3);
             break;
+        case SDLK_p:
+        case SDLK_PAUSE:
+        case SDLK_ESCAPE:
+            requestStackPush(StateID::Pause);
+            break;
 #ifdef CRO_DEBUG_
         case SDLK_F9:
             requestStackPush(StateID::Bush);
@@ -247,6 +251,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
         switch (evt.cbutton.button)
         {
         case cro::GameController::ButtonB:
+        case cro::GameController::ButtonBack:
             quitState();
             return false;
         case cro::GameController::ButtonLeftShoulder:
@@ -256,6 +261,9 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonRightShoulder:
             m_currentTab = (m_currentTab + 1) % (MenuID::Count - 1);
             setActiveTab(m_currentTab);
+            break;
+        case cro::GameController::ButtonStart:
+            requestStackPush(StateID::Pause);
             break;
         }
     }
@@ -1328,6 +1336,18 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode)
     m_menuEntities[MenuID::Holes] = m_uiScene.createEntity();
     rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::Holes].addComponent<cro::Transform>());
 
+    //fetch list of directories in course path
+    //for each dir fetch files
+    //for each file
+    //if file is hole file look for thumb with matching name/path.
+    //if thumb exists add dir to dir vector, and hole to dirIdx/hole vector
+    //create node for each dir to which thumbs are attached
+    //show/hide node based on selected dir
+    //clicking on thumb adds dir/thumb index to playlist
+    //NOTE thumb indices may not necessarily be sequential - it has to match
+    //the hole file index, so missing thumbs will jump an index.
+
+    //TODO delete this
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Holes);
 

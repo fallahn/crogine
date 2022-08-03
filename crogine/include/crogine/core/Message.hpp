@@ -143,6 +143,7 @@ namespace cro
 
         struct SkeletalAnimationEvent final
         {
+            std::int32_t animationID = -1; //! animation which was playing when this event was raised
             std::int32_t userType = -1; //! < User assigned event ID
             glm::vec3 position = glm::vec3(0.f); //! < World position of the joint which raised this event
             Entity entity; //! < Entity which raised the event

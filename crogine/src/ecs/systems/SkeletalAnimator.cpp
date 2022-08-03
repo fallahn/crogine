@@ -113,6 +113,7 @@ void SkeletalAnimator::process(float dt)
                         auto* msg = postMessage<Message::SkeletalAnimationEvent>(Message::SkeletalAnimationMessage);
                         msg->userType = Message::SkeletalAnimationEvent::Stopped;
                         msg->entity = entity;
+                        msg->animationID = skel.getCurrentAnimation();
                     }
                 }
 
@@ -128,6 +129,7 @@ void SkeletalAnimator::process(float dt)
                     msg->position = position;
                     msg->userType = uid;
                     msg->entity = entity;
+                    msg->animationID = skel.getCurrentAnimation();
                 }
             }
                    
