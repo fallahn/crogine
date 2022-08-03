@@ -1091,6 +1091,21 @@ void BushState::createThumbnails()
         }
     }
 
+    std::array<std::uint32_t, 3*6> flagBytes =
+    {
+        0xfff8e1ff, 0x00000000, 0x00000000,
+        0xfff8e1ff, 0x00000000, 0x00000000,
+        0xfff8e1ff, 0x00000000, 0x00000000,
+        0xfff8e1ff, 0x00000000, 0x00000000,
+        0xfff8e1ff, 0xb83530ff, 0xb83530ff,
+        0xfff8e1ff, 0xb83530ff, 0xb83530ff,
+    };
+    cro::Image img;
+    img.loadFromMemory(reinterpret_cast<const uint8_t*>(flagBytes.data()), 3, 6, cro::ImageFormat::RGBA);
+    cro::Texture tex;
+    tex.loadFromImage(img);
+    cro::SimpleQuad flagQuad(tex);
+
     cro::ModelDefinition md(m_resources);
     auto oldCam = m_gameScene.setActiveCamera(m_thumbnailCamera);
     for(auto i = 0u; i < inPaths.size(); ++i)
@@ -1133,21 +1148,38 @@ void BushState::createThumbnails()
                         float scale = 1.f;
                         if (size.x > size.z)
                         {
-                            scale = std::floor(320.f / size.x);
+                            scale = std::max(1.f, std::floor(320.f / size.x));
                         }
                         else
                         {
-                            scale = std::floor(200.f / size.z);
+                            scale = std::max(1.f, std::floor(200.f / size.z));
                         }
                         entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+
+
+                        glm::vec3 flagPos = glm::vec3(0.f);
+                        auto* flag = holeFile.findProperty("pin");
+                        if (flag)
+                        {
+                            flagPos = flag->getValue<glm::vec3>();
+
+                            flagPos -= glm::vec3(160.f, 0.f, -100.f);
+                            flagPos *= scale;
+                            flagPos += glm::vec3(160.f, 0.f, -100.f);
+
+                            flagQuad.setPosition({ flagPos.x / 2.f, -flagPos.z / 2.f });
+                        }
+
+
 
                         m_gameScene.simulate(0.f);
 
                         m_thumbnailTexture.clear(cro::Colour::Transparent);
                         m_gameScene.render();
+                        flagQuad.draw();
                         m_thumbnailTexture.display();
 
-                        auto fileName = cro::FileSystem::getFileName(modelPath);
+                        auto fileName = cro::FileSystem::getFileName(hole);
                         fileName = fileName.substr(0, fileName.find_last_of('.'));
                         m_thumbnailTexture.saveToFile(outPath + "/" + fileName + ".png");
 

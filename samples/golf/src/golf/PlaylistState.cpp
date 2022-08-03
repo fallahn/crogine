@@ -234,6 +234,11 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
         case SDLK_4:
             setActiveTab(3);
             break;
+#ifdef CRO_DEBUG_
+        case SDLK_F9:
+            requestStackPush(StateID::Bush);
+            break;
+#endif
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP
