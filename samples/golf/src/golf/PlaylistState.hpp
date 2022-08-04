@@ -195,6 +195,16 @@ private:
     std::size_t m_holeDirIndex;
     std::size_t m_thumbnailIndex;
 
+    struct PlaylistEntry final
+    {
+        std::string name;
+        std::size_t courseIndex = 0;
+        std::size_t holeIndex = 0;
+        cro::Entity uiNode;
+    };
+    std::vector<PlaylistEntry> m_playlist;
+    std::size_t m_playlistIndex;
+
     struct CallbackID final
     {
         enum
@@ -208,8 +218,8 @@ private:
             HoleDirScrollUp,
             HoleDirScrollDown,
 
-            HoleThumbScrollUp,
-            HoleThumbScrollDown,
+            PlaylistScrollUp,
+            PlaylistScrollDown,
 
             Count
         };

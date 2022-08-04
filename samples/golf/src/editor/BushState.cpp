@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "BushState.hpp"
+#include "../golf/GameConsts.hpp"
 #include "../golf/SharedStateData.hpp"
 
 #include <crogine/gui/Gui.hpp>
@@ -1174,7 +1175,7 @@ void BushState::createThumbnails()
 
                         m_gameScene.simulate(0.f);
 
-                        m_thumbnailTexture.clear(cro::Colour::Transparent);
+                        m_thumbnailTexture.clear(/*cro::Colour::Transparent*/WaterColour);
                         m_gameScene.render();
                         flagQuad.draw();
                         m_thumbnailTexture.display();
