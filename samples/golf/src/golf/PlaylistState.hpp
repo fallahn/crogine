@@ -178,6 +178,23 @@ private:
     };
     std::vector<Shrubbery> m_shrubberyModels;
 
+    struct Thumbnail final
+    {
+        std::string name;
+        cro::Entity thumbEnt;
+        glm::vec2 defaultScale = glm::vec2(1.f);
+    };
+
+    struct HoleDirectory final
+    {
+        std::string name;
+        std::vector<Thumbnail> holes;
+        cro::Entity thumbEnt;
+    };
+    std::vector<HoleDirectory> m_holeDirs;
+    std::size_t m_holeDirIndex;
+    std::size_t m_thumbnailIndex;
+
     struct CallbackID final
     {
         enum
@@ -187,6 +204,12 @@ private:
 
             ShrubScrollUp,
             ShrubScrollDown,
+
+            HoleDirScrollUp,
+            HoleDirScrollDown,
+
+            HoleThumbScrollUp,
+            HoleThumbScrollDown,
 
             Count
         };
@@ -224,7 +247,7 @@ private:
     };
     void createSkyboxMenu(cro::Entity, const MenuData&);
     void createShrubberyMenu(cro::Entity, const MenuData&);
-    void createHoleMenu(cro::Entity);
+    void createHoleMenu(cro::Entity, const MenuData&);
     void createFileSystemMenu(cro::Entity);
 
     std::int32_t m_currentTab;

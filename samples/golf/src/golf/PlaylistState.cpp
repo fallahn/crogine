@@ -40,6 +40,7 @@ source distribution.
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/Mouse.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/CircleMeshBuilder.hpp>
@@ -89,8 +90,10 @@ namespace
     const std::string CoursePath = "assets/golf/courses/";
     const std::string ThumbPath = "assets/golf/thumbs/";
 
-    constexpr float TabAreaHeight = 0.25f; //percent of screen
+    constexpr float TabAreaHeight = 0.33f; //percent of screen
     constexpr float ItemSpacing = 10.f;
+    constexpr float ThumbnailOffset = 80.f; //left hand spacing
+    constexpr float RootOffset = 8.f; //left hand offset for menu root nodes
     
     struct ScrollData final
     {
@@ -171,7 +174,7 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
     : cro::State        (ss, ctx),
     m_skyboxScene       (ctx.appInstance.getMessageBus()),
     m_gameScene         (ctx.appInstance.getMessageBus()),
-    m_uiScene           (ctx.appInstance.getMessageBus()),
+    m_uiScene           (ctx.appInstance.getMessageBus(), 512),
     m_sharedData        (sd),
     m_scaleBuffer       ("PixelScale"),
     m_resolutionBuffer  ("ScaledResolution"),
@@ -179,6 +182,8 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_viewScale         (2.f),
     m_skyboxIndex       (0),
     m_shrubIndex        (0),
+    m_holeDirIndex      (0),
+    m_thumbnailIndex    (0),
     m_currentTab        (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -286,13 +291,29 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
 
             //up
             auto menuID = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
-            if (menuID == MenuID::Skybox)
+            switch (menuID)
             {
+            default: break;
+            case MenuID::Skybox:
                 m_callbacks[CallbackID::SkyScrollUp](cro::Entity(), fakeEvent);
-            }
-            else if (menuID == MenuID::Shrubbery)
-            {
+                break;
+            case MenuID::Shrubbery:
                 m_callbacks[CallbackID::ShrubScrollUp](cro::Entity(), fakeEvent);
+                break;
+            case MenuID::Holes:
+                //read mouse position because we may want to scroll thumbs instead.
+            {
+                auto mousePos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+                if (mousePos.x < ThumbnailOffset * m_viewScale.x)
+                {
+                    m_callbacks[CallbackID::HoleDirScrollUp](cro::Entity(), fakeEvent);
+                }
+                else
+                {
+                    m_callbacks[CallbackID::HoleThumbScrollUp](cro::Entity(), fakeEvent);
+                }
+            }
+                break;
             }
         }
         else if (evt.wheel.y < 0)
@@ -303,13 +324,28 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
 
             //down
             auto menuID = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
-            if (menuID == MenuID::Skybox)
+            switch (menuID)
             {
+            default: break;
+            case MenuID::Skybox:
                 m_callbacks[CallbackID::SkyScrollDown](cro::Entity(), fakeEvent);
-            }
-            else if (menuID == MenuID::Shrubbery)
-            {
+                break;
+            case MenuID::Shrubbery:
                 m_callbacks[CallbackID::ShrubScrollDown](cro::Entity(), fakeEvent);
+                break;
+            case MenuID::Holes:
+            {
+                auto mousePos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+                if (mousePos.x < ThumbnailOffset * m_viewScale.x)
+                {
+                    m_callbacks[CallbackID::HoleDirScrollDown](cro::Entity(), fakeEvent);
+                }
+                else
+                {
+                    m_callbacks[CallbackID::HoleThumbScrollDown](cro::Entity(), fakeEvent);
+                }
+            }
+                break;
             }
         }
     }
@@ -754,7 +790,7 @@ void PlaylistState::buildUI()
 
     createSkyboxMenu(rootNode, md);
     createShrubberyMenu(rootNode, md);
-    createHoleMenu(rootNode);
+    createHoleMenu(rootNode, md);
     createFileSystemMenu(rootNode);
 
 
@@ -877,6 +913,11 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     if (m_skyboxes.empty())
     {
         m_skyboxes.push_back("No skybox files found");
+        
+        //dummy ent to stop crashing if we try selecting this menu group
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::UIInput>().setGroup(MenuID::Skybox);
+
         return;
     }
 
@@ -1065,7 +1106,6 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
         return;
     }
 
-    static constexpr float RootOffset = 8.f;
     m_menuEntities[MenuID::Shrubbery].addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     m_menuEntities[MenuID::Shrubbery].addComponent<UIElement>().absolutePosition = { RootOffset, -8.f };
     m_menuEntities[MenuID::Shrubbery].getComponent<UIElement>().relativePosition = { 0.f, TabAreaHeight };
@@ -1331,25 +1371,359 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     scrollEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
-void PlaylistState::createHoleMenu(cro::Entity rootNode)
+void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuData)
 {
     m_menuEntities[MenuID::Holes] = m_uiScene.createEntity();
     rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::Holes].addComponent<cro::Transform>());
 
-    //fetch list of directories in course path
-    //for each dir fetch files
-    //for each file
-    //if file is hole file look for thumb with matching name/path.
-    //if thumb exists add dir to dir vector, and hole to dirIdx/hole vector
-    //create node for each dir to which thumbs are attached
-    //show/hide node based on selected dir
-    //clicking on thumb adds dir/thumb index to playlist
-    //NOTE thumb indices may not necessarily be sequential - it has to match
-    //the hole file index, so missing thumbs will jump an index.
+    //read course dir and only add directory if it contains .hole files which have a corresponding thumbnail
+    auto holeDirs = cro::FileSystem::listDirectories(cro::FileSystem::getResourcePath() + CoursePath);
+    std::sort(holeDirs.begin(), holeDirs.end());
 
-    //TODO delete this
+    for (const auto& dir : holeDirs)
+    {
+        auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + CoursePath + dir);
+        files.erase(std::remove_if(files.begin(), files.end(),
+            [](const std::string& file)
+            {
+                return cro::FileSystem::getFileExtension(file) != ".hole";
+            }), files.end());
+        std::sort(files.begin(), files.end());
+
+        //check if thumb exists and only add if it does
+        std::vector<std::string> thumbs;
+        for (const auto& file : files)
+        {
+            auto thumb = file.substr(0, file.find_last_of('.')) + ".png";
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + ThumbPath + dir + "/" + thumb))
+            {
+                thumbs.push_back(thumb);
+            }
+        }
+
+        if (!thumbs.empty())
+        {
+            auto& holeDir = m_holeDirs.emplace_back();
+            holeDir.name = dir;
+            
+            for (auto& thumb : thumbs)
+            {
+                holeDir.holes.emplace_back().name.swap(thumb);
+            }
+        }
+    }
+
+
+    //scroll node for directory list
+    m_menuEntities[MenuID::Holes].addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    m_menuEntities[MenuID::Holes].addComponent<UIElement>().absolutePosition = { RootOffset, -8.f };
+    m_menuEntities[MenuID::Holes].getComponent<UIElement>().relativePosition = { 0.f, TabAreaHeight };
+
+    auto scrollNode = m_uiScene.createEntity();
+    scrollNode.addComponent<cro::Transform>();
+    m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(scrollNode.getComponent<cro::Transform>());
+
+    //scroll callbacks
+    ScrollData scrollData(m_holeDirs.size());
+    scrollData.basePosition = scrollNode.getComponent<cro::Transform>().getPosition();
+
+    scrollNode.addComponent<cro::Callback>().setUserData<ScrollData>(scrollData);
+    scrollNode.getComponent<cro::Callback>().active = true;
+    scrollNode.getComponent<cro::Callback>().function = ScrollNodeCallback();
+
+    m_callbacks[CallbackID::HoleDirScrollDown] =
+        [&, scrollNode](cro::Entity, const cro::ButtonEvent& evt) mutable
+    {
+        if (activated(evt))
+        {
+            auto& data = scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>();
+            data.targetIndex = std::min(data.targetIndex + 1, data.itemCount - 1);
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
+    };
+    m_callbacks[CallbackID::HoleDirScrollUp] =
+        [&, scrollNode](cro::Entity, const cro::ButtonEvent& evt) mutable
+    {
+        if (activated(evt))
+        {
+            auto& data = scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>();
+            if (data.currIndex > 0)
+            {
+                data.targetIndex = data.currIndex - 1;
+            }
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
+    };
+
+    m_callbacks[CallbackID::HoleThumbScrollDown] =
+        [&](cro::Entity, const cro::ButtonEvent& evt) mutable
+    {
+        if (activated(evt))
+        {
+            /*auto& data = m_holeDirs[m_holeDirIndex].thumbEnt.getComponent<cro::Callback>().getUserData<ScrollData>();
+            data.targetIndex = std::min(data.targetIndex + 1, data.itemCount - 1);
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();*/
+        }
+    };
+    m_callbacks[CallbackID::HoleThumbScrollUp] =
+        [&](cro::Entity, const cro::ButtonEvent& evt) mutable
+    {
+        if (activated(evt))
+        {
+            /*auto& data = m_holeDirs[m_holeDirIndex].thumbEnt.getComponent<cro::Callback>().getUserData<ScrollData>();
+            if (data.currIndex > 0)
+            {
+                data.targetIndex = data.currIndex - 1;
+            }
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();*/
+        }
+    };
+
+    //thumbnail label
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
+    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 24.f };
+    centreText(entity);
+    m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto labelEnt = entity;
+
+
+    //create the list of directories
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    glm::vec2 position(0.f);
+    for (auto i = 0u; i < m_holeDirs.size(); ++i)
+    {
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString(m_holeDirs[i].name);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function = ListItemCallback(m_croppingArea);
+
+        entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&, i, scrollNode](cro::Entity e) mutable
+                {
+                    e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+                    auto pos = e.getComponent<cro::Transform>().getWorldPosition();
+                    pos.y -= ItemSpacing / 2.f;
+                    if (!m_croppingArea.contains(pos))
+                    {
+                        cro::ButtonEvent fakeEvent;
+                        fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+                        fakeEvent.button.button = SDL_BUTTON_LEFT;
+
+                        if (pos.y < m_croppingArea.bottom)
+                        {
+                            m_callbacks[CallbackID::SkyScrollDown](cro::Entity(), fakeEvent);
+                        }
+                        else if (pos.y > (m_croppingArea.bottom + m_croppingArea.height))
+                        {
+                            scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = i;
+                        }
+                    }
+                });
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.textUnselected;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&, i, labelEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+                {
+                    if (activated(evt))
+                    {
+                        //hide current thumb, reset index
+                        m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        m_thumbnailIndex = 0;
+
+                        //hide current menu, set current directory index, show new menu
+                        m_holeDirs[m_holeDirIndex].thumbEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        m_holeDirIndex = i;
+                        m_holeDirs[m_holeDirIndex].thumbEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+                        m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(
+                            m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].defaultScale);
+
+                        labelEnt.getComponent<cro::Text>().setString(m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name);
+                        centreText(labelEnt);
+                    }
+                });
+
+        position.y -= ItemSpacing;
+        scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+        //scroll node to which to attach thumbs
+        m_holeDirs[i].thumbEnt = m_uiScene.createEntity();
+        m_holeDirs[i].thumbEnt.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+
+        m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(m_holeDirs[i].thumbEnt.getComponent<cro::Transform>());
+
+        glm::vec3 thumbPos(ThumbnailOffset, 0.f, 0.2f);
+        for (auto j = 0u; j < m_holeDirs[i].holes.size(); ++j)
+        {
+            //for each directory create a list of thumbnails
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(thumbPos);
+            entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>(m_resources.textures.get(ThumbPath + m_holeDirs[i].name + "/" + m_holeDirs[i].holes[j].name));
+            
+            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+            entity.getComponent<cro::Transform>().setOrigin({ 0.f, bounds.height, 0.f });
+
+            m_holeDirs[i].holes[j].thumbEnt = entity;
+            m_holeDirs[i].thumbEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        }
+    }
+
+    //show first entry
+    m_holeDirs[m_holeDirIndex].thumbEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+
+    //scroll buttons
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("scroll_up");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.2f;
+    entity.getComponent<UIElement>().absolutePosition = { -bounds.width * 3.f, -std::floor(bounds.height * 1.25f) };
+    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    auto buttonEnt = entity;
+    m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createHighlight(m_uiScene, *menuData.spriteSheet);
+    entity.getComponent<cro::Transform>().setPosition({ 4.f, 4.f });
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(m_callbacks[CallbackID::HoleDirScrollUp]);
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("scroll_down");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.2f;
+    entity.getComponent<UIElement>().absolutePosition = { -bounds.width * 3.f, std::floor(bounds.height * 2.f) };
+    entity.getComponent<UIElement>().relativePosition = { 1.f, -TabAreaHeight };
+    buttonEnt = entity;
+    m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createHighlight(m_uiScene, *menuData.spriteSheet);
+    entity.getComponent<cro::Transform>().setPosition({ 4.f, 4.f });
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(m_callbacks[CallbackID::HoleDirScrollDown]);
+
+
+    //buttons to scroll thumbnails
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("scroll_left");
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
+    entity.getComponent<UIElement>().absolutePosition = { -30.f - RootOffset, 16.f };
+    m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto scrollEnt = entity;
+
+    bounds = menuData.spriteSheet->getSprite("scroll_highlight").getTextureBounds();
+    entity = createHighlight(m_uiScene, *menuData.spriteSheet);
+    entity.getComponent<cro::Transform>().setPosition({ 4.f, 4.f });
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, labelEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+
+                    auto holeCount = m_holeDirs[m_holeDirIndex].holes.size();
+                    m_thumbnailIndex = (m_thumbnailIndex + (holeCount - 1)) % holeCount;
+                    labelEnt.getComponent<cro::Text>().setString(m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name);
+                    centreText(labelEnt);
+                    
+                    m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(
+                        m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].defaultScale);
+                }
+            });
+    scrollEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("scroll_right");
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
+    entity.getComponent<UIElement>().absolutePosition = { 21.f - RootOffset, 16.f };
+    m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    scrollEnt = entity;
+
+    entity = createHighlight(m_uiScene, *menuData.spriteSheet);
+    entity.getComponent<cro::Transform>().setPosition({ 4.f, 4.f });
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, labelEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+
+                    auto holeCount = m_holeDirs[m_holeDirIndex].holes.size();
+                    m_thumbnailIndex = (m_thumbnailIndex + 1) % holeCount;
+                    labelEnt.getComponent<cro::Text>().setString(m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].name);
+                    centreText(labelEnt);
+
+                    m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(
+                        m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].defaultScale);
+                }
+            });
+    scrollEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    if (m_holeDirs.empty())
+    {
+        //add a dummy ent to stop crashing when the tab is selected
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    }
 
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 }
@@ -1919,6 +2293,24 @@ void PlaylistState::updateNinePatch(cro::Entity entity)
 
     size *= m_viewScale;
     m_croppingArea = { 6.f * m_viewScale.x, 6.f * m_viewScale.y, size.x - (12.f * m_viewScale.x), size.y - (12.f * m_viewScale.y) };
+
+
+    constexpr float ThumbHeight = 100.f;
+    for (auto& hole : m_holeDirs)
+    {
+        for (auto& thumb : hole.holes)
+        {
+            thumb.defaultScale = glm::vec2(1.f);
+            if (ThumbHeight * m_viewScale.y > size.y)
+            {
+                thumb.defaultScale /= 2.f;
+            }
+            if (thumb.thumbEnt.getComponent<cro::Transform>().getScale().y > 0)
+            {
+                thumb.thumbEnt.getComponent<cro::Transform>().setScale(thumb.defaultScale);
+            }
+        }
+    }
 }
 
 void PlaylistState::updateInfo()
