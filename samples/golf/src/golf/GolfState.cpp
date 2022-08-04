@@ -1124,15 +1124,17 @@ bool GolfState::simulate(float dt)
         cmd.action = [&](cro::Entity e, float)
         {
             auto camDist = glm::length2(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getPosition() - m_holeData[m_currentHole].pin);
+            auto ballDist = glm::length2((m_activeAvatar->ballModel.getComponent<cro::Transform>().getWorldPosition() - m_holeData[m_currentHole].pin) * 4.f);
+
             auto& data = e.getComponent<cro::Callback>().getUserData<FlagCallbackData>();
             if (data.targetHeight < FlagCallbackData::MaxHeight
-                && camDist < FlagRaiseDistance)
+                && (camDist < FlagRaiseDistance || ballDist < FlagRaiseDistance))
             {
                 data.targetHeight = FlagCallbackData::MaxHeight;
                 e.getComponent<cro::Callback>().active = true;
             }
             else if (data.targetHeight > 0
-                && camDist > FlagRaiseDistance)
+                && (camDist > FlagRaiseDistance && ballDist > FlagRaiseDistance))
             {
                 data.targetHeight = 0.f;
                 e.getComponent<cro::Callback>().active = true;

@@ -95,6 +95,11 @@ namespace
     constexpr float ThumbnailOffset = 80.f; //left hand spacing
     constexpr float RootOffset = 8.f; //left hand offset for menu root nodes
     
+    constexpr std::size_t MaxSkyboxes = 40;
+    constexpr std::size_t MaxShrubs = 40;
+    constexpr std::size_t MaxCourses = 40;
+    constexpr std::size_t MaxHoles = 18;
+
     struct ScrollData final
     {
         explicit ScrollData(std::size_t ic) : itemCount(ic) {}
@@ -920,6 +925,11 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
 
         return;
     }
+    else if (m_skyboxes.size() > MaxSkyboxes)
+    {
+        //some arbitrary limit
+        m_skyboxes.resize(MaxSkyboxes);
+    }
 
     m_menuEntities[MenuID::Skybox].addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     m_menuEntities[MenuID::Skybox].addComponent<UIElement>().absolutePosition = { 8.f, -8.f };
@@ -1103,7 +1113,16 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     if (m_shrubs.empty())
     {
         m_shrubs.push_back("No shrub files found");
+
+        //dummy ent to stop crashing if we try selecting this menu group
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
+
         return;
+    }
+    else if (m_shrubs.size() > MaxShrubs)
+    {
+        m_shrubs.resize(MaxShrubs);
     }
 
     m_menuEntities[MenuID::Shrubbery].addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -1380,6 +1399,11 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     auto holeDirs = cro::FileSystem::listDirectories(cro::FileSystem::getResourcePath() + CoursePath);
     std::sort(holeDirs.begin(), holeDirs.end());
 
+    if (holeDirs.size() > MaxCourses)
+    {
+        holeDirs.resize(MaxCourses);
+    }
+
     for (const auto& dir : holeDirs)
     {
         auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + CoursePath + dir);
@@ -1389,6 +1413,11 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                 return cro::FileSystem::getFileExtension(file) != ".hole";
             }), files.end());
         std::sort(files.begin(), files.end());
+
+        if (files.size() > MaxHoles)
+        {
+            files.resize(MaxHoles);
+        }
 
         //check if thumb exists and only add if it does
         std::vector<std::string> thumbs;
