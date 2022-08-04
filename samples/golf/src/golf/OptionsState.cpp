@@ -199,6 +199,11 @@ namespace
             e.getComponent<cro::Sprite>().setTextureRect(rect);
         }
     };
+
+    struct ToolTip final
+    {
+        cro::Entity target;
+    };
 }
 
 OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -942,6 +947,7 @@ void OptionsState::buildScene()
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({-100.f, -100.f, ToolTipDepth});
         entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<ToolTip>();
         entity.addComponent<cro::Text>(font).setString(tip);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -1107,14 +1113,12 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //shadow quality
     auto shadowLabel = createLabel({ 204.f, 34.f }, "Shadow Quality");
-    //shadowLabel.addComponent<cro::Callback>().active = true;
-    //shadowLabel.getComponent<cro::Callback>().function =
-    //    [&](cro::Entity e, float)
-    //{
-    //    //TODO fix sharing tool tips (this func shrinks to zero
-    //    //when not highlighted)
-    //    updateToolTip(e, ToolTipID::NeedsRestart);
-    //};
+    shadowLabel.addComponent<cro::Callback>().active = true;
+    shadowLabel.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        updateToolTip(e, ToolTipID::NeedsRestart);
+    };
 
     auto createSlider = [&](glm::vec2 position)
     {
@@ -1781,38 +1785,35 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
 
 
+    auto shadowQualityText = createLabel({ 325.f, 34.f }, m_sharedData.hqShadows ? "High" : "Low");
+    centreText(shadowQualityText);
 
-    //hq shadow check box
-    entity = createHighlight(glm::vec2(246.f, 25.f));
+    //prev / next shadow quality
+    entity = createHighlight(glm::vec2(286.f, 25.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+        uiSystem.addCallback([&, shadowQualityText](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {
                     m_sharedData.hqShadows = !m_sharedData.hqShadows;
+                    shadowQualityText.getComponent<cro::Text>().setString(m_sharedData.hqShadows ? "High" : "Low");
+                    centreText(shadowQualityText);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
-    //hq shadow checkbox centre
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(248.f, 27.f, HighlightOffset));
-    entity.addComponent<cro::Drawable2D>().getVertexData() =
-    {
-        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
-    };
-    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        float scale = m_sharedData.hqShadows ? 1.f : 0.f;
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-    };
-    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity = createHighlight(glm::vec2(355.f, 25.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&, shadowQualityText](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.hqShadows = !m_sharedData.hqShadows;
+                    shadowQualityText.getComponent<cro::Text>().setString(m_sharedData.hqShadows ? "High" : "Low");
+                    centreText(shadowQualityText);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
 }
 
 void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
@@ -2893,12 +2894,22 @@ void OptionsState::updateToolTip(cro::Entity e, std::int32_t tipID)
         mousePos.y = std::floor(mousePos.y);
         mousePos.z = 2.f;
 
-        m_tooltips[tipID].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
-        m_tooltips[tipID].getComponent<cro::Transform>().setScale(m_viewScale);
+        if (!m_tooltips[tipID].getComponent<ToolTip>().target.isValid()
+            || m_tooltips[tipID].getComponent<ToolTip>().target == e)
+        {
+            m_tooltips[tipID].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
+            m_tooltips[tipID].getComponent<cro::Transform>().setScale(m_viewScale);
+
+            m_tooltips[tipID].getComponent<ToolTip>().target = e;
+        }
     }
     else
     {
-        m_tooltips[tipID].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        if (m_tooltips[tipID].getComponent<ToolTip>().target == e)
+        {
+            m_tooltips[tipID].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_tooltips[tipID].getComponent<ToolTip>().target = {};
+        }
     }
 }
 
