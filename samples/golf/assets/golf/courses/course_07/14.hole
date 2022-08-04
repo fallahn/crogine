@@ -1,0 +1,119 @@
+hole 14
+{
+    map="assets/golf/courses/course_07/14.png"
+    model="assets/golf/models/course_07/14.cmt"
+    par = 4
+
+    pin = 25.556490,0.371001,-66.815849
+
+    target = 102.131706,0.375429,-44.673615
+
+    tee = 295.876251,0.375429,-159.382675
+
+    prop
+    {
+        model = "assets/golf/models/bench01.cmt"
+        position = 122.944244,0.449310,-29.599415
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets//golf/models/bench03.cmt"
+        position = 126.815071,0.449310,-29.385509
+        rotation = 85.031003
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/rubbish_bin.cmt"
+        position = 124.643982,0.375731,-27.784210
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lamp_post.cmt"
+        position = 120.871490,0.373422,-28.223309
+        rotation = 84.139679
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/sign_post.cmt"
+        position = 12.082829,0.373422,-64.258263
+        rotation = 216.028451
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 55.286053,0.375474,-33.695557
+        rotation = 160.477838
+
+        path
+        {
+            point = 12.459044,0.375429,-59.072403
+            point = 23.494263,0.375429,-49.915516
+            point = 37.728863,0.375429,-40.703415
+            point = 56.033188,0.375429,-34.308819
+            point = 82.085648,0.375429,-28.540335
+            point = 114.086174,0.375429,-25.589354
+
+            loop = false
+            delay = 4.0
+            speed = 6.0
+        }
+    }
+
+    crowd
+    {
+        position = 14.773022,0.375474,-78.041367
+        rotation = 59.202332
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 79.346115,0.041930,-71.515076
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 77.783142,0.047843,-73.685043
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 40.547554,0.041930,-80.892052
+        rotation = 234.280562
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies_large.cmt"
+        position = 43.221809,0.047843,-80.892082
+        rotation = 234.280562
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/lilies.cmt"
+        position = 45.425205,0.041930,-80.062851
+        rotation = 212.163652
+        scale = 1.000000,1.000000,1.000000
+    }
+
+}

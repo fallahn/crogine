@@ -64,7 +64,7 @@ namespace cro
             void pauseSource(std::int32_t) override {}
             void stopSource(std::int32_t) override {}
 
-            std::int32_t getSourceState(std::int32_t) const override { return -1; }
+            std::int32_t getSourceState(std::int32_t) const override { return 2; }
 
             void setSourcePosition(std::int32_t, glm::vec3) override {}
             void setSourcePitch(std::int32_t, float) override {}

@@ -1123,21 +1123,24 @@ bool GolfState::simulate(float dt)
         cmd.targetFlags = CommandID::Flag;
         cmd.action = [&](cro::Entity e, float)
         {
-            auto camDist = glm::length2(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getPosition() - m_holeData[m_currentHole].pin);
-            auto ballDist = glm::length2((m_activeAvatar->ballModel.getComponent<cro::Transform>().getWorldPosition() - m_holeData[m_currentHole].pin) * 4.f);
+            if (!e.getComponent<cro::Callback>().active)
+            {
+                auto camDist = glm::length2(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getPosition() - m_holeData[m_currentHole].pin);
+                auto ballDist = glm::length2((m_activeAvatar->ballModel.getComponent<cro::Transform>().getWorldPosition() - m_holeData[m_currentHole].pin) * 3.f);
 
-            auto& data = e.getComponent<cro::Callback>().getUserData<FlagCallbackData>();
-            if (data.targetHeight < FlagCallbackData::MaxHeight
-                && (camDist < FlagRaiseDistance || ballDist < FlagRaiseDistance))
-            {
-                data.targetHeight = FlagCallbackData::MaxHeight;
-                e.getComponent<cro::Callback>().active = true;
-            }
-            else if (data.targetHeight > 0
-                && (camDist > FlagRaiseDistance && ballDist > FlagRaiseDistance))
-            {
-                data.targetHeight = 0.f;
-                e.getComponent<cro::Callback>().active = true;
+                auto& data = e.getComponent<cro::Callback>().getUserData<FlagCallbackData>();
+                if (data.targetHeight < FlagCallbackData::MaxHeight
+                    && (camDist < FlagRaiseDistance || ballDist < FlagRaiseDistance))
+                {
+                    data.targetHeight = FlagCallbackData::MaxHeight;
+                    e.getComponent<cro::Callback>().active = true;
+                }
+                else if (data.targetHeight > 0
+                    && (camDist > FlagRaiseDistance && ballDist > FlagRaiseDistance))
+                {
+                    data.targetHeight = 0.f;
+                    e.getComponent<cro::Callback>().active = true;
+                }
             }
         };
         m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -2766,14 +2769,17 @@ void GolfState::buildScene()
     {
         auto pos = e.getComponent<cro::Transform>().getPosition();
         auto& data = e.getComponent<cro::Callback>().getUserData<FlagCallbackData>();
+
+        const float  speed = dt * 0.5f;
+
         if (data.currentHeight < data.targetHeight)
         {
-            data.currentHeight = std::min(FlagCallbackData::MaxHeight, data.currentHeight + dt);
+            data.currentHeight = std::min(FlagCallbackData::MaxHeight, data.currentHeight + speed);
             pos.y = cro::Util::Easing::easeOutExpo(data.currentHeight / FlagCallbackData::MaxHeight);
         }
         else
         {
-            data.currentHeight = std::max(0.f, data.currentHeight - dt);
+            data.currentHeight = std::max(0.f, data.currentHeight - speed);
             pos.y = cro::Util::Easing::easeInExpo(data.currentHeight / FlagCallbackData::MaxHeight);
         }
         

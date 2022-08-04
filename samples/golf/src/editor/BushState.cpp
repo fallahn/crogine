@@ -1175,7 +1175,7 @@ void BushState::createThumbnails()
 
                         m_gameScene.simulate(0.f);
 
-                        m_thumbnailTexture.clear(/*cro::Colour::Transparent*/WaterColour);
+                        m_thumbnailTexture.clear(cro::Colour(std::uint8_t(39), 56, 153));
                         m_gameScene.render();
                         flagQuad.draw();
                         m_thumbnailTexture.display();
