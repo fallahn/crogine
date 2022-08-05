@@ -412,7 +412,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             //instanced shrubs
             if (m_sharedData.treeQuality == SharedStateData::High)
             {
-                for (auto j = 0; j < std::min(ThemeSettings::MaxTreeSets, theme.treesets.size()); ++j)
+                for (auto j = 0u; j < std::min(ThemeSettings::MaxTreeSets, theme.treesets.size()); ++j)
                 {
                     if (shrubDef.loadFromFile(theme.treesets[j].modelPath, true))
                     {

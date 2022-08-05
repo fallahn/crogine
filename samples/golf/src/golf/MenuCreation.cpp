@@ -520,7 +520,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         }
     };
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto cartEnt = entity;
+    //auto cartEnt = entity;
 
     //banner header
     bounds = spriteSheet.getSprite("header").getTextureBounds();
@@ -571,7 +571,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         e.getComponent<cro::Transform>().setPosition(position);
     };
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto footerEnt = entity;
+    //auto footerEnt = entity;
 
     //cursor
     entity = m_uiScene.createEntity();
@@ -581,7 +581,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::SpriteAnimation>().play(0);
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    auto cursorEnt = entity;
+    //auto cursorEnt = entity;
 
     mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity](cro::Entity e) mutable

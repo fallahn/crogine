@@ -913,8 +913,6 @@ void BushState::loadPreset(const std::string& path)
             else if (name == "branch_index")
             {
                 branchIndices.push_back(p.getValue<std::uint32_t>());
-
-                auto matIndex = p.getValue<std::uint32_t>();
             }
             else if (name == "leaf_index")
             {

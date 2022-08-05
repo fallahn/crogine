@@ -3590,7 +3590,7 @@ void GolfState::initAudio(bool loadTrees)
             "assets/golf/sound/ambience/trees02.ogg"
         };
 
-        const std::array positions =
+        /*const std::array positions =
         {
             glm::vec3(80.f, 4.f, -66.f),
             glm::vec3(240.f, 4.f, -66.f),
@@ -3611,7 +3611,7 @@ void GolfState::initAudio(bool loadTrees)
         };
 
         //this works but... meh
-        /*for (auto i = 0u; i < paths.size(); ++i)
+        for (auto i = 0u; i < paths.size(); ++i)
         {
             if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + paths[i]))
             {

@@ -538,7 +538,6 @@ void PlaylistState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Leaf] = m_resources.materials.add(*shader);
-    m_sharedData.treeQuality;
 
     m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
@@ -2582,7 +2581,7 @@ void PlaylistState::applyShrubQuality()
 
 void PlaylistState::updateNinePatch(cro::Entity entity)
 {
-    static constexpr float NinePatchSize = 4.f; //size of a 'patch' in the texture
+    //static constexpr float NinePatchSize = 4.f; //size of a 'patch' in the texture
     
     //0    2
     //|  / |

@@ -53,7 +53,7 @@ void Path::addPoint(glm::vec3 point)
         m_length += glm::length(point - m_points[m_points.size() - 2]);
 
         m_speedMultipliers.clear();
-        for (auto i = 0; i < m_points.size() - 1; ++i)
+        for (auto i = 0u; i < m_points.size() - 1; ++i)
         {
             float edgeLength = glm::length(m_points[i] - m_points[i + 1]);
             m_speedMultipliers.push_back(1.f - (edgeLength / m_length));
