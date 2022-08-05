@@ -78,6 +78,7 @@ namespace cro
         loadFromString() to read it directly.
         */
         bool loadFromFile(const std::string& vertexPath, const std::string& fragmentPath);
+        bool loadFromFile(const std::string& vertexPath, const std::string& geometryPath, const std::string& fragmentPath);
 
         /*!
         \brief Attempts to load the shader source from given strings
@@ -90,6 +91,7 @@ namespace cro
         directives should be omitted from any source code.
         */
         bool loadFromString(const std::string& vertex, const std::string& fragment, const std::string& defines = "");
+        bool loadFromString(const std::string& vertex, const std::string& geometry, const std::string& fragment, const std::string& defines);
 
         /*!
         \brief Returns the opengl handle for the shader program
@@ -115,6 +117,8 @@ namespace cro
 
 
     private:
+        bool loadFromSource(const char* v, const char* g, const char* f, const char* d);
+
         std::uint32_t m_handle;
         std::array<std::int32_t, AttributeID::Count> m_attribMap;
         bool fillAttribMap();
