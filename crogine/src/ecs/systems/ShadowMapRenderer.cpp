@@ -50,10 +50,16 @@ source distribution.
 
 using namespace cro;
 
+namespace
+{
+    std::uint32_t intervalCounter = 0;
+}
+
 ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
     : System(mb, typeid(ShadowMapRenderer)),
-    m_maxDistance (100.f),
-    m_cascadeCount(3)
+    m_maxDistance   (100.f),
+    m_cascadeCount  (3),
+    m_interval      (1)
 {
     requireComponent<cro::Model>();
     requireComponent<cro::Transform>();
@@ -77,14 +83,24 @@ void ShadowMapRenderer::process(float)
     //render here to ensure this only happens once per update
     //remember we might be rendering the Scene in multiple passes
     //which would call render() multiple times unnecessarily.
-    render();
-    m_activeCameras.clear();
+    if ((intervalCounter % m_interval) == 0)
+    {
+        render();
+        m_activeCameras.clear();
+    }
+
+
+    intervalCounter++;
 }
 
 void ShadowMapRenderer::updateDrawList(Entity camEnt)
 {
+    if (intervalCounter % m_interval)
+    {
+        return;
+    }
+
     glm::vec3 lightDir = getScene()->getSunlight().getComponent<Sunlight>().getDirection();
-    //glm::quat lightRotation = glm::quat_cast(getScene()->getSunlight().getComponent<Transform>().getWorldTransform());
 
     //this gets called once for each Camera in the CameraSystem
     //from CameraSystem::process() - so we'll check here if

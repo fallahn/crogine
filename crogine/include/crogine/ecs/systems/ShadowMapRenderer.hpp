@@ -92,6 +92,13 @@ namespace cro
         */
         void setNumCascades(std::int32_t count);
 
+        /*!
+        \brief Sets the render interval
+        Sets N where the shadow maps are rendered every Nth frame.
+        Must be greater than 0
+        */
+        void setRenderInterval(std::uint32_t interval) { m_interval = std::max(interval, 1u); }
+
         void process(float) override;
 
         void updateDrawList(Entity) override;
@@ -100,6 +107,7 @@ namespace cro
     private:
         float m_maxDistance;
         std::int32_t m_cascadeCount;
+        std::uint32_t m_interval;
         
         std::vector<Entity> m_activeCameras;
         std::vector<std::vector<std::pair<Entity, float>>> m_drawLists;

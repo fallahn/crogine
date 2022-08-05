@@ -2686,6 +2686,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(ShadowNearDistance);
+    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setRenderInterval(m_sharedData.hqShadows ? 2 : 3);
 #ifdef CRO_DEBUG_
     m_gameScene.addSystem<FpsCameraSystem>(mb);
 #endif
