@@ -114,7 +114,8 @@ bool NewsState::handleEvent(const cro::Event& evt)
         && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
     {
         if (evt.cbutton.button == cro::GameController::ButtonB
-            || evt.cbutton.button == cro::GameController::ButtonStart)
+            || evt.cbutton.button == cro::GameController::ButtonStart
+            || evt.cbutton.button == cro::GameController::ButtonBack)
         {
             quitState();
             return false;

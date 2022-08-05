@@ -200,6 +200,7 @@ private:
         std::string name;
         std::size_t courseIndex = 0;
         std::size_t holeIndex = 0;
+        std::size_t currentIndex = 0;
         cro::Entity uiNode;
     };
     std::vector<PlaylistEntry> m_playlist;
