@@ -13,7 +13,7 @@ model 17
         double_sided = false
         use_mipmaps = false
         blendmode = none
-        diffuse = "assets/golf/images/bunker.png"
+        diffuse = "assets/golf/images/light_sand.png"
 
     }
     material Unlit
