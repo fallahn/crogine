@@ -792,6 +792,17 @@ void PlaylistState::buildUI()
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
 
+    auto showTip = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, glm::vec2, const cro::MotionEvent&)
+        {
+            showToolTip(e.getLabel());
+        });
+    auto hideTip = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, glm::vec2, const cro::MotionEvent&)
+        {
+            hideToolTip();
+        });
+
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/course_tabs.spt", m_resources.textures);
 
@@ -824,7 +835,7 @@ void PlaylistState::buildUI()
     tabEnt.addComponent<cro::SpriteAnimation>().play(m_animationIDs[AnimationID::TabSkybox]);
     rootNode.getComponent<cro::Transform>().addChild(tabEnt.getComponent<cro::Transform>());
 
-    //we should never attempt to acces a menu at this index so we'll use it as a hacky convenience
+    //we should never attempt to access a menu at this index so we'll use it as a hacky convenience
     //to store the entity with the tab graphics (setActiveTab() will want to update the animation)
     m_tabEntities[MenuID::Dummy] = tabEnt;
 
@@ -840,6 +851,11 @@ void PlaylistState::buildUI()
     constexpr glm::vec2 buttonOffset(15.f, 1.f);
     auto bounds = spriteSheet.getSprite("tab_highlight").getTextureBounds();
     auto tabWidth = spriteSheet.getSprite("tab_bar").getTextureBounds().width / 4.f;
+
+    const std::array<std::string, 4u> TipText =
+    {
+        "Skybox", "Foliage", "Hole List", "Load/Save"
+    };
 
     for (auto i = 0u; i < MenuID::Count -1; ++i)
     {
@@ -860,7 +876,11 @@ void PlaylistState::buildUI()
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelected;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = highlightUnselected;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Enter] = showTip;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = hideTip;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = tabSelect;
+
+        entity.setLabel(TipText[i]);
 
         tabEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_tabEntities[i] = entity;
@@ -895,6 +915,30 @@ void PlaylistState::buildUI()
     m_infoEntity = entity;
     updateInfo();
 
+    //shows tool tip
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(cro::Colour::Black);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.addComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        auto position = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+        position.x = std::floor(position.x);
+        position.y = std::floor(position.y);
+        position.z = 2.f;
+
+        static constexpr glm::vec3 Offset(8.f, -4.f, 0.f);
+        position += (Offset * m_viewScale.x);
+
+        e.getComponent<cro::Transform>().setPosition(position);
+        e.getComponent<cro::Transform>().setScale(m_viewScale);
+    };
+    m_toolTip = entity;
 
     //TODO when we know what size this is make some nicer artwork
     entity = m_uiScene.createEntity();
@@ -1086,6 +1130,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
 
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function = ListItemCallback(m_croppingArea);
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::ScoreScroll;
 
         entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Skybox);
@@ -1281,6 +1326,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
 
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function = ListItemCallback(m_croppingArea);
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::ScoreScroll;
 
         entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
@@ -1605,6 +1651,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
 
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function = ListItemCallback(m_croppingArea);
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::ScoreScroll;
 
         entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
@@ -1966,7 +2013,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         entry.uiNode.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = itemActivated;
                             
 
-                        entry.uiNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+                        entry.uiNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::ScoreScroll;
                         entry.uiNode.addComponent<UIElement>().depth = 0.1f;
                         entry.uiNode.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
                         entry.uiNode.getComponent<UIElement>().absolutePosition = { -PlaylistOffset, vertPos };
@@ -2191,6 +2238,16 @@ void PlaylistState::setActiveTab(std::int32_t index)
     }
 
     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(index);
+
+    //disable callbacks on hidden items
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::ScoreScroll;
+    cmd.action = [index](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().active =
+            e.getComponent<cro::UIInput>().getGroup() == index;
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //we've stashed the tab graphic entity in here.
     m_tabEntities[MenuID::Dummy].getComponent<cro::SpriteAnimation>().play(m_animationIDs[index]);
@@ -2758,6 +2815,22 @@ void PlaylistState::updateInfo()
         "\nCourse: " + m_holeDirs[m_holeDirIndex].name;
 
     m_infoEntity.getComponent<cro::Text>().setString(info);
+}
+
+void PlaylistState::showToolTip(const std::string& label)
+{
+    if (label != m_toolTip.getComponent<cro::Text>().getString())
+    {
+        m_toolTip.getComponent<cro::Text>().setString(label);
+    }
+
+    m_toolTip.getComponent<cro::Callback>().active = true;
+}
+
+void PlaylistState::hideToolTip()
+{
+    m_toolTip.getComponent<cro::Callback>().active = false;
+    m_toolTip.getComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
 }
 
 void PlaylistState::quitState()
