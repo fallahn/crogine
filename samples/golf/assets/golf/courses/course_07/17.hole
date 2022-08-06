@@ -155,7 +155,7 @@ hole 17
 
     prop
     {
-        model = "assets/golf/models/spectators/sitting/02.cmt"
+        model = "assets/golf/models/spectators/sitting/01.cmt"
         position = 17.288422,0.601059,-166.350143
         rotation = 102.281420
         scale = 1.000000,1.000000,1.000000
