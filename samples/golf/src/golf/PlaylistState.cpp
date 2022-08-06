@@ -461,13 +461,13 @@ void PlaylistState::addSystems()
     m_skyboxScene.addSystem<cro::CallbackSystem>(mb);
     m_skyboxScene.addSystem<cro::CameraSystem>(mb);
     m_skyboxScene.addSystem<cro::ModelRenderer>(mb);
-    m_skyboxScene.addSystem<cro::AudioSystem>(mb);
 
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(50.f);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::AudioSystem>(mb);
 
     m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
@@ -684,6 +684,9 @@ void PlaylistState::buildScene()
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.resizeCallback = updateView;
     updateView(cam);
+
+    camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("01");
+    camEnt.getComponent<cro::AudioEmitter>().play();
 
     auto rootEnt = m_gameScene.createEntity();
     rootEnt.addComponent<cro::Transform>().setPosition({ 0.f, 1.f, 0.f });

@@ -350,6 +350,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             if (data.travelDistance > 25.f) //5m
             {
                 playSoundDelayed(AudioID::ApplausePlus, glm::vec3(0.f), 1.2f, MixerChannel::Effects);
+                applaud();
 
                 //sunk an extra long putt
                 if (data.club == ClubID::Putter)
