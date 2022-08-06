@@ -314,7 +314,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n" + wobble);
         branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
 
-        resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushFragment, "#define INSTANCING\n#define HQ\n" + wobble);
+        resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushGeom, BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
         leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
 
         resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n" + wobble);
@@ -325,7 +325,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         {
             alphaClip = "#define ALPHA_CLIP\n";
         }
-        resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
+        resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowGeom, ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
         leafShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeafShadow));
     }
     //and VATs shader for crowd

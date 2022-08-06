@@ -69,6 +69,7 @@ source distribution.
 #include <crogine/ecs/systems/BillboardSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
+#include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Random.hpp>
@@ -460,6 +461,7 @@ void PlaylistState::addSystems()
     m_skyboxScene.addSystem<cro::CallbackSystem>(mb);
     m_skyboxScene.addSystem<cro::CameraSystem>(mb);
     m_skyboxScene.addSystem<cro::ModelRenderer>(mb);
+    m_skyboxScene.addSystem<cro::AudioSystem>(mb);
 
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
@@ -532,7 +534,7 @@ void PlaylistState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Branch] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushFragment, "#define INSTANCING\n#define HQ\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushGeom, BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -545,7 +547,7 @@ void PlaylistState::loadAssets()
     m_materialIDs[MaterialID::BranchShadow] = m_resources.materials.add(*shader);
 
     std::string alphaClip = m_sharedData.hqShadows ? "#define ALPHA_CLIP\n" : "";
-    m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
+    m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowGeom, ShadowFragment, "#define POINTS\n #define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::LeafShadow] = m_resources.materials.add(*shader);

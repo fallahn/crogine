@@ -66,16 +66,14 @@ R"(
         float u_nearFadeDistance;
     };
 
-    VARYING_OUT float v_ditherAmount;
-    #if defined(HQ)    
-    VARYING_OUT vec3 v_normal;
-    #else
-    flat VARYING_OUT vec3 v_normal;
-    #endif
-    VARYING_OUT vec4 v_colour;
-    VARYING_OUT mat2 v_rotation;
-    VARYING_OUT float v_darkenAmount;
-
+    out vData
+    {
+        mat2 rotation;
+        vec4 colour;
+        vec3 normal;
+        float darkenAmount;
+        float ditherAmount;
+    }v_data;
 
     float rand(vec2 position)
     {
@@ -105,8 +103,8 @@ R"(
         position.xyz += (a_normal * offset);
     #endif
 
-        v_normal = normalMatrix * a_normal;
-        v_colour = a_colour * (1.0 - (u_randAmount - offset)); //darken less offset leaves
+        v_data.normal = normalMatrix * a_normal;
+        v_data.colour = a_colour * (1.0 - (u_randAmount - offset)); //darken less offset leaves
 
     #if !defined(HQ)
         float t = (u_windData.w * 15.0) + gl_InstanceID + gl_VertexID;
@@ -124,11 +122,11 @@ R"(
         vec3 windOffset = vec3(x, y, x);
 
         vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
-        float dirStrength = dot(v_normal, windDir);
+        float dirStrength = dot(v_data.normal, windDir);
 
         vec2 rot = vec2(sin(x * u_windData.y), cos(x * u_windData.y));
-        v_rotation[0] = vec2(rot.y, -rot.x);
-        v_rotation[1]= rot;
+        v_data.rotation[0] = vec2(rot.y, -rot.x);
+        v_data.rotation[1]= rot;
 
         dirStrength += 1.0;
         dirStrength /= 2.0;
@@ -174,7 +172,7 @@ R"(
         vec3 camForward = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
         vec3 eyeDir = normalize(u_cameraWorldPosition - worldPosition.xyz);
             
-        float facingAmount = dot(v_normal, camForward);
+        float facingAmount = dot(v_data.normal, camForward);
         pointSize *= 0.8 + (0.2 * facingAmount);
             
         //shrink 'backfacing' to zero
@@ -199,12 +197,62 @@ R"(
         const float farFadeDistance = 360.f;
         float distance = length(worldPosition.xyz - u_cameraWorldPosition);
 
-        v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
-        v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
+        v_data.ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
+        v_data.ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
 
-        v_darkenAmount = (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
+        v_data.darkenAmount = (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 
         gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
+    })";
+
+    const static std::string BushGeom = R"(
+
+#if defined (POINTS)
+    layout (points) in;
+    layout (points, max_vertices = 1) out;
+#else
+    layout (triangles) in;
+    layout (triangles, max_vertices = 3) out;
+#endif
+
+    in vData
+    {
+        mat2 rotation;
+        vec4 colour;
+        vec3 normal;
+        float darkenAmount;
+        float ditherAmount;
+    }v_dataIn[];
+
+
+    out vData
+    {
+        mat2 rotation;
+        vec4 colour;
+        vec3 normal;
+        float darkenAmount;
+        float ditherAmount;
+    } v_dataOut;
+
+    void main()
+    {
+        for(int i = 0; i < gl_in.length(); ++i)
+        {
+            gl_Position = gl_in[i].gl_Position;
+            gl_PointSize = gl_in[i].gl_PointSize;
+            gl_ClipDistance[i] = gl_in[i].gl_ClipDistance[i];
+        
+            v_dataOut.rotation = v_dataIn[i].rotation;
+            v_dataOut.colour = v_dataIn[i].colour;
+            v_dataOut.normal = v_dataIn[i].normal;
+            v_dataOut.darkenAmount = v_dataIn[i].darkenAmount;
+            v_dataOut.ditherAmount = v_dataIn[i].ditherAmount;
+
+            if(gl_PointSize > 0.05)
+            {
+                EmitVertex();
+            }
+        }
     })";
 
 const std::string BushFragment =
@@ -220,15 +268,14 @@ R"(
         float u_pixelScale;
     };
 
-    VARYING_IN float v_ditherAmount;
-    #if defined(HQ)    
-    VARYING_IN vec3 v_normal;
-    #else
-    flat VARYING_IN vec3 v_normal;
-    #endif
-    VARYING_IN vec4 v_colour;
-    VARYING_IN mat2 v_rotation;
-    VARYING_IN float v_darkenAmount;
+    in vData
+    {
+        mat2 rotation;
+        vec4 colour;
+        vec3 normal;
+        float darkenAmount;
+        float ditherAmount;
+    }v_data;
 
     //function based on example by martinsh.blogspot.com
     const int MatrixSize = 8;
@@ -293,20 +340,20 @@ R"(
 
     void main()
     {
-        float amount = dot(normalize(v_normal), -u_lightDirection);
+        float amount = dot(normalize(v_data.normal), -u_lightDirection);
         amount *= 2.0;
         amount = round(amount);
         amount /= 2.0;
         amount = 0.4 + (amount * 0.6);
 #if defined(VERTEX_COLOURED)
-        vec3 colour = mix(complementaryColour(v_colour.rgb), v_colour.rgb, amount);
+        vec3 colour = mix(complementaryColour(v_data.colour.rgb), v_data.colour.rgb, amount);
 #else
         vec3 colour = mix(complementaryColour(u_colour.rgb), u_colour.rgb, amount);
-        //multiply by v_colour.a to darken on leaf depth - looks nice but not used
+        //multiply by v_data.colour.a to darken on leaf depth - looks nice but not used
 #endif
 
         vec2 coord = gl_PointCoord.xy;
-        coord = v_rotation * (coord - vec2(0.5));
+        coord = v_data.rotation * (coord - vec2(0.5));
         coord += vec2(0.5);
 
 //use texture and dither amount to see if we discard
@@ -319,10 +366,10 @@ R"(
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
 
-        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_data.ditherAmount));
         if (textureColour.a * alpha < 0.3) discard;
 
-        textureColour.rgb *= v_darkenAmount;
+        textureColour.rgb *= v_data.darkenAmount;
 
         FRAG_OUT = vec4(colour, 1.0) * textureColour;
     })";

@@ -78,6 +78,14 @@ hole 14
 
     prop
     {
+        model = "assets/golf/models/boat02.cmt"
+        position = 70.026527,-0.815198,-114.792992
+        rotation = 63.750826
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
         model = "assets/golf/models/lilies.cmt"
         position = 79.346115,0.041930,-71.515076
         rotation = 0.000000
