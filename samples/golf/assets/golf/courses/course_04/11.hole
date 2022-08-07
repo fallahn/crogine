@@ -72,6 +72,7 @@ hole 11
         position = 252.306366,-0.463661,-5.841980
         rotation = 0.000000
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     prop
@@ -112,6 +113,7 @@ hole 11
         position = 81.701668,-0.484363,-52.417896
         rotation = -166.872866
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     prop

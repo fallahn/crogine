@@ -72,5 +72,6 @@ hole 15
         position = 79.973740,-0.908025,-117.028465
         rotation = 0.000000
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 }

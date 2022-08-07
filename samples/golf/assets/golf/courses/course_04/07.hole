@@ -48,6 +48,7 @@ hole 07
         position = 121.526421,-0.367723,-199.684753
         rotation = 14.169178
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     prop
@@ -146,6 +147,7 @@ hole 07
         position = 255.325027,-0.512657,6.748154
         rotation = 0.000000
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     prop

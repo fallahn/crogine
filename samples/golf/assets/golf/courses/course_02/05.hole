@@ -53,6 +53,7 @@ hole 05
         model = "assets/golf/models/boat01.cmt"
         position = 333.610901,-0.967538,-152.669891
         rotation = 85.056450
+        emitter = "boat_idle"
     }
 
 }

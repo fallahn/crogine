@@ -14,6 +14,7 @@ hole 16
         position = 338.456146,-0.799822,-33.234573
         rotation = 64.372893
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     prop
@@ -22,6 +23,7 @@ hole 16
         position = 326.724243,-0.799822,-83.173500
         rotation = -47.745865
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     prop
