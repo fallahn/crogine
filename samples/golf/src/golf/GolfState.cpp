@@ -2238,37 +2238,46 @@ void GolfState::loadAssets()
                                     auto baseVolume = audioEnt.getComponent<cro::AudioEmitter>().getVolume();
                                     audioEnt.addComponent<cro::CommandTarget>().ID = CommandID::AudioEmitter;
                                     audioEnt.addComponent<cro::Callback>().setUserData<AudioCallbackData>();
-                                    audioEnt.getComponent<cro::Callback>().function =
-                                        [&, ent, baseVolume](cro::Entity e, float dt)
+                                    
+                                    if (ent.hasComponent<PropFollower>())
                                     {
-                                        auto& [prevPos, fadeAmount, currentVolume] = e.getComponent<cro::Callback>().getUserData<AudioCallbackData>();
-                                        auto pos = ent.getComponent<cro::Transform>().getPosition();
-                                        auto velocity = (pos - prevPos) * 60.f; //frame time
-                                        prevPos = pos;
-                                        e.getComponent<cro::AudioEmitter>().setVelocity(velocity);
-
-                                        const float speed = ent.getComponent<PropFollower>().speed + 0.001f; //prevent div0
-                                        float pitch = std::min(1.f, glm::length2(velocity) / (speed * speed));
-                                        e.getComponent<cro::AudioEmitter>().setPitch(pitch);
-
-                                        //fades in when callback first started
-                                        fadeAmount = std::min(1.f, fadeAmount + dt);
-
-                                        //rather than just jump to volume, we move towards it for a
-                                        //smoother fade
-                                        auto targetVolume = (baseVolume * 0.1f) + (pitch * (baseVolume * 0.9f));
-                                        auto diff = targetVolume - currentVolume;
-                                        if (std::abs(diff) > 0.001f)
+                                        audioEnt.getComponent<cro::Callback>().function =
+                                            [&, ent, baseVolume](cro::Entity e, float dt)
                                         {
-                                            currentVolume += (diff * dt);
-                                        }
-                                        else
-                                        {
-                                            currentVolume = targetVolume;
-                                        }
+                                            auto& [prevPos, fadeAmount, currentVolume] = e.getComponent<cro::Callback>().getUserData<AudioCallbackData>();
+                                            auto pos = ent.getComponent<cro::Transform>().getPosition();
+                                            auto velocity = (pos - prevPos) * 60.f; //frame time
+                                            prevPos = pos;
+                                            e.getComponent<cro::AudioEmitter>().setVelocity(velocity);
 
-                                        e.getComponent<cro::AudioEmitter>().setVolume(currentVolume * fadeAmount);
-                                    };
+                                            const float speed = ent.getComponent<PropFollower>().speed + 0.001f; //prevent div0
+                                            float pitch = std::min(1.f, glm::length2(velocity) / (speed * speed));
+                                            e.getComponent<cro::AudioEmitter>().setPitch(pitch);
+
+                                            //fades in when callback first started
+                                            fadeAmount = std::min(1.f, fadeAmount + dt);
+
+                                            //rather than just jump to volume, we move towards it for a
+                                            //smoother fade
+                                            auto targetVolume = (baseVolume * 0.1f) + (pitch * (baseVolume * 0.9f));
+                                            auto diff = targetVolume - currentVolume;
+                                            if (std::abs(diff) > 0.001f)
+                                            {
+                                                currentVolume += (diff * dt);
+                                            }
+                                            else
+                                            {
+                                                currentVolume = targetVolume;
+                                            }
+
+                                            e.getComponent<cro::AudioEmitter>().setVolume(currentVolume * fadeAmount);
+                                        };
+                                    }
+                                    else
+                                    {
+                                        //add a dummy function which will still be updated on hole end to remove this ent
+                                        audioEnt.getComponent<cro::Callback>().function = [](cro::Entity,float) {};
+                                    }
                                     ent.getComponent<cro::Transform>().addChild(audioEnt.getComponent<cro::Transform>());
                                     holeData.audioEntities.push_back(audioEnt);
                                 }
@@ -3421,8 +3430,8 @@ void GolfState::initAudio(bool loadTrees)
             std::string("04"),
             std::string("05"),
             std::string("06"),
-            std::string("05"),
-            std::string("06"),
+            std::string("03"),
+            std::string("04"),
         };
 
         for (auto i = 0; i < 2; ++i)

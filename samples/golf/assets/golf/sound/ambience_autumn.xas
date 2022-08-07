@@ -2,9 +2,9 @@ audioscape ambience
 {
     emitter 01
     {
-        path = "assets/golf/sound/ambience/env01.ogg"
+        path = "assets/golf/sound/ambience/autumn01.ogg"
         streaming = true
-        volume = 1.15
+        volume = 0.75
         mixer_channel = 1
         attenuation = 0.06
         looped = true
@@ -12,9 +12,9 @@ audioscape ambience
 
     emitter 02
     {
-        path = "assets/golf/sound/ambience/env02.ogg"
+        path = "assets/golf/sound/ambience/autumn02.ogg"
         streaming = true
-        volume = 1.15
+        volume = 0.75
         mixer_channel = 1
         attenuation = 0.06
         looped = true
@@ -22,9 +22,9 @@ audioscape ambience
 
     emitter 03
     {
-        path = "assets/golf/sound/ambience/env03.ogg"
+        path = "assets/golf/sound/ambience/autumn03.ogg"
         streaming = true
-        volume = 1.15
+        volume = 0.75
         mixer_channel = 1
         attenuation = 0.06
         looped = true
@@ -32,9 +32,9 @@ audioscape ambience
 
     emitter 04
     {
-        path = "assets/golf/sound/ambience/env04.ogg"
+        path = "assets/golf/sound/ambience/autumn04.ogg"
         streaming = true
-        volume = 1.15
+        volume = 0.75
         mixer_channel = 1
         attenuation = 0.06
         looped = true
@@ -42,9 +42,9 @@ audioscape ambience
 
     emitter 05
     {
-        path = "assets/golf/sound/ambience/env05.ogg"
+        path = "assets/golf/sound/ambience/autumn05.ogg"
         streaming = true
-        volume = 2
+        volume = 0.75
         mixer_channel = 1
         attenuation = 0.06
         looped = true
@@ -52,9 +52,9 @@ audioscape ambience
 
     emitter 06
     {
-        path = "assets/golf/sound/ambience/env06.ogg"
+        path = "assets/golf/sound/ambience/autumn06.ogg"
         streaming = true
-        volume = 2
+        volume = 0.75
         mixer_channel = 1
         attenuation = 0.06
         looped = true

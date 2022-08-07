@@ -51,4 +51,14 @@ audioscape props
         mixer_channel = 1
         attenuation = 0.25
     }
+
+    emitter boat_idle
+    {
+        path = "assets/golf/sound/boat_idle.ogg"
+        looped = true
+        streaming = true
+        volume = 1.5
+        mixer_channel = 1
+        attenuation = 0.05
+    }
 }

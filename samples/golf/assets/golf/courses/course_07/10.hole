@@ -16,6 +16,7 @@ hole 10
         position = 118.982292,-1.163059,-66.078384
         rotation = 48.376691
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     prop
@@ -102,6 +103,7 @@ hole 10
         position = -100.413483,-0.976980,15.852112
         rotation = -40.240069
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     crowd

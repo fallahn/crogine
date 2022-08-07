@@ -82,6 +82,7 @@ hole 14
         position = 70.026527,-0.815198,-114.792992
         rotation = 63.750826
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     prop

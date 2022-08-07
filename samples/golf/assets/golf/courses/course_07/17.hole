@@ -56,6 +56,7 @@ hole 17
         position = 129.419830,-0.802289,-114.763489
         rotation = 0.000000
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     crowd
@@ -155,7 +156,7 @@ hole 17
 
     prop
     {
-        model = "assets/golf/models/spectators/sitting/01.cmt"
+        model = "assets/golf/models/spectators/sitting/02.cmt"
         position = 17.288422,0.601059,-166.350143
         rotation = 102.281420
         scale = 1.000000,1.000000,1.000000
