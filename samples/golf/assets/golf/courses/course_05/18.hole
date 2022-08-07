@@ -76,4 +76,20 @@ hole 18
         scale = 1.000000,1.000000,1.000000
     }
 
+    prop
+    {
+        model = "assets/golf/models/wheelchair.cmt"
+        position = 274.844940,0.834041,-133.611908
+        rotation = -157.113663
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/spectators/sitting/07.cmt"
+        position = 274.901031,0.832375,-133.591919
+        rotation = -155.696514
+        scale = 1.000000,1.000000,1.000000
+    }
+
 }

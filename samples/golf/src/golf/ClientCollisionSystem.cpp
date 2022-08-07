@@ -109,6 +109,7 @@ void ClientCollisionSystem::process(float)
             if (oldNear 
                 && !collider.nearHole 
                 && collider.terrain == TerrainID::Green
+                && position.y > m_holeData[m_holeIndex].pin.y
                 /*&& result.height >= (position.y - (Ball::Radius / 2.f))*/)
             {
                 auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);

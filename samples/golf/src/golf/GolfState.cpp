@@ -1126,7 +1126,11 @@ bool GolfState::simulate(float dt)
             if (!e.getComponent<cro::Callback>().active)
             {
                 auto camDist = glm::length2(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getPosition() - m_holeData[m_currentHole].pin);
-                auto ballDist = glm::length2((m_activeAvatar->ballModel.getComponent<cro::Transform>().getWorldPosition() - m_holeData[m_currentHole].pin) * 3.f);
+                auto ballDist = FlagRaiseDistance * 2.f;
+                if (m_activeAvatar)
+                {
+                    ballDist = glm::length2((m_activeAvatar->ballModel.getComponent<cro::Transform>().getWorldPosition() - m_holeData[m_currentHole].pin) * 3.f);
+                }
 
                 auto& data = e.getComponent<cro::Callback>().getUserData<FlagCallbackData>();
                 if (data.targetHeight < FlagCallbackData::MaxHeight
@@ -4296,9 +4300,17 @@ void GolfState::setCurrentHole(std::uint32_t hole)
                 prop.getComponent<cro::Model>().setHidden(false);
 
                 if (prop.hasComponent<cro::Skeleton>()
-                    && !prop.getComponent<cro::Skeleton>().getAnimations().empty())
+                    //&& !prop.getComponent<cro::Skeleton>().getAnimations().empty())
+                    && prop.getComponent<cro::Skeleton>().getAnimations().size() == 1)
                 {
-                    prop.getComponent<cro::Skeleton>().play(0);
+                    //this is a bit kludgy without animation index mapping - 
+                    //basically props with one anim are idle, others might be
+                    //specialised like clapping, which we don't want to trigger
+                    //on a new hole
+                    //if (prop.getComponent<cro::Skeleton>().getAnimations().size() == 1)
+                    {
+                        prop.getComponent<cro::Skeleton>().play(0);
+                    }
                 }
             }
 

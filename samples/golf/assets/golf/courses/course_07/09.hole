@@ -119,38 +119,38 @@ hole 09
     prop
     {
         model = "assets/golf/models/billboard.cmt"
-        position = 157.929031,1.216550,-77.521927
-        rotation = 156.852618
+        position = 173.361313,1.250781,-72.542488
+        rotation = 164.997434
         scale = 1.000000,1.000000,1.000000
     }
 
     crowd
     {
-        position = 176.494232,1.271631,-73.458138
-        rotation = 163.025993
+        position = 201.232864,1.271631,-68.954964
+        rotation = 179.617412
     }
 
     prop
     {
         model = "assets//golf/models/bench03.cmt"
-        position = 163.548065,1.304623,-74.537430
-        rotation = 28.395695
+        position = 179.346436,1.252373,-70.384018
+        rotation = 36.540513
         scale = 1.000000,1.000000,1.000000
     }
 
     prop
     {
         model = "assets/golf/models/bench01.cmt"
-        position = 167.467941,1.345468,-73.210670
-        rotation = 0.000000
+        position = 183.414719,1.274083,-69.625885
+        rotation = 8.144818
         scale = 1.000000,1.000000,1.000000
     }
 
     prop
     {
         model = "assets/golf/models/spectators/sitting/04.cmt"
-        position = 163.866379,1.319766,-75.381195
-        rotation = 149.937537
+        position = 179.542023,1.267516,-71.264366
+        rotation = 158.082353
         scale = 1.000000,1.000000,1.000000
     }
 

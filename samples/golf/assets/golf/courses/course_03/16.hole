@@ -6,6 +6,38 @@ hole 16
 
     prop
     {
+        model = "assets/golf/models/garden_bench.cmt"
+        position = 146.922241,1.500794,-153.124207
+        rotation = -119.130564
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/wheelchair.cmt"
+        position = 148.217545,1.501716,-152.343658
+        rotation = -44.054886
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/spectators/sitting/08.cmt"
+        position = 146.895966,1.585410,-152.986069
+        rotation = -29.601385
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/spectators/sitting/05.cmt"
+        position = 148.163498,1.500069,-152.295242
+        rotation = -49.751577
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
         model = "assets/golf/models/tall_tree.cmt"
         position = 151.925690,1.414520,-149.692368
         rotation = 0.000000

@@ -92,9 +92,9 @@ public:
             if (e.getComponent<cro::Callback>().getUserData<bool>())
             {
                 skel.play(m_animations[AnimID::Clap], 1.f, 1.f);
-                e.getComponent<cro::Callback>().setUserData<bool>(false);
             }
         }
+        e.getComponent<cro::Callback>().setUserData<bool>(false);
     }
 
 private:
