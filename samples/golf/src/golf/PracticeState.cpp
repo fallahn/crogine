@@ -366,9 +366,9 @@ void PracticeState::buildScene()
     position.y -= ItemHeight;
 
 
+    entity = createItem(position, "Clubhouse", menuEntity);
     if (Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
     {
-        entity = createItem(position, "Clubhouse", menuEntity);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
@@ -384,13 +384,20 @@ void PracticeState::buildScene()
                         Achievements::awardAchievement(AchievementStrings[AchievementID::Socialiser]);
                     }
                 });
-        position.y -= ItemHeight;
     }
+    else
+    {
+        //TODO add padlock icon and help text (override selected/unselected event)
+        entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 0;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 0;
+    }
+    position.y -= ItemHeight;
 
     //course editor
+    entity = createItem(position, "Course Editor", menuEntity);
     if (Achievements::getAchievement(AchievementStrings[AchievementID::GrandTour])->achieved)
     {
-        entity = createItem(position, "Course Editor", menuEntity);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
@@ -400,10 +407,15 @@ void PracticeState::buildScene()
                         requestStackPush(StateID::Playlist);
                     }
                 });
-        position.y -= ItemHeight;
     }
-
-
+    else
+    {
+        //TODO add padlock icon and tool tip
+        entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 0;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 0;
+    }
+    position.y -= ItemHeight;
 
     //back button
     entity = createItem(glm::vec2(0.f, -28.f), "Back", menuEntity);
