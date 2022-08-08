@@ -85,6 +85,7 @@ namespace
 #include "BillboardShader.inl"
 #include "TreeShader.inl"
 #include "ShadowMapping.inl"
+#include "CloudShader.inl"
 
     const std::string SkyboxPath = "assets/golf/skyboxes/";
     const std::string ShrubPath = "assets/golf/shrubs/";
@@ -493,6 +494,10 @@ void PlaylistState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::Cloud, CloudVertex3D, CloudFragment3D);
+    shader = &m_resources.shaders.get(ShaderID::Cloud);
+    m_scaleBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Cloud] = m_resources.materials.add(*shader);
 
     std::string wobble;
     if (m_sharedData.vertexSnap)
@@ -607,7 +612,18 @@ void PlaylistState::buildScene()
         m_collisionMesh.updateCollisionMesh(entity.getComponent<cro::Model>().getMeshData());
     }
 
+    /*if (md.loadFromFile("assets/golf/models/cloud.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 2.25f, -3.f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
 
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cloud]);
+        material.setProperty("u_colourA", TextNormalColour);
+        material.setProperty("u_colourB", TextGreenColour);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+    }*/
 
     //distributions
     static constexpr float GrassDensity = 1.7f;

@@ -174,3 +174,54 @@ R"(
         if(alpha * FRAG_OUT.a < 0.18) discard;
     }
 )";
+
+static const std::string CloudVertex3D =
+R"(
+ATTRIBUTE vec4 a_position;
+ATTRIBUTE vec3 a_normal;
+
+uniform mat4 u_worldMatrix;
+uniform mat4 u_viewProjectionMatrix;
+uniform mat3 u_normalMatrix;
+uniform vec3 u_cameraWorldPosition;
+
+VARYING_OUT vec3 v_normal;
+
+void main()
+{
+    vec4 worldPosition = u_worldMatrix * a_position;
+    gl_Position = u_viewProjectionMatrix * worldPosition;
+    v_normal = u_normalMatrix * a_normal;
+})";
+
+static const std::string CloudFragment3D =
+R"(
+
+OUTPUT
+
+uniform vec4 u_colourA = vec4(1.0);
+uniform vec4 u_colourB = vec4(0.0,0.0,0.0,1.0);
+uniform vec3 u_lightDirection;
+
+layout (std140) uniform PixelScale
+{
+    float u_pixelScale;
+};
+
+VARYING_IN vec3 v_normal;
+
+void main()
+{
+    float lightAmount = dot(normalize(u_lightDirection), normalize(v_normal));
+    /*lightAmount *= 2.0;
+    lightAmount = round(lightAmount);
+    lightAmount /= 2.0;*/
+
+    float check = mod((floor(gl_FragCoord.x / u_pixelScale) + floor(gl_FragCoord.y / u_pixelScale)), 2.0);
+    check *= 2.0;
+    check -= 1.0;
+    
+    lightAmount += (0.05 * check);
+
+    FRAG_OUT = mix(u_colourA, u_colourB, step(0.5, lightAmount));
+})";

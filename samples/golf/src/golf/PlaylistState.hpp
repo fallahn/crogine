@@ -115,7 +115,7 @@ private:
     {
         enum
         {
-            Horizon, Water,
+            Horizon, Water, Cloud,
             Cel, CelTextured,
             Course, Billboard,
             Branch, Leaf,
