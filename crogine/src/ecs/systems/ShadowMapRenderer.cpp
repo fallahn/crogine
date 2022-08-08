@@ -270,6 +270,7 @@ void ShadowMapRenderer::render()
     for (auto c = 0u; c < m_activeCameras.size(); c++)
     {
         auto& camera = m_activeCameras[c].getComponent<Camera>();
+        auto cameraPosition = m_activeCameras[c].getComponent<cro::Transform>().getWorldPosition();
 
         //enable face culling and render rear faces
         //glCheck(glEnable(GL_CULL_FACE)); //this is now done per-material as some may be double sided
@@ -347,6 +348,7 @@ void ShadowMapRenderer::render()
                 glCheck(glUniformMatrix4fv(mat.uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camera.shadowViewMatrix)));
                 glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
                 glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camera.shadowProjectionMatrix)));
+                glCheck(glUniform3f(mat.uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
                 //glCheck(glUniformMatrix4fv(mat.uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camera.depthViewProjectionMatrix)));
 
                 glCheck(model.m_materials[Mesh::IndexData::Final][i].doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));

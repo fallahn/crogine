@@ -186,7 +186,10 @@ static const std::string ShadowVertex = R"(
 
         float pointSize = u_leafSize;
         vec3 camForward = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
-        vec3 eyeDir = normalize(u_cameraWorldPosition - worldPosition.xyz);
+        vec3 eyeDir = u_cameraWorldPosition - worldPosition.xyz;
+
+        float distance = length(eyeDir);
+        eyeDir /= distance;
 
         float facingAmount = dot(normal, camForward);
         pointSize *= 0.8 + (0.2 * facingAmount);
@@ -204,6 +207,9 @@ static const std::string ShadowVertex = R"(
         //we scale point size by model matrix but it assumes all axis are
         //scaled equally ,as we only use the X axis
         pointSize *= length(worldMatrix[0].xyz);
+
+        //use the geom shader to cull leaves with point size of 0
+        pointSize *= 1.0 - smoothstep(0.5, 0.9, distance / 40.f);
 
         gl_PointSize = pointSize;
 
