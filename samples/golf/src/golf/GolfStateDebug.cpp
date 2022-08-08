@@ -29,6 +29,9 @@ source distribution.
 
 #include "GolfState.hpp"
 
+#include <crogine/core/SysTime.hpp>
+#include <crogine/detail/OpenGL.hpp>
+
 #ifdef PATH_TRACING
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
@@ -109,3 +112,54 @@ void GolfState::endBallDebug()
 }
 
 #endif
+
+void GolfState::dumpBenchmark()
+{
+    std::string outFile = cro::App::getPreferencePath() + "benchmark/" + m_sharedData.mapDirectory + "/";
+
+    if (!cro::FileSystem::directoryExists(outFile))
+    {
+        cro::FileSystem::createDirectory(outFile);
+    }
+    outFile += std::to_string(m_currentHole) + ".bmk";
+
+    const std::array<std::string, 3u> TreeTypes
+    {
+        "Classic", "Low", "High"
+    };
+
+    cro::RaiiRWops file;
+    file.file = SDL_RWFromFile(outFile.c_str(), "a");
+    if (file.file)
+    {
+        std::string dateTime = cro::SysTime::dateString();
+        dateTime += " - " + cro::SysTime::timeString() 
+#ifdef CRO_DEBUG_
+            + " (DEBUG BUILD)"
+#endif
+            + ":\n";
+
+        std::string stat = "Min fps: " + std::to_string(m_benchmark.minRate) 
+            + " | Max fps: " + std::to_string (m_benchmark.maxRate) 
+            + " | Average fps: " + std::to_string(m_benchmark.getAverage());
+
+        std::string shadowQ = m_sharedData.hqShadows ? "High" : "Low";
+        std::string vsync = cro::App::getWindow().getVsyncEnabled() ? " | vsync: ON" : " | vsync: OFF";
+        std::string vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+        std::string renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+        std::string settings = "\nTree Quality: " + TreeTypes[m_sharedData.treeQuality] + " | Shadow Quality: " + shadowQ
+            + vsync
+            + "\nVendor: " + vendor + " | Renderer: " + renderer + "\n\n";
+
+        SDL_RWwrite(file.file, dateTime.c_str(), dateTime.length(), 1);
+        SDL_RWwrite(file.file, stat.c_str(), stat.length(), 1);
+        SDL_RWwrite(file.file, settings.c_str(), settings.length(), 1);
+    }
+    else
+    {
+        LOG("Failed opening benchmark file " + outFile, cro::Logger::Type::Warning);
+        LogE << SDL_GetError() << std::endl;
+    }
+
+    m_benchmark.reset();
+}

@@ -317,7 +317,7 @@ bool FileSystem::directoryExists(const std::string& path)
     struct stat info;
     if (stat(path.c_str(), &info) != 0)
     {
-        Logger::log(path + " access denied, or doesn't exist", Logger::Type::Warning);
+        LOG(path + " access denied, or doesn't exist", Logger::Type::Warning);
         return false;
     }
     else if (info.st_mode & S_IFDIR)

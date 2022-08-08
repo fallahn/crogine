@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/ConsoleClient.hpp>
+#include <crogine/core/HiResTimer.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <crogine/ecs/Scene.hpp>
@@ -372,4 +373,47 @@ private:
     void updateBallDebug(glm::vec3);
     void endBallDebug();
 #endif
+    struct Benchmark final
+    {
+        float minRate = std::numeric_limits<float>::max();
+        float maxRate = 0.f;
+
+        float getAverage() const
+        {
+            return m_averageAccumulator / m_sampleCount;
+        }
+
+        void update()
+        {
+            float f = 1.f / m_timer.restart();
+
+            if (f < minRate)
+            {
+                minRate = f;
+            }
+            else if (f > maxRate)
+            {
+                maxRate = f;
+            }
+
+            m_averageAccumulator += f;
+            m_sampleCount++;
+        }
+
+        void reset()
+        {
+            minRate = std::numeric_limits<float>::max();
+            maxRate = 0.f;
+
+            m_averageAccumulator = 0.f;
+            m_sampleCount = 1.f;
+        }
+
+    private:
+        float m_averageAccumulator = 0.f;
+        float m_sampleCount = 1.f;
+
+        cro::HiResTimer m_timer;
+    }m_benchmark;
+    void dumpBenchmark();
 };

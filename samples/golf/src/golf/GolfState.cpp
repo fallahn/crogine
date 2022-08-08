@@ -1167,6 +1167,8 @@ bool GolfState::simulate(float dt)
 
 void GolfState::render()
 {
+    m_benchmark.update();
+
     //TODO we probably only need to do this once after the scene is built
     m_scaleBuffer.bind(0);
     m_resolutionBuffer.bind(1);
@@ -4204,6 +4206,11 @@ void GolfState::removeClient(std::uint8_t clientID)
 
 void GolfState::setCurrentHole(std::uint32_t hole)
 {
+    if (hole != m_currentHole)
+    {
+        dumpBenchmark();
+    }
+
     //update all the total hole times
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
