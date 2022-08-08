@@ -115,7 +115,13 @@ void GolfState::endBallDebug()
 
 void GolfState::dumpBenchmark()
 {
-    std::string outFile = cro::App::getPreferencePath() + "benchmark/" + m_sharedData.mapDirectory + "/";
+    std::string outFile = cro::App::getPreferencePath() + "benchmark/";
+
+    if (!cro::FileSystem::directoryExists(outFile))
+    {
+        cro::FileSystem::createDirectory(outFile);
+    }
+    outFile += m_sharedData.mapDirectory + "/";
 
     if (!cro::FileSystem::directoryExists(outFile))
     {

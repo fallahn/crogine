@@ -242,13 +242,13 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "water_trap_count",
     "sand_trap_count",
 
-    "course01", //a tad non-descript but we want these to match the name of the course directories
-    "course02",
-    "course03",
-    "course04",
-    "course05",
-    "course06",
-    "course07",
+    "course_01", //a tad non-descript but we want these to match the name of the course directories
+    "course_02",
+    "course_03",
+    "course_04",
+    "course_05",
+    "course_06",
+    "course_07",
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
