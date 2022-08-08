@@ -414,6 +414,33 @@ bool GolfGame::initialise()
             ImGui::Text("In memory of Liesbeth Penning");
         });
 
+    registerCommand("log_benchmark", 
+        [&](const std::string& state)
+        {
+            if (state.empty())
+            {
+                cro::Console::print(m_sharedData.logBenchmarks ? "Logging is enabled" : "Logging is disabled");
+                cro::Console::print("Use log_benchmark <true|false> to toggle");
+            }
+            else
+            {
+                if (state == "true")
+                {
+                    m_sharedData.logBenchmarks = true;
+                    cro::Console::print("Benchmarks will be logged to " + cro::App::getPreferencePath() + "benchmark/");
+                }
+                else if (state == "false")
+                {
+                    m_sharedData.logBenchmarks = false;
+                    cro::Console::print("Benchmark logging disabled");
+                }
+                else
+                {
+                    cro::Console::print("Use log_benchmark <true|false> to toggle");
+                }
+            }
+        });
+
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Video Golf - " + StringVer);
     getWindow().setIcon(icon);

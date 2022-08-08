@@ -296,8 +296,11 @@ void PracticeState::buildScene()
         return e;
     };
 
+
+    glm::vec2 position(0.f, 28.f);
+    static constexpr float ItemHeight = 10.f;
     //tutorial button
-    entity = createItem(glm::vec2(0.f, 28.f), "Tutorial", menuEntity);
+    entity = createItem(position, "Tutorial", menuEntity);
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) 
@@ -347,9 +350,10 @@ void PracticeState::buildScene()
                     }
                 }            
             });
+    position.y -= ItemHeight;
 
     //driving range
-    entity = createItem(glm::vec2(0.f, 18.f), "Driving Range", menuEntity);
+    entity = createItem(position, "Driving Range", menuEntity);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -359,23 +363,12 @@ void PracticeState::buildScene()
                     requestStackPush(StateID::DrivingRange);
                 }
             });
-
-    //course editor
-    entity = createItem(glm::vec2(0.f, 8.f), "Course Editor", menuEntity);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
-            {
-                if (activated(evt))
-                {
-                    requestStackClear();
-                    requestStackPush(StateID::Playlist);
-                }
-            });
+    position.y -= ItemHeight;
 
 
     if (Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
     {
-        entity = createItem(glm::vec2(0.f, -2.f), "Clubhouse", menuEntity);
+        entity = createItem(position, "Clubhouse", menuEntity);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
@@ -391,7 +384,26 @@ void PracticeState::buildScene()
                         Achievements::awardAchievement(AchievementStrings[AchievementID::Socialiser]);
                     }
                 });
+        position.y -= ItemHeight;
     }
+
+    //course editor
+    if (Achievements::getAchievement(AchievementStrings[AchievementID::GrandTour])->achieved)
+    {
+        entity = createItem(position, "Course Editor", menuEntity);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        requestStackClear();
+                        requestStackPush(StateID::Playlist);
+                    }
+                });
+        position.y -= ItemHeight;
+    }
+
+
 
     //back button
     entity = createItem(glm::vec2(0.f, -28.f), "Back", menuEntity);

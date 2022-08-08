@@ -116,7 +116,7 @@ private:
             BeaconColour, MouseSpeed,
             Video, Controls,
             Achievements, Stats,
-            NeedsRestart, Benchmark,
+            NeedsRestart,
             Count
         };
     };

@@ -42,6 +42,8 @@ source distribution.
 #include "spooky2.hpp"
 #include "../ErrorCheck.hpp"
 
+#include <AchievementStrings.hpp>
+
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/App.hpp>
@@ -589,6 +591,22 @@ void MenuState::addSystems()
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::AudioPlayerSystem>(mb);
+
+    //check course completion count and award
+    //grand tour if applicable
+    bool awarded = true;
+    for (std::int32_t i = StatID::Course01Complete; i < StatID::Course07Complete + 1; ++i)
+    {
+        if (Achievements::getStat(StatStrings[i])->value == 0)
+        {
+            awarded = false;
+            break;
+        }
+    }
+    if (awarded)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::GrandTour]);
+    }
 }
 
 void MenuState::loadAssets()

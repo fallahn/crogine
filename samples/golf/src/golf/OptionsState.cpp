@@ -987,7 +987,6 @@ void OptionsState::buildScene()
     m_tooltips[ToolTipID::Achievements] = createToolTip("Achievements");
     m_tooltips[ToolTipID::Stats] = createToolTip("Stats");
     m_tooltips[ToolTipID::NeedsRestart] = createToolTip("Applied On Next Game Load");
-    m_tooltips[ToolTipID::Benchmark] = createToolTip("Logs performance benchmarks to\n%userdata%/Trederia/golf/benchmark");
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
@@ -1119,14 +1118,6 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         [&](cro::Entity e, float)
     {
         updateToolTip(e, ToolTipID::NeedsRestart);
-    };
-
-    auto bmLabel = createLabel({ 204.f, 18.f }, "Log Benchmark");
-    bmLabel.addComponent<cro::Callback>().active = true;
-    bmLabel.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        updateToolTip(e, ToolTipID::Benchmark);
     };
 
     auto createSlider = [&](glm::vec2 position)
@@ -1824,39 +1815,6 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 }
             });
 
-
-    //benchmark checkbox
-    entity = createHighlight(glm::vec2(286.f, 9.f));
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
-            {
-                if (activated(evt))
-                {
-                    m_sharedData.logBenchmarks = !m_sharedData.logBenchmarks;
-
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                }
-            });
-
-    //benchmark checkbox centre
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(288.f, 11.f, HighlightOffset));
-    entity.addComponent<cro::Drawable2D>().getVertexData() =
-    {
-        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
-    };
-    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        float scale = m_sharedData.logBenchmarks ? 1.f : 0.f;
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-    };
-    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)

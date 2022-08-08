@@ -71,6 +71,9 @@ namespace AchievementID
         BigPutts,
         GolfinDolphin,
 
+        GrandTour,
+        GrandDesign,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");

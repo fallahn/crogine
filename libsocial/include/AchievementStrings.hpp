@@ -77,7 +77,9 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "gimme_ten",
     "day_job",
     "big_putts",
-    "golfin_dolphin"
+    "golfin_dolphin",
+    "grand_tour",
+    "grand_design",
 };
 
 //appears on the notification
@@ -113,7 +115,9 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Gimme 10!",
     "Day Job",
     "I Like Big Putts",
-    "Golfin' Dolphin"
+    "Golfin' Dolphin",
+    "Grand Tour",
+    "Grand Design"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -150,9 +154,11 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Total over 24 hours play time on the course", false),
     std::make_pair("Sink 15 long putts", false),
     std::make_pair("Hit a water trap on 5 different rounds", false),
+    std::make_pair("Play a full round on every course", false),
+    std::make_pair("Save your first custom course", false),
 };
 
-//assuming tropies load correctly they are
+//assuming trophies load correctly they are:
 /*
 Gold, silver, bronze cup
 Gold, silver, bronze mannequin
@@ -201,7 +207,9 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::BronzeFigure,
     TrophyID::GoldCup,
     TrophyID::GoldCup,
-    TrophyID::BronzeFigure
+    TrophyID::BronzeFigure,
+    TrophyID::GoldFigure,
+    TrophyID::BronzeCup
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
