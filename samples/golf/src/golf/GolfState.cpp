@@ -4206,7 +4206,8 @@ void GolfState::removeClient(std::uint8_t clientID)
 
 void GolfState::setCurrentHole(std::uint32_t hole)
 {
-    if (hole != m_currentHole)
+    if (hole != m_currentHole
+        && m_sharedData.logBenchmarks)
     {
         dumpBenchmark();
     }

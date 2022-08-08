@@ -181,6 +181,7 @@ struct SharedStateData final
     };
     std::int32_t treeQuality = Low;
     bool hqShadows = true;
+    bool logBenchmarks = false;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

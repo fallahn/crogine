@@ -674,6 +674,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.hqShadows = prop.getValue<bool>();
                 }
+                else if (name == "log_benchmark")
+                {
+                    m_sharedData.logBenchmarks = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -732,6 +736,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("grid_transparency").setValue(m_sharedData.gridTransparency);
     cfg.addProperty("tree_quality").setValue(m_sharedData.treeQuality);
     cfg.addProperty("hq_shadows").setValue(m_sharedData.hqShadows);
+    cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
     cfg.save(path);
 
 
