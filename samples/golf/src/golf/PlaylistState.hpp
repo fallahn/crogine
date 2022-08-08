@@ -270,9 +270,9 @@ private:
     cro::Entity m_infoEntity;
     void updateInfo();
 
-    cro::Entity m_toolTip;
+    /*cro::Entity m_toolTip;
     void showToolTip(const std::string&);
-    void hideToolTip();
+    void hideToolTip();*/
 
     void quitState();
 };

@@ -815,12 +815,12 @@ void PlaylistState::buildUI()
     auto showTip = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity e, glm::vec2, const cro::MotionEvent&)
         {
-            showToolTip(e.getLabel());
+            //showToolTip(e.getLabel());
         });
     auto hideTip = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity e, glm::vec2, const cro::MotionEvent&)
         {
-            hideToolTip();
+            //hideToolTip();
         });
 
     cro::SpriteSheet spriteSheet;
@@ -936,7 +936,7 @@ void PlaylistState::buildUI()
     updateInfo();
 
     //shows tool tip
-    entity = m_uiScene.createEntity();
+    /*entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont);
@@ -958,7 +958,7 @@ void PlaylistState::buildUI()
         e.getComponent<cro::Transform>().setPosition(position);
         e.getComponent<cro::Transform>().setScale(m_viewScale);
     };
-    m_toolTip = entity;
+    m_toolTip = entity;*/
 
     //TODO when we know what size this is make some nicer artwork
     entity = m_uiScene.createEntity();
@@ -1005,7 +1005,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     }
 
     m_menuEntities[MenuID::Skybox].addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    m_menuEntities[MenuID::Skybox].addComponent<UIElement>().absolutePosition = { 8.f, -8.f };
+    m_menuEntities[MenuID::Skybox].addComponent<UIElement>().absolutePosition = { 8.f, -8.f - ItemSpacing };
     m_menuEntities[MenuID::Skybox].getComponent<UIElement>().relativePosition = { 0.f, TabAreaHeight };
 
     auto scrollNode = m_uiScene.createEntity();
@@ -1077,7 +1077,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.2f;
-    entity.getComponent<UIElement>().absolutePosition = { -bounds.width * 3.f, std::floor(bounds.height * 2.f) };
+    entity.getComponent<UIElement>().absolutePosition = { -bounds.width * 3.f, std::floor(bounds.height * 2.f) + ItemSpacing };
     entity.getComponent<UIElement>().relativePosition = { 1.f, -TabAreaHeight };
     buttonEnt = entity;
     m_menuEntities[MenuID::Skybox].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1136,17 +1136,27 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
 
     m_menuEntities[MenuID::Skybox].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //title
+    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, ItemSpacing + 2.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Skyboxes");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    m_menuEntities[MenuID::Skybox].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     //list of skybox items
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     glm::vec2 position(0.f);
     for (auto i = 0u; i < m_skyboxes.size(); ++i)
     {
         auto entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString(m_skyboxes[i]);
+        entity.addComponent<cro::Text>(smallFont).setString(m_skyboxes[i]);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
 
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function = ListItemCallback(m_croppingArea);
@@ -1243,7 +1253,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     }
 
     m_menuEntities[MenuID::Shrubbery].addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    m_menuEntities[MenuID::Shrubbery].addComponent<UIElement>().absolutePosition = { RootOffset, -8.f };
+    m_menuEntities[MenuID::Shrubbery].addComponent<UIElement>().absolutePosition = { RootOffset, -8.f - ItemSpacing };
     m_menuEntities[MenuID::Shrubbery].getComponent<UIElement>().relativePosition = { 0.f, TabAreaHeight };
     m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 
@@ -1317,7 +1327,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.2f;
-    entity.getComponent<UIElement>().absolutePosition = { -bounds.width * 3.f, std::floor(bounds.height * 2.f) };
+    entity.getComponent<UIElement>().absolutePosition = { -bounds.width * 3.f, std::floor(bounds.height * 2.f) + ItemSpacing };
     entity.getComponent<UIElement>().relativePosition = { 1.f, -TabAreaHeight };
     buttonEnt = entity;
     m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1332,8 +1342,21 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(m_callbacks[CallbackID::ShrubScrollDown]);
 
+
+    //title
+    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, ItemSpacing + 2.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Foliage");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
     //list of shrub items
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     glm::vec2 position(0.f);
     for (auto i = 0u; i < m_shrubs.size(); ++i)
     {
@@ -1342,7 +1365,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(font).setString(m_shrubs[i]);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
 
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function = ListItemCallback(m_croppingArea);
@@ -1417,27 +1440,26 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Tree Quality");
+    entity.addComponent<cro::Text>(largeFont).setString("Tree Quality");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
-    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 38.f };
+    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 38.f + ItemSpacing };
     centreText(entity);
     m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString(Labels[m_sharedData.treeQuality]);
+    entity.addComponent<cro::Text>(font).setString(Labels[m_sharedData.treeQuality]);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
-    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 24.f };
+    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 24.f + ItemSpacing };
     centreText(entity);
     m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto labelEnt = entity;
@@ -1449,7 +1471,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
-    entity.getComponent<UIElement>().absolutePosition = { -30.f - RootOffset, 16.f };
+    entity.getComponent<UIElement>().absolutePosition = { -30.f - RootOffset, 16.f + ItemSpacing };
     m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto scrollEnt = entity;
 
@@ -1482,7 +1504,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
-    entity.getComponent<UIElement>().absolutePosition = { 21.f - RootOffset, 16.f };
+    entity.getComponent<UIElement>().absolutePosition = { 21.f - RootOffset, 16.f + ItemSpacing };
     m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     scrollEnt = entity;
 
@@ -1600,7 +1622,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
 
     //scroll node for directory list
     m_menuEntities[MenuID::Holes].addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    m_menuEntities[MenuID::Holes].addComponent<UIElement>().absolutePosition = { RootOffset, -8.f };
+    m_menuEntities[MenuID::Holes].addComponent<UIElement>().absolutePosition = { RootOffset, -8.f - ItemSpacing };
     m_menuEntities[MenuID::Holes].getComponent<UIElement>().relativePosition = { 0.f, TabAreaHeight };
 
     auto scrollNode = m_uiScene.createEntity();
@@ -1651,11 +1673,21 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
-    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 24.f };
+    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 24.f + ItemSpacing };
     centreText(entity);
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto labelEnt = entity;
 
+
+    //title
+    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, ItemSpacing + 2.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Courses");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //create the list of directories
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -1665,9 +1697,9 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
         auto entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString(m_holeDirs[i].name);
+        entity.addComponent<cro::Text>(smallFont).setString(m_holeDirs[i].name);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
 
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function = ListItemCallback(m_croppingArea);
@@ -1791,7 +1823,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.2f;
-    entity.getComponent<UIElement>().absolutePosition = {ThumbnailOffset - (bounds.width * 2.f), std::floor(bounds.height * 2.f)};
+    entity.getComponent<UIElement>().absolutePosition = {ThumbnailOffset - (bounds.width * 2.f), std::floor(bounds.height * 2.f) + ItemSpacing};
     entity.getComponent<UIElement>().relativePosition = { 0.f, -TabAreaHeight };
     buttonEnt = entity;
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1815,7 +1847,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
-    entity.getComponent<UIElement>().absolutePosition = { -30.f - RootOffset, 16.f };
+    entity.getComponent<UIElement>().absolutePosition = { -30.f - RootOffset, 16.f + ItemSpacing };
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto scrollEnt = entity;
 
@@ -1853,7 +1885,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
-    entity.getComponent<UIElement>().absolutePosition = { 21.f - RootOffset, 16.f };
+    entity.getComponent<UIElement>().absolutePosition = { 21.f - RootOffset, 16.f + ItemSpacing};
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     scrollEnt = entity;
 
@@ -1927,6 +1959,19 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     entity.getComponent<UIElement>().absolutePosition = { -ThumbnailOffset - 9.f, 0.f };
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto buttonNode = entity;
+
+    //title
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Hole List");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { -PlaylistOffset - 4.f, ItemSpacing + 2.f };
+    m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //move item up
     position = { 0.f, menuData.spriteSheet->getSprite("add_hole").getTextureBounds().height };
@@ -2170,7 +2215,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.2f;
-    entity.getComponent<UIElement>().absolutePosition = { -bounds.width * 3.f, std::floor(bounds.height * 2.f) };
+    entity.getComponent<UIElement>().absolutePosition = { -bounds.width * 3.f, std::floor(bounds.height * 2.f) + ItemSpacing};
     entity.getComponent<UIElement>().relativePosition = { 1.f, -TabAreaHeight };
     buttonEnt = entity;
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2798,6 +2843,7 @@ void PlaylistState::updateNinePatch(cro::Entity entity)
             cro::Vertex2D(positions[34], PatchUVs[34])
         });
 
+    size.y -= ItemSpacing;
     size *= m_viewScale;
     m_croppingArea = { 6.f * m_viewScale.x, 6.f * m_viewScale.y, size.x - (12.f * m_viewScale.x), size.y - (12.f * m_viewScale.y) };
 
@@ -2837,21 +2883,21 @@ void PlaylistState::updateInfo()
     m_infoEntity.getComponent<cro::Text>().setString(info);
 }
 
-void PlaylistState::showToolTip(const std::string& label)
-{
-    if (label != m_toolTip.getComponent<cro::Text>().getString())
-    {
-        m_toolTip.getComponent<cro::Text>().setString(label);
-    }
-
-    m_toolTip.getComponent<cro::Callback>().active = true;
-}
-
-void PlaylistState::hideToolTip()
-{
-    m_toolTip.getComponent<cro::Callback>().active = false;
-    m_toolTip.getComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
-}
+//void PlaylistState::showToolTip(const std::string& label)
+//{
+//    if (label != m_toolTip.getComponent<cro::Text>().getString())
+//    {
+//        m_toolTip.getComponent<cro::Text>().setString(label);
+//    }
+//
+//    m_toolTip.getComponent<cro::Callback>().active = true;
+//}
+//
+//void PlaylistState::hideToolTip()
+//{
+//    m_toolTip.getComponent<cro::Callback>().active = false;
+//    m_toolTip.getComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
+//}
 
 void PlaylistState::quitState()
 {
