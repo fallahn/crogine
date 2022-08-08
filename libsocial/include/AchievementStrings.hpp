@@ -230,7 +230,17 @@ static const std::array<std::string, StatID::Count> StatStrings =
 
     "time_on_the_course",
     "long_putts",
-    "water_traps"
+    "water_traps",
+    "water_trap_count",
+    "sand_trap_count",
+
+    "course01", //a tad non-descript but we want these to match the name of the course directories
+    "course02",
+    "course03",
+    "course04",
+    "course05",
+    "course06",
+    "course07",
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -245,15 +255,24 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Eightball Games Won (multiplayer)",
     "Nineball Games Won (multiplayer)",
     "Snooker Games Won (multiplayer)",
-    "Time spent at the Driving Range",
-    "Birdies scored",
+    "Time Spent At The Driving Range",
+    "Birdies Scored",
     "Eagles scored",
-    "Holes in one",
-    "Gimmies taken inside the leather",
-    "Gimmies taken inside the putter",
-    "Total time spent on a course",
-    "Long putts sunk",
-    "Rounds Where Water Were Traps Hit"
+    "Holes In One",
+    "Gimmies Taken Inside The Leather",
+    "Gimmies Taken Inside The Putter",
+    "Total Time Spent On A Course",
+    "Long Putts Sunk",
+    "Rounds Where Water Were Traps Hit",
+    "Total Water Traps Hit",
+    "Total Sand Traps Hit",
+    "Number of times Course 1 Completed",
+    "Number of times Course 2 Completed",
+    "Number of times Course 3 Completed",
+    "Number of times Course 4 Completed",
+    "Number of times Course 5 Completed",
+    "Number of times Course 6 Completed",
+    "Number of times Course 7 Completed",
 };
 
 struct StatType final
@@ -283,6 +302,15 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
     StatType::Time,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
     StatType::Integer,
     StatType::Integer
 };

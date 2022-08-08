@@ -112,7 +112,7 @@ void DefaultAchievements::init()
     trigger->achID = AchievementID::BigPutts;
     trigger->threshold = 15;
 
-    trigger = &StatTriggers[StatID::WaterTraps].emplace_back();
+    trigger = &StatTriggers[StatID::WaterTrapRounds].emplace_back();
     trigger->achID = AchievementID::GolfinDolphin;
     trigger->threshold = 5;
 }

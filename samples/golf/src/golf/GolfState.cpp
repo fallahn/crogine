@@ -4034,6 +4034,15 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
             {
                 m_sharedData.timeStats[m_currentPlayer.player].holeTimes[m_currentHole] += m_turnTimer.elapsed().asMilliseconds();
+
+                if (update.terrain == TerrainID::Bunker)
+                {
+                    Achievements::incrementStat(StatStrings[StatID::SandTrapCount]);
+                }
+                else if (update.terrain == TerrainID::Water)
+                {
+                    Achievements::incrementStat(StatStrings[StatID::WaterTrapCount]);
+                }
             }
         }
             break;

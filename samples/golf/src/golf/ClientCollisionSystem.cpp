@@ -132,7 +132,7 @@ void ClientCollisionSystem::process(float)
             {
                 if (!m_waterCollision)
                 {
-                    Achievements::incrementStat(StatStrings[StatID::WaterTraps]);
+                    Achievements::incrementStat(StatStrings[StatID::WaterTrapRounds]);
                 }
                 m_waterCollision = true;
             }

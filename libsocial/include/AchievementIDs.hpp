@@ -103,7 +103,17 @@ namespace StatID
 
         TimeOnTheCourse,
         LongPutts,
-        WaterTraps,
+        WaterTrapRounds,
+        WaterTrapCount,
+        SandTrapCount,
+
+        Course01Complete,
+        Course02Complete,
+        Course03Complete,
+        Course04Complete,
+        Course05Complete,
+        Course06Complete,
+        Course07Complete,
 
         Count
     };
