@@ -465,7 +465,7 @@ void GolfState::buildUI()
                 m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
 
                 m_mapQuad.setPosition(offset);
-                m_mapQuad.setColour(cro::Colour(0.396f,0.263f,0.184f));
+                m_mapQuad.setColour(DropShadowColour);
                 m_mapTexture.clear(cro::Colour::Transparent);
                 m_mapQuad.draw();
 

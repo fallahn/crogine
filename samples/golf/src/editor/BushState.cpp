@@ -1105,6 +1105,10 @@ void BushState::createThumbnails()
     tex.loadFromImage(img);
     cro::SimpleQuad flagQuad(tex);
 
+    cro::RenderTexture bufferTexture;
+    bufferTexture.create(160, 100);
+    cro::SimpleQuad bufferQuad(bufferTexture.getTexture());
+
     cro::ModelDefinition md(m_resources);
     auto oldCam = m_gameScene.setActiveCamera(m_thumbnailCamera);
     for(auto i = 0u; i < inPaths.size(); ++i)
@@ -1173,8 +1177,17 @@ void BushState::createThumbnails()
 
                         m_gameScene.simulate(0.f);
 
-                        m_thumbnailTexture.clear(cro::Colour(std::uint8_t(39), 56, 153));
+                        bufferTexture.clear(cro::Colour::Transparent);
                         m_gameScene.render();
+                        bufferTexture.display();
+
+                        m_thumbnailTexture.clear(/*cro::Colour(std::uint8_t(39), 56, 153)*/cro::Colour::Transparent);
+                        bufferQuad.setPosition({ 2.f, -2.f });
+                        bufferQuad.setColour(DropShadowColour); //constify this - same as minimap in GolfStateUI.cpp
+                        bufferQuad.draw();
+                        bufferQuad.setPosition({ 0.f, 0.f });
+                        bufferQuad.setColour(cro::Colour::White);
+                        bufferQuad.draw();
                         flagQuad.draw();
                         m_thumbnailTexture.display();
 

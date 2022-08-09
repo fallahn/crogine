@@ -195,6 +195,8 @@ private:
     std::size_t m_holeDirIndex;
     std::size_t m_thumbnailIndex;
 
+    cro::Entity m_holePreview;
+
     struct PlaylistEntry final
     {
         std::string name;
@@ -205,6 +207,10 @@ private:
     };
     std::vector<PlaylistEntry> m_playlist;
     std::size_t m_playlistIndex;
+
+    std::vector<std::string> m_saveFiles;
+    std::size_t m_saveFileIndex;
+
 
     struct CallbackID final
     {
@@ -221,6 +227,9 @@ private:
 
             PlaylistScrollUp,
             PlaylistScrollDown,
+
+            SaveScrollUp,
+            SaveScrollDown,
 
             Count
         };
@@ -259,7 +268,7 @@ private:
     void createSkyboxMenu(cro::Entity, const MenuData&);
     void createShrubberyMenu(cro::Entity, const MenuData&);
     void createHoleMenu(cro::Entity, const MenuData&);
-    void createFileSystemMenu(cro::Entity);
+    void createFileSystemMenu(cro::Entity, const MenuData&);
 
     std::int32_t m_currentTab;
     void setActiveTab(std::int32_t);

@@ -96,6 +96,7 @@ static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, 
 static const cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
 static const cro::Colour SkyTop(0.678f, 0.851f, 0.718f);
 static const cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
+static const cro::Colour DropShadowColour(0.396f, 0.263f, 0.184f);
 
 struct SpriteAnimID final
 {

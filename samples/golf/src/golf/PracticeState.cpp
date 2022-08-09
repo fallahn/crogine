@@ -379,7 +379,7 @@ void PracticeState::buildScene()
 
 
     entity = createItem(position, "Clubhouse", menuEntity);
-    if (false)// (Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
+    if (Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
     {
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
