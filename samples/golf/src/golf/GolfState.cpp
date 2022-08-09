@@ -204,6 +204,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     createTransition();
 
     sd.baseState = StateID::Golf;
+    //TODO can awe create a case where there's on human local player?
     Achievements::setActive(sd.localConnectionData.playerCount == 1 && !m_sharedData.localConnectionData.playerData[0].isCPU);
     
     std::int32_t clientCount = 0;

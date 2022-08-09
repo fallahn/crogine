@@ -218,30 +218,24 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "holes_played",
     "putt_distance",
     "stroke_distance",
-
     "gold_average",
     "silver_average",
     "bronze_average",
     "total_rounds",
-
     "eightball_won",
     "nineball_won",
     "snooker_won",
-
-    "time_on_the_range"
+    "time_on_the_range",
     "birdies",
     "eagles",
     "hios",
-
     "leather_gimmies",
     "putter_gimmies",
-
     "time_on_the_course",
     "long_putts",
     "water_traps",
     "water_trap_count",
     "sand_trap_count",
-
     "course_01", //a tad non-descript but we want these to match the name of the course directories
     "course_02",
     "course_03",
