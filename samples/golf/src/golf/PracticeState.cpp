@@ -71,7 +71,7 @@ source distribution.
 
 namespace
 {
-
+    constexpr float PadlockOffset = 60.f;
 }
 
 PracticeState::PracticeState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -257,6 +257,13 @@ void PracticeState::buildScene()
     menuEntity.addComponent<cro::Transform>();
     rootNode.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
 
+    auto helpText = m_scene.createEntity();
+    helpText.addComponent<cro::Transform>().setOrigin({0.f, 0.f, -0.2f});
+    helpText.addComponent<cro::Drawable2D>();
+    helpText.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info));
+    helpText.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    helpText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    menuEntity.getComponent<cro::Transform>().addChild(helpText.getComponent<cro::Transform>());
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
@@ -273,6 +280,11 @@ void PracticeState::buildScene()
         [](cro::Entity e)
         {
             e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        });
+    auto unselectedLockedID = uiSystem.addCallback(
+        [helpText](cro::Entity) mutable
+        {
+            helpText.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         });
     
     auto createItem = [&](glm::vec2 position, const std::string label, cro::Entity parent) 
@@ -367,7 +379,7 @@ void PracticeState::buildScene()
 
 
     entity = createItem(position, "Clubhouse", menuEntity);
-    if (Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
+    if (false)// (Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
     {
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -387,10 +399,26 @@ void PracticeState::buildScene()
     }
     else
     {
-        //TODO add padlock icon and help text (override selected/unselected event)
+        //add padlock icon and help text (override selected/unselected event)
         entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 0;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 0;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedLockedID;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 
+            uiSystem.addCallback([helpText](cro::Entity e) mutable
+            {
+                helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                helpText.getComponent<cro::Text>().setString("Get Join The Club to Unlock");
+                centreText(helpText);
+
+                e.getComponent<cro::AudioEmitter>().play();
+                e.getComponent<cro::Callback>().setUserData<float>(0.f);
+                e.getComponent<cro::Callback>().active = true;
+            });
+
+        auto padlock = m_scene.createEntity();
+        padlock.addComponent<cro::Transform>().setPosition(glm::vec3(PadlockOffset, position.y - ItemHeight, 0.1f));
+        padlock.addComponent<cro::Drawable2D>();
+        padlock.addComponent<cro::Sprite>() = spriteSheet.getSprite("padlock");
+        menuEntity.getComponent<cro::Transform>().addChild(padlock.getComponent<cro::Transform>());
     }
     position.y -= ItemHeight;
 
@@ -410,12 +438,33 @@ void PracticeState::buildScene()
     }
     else
     {
-        //TODO add padlock icon and tool tip
+        //add padlock icon and tool tip
         entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 0;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 0;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedLockedID;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 
+            uiSystem.addCallback([helpText](cro::Entity e) mutable
+            {
+                    helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    helpText.getComponent<cro::Text>().setString("Get Grand Tour to Unlock");
+                    centreText(helpText);
+
+                    e.getComponent<cro::AudioEmitter>().play();
+                    e.getComponent<cro::Callback>().setUserData<float>(0.f);
+                    e.getComponent<cro::Callback>().active = true;
+            });
+
+
+        auto padlock = m_scene.createEntity();
+        padlock.addComponent<cro::Transform>().setPosition(glm::vec3(PadlockOffset, position.y - ItemHeight, 0.1f));
+        padlock.addComponent<cro::Drawable2D>();
+        padlock.addComponent<cro::Sprite>() = spriteSheet.getSprite("padlock");
+        menuEntity.getComponent<cro::Transform>().addChild(padlock.getComponent<cro::Transform>());
     }
     position.y -= ItemHeight;
+
+    position.y -= 3.f;
+    helpText.getComponent<cro::Transform>().setPosition(position);
+
 
     //back button
     entity = createItem(glm::vec2(0.f, -28.f), "Back", menuEntity);

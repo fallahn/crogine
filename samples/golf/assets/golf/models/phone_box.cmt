@@ -3,10 +3,9 @@ model phone_box
     mesh = "assets/golf/models/phone_box.cmb"
     cast_shadows = true
 
-    material VertexLit
+    material Unlit
     {
         mask_colour = 0.000000,0.000000,1.000000,1.000000
-        normal = "assets/golf/images/phone_box_low_poly_normal.png"
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
