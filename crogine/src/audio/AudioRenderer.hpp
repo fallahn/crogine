@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/core/Clock.hpp>
 #include <crogine/detail/Types.hpp>
 
 #include <crogine/detail/glm/vec3.hpp>
@@ -85,6 +86,7 @@ namespace cro
         virtual void playSource(std::int32_t, bool) = 0;
         virtual void pauseSource(std::int32_t) = 0;
         virtual void stopSource(std::int32_t) = 0;
+        virtual void setPlayingOffset(std::int32_t, cro::Time) = 0;
 
         virtual std::int32_t getSourceState(std::int32_t) const = 0;
 
@@ -246,6 +248,16 @@ namespace cro
         \param src ID of the source to stop
         */
         static void stopSource(std::int32_t src);
+
+        /*!
+        \brief Sets the offset of the source to the
+        given amount of time from the beginning.
+        This has no effect if the source is stopped, only
+        if it is playing or paused. If the time exceeds the
+        length of the source, then playback is automatically
+        stopped.
+        */
+        static void setPlayingOffset(std::int32_t src, cro::Time offset);
 
         /*!
         \brief Returns the current state of the give source
