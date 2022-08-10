@@ -2429,14 +2429,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
             return cro::FileSystem::getFileExtension(s) != ".ucs";
         }), saves.end());
 
-    if (saves.empty())
-    {
-        m_saveFiles.push_back("No Save Files Found.");
-
-        //can't return here as we won't have created add/remove buttons yet
-        //return;
-    }
-    else if (saves.size() > MaxSaves)
+    if (saves.size() > MaxSaves)
     {
         saves.resize(MaxSaves);
     }
@@ -2627,7 +2620,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
                 {
                     if (activated(evt))
                     {
-                        
+                        confirmLoad(i);
                     }
                 });
 
@@ -2635,12 +2628,32 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
         scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
-
-
-    //TODO add/remove saves button
-    //TODO this needs to resize the scroll data in the callback with correct item size
-
-    //TODO load selected button
+    //save button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Save Course");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
+    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 24.f + ItemSpacing };
+    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.textSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.textUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    confirmSave();
+                }
+            });
+    centreText(entity);
+    m_menuEntities[MenuID::FileSystem].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     m_menuEntities[MenuID::FileSystem].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 }
@@ -3239,12 +3252,47 @@ void PlaylistState::updateNinePatch(cro::Entity entity)
 
 void PlaylistState::updateInfo()
 {
-    const std::string info =
+    std::string info =
         "Skybox: " + m_skyboxes[m_skyboxIndex] +
         "\nShrubs: " + m_shrubs[m_shrubIndex] +
-        "\nCourse: " + m_holeDirs[m_holeDirIndex].name;
+        "\nHole Selection: " + m_holeDirs[m_holeDirIndex].name;
+
+    if (m_saveFiles.empty())
+    {
+        info += "\n\nNo Saved Courses.";
+    }
+    else
+    {
+        info += "\n\nCurrent Save: " + m_saveFiles[m_saveFileIndex];
+    }
 
     m_infoEntity.getComponent<cro::Text>().setString(info);
+}
+
+void PlaylistState::confirmSave()
+{
+    //if saves are empty create a new one and save
+
+    //else confirm overwriting existing or creating new
+
+    //else if full confirm overwrite
+}
+
+void PlaylistState::confirmLoad(std::size_t index)
+{
+    //confirm if we want to save current first
+
+    //if confirmed set index to new then load
+}
+
+void PlaylistState::saveCourse()
+{
+
+}
+
+void PlaylistState::loadCourse()
+{
+
 }
 
 //void PlaylistState::showToolTip(const std::string& label)

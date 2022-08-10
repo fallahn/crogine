@@ -282,6 +282,11 @@ private:
     cro::Entity m_infoEntity;
     void updateInfo();
 
+    void confirmSave();
+    void confirmLoad(std::size_t);
+    void saveCourse();
+    void loadCourse();
+
     /*cro::Entity m_toolTip;
     void showToolTip(const std::string&);
     void hideToolTip();*/
