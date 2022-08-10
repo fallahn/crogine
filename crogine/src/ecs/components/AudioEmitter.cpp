@@ -162,6 +162,12 @@ void AudioEmitter::stop()
     m_state = State::Stopped;
 }
 
+void AudioEmitter::setPlayingOffset(Time offset)
+{
+    m_transportFlags |= GotoOffset;
+    m_playingOffset = offset;
+}
+
 void AudioEmitter::setLooped(bool looped)
 {
     if (looped)

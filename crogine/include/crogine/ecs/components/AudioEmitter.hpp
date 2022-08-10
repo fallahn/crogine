@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/core/Clock.hpp>
 #include <crogine/audio/AudioSource.hpp>
 
 #include <crogine/detail/glm/vec3.hpp>
@@ -81,6 +82,14 @@ namespace cro
         and rewinds it to the beginning
         */
         void stop();
+
+        /*!
+        \brief Sets the playing offset of the emitter to the given time
+        from the beginning of the source.
+        Thsi only affects emitters which are playing or paused, as
+        stopped emitters will automatically rewind when they are played.
+        */
+        void setPlayingOffset(Time offset);
 
         /*!
         \brief Sets whether this sound should be played looped or not.
@@ -193,13 +202,15 @@ namespace cro
 
         enum
         {
-            Play = 0x1,
-            Pause = 0x2,
-            Stop = 0x4,
-            Looped = 0x8
+            Play       = 0x1,
+            Pause      = 0x2,
+            Stop       = 0x4,
+            Looped     = 0x8,
+            GotoOffset = 0x10
         };
         std::uint8_t m_transportFlags;
 
+        Time m_playingOffset;
         bool m_newDataSource;
         std::int32_t m_ID;
         std::int32_t m_dataSourceID;

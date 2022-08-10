@@ -141,7 +141,7 @@ private:
 	friend class InterpolationSystem;
 
 #ifdef CRO_DEBUG_
-	std::array<glm::vec3, 60> m_prevPositions;
+	std::array<glm::vec3, 240> m_prevPositions;
 	std::size_t m_positionsIndex = 0;
 
 	void addPosition(glm::vec3 p)

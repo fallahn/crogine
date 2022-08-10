@@ -260,9 +260,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("buns"))
             {
-                ImGui::PlotLines("X Pos", ballDump[0].data(), ballDump[0].size());
-                ImGui::PlotLines("Y Pos", ballDump[1].data(), ballDump[1].size());
-                ImGui::PlotLines("Z Pos", ballDump[2].data(), ballDump[2].size());
+                ImGui::PlotLines("X Pos", ballDump[0].data(), ballDump[0].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
+                ImGui::PlotLines("Y Pos", ballDump[1].data(), ballDump[1].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
+                ImGui::PlotLines("Z Pos", ballDump[2].data(), ballDump[2].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
             }
             ImGui::End();
         });
@@ -3442,6 +3442,7 @@ void GolfState::initAudio(bool loadTrees)
                     entity.addComponent<cro::Transform>().setPosition(position);
                     entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[idx + 4]);
                     entity.getComponent<cro::AudioEmitter>().play();
+                    entity.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(5.f));
                 }
 
                 position = { i * MapSize.x, height, -static_cast<float>(MapSize.y) * j };

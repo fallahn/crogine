@@ -87,6 +87,12 @@ void AudioPlayerSystem::process(float)
         {
             AudioRenderer::stopSource(audioSource.m_ID);
         }
+
+        if (audioSource.m_transportFlags & AudioEmitter::GotoOffset)
+        {
+            AudioRenderer::setPlayingOffset(audioSource.m_ID, audioSource.m_playingOffset);
+        }
+
         //reset all flags, but preserve Loop flag
         audioSource.m_transportFlags &= AudioEmitter::Looped;
         //check the actual state as we may have stopped...
