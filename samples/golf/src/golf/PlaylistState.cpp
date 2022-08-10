@@ -128,7 +128,7 @@ namespace
             auto movement = targetPos - e.getComponent<cro::Transform>().getPosition();
             if (glm::length2(movement) > 1)
             {
-                e.getComponent<cro::Transform>().move(movement * (dt * 10.f));
+                e.getComponent<cro::Transform>().move(movement * (dt * 30.f));
             }
             else
             {
@@ -171,6 +171,47 @@ namespace
             }
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         }
+    };
+
+    struct SliderData final
+    {
+        cro::Entity scrollNode;
+        cro::Entity buttonTop;
+        cro::Entity buttonBottom;
+        cro::FloatRect bounds;
+
+        SliderData(cro::Entity s, cro::Entity t, cro::Entity b, cro::FloatRect r)
+            : scrollNode(s), buttonTop(t), buttonBottom(b), bounds(r) {}
+        void updatePosition(glm::vec2 position)
+        {
+            auto& scrollData = scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>();
+            if (scrollData.itemCount > 1)
+            {
+                auto topPos = buttonTop.getComponent<cro::Transform>().getWorldPosition().y;
+                auto bottomPos = buttonBottom.getComponent<cro::Transform>().getWorldPosition().y;
+                auto height = topPos - bottomPos;
+                auto mouseHeight = topPos - position.y;
+
+                float relPos = std::min(1.f, std::max(0.f, mouseHeight / height));
+                relPos *= scrollData.itemCount;
+                scrollData.targetIndex = std::min(static_cast<std::int32_t>(std::floor(relPos)), scrollData.itemCount - 1);
+            }
+        }
+    };
+
+    struct SliderCallback final
+    {
+        void operator()(cro::Entity e, float)
+        {
+            auto data = e.getComponent<cro::Callback>().getUserData<SliderData>();
+            auto scrollTop = data.buttonTop.getComponent<cro::Transform>().getPosition();
+            auto scrollBottom = data.buttonBottom.getComponent<cro::Transform>().getPosition();
+            float length = scrollTop.y - scrollBottom.y - (data.bounds.height * 2.f);
+
+            e.getComponent<cro::Transform>().setPosition({ scrollTop.x + 1.f, scrollTop.y - data.bounds.height, 0.2f });
+
+            e.getComponent<cro::Transform>().move({ 0.f, -length * data.scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().normalisedPosition, 0.f });
+        };
     };
 
     cro::Entity createHighlight(cro::Scene& scene, const cro::SpriteSheet& spriteSheet, bool scroll = true)
@@ -227,14 +268,14 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
         });
 
 #ifdef CRO_DEBUG_
-    /*registerWindow([&]()
-        {
-            if (ImGui::Begin("buns"))
-            {
-                
-            }
-            ImGui::End();
-        });*/
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("buns"))
+    //        {
+    //            ImGui::Text("Current Slider %u", m_activeSlider.getIndex());
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
@@ -303,13 +344,36 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
     {
-        /*if (evt.button.button == SDL_BUTTON_RIGHT)
+        if (evt.button.button == SDL_BUTTON_LEFT)
         {
-            quitState();
-            return false;
-        }*/
+            m_activeSlider = {};
+        }
     }
-
+    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    {
+        if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            //see if any sliders on the active tab are under the mouse
+            for (auto e : m_sliders[m_currentTab])
+            {
+                auto bounds = e.getComponent<cro::Transform>().getWorldTransform() * e.getComponent<cro::Drawable2D>().getLocalBounds();
+                auto pos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(glm::vec2(evt.button.x, evt.button.y));
+                if (bounds.contains(pos))
+                {
+                    m_activeSlider = e;
+                }
+            }
+        }
+    }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        if (m_activeSlider.isValid())
+        {
+            //update the associated scrollbar position
+            auto pos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(glm::vec2(evt.button.x, evt.button.y));
+            m_activeSlider.getComponent<cro::Callback>().getUserData<SliderData>().updatePosition(pos);
+        }
+    }
     else if (evt.type == SDL_MOUSEWHEEL)
     {
         if (evt.wheel.y > 0)
@@ -1130,18 +1194,10 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("slider");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [scrollNode, buttonTop, buttonBottom, bounds](cro::Entity e, float)
-    {
-        auto scrollTop = buttonTop.getComponent<cro::Transform>().getPosition();
-        auto scrollBottom = buttonBottom.getComponent<cro::Transform>().getPosition();
-        float length = scrollTop.y - scrollBottom.y - (bounds.height * 2.f);
-
-        e.getComponent<cro::Transform>().setPosition({ scrollTop.x + 1.f, scrollTop.y - bounds.height, 0.2f });
-
-        e.getComponent<cro::Transform>().move({ 0.f, -length * scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().normalisedPosition, 0.f });
-    };
+    entity.getComponent<cro::Callback>().setUserData<SliderData>(scrollNode, buttonTop, buttonBottom, bounds);
+    entity.getComponent<cro::Callback>().function = SliderCallback();
     m_menuEntities[MenuID::Skybox].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_sliders[MenuID::Skybox].push_back(entity);
 
     //chequed background
     auto& tex = m_resources.textures.get("assets/golf/images/ed_bg.png");
@@ -1383,19 +1439,10 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("slider");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [scrollNode, buttonTop, buttonBottom, bounds](cro::Entity e, float)
-    {
-        auto scrollTop = buttonTop.getComponent<cro::Transform>().getPosition();
-        auto scrollBottom = buttonBottom.getComponent<cro::Transform>().getPosition();
-        float length = scrollTop.y - scrollBottom.y - (bounds.height * 2.f);
-
-        e.getComponent<cro::Transform>().setPosition({ scrollTop.x + 1.f, scrollTop.y - bounds.height, 0.2f });
-
-        e.getComponent<cro::Transform>().move({ 0.f, -length * scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().normalisedPosition, 0.f });
-    };
+    entity.getComponent<cro::Callback>().setUserData<SliderData>(scrollNode, buttonTop, buttonBottom, bounds);
+    entity.getComponent<cro::Callback>().function = SliderCallback();
     m_menuEntities[MenuID::Shrubbery].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    m_sliders[MenuID::Shrubbery].push_back(entity);
 
     //title
     auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -1900,19 +1947,10 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("slider");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [scrollNode, buttonTop, buttonBottom, bounds](cro::Entity e, float)
-    {
-        auto scrollTop = buttonTop.getComponent<cro::Transform>().getPosition();
-        auto scrollBottom = buttonBottom.getComponent<cro::Transform>().getPosition();
-        float length = scrollTop.y - scrollBottom.y - (bounds.height * 2.f);
-
-        e.getComponent<cro::Transform>().setPosition({ scrollTop.x + 1.f, scrollTop.y - bounds.height, 0.2f });
-
-        e.getComponent<cro::Transform>().move({ 0.f, -length * scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().normalisedPosition, 0.f });
-    };
+    entity.getComponent<cro::Callback>().setUserData<SliderData>(scrollNode, buttonTop, buttonBottom, bounds);
+    entity.getComponent<cro::Callback>().function = SliderCallback();
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    m_sliders[MenuID::Holes].push_back(entity);
 
 
 
@@ -2171,7 +2209,9 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
 
                         scrollNode.getComponent<cro::Transform>().addChild(entry.uiNode.getComponent<cro::Transform>());
 
-                        scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount = static_cast<std::int32_t>(m_playlist.size());
+                        auto itemCount = static_cast<std::int32_t>(m_playlist.size());
+                        scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount = itemCount;
+                        scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = std::max(0, itemCount - 1);
                     }
                 }
             }
@@ -2217,7 +2257,9 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                             m_playlist[i].currentIndex = i;
                         }
 
-                        scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount = static_cast<std::int32_t>(m_playlist.size());
+                        auto itemCount = static_cast<std::int32_t>(m_playlist.size());
+                        scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount = itemCount;
+                        scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = std::max(0, itemCount - 1);
                     }
                 }
             });
@@ -2326,18 +2368,10 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("slider");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [scrollNode, buttonTop, buttonBottom, bounds](cro::Entity e, float)
-    {
-        auto scrollTop = buttonTop.getComponent<cro::Transform>().getPosition();
-        auto scrollBottom = buttonBottom.getComponent<cro::Transform>().getPosition();
-        float length = scrollTop.y - scrollBottom.y - (bounds.height * 2.f);
-
-        e.getComponent<cro::Transform>().setPosition({ scrollTop.x + 1.f, scrollTop.y - bounds.height, 0.2f });
-
-        e.getComponent<cro::Transform>().move({ 0.f, -length * scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().normalisedPosition, 0.f });
-    };
+    entity.getComponent<cro::Callback>().setUserData<SliderData>(scrollNode, buttonTop, buttonBottom, bounds);
+    entity.getComponent<cro::Callback>().function = SliderCallback();
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_sliders[MenuID::Holes].push_back(entity);
 
     //chequered bg
     auto& tex = m_resources.textures.get("assets/golf/images/ed_bg.png");
@@ -2373,7 +2407,6 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     };
 
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
 
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 }
@@ -2504,18 +2537,10 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("slider");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [scrollNode, buttonTop, buttonBottom, bounds](cro::Entity e, float)
-    {
-        auto scrollTop = buttonTop.getComponent<cro::Transform>().getPosition();
-        auto scrollBottom = buttonBottom.getComponent<cro::Transform>().getPosition();
-        float length = scrollTop.y - scrollBottom.y - (bounds.height * 2.f);
-
-        e.getComponent<cro::Transform>().setPosition({ scrollTop.x + 1.f, scrollTop.y - bounds.height, 0.5f });
-
-        e.getComponent<cro::Transform>().move({ 0.f, -length * scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().normalisedPosition, 0.f });
-    };
+    entity.getComponent<cro::Callback>().setUserData<SliderData>(scrollNode, buttonTop, buttonBottom, bounds);
+    entity.getComponent<cro::Callback>().function = SliderCallback();
     m_menuEntities[MenuID::FileSystem].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_sliders[MenuID::FileSystem].push_back(entity);
 
     //chequed background
     auto& tex = m_resources.textures.get("assets/golf/images/ed_bg.png");

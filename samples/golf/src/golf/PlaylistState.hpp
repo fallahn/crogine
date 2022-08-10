@@ -236,6 +236,9 @@ private:
     };
     std::array<std::function<void(cro::Entity, const cro::ButtonEvent&)>, CallbackID::Count> m_callbacks = {};
 
+    std::array<std::vector<cro::Entity>, MenuID::Count> m_sliders = {};
+    cro::Entity m_activeSlider;
+
     //really we should be using menu ID here
     struct AnimationID final
     {
