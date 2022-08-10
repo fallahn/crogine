@@ -132,6 +132,7 @@ namespace
     std::size_t bitrateCounter = 0;
     glm::vec4 topSky;
     glm::vec4 bottomSky;
+    std::array<std::vector<float>, 3u> ballDump;
 
     float godmode = 1.f;
 
@@ -230,6 +231,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 #ifdef CRO_DEBUG_
     ballEntity = {};
     useFreeCam = false;
+    ballDump[0].push_back(1.f);
+    ballDump[1].push_back(1.f);
+    ballDump[2].push_back(1.f);
 
     //registerWindow([&]()
     //    {
@@ -252,34 +256,16 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //        ImGui::End();
     //    });
 
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("buns"))
-    //        {
-    //            if (ImGui::ColorEdit4("Top", &topSky.x))
-    //            {
-    //                m_skyScene.setSkyboxColours(WaterColour, bottomSky, topSky);
-    //            }
-
-    //            if (ImGui::ColorEdit4("Bottom", &bottomSky.x))
-    //            {
-    //                m_skyScene.setSkyboxColours(WaterColour, bottomSky, topSky);
-    //            }
-
-    //            //ImGui::Text("Speed %3.3f", m_billboardUniforms.currentWindSpeed);
-    //            //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), {256.f, 256.f}, {0.f, 1.f}, {1.f, 0.f});
-    //            /*if (ballEntity.isValid())
-    //            {
-    //                auto pos = ballEntity.getComponent<cro::Transform>().getPosition();
-    //                ImGui::Text("Ball Pos: %3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-    //            }
-    //            else
-    //            {
-    //                ImGui::Text("Ball Entity not valid");
-    //            }*/
-    //        }
-    //        ImGui::End();
-    //    });
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("buns"))
+            {
+                ImGui::PlotLines("X Pos", ballDump[0].data(), ballDump[0].size());
+                ImGui::PlotLines("Y Pos", ballDump[1].data(), ballDump[1].size());
+                ImGui::PlotLines("Z Pos", ballDump[2].data(), ballDump[2].size());
+            }
+            ImGui::End();
+        });
 #endif
 }
 
@@ -378,7 +364,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
             showCountdown(10);
             break;
         case SDLK_KP_MULTIPLY:
-            m_activeAvatar->ballModel.getComponent<InterpolationComponent<InterpolationType::Linear>>().dumpPositions();
+            for (auto& d : ballDump)
+            {
+                d.clear();
+            }
+            m_activeAvatar->ballModel.getComponent<InterpolationComponent<InterpolationType::Linear>>().dumpPositions(ballDump);
             break;
         case SDLK_PAGEUP:
         {

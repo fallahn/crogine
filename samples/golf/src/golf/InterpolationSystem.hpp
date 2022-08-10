@@ -111,11 +111,15 @@ public:
 	std::uint32_t id = std::numeric_limits<std::uint32_t>::max();
 
 #ifdef CRO_DEBUG_
-	void dumpPositions() const
+	void dumpPositions(std::array<std::vector<float>, 3u>& dst) const
 	{
 		for (auto i = m_positionsIndex; i < m_positionsIndex + m_prevPositions.size(); ++i)
 		{
-			LogI << m_prevPositions[i % m_prevPositions.size()] << std::endl;
+			//LogI << m_prevPositions[i % m_prevPositions.size()] << std::endl;
+			auto idx = i % m_prevPositions.size();
+			dst[0].push_back(m_prevPositions[idx].x);
+			dst[1].push_back(m_prevPositions[idx].y);
+			dst[2].push_back(m_prevPositions[idx].z);
 		}
 	}
 #endif
