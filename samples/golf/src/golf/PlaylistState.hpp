@@ -104,6 +104,8 @@ private:
             Skybox, Shrubbery,
             Holes, FileSystem,
 
+            Popup,
+
             Dummy,
             Count
         };
@@ -238,6 +240,21 @@ private:
 
     std::array<std::vector<cro::Entity>, MenuID::Count> m_sliders = {};
     cro::Entity m_activeSlider;
+
+    struct PopupID final
+    {
+        enum
+        {
+            TextSelected,
+            TextUnselected,
+            SaveNew,
+            SaveOverwrite,
+            ClosePopup,
+
+            Count
+        };
+    };
+    std::array<std::uint32_t, PopupID::Count> m_popupIDs = {};
 
     //really we should be using menu ID here
     struct AnimationID final

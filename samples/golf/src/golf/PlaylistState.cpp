@@ -214,6 +214,13 @@ namespace
         };
     };
 
+    struct PopupData final
+    {
+        enum { In, Idle, Out };
+        std::int32_t state = In;
+        float progress = 0.f;
+    };
+
     cro::Entity createHighlight(cro::Scene& scene, const cro::SpriteSheet& spriteSheet, bool scroll = true)
     {
         auto entity = scene.createEntity();
@@ -316,6 +323,9 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
 #ifdef CRO_DEBUG_
         case SDLK_F9:
             requestStackPush(StateID::Bush);
+            break;
+        case SDLK_KP_0:
+            confirmSave();
             break;
 #endif
         }
@@ -824,6 +834,88 @@ void PlaylistState::buildUI()
     ninePatch.getComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get("assets/golf/images/tab_patch.png"));
     rootNode.getComponent<cro::Transform>().addChild(ninePatch.getComponent<cro::Transform>());
 
+    //used as the pop-up background, buttons are added and removed by relevant callbacks
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setOrigin({0.f, 0.f, -0.4f});
+    entity.addComponent<cro::Drawable2D>();
+    auto popupBG = entity;
+    rootNode.getComponent<cro::Transform>().addChild(popupBG.getComponent<cro::Transform>());
+    
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/facilities_menu.spt", m_resources.textures);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(-1000.f, -100000.f, 0.1f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height, -0.5f });
+    entity.addComponent<cro::Callback>().setUserData<PopupData>();
+    entity.getComponent<cro::Callback>().function =
+        [&, popupBG](cro::Entity e, float dt) mutable
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<PopupData>();
+        glm::vec2 targetPos = (glm::vec2(cro::App::getWindow().getSize()) / m_viewScale);
+        auto windowSize = targetPos;
+        targetPos.x /= 2.f;
+        auto bgPos = targetPos;
+        targetPos.y /= 2.f;
+        targetPos.y += e.getComponent<cro::Sprite>().getTextureBounds().height / 2.f;
+
+        float speed = dt * 4.f;
+
+        switch (data.state)
+        {
+        default: break;
+        case PopupData::In:
+        {
+            data.progress = std::min(1.f, data.progress + speed);
+            float progress = cro::Util::Easing::easeInOutCirc(data.progress);
+            targetPos.y *= progress;
+            bgPos.y *= progress;
+
+            if (data.progress == 1)
+            {
+                data.state = PopupData::Idle;
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Popup);
+            }
+        }
+            break;
+        case PopupData::Idle:
+
+            break;
+        case PopupData::Out:
+        {
+            data.progress = std::max(0.f, data.progress - speed);
+            float progress = cro::Util::Easing::easeOutQuint(data.progress);
+            targetPos.y *= progress;
+            bgPos.y *= progress;
+
+            if (data.progress == 0)
+            {
+                data.state = PopupData::In;
+                e.getComponent<cro::Callback>().active = false;
+
+                updateInfo();
+            }
+        }
+            break;
+        }
+
+        e.getComponent<cro::Transform>().setPosition(targetPos);
+        popupBG.getComponent<cro::Transform>().setPosition(bgPos);
+
+        static const cro::Colour c(0.f, 0.f, 0.f, BackgroundAlpha);
+        popupBG.getComponent<cro::Drawable2D>().setVertexData(
+            {
+                cro::Vertex2D(glm::vec2(-windowSize.x / 2.f, 0.f), c),
+                cro::Vertex2D(glm::vec2(-windowSize.x / 2.f, -windowSize.y), c),
+                cro::Vertex2D(glm::vec2(windowSize.x / 2.f, 0.f), c),
+                cro::Vertex2D(glm::vec2(windowSize.x / 2.f, -windowSize.y), c)
+            });
+    };
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_menuEntities[MenuID::Popup] = entity;
+
     auto updateView = [&, sceneEnt, rootNode, ninePatch](cro::Camera& cam) mutable
     {
         glm::vec2 size(GolfGame::getActiveTarget()->getSize());
@@ -881,7 +973,6 @@ void PlaylistState::buildUI()
             e.getComponent<cro::Text>().setFillColour(TextNormalColour);
         });
 
-
     auto highlightSelected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity e)
         {
@@ -906,7 +997,44 @@ void PlaylistState::buildUI()
             //hideToolTip();
         });
 
-    cro::SpriteSheet spriteSheet;
+    m_popupIDs[PopupID::TextSelected] = textSelected;
+    m_popupIDs[PopupID::TextUnselected] = textUnselected;
+    m_popupIDs[PopupID::ClosePopup] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::FileSystem);
+
+                m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().getUserData<PopupData>().state = PopupData::Out;
+            }
+        });
+    m_popupIDs[PopupID::SaveNew] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                std::string newStr = "Save_" + std::to_string(m_saveFileIndex);
+                m_saveFiles.push_back(newStr);
+                m_saveFileIndex = m_saveFiles.size() - 1;
+                saveCourse();
+
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::FileSystem);
+                m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().getUserData<PopupData>().state = PopupData::Out;
+            }
+        });
+    m_popupIDs[PopupID::SaveOverwrite] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                saveCourse();
+
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::FileSystem);
+                m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().getUserData<PopupData>().state = PopupData::Out;
+            }
+        });
+
     spriteSheet.loadFromFile("assets/golf/sprites/course_tabs.spt", m_resources.textures);
 
     MenuData md;
@@ -952,7 +1080,7 @@ void PlaylistState::buildUI()
         });
 
     constexpr glm::vec2 buttonOffset(15.f, 1.f);
-    auto bounds = spriteSheet.getSprite("tab_highlight").getTextureBounds();
+    bounds = spriteSheet.getSprite("tab_highlight").getTextureBounds();
     auto tabWidth = spriteSheet.getSprite("tab_bar").getTextureBounds().width / 4.f;
 
     const std::array<std::string, 4u> TipText =
@@ -960,7 +1088,7 @@ void PlaylistState::buildUI()
         "Skybox", "Foliage", "Hole List", "Load/Save"
     };
 
-    for (auto i = 0u; i < MenuID::Count -1; ++i)
+    for (auto i = 0u; i < MenuID::Popup; ++i)
     {
         glm::vec3 position((i * tabWidth) + buttonOffset.x, buttonOffset.y, 0.1f);
         position.x += bounds.width / 2.f;
@@ -983,7 +1111,7 @@ void PlaylistState::buildUI()
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = hideTip;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = tabSelect;
 
-        entity.setLabel(TipText[i]);
+        //entity.setLabel(TipText[i]);
 
         tabEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_tabEntities[i] = entity;
@@ -2647,7 +2775,8 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&](cro::Entity e, const cro::ButtonEvent& evt)
             {
-                if (activated(evt))
+                if (activated(evt)
+                    && !m_playlist.empty())
                 {
                     confirmSave();
                 }
@@ -2663,7 +2792,7 @@ void PlaylistState::setActiveTab(std::int32_t index)
     index %= MenuID::Count -1;
     m_currentTab = index;
 
-    for (auto i = 0; i < MenuID::Count - 1; ++i)
+    for (auto i = 0; i < MenuID::Popup; ++i)
     {
         auto tabIndex = m_tabEntities[i].getComponent<cro::Callback>().getUserData<std::int32_t>();
         if (tabIndex == index)
@@ -3271,23 +3400,117 @@ void PlaylistState::updateInfo()
 
 void PlaylistState::confirmSave()
 {
+    m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().getUserData<PopupData>().state = PopupData::In;
+    m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().active = true;
+    
+    auto bounds = m_menuEntities[MenuID::Popup].getComponent<cro::Sprite>().getTextureBounds();
+
+    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto title = m_uiScene.createEntity();
+    title.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), std::floor(bounds.height * 0.65f), 0.6f });
+    title.addComponent<cro::Drawable2D>();
+    title.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    title.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    title.addComponent<cro::Callback>().active = true;
+    title.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        if (!m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().active)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        }
+    };
+    m_menuEntities[MenuID::Popup].getComponent<cro::Transform>().addChild(title.getComponent<cro::Transform>());
+
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    auto createItem = [&](const std::string& label, glm::vec2 position)
+    {
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(position, 0.6f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString(label);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Popup);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_popupIDs[PopupID::TextSelected];
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_popupIDs[PopupID::TextUnselected];
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+        {
+            if (!m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().active)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(e);
+            }
+        };
+        centreText(entity);
+        m_menuEntities[MenuID::Popup].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        return entity;
+    };
+
+
     //if saves are empty create a new one and save
+    glm::vec2 rootPos = glm::vec2(std::floor(bounds.width / 3.f), ItemSpacing * 3.f);
+    if (m_saveFiles.empty())
+    {
+        title.getComponent<cro::Text>().setString("Save Course?");
+        centreText(title);
 
+        auto entity = createItem("Yes", rootPos);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_popupIDs[PopupID::SaveNew];
+        rootPos.x *= 2.f;
+    }
     //else confirm overwriting existing or creating new
+    else 
+    {
+        title.getComponent<cro::Text>().setString("Overwrite Existing?");
+        centreText(title);
 
-    //else if full confirm overwrite
+        if (m_saveFiles.size() < MaxSaves)
+        {
+            //allow creating new
+            rootPos.x = std::floor(bounds.width / 4.f);
+
+            auto entity = createItem("Yes", rootPos);
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_popupIDs[PopupID::SaveOverwrite];
+            rootPos.x *= 2.f;
+
+            entity = createItem("No", rootPos);
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_popupIDs[PopupID::SaveNew];
+            rootPos.x += std::floor(bounds.width / 4.f);
+        }
+        else
+        {
+            auto entity = createItem("Yes", rootPos);
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_popupIDs[PopupID::SaveOverwrite];
+            rootPos.x *= 2.f;
+        }
+    }
+    
+    auto entity = createItem("Cancel", rootPos);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_popupIDs[PopupID::ClosePopup];
 }
 
 void PlaylistState::confirmLoad(std::size_t index)
 {
     //confirm if we want to save current first
+    if (!m_playlist.empty())
+    {
 
-    //if confirmed set index to new then load
+    }
+    else
+    {
+        //ask to load directly
+    }
 }
 
 void PlaylistState::saveCourse()
 {
-
+    //TODO write to file at selected index
 }
 
 void PlaylistState::loadCourse()
