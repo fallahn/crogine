@@ -40,6 +40,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/detail/SDLResource.cpp
   ${PROJECT_DIR}/detail/StaticMeshFile.cpp
   ${PROJECT_DIR}/detail/TextConstruction.cpp
+  ${PROJECT_DIR}/detail/QuadTree.cpp
 
   ${PROJECT_DIR}/detail/enet/callbacks.c
   ${PROJECT_DIR}/detail/enet/compress.c
