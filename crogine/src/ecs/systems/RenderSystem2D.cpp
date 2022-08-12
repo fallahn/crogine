@@ -59,7 +59,12 @@ using namespace cro;
 
 RenderSystem2D::RenderSystem2D(MessageBus& mb)
     : System        (mb, typeid(RenderSystem2D)),
-    m_sortOrder     (DepthAxis::Z)
+    m_sortOrder     (DepthAxis::Z),
+    m_quadTree({ -10.f, -10.f, 800.f, 600.f }) //this needs to be a reasonable size, if its too large we end up too deep and everything is placed in one cell
+    /*m_quadTree      ({std::numeric_limits<float>::lowest() / 2.f,
+        std::numeric_limits<float>::lowest() / 2.f,
+        std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::max()})*/ //probably not the best tactic but assures we'll always(?) be inside
 {
     requireComponent<Drawable2D>();
     requireComponent<Transform>();
@@ -82,14 +87,21 @@ RenderSystem2D::~RenderSystem2D()
 //public
 void RenderSystem2D::updateDrawList(Entity camEnt)
 {
+    //for (auto e : m_dirtyEnts)
+    //{
+    //    //remove and reinsert the item at the correct place
+    //    m_quadTree.remove(e);
+    //    m_quadTree.add(e);
+    //}
+    //m_dirtyEnts.clear();
+
     m_drawList.clear();
     auto& camera = camEnt.getComponent<Camera>();
     CRO_ASSERT(camera.isOrthographic(), "");
     auto viewRect = camEnt.getComponent<cro::Transform>().getWorldTransform() * camera.getViewSize();
 
-    //TODO Optionally using a balanced/quad tree
-    //might also help on more populated scenes.
 
+    //auto entities = m_quadTree.query(viewRect);
     auto& entities = getEntities();
     for (auto entity : entities)
     {
@@ -388,10 +400,30 @@ void RenderSystem2D::onEntityAdded(Entity entity)
     {
         glCheck(glGenBuffers(1, &drawable.m_vbo));
     }
+
+    /*
+    The problem with the quad tree is that it expects fixed
+    size AABBs. If a drawable changes significantly, eg a 
+    text string, then searching for it to remove it based
+    on its current AABB will return a different result to
+    when it was first placed (and therefor an incorrect
+    location). This cascades in errors when trying to remove
+    an entity from a cell in which is doesn't actually reside...
+    */
+
+
+    //m_quadTree.add(entity);
+    /*entity.getComponent<cro::Transform>().addCallback(
+        [&, entity]()
+        {
+            m_dirtyEnts.push_back(entity);
+        });*/
 }
 
 void RenderSystem2D::onEntityRemoved(Entity entity)
 {
+    //m_quadTree.remove(entity);
+
     //remove any OpenGL buffers
     resetDrawable(entity);
 }

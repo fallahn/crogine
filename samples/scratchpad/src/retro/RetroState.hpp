@@ -67,6 +67,8 @@ private:
     cro::RenderTexture m_renderTexture;
     cro::SimpleQuad m_quad;
 
+    std::vector<cro::Entity> m_sprites;
+
     void addSystems();
     void loadAssets();
     void createScene();

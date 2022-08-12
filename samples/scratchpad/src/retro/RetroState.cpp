@@ -34,10 +34,14 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/util/Constants.hpp>
 
@@ -147,6 +151,32 @@ bool RetroState::handleEvent(const cro::Event& evt)
         return true;
     }
 
+    if (evt.type == SDL_KEYDOWN)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_KP_PLUS:
+            //if (!debugEnt.isValid())
+            {
+                auto debugEnt = m_uiScene.createEntity();
+                debugEnt.addComponent<cro::Transform>().setScale(glm::vec2(10.f));
+                debugEnt.getComponent<cro::Transform>().setPosition({ 0.f, m_sprites.size() * 10.f });
+                debugEnt.addComponent<cro::Drawable2D>();
+                debugEnt.addComponent<cro::Sprite>(m_paletteTexture);
+                m_sprites.push_back(debugEnt);
+            }
+            break;
+        case SDLK_KP_MINUS:
+            if (!m_sprites.empty())
+            {
+                m_uiScene.destroyEntity(m_sprites.back());
+                m_sprites.pop_back();
+            }
+            break;
+        }
+    }
+
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
     return true;
@@ -154,6 +184,16 @@ bool RetroState::handleEvent(const cro::Event& evt)
 
 void RetroState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            float scale = std::round(static_cast<float>(data.data0) / m_renderTexture.getSize().x);
+            m_quad.setScale(glm::vec2(scale));
+        }
+    }
+
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
@@ -182,6 +222,10 @@ void RetroState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+
+    m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
+    m_uiScene.addSystem<cro::CameraSystem>(mb);
+    m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 }
 
 void RetroState::loadAssets()
@@ -254,6 +298,9 @@ void RetroState::createUI()
 
                     m_paletteTexture.loadFromFile(paths[pathIndex]);
                 }
+
+
+                ImGui::Text("Sprites %u", m_sprites.size());
             }
             ImGui::End();        
         });
@@ -262,6 +309,7 @@ void RetroState::createUI()
 void RetroState::updateView(cro::Camera& cam3D)
 {
     glm::vec2 size(cro::App::getWindow().getSize());
+    auto windowSize = size;
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
@@ -271,6 +319,10 @@ void RetroState::updateView(cro::Camera& cam3D)
     cam3D.viewport.height = size.y;
 
     //update the UI camera to match the new screen size
+    //TODO DON'T DO THIS. Each camera wants its own specific
+    //resize callback else the default one will override it.
     auto& cam2D = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
-    cam2D.viewport = cam3D.viewport;
+    cam2D.viewport = {0.f, 0.f, 1.f, 1.f};
+
+    cam2D.setOrthographic(0.f, windowSize.x, 0.f, windowSize.y, -0.1f, 10.f);
 }

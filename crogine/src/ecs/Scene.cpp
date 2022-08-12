@@ -128,12 +128,21 @@ namespace
     void updateView(cro::Camera& camera)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
-        size.y = ((size.x / 16.f) * 9.f) / size.y;
-        size.x = 1.f;
+        if (camera.isOrthographic())
+        {
+            camera.setOrthographic(0.f, size.x, 0.f, size.y, 0.f, 10.f);
+            camera.viewport = { 0.f, 0.f, 1.f, 1.f };
+        }
+        else
+        {
+            size.y = ((size.x / 16.f) * 9.f) / size.y;
+            size.x = 1.f;
 
-        camera.setPerspective(DefaultFOV, 16.f / 9.f, 0.1f, 280.f);
-        camera.viewport.bottom = (1.f - size.y) / 2.f;
-        camera.viewport.height = size.y;
+            camera.setPerspective(DefaultFOV, 16.f / 9.f, 0.1f, 280.f);
+            camera.viewport.bottom = (1.f - size.y) / 2.f;
+            camera.viewport.height = size.y;
+        }
+        LogW << "Default camera resize callback used: are you missing a callback assignment?" << std::endl;
     }
 }
 

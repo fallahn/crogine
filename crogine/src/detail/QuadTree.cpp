@@ -154,6 +154,8 @@ std::int32_t QuadTree::getQuadrant(FloatRect nodeBounds, FloatRect aabb) const
 
 void QuadTree::add(Node* node, std::size_t depth, FloatRect area, Entity member)
 {
+    auto r = getAABB(member);
+
     CRO_ASSERT(node, "");
     CRO_ASSERT(area.contains(getAABB(member)), "");
 
