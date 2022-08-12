@@ -126,6 +126,7 @@ Transform::Transform(Transform&& other) noexcept
         setOrigin(other.getOrigin());
         m_dirtyFlags = Flags::Tx;
         m_attachmentTransform = other.m_attachmentTransform;
+        m_callbacks.swap(other.m_callbacks);
 
         other.reset();
     }
@@ -193,6 +194,7 @@ Transform& Transform::operator=(Transform&& other) noexcept
         setOrigin(other.getOrigin());
         m_dirtyFlags = Flags::Tx;
         m_attachmentTransform = other.m_attachmentTransform;
+        m_callbacks.swap(other.m_callbacks);
 
         other.reset();
     }
@@ -376,6 +378,11 @@ glm::mat4 Transform::getLocalTransform() const
         m_transform = glm::translate(m_transform, -m_origin);
 
         m_dirtyFlags &= ~Tx;
+
+        for (auto& cb : m_callbacks)
+        {
+            cb();
+        }
     }
 
     return m_attachmentTransform * m_transform;
@@ -410,6 +417,11 @@ void Transform::setLocalTransform(glm::mat4 transform)
     //m_dirtyFlags |= Tx;
     m_transform = glm::translate(transform, -m_origin);
     m_dirtyFlags &= ~Tx;
+
+    for (auto& cb : m_callbacks)
+    {
+        cb();
+    }
 }
 
 glm::mat4 Transform::getWorldTransform() const
@@ -499,6 +511,11 @@ void Transform::removeChild(Transform& tx)
         }), m_children.end());
 }
 
+void Transform::addCallback(std::function<void()> cb)
+{
+    m_callbacks.push_back(cb);
+}
+
 //private
 void Transform::reset()
 {
@@ -512,6 +529,7 @@ void Transform::reset()
     m_depth = 0;
     m_attachmentTransform = glm::mat4(1.f);
 
+    m_callbacks.clear();
     m_children.clear();
 }
 

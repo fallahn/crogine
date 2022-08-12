@@ -29,7 +29,6 @@ source distribution.
 
 #pragma once
 
-#include <crogine/Config.hpp>
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
@@ -49,7 +48,7 @@ namespace cro::Detail
     \see DynamicTreeSystem
     */
 
-    class CRO_EXPORT_API QuadTree final
+    class QuadTree final
     {
     public:
         /*!

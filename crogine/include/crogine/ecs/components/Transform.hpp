@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
 #include <vector>
+#include <functional>
 
 namespace cro
 {
@@ -273,6 +274,15 @@ namespace cro
         */
         std::size_t getDepth() const { return m_depth; }
 
+        /*!
+        \brief Adds a callback which is executed when the transform is updated.
+        Specifically this happens on setLocalTransform() or getLocalTransform()
+        if the transform has internally been flagged as dirty. As getWorldTransform()
+        also calls getLocalTransform() then this function may also raise callback
+        events.
+        */
+        void addCallback(std::function<void()> callback);
+
         static constexpr glm::vec3 X_AXIS = glm::vec3(1.f, 0.f, 0.f);
         static constexpr glm::vec3 Y_AXIS = glm::vec3(0.f, 1.f, 0.f);
         static constexpr glm::vec3 Z_AXIS = glm::vec3(0.f, 0.f, 1.f);
@@ -300,6 +310,8 @@ namespace cro
             All = Parent | Child | Tx
         };
         mutable std::uint8_t m_dirtyFlags;
+
+        std::vector<std::function<void()>> m_callbacks;
 
         void reset();
 
