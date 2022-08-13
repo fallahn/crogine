@@ -251,6 +251,7 @@ private:
             TextUnselected,
             SaveNew,
             SaveOverwrite,
+            LoadFile,
             ClosePopup,
             QuitState,
 
