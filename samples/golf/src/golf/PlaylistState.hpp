@@ -300,6 +300,19 @@ private:
     cro::Entity m_infoEntity;
     void updateInfo();
 
+    enum class EntryType : std::uint8_t
+    {
+        Skybox, Shrub, Audio, Hole
+    };
+    struct SaveFileEntry final
+    {
+        EntryType type = EntryType::Skybox;
+        std::uint8_t directory = 0;
+        std::uint8_t file = 0;
+        std::uint8_t padding = 0;
+    };
+
+
     void confirmSave();
     void confirmLoad(std::size_t);
     void showExportResult(bool);

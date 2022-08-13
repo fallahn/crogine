@@ -38,6 +38,9 @@ source distribution.
 #include "Treeset.hpp"
 #include "../GolfGame.hpp"
 
+#include <Achievements.hpp>
+#include <AchievementStrings.hpp>
+
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/Mouse.hpp>
@@ -96,7 +99,8 @@ namespace
     const std::string ThumbPath = "assets/golf/thumbs/";
 
     const std::string UserCoursePath = "courses/";
-    const std::string UserCourseExport = "courses/export";
+    const std::string UserCourseExport = "courses/export/";
+    const std::string SaveFileExtension = ".ucs";
 
     constexpr float TabAreaHeight = 0.33f; //percent of screen
     constexpr float ItemSpacing = 10.f;
@@ -2573,13 +2577,14 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     saves.erase(std::remove_if(saves.begin(), saves.end(), 
         [](const std::string& s)
         {
-            return cro::FileSystem::getFileExtension(s) != ".ucs";
+            return cro::FileSystem::getFileExtension(s) != SaveFileExtension;
         }), saves.end());
 
     if (saves.size() > MaxSaves)
     {
         saves.resize(MaxSaves);
     }
+    m_saveFiles.swap(saves);
 
     //scroll saves list
     m_menuEntities[MenuID::FileSystem].addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -2833,6 +2838,11 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     m_menuEntities[MenuID::FileSystem].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     m_menuEntities[MenuID::FileSystem].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+
+    if (!m_saveFiles.empty())
+    {
+        loadCourse();
+    }
 }
 
 void PlaylistState::setActiveTab(std::int32_t index)
@@ -3441,7 +3451,7 @@ void PlaylistState::updateInfo()
     }
     else
     {
-        info += "\n\nCurrent Save: " + m_saveFiles[m_saveFileIndex];
+        info += "\n\nCurrent Save: " + m_saveFiles[m_saveFileIndex].substr(0, m_saveFiles[m_saveFileIndex].find_last_of('.'));
     }
 
     m_infoEntity.getComponent<cro::Text>().setString(info);
@@ -3549,12 +3559,11 @@ void PlaylistState::confirmLoad(std::size_t index)
     //confirm if we want to save current first
     if (!m_playlist.empty())
     {
+        //TODO this will overwrite existing
+        //OK/Cancel
+    }
 
-    }
-    else
-    {
-        //ask to load directly
-    }
+    updateInfo();
 }
 
 void PlaylistState::showExportResult(bool success)
@@ -3585,6 +3594,8 @@ void PlaylistState::showExportResult(bool success)
     if (success)
     {
         title.getComponent<cro::Text>().setString("Export Successful");
+
+        Achievements::awardAchievement(AchievementStrings[AchievementID::GrandDesign]);
     }
     else
     {
@@ -3630,12 +3641,120 @@ void PlaylistState::showExportResult(bool success)
 
 void PlaylistState::saveCourse()
 {
-    //TODO write to file at selected index
+    auto exportDir = cro::App::getPreferencePath() + UserCoursePath;
+    if (!cro::FileSystem::directoryExists(exportDir))
+    {
+        cro::FileSystem::createDirectory(exportDir);
+    }
+    
+    std::stringstream ss;
+    ss << exportDir << "course" << std::setw(2) << std::setfill('0') << m_saveFileIndex << SaveFileExtension;
+    std::string fileName = ss.str();
+
+    cro::RaiiRWops file;
+    file.file = SDL_RWFromFile(fileName.c_str(), "wb");
+    if (file.file)
+    {
+        SaveFileEntry entry;
+        entry.type = EntryType::Shrub;
+        entry.directory = static_cast<std::uint8_t>(m_shrubIndex);
+        auto written = SDL_RWwrite(file.file, &entry, sizeof(entry), 1);
+
+        entry.type = EntryType::Skybox;
+        entry.directory = static_cast<std::uint8_t>(m_skyboxIndex);
+        written += SDL_RWwrite(file.file, &entry, sizeof(entry), 1);
+
+        for (const auto& hole : m_playlist)
+        {
+            entry.type = EntryType::Hole;
+            entry.directory = static_cast<std::uint8_t>(hole.courseIndex);
+            entry.file = static_cast<std::uint8_t>(hole.holeIndex);
+            written += SDL_RWwrite(file.file, &entry, sizeof(entry), 1);
+        }
+
+        if (written != m_playlist.size() + 2)
+        {
+            LogE << "Incomplete save file written. Wrote: " << written << ", expected: " << m_playlist.size() + 2 << std::endl;
+        }
+    }
+    else
+    {
+        LogE << "Failed opening " << fileName << " for writing." << std::endl;
+    }
 }
 
 void PlaylistState::loadCourse()
 {
+    auto exportDir = cro::App::getPreferencePath() + UserCoursePath;
+    if (!cro::FileSystem::directoryExists(exportDir))
+    {
+        cro::FileSystem::createDirectory(exportDir);
+    }
 
+    std::stringstream ss;
+    ss << exportDir << m_saveFiles[m_saveFileIndex];
+    std::string fileName = ss.str();
+
+    cro::RaiiRWops file;
+    file.file = SDL_RWFromFile(fileName.c_str(), "rb");
+    if (file.file)
+    {
+        for (auto& e : m_playlist)
+        {
+            m_uiScene.destroyEntity(e.uiNode);
+        }
+        m_playlist.clear();
+        m_playlistIndex = 0;
+
+        static constexpr std::size_t MaxCount = 21; //18 holes + shrub/sky/audio
+        std::size_t readTotal = 0;
+        std::size_t read = 0;
+
+        do
+        {
+            SaveFileEntry output;
+            read = SDL_RWread(file.file, &output, sizeof(output), 1);
+
+            if (read)
+            {
+                switch (output.type)
+                {
+                default:
+                case EntryType::Audio:
+                    LogW << "Not yet implemented" << std::endl;
+                    break;
+                case EntryType::Hole:
+                {
+                    auto currIndex = m_playlist.size();
+                    auto& item = m_playlist.emplace_back();
+                    item.courseIndex = output.directory;
+                    item.holeIndex = output.file;
+                    item.currentIndex = currIndex;
+                    item.name = m_holeDirs[item.courseIndex].holes[item.holeIndex].name;
+                }
+                    break;
+                case EntryType::Skybox:
+                    m_skyboxIndex = output.directory;
+                    break;
+                case EntryType::Shrub:
+                    m_shrubIndex = output.directory;
+                    break;
+                }
+            }
+            readTotal += read;
+
+        } while (read == 1 && readTotal < MaxCount);
+
+        m_courseData.shrubPath = ShrubPath + m_shrubs[m_shrubIndex];
+        m_courseData.skyboxPath = SkyboxPath + m_skyboxes[m_skyboxIndex];
+
+        //TODO apply all selected indices
+        //TODO create ui nodes for playlist entries
+    }
+    else
+    {
+        LogE << "Failed opening file " << fileName << " for loading." << std::endl;
+    }
 }
 
 bool PlaylistState::exportCourse()
@@ -3647,7 +3766,7 @@ bool PlaylistState::exportCourse()
     }
 
     std::stringstream ss;
-    ss << "/course" << std::setw(2) << std::setfill('0') << m_saveFileIndex << '/';
+    ss << "course" << std::setw(2) << std::setfill('0') << m_saveFileIndex << '/';
     std::string courseDir = ss.str();
 
     exportDir += courseDir;
