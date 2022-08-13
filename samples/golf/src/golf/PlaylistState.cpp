@@ -1215,17 +1215,15 @@ void PlaylistState::buildUI()
     };
     m_toolTip = entity;*/
 
-    //TODO when we know what size this is make some nicer artwork
+    //info background
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -2.f, 4.f, -0.1f });
-    entity.addComponent<cro::Drawable2D>().setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha)),
-            cro::Vertex2D(glm::vec2(0.f, -80.f), cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha)),
-            cro::Vertex2D(glm::vec2(150.f, 0.f), cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha)),
-            cro::Vertex2D(glm::vec2(150.f, -80.f), cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha))
-        });
+    entity.addComponent<cro::Transform>().setPosition({ -5.f, -92.f, -0.1f });
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("info_background");
+    entity.addComponent<cro::Drawable2D>();
     m_infoEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //TODO add buttons for help/quit - these have to be grouped with each tab
+    //although that's OK because the help button is different depending on what's active
 }
 
 void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuData)
@@ -2037,7 +2035,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
             
             entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
             entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
-            entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 0.f };
+            entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 10.f };
 
             auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
             entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height, 0.f });
@@ -2369,9 +2367,18 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
 
                         scrollNode.getComponent<cro::Transform>().addChild(entry.uiNode.getComponent<cro::Transform>());
 
+                        //if(list is too long)
                         auto itemCount = static_cast<std::int32_t>(m_playlist.size());
                         scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount = itemCount;
-                        scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = std::max(0, itemCount - 1);
+                        if (entry.uiNode.getComponent<cro::Transform>().getWorldPosition().y < ItemSpacing * 2.f)
+                        {
+                            scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = std::max(0, itemCount - 1);
+                        }
+
+                        auto c = m_playlist[m_playlistIndex].courseIndex;
+                        auto h = m_playlist[m_playlistIndex].holeIndex;
+
+                        m_holePreview.getComponent<cro::Sprite>().setTexture(*m_holeDirs[c].holes[h].thumbEnt.getComponent<cro::Sprite>().getTexture());
 
                         updateInfo();
                     }
@@ -2405,10 +2412,19 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                     {
                         m_uiScene.destroyEntity(m_playlist[m_playlistIndex].uiNode);
                         m_playlist.erase(m_playlist.begin() + m_playlistIndex);
+
+                        auto itemCount = static_cast<std::int32_t>(m_playlist.size());
+                        scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount = itemCount;
+
                         if (!m_playlist.empty())
                         {
                             m_playlistIndex = std::min(m_playlistIndex, m_playlist.size() - 1);
                             m_playlist[m_playlistIndex].uiNode.getComponent<cro::Text>().setFillColour(TextGoldColour);
+
+                            if (m_playlist.back().uiNode.getComponent<cro::Transform>().getWorldPosition().y > m_croppingArea.bottom + m_croppingArea.height)
+                            {
+                                scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = std::max(0, itemCount - 6);
+                            }
                         }
 
                         for (auto i = 0u; i < m_playlist.size(); ++i)
@@ -2418,10 +2434,6 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                             m_playlist[i].uiNode.getComponent<cro::Transform>().setPosition(pos);
                             m_playlist[i].currentIndex = i;
                         }
-
-                        auto itemCount = static_cast<std::int32_t>(m_playlist.size());
-                        scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount = itemCount;
-                        scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = std::max(0, itemCount - 1);
 
                         updateInfo();
                     }
@@ -3914,8 +3926,11 @@ void PlaylistState::loadCourse()
 
             auto itemCount = static_cast<std::int32_t>(m_playlist.size());
             m_playlistScrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount = itemCount;
-            m_playlistScrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = std::max(0, itemCount - 1);
 
+            if (entry.uiNode.getComponent<cro::Transform>().getWorldPosition().y < ItemSpacing * 2.f)
+            {
+                m_playlistScrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = std::max(0, itemCount - 1);
+            }
             vertPos -= ItemSpacing;
         }
 
