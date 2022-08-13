@@ -256,22 +256,23 @@ namespace
 }
 
 PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State        (ss, ctx),
-    m_skyboxScene       (ctx.appInstance.getMessageBus()),
-    m_gameScene         (ctx.appInstance.getMessageBus()),
-    m_uiScene           (ctx.appInstance.getMessageBus(), 512),
-    m_sharedData        (sd),
-    m_scaleBuffer       ("PixelScale"),
-    m_resolutionBuffer  ("ScaledResolution"),
-    m_windBuffer        ("WindValues"),
-    m_viewScale         (2.f),
-    m_skyboxIndex       (0),
-    m_shrubIndex        (0),
-    m_holeDirIndex      (0),
-    m_thumbnailIndex    (0),
-    m_playlistIndex     (0),
-    m_saveFileIndex     (0),
-    m_currentTab        (0)
+    : cro::State                (ss, ctx),
+    m_skyboxScene               (ctx.appInstance.getMessageBus()),
+    m_gameScene                 (ctx.appInstance.getMessageBus()),
+    m_uiScene                   (ctx.appInstance.getMessageBus(), 512),
+    m_sharedData                (sd),
+    m_scaleBuffer               ("PixelScale"),
+    m_resolutionBuffer          ("ScaledResolution"),
+    m_windBuffer                ("WindValues"),
+    m_viewScale                 (2.f),
+    m_skyboxIndex               (0),
+    m_shrubIndex                (0),
+    m_holeDirIndex              (0),
+    m_thumbnailIndex            (0),
+    m_playlistIndex             (0),
+    m_saveFileIndex             (0),
+    m_playlistActivatedCallback (0),
+    m_currentTab                (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -2211,7 +2212,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
         }
     };
-
+    m_playlistScrollNode = scrollNode;
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -2288,7 +2289,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
 
     position.y -= bounds.height;
 
-    auto itemActivated = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+    m_playlistActivatedCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity e, const cro::ButtonEvent& evt)
         {
             if (activated(evt))
@@ -2315,7 +2316,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, scrollNode, itemActivated](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, scrollNode](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -2343,7 +2344,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         
                         entry.uiNode.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entry.uiNode);
                         entry.uiNode.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
-                        entry.uiNode.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = itemActivated;
+                        entry.uiNode.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_playlistActivatedCallback;
                             
 
                         entry.uiNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::ScoreScroll;
@@ -2841,7 +2842,23 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
 
     if (!m_saveFiles.empty())
     {
-        loadCourse();
+        //delay this one frame to make sure everything is set up
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<std::int32_t>(2);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+        {
+            auto& count = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+            count--;
+
+            if (count == 0)
+            {
+                loadCourse();
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(e);
+            }
+        };
     }
 }
 
@@ -3526,7 +3543,7 @@ void PlaylistState::confirmSave()
     //else confirm overwriting existing or creating new
     else 
     {
-        title.getComponent<cro::Text>().setString("Overwrite Existing?");
+        title.getComponent<cro::Text>().setString("Overwrite Save?");
         centreText(title);
 
         if (m_saveFiles.size() < MaxSaves)
@@ -3748,13 +3765,70 @@ void PlaylistState::loadCourse()
         m_courseData.shrubPath = ShrubPath + m_shrubs[m_shrubIndex];
         m_courseData.skyboxPath = SkyboxPath + m_skyboxes[m_skyboxIndex];
 
-        //TODO apply all selected indices
-        //TODO create ui nodes for playlist entries
+        //apply skybox
+        const auto& ents = m_skyboxScene.getSystem<cro::ModelRenderer>()->getEntities();
+        for (auto e : ents)
+        {
+            m_skyboxScene.destroyEntity(e);
+        }
+        loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+
+        //apply shrubs
+        for (auto& shrub : m_shrubberyModels)
+        {
+            shrub.hide();
+        }
+        applyShrubQuality();
+
+        //create ui nodes for playlist entries
+        float vertPos = 0.f;
+        for (auto& entry : m_playlist)
+        {
+            entry.uiNode = m_uiScene.createEntity();
+            entry.uiNode.addComponent<cro::Transform>().setPosition({ (cro::App::getWindow().getSize().x / m_viewScale.x) - PlaylistOffset, vertPos, 0.1f });
+            entry.uiNode.addComponent<cro::Drawable2D>();
+            entry.uiNode.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString(entry.name);
+            entry.uiNode.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+            entry.uiNode.getComponent<cro::Text>().setFillColour(TextNormalColour);
+
+            entry.uiNode.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entry.uiNode);
+            entry.uiNode.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+            entry.uiNode.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_playlistActivatedCallback;;
+
+
+            entry.uiNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::ScoreScroll;
+            entry.uiNode.addComponent<UIElement>().depth = 0.1f;
+            entry.uiNode.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+            entry.uiNode.getComponent<UIElement>().absolutePosition = { -PlaylistOffset, vertPos };
+
+            entry.uiNode.addComponent<cro::Callback>().active = true;
+            entry.uiNode.getComponent<cro::Callback>().function = ListItemCallback(m_croppingArea);
+
+            m_playlistScrollNode.getComponent<cro::Transform>().addChild(entry.uiNode.getComponent<cro::Transform>());
+
+            auto itemCount = static_cast<std::int32_t>(m_playlist.size());
+            m_playlistScrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount = itemCount;
+            m_playlistScrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = std::max(0, itemCount - 1);
+
+            vertPos -= ItemSpacing;
+        }
+
+        if (!m_playlist.empty())
+        {
+            m_playlistIndex = m_playlist.size() - 1;
+
+            auto c = m_playlist[m_playlistIndex].courseIndex;
+            auto h = m_playlist[m_playlistIndex].holeIndex;
+            m_playlist[m_playlistIndex].uiNode.getComponent<cro::Text>().setFillColour(TextGoldColour);
+
+            m_holePreview.getComponent<cro::Sprite>().setTexture(*m_holeDirs[c].holes[h].thumbEnt.getComponent<cro::Sprite>().getTexture());
+        }
     }
     else
     {
         LogE << "Failed opening file " << fileName << " for loading." << std::endl;
     }
+    updateInfo();
 }
 
 bool PlaylistState::exportCourse()

@@ -237,6 +237,8 @@ private:
         };
     };
     std::array<std::function<void(cro::Entity, const cro::ButtonEvent&)>, CallbackID::Count> m_callbacks = {};
+    std::uint32_t m_playlistActivatedCallback;
+    cro::Entity m_playlistScrollNode;
 
     std::array<std::vector<cro::Entity>, MenuID::Count> m_sliders = {};
     cro::Entity m_activeSlider;
