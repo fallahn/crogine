@@ -204,7 +204,7 @@ private:
         std::string name;
         std::size_t courseIndex = 0;
         std::size_t holeIndex = 0;
-        std::size_t currentIndex = 0;
+        std::size_t currentIndex = 0; //current position in the playlist so we can correctly update when adding/removing items
         cro::Entity uiNode;
     };
     std::vector<PlaylistEntry> m_playlist;
@@ -250,6 +250,7 @@ private:
             SaveNew,
             SaveOverwrite,
             ClosePopup,
+            QuitState,
 
             Count
         };
@@ -301,8 +302,10 @@ private:
 
     void confirmSave();
     void confirmLoad(std::size_t);
+    void showExportResult(bool);
     void saveCourse();
     void loadCourse();
+    bool exportCourse();
 
     /*cro::Entity m_toolTip;
     void showToolTip(const std::string&);

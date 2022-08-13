@@ -567,7 +567,7 @@ void MenuState::addSystems()
     m_backgroundScene.addSystem<CloudSystem>(mb)->setWindVector(glm::vec3(0.25f));
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
     m_backgroundScene.addSystem<cro::SkeletalAnimator>(mb);
-    m_backgroundScene.addSystem<cro::SpriteSystem3D>(mb);
+    m_backgroundScene.addSystem<cro::SpriteSystem3D>(mb); //clouds
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);

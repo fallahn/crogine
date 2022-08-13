@@ -71,7 +71,7 @@ source distribution.
 
 namespace
 {
-    constexpr float PadlockOffset = 60.f;
+    constexpr float PadlockOffset = 58.f;
 }
 
 PracticeState::PracticeState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -415,7 +415,7 @@ void PracticeState::buildScene()
             });
 
         auto padlock = m_scene.createEntity();
-        padlock.addComponent<cro::Transform>().setPosition(glm::vec3(PadlockOffset, position.y - ItemHeight, 0.1f));
+        padlock.addComponent<cro::Transform>().setPosition(glm::vec3(PadlockOffset, position.y - ItemHeight + 2.f, 0.1f));
         padlock.addComponent<cro::Drawable2D>();
         padlock.addComponent<cro::Sprite>() = spriteSheet.getSprite("padlock");
         menuEntity.getComponent<cro::Transform>().addChild(padlock.getComponent<cro::Transform>());
@@ -455,7 +455,7 @@ void PracticeState::buildScene()
 
 
         auto padlock = m_scene.createEntity();
-        padlock.addComponent<cro::Transform>().setPosition(glm::vec3(PadlockOffset, position.y - ItemHeight, 0.1f));
+        padlock.addComponent<cro::Transform>().setPosition(glm::vec3(PadlockOffset, position.y - ItemHeight + 2.f, 0.1f));
         padlock.addComponent<cro::Drawable2D>();
         padlock.addComponent<cro::Sprite>() = spriteSheet.getSprite("padlock");
         menuEntity.getComponent<cro::Transform>().addChild(padlock.getComponent<cro::Transform>());

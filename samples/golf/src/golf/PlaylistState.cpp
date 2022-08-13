@@ -78,6 +78,9 @@ source distribution.
 
 #include "../ErrorCheck.hpp"
 
+#include <sstream>
+#include <iomanip>
+
 namespace
 {
 #include "WaterShader.inl"
@@ -91,6 +94,9 @@ namespace
     const std::string ShrubPath = "assets/golf/shrubs/";
     const std::string CoursePath = "assets/golf/courses/";
     const std::string ThumbPath = "assets/golf/thumbs/";
+
+    const std::string UserCoursePath = "courses/";
+    const std::string UserCourseExport = "courses/export";
 
     constexpr float TabAreaHeight = 0.33f; //percent of screen
     constexpr float ItemSpacing = 10.f;
@@ -1032,6 +1038,15 @@ void PlaylistState::buildUI()
 
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::FileSystem);
                 m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().getUserData<PopupData>().state = PopupData::Out;
+            }
+        });
+    m_popupIDs[PopupID::QuitState] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                requestStackClear();
+                requestStackPush(StateID::Menu);
             }
         });
 
@@ -2340,6 +2355,8 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         auto itemCount = static_cast<std::int32_t>(m_playlist.size());
                         scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount = itemCount;
                         scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = std::max(0, itemCount - 1);
+
+                        updateInfo();
                     }
                 }
             }
@@ -2388,6 +2405,8 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         auto itemCount = static_cast<std::int32_t>(m_playlist.size());
                         scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount = itemCount;
                         scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = std::max(0, itemCount - 1);
+
+                        updateInfo();
                     }
                 }
             });
@@ -2544,7 +2563,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     m_menuEntities[MenuID::FileSystem] = m_uiScene.createEntity();
     rootNode.getComponent<cro::Transform>().addChild(m_menuEntities[MenuID::FileSystem].addComponent<cro::Transform>());
 
-    const std::string saveDir = cro::App::getPreferencePath() + "user_courses/";
+    const std::string saveDir = cro::App::getPreferencePath() + UserCoursePath;
     if (!cro::FileSystem::directoryExists(saveDir))
     {
         cro::FileSystem::createDirectory(saveDir);
@@ -2765,7 +2784,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
-    entity.getComponent<UIElement>().relativePosition = { 0.5f, -TabAreaHeight };
+    entity.getComponent<UIElement>().relativePosition = { 0.35f, -TabAreaHeight };
     entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 24.f + ItemSpacing };
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
@@ -2779,6 +2798,35 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
                     && !m_playlist.empty())
                 {
                     confirmSave();
+                }
+            });
+    centreText(entity);
+    m_menuEntities[MenuID::FileSystem].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //export button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Export To Game");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().relativePosition = { 0.65f, -TabAreaHeight };
+    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 24.f + ItemSpacing };
+    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.textSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.textUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt)
+                    && !m_playlist.empty())
+                {
+                    showExportResult(exportCourse());
                 }
             });
     centreText(entity);
@@ -3384,7 +3432,8 @@ void PlaylistState::updateInfo()
     std::string info =
         "Skybox: " + m_skyboxes[m_skyboxIndex] +
         "\nShrubs: " + m_shrubs[m_shrubIndex] +
-        "\nHole Selection: " + m_holeDirs[m_holeDirIndex].name;
+        "\nHole Selection: " + m_holeDirs[m_holeDirIndex].name +
+        "\n" + std::to_string(m_playlist.size()) + " holes added.";
 
     if (m_saveFiles.empty())
     {
@@ -3508,6 +3557,77 @@ void PlaylistState::confirmLoad(std::size_t index)
     }
 }
 
+void PlaylistState::showExportResult(bool success)
+{
+    m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().getUserData<PopupData>().state = PopupData::In;
+    m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().active = true;
+
+    auto bounds = m_menuEntities[MenuID::Popup].getComponent<cro::Sprite>().getTextureBounds();
+
+    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto title = m_uiScene.createEntity();
+    title.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), std::floor(bounds.height * 0.65f), 0.6f });
+    title.addComponent<cro::Drawable2D>();
+    title.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    title.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    title.addComponent<cro::Callback>().active = true;
+    title.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        if (!m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().active)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        }
+    };
+    m_menuEntities[MenuID::Popup].getComponent<cro::Transform>().addChild(title.getComponent<cro::Transform>());
+
+    if (success)
+    {
+        title.getComponent<cro::Text>().setString("Export Successful");
+    }
+    else
+    {
+        title.getComponent<cro::Text>().setString("Export Failed");
+    }
+    centreText(title);
+
+
+
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    auto createItem = [&](const std::string& label, glm::vec2 position)
+    {
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(position, 0.6f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString(label);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Popup);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_popupIDs[PopupID::TextSelected];
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_popupIDs[PopupID::TextUnselected];
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+        {
+            if (!m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().active)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(e);
+            }
+        };
+        centreText(entity);
+        m_menuEntities[MenuID::Popup].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        return entity;
+    };
+
+
+    auto entity = createItem("OK", glm::vec2(std::floor(bounds.width / 2.f), ItemSpacing * 3.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_popupIDs[PopupID::ClosePopup];
+}
+
 void PlaylistState::saveCourse()
 {
     //TODO write to file at selected index
@@ -3516,6 +3636,42 @@ void PlaylistState::saveCourse()
 void PlaylistState::loadCourse()
 {
 
+}
+
+bool PlaylistState::exportCourse()
+{
+    auto exportDir = cro::App::getPreferencePath() + UserCourseExport;
+    if (!cro::FileSystem::directoryExists(exportDir))
+    {
+        cro::FileSystem::createDirectory(exportDir);
+    }
+
+    std::stringstream ss;
+    ss << "/course" << std::setw(2) << std::setfill('0') << m_saveFileIndex << '/';
+    std::string courseDir = ss.str();
+
+    exportDir += courseDir;
+
+    if (!cro::FileSystem::directoryExists(exportDir))
+    {
+        cro::FileSystem::createDirectory(exportDir);
+    }
+
+    cro::ConfigFile cfg;
+    cfg.addProperty("skybox").setValue(m_courseData.skyboxPath);
+    cfg.addProperty("shrubbery").setValue(m_courseData.shrubPath);
+    //TODO audio. We'll let the default take care of it for now
+
+    cfg.addProperty("title").setValue(std::string("Custom Course")); //implicit conversion of const char to bool...
+    cfg.addProperty("description").setValue("User Created Course " + std::to_string(m_saveFileIndex + 1));
+
+    for (const auto& h : m_playlist)
+    {
+        std::string holePath = CoursePath + m_holeDirs[h.courseIndex].name + "/" + m_holeDirs[h.courseIndex].holes[h.holeIndex].name;
+        cfg.addProperty("hole").setValue(holePath);
+    }
+
+    return cfg.save(exportDir + "course.data");
 }
 
 //void PlaylistState::showToolTip(const std::string& label)
@@ -3536,7 +3692,85 @@ void PlaylistState::loadCourse()
 
 void PlaylistState::quitState()
 {
-    //TODO some sort of confirmation, make sure everything is saved
-    requestStackClear();
-    requestStackPush(StateID::Menu);
+    const auto destructionCallback = [&](cro::Entity e, float)
+    {
+        if (!m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().active)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        }
+    };
+
+    m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().getUserData<PopupData>().state = PopupData::In;
+    m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().active = true;
+
+    auto bounds = m_menuEntities[MenuID::Popup].getComponent<cro::Sprite>().getTextureBounds();
+
+    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto title = m_uiScene.createEntity();
+    title.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), std::floor(bounds.height * 0.77f), 0.6f });
+    title.addComponent<cro::Drawable2D>();
+    title.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    title.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    title.getComponent<cro::Text>().setString("Quit Editor");
+    title.addComponent<cro::Callback>().active = true;
+    title.getComponent<cro::Callback>().function = destructionCallback;
+        
+    centreText(title);
+    m_menuEntities[MenuID::Popup].getComponent<cro::Transform>().addChild(title.getComponent<cro::Transform>());
+
+
+    title = m_uiScene.createEntity();
+    title.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), std::floor(bounds.height * 0.53f), 0.6f });
+    title.addComponent<cro::Drawable2D>();
+    title.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    title.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    title.getComponent<cro::Text>().setString("Are You Sure?");
+    title.addComponent<cro::Callback>().active = true;
+    title.getComponent<cro::Callback>().function = destructionCallback;
+
+    centreText(title);
+    m_menuEntities[MenuID::Popup].getComponent<cro::Transform>().addChild(title.getComponent<cro::Transform>());
+
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    /*title = m_uiScene.createEntity();
+    title.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), std::floor(bounds.height * 0.45f), 0.6f });
+    title.addComponent<cro::Drawable2D>();
+    title.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+    title.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    title.getComponent<cro::Text>().setString("Changes Will Be Lost");
+    title.addComponent<cro::Callback>().active = true;
+    title.getComponent<cro::Callback>().function = destructionCallback;
+    centreText(title);
+    m_menuEntities[MenuID::Popup].getComponent<cro::Transform>().addChild(title.getComponent<cro::Transform>());*/
+
+
+
+    auto createItem = [&](const std::string& label, glm::vec2 position)
+    {
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(position, 0.6f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString(label);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Popup);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_popupIDs[PopupID::TextSelected];
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_popupIDs[PopupID::TextUnselected];
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function = destructionCallback;
+        centreText(entity);
+        m_menuEntities[MenuID::Popup].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        return entity;
+    };
+
+    glm::vec2 rootPos = glm::vec2(std::floor(bounds.width / 3.f), ItemSpacing * 3.f);
+    auto entity = createItem("Yes", rootPos);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_popupIDs[PopupID::QuitState];
+    rootPos.x *= 2.f;
+
+    entity = createItem("No", rootPos);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_popupIDs[PopupID::ClosePopup];
 }
