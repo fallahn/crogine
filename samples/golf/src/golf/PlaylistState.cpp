@@ -915,7 +915,7 @@ void PlaylistState::buildUI()
         e.getComponent<cro::Transform>().setPosition(targetPos);
         popupBG.getComponent<cro::Transform>().setPosition(bgPos);
 
-        static const cro::Colour c(0.f, 0.f, 0.f, BackgroundAlpha);
+        const cro::Colour c(0.f, 0.f, 0.f, BackgroundAlpha * data.progress);
         popupBG.getComponent<cro::Drawable2D>().setVertexData(
             {
                 cro::Vertex2D(glm::vec2(-windowSize.x / 2.f, 0.f), c),
@@ -987,7 +987,10 @@ void PlaylistState::buildUI()
     auto highlightSelected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity e)
         {
-            e.getComponent<cro::Callback>().active = true;
+            if (e.hasComponent<cro::Callback>())
+            {
+                e.getComponent<cro::Callback>().active = true;
+            }
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
         });
@@ -1074,7 +1077,6 @@ void PlaylistState::buildUI()
     md.scrollSelected = highlightSelected;
     md.scrollUnselected = highlightUnselected;
     md.spriteSheet = &spriteSheet;
-    m_textUnselectedCallback = textUnselected;
 
     createSkyboxMenu(rootNode, md);
     createShrubberyMenu(rootNode, md);
@@ -1222,8 +1224,66 @@ void PlaylistState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     m_infoEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //TODO add buttons for help/quit - these have to be grouped with each tab
+    //add buttons for help/quit - these have to be grouped with each tab
     //although that's OK because the help button is different depending on what's active
+    auto quitID = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                quitState();
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+    const auto createQuit = [&](std::uint32_t menuID)
+    {
+        auto e = m_uiScene.createEntity();
+        e.addComponent<cro::Transform>().setPosition({ 2.f, 2.f, 0.1f });
+        e.addComponent<cro::Drawable2D>();
+        e.addComponent<cro::Sprite>() = spriteSheet.getSprite("leave_highlight");
+        e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+
+        e.addComponent<cro::UIInput>().area = e.getComponent<cro::Sprite>().getTextureBounds();
+        e.getComponent<cro::UIInput>().setGroup(menuID);
+        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelected;
+        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = highlightUnselected;
+        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = quitID;
+
+        entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+    };
+    createQuit(MenuID::Skybox);
+    createQuit(MenuID::Shrubbery);
+    createQuit(MenuID::Holes);
+    createQuit(MenuID::FileSystem);
+
+    auto helpID = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                //showHelp(e.getComponent<cro::UIInput>().getGroup());
+            }
+        });
+    const auto createHelp = [&](std::uint32_t menuID)
+    {
+        auto e = m_uiScene.createEntity();
+        e.addComponent<cro::Transform>().setPosition({ 141.f, 2.f, 0.1f });
+        e.addComponent<cro::Drawable2D>();
+        e.addComponent<cro::Sprite>() = spriteSheet.getSprite("help_highlight");
+        e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+
+        e.addComponent<cro::UIInput>().area = e.getComponent<cro::Sprite>().getTextureBounds();
+        e.getComponent<cro::UIInput>().setGroup(menuID);
+        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelected;
+        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = highlightUnselected;
+        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = helpID;
+
+        entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+    };
+    createHelp(MenuID::Skybox);
+    createHelp(MenuID::Shrubbery);
+    createHelp(MenuID::Holes);
+    createHelp(MenuID::FileSystem);
 }
 
 void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuData)
@@ -1281,7 +1341,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
         {
             auto& data = scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>();
             data.targetIndex = std::min(data.targetIndex + 1, data.itemCount - 1);
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
         }
     };
     m_callbacks[CallbackID::SkyScrollUp] =
@@ -1294,7 +1354,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
             {
                 data.targetIndex = data.currIndex - 1;
             }
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
         }
     };
 
@@ -1433,6 +1493,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
                             scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = i;
                         }
                     }
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 });
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.textUnselected;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -1452,6 +1513,8 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
                         m_courseData.skyboxPath = SkyboxPath + m_skyboxes[i];
 
                         updateInfo();
+
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                     }
                 });
 
@@ -1525,7 +1588,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
         {
             auto& data = scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>();
             data.targetIndex = std::min(data.targetIndex + 1, data.itemCount - 1);
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
         }
     };
     m_callbacks[CallbackID::ShrubScrollUp] =
@@ -1538,7 +1601,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
             {
                 data.targetIndex = data.currIndex - 1;
             }
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
         }
     };
 
@@ -1654,6 +1717,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
                             scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = i;
                         }
                     }
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 });
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.textUnselected;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -1672,6 +1736,8 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
                         m_courseData.shrubPath = ShrubPath + m_shrubs[i];
                         applyShrubQuality();
                         updateInfo();
+
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                     }
                 });
 
@@ -1752,6 +1818,8 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
                     labelEnt.getComponent<cro::Text>().setString(Labels[m_sharedData.treeQuality]);
                     centreText(labelEnt);
                     applyShrubQuality();
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     scrollEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1784,6 +1852,8 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
                     labelEnt.getComponent<cro::Text>().setString(Labels[m_sharedData.treeQuality]);
                     centreText(labelEnt);
                     applyShrubQuality();
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     scrollEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1903,7 +1973,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
         {
             auto& data = scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>();
             data.targetIndex = std::min(data.targetIndex + 1, data.itemCount - 1);
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
         }
     };
     m_callbacks[CallbackID::HoleDirScrollUp] =
@@ -1916,7 +1986,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
             {
                 data.targetIndex = data.currIndex - 1;
             }
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
         }
     };
 
@@ -1988,6 +2058,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                             scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = i;
                         }
                     }
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 });
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.textUnselected;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -2012,6 +2083,8 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         centreText(labelEnt);
 
                         updateInfo();
+
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                     }
                 });
 
@@ -2147,6 +2220,8 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                     
                     m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(
                         m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].defaultScale);
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     scrollEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2184,6 +2259,8 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
 
                     m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].thumbEnt.getComponent<cro::Transform>().setScale(
                         m_holeDirs[m_holeDirIndex].holes[m_thumbnailIndex].defaultScale);
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     scrollEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2206,7 +2283,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
         {
             auto& data = scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>();
             data.targetIndex = std::min(data.targetIndex + 1, data.itemCount - 1);
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
         }
     };
     m_callbacks[CallbackID::PlaylistScrollUp] =
@@ -2219,7 +2296,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
             {
                 data.targetIndex = data.currIndex - 1;
             }
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
         }
     };
     m_playlistScrollNode = scrollNode;
@@ -2275,6 +2352,8 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         m_playlist[m_playlistIndex - 1] = temp;
                         m_playlistIndex--;
 
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
                         for (auto i = 0u; i < m_playlist.size(); ++i)
                         {
                             auto pos = m_playlist[i].uiNode.getComponent<cro::Transform>().getPosition();
@@ -2313,7 +2392,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                 auto h = m_playlist[m_playlistIndex].holeIndex;
 
                 m_holePreview.getComponent<cro::Sprite>().setTexture(*m_holeDirs[c].holes[h].thumbEnt.getComponent<cro::Sprite>().getTexture());
-
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }        
         });
 
@@ -2340,6 +2419,10 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         m_playlistIndex = m_playlist.size();
                         float vertPos = -ItemSpacing * m_playlistIndex;
 
+                        std::stringstream ss;
+                        ss << std::setw(2) << std::setfill('0') << m_holeDirIndex + 1 << "_";
+
+
                         auto& entry = m_playlist.emplace_back();
                         entry.courseIndex = m_holeDirIndex;
                         entry.holeIndex = m_thumbnailIndex;
@@ -2348,7 +2431,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         entry.uiNode = m_uiScene.createEntity();
                         entry.uiNode.addComponent<cro::Transform>().setPosition({ (cro::App::getWindow().getSize().x / m_viewScale.x) - PlaylistOffset, vertPos, 0.1f});
                         entry.uiNode.addComponent<cro::Drawable2D>();
-                        entry.uiNode.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString(entry.name);
+                        entry.uiNode.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString(ss.str() + entry.name);
                         entry.uiNode.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
                         entry.uiNode.getComponent<cro::Text>().setFillColour(TextGoldColour);
                         
@@ -2381,6 +2464,8 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         m_holePreview.getComponent<cro::Sprite>().setTexture(*m_holeDirs[c].holes[h].thumbEnt.getComponent<cro::Sprite>().getTexture());
 
                         updateInfo();
+
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                     }
                 }
             }
@@ -2436,6 +2521,8 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         }
 
                         updateInfo();
+
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                     }
                 }
             });
@@ -2473,6 +2560,8 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         m_playlist[m_playlistIndex] = m_playlist[m_playlistIndex + 1];
                         m_playlist[m_playlistIndex + 1] = temp;
                         m_playlistIndex++;
+
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 
                         for (auto i = 0u; i < m_playlist.size(); ++i)
                         {
@@ -2637,7 +2726,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
         {
             auto& data = scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>();
             data.targetIndex = std::min(data.targetIndex + 1, data.itemCount - 1);
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
         }
     };
     m_callbacks[CallbackID::SaveScrollUp] =
@@ -2650,7 +2739,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
             {
                 data.targetIndex = data.currIndex - 1;
             }
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
         }
     };
 
@@ -2831,6 +2920,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
                     && !m_playlist.empty())
                 {
                     confirmSave();
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     centreText(entity);
@@ -2860,6 +2950,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
                     && !m_playlist.empty())
                 {
                     showExportResult(exportCourse());
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     centreText(entity);
@@ -2928,8 +3019,9 @@ void PlaylistState::addSaveFileItem(std::size_t i, glm::vec2 position)
                         m_saveFileScrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = i;
                     }
                 }
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_textUnselectedCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_popupIDs[PopupID::TextUnselected];
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, i](cro::Entity, const cro::ButtonEvent& evt)
@@ -2937,6 +3029,7 @@ void PlaylistState::addSaveFileItem(std::size_t i, glm::vec2 position)
                 if (activated(evt))
                 {
                     confirmLoad(i);
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -3969,10 +4062,13 @@ void PlaylistState::loadCourse()
         float vertPos = 0.f;
         for (auto& entry : m_playlist)
         {
+            std::stringstream ss;
+            ss << std::setw(2) << std::setfill('0') << entry.courseIndex + 1 << "_";
+
             entry.uiNode = m_uiScene.createEntity();
             entry.uiNode.addComponent<cro::Transform>().setPosition({ (cro::App::getWindow().getSize().x / m_viewScale.x) - PlaylistOffset, vertPos, 0.1f });
             entry.uiNode.addComponent<cro::Drawable2D>();
-            entry.uiNode.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString(entry.name);
+            entry.uiNode.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString(ss.str() + entry.name);
             entry.uiNode.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
             entry.uiNode.getComponent<cro::Text>().setFillColour(TextNormalColour);
 
