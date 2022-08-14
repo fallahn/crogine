@@ -110,6 +110,8 @@ namespace
 
     cro::Colour skyMid = cro::Colour::White;
     cro::Colour skyTop = cro::Colour::CornflowerBlue;
+
+    constexpr glm::uvec2 ThumbnailSize(120u, 75u);
 }
 
 BushState::BushState(cro::StateStack& stack, cro::State::Context context, const SharedStateData& sd)
@@ -378,7 +380,7 @@ void BushState::loadAssets()
     m_billboardTexture.create(BillboardTargetSize.x, BillboardTargetSize.y);
 
     //used to render thumbnails of hole models
-    m_thumbnailTexture.create(160, 100);
+    m_thumbnailTexture.create(ThumbnailSize.x, ThumbnailSize.y);
 
     m_skyScene.enableSkybox();
     m_skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
@@ -702,7 +704,7 @@ void BushState::drawUI()
 
     if (ImGui::Begin("Thumbnail"))
     {
-        ImGui::Image(m_thumbnailTexture.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
+        ImGui::Image(m_thumbnailTexture.getTexture(), { static_cast<float>(ThumbnailSize.x), static_cast<float>(ThumbnailSize.y) }, { 0.f, 1.f }, { 1.f, 0.f });
     }
     ImGui::End();
 
@@ -1106,7 +1108,7 @@ void BushState::createThumbnails()
     cro::SimpleQuad flagQuad(tex);
 
     cro::RenderTexture bufferTexture;
-    bufferTexture.create(160, 100);
+    bufferTexture.create(ThumbnailSize.x, ThumbnailSize.y);
     cro::SimpleQuad bufferQuad(bufferTexture.getTexture());
 
     cro::ModelDefinition md(m_resources);
@@ -1170,7 +1172,7 @@ void BushState::createThumbnails()
                             flagPos *= scale;
                             flagPos += glm::vec3(160.f, 0.f, -100.f);
 
-                            flagQuad.setPosition({ flagPos.x / 2.f, -flagPos.z / 2.f });
+                            flagQuad.setPosition({ flagPos.x / (320.f / ThumbnailSize.x), -flagPos.z / (200.f / ThumbnailSize.y)});
                         }
 
 

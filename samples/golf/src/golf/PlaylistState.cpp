@@ -2035,7 +2035,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
             
             entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
             entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
-            entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 10.f };
+            entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 0.f };
 
             auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
             entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height, 0.f });
@@ -3525,7 +3525,7 @@ void PlaylistState::updateNinePatch(cro::Entity entity)
             thumb.defaultScale = glm::vec2(1.f);
             if (ThumbHeight * m_viewScale.y > size.y)
             {
-                thumb.defaultScale /= 2.f;
+                //thumb.defaultScale /= 2.f;
             }
             if (thumb.thumbEnt.getComponent<cro::Transform>().getScale().y > 0)
             {
