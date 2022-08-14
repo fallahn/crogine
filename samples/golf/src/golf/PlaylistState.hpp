@@ -209,10 +209,11 @@ private:
     };
     std::vector<PlaylistEntry> m_playlist;
     std::size_t m_playlistIndex;
+    cro::Entity m_playlistScrollNode;
 
     std::vector<std::string> m_saveFiles;
     std::size_t m_saveFileIndex;
-
+    cro::Entity m_saveFileScrollNode;
 
     struct CallbackID final
     {
@@ -238,8 +239,8 @@ private:
     };
     std::array<std::function<void(cro::Entity, const cro::ButtonEvent&)>, CallbackID::Count> m_callbacks = {};
     std::uint32_t m_playlistActivatedCallback;
-    cro::Entity m_playlistScrollNode;
-
+    std::uint32_t m_textUnselectedCallback;
+    
     std::array<std::vector<cro::Entity>, MenuID::Count> m_sliders = {};
     cro::Entity m_activeSlider;
 
@@ -293,6 +294,7 @@ private:
     void createShrubberyMenu(cro::Entity, const MenuData&);
     void createHoleMenu(cro::Entity, const MenuData&);
     void createFileSystemMenu(cro::Entity, const MenuData&);
+    void addSaveFileItem(std::size_t, glm::vec2);
 
     std::int32_t m_currentTab;
     void setActiveTab(std::int32_t);
@@ -315,11 +317,10 @@ private:
         std::uint8_t padding = 0;
     };
 
-
     void confirmSave();
     void confirmLoad(std::size_t);
     void showExportResult(bool);
-    void saveCourse();
+    void saveCourse(bool);
     void loadCourse();
     bool exportCourse();
 

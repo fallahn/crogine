@@ -1025,10 +1025,9 @@ void PlaylistState::buildUI()
         {
             if (activated(evt))
             {
-                std::string newStr = "Save_" + std::to_string(m_saveFileIndex);
-                m_saveFiles.push_back(newStr);
-                m_saveFileIndex = m_saveFiles.size() - 1;
-                saveCourse();
+                saveCourse(true);
+
+                addSaveFileItem(m_saveFileIndex, glm::vec2(0.f, -ItemSpacing * m_saveFileIndex));
 
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::FileSystem);
                 m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().getUserData<PopupData>().state = PopupData::Out;
@@ -1039,7 +1038,7 @@ void PlaylistState::buildUI()
         {
             if (activated(evt))
             {
-                saveCourse();
+                saveCourse(false);
 
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::FileSystem);
                 m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().getUserData<PopupData>().state = PopupData::Out;
@@ -1075,6 +1074,7 @@ void PlaylistState::buildUI()
     md.scrollSelected = highlightSelected;
     md.scrollUnselected = highlightUnselected;
     md.spriteSheet = &spriteSheet;
+    m_textUnselectedCallback = textUnselected;
 
     createSkyboxMenu(rootNode, md);
     createShrubberyMenu(rootNode, md);
@@ -2628,6 +2628,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     scrollNode.addComponent<cro::Callback>().setUserData<ScrollData>(scrollData);
     scrollNode.getComponent<cro::Callback>().active = true;
     scrollNode.getComponent<cro::Callback>().function = ScrollNodeCallback();
+    m_saveFileScrollNode = scrollNode;
 
     m_callbacks[CallbackID::SaveScrollDown] =
         [&, scrollNode](cro::Entity, const cro::ButtonEvent& evt) mutable
@@ -2754,7 +2755,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     glm::vec2 position(0.f);
     for (auto i = 0u; i < m_saveFiles.size(); ++i)
     {
-        auto entity = m_uiScene.createEntity();
+        /*auto entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString(m_saveFiles[i]);
@@ -2801,8 +2802,10 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
                     }
                 });
 
+        scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
+
+        addSaveFileItem(i, position);
         position.y -= ItemSpacing;
-        scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
     //save button
@@ -2884,6 +2887,60 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
             }
         };
     }
+}
+
+void PlaylistState::addSaveFileItem(std::size_t i, glm::vec2 position)
+{
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(m_saveFiles[i]);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = ListItemCallback(m_croppingArea);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::ScoreScroll;
+
+    entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, i](cro::Entity e) mutable
+            {
+                e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+                auto pos = e.getComponent<cro::Transform>().getWorldPosition();
+                pos.y -= ItemSpacing / 2.f;
+                if (!m_croppingArea.contains(pos))
+                {
+                    cro::ButtonEvent fakeEvent;
+                    fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+                    fakeEvent.button.button = SDL_BUTTON_LEFT;
+
+                    if (pos.y < m_croppingArea.bottom)
+                    {
+                        m_callbacks[CallbackID::SkyScrollDown](cro::Entity(), fakeEvent);
+                    }
+                    else if (pos.y > (m_croppingArea.bottom + m_croppingArea.height))
+                    {
+                        m_saveFileScrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = i;
+                    }
+                }
+            });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_textUnselectedCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, i](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    confirmLoad(i);
+                }
+            });
+
+    m_saveFileScrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void PlaylistState::setActiveTab(std::int32_t index)
@@ -3774,7 +3831,7 @@ void PlaylistState::showExportResult(bool success)
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_popupIDs[PopupID::ClosePopup];
 }
 
-void PlaylistState::saveCourse()
+void PlaylistState::saveCourse(bool createNew)
 {
     auto exportDir = cro::App::getPreferencePath() + UserCoursePath;
     if (!cro::FileSystem::directoryExists(exportDir))
@@ -3782,8 +3839,18 @@ void PlaylistState::saveCourse()
         cro::FileSystem::createDirectory(exportDir);
     }
     
+
+    if (createNew)
+    {
+        m_saveFileIndex = m_saveFiles.size();
+
+        std::stringstream ss;
+        ss << "course" << std::setw(2) << std::setfill('0') << m_saveFileIndex << SaveFileExtension;
+        m_saveFiles.push_back(ss.str());
+    }
+
     std::stringstream ss;
-    ss << exportDir << "course" << std::setw(2) << std::setfill('0') << m_saveFileIndex << SaveFileExtension;
+    ss << exportDir << m_saveFiles[m_saveFileIndex];
     std::string fileName = ss.str();
 
     cro::RaiiRWops file;
