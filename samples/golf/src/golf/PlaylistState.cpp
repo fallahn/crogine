@@ -2308,7 +2308,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 1.f, -TabAreaHeight / 2.5f };
-    entity.getComponent<UIElement>().absolutePosition = { -ThumbnailOffset - 9.f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { -ThumbnailOffset - 9.f, 9.f };
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto buttonNode = entity;
 
@@ -2608,7 +2608,43 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
             });
     entity.getComponent<cro::Transform>().addChild(highlight.getComponent<cro::Transform>());
 
+    //clear play list
+    position.y -= 18.f;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = menuData.spriteSheet->getSprite("clear_list");
+    buttonNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().move({ 0.f, -bounds.height });
+
+    highlight = createHighlight(m_uiScene, *menuData.spriteSheet);
+    bounds = highlight.getComponent<cro::Sprite>().getTextureBounds();
+    highlight.getComponent<cro::Transform>().setPosition({ 4.f, 4.f });
+    highlight.addComponent<cro::UIInput>().area = bounds;
+    highlight.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
+    highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
+    highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    for (auto& e : m_playlist)
+                    {
+                        m_uiScene.destroyEntity(e.uiNode);
+                    }
+                    m_playlist.clear();
+                    m_playlistIndex = 0;
+
+                    updateInfo();
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    entity.getComponent<cro::Transform>().addChild(highlight.getComponent<cro::Transform>());
 
     //scrolls current playlist
     entity = m_uiScene.createEntity();
