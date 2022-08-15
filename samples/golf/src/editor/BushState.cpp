@@ -1206,4 +1206,6 @@ void BushState::createThumbnails()
 
     }
     m_gameScene.setActiveCamera(oldCam);
+
+    cro::App::getInstance().resetFrameTime();
 }

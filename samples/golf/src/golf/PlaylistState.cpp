@@ -272,6 +272,8 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_playlistIndex             (0),
     m_saveFileIndex             (0),
     m_playlistActivatedCallback (0),
+    m_playlistSelectedCallback  (0),
+    m_playlistUnselectedCallback(0),
     m_currentTab                (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -2386,15 +2388,44 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                 m_playlist[m_playlistIndex].uiNode.getComponent<cro::Text>().setFillColour(TextNormalColour);
                 auto posY = e.getComponent<cro::Transform>().getPosition().y;
                 m_playlistIndex = static_cast<std::size_t>(-posY / ItemSpacing);
-                e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+                //e.getComponent<cro::Text>().setFillColour(TextGoldColour);
                 
                 auto c = m_playlist[m_playlistIndex].courseIndex;
                 auto h = m_playlist[m_playlistIndex].holeIndex;
 
                 m_holePreview.getComponent<cro::Sprite>().setTexture(*m_holeDirs[c].holes[h].thumbEnt.getComponent<cro::Sprite>().getTexture());
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                updateInfo();
             }        
         });
+    
+    m_playlistSelectedCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&, scrollNode](cro::Entity e) mutable
+        {
+            e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+            auto pos = e.getComponent<cro::Transform>().getWorldPosition();
+            pos.y -= ItemSpacing / 2.f;
+            if (!m_croppingArea.contains(pos))
+            {
+                cro::ButtonEvent fakeEvent;
+                fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+                fakeEvent.button.button = SDL_BUTTON_LEFT;
+
+                if (pos.y < m_croppingArea.bottom)
+                {
+                    m_callbacks[CallbackID::SkyScrollDown](cro::Entity(), fakeEvent);
+                }
+                else if (pos.y > (m_croppingArea.bottom + m_croppingArea.height))
+                {
+                    auto i = std::floor(e.getComponent<cro::Transform>().getPosition().y / -ItemSpacing);
+
+                    scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = i;
+                }
+            }
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        });
+    m_playlistUnselectedCallback = menuData.textUnselected;
 
     highlight = createHighlight(m_uiScene, *menuData.spriteSheet, false);
     bounds = highlight.getComponent<cro::Sprite>().getTextureBounds();
@@ -2438,6 +2469,8 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         entry.uiNode.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entry.uiNode);
                         entry.uiNode.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
                         entry.uiNode.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_playlistActivatedCallback;
+                        entry.uiNode.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_playlistSelectedCallback;
+                        entry.uiNode.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_playlistUnselectedCallback;
                             
 
                         entry.uiNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::ScoreScroll;
@@ -3633,8 +3666,14 @@ void PlaylistState::updateInfo()
     std::string info =
         "Skybox: " + m_skyboxes[m_skyboxIndex] +
         "\nShrubs: " + m_shrubs[m_shrubIndex] +
-        "\nHole Selection: " + m_holeDirs[m_holeDirIndex].name +
-        "\n" + std::to_string(m_playlist.size()) + " holes added.";
+        "\nActive Course: " + m_holeDirs[m_holeDirIndex].name;// +
+        //"\nSelected Hole: " + m_playlist[m_playlistIndex].name +
+        //"\n" + std::to_string(m_playlist.size()) + " holes added.";
+
+    if (!m_playlist.empty())
+    {
+        info += "\nSelected Hole: " + m_playlist[m_playlistIndex].uiNode.getComponent<cro::Text>().getString();
+    }
 
     if (m_saveFiles.empty())
     {
@@ -4075,6 +4114,8 @@ void PlaylistState::loadCourse()
             entry.uiNode.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entry.uiNode);
             entry.uiNode.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
             entry.uiNode.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_playlistActivatedCallback;;
+            entry.uiNode.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_playlistSelectedCallback;;
+            entry.uiNode.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_playlistUnselectedCallback;;
 
 
             entry.uiNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::ScoreScroll;
@@ -4103,7 +4144,7 @@ void PlaylistState::loadCourse()
 
             auto c = m_playlist[m_playlistIndex].courseIndex;
             auto h = m_playlist[m_playlistIndex].holeIndex;
-            m_playlist[m_playlistIndex].uiNode.getComponent<cro::Text>().setFillColour(TextGoldColour);
+            //m_playlist[m_playlistIndex].uiNode.getComponent<cro::Text>().setFillColour(TextGoldColour);
 
             m_holePreview.getComponent<cro::Sprite>().setTexture(*m_holeDirs[c].holes[h].thumbEnt.getComponent<cro::Sprite>().getTexture());
         }
