@@ -202,9 +202,10 @@ private:
         cro::String title = "Untitled";
         cro::String description = "No Description"; 
         std::array<cro::String, 3u> holeCount = {};
+        bool isUser = false;
     };
     std::vector<CourseData> m_courseData;
-    void parseCourseDirectory(const std::string&);
+    void parseCourseDirectory(const std::string&, bool isUser);
 
     cro::Entity m_toolTip;
     void createToolTip();

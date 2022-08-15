@@ -1183,42 +1183,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             }
             else
             {
-                if (auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
-                    [&course](const CourseData& cd)
-                    {
-                        return cd.directory == course;
-                    }); data != m_courseData.cend())
-                {
-                    m_sharedData.mapDirectory = course;
-
-                    //update UI
-                    cro::Command cmd;
-                    cmd.targetFlags = CommandID::Menu::CourseTitle;
-                    cmd.action = [data](cro::Entity e, float)
-                    {
-                        e.getComponent<cro::Text>().setString(data->title);
-                        centreText(e);
-                    };
-                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-                    cmd.targetFlags = CommandID::Menu::CourseDesc;
-                    cmd.action = [data](cro::Entity e, float)
-                    {
-                        e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-                        e.getComponent<cro::Text>().setString(data->description);
-                        centreText(e);
-                    };
-                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-                    cmd.targetFlags = CommandID::Menu::CourseHoles;
-                    cmd.action = [&,data](cro::Entity e, float)
-                    {
-                        e.getComponent<cro::Text>().setString(data->holeCount[m_sharedData.holeCount]);
-                        centreText(e);
-                    };
-                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-                }
-                else
+                const auto setUnavailable = [&]()
                 {
                     m_sharedData.mapDirectory = "";
 
@@ -1258,6 +1223,54 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                             std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),
                             net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     }
+                };
+
+                if (auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
+                    [&course](const CourseData& cd)
+                    {
+                        return cd.directory == course;
+                    }); data != m_courseData.cend())
+                {
+                    if (!data->isUser
+                        || (data->isUser && m_sharedData.hosting))
+                    {
+                        m_sharedData.mapDirectory = course;
+
+                        //update UI
+                        cro::Command cmd;
+                        cmd.targetFlags = CommandID::Menu::CourseTitle;
+                        cmd.action = [data](cro::Entity e, float)
+                        {
+                            e.getComponent<cro::Text>().setString(data->title);
+                            centreText(e);
+                        };
+                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                        cmd.targetFlags = CommandID::Menu::CourseDesc;
+                        cmd.action = [data](cro::Entity e, float)
+                        {
+                            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                            e.getComponent<cro::Text>().setString(data->description);
+                            centreText(e);
+                        };
+                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                        cmd.targetFlags = CommandID::Menu::CourseHoles;
+                        cmd.action = [&, data](cro::Entity e, float)
+                        {
+                            e.getComponent<cro::Text>().setString(data->holeCount[m_sharedData.holeCount]);
+                            centreText(e);
+                        };
+                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                    }
+                    else
+                    {
+                        setUnavailable();
+                    }
+                }
+                else
+                {
+                    setUnavailable();
                 }
             }
         }

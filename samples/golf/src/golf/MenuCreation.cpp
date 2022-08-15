@@ -113,7 +113,7 @@ constexpr std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPosit
     glm::vec2(0.f, 0.f)
 };
 
-void MenuState::parseCourseDirectory(const std::string& rootDir)
+void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
 {
     auto directories = cro::FileSystem::listDirectories(rootDir);
 
@@ -128,7 +128,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir)
         }
 
         auto courseFile = rootDir + dir + "/course.data";
-        if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + courseFile))
+        if (cro::FileSystem::fileExists(courseFile)) //getResourcePath() was already prepended on function call.
         {
             std::string title;
             std::string description;
@@ -163,9 +163,16 @@ void MenuState::parseCourseDirectory(const std::string& rootDir)
             if (holeCount > 0)
             {
                 auto& data = m_courseData.emplace_back();
-                if (!title.empty())data.title = title;
-                if(!description.empty()) data.description = description;
+                if (!title.empty())
+                {
+                    data.title = title;
+                }
+                if (!description.empty())
+                {
+                    data.description = description;
+                }
                 data.directory = dir;
+                data.isUser = isUser;
                 data.holeCount[0] = "All " + std::to_string(std::min(holeCount, 18)) + " holes";
                 data.holeCount[1] = "Front " + std::to_string(std::max(holeCount / 2, 1));
                 data.holeCount[2] = "Back " + std::to_string(std::min(holeCount - (holeCount / 2), 9));
@@ -226,8 +233,8 @@ void MenuState::hideToolTip()
 
 void MenuState::createUI()
 {
-    parseCourseDirectory(cro::FileSystem::getResourcePath() + ConstVal::MapPath);
-    parseCourseDirectory(cro::App::getPreferencePath() + ConstVal::UserMapPath);
+    parseCourseDirectory(cro::FileSystem::getResourcePath() + ConstVal::MapPath, false);
+    parseCourseDirectory(cro::App::getPreferencePath() + ConstVal::UserMapPath, true);
     parseAvatarDirectory();
     createToolTip();
 

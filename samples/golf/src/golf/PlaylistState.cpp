@@ -3692,6 +3692,15 @@ void PlaylistState::confirmSave()
     m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().getUserData<PopupData>().state = PopupData::In;
     m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().active = true;
     
+    auto destructCallback = [&](cro::Entity e, float)
+    {
+        if (!m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().active)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        }
+    };
+
     auto bounds = m_menuEntities[MenuID::Popup].getComponent<cro::Sprite>().getTextureBounds();
 
     auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -3701,15 +3710,8 @@ void PlaylistState::confirmSave()
     title.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     title.getComponent<cro::Text>().setFillColour(TextNormalColour);
     title.addComponent<cro::Callback>().active = true;
-    title.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        if (!m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().active)
-        {
-            e.getComponent<cro::Callback>().active = false;
-            m_uiScene.destroyEntity(e);
-        }
-    };
+    title.getComponent<cro::Callback>().function = destructCallback;
+      
     m_menuEntities[MenuID::Popup].getComponent<cro::Transform>().addChild(title.getComponent<cro::Transform>());
 
     auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
@@ -3727,15 +3729,7 @@ void PlaylistState::confirmSave()
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_popupIDs[PopupID::TextSelected];
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_popupIDs[PopupID::TextUnselected];
         entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float)
-        {
-            if (!m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().active)
-            {
-                e.getComponent<cro::Callback>().active = false;
-                m_uiScene.destroyEntity(e);
-            }
-        };
+        entity.getComponent<cro::Callback>().function = destructCallback;
         centreText(entity);
         m_menuEntities[MenuID::Popup].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         return entity;
@@ -3771,6 +3765,18 @@ void PlaylistState::confirmSave()
             entity = createItem("No", rootPos);
             entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_popupIDs[PopupID::SaveNew];
             rootPos.x += std::floor(bounds.width / 4.f);
+
+            title = m_uiScene.createEntity();
+            title.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), std::floor(bounds.height * 0.49f), 0.6f });
+            title.addComponent<cro::Drawable2D>();
+            title.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+            title.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            title.getComponent<cro::Text>().setString("\'No\' to Create New Save");
+            title.addComponent<cro::Callback>().active = true;
+            title.getComponent<cro::Callback>().function = destructCallback;
+
+            m_menuEntities[MenuID::Popup].getComponent<cro::Transform>().addChild(title.getComponent<cro::Transform>());
+            centreText(title);
         }
         else
         {
