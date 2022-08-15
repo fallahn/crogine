@@ -287,6 +287,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("Debug"))
             {
+                ImGui::Text("Course Index %u", m_sharedData.courseIndex);
                 /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
                 ImGui::SameLine();
                 ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });

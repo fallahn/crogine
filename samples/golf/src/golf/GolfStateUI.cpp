@@ -1006,7 +1006,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         //hmmm not sure the point of this as it lands so close that it fades out...
         auto pos = m_holeData[m_currentHole].pin;
         auto camPos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
-        camPos.y = pos.y + 0.14f;
+        camPos.y = pos.y + 0.24f;
 
         auto diff = glm::normalize(pos - camPos);
         float temp = diff.z;
