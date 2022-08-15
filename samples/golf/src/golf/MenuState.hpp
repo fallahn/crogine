@@ -204,7 +204,7 @@ private:
         std::array<cro::String, 3u> holeCount = {};
     };
     std::vector<CourseData> m_courseData;
-    void parseCourseDirectory();
+    void parseCourseDirectory(const std::string&);
 
     cro::Entity m_toolTip;
     void createToolTip();

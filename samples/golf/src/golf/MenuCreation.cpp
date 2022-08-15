@@ -113,10 +113,9 @@ constexpr std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPosit
     glm::vec2(0.f, 0.f)
 };
 
-void MenuState::parseCourseDirectory()
+void MenuState::parseCourseDirectory(const std::string& rootDir)
 {
-    static const std::string rootDir("assets/golf/courses");
-    auto directories = cro::FileSystem::listDirectories(cro::FileSystem::getResourcePath() + rootDir);
+    auto directories = cro::FileSystem::listDirectories(rootDir);
 
     //at least be consistent across platforms
     std::sort(directories.begin(), directories.end(), [](const  std::string& a, const std::string& b) {return a < b; });
@@ -128,7 +127,7 @@ void MenuState::parseCourseDirectory()
             continue;
         }
 
-        auto courseFile = rootDir + "/" + dir + "/course.data";
+        auto courseFile = rootDir + dir + "/course.data";
         if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + courseFile))
         {
             std::string title;
@@ -227,7 +226,8 @@ void MenuState::hideToolTip()
 
 void MenuState::createUI()
 {
-    parseCourseDirectory();
+    parseCourseDirectory(cro::FileSystem::getResourcePath() + ConstVal::MapPath);
+    parseCourseDirectory(cro::App::getPreferencePath() + ConstVal::UserMapPath);
     parseAvatarDirectory();
     createToolTip();
 

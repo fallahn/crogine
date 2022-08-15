@@ -1747,8 +1747,13 @@ void GolfState::loadAssets()
 
     if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
     {
-        LOG("Course file doesn't exist", cro::Logger::Type::Error);
-        error = true;
+        mapPath = cro::App::getPreferencePath() + ConstVal::UserMapPath + mapDir + "/course.data";
+
+        if (!cro::FileSystem::fileExists(mapPath))
+        {
+            LOG("Course file doesn't exist", cro::Logger::Type::Error);
+            error = true;
+        }
     }
 
     cro::ConfigFile courseFile;

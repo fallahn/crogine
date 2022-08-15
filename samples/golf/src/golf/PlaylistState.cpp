@@ -4180,12 +4180,13 @@ bool PlaylistState::exportCourse()
     cfg.addProperty("shrubbery").setValue(m_courseData.shrubPath);
     //TODO audio. We'll let the default take care of it for now
 
-    cfg.addProperty("title").setValue(std::string("Custom Course")); //implicit conversion of const char to bool...
+    cfg.addProperty("title").setValue("Custom Course " + std::to_string(m_saveFileIndex + 1));
     cfg.addProperty("description").setValue("User Created Course " + std::to_string(m_saveFileIndex + 1));
 
     for (const auto& h : m_playlist)
     {
         std::string holePath = CoursePath + m_holeDirs[h.courseIndex].name + "/" + m_holeDirs[h.courseIndex].holes[h.holeIndex].name;
+        holePath = holePath.substr(0, holePath.find_last_of('.')) + ".hole";
         cfg.addProperty("hole").setValue(holePath);
     }
 

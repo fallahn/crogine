@@ -689,11 +689,16 @@ bool GolfState::validateMap()
 
     if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
     {
-        //TODO what's the best state to leave this in
-        //if we fail to load a map? If the clients all
-        //error this should be ok because the host will
-        //kill the server for us
-        return false;
+        mapPath = cro::App::getPreferencePath() + ConstVal::UserMapPath + mapDir + "/course.data";
+
+        if (!cro::FileSystem::fileExists(mapPath))
+        {
+            //TODO what's the best state to leave this in
+            //if we fail to load a map? If the clients all
+            //error this should be ok because the host will
+            //kill the server for us
+            return false;
+        }
     }
 
     cro::ConfigFile courseFile;
