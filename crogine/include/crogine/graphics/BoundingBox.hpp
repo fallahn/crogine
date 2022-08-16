@@ -85,12 +85,12 @@ namespace cro
         create a box representing the intersection of the two boxes
         that are currently being tested.
         */
-        bool constexpr intersects(const Box& box, Box* overlap = nullptr) const;
+        bool intersects(const Box& box, Box* overlap = nullptr) const;
 
         /*!
         \brief Returns true if this box fully contains the given box
         */
-        bool constexpr contains(const Box& box) const;
+        bool contains(const Box& box) const;
 
         /*!
         \brief Returns true if this box contains the given point
@@ -105,7 +105,7 @@ namespace cro
         /*!
         \brief Returns the sum of all 6 sides of the box
         */
-        float constexpr getPerimeter() const;
+        float getPerimeter() const;
 
         /*!
         \brief Returns the cubic volume of the box

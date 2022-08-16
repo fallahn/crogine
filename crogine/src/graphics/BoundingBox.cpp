@@ -78,7 +78,7 @@ const glm::vec3& Box::operator[](std::size_t idx) const
     return m_points[idx];
 }
 
-bool constexpr Box::intersects(const Box& other, Box* overlap) const
+bool Box::intersects(const Box& other, Box* overlap) const
 {
     //auto result = ((m_points[0].x >= other[0].x && m_points[0].x <= other[1].x) || (other[0].x >= m_points[0].x && other[0].x <= m_points[1].x)) &&
     //            ((m_points[0].y >= other[0].y && m_points[0].y <= other[1].y) || (other[0].y >= m_points[0].y && other[0].y <= m_points[1].y)) &&
@@ -97,7 +97,7 @@ bool constexpr Box::intersects(const Box& other, Box* overlap) const
     return result;
 }
 
-bool constexpr Box::contains(const Box& box) const
+bool Box::contains(const Box& box) const
 {
     if (box.m_points[0].x < m_points[0].x) return false;
     if (box.m_points[0].y < m_points[0].y) return false;

@@ -35,7 +35,7 @@ source distribution.
 
 using namespace cro;
 
-constexpr Sphere::Sphere()
+Sphere::Sphere()
     : radius(0.f),
     centre  (0.f) {}
 

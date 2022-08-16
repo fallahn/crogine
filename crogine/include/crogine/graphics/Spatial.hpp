@@ -44,7 +44,7 @@ namespace cro
         float radius = 0.f;
         glm::vec3 centre = glm::vec3(0.f);
 
-        constexpr Sphere();
+        Sphere();
         explicit Sphere(const Box&);
         Sphere& operator = (const Box&);
 
