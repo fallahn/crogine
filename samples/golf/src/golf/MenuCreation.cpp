@@ -180,10 +180,11 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
         }
     }
 
-    if (!m_courseData.empty())
+    //moved to createUI() because this func gets called multiple times
+    /*if (!m_courseData.empty())
     {
         m_sharedData.courseIndex = std::min(m_sharedData.courseIndex, m_courseData.size() - 1);
-    }
+    }*/
 }
 
 void MenuState::createToolTip()
@@ -235,6 +236,12 @@ void MenuState::createUI()
 {
     parseCourseDirectory(cro::FileSystem::getResourcePath() + ConstVal::MapPath, false);
     parseCourseDirectory(cro::App::getPreferencePath() + ConstVal::UserMapPath, true);
+
+    if (!m_courseData.empty())
+    {
+        m_sharedData.courseIndex = std::min(m_sharedData.courseIndex, m_courseData.size() - 1);
+    }
+
     parseAvatarDirectory();
     createToolTip();
 

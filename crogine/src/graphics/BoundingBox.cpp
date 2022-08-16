@@ -61,7 +61,7 @@ Box::Box(FloatRect rect, float thickness)
     CRO_ASSERT(thickness > 0, "");
 }
 
-glm::vec3 Box::getCentre() const
+glm::vec3 constexpr Box::getCentre() const
 {
     return m_points[0] + ((m_points[1] - m_points[0]) / 2.f);
 }
@@ -78,39 +78,39 @@ const glm::vec3& Box::operator[](std::size_t idx) const
     return m_points[idx];
 }
 
-bool Box::intersects(const Box& other, Box* overlap) const
+bool constexpr Box::intersects(const Box& other, Box* overlap) const
 {
     //auto result = ((m_points[0].x >= other[0].x && m_points[0].x <= other[1].x) || (other[0].x >= m_points[0].x && other[0].x <= m_points[1].x)) &&
     //            ((m_points[0].y >= other[0].y && m_points[0].y <= other[1].y) || (other[0].y >= m_points[0].y && other[0].y <= m_points[1].y)) &&
     //            ((m_points[0].z >= other[0].z && m_points[0].z <= other[1].z) || (other[0].z >= m_points[0].z && other[0].z <= m_points[1].z));
 
-    auto result = (m_points[0].x <= other[1].x && m_points[1].x >= other[0].x) &&
-                    (m_points[0].y <= other[1].y && m_points[1].y >= other[0].y) &&
-                    (m_points[0].z <= other[1].z && m_points[1].z >= other[0].z);
+    auto result = (m_points[0].x <= other.m_points[1].x && m_points[1].x >= other.m_points[0].x) &&
+                    (m_points[0].y <= other.m_points[1].y && m_points[1].y >= other.m_points[0].y) &&
+                    (m_points[0].z <= other.m_points[1].z && m_points[1].z >= other.m_points[0].z);
 
     if (overlap && result)
     {
         auto& out = *overlap;
-        out[0] = { std::max(m_points[0].x, other[0].x), std::max(m_points[0].y, other[0].y), std::max(m_points[0].z, other[0].z) };
-        out[1] = { std::min(m_points[1].x, other[1].x), std::min(m_points[1].y, other[1].y), std::min(m_points[1].z, other[1].z) };
+        out[0] = { std::max(m_points[0].x, other.m_points[0].x), std::max(m_points[0].y, other.m_points[0].y), std::max(m_points[0].z, other.m_points[0].z) };
+        out[1] = { std::min(m_points[1].x, other.m_points[1].x), std::min(m_points[1].y, other.m_points[1].y), std::min(m_points[1].z, other.m_points[1].z) };
     }
     return result;
 }
 
-bool Box::contains(const Box& box) const
+bool constexpr Box::contains(const Box& box) const
 {
-    if (box[0].x < m_points[0].x) return false;
-    if (box[0].y < m_points[0].y) return false;
-    if (box[0].z < m_points[0].z) return false;
+    if (box.m_points[0].x < m_points[0].x) return false;
+    if (box.m_points[0].y < m_points[0].y) return false;
+    if (box.m_points[0].z < m_points[0].z) return false;
     
-    if (box[1].x > m_points[1].x) return false;
-    if (box[1].y > m_points[1].y) return false;
-    if (box[1].z > m_points[1].z) return false;
+    if (box.m_points[1].x > m_points[1].x) return false;
+    if (box.m_points[1].y > m_points[1].y) return false;
+    if (box.m_points[1].z > m_points[1].z) return false;
 
     return true;
 }
 
-bool Box::contains(glm::vec3 point) const
+bool constexpr Box::contains(glm::vec3 point) const
 {
     if (point.x < m_points[0].x) return false;
     if (point.y < m_points[0].y) return false;
@@ -123,7 +123,7 @@ bool Box::contains(glm::vec3 point) const
     return true;
 }
 
-float Box::getPerimeter() const
+float constexpr Box::getPerimeter() const
 {
     auto size = m_points[1] - m_points[0];
     return (size.x + size.y + size.z) * 2.f;
