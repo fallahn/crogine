@@ -3853,7 +3853,7 @@ void PlaylistState::confirmLoad(std::size_t index)
     title.addComponent<cro::Drawable2D>();
     title.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     title.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    title.getComponent<cro::Text>().setString("Load Selected?");
+    title.getComponent<cro::Text>().setString("Load " + m_saveFiles[index].substr(0, m_saveFiles[index].find_last_of('.')) + "?");
     title.addComponent<cro::Callback>().active = true;
     title.getComponent<cro::Callback>().function = destroyCallback;
         

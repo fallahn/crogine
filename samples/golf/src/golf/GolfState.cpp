@@ -1088,7 +1088,7 @@ bool GolfState::simulate(float dt)
     auto& dstCam = m_skyScene.getActiveCamera().getComponent<cro::Camera>();
 
     dstCam.viewport = srcCam.viewport;
-    dstCam.setPerspective(srcCam.getFOV(), srcCam.getAspectRatio(), 0.5f, 14.f);
+    dstCam.setPerspective(/*srcCam.getFOV()*/m_sharedData.fov* cro::Util::Const::degToRad, srcCam.getAspectRatio(), 0.5f, 14.f);
 
     m_skyScene.getActiveCamera().getComponent<cro::Transform>().setRotation(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation());
     auto pos = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
