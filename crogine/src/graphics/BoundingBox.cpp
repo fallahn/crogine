@@ -123,7 +123,7 @@ bool constexpr Box::contains(glm::vec3 point) const
     return true;
 }
 
-float constexpr Box::getPerimeter() const
+float Box::getPerimeter() const
 {
     auto size = m_points[1] - m_points[0];
     return (size.x + size.y + size.z) * 2.f;
