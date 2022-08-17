@@ -282,6 +282,39 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 
+    registerCommand("clubhouse", [&](const std::string&)
+        {
+            if (getStateCount() == 1
+                && m_currentMenu == MenuID::Main)
+            {
+                //forces clubhouse state to clear any existing net connection
+                m_sharedData.tutorial = true;
+
+                m_sharedData.courseIndex = 0;
+
+                requestStackClear();
+                requestStackPush(StateID::Clubhouse);
+            }
+            else
+            {
+                cro::Console::print("Must be on main menu to launch clubhouse");
+            }
+        });
+
+    registerCommand("designer", [&](const std::string&)
+        {
+            if (getStateCount() == 1
+                && m_currentMenu == MenuID::Main)
+            {
+                requestStackClear();
+                requestStackPush(StateID::Playlist);
+            }
+            else
+            {
+                cro::Console::print("Must be on main menu to launch designer");
+            }
+        });
+
 #ifdef CRO_DEBUG_
     registerWindow([&]() 
         {

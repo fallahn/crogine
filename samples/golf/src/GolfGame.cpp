@@ -549,24 +549,24 @@ bool GolfGame::initialise()
 
     m_activeIndex = m_sharedData.postProcessIndex;
 
+    //moved to menu state
+    //registerCommand("clubhouse", [&](const std::string&)
+    //    {
+    //        if (m_stateStack.getTopmostState() != StateID::Clubhouse)
+    //        {
+    //            //forces clubhouse state to clear any existing net connection
+    //            m_sharedData.tutorial = true;
 
-    registerCommand("clubhouse", [&](const std::string&)
-        {
-            if (m_stateStack.getTopmostState() != StateID::Clubhouse)
-            {
-                //forces clubhouse state to clear any existing net connection
-                m_sharedData.tutorial = true;
+    //            m_sharedData.courseIndex = 0;
 
-                m_sharedData.courseIndex = 0;
-
-                m_stateStack.clearStates();
-                m_stateStack.pushState(StateID::Clubhouse);
-            }
-            else
-            {
-                cro::Console::print("Already in clubhouse.");
-            }
-        });
+    //            m_stateStack.clearStates();
+    //            m_stateStack.pushState(StateID::Clubhouse);
+    //        }
+    //        else
+    //        {
+    //            cro::Console::print("Already in clubhouse.");
+    //        }
+    //    });
 
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
