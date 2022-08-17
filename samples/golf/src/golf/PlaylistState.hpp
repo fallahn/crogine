@@ -328,6 +328,7 @@ private:
     /*cro::Entity m_toolTip;
     void showToolTip(const std::string&);
     void hideToolTip();*/
+    void showHelp();
 
     void quitState();
 };

@@ -107,12 +107,21 @@ namespace
     constexpr float ThumbnailOffset = 108.f; //left hand spacing
     constexpr float PlaylistOffset = 100.f;
     constexpr float RootOffset = 8.f; //left hand offset for menu root nodes
+    constexpr float InfoOffset = 154.f; //offset from right for info board
     
     constexpr std::size_t MaxSkyboxes = 40;
     constexpr std::size_t MaxShrubs = 40;
     constexpr std::size_t MaxCourses = 40;
     constexpr std::size_t MaxHoles = 18;
     constexpr std::size_t MaxSaves = 16;
+
+    cro::Entity helpOverlay;
+    struct BgData final
+    {
+        std::int32_t state = 0;
+        float progress = 0.f;
+        std::vector<cro::Entity> children;
+    };
 
     struct ScrollData final
     {
@@ -371,10 +380,16 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
         {
             m_activeSlider = {};
         }
+        else if (evt.button.button == SDL_BUTTON_RIGHT
+            && helpOverlay.isValid())
+        {
+            quitState();
+        }
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
-        if (evt.button.button == SDL_BUTTON_LEFT)
+        if (evt.button.button == SDL_BUTTON_LEFT
+            && !helpOverlay.isValid())
         {
             //see if any sliders on the active tab are under the mouse
             for (auto e : m_sliders[m_currentTab])
@@ -1177,7 +1192,7 @@ void PlaylistState::buildUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 1.f, 1.f };
-    entity.getComponent<UIElement>().absolutePosition = { -154.f, -12.f };
+    entity.getComponent<UIElement>().absolutePosition = { -InfoOffset, -12.f };
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_infoEntity = entity;
     updateInfo();
@@ -1263,7 +1278,7 @@ void PlaylistState::buildUI()
         {
             if (activated(evt))
             {
-                //showHelp(e.getComponent<cro::UIInput>().getGroup());
+                showHelp();
             }
         });
     const auto createHelp = [&](std::uint32_t menuID)
@@ -2976,7 +2991,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 0.35f, -TabAreaHeight };
-    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 24.f + ItemSpacing };
+    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 28.f + ItemSpacing };
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.textSelected;
@@ -3006,7 +3021,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().relativePosition = { 0.65f, -TabAreaHeight };
-    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 24.f + ItemSpacing };
+    entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 28.f + ItemSpacing };
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.textSelected;
@@ -3103,10 +3118,16 @@ void PlaylistState::addSaveFileItem(std::size_t i, glm::vec2 position)
             });
 
     m_saveFileScrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_saveFileScrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount = static_cast<std::int32_t>(m_saveFiles.size());
 }
 
 void PlaylistState::setActiveTab(std::int32_t index)
 {
+    if (helpOverlay.isValid())
+    {
+        return;
+    }
+
     index %= MenuID::Count -1;
     m_currentTab = index;
 
@@ -4251,8 +4272,216 @@ bool PlaylistState::exportCourse()
 //    m_toolTip.getComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
 //}
 
+void PlaylistState::showHelp()
+{
+    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+
+    glm::vec2 screenSize = cro::App::getWindow().getSize();
+    auto c = cro::Colour(0.f, 0.f, 0.f, 0.5f);
+
+    //background
+    auto bgEnt = m_uiScene.createEntity();
+    bgEnt.addComponent<cro::Transform>().setPosition({ screenSize.x / 2.f, screenSize.y / 2.f, 1.f });
+    bgEnt.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-0.5f, 0.5f), c),
+            cro::Vertex2D(glm::vec2(-0.5f), c),
+            cro::Vertex2D(glm::vec2(0.5f), c),
+            cro::Vertex2D(glm::vec2(0.5f, -0.5f), c)
+        });
+    bgEnt.addComponent<cro::Callback>().active = true;
+    bgEnt.getComponent<cro::Callback>().setUserData<BgData>();
+    bgEnt.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<BgData>();
+        const float speed = dt * 6.f;
+        if (data.state == 0)
+        {
+            //zoom in
+            data.progress = std::min(1.f, data.progress + speed);
+        }
+        else
+        {
+            //zoom out
+            data.progress = std::max(0.f, data.progress - speed);
+
+            if (data.progress == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                for (auto c : data.children)
+                {
+                    m_uiScene.destroyEntity(c);
+                }
+                m_uiScene.destroyEntity(e);
+                helpOverlay = {};
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(m_currentTab);
+            }
+        }
+
+        glm::vec2 screenSize = cro::App::getWindow().getSize();
+        //float scaleProgress = std::min(1.f, (e.getComponent<cro::Transform>().getScale().x / screenSize.x) + speed);
+        e.getComponent<cro::Transform>().setScale(cro::Util::Easing::easeOutCirc(data.progress) * screenSize);
+
+        //always navigate to screen centre
+        auto target = screenSize / 2.f;
+        auto diff = target - glm::vec2(e.getComponent<cro::Transform>().getPosition());
+        if (glm::length2(diff) > 1)
+        {
+            e.getComponent<cro::Transform>().move(diff * speed);
+        }
+        else
+        {
+            e.getComponent<cro::Transform>().setPosition(target);
+        }
+    };
+    helpOverlay = bgEnt;
+
+    BgData& callbackData = bgEnt.getComponent<cro::Callback>().getUserData<BgData>();
+
+    auto rootNode = m_uiScene.createEntity();
+    rootNode.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 1.1f });
+    rootNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    rootNode.addComponent<UIElement>().depth = 1.1f;
+    //rootNode.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    rootNode.addComponent<cro::Callback>().active = true;
+    rootNode.getComponent<cro::Callback>().function = 
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setScale(m_viewScale);
+    };
+    callbackData.children.push_back(rootNode);
+
+    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    auto textCallback = [bgEnt](cro::Entity e, float dt)
+    {
+        const auto& data = bgEnt.getComponent<cro::Callback>().getUserData<BgData>();
+        float scale = cro::Util::Easing::easeOutBack(data.progress);
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    };
+
+    //info panel title and desc
+    const auto createTitle = [&](glm::vec3 position, const std::string label, glm::vec2 relPos = glm::vec2(0.f))
+    {
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition((screenSize / m_viewScale) * relPos);
+        entity.getComponent<cro::Transform>().move(position);
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+        entity.addComponent<UIElement>().depth = position.z;
+        entity.getComponent<UIElement>().relativePosition = relPos;
+        entity.getComponent<UIElement>().absolutePosition = { position.x, position.y };
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(largeFont).setString(label);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function = textCallback;
+
+        rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        callbackData.children.push_back(entity);
+        return entity;
+    };
+    const auto createDesc = [&](glm::vec3 position, const std::string& label, glm::vec2 relPos = glm::vec2(0.f))
+    {
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition((screenSize / m_viewScale) * relPos);
+        entity.getComponent<cro::Transform>().move(position);
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+        entity.addComponent<UIElement>().depth = position.z;
+        entity.getComponent<UIElement>().relativePosition = relPos;
+        entity.getComponent<UIElement>().absolutePosition = { position.x, position.y };
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString(label);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function = textCallback;
+
+        rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        callbackData.children.push_back(entity);
+
+        return entity;
+    };
+
+    auto entity = createTitle({ -InfoOffset, -10.f, 0.1f }, "Active Settings >", glm::vec2(1.f));
+    auto bounds = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width * 1.1f), 0.f });
+
+    entity = createDesc({ -InfoOffset, -22.f, 0.1f }, "Current selections\nappear here", glm::vec2(1.f));
+    //use above bounds to line up correctly
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width * 1.1f), 0.f });
+
+    switch (m_currentTab)
+    {
+    default: break;
+    case MenuID::Skybox:
+    {
+        createTitle({ 120.f, -ItemSpacing, 0.1f }, "< Skybox Selection", glm::vec2(0.f, TabAreaHeight));
+        createDesc({ 120.f, (-ItemSpacing * 2.f) - 2.f, 0.1f}, "Select which skybox the course has", glm::vec2(0.f, TabAreaHeight));
+    }
+        break;
+    case MenuID::Shrubbery:
+    {
+        createTitle({ 80.f, -ItemSpacing, 0.1f }, "< Foliage Selection", glm::vec2(0.f, TabAreaHeight));
+        createDesc({ 80.f, (-ItemSpacing * 2.f) - 2.f, 0.1f }, "Select which trees and\nbushes the course has", glm::vec2(0.f, TabAreaHeight));
+
+        createTitle({ 34.f, 15.f, 0.1f }, "< Preview Quality", glm::vec2(0.5f, 0.f));
+    }
+        break;
+    case MenuID::Holes:
+    {
+        createTitle({ 80.f, -ItemSpacing, 0.1f }, "< Course List", glm::vec2(0.f, TabAreaHeight));
+        createDesc({ 80.f, (-ItemSpacing * 2.f) - 2.f, 0.1f }, "Select which course to browse", glm::vec2(0.f, TabAreaHeight));
+
+        entity = createTitle({ -26.f, 15.f, 0.1f }, "Cycle Holes >", glm::vec2(0.5f, 0.f));
+        bounds = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width * 1.1f), 0.f });
+
+        entity = createTitle({ -ThumbnailOffset, ItemSpacing, 0.1f }, "Update Playlist >", glm::vec2(1.f, TabAreaHeight / 2.f));
+        bounds = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width * 1.1f), 0.f });
+        entity = createDesc({ -ThumbnailOffset, -2.f, 0.1f }, "Add, Remove or adjust the\norder of selected holes", glm::vec2(1.f, TabAreaHeight / 2.f));
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width * 1.1f), 0.f });
+    }
+        break;
+    case MenuID::FileSystem:
+    {
+        if (!m_saveFiles.empty())
+        {
+            createTitle({ 90.f, -ItemSpacing * 2.f, 0.1f }, "< Saved Courses", glm::vec2(0.f, TabAreaHeight));
+            createDesc({ 90.f, (-ItemSpacing * 3.f) - 2.f, 0.1f }, "Select a save file to load", glm::vec2(0.f, TabAreaHeight));
+        }
+
+        entity = createTitle({ -38.f, 31.f, 0.1f }, "Save\nSelection >", glm::vec2(0.35f, 0.f));
+        entity.getComponent<cro::Text>().setVerticalSpacing(4.f);
+        bounds = cro::Text::getLocalBounds(entity);
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width), 0.f });
+
+        createTitle({ 48.f, 40.f, 0.1f }, "< Export", glm::vec2(0.65f, 0.f));
+        createDesc({ 48.f, 28.f, 0.1f }, "Make this course\navailable in game", glm::vec2(0.65f, 0.f));
+    }
+        break;
+    }
+
+
+    //cancel any active sliders
+    m_activeSlider = {};
+}
+
 void PlaylistState::quitState()
 {
+    if (helpOverlay.isValid())
+    {
+        helpOverlay.getComponent<cro::Callback>().getUserData<BgData>().state = 1;
+        return;
+    }
+
+
     const auto destructionCallback = [&](cro::Entity e, float)
     {
         if (!m_menuEntities[MenuID::Popup].getComponent<cro::Callback>().active)
