@@ -3807,7 +3807,7 @@ void PlaylistState::confirmSave()
     //else confirm overwriting existing or creating new
     else 
     {
-        title.getComponent<cro::Text>().setString("Overwrite Save?");
+        title.getComponent<cro::Text>().setString("Replace " + m_saveFiles[m_saveFileIndex].substr(0, m_saveFiles[m_saveFileIndex].find_last_of('.')) + "?");
         centreText(title);
 
         if (m_saveFiles.size() < MaxSaves)

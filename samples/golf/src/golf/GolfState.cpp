@@ -5434,9 +5434,15 @@ void GolfState::startFlyBy()
     static constexpr float MaxHoleDistance = 275.f; //this scales the move speed based on the tee-pin distance
     float SpeedMultiplier = (0.25f + ((m_holeData[m_currentHole].distanceToPin / MaxHoleDistance) * 0.75f));
     float heightMultiplier = 1.f;
+
+    //only slow down if current and previous were putters - in cases of custom courses
+    bool previousPutt = (m_currentHole > 0) ? m_holeData[m_currentHole - 1].puttFromTee : m_holeData[m_currentHole].puttFromTee;
     if (m_holeData[m_currentHole].puttFromTee)
     {
-        SpeedMultiplier /= 3.f;
+        if (previousPutt)
+        {
+            SpeedMultiplier /= 3.f;
+        }
         heightMultiplier = 0.35f;
     }
 
