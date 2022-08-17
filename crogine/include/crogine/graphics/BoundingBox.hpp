@@ -95,7 +95,7 @@ namespace cro
         /*!
         \brief Returns true if this box contains the given point
         */
-        bool constexpr contains(glm::vec3 point) const;
+        bool contains(glm::vec3 point) const;
 
         /*!
         \brief Returns the size of the box as width/height/depth

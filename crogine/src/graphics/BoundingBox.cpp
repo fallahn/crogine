@@ -110,7 +110,7 @@ bool Box::contains(const Box& box) const
     return true;
 }
 
-bool constexpr Box::contains(glm::vec3 point) const
+bool Box::contains(glm::vec3 point) const
 {
     if (point.x < m_points[0].x) return false;
     if (point.y < m_points[0].y) return false;
