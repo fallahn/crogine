@@ -687,9 +687,11 @@ bool GolfState::validateMap()
     auto mapDir = m_sharedData.mapDir.toAnsiString();
     auto mapPath = ConstVal::MapPath + mapDir + "/course.data";
 
+    bool isUser = false;
     if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
     {
         mapPath = cro::App::getPreferencePath() + ConstVal::UserMapPath + mapDir + "/course.data";
+        isUser = true;
 
         if (!cro::FileSystem::fileExists(mapPath))
         {
@@ -702,7 +704,7 @@ bool GolfState::validateMap()
     }
 
     cro::ConfigFile courseFile;
-    if (!courseFile.loadFromFile(mapPath))
+    if (!courseFile.loadFromFile(mapPath, !isUser))
     {
         return false;
     }
