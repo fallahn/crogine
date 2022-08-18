@@ -136,7 +136,6 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
             testPath = cro::FileSystem::getResourcePath() + testPath;
         }
 
-
         if (cro::FileSystem::fileExists(testPath))
         {
             std::string title;
@@ -144,7 +143,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
             std::int32_t holeCount = 0;
 
             cro::ConfigFile cfg;
-            cfg.loadFromFile(courseFile);
+            cfg.loadFromFile(courseFile, !isUser);
 
             const auto& props = cfg.getProperties();
             for (const auto& prop : props)
