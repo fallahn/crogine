@@ -128,7 +128,16 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
         }
 
         auto courseFile = rootDir + dir + "/course.data";
-        if (cro::FileSystem::fileExists(courseFile)) //getResourcePath() was already prepended on function call.
+
+        //because macs are special, obvs
+        auto testPath = courseFile;
+        if (!isUser)
+        {
+            testPath = cro::FileSystem::getResourcePath() + testPath;
+        }
+
+
+        if (cro::FileSystem::fileExists(testPath))
         {
             std::string title;
             std::string description;
@@ -234,7 +243,7 @@ void MenuState::hideToolTip()
 
 void MenuState::createUI()
 {
-    parseCourseDirectory(cro::FileSystem::getResourcePath() + ConstVal::MapPath, false);
+    parseCourseDirectory(ConstVal::MapPath, false);
     parseCourseDirectory(cro::App::getPreferencePath() + ConstVal::UserMapPath, true);
 
     if (!m_courseData.empty())
