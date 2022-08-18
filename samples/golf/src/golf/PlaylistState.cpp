@@ -1931,12 +1931,14 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
             files.resize(MaxHoles);
         }
 
-        //check if thumb exists and only add if it does
+        //check if thumb exists and only add if it does.
+        //DON'T FORGET YOU HAVE TO MANUALLY GENERATE THE THUMBS!!
         std::vector<std::string> thumbs;
         for (const auto& file : files)
         {
             auto thumb = file.substr(0, file.find_last_of('.')) + ".png";
-            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + ThumbPath + dir + "/" + thumb))
+            auto thumbPath = cro::FileSystem::getResourcePath() + ThumbPath + dir + "/" + thumb;
+            if (cro::FileSystem::fileExists(thumbPath))
             {
                 thumbs.push_back(thumb);
             }
@@ -2036,7 +2038,6 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     m_menuEntities[MenuID::Holes].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //create the list of directories
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     glm::vec2 position(0.f);
     for (auto i = 0u; i < m_holeDirs.size(); ++i)
     {
@@ -2928,55 +2929,6 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     glm::vec2 position(0.f);
     for (auto i = 0u; i < m_saveFiles.size(); ++i)
     {
-        /*auto entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(position);
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString(m_saveFiles[i]);
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function = ListItemCallback(m_croppingArea);
-        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::ScoreScroll;
-
-        entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-        entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
-            m_uiScene.getSystem<cro::UISystem>()->addCallback(
-                [&, i, scrollNode](cro::Entity e) mutable
-                {
-                    e.getComponent<cro::Text>().setFillColour(TextGoldColour);
-                    auto pos = e.getComponent<cro::Transform>().getWorldPosition();
-                    pos.y -= ItemSpacing / 2.f;
-                    if (!m_croppingArea.contains(pos))
-                    {
-                        cro::ButtonEvent fakeEvent;
-                        fakeEvent.type = SDL_MOUSEBUTTONDOWN;
-                        fakeEvent.button.button = SDL_BUTTON_LEFT;
-
-                        if (pos.y < m_croppingArea.bottom)
-                        {
-                            m_callbacks[CallbackID::SkyScrollDown](cro::Entity(), fakeEvent);
-                        }
-                        else if (pos.y > (m_croppingArea.bottom + m_croppingArea.height))
-                        {
-                            scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = i;
-                        }
-                    }
-                });
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.textUnselected;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-            m_uiScene.getSystem<cro::UISystem>()->addCallback(
-                [&, i](cro::Entity, const cro::ButtonEvent& evt)
-                {
-                    if (activated(evt))
-                    {
-                        confirmLoad(i);
-                    }
-                });
-
-        scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
-
         addSaveFileItem(i, position);
         position.y -= ItemSpacing;
     }
