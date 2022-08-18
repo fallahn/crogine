@@ -63,7 +63,7 @@ bool Sphere::contains(glm::vec3 point)
 namespace
 {
     //used to calculate the AABB for a frustum.
-    const std::array ClipPoints =
+    constexpr std::array ClipPoints =
     {
         //far
         glm::vec4(-1.f, -1.f, -1.f, 1.f),

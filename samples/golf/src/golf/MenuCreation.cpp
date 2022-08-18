@@ -113,10 +113,9 @@ constexpr std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPosit
     glm::vec2(0.f, 0.f)
 };
 
-void MenuState::parseCourseDirectory()
+void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
 {
-    static const std::string rootDir("assets/golf/courses");
-    auto directories = cro::FileSystem::listDirectories(cro::FileSystem::getResourcePath() + rootDir);
+    auto directories = cro::FileSystem::listDirectories(rootDir);
 
     //at least be consistent across platforms
     std::sort(directories.begin(), directories.end(), [](const  std::string& a, const std::string& b) {return a < b; });
@@ -128,15 +127,23 @@ void MenuState::parseCourseDirectory()
             continue;
         }
 
-        auto courseFile = rootDir + "/" + dir + "/course.data";
-        if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + courseFile))
+        auto courseFile = rootDir + dir + "/course.data";
+
+        //because macs are special, obvs
+        auto testPath = courseFile;
+        if (!isUser)
+        {
+            testPath = cro::FileSystem::getResourcePath() + testPath;
+        }
+
+        if (cro::FileSystem::fileExists(testPath))
         {
             std::string title;
             std::string description;
             std::int32_t holeCount = 0;
 
             cro::ConfigFile cfg;
-            cfg.loadFromFile(courseFile);
+            cfg.loadFromFile(courseFile, !isUser);
 
             const auto& props = cfg.getProperties();
             for (const auto& prop : props)
@@ -164,18 +171,28 @@ void MenuState::parseCourseDirectory()
             if (holeCount > 0)
             {
                 auto& data = m_courseData.emplace_back();
-                if (!title.empty())data.title = title;
-                if(!description.empty()) data.description = description;
+                if (!title.empty())
+                {
+                    data.title = title;
+                }
+                if (!description.empty())
+                {
+                    data.description = description;
+                }
                 data.directory = dir;
-                data.holeCount = "Holes: " + std::to_string(std::min(holeCount, 18));
+                data.isUser = isUser;
+                data.holeCount[0] = "All " + std::to_string(std::min(holeCount, 18)) + " holes";
+                data.holeCount[1] = "Front " + std::to_string(std::max(holeCount / 2, 1));
+                data.holeCount[2] = "Back " + std::to_string(std::min(holeCount - (holeCount / 2), 9));
             }
         }
     }
 
-    if (!m_courseData.empty())
+    //moved to createUI() because this func gets called multiple times
+    /*if (!m_courseData.empty())
     {
         m_sharedData.courseIndex = std::min(m_sharedData.courseIndex, m_courseData.size() - 1);
-    }
+    }*/
 }
 
 void MenuState::createToolTip()
@@ -225,7 +242,14 @@ void MenuState::hideToolTip()
 
 void MenuState::createUI()
 {
-    parseCourseDirectory();
+    parseCourseDirectory(ConstVal::MapPath, false);
+    parseCourseDirectory(cro::App::getPreferencePath() + ConstVal::UserMapPath, true);
+
+    if (!m_courseData.empty())
+    {
+        m_sharedData.courseIndex = std::min(m_sharedData.courseIndex, m_courseData.size() - 1);
+    }
+
     parseAvatarDirectory();
     createToolTip();
 
@@ -283,10 +307,11 @@ void MenuState::createUI()
     entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString("Version: " + StringVer);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    auto versionEnt = entity;
 
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
-    auto updateView = [&, rootNode, courseEnt](cro::Camera& cam) mutable
+    auto updateView = [&, rootNode, courseEnt, versionEnt](cro::Camera& cam) mutable
     {
         auto windowSize = GolfGame::getActiveTarget()->getSize();
         glm::vec2 size(windowSize);
@@ -304,6 +329,10 @@ void MenuState::createUI()
         courseEnt.getComponent<cro::Transform>().setScale(courseScale);
         courseEnt.getComponent<cro::Callback>().active = true; //makes sure to delay so updating the texture size is complete first
         courseEnt.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -1.f));
+
+        static constexpr glm::vec2 versionPos(2.f, 10.f);
+        versionEnt.getComponent<cro::Transform>().setScale(m_viewScale);
+        versionEnt.getComponent<cro::Transform>().setPosition(versionPos * m_viewScale);
 
         //updates any text objects / buttons with a relative position
         cro::Command cmd;
@@ -378,7 +407,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
     entity.addComponent<UIElement>().absolutePosition = { 0.f, 0.f };
-    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.75f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.72f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
 
     entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
@@ -390,10 +419,38 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) + 1.f, bounds.height });
+    entity.getComponent<cro::Transform>().move({ 57.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag");
     entity.addComponent<cro::SpriteAnimation>().play(0);
     titleEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), bounds.height, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({0.f, 0.f, 0.f, 0.f});
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("super");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, std::floor(bounds.height * 0.7f) });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [bounds, titleEnt](cro::Entity e, float dt)
+    {
+        if (!titleEnt.getComponent<cro::Callback>().active)
+        {
+            auto crop = e.getComponent<cro::Drawable2D>().getCroppingArea();
+            crop.height = bounds.height;
+            crop.width = std::min(bounds.width, crop.width + (bounds.width * dt));
+            e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+
+            if (crop.width == bounds.width)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+    };
+    titleEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //menu text background
     entity = m_uiScene.createEntity();
@@ -490,7 +547,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         }
     };
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto cartEnt = entity;
+    //auto cartEnt = entity;
 
     //banner header
     bounds = spriteSheet.getSprite("header").getTextureBounds();
@@ -541,7 +598,6 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         e.getComponent<cro::Transform>().setPosition(position);
     };
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto footerEnt = entity;
 
     //cursor
     entity = m_uiScene.createEntity();
@@ -550,8 +606,6 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("cursor");
     entity.addComponent<cro::SpriteAnimation>().play(0);
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    auto cursorEnt = entity;
 
     mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity](cro::Entity e) mutable
@@ -626,8 +680,8 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     }
                 });
 
-        //practice menu
-        entity = createButton("Practice");
+        //facilities menu
+        entity = createButton("19th Hole");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
                 {
@@ -690,64 +744,6 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 }
             });
 
-
-    //if the 19th hole unlocked add a sneaky button to the footer
-    if (Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
-    {
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
-        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-        entity.addComponent<cro::UIInput>().area = bounds;
-        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
-        bounds = footerEnt.getComponent<cro::Sprite>().getTextureBounds();
-        entity.getComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f), 0.1f });
-
-        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
-            m_uiScene.getSystem<cro::UISystem>()->addCallback([cursorEnt](cro::Entity e) mutable
-                {
-                    e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-                    e.getComponent<cro::AudioEmitter>().play();
-
-                    cursorEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                });
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
-            m_uiScene.getSystem<cro::UISystem>()->addCallback([](cro::Entity e)
-                {
-                    e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-                });
-
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-            m_uiScene.getSystem<cro::UISystem>()->addCallback([&, cartEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
-                {
-                    if (activated(evt))
-                    {
-                        cartEnt.getComponent<cro::Callback>().function = 
-                            [&](cro::Entity e, float dt)
-                        {
-                            e.getComponent<cro::Transform>().move({ -400.f * dt, 0.f, 0.f });
-                            if (e.getComponent<cro::Transform>().getPosition().x < -100.f)
-                            {
-                                //also used as table index so reset this in case
-                                //the current value is greater than the number of tables...
-                                m_sharedData.courseIndex = 0;
-
-                                requestStackClear();
-                                requestStackPush(StateID::Clubhouse);
-                            }
-                        };
-
-                        Achievements::awardAchievement(AchievementStrings[AchievementID::Socialiser]);
-                    }
-                });
-
-        footerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    }
 }
 
 void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
@@ -1066,6 +1062,29 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             }
         });
 
+    m_courseSelectCallbacks.prevHoleCount = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.holeCount = (m_sharedData.holeCount + 2) % 3;
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+    m_courseSelectCallbacks.nextHoleCount = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.holeCount = (m_sharedData.holeCount + 1) % 3;
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+
     m_courseSelectCallbacks.prevCourse = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity, const cro::ButtonEvent& evt)
         {
@@ -1133,7 +1152,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+            [&, menuEntity](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1152,71 +1171,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                             cro::Clock clock;
                             while (clock.elapsed().asMilliseconds() < 500) {}
 
-#ifdef USE_GNS
-                            //gns only supports 127.0.0.1 for loopback, but to report correct local IP with enet we need 255.255.255.255
-                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("127.0.0.1", ConstVal::GamePort);
-#else
-                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
-#endif
-                            if (!m_sharedData.clientConnection.connected)
-                            {
-                                m_sharedData.serverInstance.stop();
-                                m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port " 
-                                    + std::to_string(ConstVal::GamePort) 
-                                    + " is allowed through\nany firewalls or NAT";
-                                requestStackPush(StateID::Error);
-                            }
-                            else
-                            {
-                                //make sure the server knows we're the host
-                                m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
-
-                                cro::Command cmd;
-                                cmd.targetFlags = CommandID::Menu::ReadyButton;
-                                cmd.action = [&](cro::Entity e, float)
-                                {
-                                    e.getComponent<cro::Sprite>() = m_sprites[SpriteID::StartGame];
-                                };
-                                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-                                cmd.targetFlags = CommandID::Menu::ServerInfo;
-                                cmd.action = [&](cro::Entity e, float)
-                                {
-                                    e.getComponent<cro::Text>().setString(
-                                        "Hosting on: " + m_sharedData.clientConnection.netClient.getPeer().getAddress() + ":" 
-                                        + std::to_string(ConstVal::GamePort));
-                                };
-                                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-                                
-                                //enable the course selection in the lobby
-                                addCourseSelectButtons();
-
-                                //send a UI refresh to correctly place buttons
-                                glm::vec2 size(GolfGame::getActiveTarget()->getSize());
-                                cmd.targetFlags = CommandID::Menu::UIElement;
-                                cmd.action =
-                                    [&, size](cro::Entity e, float)
-                                {
-                                    const auto& element = e.getComponent<UIElement>();
-                                    auto pos = element.absolutePosition;
-                                    pos += element.relativePosition * size / m_viewScale;
-
-                                    pos.x = std::floor(pos.x);
-                                    pos.y = std::floor(pos.y);
-
-                                    e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
-                                };
-                                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-
-                                //send the initially selected map/course
-                                m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
-                                auto data = serialiseString(m_sharedData.mapDirectory);
-                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
-
-                                //and scoring type
-                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                            }
+                            m_matchMaking.createGame(Server::GameMode::Golf);
                         }
                     }
                     else
@@ -1225,6 +1180,26 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                         menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Join;
                         menuEntity.getComponent<cro::Callback>().active = true;
                     }
+
+                    //kludgy way of temporarily disabling this button to prevent double clicks
+                    auto defaultCallback = e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp];
+                    e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0;
+
+                    auto tempEnt = m_uiScene.createEntity();
+                    tempEnt.addComponent<cro::Callback>().active = true;
+                    tempEnt.getComponent<cro::Callback>().setUserData<std::pair<std::uint32_t, float>>(defaultCallback, 0.f);
+                    tempEnt.getComponent<cro::Callback>().function =
+                        [&, e](cro::Entity t, float dt) mutable
+                    {
+                        auto& [cb, currTime] = t.getComponent<cro::Callback>().getUserData<std::pair<std::uint32_t, float>>();
+                        currTime += dt;
+                        if (currTime > 1)
+                        {
+                            e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = cb;
+                            t.getComponent<cro::Callback>().active = false;
+                            m_uiScene.destroyEntity(t);
+                        }
+                    };
                 }
             });
     entity.getComponent<UIElement>().absolutePosition.x = -bounds.width;
@@ -1551,7 +1526,8 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1562,36 +1538,27 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     if (!m_sharedData.targetIP.empty() &&
                         !m_sharedData.clientConnection.connected)
                     {
-                        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
-                        if (!m_sharedData.clientConnection.connected)
-                        {
-                            m_sharedData.errorMessage = "Could not connect to server";
-                            requestStackPush(StateID::Error);
-                        }
-
-                        cro::Command cmd;
-                        cmd.targetFlags = CommandID::Menu::ReadyButton;
-                        cmd.action = [&](cro::Entity e, float)
-                        {
-                            e.getComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyUp];
-                        };
-                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-                        cmd.targetFlags = CommandID::Menu::ServerInfo;
-                        cmd.action = [&](cro::Entity e, float)
-                        {
-                            e.getComponent<cro::Text>().setString("Connected to: " + m_sharedData.targetIP + ":" + std::to_string(ConstVal::GamePort));
-                        };
-                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-                        //disable the course selection in the lobby
-                        cmd.targetFlags = CommandID::Menu::CourseSelect;
-                        cmd.action = [&](cro::Entity e, float)
-                        {
-                            m_uiScene.destroyEntity(e);
-                        };
-                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                        m_matchMaking.joinGame(0);
                     }
+
+                    auto defaultCallback = e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown];
+                    e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = 0;
+
+                    auto tempEnt = m_uiScene.createEntity();
+                    tempEnt.addComponent<cro::Callback>().active = true;
+                    tempEnt.getComponent<cro::Callback>().setUserData<std::pair<std::uint32_t, float>>(defaultCallback, 0.f);
+                    tempEnt.getComponent<cro::Callback>().function =
+                        [&, e](cro::Entity t, float dt) mutable
+                    {
+                        auto& [cb, currTime] = t.getComponent<cro::Callback>().getUserData<std::pair<std::uint32_t, float>>();
+                        currTime += dt;
+                        if (currTime > 1)
+                        {
+                            e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = cb;
+                            t.getComponent<cro::Callback>().active = false;
+                            m_uiScene.destroyEntity(t);
+                        }
+                    };
                 }
             });
     
@@ -1803,6 +1770,9 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::SpriteAnimation>().play(0);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
+    auto enter = mouseEnter;
+    auto exit = mouseExit;
+
     mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity](cro::Entity e) mutable
         {
@@ -1818,7 +1788,209 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         });
 
 
+    //quit confirmation
+    spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
+
+    struct ConfirmationData final
+    {
+        float progress = 0.f;
+        enum
+        {
+            In, Out
+        }dir = In;
+        bool quitWhenDone = false;
+    };
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("message_board");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().depth = 1.8f;
+    entity.addComponent<cro::Callback>().setUserData<ConfirmationData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<ConfirmationData>();
+        float scale = 0.f;
+        if (data.dir == ConfirmationData::In)
+        {
+            data.progress = std::min(1.f, data.progress + (dt * 2.f));
+            scale = cro::Util::Easing::easeOutBack(data.progress);
+
+            if (data.progress == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::ConfirmQuit);
+                m_currentMenu = MenuID::ConfirmQuit;
+            }
+        }
+        else
+        {
+            data.progress = std::max(0.f, data.progress - (dt * 4.f));
+            scale = cro::Util::Easing::easeOutQuint(data.progress);
+            if (data.progress == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_currentMenu = MenuID::Lobby;
+
+                if (data.quitWhenDone)
+                {
+                    quitLobby();
+                }
+                else
+                {
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Lobby);
+                }
+            }
+        }
+
+        
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    auto confirmEnt = entity;
+
+    //quad to darken the screen
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.4f });
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(-0.5f, 0.5f), cro::Colour::Black),
+        cro::Vertex2D(glm::vec2(-0.5f), cro::Colour::Black),
+        cro::Vertex2D(glm::vec2(0.5f), cro::Colour::Black),
+        cro::Vertex2D(glm::vec2(0.5f, -0.5f), cro::Colour::Black)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().function =
+        [&, confirmEnt](cro::Entity e, float)
+    {
+        auto scale = confirmEnt.getComponent<cro::Transform>().getScale().x;
+        scale = std::min(1.f, scale);
+
+        if (scale > 0)
+        {
+            auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
+            e.getComponent<cro::Transform>().setScale(size / scale);
+        }
+
+        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+        for (auto& v : verts)
+        {
+            v.colour.setAlpha(BackgroundAlpha * confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().progress);
+        }
+
+        e.getComponent<cro::Callback>().active = confirmEnt.getComponent<cro::Callback>().active;
+    };
+    confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto shadeEnt = entity;
+
+    //confirmation text
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 56.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Are You Sure?");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    centreText(entity);
+    confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 44.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("This will kick all players.");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Magenta);
+    centreText(entity);
+    confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto messageEnt = entity;
+
+
+
+    //stash this so we can access it from the even handler (escape to ignore etc)
+    quitConfirmCallback = [&, confirmEnt, shadeEnt]() mutable
+    {
+        confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::Out;
+        confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().quitWhenDone = false;
+        confirmEnt.getComponent<cro::Callback>().active = true;
+        shadeEnt.getComponent<cro::Callback>().active = true;
+        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+    };
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) - 20.f, 26.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Text>(font).setString("No");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::ConfirmQuit);
+    entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = enter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = exit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    quitConfirmCallback();
+                }
+            });
+    centreText(entity);
+    confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) + 20.f, 26.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Text>(font).setString("Yes");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::ConfirmQuit);
+    entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = enter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = exit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, confirmEnt, shadeEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::Out;
+                    confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().quitWhenDone = true;
+                    confirmEnt.getComponent<cro::Callback>().active = true;
+                    shadeEnt.getComponent<cro::Callback>().active = true;
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    centreText(entity);
+    confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
     //back
+    enterConfirmCallback = [&, confirmEnt, shadeEnt, messageEnt]() mutable
+    {
+        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+        confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::In;
+        confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().quitWhenDone = false;
+        confirmEnt.getComponent<cro::Callback>().active = true;
+        shadeEnt.getComponent<cro::Callback>().active = true;
+
+        messageEnt.getComponent<cro::Text>().setFillColour(m_sharedData.hosting ? TextNormalColour : cro::Colour::Transparent);
+
+        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+    };
+
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -1831,12 +2003,12 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
-                    quitLobby();
-                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                    enterConfirmCallback();
                 }
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
@@ -1881,18 +2053,22 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     }
                     else
                     {
-                        //toggle readyness
-                        std::uint8_t ready = m_readyState[m_sharedData.clientConnection.connectionID] ? 0 : 1;
-                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),
-                            net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        //toggle readyness but only if the selected course is locally available
+                        if (!m_sharedData.mapDirectory.empty())
+                        {
+                            std::uint8_t ready = m_readyState[m_sharedData.clientConnection.connectionID] ? 0 : 1;
+                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady,
+                                std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),
+                                net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-                        if (ready)
-                        {
-                            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                        }
-                        else
-                        {
-                            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                            if (ready)
+                            {
+                                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                            }
+                            else
+                            {
+                                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                            }
                         }
                     }
                 }
@@ -1962,7 +2138,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     }
     else
     {
-        str = "Welcome To Video Golf!";
+        str = "Welcome To Super Video Golf!";
     }
 
     entity = m_uiScene.createEntity();
@@ -3224,6 +3400,52 @@ void MenuState::addCourseSelectButtons()
     m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
+
+    //hole count buttons wedged in between for selection order...
+    buttonEnt = m_uiScene.createEntity();
+    buttonEnt.addComponent<cro::Transform>();
+    buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    buttonEnt.addComponent<cro::Drawable2D>();
+    buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourse];
+    buttonEnt.addComponent<cro::SpriteAnimation>();
+    buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+    buttonEnt.addComponent<UIElement>().absolutePosition = { -44.f, -15.f };
+    buttonEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
+    buttonEnt.getComponent<UIElement>().depth = 0.01f;
+    bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
+    buttonEnt.addComponent<cro::UIInput>().area = bounds;
+    buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.prevHoleCount;
+
+    buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+
+    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+    buttonEnt = m_uiScene.createEntity();
+    buttonEnt.addComponent<cro::Transform>();
+    buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    buttonEnt.addComponent<cro::Drawable2D>();
+    buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
+    buttonEnt.addComponent<cro::SpriteAnimation>();
+    buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 44.f, -15.f };
+    buttonEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
+    buttonEnt.getComponent<UIElement>().depth = 0.01f;
+    bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
+    buttonEnt.addComponent<cro::UIInput>().area = bounds;
+    buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.nextHoleCount;
+
+    buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+
+    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+
+    //...and back to hole select
     buttonEnt = m_uiScene.createEntity();
     buttonEnt.addComponent<cro::Transform>();
     buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");

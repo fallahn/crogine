@@ -115,6 +115,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 //we should quit this state? If no one is
                 //connected we could be on our way out anyway
+                m_returnValue = sv::StateID::Lobby;
             }
         }
     }
@@ -686,17 +687,24 @@ bool GolfState::validateMap()
     auto mapDir = m_sharedData.mapDir.toAnsiString();
     auto mapPath = ConstVal::MapPath + mapDir + "/course.data";
 
+    bool isUser = false;
     if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
     {
-        //TODO what's the best state to leave this in
-        //if we fail to load a map? If the clients all
-        //error this should be ok because the host will
-        //kill the server for us
-        return false;
+        mapPath = cro::App::getPreferencePath() + ConstVal::UserMapPath + mapDir + "/course.data";
+        isUser = true;
+
+        if (!cro::FileSystem::fileExists(mapPath))
+        {
+            //TODO what's the best state to leave this in
+            //if we fail to load a map? If the clients all
+            //error this should be ok because the host will
+            //kill the server for us
+            return false;
+        }
     }
 
     cro::ConfigFile courseFile;
-    if (!courseFile.loadFromFile(mapPath))
+    if (!courseFile.loadFromFile(mapPath, !isUser))
     {
         return false;
     }
@@ -719,6 +727,22 @@ bool GolfState::validateMap()
         //TODO could be more fine-grained with error info?
         return false;
     }
+
+    //check the rules and truncate hole list
+    //if requested - 1 front holes, 1 back holes
+    if (m_sharedData.holeCount == 1)
+    {
+        auto size = std::max(std::size_t(1), holeStrings.size() / 2);
+        holeStrings.resize(size);
+    }
+    else if (m_sharedData.holeCount == 2)
+    {
+        auto start = holeStrings.size() / 2;
+        std::vector<std::string> newStrings(holeStrings.begin() + start, holeStrings.end());
+        holeStrings.swap(newStrings);
+    }
+
+
 
     cro::ConfigFile holeCfg;
     for (const auto& hole : holeStrings)

@@ -220,7 +220,10 @@ glm::vec3 Camera::pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize) 
     glm::vec3 winCoords(pixelCoords.x, targetSize.y - pixelCoords.y, 0.f); //inverts mouse pos Y
 
     //TODO this triggers an abort trap 6 on mac. No idea why.
-    glCheck(glReadPixels(static_cast<std::int32_t>(winCoords.x), static_cast<std::int32_t>(winCoords.y), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winCoords.z));
+    if (!m_orthographic)
+    {
+        glCheck(glReadPixels(static_cast<std::int32_t>(winCoords.x), static_cast<std::int32_t>(winCoords.y), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winCoords.z));
+    }
 
     return glm::unProject(winCoords, m_passes[Pass::Final].viewMatrix, m_projectionMatrix, vp);
 }

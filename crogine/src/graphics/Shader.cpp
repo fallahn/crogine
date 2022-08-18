@@ -140,124 +140,44 @@ bool Shader::loadFromFile(const std::string& vertex, const std::string& fragment
         return false;
     }
 
-    return loadFromString(parseFile(vertPath), parseFile(fragPath));
+    return loadFromSource(parseFile(vertPath).c_str(), nullptr, parseFile(fragPath).c_str(), nullptr);
+}
+
+bool Shader::loadFromFile(const std::string& vertex, const std::string& geometry, const std::string& fragment)
+{
+    auto vertPath = FileSystem::getResourcePath() + vertex;
+    auto geomPath = FileSystem::getResourcePath() + geometry;
+    auto fragPath = FileSystem::getResourcePath() + fragment;
+
+    if (!FileSystem::fileExists(vertPath))
+    {
+        LogE << "Failed opening " << vertex << ": file not found" << std::endl;
+        return false;
+    }
+
+    if (!FileSystem::fileExists(geomPath))
+    {
+        LogE << "Failed opening " << geometry << ": file not found" << std::endl;
+        return false;
+    }
+
+    if (!FileSystem::fileExists(fragPath))
+    {
+        LogE << "Failed opening " << fragment << ": file not found" << std::endl;
+        return false;
+    }
+
+    return loadFromSource(parseFile(vertPath).c_str(), parseFile(geomPath).c_str(), parseFile(fragPath).c_str(), nullptr);
 }
 
 bool Shader::loadFromString(const std::string& vertex, const std::string& fragment, const std::string& defines)
 {
-    if (m_handle)
-    {
-        //remove existing program
-        glCheck(glDeleteProgram(m_handle));
-        m_handle = 0;
-        resetAttribMap();
-        resetUniformMap();
-    }    
-    
-    //compile vert shader
-    GLuint vertID = glCreateShader(GL_VERTEX_SHADER);
-    
-#ifdef __ANDROID__
-    const char* src[] = { "#version 100\n#define MOBILE\n", precision.c_str(), defines.c_str(), vertex.c_str() };
-#else
-    const char* src[] = { "#version 410 core\n", precision.c_str(), defines.c_str(), vertex.c_str() };
-#endif //__ANDROID__
+    return loadFromSource(vertex.c_str(), nullptr, fragment.c_str(), defines.c_str());
+}
 
-    glCheck(glShaderSource(vertID, 4, src, nullptr));
-    glCheck(glCompileShader(vertID));
-
-    GLint result = GL_FALSE;
-    int resultLength = 0;
-
-    glCheck(glGetShaderiv(vertID, GL_COMPILE_STATUS, &result));
-    glCheck(glGetShaderiv(vertID, GL_INFO_LOG_LENGTH, &resultLength));
-    if (result == GL_FALSE)
-    {
-        //failed compilation
-        std::string str;
-        str.resize(resultLength + 1);
-        glCheck(glGetShaderInfoLog(vertID, resultLength, nullptr, &str[0]));
-        Logger::log("Failed compiling vertex shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
-
-        glCheck(glDeleteShader(vertID));
-        return false;
-    }
-    
-    //compile frag shader
-    GLuint fragID = glCreateShader(GL_FRAGMENT_SHADER);
-    src[3] = fragment.c_str();
-    glCheck(glShaderSource(fragID, 4, src, nullptr));
-    glCheck(glCompileShader(fragID));
-
-    result = GL_FALSE;
-    resultLength = 0;
-
-    glCheck(glGetShaderiv(fragID, GL_COMPILE_STATUS, &result));
-    glCheck(glGetShaderiv(fragID, GL_INFO_LOG_LENGTH, &resultLength));
-    if (result == GL_FALSE)
-    {
-        std::string str;
-        str.resize(resultLength + 1);
-        glCheck(glGetShaderInfoLog(fragID, resultLength, nullptr, &str[0]));
-        Logger::log("Failed compiling fragment shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
-
-        glCheck(glDeleteShader(vertID));
-        glCheck(glDeleteShader(fragID));
-        return false;
-    }
-
-    //link shaders to program
-    m_handle = glCreateProgram();
-    if (m_handle)
-    {
-        glCheck(glAttachShader(m_handle, vertID));
-        glCheck(glAttachShader(m_handle, fragID));
-        glCheck(glLinkProgram(m_handle));
-
-        result = GL_FALSE;
-        resultLength = 0;
-        glCheck(glGetProgramiv(m_handle, GL_LINK_STATUS, &result));
-        glCheck(glGetProgramiv(m_handle, GL_INFO_LOG_LENGTH, &resultLength));
-        if (result == GL_FALSE)
-        {
-            std::string str;
-            str.resize(resultLength + 1);
-            glCheck(glGetProgramInfoLog(m_handle, resultLength, nullptr, &str[0]));
-            Logger::log("Failed to link shader program: " + std::to_string(result) + ", " + str, Logger::Type::Error);
-
-            glCheck(glDetachShader(m_handle, vertID));
-            glCheck(glDetachShader(m_handle, fragID));
-
-            glCheck(glDeleteShader(vertID));
-            glCheck(glDeleteShader(fragID));
-            glCheck(glDeleteProgram(m_handle));
-            m_handle = 0;
-            return false;
-        }
-        else
-        {
-            //tidy
-            glCheck(glDetachShader(m_handle, vertID));
-            glCheck(glDetachShader(m_handle, fragID));
-
-            glCheck(glDeleteShader(vertID));
-            glCheck(glDeleteShader(fragID));
-
-            //grab attributes
-            if (!fillAttribMap())
-            {
-                glCheck(glDeleteProgram(m_handle));
-                m_handle = 0;
-                return false;
-            }
-
-            fillUniformMap();
-
-            return true;
-        }
-    }
-
-    return false;
+bool Shader::loadFromString(const std::string& vertex, const std::string& geometry, const std::string& fragment, const std::string& defines)
+{
+    return loadFromSource(vertex.c_str(), geometry.c_str(), fragment.c_str(), defines.c_str());
 }
 
 std::uint32_t Shader::getGLHandle() const
@@ -285,6 +205,178 @@ std::int32_t Shader::getUniformID(const std::string& name) const
 }
 
 //private
+bool Shader::loadFromSource(const char* vertex, const char* geometry, const char* fragment, const char* defines)
+{
+    if (m_handle)
+    {
+        //remove existing program
+        glCheck(glDeleteProgram(m_handle));
+        m_handle = 0;
+        resetAttribMap();
+        resetUniformMap();
+    }
+
+    //compile vert shader
+    GLuint vertID = glCreateShader(GL_VERTEX_SHADER);
+
+#ifdef __ANDROID__
+    const char* src[] = { "#version 100\n#define MOBILE\n", precision.c_str(), defines, vertex };
+#else
+    const char* src[] = { "#version 410 core\n", precision.c_str(), defines, vertex };
+#endif //__ANDROID__
+
+    glCheck(glShaderSource(vertID, 4, src, nullptr));
+    glCheck(glCompileShader(vertID));
+
+    GLint result = GL_FALSE;
+    int resultLength = 0;
+
+    glCheck(glGetShaderiv(vertID, GL_COMPILE_STATUS, &result));
+    glCheck(glGetShaderiv(vertID, GL_INFO_LOG_LENGTH, &resultLength));
+    if (result == GL_FALSE)
+    {
+        //failed compilation
+        std::string str;
+        str.resize(resultLength + 1);
+        glCheck(glGetShaderInfoLog(vertID, resultLength, nullptr, &str[0]));
+        Logger::log("Failed compiling vertex shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
+
+        glCheck(glDeleteShader(vertID));
+        return false;
+    }
+
+    GLuint geomID = 0;
+#ifdef PLATFORM_DESKTOP
+    //compile geom shader if not nullptr
+    if (geometry != nullptr)
+    {
+        geomID = glCreateShader(GL_GEOMETRY_SHADER);
+        src[3] = geometry;
+        glCheck(glShaderSource(geomID, 4, src, nullptr));
+        glCheck(glCompileShader(geomID));
+
+        result = GL_FALSE;
+        resultLength = 0;
+
+        glCheck(glGetShaderiv(geomID, GL_COMPILE_STATUS, &result));
+        glCheck(glGetShaderiv(geomID, GL_INFO_LOG_LENGTH, &resultLength));
+        if (result == GL_FALSE)
+        {
+            std::string str;
+            str.resize(resultLength + 1);
+            glCheck(glGetShaderInfoLog(geomID, resultLength, nullptr, &str[0]));
+            Logger::log("Failed compiling geometry shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
+
+            glCheck(glDeleteShader(vertID));
+            glCheck(glDeleteShader(geomID));
+
+            return false;
+        }
+    }
+#endif
+
+    //compile frag shader
+    GLuint fragID = glCreateShader(GL_FRAGMENT_SHADER);
+    src[3] = fragment;
+    glCheck(glShaderSource(fragID, 4, src, nullptr));
+    glCheck(glCompileShader(fragID));
+
+    result = GL_FALSE;
+    resultLength = 0;
+
+    glCheck(glGetShaderiv(fragID, GL_COMPILE_STATUS, &result));
+    glCheck(glGetShaderiv(fragID, GL_INFO_LOG_LENGTH, &resultLength));
+    if (result == GL_FALSE)
+    {
+        std::string str;
+        str.resize(resultLength + 1);
+        glCheck(glGetShaderInfoLog(fragID, resultLength, nullptr, &str[0]));
+        Logger::log("Failed compiling fragment shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
+
+        glCheck(glDeleteShader(vertID));
+        glCheck(glDeleteShader(fragID));
+
+        if (geomID)
+        {
+            glCheck(glDeleteShader(geomID));
+        }
+        return false;
+    }
+
+    //link shaders to program
+    m_handle = glCreateProgram();
+    if (m_handle)
+    {
+        glCheck(glAttachShader(m_handle, vertID));
+        if (geomID)
+        {
+            glCheck(glAttachShader(m_handle, geomID));
+        }
+        glCheck(glAttachShader(m_handle, fragID));
+        glCheck(glLinkProgram(m_handle));
+
+        result = GL_FALSE;
+        resultLength = 0;
+        glCheck(glGetProgramiv(m_handle, GL_LINK_STATUS, &result));
+        glCheck(glGetProgramiv(m_handle, GL_INFO_LOG_LENGTH, &resultLength));
+        if (result == GL_FALSE)
+        {
+            std::string str;
+            str.resize(resultLength + 1);
+            glCheck(glGetProgramInfoLog(m_handle, resultLength, nullptr, &str[0]));
+            Logger::log("Failed to link shader program: " + std::to_string(result) + ", " + str, Logger::Type::Error);
+
+            glCheck(glDetachShader(m_handle, vertID));
+            if (geomID)
+            {
+                glCheck(glDetachShader(m_handle, geomID));
+            }
+            glCheck(glDetachShader(m_handle, fragID));
+
+            glCheck(glDeleteShader(vertID));
+            if (geomID)
+            {
+                glCheck(glDeleteShader(geomID));
+            }
+            glCheck(glDeleteShader(fragID));
+            glCheck(glDeleteProgram(m_handle));
+            m_handle = 0;
+            return false;
+        }
+        else
+        {
+            //tidy
+            glCheck(glDetachShader(m_handle, vertID));
+            if (geomID)
+            {
+                glCheck(glDetachShader(m_handle, geomID));
+            }
+            glCheck(glDetachShader(m_handle, fragID));
+
+            glCheck(glDeleteShader(vertID));
+            if (geomID)
+            {
+                glCheck(glDeleteShader(geomID));
+            }
+            glCheck(glDeleteShader(fragID));
+
+            //grab attributes
+            if (!fillAttribMap())
+            {
+                glCheck(glDeleteProgram(m_handle));
+                m_handle = 0;
+                return false;
+            }
+
+            fillUniformMap();
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool Shader::fillAttribMap()
 {
     GLint activeAttribs;

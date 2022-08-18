@@ -79,6 +79,7 @@ static const std::string WaterFragment = R"(
     uniform sampler2D u_refractionMap;
 
     uniform vec3 u_cameraWorldPosition;
+    uniform float u_radius = 239.9;
 
     layout (std140) uniform WindValues
     {
@@ -182,7 +183,7 @@ static const std::string WaterFragment = R"(
         blendedColour.rgb += wave;
 
         //edge feather
-        float amount = 1.0 - smoothstep(150.0, 239.9, length(v_vertDistance));
+        float amount = 1.0 - smoothstep(u_radius * 0.625, u_radius, length(v_vertDistance));
 
         vec2 xy = gl_FragCoord.xy / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));

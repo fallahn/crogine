@@ -40,6 +40,7 @@ hole 16
         position = -4.637539,-0.921081,-50.063534
         rotation = -71.347819
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     prop
@@ -48,6 +49,7 @@ hole 16
         position = -3.421874,-0.998722,-21.132820
         rotation = -31.903152
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     crowd

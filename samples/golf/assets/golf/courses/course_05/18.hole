@@ -16,6 +16,7 @@ hole 18
         position = 116.857620,-0.469413,-140.066467
         rotation = -154.446107
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     crowd
@@ -73,6 +74,22 @@ hole 18
         model = "assets/golf/models/fence02.cmt"
         position = 251.422119,0.832328,-124.527885
         rotation = 20.425084
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/wheelchair.cmt"
+        position = 274.844940,0.834041,-133.611908
+        rotation = -157.113663
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/spectators/sitting/07.cmt"
+        position = 274.901031,0.832375,-133.591919
+        rotation = -155.696514
         scale = 1.000000,1.000000,1.000000
     }
 

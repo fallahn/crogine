@@ -63,11 +63,12 @@ namespace
 {
 #include "TerrainShader.inl"
 #include "ShadowMapping.inl"
+#include "TreeShader.inl"
+
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler
     static constexpr float TreeDensity = 4.f;
 
-    //TODO for grass billboard we could shrink the area slightly as we prefer trees further away
     static constexpr std::array MinBounds = { 0.f, 0.f };
     static constexpr std::array MaxBounds = { static_cast<float>(MapSize.x), static_cast<float>(MapSize.y) };
 
@@ -87,6 +88,7 @@ namespace
         float destination = 0.f;
         cro::Entity otherEnt;
         cro::Entity instancedEnt; //entity containing instanced geometry
+        std::array<cro::Entity, 4> shrubberyEnts; //instanced shrubbery
         std::vector<cro::Entity>* crowdEnts = nullptr;
     };
 
@@ -124,6 +126,14 @@ namespace
                 if (swapData.instancedEnt.isValid())
                 {
                     swapData.instancedEnt.getComponent<cro::Model>().setHidden(true);
+                }
+
+                for (auto ent : swapData.shrubberyEnts)
+                {
+                    if (ent.isValid())
+                    {
+                        ent.getComponent<cro::Model>().setHidden(true);
+                    }
                 }
 
                 if (swapData.crowdEnts)
@@ -289,9 +299,35 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto billboardMatID = resources.materials.add(billboardShader);
 
     //custom shader for instanced plants
-    resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
+    resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
     auto reedMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CelTexturedInstanced));
 
+
+    std::int32_t branchMaterialID = 0;
+    std::int32_t leafMaterialID = 0;
+    std::int32_t treeShadowMaterialID = 0;
+    std::int32_t leafShadowMaterialID = 0;
+    if (m_sharedData.treeQuality == SharedStateData::High)
+    {
+        std::string wobble = m_sharedData.vertexSnap ? "#define WOBBLE\n" : "";
+
+        resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n" + wobble);
+        branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
+
+        resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushGeom, BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
+        leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
+
+        resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n" + wobble);
+        treeShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetShadow));
+
+        std::string alphaClip;
+        if (m_sharedData.hqShadows)
+        {
+            alphaClip = "#define ALPHA_CLIP\n";
+        }
+        resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowGeom, ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
+        leafShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeafShadow));
+    }
     //and VATs shader for crowd
     resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define NOCHEX\n#define TEXTURED\n");
     auto crowdMaterialID = resources.materials.add(resources.shaders.get(ShaderID::Crowd));
@@ -302,7 +338,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     //create billboard/instanced entities
     cro::ModelDefinition billboardDef(resources);
-    cro::ModelDefinition reedsDef(resources);
+    cro::ModelDefinition shrubDef(resources);
     cro::ModelDefinition crowdDef(resources);
     std::int32_t i = 0;
 
@@ -354,23 +390,70 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             //create a child entity for instanced geometry
             std::string instancePath = theme.instancePath.empty() ? "assets/golf/models/reeds_large.cmt" : theme.instancePath;
 
-            if (reedsDef.loadFromFile(instancePath, true))
+            if (shrubDef.loadFromFile(instancePath, true))
             {
                 auto material = resources.materials.get(reedMaterialID);
 
                 auto childEnt = scene.createEntity();
                 childEnt.addComponent<cro::Transform>();
-                reedsDef.createModel(childEnt);
+                shrubDef.createModel(childEnt);
 
-                for (auto j = 0u; j < reedsDef.getMaterialCount(); ++j)
+                for (auto j = 0u; j < shrubDef.getMaterialCount(); ++j)
                 {
-                    applyMaterialData(reedsDef, material, j);
+                    applyMaterialData(shrubDef, material, j);
                     childEnt.getComponent<cro::Model>().setMaterial(j, material);
                 }
                 childEnt.getComponent<cro::Model>().setHidden(true);
                 childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
                 entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
                 m_instancedEntities[i] = childEnt;
+            }
+
+            //instanced shrubs
+            if (m_sharedData.treeQuality == SharedStateData::High)
+            {
+                for (auto j = 0u; j < std::min(ThemeSettings::MaxTreeSets, theme.treesets.size()); ++j)
+                {
+                    if (shrubDef.loadFromFile(theme.treesets[j].modelPath, true))
+                    {
+                        auto childEnt = scene.createEntity();
+                        childEnt.addComponent<cro::Transform>();
+                        shrubDef.createModel(childEnt);
+
+                        for (auto idx : theme.treesets[j].branchIndices)
+                        {
+                            auto material = resources.materials.get(branchMaterialID);
+                            applyMaterialData(shrubDef, material, idx);
+                            childEnt.getComponent<cro::Model>().setMaterial(idx, material);
+                            childEnt.getComponent<cro::Model>().setShadowMaterial(idx, resources.materials.get(treeShadowMaterialID));
+                        }
+
+                        auto& meshData = childEnt.getComponent<cro::Model>().getMeshData();
+                        for (auto idx : theme.treesets[j].leafIndices)
+                        {
+                            auto material = resources.materials.get(leafMaterialID);
+                            meshData.indexData[idx].primitiveType = GL_POINTS;
+                            material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                            material.setProperty("u_leafSize", theme.treesets[j].leafSize);
+                            material.setProperty("u_randAmount", theme.treesets[j].randomness);
+                            material.setProperty("u_colour", theme.treesets[j].colour);
+                            childEnt.getComponent<cro::Model>().setMaterial(idx, material);
+
+                            material = resources.materials.get(leafShadowMaterialID);
+                            if (m_sharedData.hqShadows)
+                            {
+                                material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                            }
+                            material.setProperty("u_leafSize", theme.treesets[j].leafSize);
+                            childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
+                        }
+
+                        childEnt.getComponent<cro::Model>().setHidden(true);
+                        childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+                        entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
+                        m_instancedShrubs[i][j] = childEnt;
+                    }
+                }
             }
 
             //create entities to render instanced crowd models
@@ -413,6 +496,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         {
             //hmmm we need access to shared state data to set an
             //error message and the state stack to push said error
+            m_sharedData.errorMessage = "Failed loading billboards";
         }
     }
 
@@ -542,6 +626,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.destination = -MaxShrubOffset;
                 swapData.otherEnt = m_billboardEntities[first];
                 swapData.instancedEnt = m_instancedEntities[second];
+                swapData.shrubberyEnts = m_instancedShrubs[second];
                 swapData.crowdEnts = &m_crowdEntities[second];
                 swapData.currentTime = 0.f;
                 m_billboardEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
@@ -553,6 +638,18 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 {
                     m_instancedEntities[first].getComponent<cro::Model>().setHidden(false);
                     m_instancedEntities[first].getComponent<cro::Model>().setInstanceTransforms(m_instanceTransforms);
+                    m_instanceTransforms.clear();
+                }
+
+                for (auto i = 0u; i < MaxShrubInstances; ++i)
+                {
+                    if (!m_shrubTransforms[i].empty()
+                        && m_instancedShrubs[first][i].isValid())
+                    {
+                        m_instancedShrubs[first][i].getComponent<cro::Model>().setHidden(false);
+                        m_instancedShrubs[first][i].getComponent<cro::Model>().setInstanceTransforms(m_shrubTransforms[i]);
+                    }
+                    m_shrubTransforms[i].clear();
                 }
 
                 //crowd instances
@@ -661,7 +758,12 @@ void TerrainBuilder::threadFunc()
     {
         if (m_wantsUpdate)
         {
+            //should be empty anyway because we clear after assigning them
             m_instanceTransforms.clear();
+            for (auto& tx : m_shrubTransforms)
+            {
+                tx.clear();
+            }
 
             //we checked the file validity when the game starts.
             //if the map file is broken now something more drastic happened...
@@ -757,18 +859,40 @@ void TerrainBuilder::threadFunc()
 
                             if (!isNearProp)
                             {
-                                float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
-                                auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)]);
-                                bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards
-                                bb.size *= scale;
-                                
-                                if (cro::Util::Random::value(0, 1) == 0)
+                                static std::size_t shrubIdx = 0;
+                                auto currIndex = shrubIdx % MaxShrubInstances;
+
+                                //bool quality = m_sharedData.treeQuality == 2 || (m_sharedData.treeQuality == 1 && (shrubIdx % 2) == 0);
+
+                                if (m_instancedShrubs[0][currIndex].isValid()
+                                    && m_sharedData.treeQuality == SharedStateData::High)
                                 {
-                                    //flip billboard
-                                    auto rect = bb.textureRect;
-                                    bb.textureRect.left = rect.left + rect.width;
-                                    bb.textureRect.width = -rect.width;
+                                    glm::vec3 position(x, height - 0.05f, -y);
+                                    float rotation = static_cast<float>(cro::Util::Random::value(0, 36) * 10) * cro::Util::Const::degToRad;
+                                    float scale = static_cast<float>(cro::Util::Random::value(16, 20)) / 10.f;
+
+                                    auto& mat4 = m_shrubTransforms[currIndex].emplace_back(1.f);
+                                    mat4 = glm::translate(mat4, position);
+                                    mat4 = glm::rotate(mat4, rotation, cro::Transform::Y_AXIS);
+                                    mat4 = glm::scale(mat4, glm::vec3(scale));
                                 }
+                                else
+                                {
+                                    //no model loaded for this theme or quality setting prevents it, so fall back to billboard
+                                    float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+                                    auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[BillboardID::Tree01 + currIndex]);
+                                    bb.position = { x, height - 0.05f, -y }; //small vertical offset to stop floating billboards
+                                    bb.size *= scale;
+                                    
+                                    if (cro::Util::Random::value(0, 1) == 0)
+                                    {
+                                        //flip billboard
+                                        auto rect = bb.textureRect;
+                                        bb.textureRect.left = rect.left + rect.width;
+                                        bb.textureRect.width = -rect.width;
+                                    }
+                                }
+                                shrubIdx++;
                             }
                         }
                     }

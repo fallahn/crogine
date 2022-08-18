@@ -49,7 +49,7 @@ hole 03
         model = "assets/golf/models/scoreboard.cmt"
         position = 142.730850,1.245083,-43.532295
         rotation = 7.169043
-        scale = 1.000000,1.000000,1.000000
+        scale = 1,1,1
     }
 
     prop
@@ -273,7 +273,7 @@ hole 03
         model = "assets/golf/models/leaderboard.cmt"
         position = 245.998810,1.198576,-177.385803
         rotation = -87.224488
-        scale = 1.000000,1.000000,1.000000
+        scale = 0.500000,0.500000,0.500000
     }
 
     prop
@@ -388,30 +388,6 @@ hole 03
         position = 172.869843,1.443598,-120.488029
         rotation = 45.450530
         scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 161.047134,1.200001,-116.500198
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 167.238953,1.199999,-123.492020
-        rotation = -23.307939
-        scale = 1.160726,1.160726,1.160726
-    }
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 164.891220,1.200001,-117.921951
-        rotation = 31.753157
-        scale = 0.924445,0.924445,0.924445
     }
 
     tee = 211.420975,1.200000,-58.639954

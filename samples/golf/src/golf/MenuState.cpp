@@ -42,6 +42,8 @@ source distribution.
 #include "spooky2.hpp"
 #include "../ErrorCheck.hpp"
 
+#include <AchievementStrings.hpp>
+
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/App.hpp>
@@ -107,6 +109,7 @@ MainMenuContext::MainMenuContext(MenuState* state)
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
+    m_matchMaking       (context.appInstance.getMessageBus()),
     m_cursor            (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_backgroundScene   (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
@@ -271,31 +274,75 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //for some reason this immediately unsets itself
     //cro::App::getWindow().setCursor(&m_cursor);
 
+    registerCommand("tree_ed", [&](const std::string&) 
+        {
+            if (getStateCount() == 1)
+            {
+                requestStackPush(StateID::Bush);
+            }
+        });
+
+    registerCommand("clubhouse", [&](const std::string&)
+        {
+            if (getStateCount() == 1
+                && m_currentMenu == MenuID::Main)
+            {
+                //forces clubhouse state to clear any existing net connection
+                m_sharedData.tutorial = true;
+
+                m_sharedData.courseIndex = 0;
+
+                requestStackClear();
+                requestStackPush(StateID::Clubhouse);
+            }
+            else
+            {
+                cro::Console::print("Must be on main menu to launch clubhouse");
+            }
+        });
+
+    registerCommand("designer", [&](const std::string&)
+        {
+            if (getStateCount() == 1
+                && m_currentMenu == MenuID::Main)
+            {
+                requestStackClear();
+                requestStackPush(StateID::Playlist);
+            }
+            else
+            {
+                cro::Console::print("Must be on main menu to launch designer");
+            }
+        });
+
 #ifdef CRO_DEBUG_
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("Debug"))
-    //        {
-    //            /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
-    //            /*float x = static_cast<float>(AvatarThumbSize.x);
-    //            float y = static_cast<float>(AvatarThumbSize.y);
-    //            ImGui::Image(m_avatarThumbs[0].getTexture(), {x,y}, {0,1}, {1,0});
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_avatarThumbs[1].getTexture(), { x,y }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_avatarThumbs[2].getTexture(), { x,y }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
-    //            //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
-    //            //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-    //        }
-    //        ImGui::End();
-    //    });
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Debug"))
+            {
+                ImGui::Text("Course Index %u", m_sharedData.courseIndex);
+                /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
+                /*float x = static_cast<float>(AvatarThumbSize.x);
+                float y = static_cast<float>(AvatarThumbSize.y);
+                ImGui::Image(m_avatarThumbs[0].getTexture(), {x,y}, {0,1}, {1,0});
+                ImGui::SameLine();
+                ImGui::Image(m_avatarThumbs[1].getTexture(), { x,y }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_avatarThumbs[2].getTexture(), { x,y }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
+                //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
+                //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+
+                //ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();
+        });
 #endif
 }
 
@@ -320,12 +367,15 @@ bool MenuState::handleEvent(const cro::Event& evt)
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
             break;
         case MenuID::Lobby:
-            quitLobby();
+            enterConfirmCallback();
             break;
         case MenuID::PlayerConfig:
             applyTextEdit();
             showPlayerConfig(false, m_activePlayerAvatar);
             updateLocalAvatars(m_avatarCallbacks.first, m_avatarCallbacks.second);
+            break;
+        case MenuID::ConfirmQuit:
+            quitConfirmCallback();
             break;
         }
     };
@@ -351,6 +401,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_F4:
             requestStackClear();
             requestStackPush(StateID::PuttingRange);
+            break;
+        case SDLK_F9:
+            requestStackPush(StateID::Bush);
             break;
         case SDLK_KP_0:
             requestStackPush(StateID::News);
@@ -449,6 +502,22 @@ void MenuState::handleMessage(const cro::Message& msg)
             applyTextEdit();
         }
     }
+    else if (msg.id == MatchMaking::MessageID)
+    {
+        const auto& data = msg.getData<MatchMaking::Message>();
+        switch (data.type)
+        {
+        default:
+        case MatchMaking::Message::Error:
+            break;
+        case MatchMaking::Message::GameCreated:
+            finaliseGameCreate();
+        break;
+        case MatchMaking::Message::LobbyJoined:
+            finaliseGameJoin();
+            break;
+        }
+    }
 
     m_backgroundScene.forwardMessage(msg);
     m_avatarScene.forwardMessage(msg);
@@ -532,7 +601,7 @@ void MenuState::addSystems()
     m_backgroundScene.addSystem<CloudSystem>(mb)->setWindVector(glm::vec3(0.25f));
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
     m_backgroundScene.addSystem<cro::SkeletalAnimator>(mb);
-    m_backgroundScene.addSystem<cro::SpriteSystem3D>(mb);
+    m_backgroundScene.addSystem<cro::SpriteSystem3D>(mb); //clouds
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
@@ -556,6 +625,22 @@ void MenuState::addSystems()
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::AudioPlayerSystem>(mb);
+
+    //check course completion count and award
+    //grand tour if applicable
+    bool awarded = true;
+    for (std::int32_t i = StatID::Course01Complete; i < StatID::Course07Complete + 1; ++i)
+    {
+        if (Achievements::getStat(StatStrings[i])->value == 0)
+        {
+            awarded = false;
+            break;
+        }
+    }
+    if (awarded)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::GrandTour]);
+    }
 }
 
 void MenuState::loadAssets()
@@ -608,7 +693,14 @@ void MenuState::loadAssets()
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", m_resources.textures);
+    if (m_sharedData.treeQuality == SharedStateData::Classic)
+    {
+        spriteSheet.loadFromFile("assets/golf/sprites/shrubbery_low.spt", m_resources.textures);
+    }
+    else
+    {
+        spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", m_resources.textures);
+    }
     m_billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
     m_billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
     m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("flowers01"));
@@ -617,6 +709,7 @@ void MenuState::loadAssets()
     m_billboardTemplates[BillboardID::Tree01] = spriteToBillboard(spriteSheet.getSprite("tree01"));
     m_billboardTemplates[BillboardID::Tree02] = spriteToBillboard(spriteSheet.getSprite("tree02"));
     m_billboardTemplates[BillboardID::Tree03] = spriteToBillboard(spriteSheet.getSprite("tree03"));
+    m_billboardTemplates[BillboardID::Tree04] = spriteToBillboard(spriteSheet.getSprite("tree04"));
 
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
@@ -684,7 +777,32 @@ void MenuState::createScene()
     if (md.loadFromFile("assets/golf/models/phone_box.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 8.2f, 0.f, 13.8f });
+        entity.addComponent<cro::Transform>().setPosition({ 8.2f, 0.f, 13.2f });
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.9f));
+        md.createModel(entity);
+
+        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+    }
+
+    if (md.loadFromFile("assets/golf/models/garden_bench.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 12.2f, 0.f, 13.6f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+    }
+
+    if (md.loadFromFile("assets/golf/models/sign_post.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -10.f, 0.f, 12.f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -150.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
         texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
@@ -698,7 +816,7 @@ void MenuState::createScene()
         {
             glm::vec3(7.2f, 0.f, 12.f),
             glm::vec3(7.2f, 0.f, 3.5f),
-            glm::vec3(-10.5f, 0.f, 12.5f),
+            //glm::vec3(-10.5f, 0.f, 12.5f),
             glm::vec3(-8.2f, 0.f, 3.5f)
         };
 
@@ -723,7 +841,10 @@ void MenuState::createScene()
     }*/
 
     //billboards
-    if (md.loadFromFile("assets/golf/models/shrubbery.cmt"))
+    auto shrubPath = m_sharedData.treeQuality == SharedStateData::Classic ?
+        "assets/golf/models/shrubbery_low.cmt" :
+        "assets/golf/models/shrubbery.cmt";
+    if (md.loadFromFile(shrubPath))
     {
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>();
@@ -850,6 +971,7 @@ void MenuState::createScene()
     auto entity = m_backgroundScene.createEntity();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("music");
     entity.getComponent<cro::AudioEmitter>().play();
+    entity.getComponent<cro::AudioEmitter>().setLooped(true);
 
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
@@ -881,7 +1003,7 @@ void MenuState::createScene()
     updateView(cam);
 
     //camEnt.getComponent<cro::Transform>().setPosition({ -17.8273, 4.9, 25.0144 });
-    camEnt.getComponent<cro::Transform>().setPosition({ -18.3, 4.9, 23.3144 });
+    camEnt.getComponent<cro::Transform>().setPosition({ -18.3f, 5.2f, 23.3144f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -31.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
 
@@ -890,9 +1012,8 @@ void MenuState::createScene()
     camEnt.getComponent<cro::AudioEmitter>().play();
 
     auto sunEnt = m_backgroundScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, /*-0.967f*/-40.56f * cro::Util::Const::degToRad);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, /*-0.967f*/-40.56f * cro::Util::Const::degToRad);
-    //sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -80.7f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -40.56f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -39.f * cro::Util::Const::degToRad);
 
     //set up cam / models for ball preview
     createBallScene();    
@@ -948,7 +1069,7 @@ void MenuState::createClouds()
             bounds.height /= PixelPerMetre;
             entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
 
-            float scale = static_cast<float>(cro::Util::Random::value(8, 20)) / 100.f;
+            float scale = static_cast<float>(cro::Util::Random::value(4, 10)) / 100.f;
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
             entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
 
@@ -1096,43 +1217,10 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             }
             else
             {
-                if (auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
-                    [&course](const CourseData& cd)
-                    {
-                        return cd.directory == course;
-                    }); data != m_courseData.cend())
+                const auto setUnavailable = [&]()
                 {
-                    m_sharedData.mapDirectory = course;
+                    m_sharedData.mapDirectory = "";
 
-                    //update UI
-                    cro::Command cmd;
-                    cmd.targetFlags = CommandID::Menu::CourseTitle;
-                    cmd.action = [data](cro::Entity e, float)
-                    {
-                        e.getComponent<cro::Text>().setString(data->title);
-                        centreText(e);
-                    };
-                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-                    cmd.targetFlags = CommandID::Menu::CourseDesc;
-                    cmd.action = [data](cro::Entity e, float)
-                    {
-                        e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-                        e.getComponent<cro::Text>().setString(data->description);
-                        centreText(e);
-                    };
-                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-                    cmd.targetFlags = CommandID::Menu::CourseHoles;
-                    cmd.action = [data](cro::Entity e, float)
-                    {
-                        e.getComponent<cro::Text>().setString(data->holeCount);
-                        centreText(e);
-                    };
-                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-                }
-                else
-                {
                     //print to UI course is missing
                     cro::Command cmd;
                     cmd.targetFlags = CommandID::Menu::CourseTitle;
@@ -1144,7 +1232,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                     cmd.targetFlags = CommandID::Menu::CourseDesc;
-                    cmd.action = [course](cro::Entity e, float)
+                    cmd.action = [](cro::Entity e, float)
                     {
                         e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
                         e.getComponent<cro::Text>().setString("Course Data Not Found");
@@ -1158,6 +1246,65 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         e.getComponent<cro::Text>().setString(" ");
                     };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                    //un-ready the client to prevent the host launching
+                    //if we don't have this course
+                    if (!m_sharedData.hosting) //this should be implicit, but hey
+                    {
+                        //m_readyState is updated when we get this back from the server
+                        std::uint8_t ready = 0;
+                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady,
+                            std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),
+                            net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    }
+                };
+
+                if (auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
+                    [&course](const CourseData& cd)
+                    {
+                        return cd.directory == course;
+                    }); data != m_courseData.cend())
+                {
+                    if (!data->isUser
+                        || (data->isUser && m_sharedData.hosting))
+                    {
+                        m_sharedData.mapDirectory = course;
+
+                        //update UI
+                        cro::Command cmd;
+                        cmd.targetFlags = CommandID::Menu::CourseTitle;
+                        cmd.action = [data](cro::Entity e, float)
+                        {
+                            e.getComponent<cro::Text>().setString(data->title);
+                            centreText(e);
+                        };
+                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                        cmd.targetFlags = CommandID::Menu::CourseDesc;
+                        cmd.action = [data](cro::Entity e, float)
+                        {
+                            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                            e.getComponent<cro::Text>().setString(data->description);
+                            centreText(e);
+                        };
+                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                        cmd.targetFlags = CommandID::Menu::CourseHoles;
+                        cmd.action = [&, data](cro::Entity e, float)
+                        {
+                            e.getComponent<cro::Text>().setString(data->holeCount[m_sharedData.holeCount]);
+                            centreText(e);
+                        };
+                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                    }
+                    else
+                    {
+                        setUnavailable();
+                    }
+                }
+                else
+                {
+                    setUnavailable();
                 }
             }
         }
@@ -1196,6 +1343,35 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
             break;
+        case PacketID::HoleCount:
+        {
+            m_sharedData.holeCount = evt.packet.as<std::uint8_t>();
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Menu::CourseHoles;
+            if (auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
+                [&](const CourseData& cd)
+                {
+                    return cd.directory == m_sharedData.mapDirectory;
+                }); data != m_courseData.cend())
+            {
+                cmd.action = [&, data](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(data->holeCount[m_sharedData.holeCount]);
+                    centreText(e);
+                };
+            }
+            else
+            {
+                cmd.action = [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(" ");
+                    centreText(e);
+                };
+            }
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+            break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())
             {
@@ -1230,6 +1406,108 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         m_sharedData.errorMessage = "Lost Connection To Host";
         requestStackPush(StateID::Error);
     }
+}
+
+void MenuState::finaliseGameCreate()
+{
+#ifdef USE_GNS
+    //gns only supports 127.0.0.1 for loopback, but to report correct local IP with enet we need 255.255.255.255
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("127.0.0.1", ConstVal::GamePort);
+#else
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+#endif
+    if (!m_sharedData.clientConnection.connected)
+    {
+        m_sharedData.serverInstance.stop();
+        m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
+            + std::to_string(ConstVal::GamePort)
+            + " is allowed through\nany firewalls or NAT";
+        requestStackPush(StateID::Error);
+    }
+    else
+    {
+        //make sure the server knows we're the host
+        m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
+
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Menu::ReadyButton;
+        cmd.action = [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Sprite>() = m_sprites[SpriteID::StartGame];
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        cmd.targetFlags = CommandID::Menu::ServerInfo;
+        cmd.action = [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Text>().setString(
+                "Hosting on: " + m_sharedData.clientConnection.netClient.getPeer().getAddress() + ":"
+                + std::to_string(ConstVal::GamePort));
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        //enable the course selection in the lobby
+        addCourseSelectButtons();
+
+        //send a UI refresh to correctly place buttons
+        glm::vec2 size(GolfGame::getActiveTarget()->getSize());
+        cmd.targetFlags = CommandID::Menu::UIElement;
+        cmd.action =
+            [&, size](cro::Entity e, float)
+        {
+            const auto& element = e.getComponent<UIElement>();
+            auto pos = element.absolutePosition;
+            pos += element.relativePosition * size / m_viewScale;
+
+            pos.x = std::floor(pos.x);
+            pos.y = std::floor(pos.y);
+
+            e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+        //send the initially selected map/course
+        m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
+        auto data = serialiseString(m_sharedData.mapDirectory);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+        //and scoring type
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
+}
+
+void MenuState::finaliseGameJoin()
+{
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
+    if (!m_sharedData.clientConnection.connected)
+    {
+        m_sharedData.errorMessage = "Could not connect to server";
+        requestStackPush(StateID::Error);
+    }
+
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Menu::ReadyButton;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyUp];
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::Menu::ServerInfo;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Text>().setString("Connected to: " + m_sharedData.targetIP + ":" + std::to_string(ConstVal::GamePort));
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //disable the course selection in the lobby
+    cmd.targetFlags = CommandID::Menu::CourseSelect;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        m_uiScene.destroyEntity(e);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void MenuState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)

@@ -1,0 +1,25 @@
+model 02
+{
+    mesh = assets/golf/models/spectators/sitting/02.cmb
+    cast_shadows = true
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        subrect = 0.333000,0.000000,0.333300,1.000000
+        blendmode = none
+        diffuse = "assets/golf/crowd/crowd02.png"
+        skinned = true
+
+    }
+}

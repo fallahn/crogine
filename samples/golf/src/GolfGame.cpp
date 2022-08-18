@@ -42,10 +42,12 @@ source distribution.
 #include "golf/ClubhouseState.hpp"
 #include "golf/TrophyState.hpp"
 #include "golf/NewsState.hpp"
+#include "golf/PlaylistState.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
 #include "golf/PacketIDs.hpp"
+#include "editor/BushState.hpp"
 #include "LoadingScreen.hpp"
 #include "SplashScreenState.hpp"
 #include "ErrorCheck.hpp"
@@ -117,6 +119,8 @@ GolfGame::GolfGame()
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
+    m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
+    m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
 }
 
 //public
@@ -410,8 +414,35 @@ bool GolfGame::initialise()
             ImGui::Text("In memory of Liesbeth Penning");
         });
 
+    registerCommand("log_benchmark", 
+        [&](const std::string& state)
+        {
+            if (state.empty())
+            {
+                cro::Console::print(m_sharedData.logBenchmarks ? "Logging is enabled" : "Logging is disabled");
+                cro::Console::print("Use log_benchmark <true|false> to toggle");
+            }
+            else
+            {
+                if (state == "true")
+                {
+                    m_sharedData.logBenchmarks = true;
+                    cro::Console::print("Benchmarks will be logged to " + cro::App::getPreferencePath() + "benchmark/");
+                }
+                else if (state == "false")
+                {
+                    m_sharedData.logBenchmarks = false;
+                    cro::Console::print("Benchmark logging disabled");
+                }
+                else
+                {
+                    cro::Console::print("Use log_benchmark <true|false> to toggle");
+                }
+            }
+        });
+
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
-    getWindow().setTitle("VGA Golf - " + StringVer);
+    getWindow().setTitle("Video Golf - " + StringVer);
     getWindow().setIcon(icon);
     m_renderTarget = &getWindow();
 
@@ -452,7 +483,7 @@ bool GolfGame::initialise()
 
     cro::SpriteSheet s;
     s.loadFromFile("assets/golf/sprites/options.spt", m_sharedData.sharedResources->textures);
-    s.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
+    s.loadFromFile("assets/golf/sprites/facilities_menu.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/scoreboard.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/tutorial.spt", m_sharedData.sharedResources->textures);
@@ -518,27 +549,28 @@ bool GolfGame::initialise()
 
     m_activeIndex = m_sharedData.postProcessIndex;
 
+    //moved to menu state
+    //registerCommand("clubhouse", [&](const std::string&)
+    //    {
+    //        if (m_stateStack.getTopmostState() != StateID::Clubhouse)
+    //        {
+    //            //forces clubhouse state to clear any existing net connection
+    //            m_sharedData.tutorial = true;
 
-    registerCommand("clubhouse", [&](const std::string&)
-        {
-            if (m_stateStack.getTopmostState() != StateID::Clubhouse)
-            {
-                //forces clubhouse state to clear any existing net connection
-                m_sharedData.tutorial = true;
+    //            m_sharedData.courseIndex = 0;
 
-                m_sharedData.courseIndex = 0;
-
-                m_stateStack.clearStates();
-                m_stateStack.pushState(StateID::Clubhouse);
-            }
-            else
-            {
-                cro::Console::print("Already in clubhouse.");
-            }
-        });
+    //            m_stateStack.clearStates();
+    //            m_stateStack.pushState(StateID::Clubhouse);
+    //        }
+    //        else
+    //        {
+    //            cro::Console::print("Already in clubhouse.");
+    //        }
+    //    });
 
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
+    //m_stateStack.pushState(StateID::Playlist);
     m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
@@ -660,6 +692,19 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.gridTransparency = std::max(0.f, std::min(1.f, prop.getValue<float>()));
                 }
+                else if (name == "tree_quality")
+                {
+                    std::int32_t quality = std::min(2, std::max(0, prop.getValue<std::int32_t>()));
+                    m_sharedData.treeQuality = quality;
+                }
+                else if (name == "hq_shadows")
+                {
+                    m_sharedData.hqShadows = prop.getValue<bool>();
+                }
+                else if (name == "log_benchmark")
+                {
+                    m_sharedData.logBenchmarks = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -716,6 +761,9 @@ void GolfGame::savePreferences()
     cfg.addProperty("beacon_colour").setValue(m_sharedData.beaconColour);
     cfg.addProperty("imperial_measurements").setValue(m_sharedData.imperialMeasurements);
     cfg.addProperty("grid_transparency").setValue(m_sharedData.gridTransparency);
+    cfg.addProperty("tree_quality").setValue(m_sharedData.treeQuality);
+    cfg.addProperty("hq_shadows").setValue(m_sharedData.hqShadows);
+    cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
     cfg.save(path);
 
 

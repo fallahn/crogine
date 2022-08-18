@@ -71,7 +71,7 @@ R"(
 
     float rand(vec2 position)
     {
-        return fract(sin(dot(position, vec2(12.9898, 4.1414) + u_windData.w)) * 43758.5453);
+        return fract(sin(dot(position, vec2(12.9898, 4.1414)) + u_windData.w) * 43758.5453);
     }
 
     void main()

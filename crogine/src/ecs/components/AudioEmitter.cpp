@@ -138,7 +138,7 @@ void AudioEmitter::play()
 {
     /*
     Using these flags means there's a delay until the next
-    AudioSystem updte which actually plays the sound, so we
+    AudioSystem update which actually plays the sound, so we
     set the status here so it will return the expected value
     on any immediate state queries. The AudioSystem will then
     update the state with the correct value.
@@ -160,6 +160,12 @@ void AudioEmitter::stop()
 {
     m_transportFlags |= Stop;
     m_state = State::Stopped;
+}
+
+void AudioEmitter::setPlayingOffset(Time offset)
+{
+    m_transportFlags |= GotoOffset;
+    m_playingOffset = offset;
 }
 
 void AudioEmitter::setLooped(bool looped)

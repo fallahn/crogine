@@ -6,54 +6,6 @@ hole 01
 
     prop
     {
-        model = "assets/golf/models/cactus01.cmt"
-        position = 170.050949,0.183790,-104.670044
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/cactus01.cmt"
-        position = 137.144287,0.183790,-112.091835
-        rotation = -157.261072
-        scale = 1.051394,1.051394,1.051394
-    }
-
-    prop
-    {
-        model = "assets/golf/models/cactus01.cmt"
-        position = 159.367996,0.183790,-89.307129
-        rotation = -61.068876
-        scale = 0.940924,0.940924,0.940924
-    }
-
-    prop
-    {
-        model = "assets/golf/models/cactus02.cmt"
-        position = 142.845474,0.183594,-100.590866
-        rotation = -0.000000
-        scale = 0.716965,0.716965,0.716965
-    }
-
-    prop
-    {
-        model = "assets/golf/models/cactus02.cmt"
-        position = 133.739883,0.183602,-109.657326
-        rotation = 44.777803
-        scale = 0.843945,0.843945,0.843945
-    }
-
-    prop
-    {
-        model = "assets/golf/models/cactus02.cmt"
-        position = 182.921234,0.183606,-93.260185
-        rotation = 955.383935
-        scale = 0.998478,0.998477,0.998478
-    }
-
-    prop
-    {
         model = "assets/golf/models/leaderboard.cmt"
         position = 168.817368,0.136342,-82.656151
         rotation = 151.041025
@@ -184,6 +136,94 @@ hole 01
     {
         emitter = "water_running"
         position = 183.186722,-0.082257,-90.293434
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus01.cmt"
+        position = 170.050949,0.183790,-104.670044
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus01.cmt"
+        position = 137.144287,0.183790,-112.091835
+        rotation = -157.261072
+        scale = 1.051394,1.051394,1.051394
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus01.cmt"
+        position = 159.367996,0.183790,-89.307129
+        rotation = -61.068876
+        scale = 0.940924,0.940924,0.940924
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus02.cmt"
+        position = 142.845474,0.183594,-100.590866
+        rotation = -0.000000
+        scale = 0.716965,0.716965,0.716965
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus02.cmt"
+        position = 133.739883,0.183602,-109.657326
+        rotation = 44.777803
+        scale = 0.843945,0.843945,0.843945
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cactus02.cmt"
+        position = 182.921234,0.183606,-93.260185
+        rotation = 955.383935
+        scale = 0.998478,0.998477,0.998478
+    }
+
+    prop
+    {
+        model = "assets/golf/models/spectators/sitting/01.cmt"
+        position = 139.698792,0.183192,-117.753639
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/spectators/sitting/02.cmt"
+        position = 141.271454,0.160526,-117.230583
+        rotation = -7.185624
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/spectators/sitting/03.cmt"
+        position = 182.154831,0.183171,-101.196129
+        rotation = 33.761137
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/spectators/sitting/04.cmt"
+        position = 129.661972,0.183294,-93.281921
+        rotation = -139.803436
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/wheelchair.cmt"
+        position = 139.708939,0.184838,-117.774803
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
     }
 
     target = 187.208237,0.136754,-98.043587

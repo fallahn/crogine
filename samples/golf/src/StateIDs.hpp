@@ -47,6 +47,8 @@ struct StateID final
         Clubhouse,
         Billiards,
         Trophy,
-        News
+        News,
+        Bush,
+        Playlist
     };
 };

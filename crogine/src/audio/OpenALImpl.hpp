@@ -99,6 +99,7 @@ namespace cro
             void pauseSource(std::int32_t) override;
             void stopSource(std::int32_t) override;
 
+            void setPlayingOffset(std::int32_t, cro::Time) override;
             std::int32_t getSourceState(std::int32_t src) const override;
 
             void setSourcePosition(std::int32_t, glm::vec3) override;

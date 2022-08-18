@@ -56,7 +56,7 @@ namespace cro
         };
 
         FloatRect area;
-        bool active;
+        bool active = false;
         std::array<std::uint32_t, CallbackID::Count> callbacks{};
         std::int32_t ID = -1;
 

@@ -42,7 +42,7 @@ struct Spectator final
 
     std::int32_t direction = 1;
     std::int32_t target = 0;
-    float walkSpeed = 1.f;
+    static constexpr float WalkSpeed = 1.2f;
     const Path* path = nullptr;
 
     float rotation = 0.f;

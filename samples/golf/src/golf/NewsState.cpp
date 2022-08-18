@@ -114,7 +114,8 @@ bool NewsState::handleEvent(const cro::Event& evt)
         && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
     {
         if (evt.cbutton.button == cro::GameController::ButtonB
-            || evt.cbutton.button == cro::GameController::ButtonStart)
+            || evt.cbutton.button == cro::GameController::ButtonStart
+            || evt.cbutton.button == cro::GameController::ButtonBack)
         {
             quitState();
             return false;
@@ -324,13 +325,34 @@ void NewsState::buildScene()
 
 #ifdef USE_RSS
 
+    spriteSheet.loadFromFile("assets/golf/sprites/connect_menu.spt", m_sharedData.sharedResources->textures);
+
+    auto balls = m_scene.createEntity();
+    balls.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    balls.addComponent<cro::Drawable2D>();
+    balls.addComponent<cro::Sprite>() = spriteSheet.getSprite("bounce");
+    balls.addComponent<cro::SpriteAnimation>().play(0);
+    bounds = balls.getComponent<cro::Sprite>().getTextureBounds();
+    balls.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f });
+    rootNode.getComponent<cro::Transform>().addChild(balls.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 24.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Fetching News...");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    centreText(entity);
+    menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto newsEnt = entity;
+
     m_feed.fetchAsync("https://fallahn.itch.io/vga-golf/devlog.rss");
 
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&, menuEntity, createItem](cro::Entity e, float) mutable
+        [&, menuEntity, createItem, balls, newsEnt](cro::Entity e, float) mutable
     {
         if (m_feed.fetchComplete())
         {
@@ -422,6 +444,8 @@ void NewsState::buildScene()
 
             e.getComponent<cro::Callback>().active = false;
             m_scene.destroyEntity(e);
+            m_scene.destroyEntity(balls);
+            m_scene.destroyEntity(newsEnt);
         }
     };
 #endif

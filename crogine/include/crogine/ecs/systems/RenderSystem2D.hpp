@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/Shader.hpp>
+#include <crogine/detail/QuadTree.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/matrix.hpp>
 
@@ -114,6 +115,9 @@ namespace cro
 
         DepthAxis m_sortOrder;
         std::vector<Entity> m_drawList;
+
+        Detail::QuadTree m_quadTree;
+        std::vector<Entity> m_dirtyEnts; //transform callback marks these as needing to be moved in the quad tree
 
         void applyBlendMode(Material::BlendMode);
         glm::ivec2 mapCoordsToPixel(glm::vec2, const glm::mat4& viewProjMat, IntRect) const;

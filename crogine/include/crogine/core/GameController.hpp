@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -239,6 +239,14 @@ namespace cro
         an event handler. TODO fix this :3
         */
         static std::size_t getControllerCount();
+
+        /*!
+        \brief Returns true if the controller at the given index was detected
+        to have a playstation style layout.
+        This may not always be accurate as detection is based on the controller
+        name string which was read at the time of the controller connection
+        */
+        static bool hasPSLayout(std::int32_t controllerIndex);
 
         /*!
         \brief Maximum number of game controllers which may be connected

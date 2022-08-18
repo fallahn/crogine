@@ -43,6 +43,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ParticleDirector.cpp
   ${PROJECT_DIR}/golf/Path.cpp
   ${PROJECT_DIR}/golf/PlayerAvatar.cpp
+  ${PROJECT_DIR}/golf/PlaylistState.cpp
   ${PROJECT_DIR}/golf/PocketBallSystem.cpp
   ${PROJECT_DIR}/golf/PracticeState.cpp
   ${PROJECT_DIR}/golf/PropFollowSystem.cpp

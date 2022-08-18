@@ -596,8 +596,8 @@ void DrivingState::addSystems()
     m_gameScene.addSystem<CloudSystem>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(10.f);
-    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setNumCascades(1);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(30.f);
+    //m_gameScene.getSystem<cro::ShadowMapRenderer>()->setNumCascades(1);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
@@ -696,7 +696,14 @@ void DrivingState::loadAssets()
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", m_resources.textures);
+    if (m_sharedData.treeQuality == SharedStateData::Classic)
+    {
+        spriteSheet.loadFromFile("assets/golf/sprites/shrubbery_low.spt", m_resources.textures);
+    }
+    else
+    {
+        spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", m_resources.textures);
+    }
     m_billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
     m_billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
     m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("flowers01"));
@@ -1188,12 +1195,12 @@ void DrivingState::createScene()
     createFoliage(entity);
 
     //and sky detail
-    std::string skybox = "assets/golf/skyboxes/";
-    auto skyboxes = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + skybox);
-    if (!skyboxes.empty())
-    {
-        skybox += skyboxes[cro::Util::Random::value(0u, skyboxes.size() - 1)];
-    }
+    std::string skybox = "assets/golf/skyboxes/spring.sbf";
+    //auto skyboxes = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + skybox);
+    //if (!skyboxes.empty())
+    //{
+    //    skybox += skyboxes[cro::Util::Random::value(0u, skyboxes.size() - 1)];
+    //}
     auto cloudPath = loadSkybox(skybox, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
     createClouds(cloudPath);
 
@@ -1518,7 +1525,9 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     };
 
     cro::ModelDefinition md(m_resources);
-    static const std::string shrubPath("assets/golf/models/shrubbery.cmt");
+    const std::string shrubPath = m_sharedData.treeQuality == SharedStateData::Classic ?
+        ("assets/golf/models/shrubbery_low.cmt") :
+        ("assets/golf/models/shrubbery.cmt");
 
     //sides
     for (auto i = 0u; i < ChunkCount; ++i)
@@ -1652,7 +1661,7 @@ void DrivingState::createClouds(const std::string& cloudPath)
             bounds.height /= PixelPerMetre;
             entity.getComponent<cro::Transform>().setOrigin({bounds.width / 2.f, bounds.height / 2.f, 0.f});
 
-            float scale = static_cast<float>(cro::Util::Random::value(8, 20));
+            float scale = static_cast<float>(cro::Util::Random::value(4, 10));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
             entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
             //entity.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, 180.f * cro::Util::Const::degToRad);

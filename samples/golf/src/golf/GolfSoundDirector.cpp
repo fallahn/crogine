@@ -45,6 +45,8 @@ source distribution.
 
 #include <crogine/util/Random.hpp>
 
+#include <AchievementStrings.hpp>
+
 namespace
 {
     constexpr float VoiceDelay = 0.5f;
@@ -134,6 +136,13 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/ambience/burst.wav",
         "assets/golf/sound/holes/airmail.wav",
         "assets/golf/sound/ambience/birds01.wav",
+        "assets/golf/sound/ambience/billboard_swing.wav",
+        "assets/golf/sound/ambience/billboard_rewind.wav",
+
+        "assets/golf/sound/ambience/foot01.wav",
+        "assets/golf/sound/ambience/foot02.wav",
+        "assets/golf/sound/ambience/foot03.wav",
+        "assets/golf/sound/ambience/foot04.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -175,6 +184,30 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         }
     }
     break;
+    case cro::Message::SkeletalAnimationMessage:
+    {
+        const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
+        if (data.userType == SpriteAnimID::BillboardRewind)
+        {
+            auto sound = playSound(AudioID::BillboardRewind, data.position, 1.2f);
+            sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            sound.getComponent<cro::AudioEmitter>().setRolloff(0.65f);
+        }
+        else if (data.userType == SpriteAnimID::BillboardSwing)
+        {
+            auto sound = playSound(AudioID::BillboardSwing, data.position, 1.2f);
+            sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            sound.getComponent<cro::AudioEmitter>().setRolloff(0.65f);
+        }
+        else if (data.userType == SpriteAnimID::Footstep)
+        {
+            auto sound = playSound(cro::Util::Random::value(AudioID::Foot01, AudioID::Foot04), data.position, 0.3f);
+            sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            sound.getComponent<cro::AudioEmitter>().setRolloff(0.74f);
+            sound.getComponent<cro::AudioEmitter>().setPitch(1.f + cro::Util::Random::value(-0.2f, 0.2f));
+        }
+    }
+        break;
     case MessageID::GolfMessage:
     {
         const auto& data = msg.getData<GolfEvent>();
@@ -317,10 +350,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             if (data.travelDistance > 25.f) //5m
             {
                 playSoundDelayed(AudioID::ApplausePlus, glm::vec3(0.f), 1.2f, MixerChannel::Effects);
+                applaud();
 
+                //sunk an extra long putt
                 if (data.club == ClubID::Putter)
                 {
                     playSoundDelayed(cro::Util::Random::value(AudioID::NicePutt01, AudioID::NicePutt02), glm::vec3(0.f), 2.2f, MixerChannel::Voice);
+                    Achievements::incrementStat(StatStrings[StatID::LongPutts]);
                 }
             }
 
@@ -380,6 +416,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     //you're poop.
                     playSound(AudioID::TerrainScrub01, glm::vec3(0.f));
                 }
+
+                if (data.club == ClubID::Putter
+                    && (data.terrain == TerrainID::Water || data.terrain == TerrainID::Scrub))
+                {
+                    //assume we putt off the green on a putting course
+                    playSound(AudioID::TerrainWater03, glm::vec3(0.f));
+                }
             }
             break;
         }
@@ -421,7 +464,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 playSound(AudioID::Hole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             }
         }
-        else
+        else if (data.type == CollisionEvent::NearMiss)
         {
             playSoundDelayed(AudioID::NearMiss, data.position, 0.5f, 1.f, MixerChannel::Effects);
             //playSound(AudioID::NearHole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
@@ -477,6 +520,7 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
         auto ent = getNextEntity();
         ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
         ent.getComponent<cro::AudioEmitter>().setVolume(volume);
+        ent.getComponent<cro::AudioEmitter>().setPitch(1.f);
         ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
         ent.getComponent<cro::AudioEmitter>().play();
         ent.getComponent<cro::Transform>().setPosition(position);
@@ -568,6 +612,7 @@ cro::Entity GolfSoundDirector::playAvatarSound(std::int32_t idx, const std::stri
     auto ent = getNextEntity();
     ent.getComponent<cro::AudioEmitter>() = m_playerVoices[idx].getEmitter(emitterName);
     ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+    ent.getComponent<cro::AudioEmitter>().setPitch(1.f);
     ent.getComponent<cro::AudioEmitter>().play();
     ent.getComponent<cro::Transform>().setPosition(position);
     return ent;
@@ -604,6 +649,13 @@ void GolfSoundDirector::applaud()
     cmd.action = [](cro::Entity e, float)
     {
         e.getComponent<VatAnimation>().applaud();
+    };
+    getScene().getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::Spectator;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().setUserData<bool>(true);
     };
     getScene().getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

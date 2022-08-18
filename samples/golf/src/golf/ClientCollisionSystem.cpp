@@ -38,6 +38,9 @@ source distribution.
 
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+#include <Achievements.hpp>
+#include <AchievementStrings.hpp>
+
 namespace
 {
     static constexpr float MinBallDist = (HoleRadius * 1.2f) * (HoleRadius * 1.2f);
@@ -49,7 +52,8 @@ ClientCollisionSystem::ClientCollisionSystem(cro::MessageBus& mb, const std::vec
     m_holeData      (hd),
     m_holeIndex     (0),
     m_collisionMesh (cm),
-    m_club          (-1)
+    m_club          (-1),
+    m_waterCollision(false)
 {
     requireComponent<cro::Transform>();
     requireComponent<ClientCollider>();
@@ -104,7 +108,9 @@ void ClientCollisionSystem::process(float)
             //or a near miss
             if (oldNear 
                 && !collider.nearHole 
-                && collider.terrain == TerrainID::Green)
+                && collider.terrain == TerrainID::Green
+                && position.y > m_holeData[m_holeIndex].pin.y
+                /*&& result.height >= (position.y - (Ball::Radius / 2.f))*/)
             {
                 auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
                 msg->type = CollisionEvent::NearMiss;
@@ -118,19 +124,19 @@ void ClientCollisionSystem::process(float)
             collider.nearHole = false;
         }
 
-        //not sure why we had this, this case is caught below
-        /*else if (collider.terrain == TerrainID::Water)
+        //tracks dolphin achievement - should happen only once per round
+        if (collider.terrain == TerrainID::Water)
         {
             if (position.y < WaterLevel
                 && collider.previousWorldHeight > WaterLevel)
             {
-                auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
-                msg->type = CollisionEvent::Begin;
-                msg->position = position;
-                msg->terrain = TerrainID::Water;
-                msg->clubID = m_club;
+                if (!m_waterCollision)
+                {
+                    Achievements::incrementStat(StatStrings[StatID::WaterTrapRounds]);
+                }
+                m_waterCollision = true;
             }
-        }*/
+        }
 
         const auto notify = [&](CollisionEvent::Type type, glm::vec3 position)
         {
@@ -149,7 +155,7 @@ void ClientCollisionSystem::process(float)
             }
         };
 
-        static constexpr float CollisionLevel = 0.35f;
+        static constexpr float CollisionLevel = 0.45f;
         float currentLevel = position.y - result.height;
 
         std::int32_t direction = 0;

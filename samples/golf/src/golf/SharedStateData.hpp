@@ -148,6 +148,7 @@ struct SharedStateData final
     cro::String mapDirectory = "course_01";
     std::uint8_t scoreType = 0;
     std::uint8_t gimmeRadius = 0;
+    std::uint8_t holeCount = 0; //0-1-2 all, front, back
 
     //printed by the error state
     std::string errorMessage;
@@ -174,6 +175,13 @@ struct SharedStateData final
     float beaconColour = 1.f; //normalised rotation
     bool imperialMeasurements = false;
     float gridTransparency = 1.f;
+    enum TreeQuality
+    {
+        Classic, Low, High
+    };
+    std::int32_t treeQuality = Low;
+    bool hqShadows = true;
+    bool logBenchmarks = false;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

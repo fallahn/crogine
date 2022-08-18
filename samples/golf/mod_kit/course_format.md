@@ -1,5 +1,5 @@
 #### Course File Format
-Courses are defined by sets of three different kinds of file (subject to change)
+Courses are defined by sets of multiple configuration files (subject to change)
 
 ###### Course File
 A course folder should contain one file with the name `course.data`. It has the following format:
@@ -7,12 +7,12 @@ A course folder should contain one file with the name `course.data`. It has the 
     course course_01 //name or identifier, doesn't have to be unique
     {
         skybox = "assets/golf/skyboxes/sky.sbf" //a path to the skybox definition file to use (see below)
-        billboard_model = "assets/golf/models/shrubbery.cmt" //path to the model definition for the billboard file containing the trees/shrubs
-        billboard_sprites = "assets/golf/sprites/shrubbery.spt" //path to the spritesheet containing the sprite definitions for each billboard in the billboard model
+        shrubbery = "assets/golf/shrubs/cliffs.shb" //path to the shrubbery definition file (see below)
         instance_model = "assets/golf/models/reeds_large.cmt" //optional path to a model which is instanced around the water's edge. Defaults to reeds if this is omitted
         grass = 1,0.5,0,1 //surrounding grass colour. This is optional and will default to dark green from the colordome-32 palette
         grass_tint = 1.0, 1.0, 0.5, 1 //affects the colour of the noise applied to the grass colour. This is optional, by default just darkens the grass colour
         audio = "assets/golf/sound/ambience.xas" //optional path to a crogine audioscape file for environment sounds (see below)
+
 
         title = "St. Billybob's links, Isle of Wibble" //course title, shown in the game lobby
         description = "This is a test course. Why not have a play?" //a brief description, shown in the game lobby
@@ -26,7 +26,7 @@ A course folder should contain one file with the name `course.data`. It has the 
 The course file contains a list of paths to `*.hole` files which describe the individual holes that make up a course. This way holes can be recycled thoughout different course layouts should it be so desired. Up to 18 holes can be added to a course (any further holes will be ignored when the course file is loaded). The optional `audio` property is a path to an `AudioScape` file. This should contain definitions for up to 6 looped sound effects, labelled 01 - 06. These are placed evenly throughout the scene and should be *mono* for positional audio to take effect. Optionally up to two emitters labelled `incidental01` and `incidental02` can be added. These should be stereo and are played at random intervals, for example this could be the sound of a plane flying overhead. These should not be looped. Finally an emitter called `music` can be defined to play the incidental music during hole transitions. This should be stereo, and also not looped. See `assets/golf/sound/ambience.xas` for an example `AudioScape`.
 
 ###### Hole file
-Hole files describe which models/assets make up the hole, as well as the position of the tee, the hole and the par for that hole. Optionally prop objects can be added to the hole to display models as props in the game. Crowd objects can also optionally be added to place a small crowd of spectators. By default crowds are aligned left to right along the X axis and can be rotated with the `rotation` property. Particle objects denote an emitter settings file and world position for particle effects. These are triggered as the hole is loaded.
+Hole files describe which models/assets make up the hole, as well as the position of the tee, the position of the cup and the par for that hole. Optionally prop objects can be added to the hole to display models as props in the game. Crowd objects can also optionally be added to place a small crowd of spectators. By default crowds are aligned left to right along the X axis and can be rotated with the `rotation` property. Particle objects denote an emitter settings file and world position for particle effects. These are triggered as the hole is loaded.
 
     hole 01 //hole ID
     {
@@ -59,6 +59,51 @@ Hole files describe which models/assets make up the hole, as well as the positio
     }
 
 
+Since 1.7.0 crowds and props can be given paths to follow. These have the following format:
+
+    prop
+    {
+        model = "assets/golf/models/speed_boat.cmt"
+        position = -1.989228,0.005000,-65.556274
+        rotation = 0.000000
+        scale = 1.000000,1.000000,1.000000
+
+        path
+        {
+            point = 9.993729,1.633960,-65.031258
+            point = 14.973561,1.633960,-61.878002
+            point = 20.381990,1.633960,-59.367649
+
+            loop = false
+            delay = 8.000000
+            speed = 6.0
+        }
+        emitter = "boat"
+        particles = "assets/golf/particles/water_spray.cps"
+    }
+
+    crowd
+    {
+        position = 103.052010,1.262347,-135.670990
+        rotation = -377.916374
+
+        path
+        {
+            point = 95.192429,1.262303,-140.468903
+            point = 118.227936,1.262303,-133.075958
+            point = 134.671310,1.262303,-129.906708
+            point = 151.243515,1.262302,-127.346008
+            point = 163.376205,1.262303,-125.559677
+        }
+    }
+
+The Blender export script will automatically generate these paths if a Path object is created in Blender and the prop or crowd model is parented to it. Paths with prop models parented to them can also have the extra properties `loop`, `delay` and `speed` added to them. The `loop` property determines if the prop returns to the start point when it reaches the end, if set to true, else the model will travel back along the path in the reverse direction. The `delay` property defines the number of seconds the prop waits before moving along the path again after reaching the end. `speed` is a value in metres per second at which the prop will travel along the path. These can all be added in Blender as 'custom properties' and will be exported by the Blender export script.
+These properties are ignored by paths assigned to crowds, as the crowd members will walk up and down the path until the hole is unloaded.
+
+Also since 1.7.0 props may have `emitters` added to them and `particles`. The `particles` property contains a path to a particle settings file which, if loaded successfully, will be parented to the prop, and started once the hole loads. Parented particles follow the prop as it moves along a path, so can be used for the spray behind a boat for example. The `emitter` property contains a single name which references an audio emitter defined in `assets/golf/sound/props.xas`. If the emitter exists in this file it will be parented to the prop, useful for creating effects such as the noise of a boat engine. Both emitters and particles can be defined in Blender, using a Sound object for emitters, or an Empty set to draw as a point for particle emitters (see `placeholders.blend`). If these are parented to a prop model in Blender the export script will automatically append them to the exported file.
+
+
+
 Hole file creation can be aided with the export script for blender. See readme.txt for more details.
 
 The map file contains metadata about the hole stored as an image. The image is stored with a scale of one pixel per metre. In other words each pixel represents one metre square on the course grid. The XY coordinates of the image, starting at the bottom left, are mapped to the X, -Z coordinates of the 3D world. Map sizes are fixed at 320 pixels by 200 pixels.
@@ -67,7 +112,7 @@ The red channel of the map file stores a value representing the current terrain 
 
 The green channel of the map contains height values used to create the surrounding terrain. Values of zero will be below the water plane, whereas values of 255 will raise the terrain at that point to its max height (currently 4.5 metres). A heightmap can be created by sculpting a 3D plane and baking its values to a texture in software such as Blender. See readme.txt for more details.
 
-Note that although the blue and alpha channels are currently unused the image MUST be in RGBA format for it to be loaded correctly.
+Note that although the blue and alpha channels are currently unused the image MUST be in RGBA format for it to be loaded correctly. These channels maybe be used in the future.
 
 
 ###### Skybox File (since 1.6.0)
@@ -89,3 +134,55 @@ The skybox definition file is used to declare the colour of the skybox, as well 
     }
 
 For an example of creating models for a skybox see the `skybox.blend` file. Note that many models include 'fake' reflections modelled directly as part of the mesh, for cases where they are rendered outside the world's reflection plane. The vertex colour of the mesh is used to decide how much 'tint' the model receives in the reflected part to take on the water colour, where 1 (white) is no tint, and 0 (black) is completely water colour.
+
+As of 1.8.0 typing `tree_ed` into the console when at the game menu opens the treeset editor (see below). This can be used to preview and modify skybox files.
+
+
+###### Shrubbery (since 1.8.0)
+Up to and including version 1.7.0 shrubbery billboards were defined by two files in the the `course.data` file. These have been moved to a single file with the following format:
+
+    shrub
+    {
+        model = "assets/golf/models/shrubbery_autumn.cmt" //billboard model file
+        sprite = "assets/golf/sprites/shrubbery_autumn.spt" //sprite sheet defining billboard sizes at 64px per metre.
+
+        treeset = "assets/golf/treesets/oak.tst" //path to a treeset file - see below
+    }
+
+Shrub files have the extension `*.shb` and should be stored in `assets/golf/shrubs`. The `.cmt` file is a standard billboard definition file - see the crogine model definition format. The `.spt` file is a crogine format sprite sheet, which defines a specific set of sprites:
+
+ - grass01
+ - grass02
+ - hedge01
+ - hedge02
+ - flowers01
+ - flowers02
+ - flowers03
+ - tree01
+ - tree02
+ - tree03
+ - tree04
+
+The sprites are mapped to the billboards at 64 pixels per metre (game unit). The tree sprites will be substituted with a treeset if it is available and the tree quality is set to 'high' in the game options. It is also possible to supply a second model and spritesheet definition for 'classic' rendering - ie when the game option for tree quality is set to 'classic'. To do this add a second definition file for each with the same name appended with `_low`. For example `shrubbery_autumm_low.cmt` and `shrubbery_autumn_low.spt`. These are automatically loaded by the game if they are found.
+
+
+###### Treesets (since 1.8.0)
+Treesets can be used to define 3D models to render trees instead of the default billboarded trees. These are optional and, if omitted from the shrubbery file, will fall back to drawing tree01-tree04 as defined in the shrub sprite sheet. As treesets are added they replace their corresponding sprite, so for example if two treesets are added to the shrubbery file then sprites tree01 and tree02 will not be drawn. Tree03 and tree04 will still appear as the shrub file defines them.
+
+
+    treeset 
+    {
+        model = "oak01.cmt" //model to draw. Must be RELATIVE to the treeset file (ie in the same directory)
+        texture = "oak_leaf.png" //texture used by the leaf material - RELATIVE to the treeset file
+        colour = 0.494118,0.427451,0.215686 //colour multiplied with the leaf texture
+        randomness = 0.196000 //see editor window
+        leaf_size = 0.600000 //see editor window
+        branch_index = 0 //submesh index of the branch part of the model. There can be multiple entries for this
+        leaf_index = 1 //submesh index of the leaf part of the model. There can be multiple entries for this
+    }
+
+Treesets have a few special requirements when creating the model. The trunk part of the model requires a separate material assigned to it from the leaf part, as the game uses different shaders to render each part. The models should also use vertex colours to define how much they are affected by wind in game. The blue channel contains the strength of the bend, so a value of 0 (black) is usually placed on the vertices at the roots of the trunk with a higher (0.5 - 1.0) value on the vertices at the tips. The red channel contains the amount of high frequency 'jitter' caused by the wind effect so leaf vetices are usually painted a magenta colour, which is created from a high red and blue channel value. The `mod_kit` directory contains `wind_colours.ase` which can be used as a starter palette for these values. Materials for the branch parts of tree models are textured, and should be UV mapped. When converting the model file using the crogine editor, branch materials should be set to unlit with a diffuse texture, and leaf materials should be unlit with vertex colouring. Once the model is correctly converted and saved in `assets/golf/treesets/` the treeset metadata which controls the final appearance can be defined using the treeset editor.
+
+The treeset editor is found by launching the game, opening the console with F1 (when the game is on the main menu) and entering the command `tree_ed`. In the new window which opens it is possible to define which parts of the model are assigned the branch material, and which is the leaf material. The leaf material also requires a texture to be loaded for the leaves, and optionally a leaf colour can be picked from the palette window. Once the look has been defined, selecting `save preset` from the file menu will write the treeset file which can be used to define treesets in the `course.data` file. IMPORTANT: as the game allows setting the tree quality in the options menu the game requires a billboard version of each tree which can be used to draw the model on low quality mode. To aid this the Billboard window provides a flat 2D view of the tree model, where an image can be quickly saved by clicking the `save` button, for later editing into the sprite sheet used for this treeset's shrubbery file.
+
+The treeset editor can also be used to open and modify skybox files (see above). To use this feature open the skybox editor window from the `View` menu. Here it is possible to open skybox files, add or remove models from the skybox, set the sky colour, and save the skybox file again.

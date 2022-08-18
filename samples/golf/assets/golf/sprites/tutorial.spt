@@ -1,9 +1,13 @@
 spritesheet tutorial
 {
     src = "assets/golf/images/tutorial_title.png"
+    smooth = false
+    repeat = false
 
     sprite title
     {
-        bounds = 0,0,232,112
+        bounds = 0.000000,0.000000,298.000000,112.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
     }
 }

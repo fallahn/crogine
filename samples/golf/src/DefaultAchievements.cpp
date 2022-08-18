@@ -107,6 +107,14 @@ void DefaultAchievements::init()
     trigger = &StatTriggers[StatID::TimeOnTheCourse].emplace_back();
     trigger->achID = AchievementID::DayJob;
     trigger->threshold = 24 * 60 * 60;
+
+    trigger = &StatTriggers[StatID::LongPutts].emplace_back();
+    trigger->achID = AchievementID::BigPutts;
+    trigger->threshold = 15;
+
+    trigger = &StatTriggers[StatID::WaterTrapRounds].emplace_back();
+    trigger->achID = AchievementID::GolfinDolphin;
+    trigger->threshold = 5;
 }
 
 void DefaultAchievements::update()

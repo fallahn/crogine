@@ -1,0 +1,7 @@
+shrub
+{
+    model = "assets/golf/models/shrubbery02.cmt"
+    sprite = "assets/golf/sprites/shrubbery02.spt"
+
+    treeset = "assets/golf/treesets/palm_tree.tst"
+}

@@ -109,6 +109,7 @@ namespace cro
         \returns true if successful, else returns false
         */
         bool loadFromString(std::int32_t id, const std::string& vertex, const std::string& fragment, const std::string& defines = "");
+        bool loadFromString(std::int32_t id, const std::string& vertex, const std::string& geom, const std::string& fragment, const std::string& defines);
 
         /*!
         \brief Preloads one of the built in shaders.

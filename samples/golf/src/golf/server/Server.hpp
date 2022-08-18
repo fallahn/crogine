@@ -38,9 +38,12 @@ source distribution.
 class Server final
 {
 public:
-    enum class GameMode
+    struct GameMode final
     {
-        Golf, Billiards, None
+        enum
+        {
+            Golf, Billiards, None
+        };
     };
 
     Server();
@@ -51,7 +54,7 @@ public:
     Server& operator = (const Server&) = delete;
     Server& operator = (Server&&) = delete;
 
-    void launch(std::size_t, GameMode);
+    void launch(std::size_t, std::int32_t);
     bool running() const { return m_running; }
     void stop();
 
@@ -69,7 +72,7 @@ private:
     std::unique_ptr<std::thread> m_thread;
 
     std::unique_ptr<sv::State> m_currentState;
-    GameMode m_gameMode;
+    std::int32_t m_gameMode;
 
     sv::SharedData m_sharedData;
 
@@ -80,6 +83,8 @@ private:
         static constexpr float Timeout = 15.f;
     };
     std::vector<PendingConnection> m_pendingConnections;
+
+    std::size_t m_clientCount;
 
     void run();
 

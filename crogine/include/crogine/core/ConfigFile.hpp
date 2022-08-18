@@ -173,14 +173,14 @@ namespace cro
 
         /*!
         \brief Adds a name / value property pair to this object
-        WARNING this will most likely invalidate any pointers retreived
+        WARNING this will most likely invalidate any pointers retrieved
         with findProperty()
         */
         ConfigProperty& addProperty(const std::string& name, const std::string& value = "");
 
         /*!
         \brief Adds a name / value property pair to this object
-        WARNING this will most likely invalidate any pointers retreived
+        WARNING this will most likely invalidate any pointers retrieved
         with findProperty()
         */
         void addProperty(const ConfigProperty& prop);

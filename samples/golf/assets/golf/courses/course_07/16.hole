@@ -1,0 +1,97 @@
+hole 16
+{
+    map="assets/golf/courses/course_07/16.png"
+    model="assets/golf/models/course_07/16.cmt"
+    par = 4
+
+    pin = 37.745228,5.847712,-37.187485
+
+    target = 181.669739,4.134131,-89.467758
+
+    tee = 295.763763,7.660710,-170.348419
+
+    crowd
+    {
+        position = 37.215237,5.847819,-19.200123
+        rotation = 177.972651
+    }
+
+    crowd
+    {
+        position = 14.911672,5.847819,-44.244289
+        rotation = 82.199806
+    }
+
+    prop
+    {
+        model = "assets/golf/models/billboard.cmt"
+        position = 113.067368,5.882579,-38.994629
+        rotation = -163.612666
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/rock_large.cmt"
+        position = 106.471146,5.754349,-35.124992
+        rotation = 28.514162
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/driving_shed.cmt"
+        position = 261.323914,7.660711,-174.003098
+        rotation = 34.919157
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/log.cmt"
+        position = 258.432770,7.659990,-170.245300
+        rotation = 14.847239
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/cart.cmt"
+        position = 265.405548,7.665711,-175.340714
+        rotation = 227.993880
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence01.cmt"
+        position = 266.165924,7.660712,-174.427826
+        rotation = 27.377081
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/fence02.cmt"
+        position = 269.596527,7.660710,-176.522064
+        rotation = 35.337698
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/garden_bench.cmt"
+        position = 255.421356,7.661505,-168.739395
+        rotation = -47.948999
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/spectators/sitting/04.cmt"
+        position = 255.630081,7.708799,-168.804565
+        rotation = 38.468564
+        scale = 1.000000,1.000000,1.000000
+    }
+
+}

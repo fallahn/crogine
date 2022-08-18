@@ -44,7 +44,8 @@ source distribution.
 Server::Server()
     : m_maxConnections  (ConstVal::MaxClients),
     m_running           (false),
-    m_gameMode          (GameMode::None)
+    m_gameMode          (GameMode::None),
+    m_clientCount       (0)
 {
 
 }
@@ -58,7 +59,7 @@ Server::~Server()
 }
 
 //public
-void Server::launch(std::size_t maxConnections, GameMode gameMode)
+void Server::launch(std::size_t maxConnections, std::int32_t gameMode)
 {
     //stop any existing instance first
     stop();
@@ -178,6 +179,11 @@ void Server::run()
 
         checkPending();
 
+        //TODO fix this - we have to wait for at least
+        //one connection to happen first
+        
+        //m_running = m_clientCount != 0;
+
         //network broadcasts
         netAccumulatedTime += netFrameClock.restart();
         while (netAccumulatedTime > netFrameTime)
@@ -279,7 +285,7 @@ void Server::validatePeer(net::NetPeer& peer)
 
     if (result != m_pendingConnections.end())
     {
-        if (auto i = addClient(peer); i >= /*ConstVal::MaxClients*/m_maxConnections)
+        if (auto i = addClient(peer); i >= m_maxConnections)
         {
             //tell client server is full
             m_sharedData.host.sendPacket(peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerFull), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -319,6 +325,8 @@ std::uint8_t Server::addClient(const net::NetPeer& peer)
             msg->clientID = i;
             msg->type = ConnectionEvent::Connected;
 
+            m_clientCount++;
+
             break;
         }
     }
@@ -353,5 +361,7 @@ void Server::removeClient(const net::NetEvent& evt)
         //broadcast to all connected clients
         m_sharedData.host.broadcastPacket(PacketID::ClientDisconnected, static_cast<std::uint8_t>(playerID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         LOG("Client disconnected", cro::Logger::Type::Info);
+
+        m_clientCount--;
     }
 }

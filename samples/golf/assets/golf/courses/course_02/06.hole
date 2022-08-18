@@ -110,4 +110,20 @@ hole 06
         rotation = -340.438395
         scale = 1.000000,1.000000,1.000000
     }
+
+    prop
+    {
+        model = "assets/golf/models/wheelchair.cmt"
+        position = 306.777557,1.332260,-142.144882
+        rotation = -129.945927
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/spectators/sitting/05.cmt"
+        position = 306.786743,1.330614,-142.141754
+        rotation = -133.935278
+        scale = 1.000000,1.000000,1.000000
+    }
 }

@@ -16,9 +16,30 @@ driving_range
 
     prop
     {
+        model = "assets/golf/models/garden_bench.cmt"
+        position = 10,3.500000,-176.80000
+        rotation = -90
+    }
+
+    prop
+    {
+        model = "assets/golf/models/garden_bench.cmt"
+        position = 15,3.500000,-176.80000
+        rotation = -90
+    }    
+
+    prop
+    {
         model = "assets/golf/models/phone_box.cmt"
-        position = 10,3.500000,-179.70000
+        position = 9,3.500000,-179.70000
         rotation = 0
+    }
+
+    prop
+    {
+        model = "assets/golf/models/sign_post.cmt"
+        position = -7,3.500000,-179.70000
+        rotation = 140
     }
 
     prop

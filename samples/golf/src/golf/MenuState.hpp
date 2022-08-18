@@ -37,10 +37,13 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "MenuCallbacks.hpp"
 
+#include <MatchMaking.hpp>
+
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/Cursor.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/core/String.hpp>
+#include <crogine/core/ConsoleClient.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -62,7 +65,7 @@ struct MainMenuContext final : public MenuContext
     explicit MainMenuContext(MenuState*);
 };
 
-class MenuState final : public cro::State, public cro::GuiClient
+class MenuState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
     MenuState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -76,11 +79,12 @@ public:
 
     enum MenuID
     {
-        Dummy, Main, Avatar, Join, Lobby, PlayerConfig, Count
+        Dummy, Main, Avatar, Join, Lobby, PlayerConfig, ConfirmQuit, Count
     };
 
 private:
     SharedStateData& m_sharedData;
+    MatchMaking m_matchMaking;
     cro::Cursor m_cursor;
     cro::ResourceCollection m_resources;
 
@@ -137,6 +141,8 @@ private:
         std::uint32_t nextRadius = 0;
         std::uint32_t prevCourse = 0;
         std::uint32_t nextCourse = 0;
+        std::uint32_t prevHoleCount = 0;
+        std::uint32_t nextHoleCount = 0;
         std::uint32_t selected = 0;
         std::uint32_t unselected = 0;
         std::uint32_t showTip = 0;
@@ -149,6 +155,10 @@ private:
     std::size_t m_currentMenu; //used by view callback to reposition the root node on window resize
     std::size_t m_prevMenu; //used to resore active menu when completing text entry
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {}; //each menu transform, attatched to root node.
+
+    //hack to quit the lobby confirm menu from event input
+    std::function<void()> enterConfirmCallback;
+    std::function<void()> quitConfirmCallback;
 
     struct TextEdit final
     {
@@ -191,10 +201,11 @@ private:
         cro::String directory;
         cro::String title = "Untitled";
         cro::String description = "No Description"; 
-        cro::String holeCount = "0";
+        std::array<cro::String, 3u> holeCount = {};
+        bool isUser = false;
     };
     std::vector<CourseData> m_courseData;
-    void parseCourseDirectory();
+    void parseCourseDirectory(const std::string&, bool isUser);
 
     cro::Entity m_toolTip;
     void createToolTip();
@@ -234,6 +245,10 @@ private:
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createPlayerConfigMenu();
+
+    //message handlers for completing connection
+    void finaliseGameCreate();
+    void finaliseGameJoin();
 
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);

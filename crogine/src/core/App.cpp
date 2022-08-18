@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/gui/Gui.hpp>
+#include <crogine/util/String.hpp>
 
 #include <SDL.h>
 #include <SDL_joystick.h>
@@ -257,8 +258,9 @@ void App::run()
     LogI << "Using SDL " << (int)v.major << "." << (int)v.minor << "." << (int)v.patch << std::endl;
 
     auto settings = loadSettings();
+    glm::uvec2 size = settings.fullscreen ? glm::uvec2(settings.windowedSize) : glm::uvec2(settings.width, settings.height);
 
-    if (m_window.create(settings.width, settings.height, "crogine game", m_windowStyleFlags))
+    if (m_window.create(size.x, size.y, "crogine game", m_windowStyleFlags))
     {
         //load opengl - TODO choose which loader to use based on
         //current platform, ie mobile or desktop
@@ -488,7 +490,8 @@ void App::handleEvents()
                     //the actual index is different to the id of the event
                     auto* j = SDL_GameControllerGetJoystick(ci.controller);
                     ci.joystickID = SDL_JoystickInstanceID(j);                    
-                    
+                    ci.psLayout = Detail::isPSLayout(ci.controller);
+
                     m_controllers[id] = ci;
                     //SDL_GameControllerSetPlayerIndex(m_controllers[id].controller, id);
                     m_controllerCount++;
@@ -635,6 +638,10 @@ App::WindowSettings App::loadSettings()
             {
                 settings.useMultisampling = prop.getValue<bool>();
             }
+            else if (prop.getName() == "window_size")
+            {
+                settings.windowedSize = prop.getValue<glm::vec2>();
+            }
         }
 
         //load mixer settings
@@ -689,6 +696,7 @@ void App::saveSettings()
     saveSettings.addProperty("fullscreen").setValue(m_window.isFullscreen());
     saveSettings.addProperty("vsync").setValue(m_window.getVsyncEnabled());
     saveSettings.addProperty("multisample").setValue(m_window.getMultisamplingEnabled());
+    saveSettings.addProperty("window_size").setValue(m_window.getWindowedSize());
 
     auto* aObj = saveSettings.addObject("audio");
     aObj->addProperty("master", std::to_string(AudioMixer::getMasterVolume()));
@@ -717,4 +725,35 @@ void App::saveScreenshot()
     RaiiRWops out;
     out.file = SDL_RWFromFile(filename.c_str(), "w");
     stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 4, buffer.data(), size.x * 4);
+}
+
+bool Detail::isPSLayout(SDL_GameController* gc)
+{
+    const std::array NameStrings =
+    {
+        std::string("ps1"),
+        std::string("ps2"),
+        std::string("ps3"),
+        std::string("ps4"),
+        std::string("ps5"),
+        std::string("psx"),
+        std::string("dualshock"),
+        std::string("playstation"),
+        std::string("sony"),
+    };
+
+    auto name = SDL_GameControllerName(gc);
+    if (name)
+    {
+        auto nameString = cro::Util::String::toLower(name);
+        for (const auto& str : NameStrings)
+        {
+            if (nameString.find(str) != std::string::npos)
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }

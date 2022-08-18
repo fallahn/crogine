@@ -40,7 +40,7 @@ model 03
         smooth = false
         repeat = true
         blendmode = none
-        diffuse = "assets/golf/images/bunker.png"
+        diffuse = "assets/golf/images/light_sand.png"
 
     }
     material Unlit

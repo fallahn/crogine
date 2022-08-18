@@ -11,6 +11,11 @@ model willow01
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/willow_texture.png"
 
@@ -23,6 +28,11 @@ model willow01
         repeat = true
         depth_test = true
         double_sided = true
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/willow_texture.png"
         alpha_clip = 0.184000

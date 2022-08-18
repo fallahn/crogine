@@ -30,22 +30,6 @@ hole 06
 
     prop
     {
-        model = "assets/golf/models/palm01.cmt"
-        position = 97.097397,1.089964,-45.746223
-        rotation = -117.039230
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/palm02.cmt"
-        position = 95.157333,1.081091,-46.536537
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
         model = "assets/golf/models/beach_hut.cmt"
         position = 213.445236,1.064838,-184.305618
         rotation = -20.823467
@@ -114,30 +98,6 @@ hole 06
         position = 220.325958,0.920564,-115.057373
         rotation = 26.050138
         scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/palm01.cmt"
-        position = 260.890594,1.056958,-70.161209
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/palm02.cmt"
-        position = 262.150665,1.048086,-69.050301
-        rotation = 39.289797
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/palm01.cmt"
-        position = 262.821198,1.056958,-71.365822
-        rotation = -61.407533
-        scale = 0.830039,0.830039,0.830039
     }
 
     particles

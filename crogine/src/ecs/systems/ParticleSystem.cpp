@@ -527,6 +527,13 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
     const auto& entities = std::any_cast<const std::vector<Entity>&>(pass.drawList.at(getType()));
     for(auto entity : entities)
     {
+        //it's possible an entity might be destroyed between adding to the 
+        //draw list and render time - hum.
+        if (entity.destroyed())
+        {
+            continue;
+        }
+
         const auto& emitter = entity.getComponent<ParticleEmitter>();
 
         if ((emitter.m_renderFlags & cam.renderFlags) == 0)
@@ -596,7 +603,7 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glDisable(GL_BLEND));
     glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDepthMask(GL_TRUE));
-    DISABLE_POINT_SPRITES;
+    //DISABLE_POINT_SPRITES;
 
     glCheck(glPointSize(pointSize));
 }

@@ -68,6 +68,11 @@ namespace AchievementID
         GimmeFive,
         GimmeTen,
         DayJob,
+        BigPutts,
+        GolfinDolphin,
+
+        GrandTour,
+        GrandDesign,
 
         Count
     };
@@ -81,25 +86,31 @@ namespace StatID
         HolesPlayed,
         PuttDistance,
         StrokeDistance,
-
         GoldAverage,
         SilverAverage,
         BronzeAverage,
         TotalRounds,
-
         EightballWon,
         NineballWon,
         SnookerWon,
-
         TimeOnTheRange,
         Birdies,
         Eagles,
         HIOs,
-
         LeatherGimmies,
         PutterGimmies,
-
         TimeOnTheCourse,
+        LongPutts,
+        WaterTrapRounds,
+        WaterTrapCount,
+        SandTrapCount,
+        Course01Complete,
+        Course02Complete,
+        Course03Complete,
+        Course04Complete,
+        Course05Complete,
+        Course06Complete,
+        Course07Complete,
 
         Count
     };

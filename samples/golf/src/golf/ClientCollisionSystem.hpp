@@ -74,4 +74,6 @@ private:
     std::int32_t m_club;
 
     cro::Image m_mapImage;
+
+    bool m_waterCollision; //tracking dolphin achievement
 };

@@ -75,7 +75,11 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "hole_in_one_million",
     "gimme_five",
     "gimme_ten",
-    "day_job"
+    "day_job",
+    "big_putts",
+    "golfin_dolphin",
+    "grand_tour",
+    "grand_design",
 };
 
 //appears on the notification
@@ -109,7 +113,11 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Hole In One Million",
     "Gimme 5!",
     "Gimme 10!",
-    "Day Job"
+    "Day Job",
+    "I Like Big Putts",
+    "Golfin' Dolphin",
+    "Grand Tour",
+    "Grand Design"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -144,9 +152,13 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Take five gimmies inside the leather", false),
     std::make_pair("Take ten gimmies inside the putter", false),
     std::make_pair("Total over 24 hours play time on the course", false),
+    std::make_pair("Sink 15 long putts", false),
+    std::make_pair("Hit a water trap on 5 different rounds", false),
+    std::make_pair("Play a full round on every course", false),
+    std::make_pair("Save your first custom course", false),
 };
 
-//assuming tropies load correctly they are
+//assuming trophies load correctly they are:
 /*
 Gold, silver, bronze cup
 Gold, silver, bronze mannequin
@@ -193,7 +205,11 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::Platinum,
     TrophyID::BronzeCup,
     TrophyID::BronzeFigure,
-    TrophyID::GoldCup
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
+    TrophyID::BronzeFigure,
+    TrophyID::GoldFigure,
+    TrophyID::BronzeCup
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
@@ -202,25 +218,31 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "holes_played",
     "putt_distance",
     "stroke_distance",
-
     "gold_average",
     "silver_average",
     "bronze_average",
     "total_rounds",
-
     "eightball_won",
     "nineball_won",
     "snooker_won",
-
-    "time_on_the_range"
+    "time_on_the_range",
     "birdies",
     "eagles",
     "hios",
-
     "leather_gimmies",
     "putter_gimmies",
-
-    "time_on_the_course"
+    "time_on_the_course",
+    "long_putts",
+    "water_traps",
+    "water_trap_count",
+    "sand_trap_count",
+    "course_01", //a tad non-descript but we want these to match the name of the course directories
+    "course_02",
+    "course_03",
+    "course_04",
+    "course_05",
+    "course_06",
+    "course_07",
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -235,13 +257,24 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Eightball Games Won (multiplayer)",
     "Nineball Games Won (multiplayer)",
     "Snooker Games Won (multiplayer)",
-    "Time spent at the Driving Range",
-    "Birdies scored",
+    "Time Spent At The Driving Range",
+    "Birdies Scored",
     "Eagles scored",
-    "Holes in one",
-    "Gimmies taken inside the leather",
-    "Gimmies taken inside the putter",
-    "Total time spent on a course"
+    "Holes In One",
+    "Gimmies Taken Inside The Leather",
+    "Gimmies Taken Inside The Putter",
+    "Total Time Spent On A Course",
+    "Long Putts Sunk",
+    "Rounds Where Water Were Traps Hit",
+    "Total Water Traps Hit",
+    "Total Sand Traps Hit",
+    "Number of times Course 1 Completed",
+    "Number of times Course 2 Completed",
+    "Number of times Course 3 Completed",
+    "Number of times Course 4 Completed",
+    "Number of times Course 5 Completed",
+    "Number of times Course 6 Completed",
+    "Number of times Course 7 Completed",
 };
 
 struct StatType final
@@ -270,7 +303,18 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
     StatType::Integer,
-    StatType::Time
+    StatType::Time,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer
 };
 
 struct StatTrigger final

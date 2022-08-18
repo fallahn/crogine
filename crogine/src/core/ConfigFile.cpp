@@ -705,18 +705,26 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
     stream << indent << "{" << std::endl;
     for (const auto& p : m_properties)
     {
-        stream << indent << indentBlock << p.getName() << " = ";
         auto str = p.getValue<std::string>();
-        if (!p.m_isStringValue
-            || (str.front() == '\"' && str.back() == '\"'))
+        if (str.empty())
         {
-            stream << std::fixed << str;
+            LogW << p.getName() << ": property has no value and will be skipped..." << std::endl;
         }
         else
         {
-            stream << "\"" << str << "\"";        }
-        
-        stream << std::endl;
+            stream << indent << indentBlock << p.getName() << " = ";
+            if (!p.m_isStringValue
+                || (str.front() == '\"' && str.back() == '\"'))
+            {
+                stream << std::fixed << str;
+            }
+            else
+            {
+                stream << "\"" << str << "\"";
+            }
+
+            stream << std::endl;
+        }
     }
     stream << "\n";
 

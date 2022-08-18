@@ -126,6 +126,8 @@ void GameState::updateView(cro::Camera& cam3D)
     cam3D.viewport.height = size.y;
 
     //update the UI camera to match the new screen size
+    //TODO DON'T DO THIS. Each camera wants its own specific
+    //resize callback else the default one will override it.
     auto& cam2D = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam2D.viewport = cam3D.viewport;
 }

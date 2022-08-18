@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -224,4 +224,16 @@ std::size_t GameController::getControllerCount()
 {
     CRO_ASSERT(App::m_instance, "No app running");
     return App::m_instance->m_controllerCount;
+}
+
+bool GameController::hasPSLayout(std::int32_t controllerIndex)
+{
+    CRO_ASSERT(App::m_instance, "No app running");
+    CRO_ASSERT(controllerIndex < MaxControllers, "");
+
+    if (App::m_instance->m_controllers[controllerIndex].controller)
+    {
+        return App::m_instance->m_controllers[controllerIndex].psLayout;
+    }
+    return false;
 }

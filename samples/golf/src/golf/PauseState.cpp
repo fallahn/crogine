@@ -318,7 +318,7 @@ void PauseState::buildScene()
             });
 
     //return to game
-    entity = createItem(glm::vec2(0.f), "Return To Game", menuEntity);
+    entity = createItem(glm::vec2(0.f), "Return", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -330,7 +330,7 @@ void PauseState::buildScene()
             });
 
     //quit button
-    entity = createItem(glm::vec2(0.f, -10.f), "Quit", menuEntity);
+    entity = createItem(glm::vec2(0.f, -10.f), "Quit To Menu", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -346,7 +346,7 @@ void PauseState::buildScene()
 
 
     //confirmation buttons
-    entity = createItem(glm::vec2(-20.f, -10.f), "No", confirmEntity);
+    entity = createItem(glm::vec2(-20.f, -12.f), "No", confirmEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Confirm);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&,menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -361,7 +361,7 @@ void PauseState::buildScene()
             });
 
 
-    entity = createItem(glm::vec2(20.f, -10.f), "Yes", confirmEntity);
+    entity = createItem(glm::vec2(20.f, -12.f), "Yes", confirmEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Confirm);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -387,13 +387,27 @@ void PauseState::buildScene()
             });
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 10.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 12.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setString("Are You Sure?");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
     confirmEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    if (m_sharedData.hosting
+        && !m_sharedData.tutorial)
+    {
+        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 2.f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setString("This Will Kick All Players");
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        centreText(entity);
+        confirmEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
 
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable

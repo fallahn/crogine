@@ -90,6 +90,23 @@ bool ShaderResource::loadFromString(std::int32_t ID, const std::string& vertex, 
     return true;
 }
 
+bool ShaderResource::loadFromString(std::int32_t ID, const std::string& vertex, const std::string& geom, const std::string& fragment, const std::string& defines)
+{
+    if (m_shaders.count(ID) > 0)
+    {
+        Logger::log("Shader with this ID already exists!", Logger::Type::Error);
+        return false;
+    }
+
+    auto pair = std::make_pair(ID, Shader());
+    if (!pair.second.loadFromString(vertex, geom, fragment, defines))
+    {
+        return false;
+    }
+    m_shaders.insert(std::move(pair));
+    return true;
+}
+
 std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
 {
 #ifdef PLATFORM_DESKTOP

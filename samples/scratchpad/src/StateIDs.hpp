@@ -38,8 +38,10 @@ namespace States
             MainMenu,
             BatCat,
             Billiards,
+            Bush,
             BSP,
             MeshCollision,
+            Retro,
             Voxels,
             VATs,
 

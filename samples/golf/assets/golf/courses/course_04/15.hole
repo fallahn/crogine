@@ -36,30 +36,6 @@ hole 15
 
     prop
     {
-        model = "assets/golf/models/palm01.cmt"
-        position = 97.473953,1.296470,-131.707001
-        rotation = -63.333812
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/palm02.cmt"
-        position = 93.594521,1.287599,-121.983879
-        rotation = -26.296128
-        scale = 0.945872,0.945872,0.945872
-    }
-
-    prop
-    {
-        model = "assets/golf/models/palm01.cmt"
-        position = 100.268166,1.535125,-128.978577
-        rotation = -106.395527
-        scale = 0.856892,0.856892,0.856892
-    }
-
-    prop
-    {
         model = "assets/golf/models/lilies_large.cmt"
         position = 118.942719,0.071474,-84.427841
         rotation = 0.000000
@@ -172,6 +148,7 @@ hole 15
         position = 74.423965,-0.525209,-203.030792
         rotation = 0.000000
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     prop

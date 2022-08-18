@@ -24,9 +24,15 @@
     <ClInclude Include="include\AchievementIDs.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\MatchMaking.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Achievements.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MatchMaking.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,7 +1,7 @@
 model leaderboard
 {
     mesh = assets/golf/models/leaderboard.cmb
-    cast_shadows = false
+    cast_shadows = true
 
     material Unlit
     {
@@ -11,6 +11,11 @@ model leaderboard
         repeat = true
         depth_test = true
         double_sided = true
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/score_background.png"
         alpha_clip = 0.520000
@@ -24,6 +29,11 @@ model leaderboard
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/score_background.png"
 

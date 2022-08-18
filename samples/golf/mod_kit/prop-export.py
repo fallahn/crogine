@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2022, 7, 4),
+    "version": (2022, 7, 31),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -169,10 +169,11 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                 worldRotation = ob.rotation_euler
                 worldScale = ob.scale
 
-                if ob.parent is not None and ob.parent.type == 'MESH':
-                    worldLocation = ob.matrix_world @ ob.location
-                    worldRotation = ob.matrix_world.to_euler('XYZ')
-                    worldScale = vecMultiply(ob.parent.scale, ob.scale)
+                if ob.parent is not None:
+                    if ob.parent.type == 'MESH' or ob.parent.type == 'ARMATURE':
+                        worldLocation = ob.matrix_world @ ob.location
+                        worldRotation = ob.matrix_world.to_euler('XYZ')
+                        worldScale = vecMultiply(ob.parent.scale, ob.scale)
 
 
                 if "crowd" in modelName.lower():

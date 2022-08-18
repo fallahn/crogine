@@ -465,7 +465,7 @@ void GolfState::buildUI()
                 m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
 
                 m_mapQuad.setPosition(offset);
-                m_mapQuad.setColour(cro::Colour(0.396f,0.263f,0.184f));
+                m_mapQuad.setColour(DropShadowColour);
                 m_mapTexture.clear(cro::Colour::Transparent);
                 m_mapQuad.draw();
 
@@ -874,6 +874,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
     }
     Achievements::incrementStat(StatStrings[StatID::TotalRounds]);
     Achievements::incrementStat(StatStrings[StatID::TimeOnTheCourse], m_sharedData.timeStats[0].totalTime / 1000);
+    if (m_sharedData.holeCount == 0) //set to ALL - which ought to be 18
+    {
+        Achievements::incrementStat(m_sharedData.mapDirectory);
+    }
 
     auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());
     float trophyStat = 1.f - (1.f / m_statBoardScores.size()); //in other words, 0 if we're the only player
@@ -1002,10 +1006,13 @@ void GolfState::showCountdown(std::uint8_t seconds)
         //hmmm not sure the point of this as it lands so close that it fades out...
         auto pos = m_holeData[m_currentHole].pin;
         auto camPos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
-        camPos.y = pos.y;
+        camPos.y = pos.y + 0.24f;
 
-        auto diff = pos - camPos;
-        pos += diff;
+        auto diff = glm::normalize(pos - camPos);
+        float temp = diff.z;
+        diff.z = diff.x;
+        diff.x = -temp;
+        pos += diff * 1.5f;
 
         m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(pos);
     }

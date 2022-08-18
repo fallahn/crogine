@@ -13,6 +13,7 @@ hole 11
         model = "assets/golf/models/boat01.cmt"
         position = 120.558243,-0.603668,-38.152496
         rotation = 0.000000
+        emitter = "boat_idle"
     }
 
     crowd

@@ -70,7 +70,7 @@ namespace cro
         /*!
         \brief Returns the centre of the box in local coordinates
         */
-        glm::vec3 getCentre() const;
+        glm::vec3 constexpr getCentre() const;
 
         /*!
         \brief Overload allows accessing the min and max values as an array
@@ -100,7 +100,7 @@ namespace cro
         /*!
         \brief Returns the size of the box as width/height/depth
         */
-        glm::vec3 getSize() const { return m_points[1] - m_points[0]; }
+        glm::vec3 constexpr getSize() const { return m_points[1] - m_points[0]; }
 
         /*!
         \brief Returns the sum of all 6 sides of the box

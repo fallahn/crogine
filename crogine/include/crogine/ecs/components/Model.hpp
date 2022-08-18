@@ -199,11 +199,11 @@ namespace cro
 
         /*!
         \brief Sets the transform data for instanced models
-        \param transforms A std::vector of glm::mat containing the transforms
+        \param transforms A std::vector of glm::mat4 containing the transforms
         for each instance.
 
-        To enable this make sure to load the model with a ModelDefinition constructed
-        with the 'instanced' parameter set to true, or with a material that has a compatible
+        To enable this make sure to load the model using a ModelDefinition with the
+        'instanced' parameter set to true, or with a material that has a compatible
         instancing shader.
         Note that it is not generally recommended to update this frequently as the VBO
         containing the transform and normal matrix data is completely recalculated, which

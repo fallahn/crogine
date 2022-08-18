@@ -221,11 +221,22 @@ namespace cro
         void setCursor(const Cursor* cursor);
 
         /*!
-        \brief Returns a pointer to the active cursorm or nullptr
+        \brief Returns a pointer to the active cursor, or nullptr
         if no specific currsor has been set.
         */
         const Cursor* getCursor() const;
 
+        /*!
+        \brief Sets the size of the window to use when returning from
+        full screen
+        */
+        void setWindowedSize(glm::uvec2 size);
+
+        /*!
+        \brief Returns the currnt windowed size used when returning
+        from full screen mode
+        */
+        glm::uvec2 getWindowedSize() const;
 
     private:
 

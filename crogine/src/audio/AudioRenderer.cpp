@@ -162,6 +162,13 @@ void AudioRenderer::stopSource(std::int32_t src)
     m_impl->stopSource(src);
 }
 
+void AudioRenderer::setPlayingOffset(std::int32_t src, cro::Time offset)
+{
+    CRO_ASSERT(src > 0, "Not a valid source ID");
+    CRO_ASSERT(offset.asMilliseconds() >= 0, "offset must not be negative");
+    m_impl->setPlayingOffset(src, offset);
+}
+
 std::int32_t AudioRenderer::getSourceState(std::int32_t src)
 {
     if (src < 1)

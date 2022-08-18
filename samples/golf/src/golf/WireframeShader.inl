@@ -65,7 +65,14 @@ static const std::string WireframeVertex = R"(
 
 #if defined (CULLED)
         vec3 distance = worldPos.xyz - u_cameraWorldPosition;
-        v_colour.a *= smoothstep(12.25, 16.0, dot(distance, distance));
+
+//float near = 3.5;
+//float far = 4.0;
+
+float near = 10.0;
+float far = 15.0;
+
+        v_colour.a *= smoothstep(near*near, far*far, dot(distance, distance));
 #endif
 
         gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
@@ -93,7 +100,6 @@ static const std::string WireframeFragment = R"(
         alpha = step(0.5, alpha);
         if (alpha < 0.5) discard;
 #endif
-
         FRAG_OUT = colour;
     }
 )";

@@ -13,6 +13,7 @@ hole 08
         model = "assets/golf/models/boat02.cmt"
         position = 116.151733,-0.880012,-154.856918
         rotation = -27.637924
+        emitter = "boat_idle"
     }
 
     prop

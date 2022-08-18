@@ -24,6 +24,7 @@ hole 15
         position = 249.313110,-0.741361,-92.890999
         rotation = -14.589895
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     crowd

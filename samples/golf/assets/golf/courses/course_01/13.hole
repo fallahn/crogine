@@ -79,13 +79,4 @@ hole 13
         rotation = 20.204436
         scale = 1.000000,1.000000,1.000000
     }
-
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 56.960194,2.138249,-34.147106
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
 }

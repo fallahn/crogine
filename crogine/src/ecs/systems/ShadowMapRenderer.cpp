@@ -50,10 +50,16 @@ source distribution.
 
 using namespace cro;
 
+namespace
+{
+    std::uint32_t intervalCounter = 0;
+}
+
 ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
     : System(mb, typeid(ShadowMapRenderer)),
-    m_maxDistance (100.f),
-    m_cascadeCount(3)
+    m_maxDistance   (100.f),
+    m_cascadeCount  (3),
+    m_interval      (1)
 {
     requireComponent<cro::Model>();
     requireComponent<cro::Transform>();
@@ -77,14 +83,24 @@ void ShadowMapRenderer::process(float)
     //render here to ensure this only happens once per update
     //remember we might be rendering the Scene in multiple passes
     //which would call render() multiple times unnecessarily.
-    render();
-    m_activeCameras.clear();
+    if ((intervalCounter % m_interval) == 0)
+    {
+        render();
+        m_activeCameras.clear();
+    }
+
+
+    intervalCounter++;
 }
 
 void ShadowMapRenderer::updateDrawList(Entity camEnt)
 {
+    if (intervalCounter % m_interval)
+    {
+        return;
+    }
+
     glm::vec3 lightDir = getScene()->getSunlight().getComponent<Sunlight>().getDirection();
-    glm::quat lightRotation = glm::quat_cast(getScene()->getSunlight().getComponent<Transform>().getWorldTransform());
 
     //this gets called once for each Camera in the CameraSystem
     //from CameraSystem::process() - so we'll check here if
@@ -104,25 +120,28 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         m_activeCameras.push_back(camEnt);
 
 
+        //only covers the first part of the frustum...
+        //TODO implement the rest as cascaded shadows
+        float farPlane = std::min(camera.m_farPlane, m_maxDistance) / m_cascadeCount;
+
         //calc a position for the directional light
         //this is used for depth sorting the draw list
-        auto centre = camEnt.getComponent<cro::Transform>().getWorldPosition() + (camEnt.getComponent<cro::Transform>().getForwardVector() * (camera.m_farPlane / 2.f));
+        auto centre = camEnt.getComponent<cro::Transform>().getWorldPosition() + (camEnt.getComponent<cro::Transform>().getForwardVector() * (farPlane / 2.f));
         auto lightPos = centre - (lightDir * ((camera.m_farPlane - camera.m_nearPlane) / 2.f));
 
-        camera.shadowViewMatrix = glm::inverse(glm::toMat4(lightRotation));
+        camera.shadowViewMatrix = glm::lookAt(lightPos, centre, cro::Transform::Y_AXIS);// glm::inverse(glm::toMat4(lightRotation));
 
         //frustum in camera coords
         float tanHalfFOVY = std::tan(camera.m_verticalFOV / 2.f);
         float tanHalfFOVX = std::tan((camera.m_verticalFOV * camera.m_aspectRatio) / 2.f);
 
-        //only covers the first part of the frustum...
-        //TODO implement the rest as cascaded shadows
-        float farPlane = std::min(camera.m_farPlane, m_maxDistance) / m_cascadeCount;
-        //float farPlane = camera.m_farPlane;
-        float xNear = camera.m_nearPlane * tanHalfFOVX;
-        float xFar = farPlane * tanHalfFOVX;
-        float yNear = camera.m_nearPlane * tanHalfFOVY;
-        float yFar = farPlane * tanHalfFOVY;
+        
+        static constexpr float Embiggenment = 1.2f;
+
+        float xNear = (camera.m_nearPlane * tanHalfFOVX) * Embiggenment;
+        float xFar = (farPlane * tanHalfFOVX)* Embiggenment;
+        float yNear = (camera.m_nearPlane * tanHalfFOVY)* Embiggenment;
+        float yFar = (farPlane * tanHalfFOVY)* Embiggenment;
 
         std::array frustumCorners =
         {
@@ -251,6 +270,7 @@ void ShadowMapRenderer::render()
     for (auto c = 0u; c < m_activeCameras.size(); c++)
     {
         auto& camera = m_activeCameras[c].getComponent<Camera>();
+        auto cameraPosition = m_activeCameras[c].getComponent<cro::Transform>().getWorldPosition();
 
         //enable face culling and render rear faces
         //glCheck(glEnable(GL_CULL_FACE)); //this is now done per-material as some may be double sided
@@ -328,6 +348,7 @@ void ShadowMapRenderer::render()
                 glCheck(glUniformMatrix4fv(mat.uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camera.shadowViewMatrix)));
                 glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
                 glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camera.shadowProjectionMatrix)));
+                glCheck(glUniform3f(mat.uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
                 //glCheck(glUniformMatrix4fv(mat.uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camera.depthViewProjectionMatrix)));
 
                 glCheck(model.m_materials[Mesh::IndexData::Final][i].doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));

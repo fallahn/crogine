@@ -1,0 +1,24 @@
+model suzanne
+{
+    mesh = assets/bush/suzanne.cmb
+    cast_shadows = false
+
+    material VertexLit
+    {
+        mask_colour = 1.000000,1.000000,0.000000,1.000000
+        name = "Untitled"
+        colour = 1.000000,0.999990,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        vertex_coloured = true
+        blendmode = none
+
+    }
+}

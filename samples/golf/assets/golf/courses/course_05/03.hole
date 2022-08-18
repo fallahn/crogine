@@ -98,4 +98,20 @@ hole 03
         rotation = -20.804146
     }
 
+    prop
+    {
+        model = "assets/golf/models/wheelchair.cmt"
+        position = 140.429169,2.424849,-111.484100
+        rotation = 38.468356
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/spectators/sitting/07.cmt"
+        position = 140.375732,2.423182,-111.493225
+        rotation = 35.233235
+        scale = 1.000000,1.000000,1.000000
+    }
+
 }

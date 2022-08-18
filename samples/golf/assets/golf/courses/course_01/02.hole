@@ -21,6 +21,7 @@ hole 02
         model = "assets/golf/models/boat02.cmt"
         position = 265.054596,-0.825552,-101.741470
         rotation = 95.085401
+        emitter = "boat_idle"
     }
 
     prop
@@ -46,20 +47,6 @@ hole 02
     {
         position = 57.670109,1.570306,-184.404999
         rotation = -16.483784
-    }
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 140.753281,1.698383,-135.438858
-        rotation = -0.035147
-    }
-
-    prop
-    {
-        model = "assets/golf/models/spruce01.cmt"
-        position = 146.388657,1.698383,-132.966751
-        rotation = -134.587547
     }
 
     prop

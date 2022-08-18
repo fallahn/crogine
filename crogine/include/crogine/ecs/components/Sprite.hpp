@@ -50,15 +50,15 @@ namespace cro
     a SpriteSystem2D to update them and a RenderSystem2D to draw them.
     Sprite components can also be placed on an entity with a Model component
     in which case a SpriteSystem3D is required to update the sprite
-    geometry and sprites are rendered with the ModelRenderer system.
+    geometry and sprites are rendered with the ModelRenderer system in 3D space.
 
     Sprites rendered via a Drawable2D are usually measured in pixel units
     and drawn on screen with an orthographic projection.
 
     Sprites with a Model component are rendered as part of a 3D scene, and
-    their units will need to be scaled accordingly.
+    their units will need to be scaled accordingly if loaded from a SpriteSheet.
 
-    Bother versions of a Sprite can be animated with a SpriteAnimation component
+    Both versions of a Sprite can be animated with a SpriteAnimation component
     and SpriteAnimator system.
 
     \see SpriteSheet, SpriteAnimation
@@ -121,7 +121,7 @@ namespace cro
         glm::vec2 getSize() const { return { m_textureRect.width, m_textureRect.height }; }
         /*!
 
-        \brief Returns the created by the active texture rectangle's size
+        \brief Returns the FloatRect created by the active texture rectangle's size
         */
         FloatRect getTextureBounds() const { return { glm::vec2(0.f), getSize() }; }
 

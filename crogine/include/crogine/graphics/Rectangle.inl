@@ -35,14 +35,14 @@ Rectangle<T>::Rectangle(const Rectangle<U>& other)
     height(static_cast<T>(other.height)) {}
 
 template <typename T>
-bool Rectangle<T>::intersects(Rectangle<T> other) const
+bool constexpr Rectangle<T>::intersects(Rectangle<T> other) const
 {
     Rectangle<T> intersection;
     return intersects(other, intersection);
 }
 
 template <class T>
-bool Rectangle<T>::intersects(Rectangle<T> other, Rectangle<T>& overlap) const
+bool constexpr Rectangle<T>::intersects(Rectangle<T> other, Rectangle<T>& overlap) const
 {
     T r1MinX = std::min(left, static_cast<T>(left + width));
     T r1MaxX = std::max(left, static_cast<T>(left + width));
@@ -74,7 +74,7 @@ bool Rectangle<T>::intersects(Rectangle<T> other, Rectangle<T>& overlap) const
 }
 
 template <class T>
-bool Rectangle<T>::contains(Rectangle<T> second) const
+bool constexpr Rectangle<T>::contains(Rectangle<T> second) const
 {
     if (second.left < left) return false;
     if (second.bottom < bottom) return false;
@@ -85,7 +85,7 @@ bool Rectangle<T>::contains(Rectangle<T> second) const
 }
 
 template <class T>
-bool Rectangle<T>::contains(glm::vec2 point) const
+bool constexpr Rectangle<T>::contains(glm::vec2 point) const
 {
     T x = static_cast<T>(point.x);
     T y = static_cast<T>(point.y);

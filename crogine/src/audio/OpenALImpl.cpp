@@ -461,6 +461,35 @@ void OpenALImpl::stopSource(std::int32_t source)
     alCheck(alSourceStop(src));
 }
 
+void OpenALImpl::setPlayingOffset(std::int32_t source, cro::Time offset)
+{
+    if (getSourceState(source) == 2)
+    {
+        return;
+    }
+
+    ALuint src = static_cast<ALuint>(source);
+
+    auto result = std::find_if(std::begin(m_streams), std::end(m_streams),
+        [src](const OpenALStream& str)
+        {
+            return str.sourceID == src;
+        });
+
+    if (result == m_streams.end())
+    {
+        alCheck(alSourcef(src, AL_SEC_OFFSET, offset.asSeconds()));
+    }
+    else
+    {
+        while (result->busy) {}
+
+        result->accessed = true;
+        result->audioFile->seek(offset);
+        result->accessed = false;
+    }
+}
+
 std::int32_t OpenALImpl::getSourceState(std::int32_t source) const
 {
     ALuint src = static_cast<ALuint>(source);

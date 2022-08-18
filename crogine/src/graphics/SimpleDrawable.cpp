@@ -142,6 +142,7 @@ SimpleDrawable::SimpleDrawable()
 #endif
     m_vertexCount       (0),
     m_textureID         (0),
+    m_texture           (nullptr),
     m_blendMode         (Material::BlendMode::Alpha)
 {
     increaseColourShader();
@@ -275,6 +276,7 @@ bool SimpleDrawable::setShader(const Shader& shader)
 void SimpleDrawable::setTexture(const Texture& texture)
 {
     m_textureID = texture.getGLHandle();
+    m_texture = &texture;
 
     //only replace the texture if  active shader is
     //colour shader (don't replace custom shaders)

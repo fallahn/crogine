@@ -79,7 +79,7 @@ static constexpr float WaterLevel = -0.02f;
 static constexpr float TerrainLevel = WaterLevel - 0.03f;
 static constexpr float MaxTerrainHeight = 4.5f;
 
-static constexpr float FlagRaiseDistance = 2.5f * 2.5f;
+static constexpr float FlagRaiseDistance = 3.f * 3.f;
 static constexpr float PlayerShadowOffset = 0.04f;
 
 static constexpr float MinPixelScale = 1.f;
@@ -96,13 +96,17 @@ static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, 
 static const cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
 static const cro::Colour SkyTop(0.678f, 0.851f, 0.718f);
 static const cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
+static const cro::Colour DropShadowColour(0.396f, 0.263f, 0.184f);
 
 struct SpriteAnimID final
 {
     enum
     {
         Swing = 0,
-        Medal
+        Medal,
+        BillboardSwing,
+        BillboardRewind,
+        Footstep
     };
 };
 
@@ -120,7 +124,7 @@ struct MixerChannel final
 //data blocks for uniform buffer
 struct WindData final
 {
-    float direction[3];
+    float direction[3] = {1.f, 0.f, 0.f};
     float elapsedTime = 0.f;
 };
 
@@ -144,6 +148,7 @@ struct ShaderID final
         CelTexturedInstanced,
         CelTexturedSkinned,
         ShadowMap,
+        ShadowMapSkinned,
         Crowd,
         CrowdShadow,
         Cloud,
@@ -163,7 +168,11 @@ struct ShaderID final
         Trophy,
         Beacon,
         Bow,
-        Noise
+        Noise,
+        TreesetLeaf,
+        TreesetBranch,
+        TreesetShadow,
+        TreesetLeafShadow
     };
 };
 
@@ -515,13 +524,17 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
             entity.addComponent<cro::Transform>().setPosition(model.position);
             entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, model.rotation * cro::Util::Const::degToRad);
             entity.getComponent<cro::Transform>().setScale(model.scale);
+            entity.setLabel(cro::FileSystem::getFileName(model.path));
             md.createModel(entity);
 
-            auto material = resources.materials.get(materialID);
-            for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+            if (materialID > -1)
             {
-                applyMaterialData(md, material, i);
-                entity.getComponent<cro::Model>().setMaterial(i, material);
+                auto material = resources.materials.get(materialID);
+                for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+                {
+                    applyMaterialData(md, material, i);
+                    entity.getComponent<cro::Model>().setMaterial(i, material);
+                }
             }
 
             //add auto rotation if this model is set to > 360

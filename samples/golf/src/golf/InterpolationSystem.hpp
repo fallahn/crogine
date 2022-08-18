@@ -110,6 +110,20 @@ public:
 
 	std::uint32_t id = std::numeric_limits<std::uint32_t>::max();
 
+#ifdef CRO_DEBUG_
+	void dumpPositions(std::array<std::vector<float>, 3u>& dst) const
+	{
+		for (auto i = m_positionsIndex; i < m_positionsIndex + m_prevPositions.size(); ++i)
+		{
+			//LogI << m_prevPositions[i % m_prevPositions.size()] << std::endl;
+			auto idx = i % m_prevPositions.size();
+			dst[0].push_back(m_prevPositions[idx].x);
+			dst[1].push_back(m_prevPositions[idx].y);
+			dst[2].push_back(m_prevPositions[idx].z);
+		}
+	}
+#endif
+
 private:
 	cro::Clock m_timer;
 	std::int32_t m_overflow = 0;
@@ -125,6 +139,17 @@ private:
 
 	template <InterpolationType>
 	friend class InterpolationSystem;
+
+#ifdef CRO_DEBUG_
+	std::array<glm::vec3, 240> m_prevPositions;
+	std::size_t m_positionsIndex = 0;
+
+	void addPosition(glm::vec3 p)
+	{
+		m_prevPositions[m_positionsIndex] = p;
+		m_positionsIndex = (m_positionsIndex + 1) % m_prevPositions.size();
+	}
+#endif
 };
 
 template <InterpolationType Interpolation = InterpolationType::Linear>
@@ -138,7 +163,7 @@ public:
 		requireComponent<InterpolationComponent<Interpolation>>();
 	}
 
-	void process(float) override
+	void process(float dt) override
 	{
 		for (auto entity : getEntities())
 		{
@@ -159,8 +184,8 @@ public:
 						interp.m_timer.restart();
 						interp.m_buffer.pop_front();
 
-						entity.template getComponent<cro::Transform>().setPosition(interp.m_buffer[0].position);
-						entity.template getComponent<cro::Transform>().setRotation(interp.m_buffer[0].rotation);
+						//entity.template getComponent<cro::Transform>().setPosition(interp.m_buffer[0].position);
+						//entity.template getComponent<cro::Transform>().setRotation(interp.m_buffer[0].rotation);
 
 						elapsed = interp.m_overflow;
 
@@ -218,7 +243,11 @@ public:
 							auto lastPos = entity.template getComponent<cro::Transform>().getPosition();
 							entity.template getComponent<cro::Transform>().setPosition(position);
 
-							interp.m_interpVelocity = (position - lastPos) * 60.f; //fixed step... sould be 1/dt?
+							interp.m_interpVelocity = (position - lastPos) * (1.f / dt);// 60.f; //fixed step... should be 1/dt?
+
+#ifdef CRO_DEBUG_
+							interp.addPosition(position);
+#endif
 						}
 
 						auto rotation = glm::slerp(interp.m_buffer[0].rotation, interp.m_buffer[1].rotation, t);

@@ -86,7 +86,7 @@ namespace cro
         /*!
         \brief Returns true if the given rectangle intersects this one
         */
-        bool intersects(Rectangle<T>) const;
+        bool constexpr intersects(Rectangle<T>) const;
 
         /*!
         \brief Returns true if the given rectangle intersects this one
@@ -94,17 +94,17 @@ namespace cro
         then it will contain the overlapping area of the two rectangles, if they
         overlap
         */
-        bool intersects(Rectangle<T>, Rectangle<T>& overlap) const;
+        bool constexpr intersects(Rectangle<T>, Rectangle<T>& overlap) const;
 
         /*!
         \brief Returns true if this rectangle fully contains the given rectangle
         */
-        bool contains(Rectangle<T>) const;
+        bool constexpr contains(Rectangle<T>) const;
 
         /*!
         \brief Returns true if this rectangle contains the given point
         */
-        bool contains(glm::vec2) const;
+        bool constexpr contains(glm::vec2) const;
 
         /*!
         \brief Returns a copy of this rectangle transformed by the given matrix
