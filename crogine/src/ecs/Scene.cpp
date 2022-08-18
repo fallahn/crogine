@@ -142,7 +142,7 @@ namespace
             camera.viewport.bottom = (1.f - size.y) / 2.f;
             camera.viewport.height = size.y;
         }
-        LogW << "Default camera resize callback used: are you missing a callback assignment?" << std::endl;
+        LOG("Default camera resize callback used: are you missing a callback assignment?", cro::Logger::Type::Warning);
     }
 }
 
