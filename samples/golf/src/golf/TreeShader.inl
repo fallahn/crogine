@@ -215,9 +215,12 @@ R"(
 #if defined (POINTS)
     layout (points) in;
     layout (points, max_vertices = 1) out;
+//hax because mac gpu drivers suck
+#define ARRAY_SIZE 1
 #else
     layout (triangles) in;
     layout (triangles, max_vertices = 3) out;
+#define ARRAY_SIZE 3
 #endif
 
     in vData
@@ -227,7 +230,7 @@ R"(
         vec3 normal;
         float darkenAmount;
         float ditherAmount;
-    }v_dataIn[];
+    }v_dataIn[ARRAY_SIZE];
 
 
     out vData
@@ -241,11 +244,30 @@ R"(
 
     void main()
     {
+#if defined (POINTS)
+
+        gl_Position = gl_in[0].gl_Position;
+        gl_PointSize = gl_in[0].gl_PointSize;
+        gl_ClipDistance[0] = gl_in[0].gl_ClipDistance[0];
+    
+        v_dataOut.rotation = v_dataIn[0].rotation;
+        v_dataOut.colour = v_dataIn[0].colour;
+        v_dataOut.normal = v_dataIn[0].normal;
+        v_dataOut.darkenAmount = v_dataIn[0].darkenAmount;
+        v_dataOut.ditherAmount = v_dataIn[0].ditherAmount;
+
+        if(gl_PointSize > 0.05)
+        {
+            EmitVertex();
+        }
+
+#else
+
         for(int i = 0; i < gl_in.length(); ++i)
         {
             gl_Position = gl_in[i].gl_Position;
             gl_PointSize = gl_in[i].gl_PointSize;
-            gl_ClipDistance[i] = gl_in[i].gl_ClipDistance[i];
+            gl_ClipDistance[0] = gl_in[i].gl_ClipDistance[0];
         
             v_dataOut.rotation = v_dataIn[i].rotation;
             v_dataOut.colour = v_dataIn[i].colour;
@@ -258,6 +280,7 @@ R"(
                 EmitVertex();
             }
         }
+#endif
     })";
 
 const std::string BushFragment =

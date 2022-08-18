@@ -237,24 +237,38 @@ const static std::string ShadowGeom = R"(
 #if defined (POINTS)
     layout (points) in;
     layout (points, max_vertices = 1) out;
+#define ARRAY_SIZE 1
 #else
     layout (triangles) in;
     layout (triangles, max_vertices = 3) out;
+#define ARRAY_SIZE 3
 #endif
 
     void main()
     {
+#if defined (POINTS)
+        gl_Position = gl_in[0].gl_Position;
+        gl_PointSize = gl_in[0].gl_PointSize;
+        gl_ClipDistance[0] = gl_in[0].gl_ClipDistance[0];
+        
+        if(gl_PointSize > 0.05)
+        {
+            EmitVertex();
+        }
+
+#else
         for(int i = 0; i < gl_in.length(); ++i)
         {
             gl_Position = gl_in[i].gl_Position;
             gl_PointSize = gl_in[i].gl_PointSize;
-            gl_ClipDistance[i] = gl_in[i].gl_ClipDistance[i];
+            gl_ClipDistance[0] = gl_in[i].gl_ClipDistance[0];
         
             if(gl_PointSize > 0.05)
             {
                 EmitVertex();
             }
         }
+#endif
     })";
 
 const static std::string ShadowFragment = R"(
