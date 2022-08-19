@@ -34,6 +34,7 @@ source distribution.
 #include "bush/BushState.hpp"
 #include "bsp/BspState.hpp"
 #include "collision/CollisionState.hpp"
+#include "frustum/FrustumState.hpp"
 #include "voxels/VoxelState.hpp"
 #include "vats/VatsState.hpp"
 #include "retro/RetroState.hpp"
@@ -101,9 +102,10 @@ bool MyApp::initialise()
     m_stateStack.registerState<VoxelState>(States::ScratchPad::Voxels);
     m_stateStack.registerState<VatsState>(States::ScratchPad::VATs);
     m_stateStack.registerState<RetroState>(States::ScratchPad::Retro);
+    m_stateStack.registerState<FrustumState>(States::ScratchPad::Frustum);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::Retro);
+    m_stateStack.pushState(States::ScratchPad::Frustum);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
