@@ -50,6 +50,8 @@ Camera::Camera()
     m_passes[Pass::Final].m_planeMultiplier = -1.f;
 
     m_passes[Pass::Reflection].m_cullFace = GL_FRONT;
+
+    std::fill(m_frustumCorners.begin(), m_frustumCorners.end(), glm::vec4(0.f));
 }
 
 void Camera::setActivePass(std::uint32_t pass)
@@ -140,6 +142,8 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
     m_frustumData.nearPlane = -nearPlane;
     m_frustumData.nearRight = aspect * nearPlane * fovTan;
     m_frustumData.nearTop = nearPlane * fovTan;
+
+    updateFrustumCorners();
 }
 
 void Camera::setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane)
@@ -158,6 +162,21 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
     m_frustumData.nearPlane = -nearPlane;
     m_frustumData.nearRight = m_aspectRatio * nearPlane;
     m_frustumData.nearTop = nearPlane;
+
+    m_frustumCorners =
+    {
+        //near
+        glm::vec4(right, top, -nearPlane, 1.f),
+        glm::vec4(left, top, -nearPlane, 1.f),
+        glm::vec4(left, bottom, -nearPlane, 1.f),
+        glm::vec4(right, bottom, -nearPlane, 1.f),
+
+        //far
+        glm::vec4(right, top, -farPlane, 1.f),
+        glm::vec4(left, top, -farPlane, 1.f),
+        glm::vec4(left, bottom, -farPlane, 1.f),
+        glm::vec4(right, bottom, -farPlane, 1.f)
+    };
 }
 
 void Camera::updateMatrices(const Transform& tx, float level)
@@ -226,4 +245,31 @@ glm::vec3 Camera::pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize) 
     }
 
     return glm::unProject(winCoords, m_passes[Pass::Final].viewMatrix, m_projectionMatrix, vp);
+}
+
+//private
+void Camera::updateFrustumCorners()
+{
+    float tanHalfFOVY = std::tan(m_verticalFOV / 2.f);
+    float tanHalfFOVX = std::tan((m_verticalFOV * m_aspectRatio) / 2.f);
+
+    float xNear = (m_nearPlane * tanHalfFOVX);
+    float xFar = (m_farPlane * tanHalfFOVX);
+    float yNear = (m_nearPlane * tanHalfFOVY);
+    float yFar = (m_farPlane * tanHalfFOVY);
+
+    m_frustumCorners =
+    {
+        //near
+        glm::vec4(xNear, yNear, -m_nearPlane, 1.f),
+        glm::vec4(-xNear, yNear, -m_nearPlane, 1.f),
+        glm::vec4(-xNear, -yNear, -m_nearPlane, 1.f),
+        glm::vec4(xNear, -yNear, -m_nearPlane, 1.f),
+
+        //far
+        glm::vec4(xFar, yFar, -m_farPlane, 1.f),
+        glm::vec4(-xFar, yFar, -m_farPlane, 1.f),
+        glm::vec4(-xFar, -yFar, -m_farPlane, 1.f),
+        glm::vec4(xFar, -yFar, -m_farPlane, 1.f)
+    };
 }

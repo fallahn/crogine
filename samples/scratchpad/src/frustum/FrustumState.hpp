@@ -64,8 +64,14 @@ private:
 
     cro::ResourceCollection m_resources;
 
+    cro::Entity m_modelEntity;
+    cro::Entity m_cameraEntity;
+    cro::Entity m_visEntity;
+
     void addSystems();
     void loadAssets();
     void createScene();
     void createUI();
+
+    void updateFrustumVis(cro::Entity, cro::Mesh::Data&);
 };

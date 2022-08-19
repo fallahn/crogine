@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
+#include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/util/Constants.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
@@ -50,7 +51,19 @@ source distribution.
 
 namespace
 {
+    struct PerspectiveDebug final
+    {
+        float nearPlane = 0.1f;
+        float farPlane = 20.f;
+        float fov = 40.f;
+        float aspectRatio = 1.f;
 
+        void update(cro::Camera& cam)
+        {
+            cam.setPerspective(fov * cro::Util::Const::degToRad, aspectRatio, nearPlane, farPlane);
+            cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+        }
+    }perspectiveDebug;
 }
 
 FrustumState::FrustumState(cro::StateStack& stack, cro::State::Context context)
@@ -108,6 +121,44 @@ void FrustumState::handleMessage(const cro::Message& msg)
 
 bool FrustumState::simulate(float dt)
 {
+    const float rotationSpeed = dt;
+    glm::vec3 rotation(0.f);
+    if (cro::Keyboard::isKeyPressed(SDLK_s))
+    {
+        rotation.x -= rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_w))
+    {
+        rotation.x += rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_d))
+    {
+        rotation.y -= rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_a))
+    {
+        rotation.y += rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_e))
+    {
+        rotation.z -= rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_q))
+    {
+        rotation.z += rotationSpeed;
+    }
+
+    if (glm::length2(rotation) != 0
+        && m_modelEntity.isValid())
+    {
+        auto worldMat = glm::inverse(glm::mat3(m_modelEntity.getComponent<cro::Transform>().getLocalTransform()));
+        m_modelEntity.getComponent<cro::Transform>().rotate(/*worldMat **/ cro::Transform::X_AXIS, rotation.x);
+        m_modelEntity.getComponent<cro::Transform>().rotate(worldMat * cro::Transform::Y_AXIS, rotation.y);
+        m_modelEntity.getComponent<cro::Transform>().rotate(/*worldMat **/ cro::Transform::Z_AXIS, rotation.z);
+
+        updateFrustumVis(m_cameraEntity, m_visEntity.getComponent<cro::Model>().getMeshData());
+    }
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -143,11 +194,10 @@ void FrustumState::createScene()
     if (md.loadFromFile("assets/models/cube.cmt"))
     {
         auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -5.f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -3.f, -15.f });
         md.createModel(entity);
+        m_modelEntity = entity;
     }
-
-
 
     auto updateView = [](cro::Camera& cam)
     {
@@ -162,9 +212,42 @@ void FrustumState::createScene()
         cam.viewport.height = size.y;
     };
 
+    //scene camera
     auto camEnt = m_gameScene.getActiveCamera();
     camEnt.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(camEnt.getComponent<cro::Camera>());
+
+    //this is the camera on the cube which we're visualising
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>();
+    camEnt.addComponent<cro::Camera>().resizeCallback = std::bind(&PerspectiveDebug::update, &perspectiveDebug, std::placeholders::_1);
+    perspectiveDebug.update(camEnt.getComponent<cro::Camera>());
+    m_cameraEntity = camEnt;
+
+    if (m_modelEntity.isValid())
+    {
+        m_modelEntity.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
+    }
+
+    //this entity draws the camera frustum. The points are updated in world
+    //space so the entity has an identity transform
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINES));
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
+    auto materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    auto material = m_resources.materials.get(materialID);
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    //just set any bounds as long as it's in view and isn't culled...
+    entity.getComponent<cro::Model>().getMeshData().boundingBox = {glm::vec3(-10.f, -10.f, -20.f), glm::vec3(10.f, 10.f, 20.f)};
+    entity.getComponent<cro::Model>().getMeshData().boundingSphere = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+    m_visEntity = entity;
+
+    updateFrustumVis(camEnt, m_visEntity.getComponent<cro::Model>().getMeshData());
+
+
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -60.f * cro::Util::Const::degToRad);
 }
 
 void FrustumState::createUI()
@@ -173,7 +256,26 @@ void FrustumState::createUI()
         {
             if (ImGui::Begin("Window of happiness"))
             {
-
+                if (ImGui::SliderFloat("Near Plane", &perspectiveDebug.nearPlane, 0.f, perspectiveDebug.farPlane -  0.1f))
+                {
+                    perspectiveDebug.update(m_cameraEntity.getComponent<cro::Camera>());
+                    updateFrustumVis(m_cameraEntity, m_visEntity.getComponent<cro::Model>().getMeshData());
+                }
+                if (ImGui::SliderFloat("Far Plane", &perspectiveDebug.farPlane, perspectiveDebug.nearPlane + 0.1f, 100.f))
+                {
+                    perspectiveDebug.update(m_cameraEntity.getComponent<cro::Camera>());
+                    updateFrustumVis(m_cameraEntity, m_visEntity.getComponent<cro::Model>().getMeshData());
+                }
+                if (ImGui::SliderFloat("FOV", &perspectiveDebug.fov, 10.f, 100.f))
+                {
+                    perspectiveDebug.update(m_cameraEntity.getComponent<cro::Camera>());
+                    updateFrustumVis(m_cameraEntity, m_visEntity.getComponent<cro::Model>().getMeshData());
+                }
+                if (ImGui::SliderFloat("Aspect", &perspectiveDebug.aspectRatio, 0.1f, 4.f))
+                {
+                    perspectiveDebug.update(m_cameraEntity.getComponent<cro::Camera>());
+                    updateFrustumVis(m_cameraEntity, m_visEntity.getComponent<cro::Model>().getMeshData());
+                }
             }
             ImGui::End();        
         });
@@ -189,4 +291,56 @@ void FrustumState::createUI()
     auto camEnt = m_uiScene.getActiveCamera();
     camEnt.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(camEnt.getComponent<cro::Camera>());
+}
+
+void FrustumState::updateFrustumVis(cro::Entity camera, cro::Mesh::Data& meshData)
+{
+    CRO_ASSERT(camera.hasComponent<cro::Camera>(), "");
+
+    struct Vert final
+    {
+        Vert(glm::vec3 p, glm::vec4 c = glm::vec4(1.))
+            : position(p), colour(c) {}
+        glm::vec3 position = glm::vec3(0.f);
+        glm::vec4 colour = glm::vec4(1.f);
+    };
+
+    auto worldMat = camera.getComponent<cro::Transform>().getWorldTransform();
+    const auto& corners = camera.getComponent<cro::Camera>().getFrustumCorners();
+
+    std::vector<Vert> vertices =
+    {
+        //near
+        Vert(glm::vec3(worldMat * corners[0])),
+        Vert(glm::vec3(worldMat * corners[1])),
+        Vert(glm::vec3(worldMat * corners[2])),
+        Vert(glm::vec3(worldMat * corners[3])),
+
+        //far
+        Vert(glm::vec3(worldMat * corners[4])),
+        Vert(glm::vec3(worldMat * corners[5])),
+        Vert(glm::vec3(worldMat * corners[6])),
+        Vert(glm::vec3(worldMat * corners[7]))
+    };
+
+    std::vector<std::uint32_t> indices =
+    {
+        0,1,  1,2,  2,3,  3,0,
+
+        4,5,  5,6,  6,7,  7,4,
+
+        0,4,  1,5,  2,6,  3,7
+    };
+
+
+    meshData.vertexCount = vertices.size();
+    glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+    glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, vertices.data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    auto& submesh = meshData.indexData[0];
+    submesh.indexCount = static_cast<std::uint32_t>(indices.size());
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }

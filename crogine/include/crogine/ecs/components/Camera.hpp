@@ -293,6 +293,18 @@ namespace cro
         const glm::mat4& getProjectionMatrix() const { return m_projectionMatrix; }
 
         /*!
+        \brief Returns the 8 corners of the frustum bounds.
+        The first 4 are the near plane, and second 4 are the far plane,
+        starting top right, wound ant-clockwise.
+        As the points are in local camera space altering the z-depth
+        of the returned values will change the near or far plane values.
+        This is updated each time setPerspective() or setOrthographic() is called.
+        \returns Array of 8 points as glm::vec4, so can be easily multiplied
+        with a transform matrix
+        */
+        const std::array<glm::vec4, 8u>& getFrustumCorners() const { return m_frustumCorners; }
+
+        /*!
         \brief Viewport.
         This is in normalised (0 - 1) coordinates to describe which part
         of the window this camera should render to. By default it is 0, 0, 1, 1
@@ -489,6 +501,9 @@ namespace cro
         bool m_orthographic;
         FloatRect m_orthographicView;
         FrustumData m_frustumData;
+
+        std::array<glm::vec4, 8u> m_frustumCorners;
+        void updateFrustumCorners();
 
         friend class ShadowMapRenderer;
     };
