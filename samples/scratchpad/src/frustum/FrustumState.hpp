@@ -64,9 +64,21 @@ private:
 
     cro::ResourceCollection m_resources;
 
-    cro::Entity m_modelEntity;
-    cro::Entity m_cameraEntity;
-    cro::Entity m_visEntity;
+        struct EntityID final
+    {
+        enum
+        {
+            Cube,
+            Camera,
+            CameraViz,
+
+            Light,
+            LightViz,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, EntityID::Count> m_entities;
 
     void addSystems();
     void loadAssets();
@@ -74,4 +86,5 @@ private:
     void createUI();
 
     void updateFrustumVis(cro::Entity, cro::Mesh::Data&);
+    bool rotateEntity(cro::Entity, std::int32_t keyset, float);
 };

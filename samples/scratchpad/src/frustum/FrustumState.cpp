@@ -54,9 +54,9 @@ namespace
     struct PerspectiveDebug final
     {
         float nearPlane = 0.1f;
-        float farPlane = 20.f;
+        float farPlane = 80.f;
         float fov = 40.f;
-        float aspectRatio = 1.f;
+        float aspectRatio = 1.3f;
 
         void update(cro::Camera& cam)
         {
@@ -64,6 +64,29 @@ namespace
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         }
     }perspectiveDebug;
+
+    struct KeyID final
+    {
+        enum
+        {
+            Up, Down, Left, Right,
+            CW, CCW,
+
+            Count
+        };
+    };
+    struct KeysetID final
+    {
+        enum
+        {
+            Cube, Light
+        };
+    };
+    std::array keysets =
+    {
+        std::array<std::int32_t, KeyID::Count>({SDLK_w, SDLK_s, SDLK_a, SDLK_d, SDLK_q, SDLK_e}),
+        std::array<std::int32_t, KeyID::Count>({SDLK_HOME, SDLK_END, SDLK_DELETE, SDLK_PAGEDOWN, SDLK_INSERT, SDLK_PAGEUP})
+    };
 }
 
 FrustumState::FrustumState(cro::StateStack& stack, cro::State::Context context)
@@ -121,42 +144,14 @@ void FrustumState::handleMessage(const cro::Message& msg)
 
 bool FrustumState::simulate(float dt)
 {
-    const float rotationSpeed = dt;
-    glm::vec3 rotation(0.f);
-    if (cro::Keyboard::isKeyPressed(SDLK_s))
+    if (rotateEntity(m_entities[EntityID::Cube], KeysetID::Cube, dt))
     {
-        rotation.x -= rotationSpeed;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_w))
-    {
-        rotation.x += rotationSpeed;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_d))
-    {
-        rotation.y -= rotationSpeed;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_a))
-    {
-        rotation.y += rotationSpeed;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_e))
-    {
-        rotation.z -= rotationSpeed;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_q))
-    {
-        rotation.z += rotationSpeed;
+        updateFrustumVis(m_entities[EntityID::Camera], m_entities[EntityID::CameraViz].getComponent<cro::Model>().getMeshData());
     }
 
-    if (glm::length2(rotation) != 0
-        && m_modelEntity.isValid())
+    if (rotateEntity(m_entities[EntityID::Light], KeysetID::Light, dt))
     {
-        auto worldMat = glm::inverse(glm::mat3(m_modelEntity.getComponent<cro::Transform>().getLocalTransform()));
-        m_modelEntity.getComponent<cro::Transform>().rotate(/*worldMat **/ cro::Transform::X_AXIS, rotation.x);
-        m_modelEntity.getComponent<cro::Transform>().rotate(worldMat * cro::Transform::Y_AXIS, rotation.y);
-        m_modelEntity.getComponent<cro::Transform>().rotate(/*worldMat **/ cro::Transform::Z_AXIS, rotation.z);
-
-        updateFrustumVis(m_cameraEntity, m_visEntity.getComponent<cro::Model>().getMeshData());
+        m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(m_entities[EntityID::Light].getComponent<cro::Transform>().getRotation());
     }
 
     m_gameScene.simulate(dt);
@@ -196,7 +191,24 @@ void FrustumState::createScene()
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, -3.f, -15.f });
         md.createModel(entity);
-        m_modelEntity = entity;
+        m_entities[EntityID::Cube] = entity;
+    }
+
+    if (md.loadFromFile("assets/batcat/models/arrow.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 12.f, 7.f, -20.f });
+        md.createModel(entity);
+        m_entities[EntityID::Light] = entity;
+    }
+
+    if (md.loadFromFile("assets/bush/ground_plane.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -4.f, -15.f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(2.f));
+        md.createModel(entity);
     }
 
     auto updateView = [](cro::Camera& cam)
@@ -222,11 +234,11 @@ void FrustumState::createScene()
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = std::bind(&PerspectiveDebug::update, &perspectiveDebug, std::placeholders::_1);
     perspectiveDebug.update(camEnt.getComponent<cro::Camera>());
-    m_cameraEntity = camEnt;
+    m_entities[EntityID::Camera] = camEnt;
 
-    if (m_modelEntity.isValid())
+    if (m_entities[EntityID::Cube].isValid())
     {
-        m_modelEntity.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
+        m_entities[EntityID::Cube].getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
     }
 
     //this entity draws the camera frustum. The points are updated in world
@@ -238,16 +250,23 @@ void FrustumState::createScene()
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
     auto materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
     auto material = m_resources.materials.get(materialID);
+    material.enableDepthTest = false;
+    material.blendMode = cro::Material::BlendMode::Alpha;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     //just set any bounds as long as it's in view and isn't culled...
     entity.getComponent<cro::Model>().getMeshData().boundingBox = {glm::vec3(-10.f, -10.f, -20.f), glm::vec3(10.f, 10.f, 20.f)};
     entity.getComponent<cro::Model>().getMeshData().boundingSphere = entity.getComponent<cro::Model>().getMeshData().boundingBox;
-    m_visEntity = entity;
+    m_entities[EntityID::CameraViz] = entity;
 
-    updateFrustumVis(camEnt, m_visEntity.getComponent<cro::Model>().getMeshData());
+    updateFrustumVis(camEnt, m_entities[EntityID::CameraViz].getComponent<cro::Model>().getMeshData());
 
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -60.f * cro::Util::Const::degToRad);
+
+    if (m_entities[EntityID::Light].isValid())
+    {
+        m_entities[EntityID::Light].getComponent<cro::Transform>().setRotation(m_gameScene.getSunlight().getComponent<cro::Transform>().getRotation());
+    }
 }
 
 void FrustumState::createUI()
@@ -258,24 +277,28 @@ void FrustumState::createUI()
             {
                 if (ImGui::SliderFloat("Near Plane", &perspectiveDebug.nearPlane, 0.f, perspectiveDebug.farPlane -  0.1f))
                 {
-                    perspectiveDebug.update(m_cameraEntity.getComponent<cro::Camera>());
-                    updateFrustumVis(m_cameraEntity, m_visEntity.getComponent<cro::Model>().getMeshData());
+                    perspectiveDebug.update(m_entities[EntityID::Camera].getComponent<cro::Camera>());
+                    updateFrustumVis(m_entities[EntityID::Camera], m_entities[EntityID::CameraViz].getComponent<cro::Model>().getMeshData());
                 }
                 if (ImGui::SliderFloat("Far Plane", &perspectiveDebug.farPlane, perspectiveDebug.nearPlane + 0.1f, 100.f))
                 {
-                    perspectiveDebug.update(m_cameraEntity.getComponent<cro::Camera>());
-                    updateFrustumVis(m_cameraEntity, m_visEntity.getComponent<cro::Model>().getMeshData());
+                    perspectiveDebug.update(m_entities[EntityID::Camera].getComponent<cro::Camera>());
+                    updateFrustumVis(m_entities[EntityID::Camera], m_entities[EntityID::CameraViz].getComponent<cro::Model>().getMeshData());
                 }
                 if (ImGui::SliderFloat("FOV", &perspectiveDebug.fov, 10.f, 100.f))
                 {
-                    perspectiveDebug.update(m_cameraEntity.getComponent<cro::Camera>());
-                    updateFrustumVis(m_cameraEntity, m_visEntity.getComponent<cro::Model>().getMeshData());
+                    perspectiveDebug.update(m_entities[EntityID::Camera].getComponent<cro::Camera>());
+                    updateFrustumVis(m_entities[EntityID::Camera], m_entities[EntityID::CameraViz].getComponent<cro::Model>().getMeshData());
                 }
                 if (ImGui::SliderFloat("Aspect", &perspectiveDebug.aspectRatio, 0.1f, 4.f))
                 {
-                    perspectiveDebug.update(m_cameraEntity.getComponent<cro::Camera>());
-                    updateFrustumVis(m_cameraEntity, m_visEntity.getComponent<cro::Model>().getMeshData());
+                    perspectiveDebug.update(m_entities[EntityID::Camera].getComponent<cro::Camera>());
+                    updateFrustumVis(m_entities[EntityID::Camera], m_entities[EntityID::CameraViz].getComponent<cro::Model>().getMeshData());
                 }
+
+                ImGui::Text("WASDQE:\nRotate Camera");
+                ImGui::NewLine();
+                ImGui::Text("Home, Del, End,\nPgDn, Ins, PgUp:\nRotate Light");
             }
             ImGui::End();        
         });
@@ -343,4 +366,46 @@ void FrustumState::updateFrustumVis(cro::Entity camera, cro::Mesh::Data& meshDat
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+bool FrustumState::rotateEntity(cro::Entity entity, std::int32_t keysetID, float dt)
+{
+    const float rotationSpeed = dt;
+    glm::vec3 rotation(0.f);
+    if (cro::Keyboard::isKeyPressed(keysets[keysetID][KeyID::Down]))
+    {
+        rotation.x -= rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(keysets[keysetID][KeyID::Up]))
+    {
+        rotation.x += rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(keysets[keysetID][KeyID::Right]))
+    {
+        rotation.y -= rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(keysets[keysetID][KeyID::Left]))
+    {
+        rotation.y += rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(keysets[keysetID][KeyID::CW]))
+    {
+        rotation.z -= rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(keysets[keysetID][KeyID::CCW]))
+    {
+        rotation.z += rotationSpeed;
+    }
+
+    if (glm::length2(rotation) != 0
+        && entity.isValid())
+    {
+        auto worldMat = glm::inverse(glm::mat3(entity.getComponent<cro::Transform>().getLocalTransform()));
+        entity.getComponent<cro::Transform>().rotate(/*worldMat **/ cro::Transform::X_AXIS, rotation.x);
+        entity.getComponent<cro::Transform>().rotate(worldMat * cro::Transform::Y_AXIS, rotation.y);
+        entity.getComponent<cro::Transform>().rotate(/*worldMat **/ cro::Transform::Z_AXIS, rotation.z);
+
+        return true;
+    }
+    return false;
 }
