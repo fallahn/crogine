@@ -1,0 +1,12 @@
+model arrow
+{
+    mesh = "assets/batcat/models/arrow.cmf"
+
+    cast_shadows = false
+
+    material VertexLit
+    {
+        colour = 1.0, 1.0, 0., 1.0
+        mask_colour = 0,0,0.4,1.0
+    }
+}

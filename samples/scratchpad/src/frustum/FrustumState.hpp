@@ -63,6 +63,7 @@ private:
     cro::Scene m_uiScene;
 
     cro::ResourceCollection m_resources;
+    cro::RenderTexture m_cameraPreview;
 
         struct EntityID final
     {
@@ -74,6 +75,7 @@ private:
 
             Light,
             LightViz,
+            LightDummy,
 
             Count
         };
@@ -85,6 +87,7 @@ private:
     void createScene();
     void createUI();
 
-    void updateFrustumVis(cro::Entity, cro::Mesh::Data&);
+    void calcLightFrusta();
+    void updateFrustumVis(glm::mat4, const std::array<glm::vec4, 8u>&, cro::Mesh::Data&, glm::vec4 c = glm::vec4(1.f));
     bool rotateEntity(cro::Entity, std::int32_t keyset, float);
 };
