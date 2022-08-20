@@ -256,7 +256,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //        ImGui::End();
     //    });
 
-    registerWindow([&]()
+    /*registerWindow([&]()
         {
             if (ImGui::Begin("buns"))
             {
@@ -265,7 +265,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::PlotLines("Z Pos", ballDump[2].data(), ballDump[2].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
             }
             ImGui::End();
-        });
+        });*/
 #endif
 }
 
@@ -336,7 +336,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F8:
             showCountdown(20);
             break;
-        case SDLK_F9:
+        case SDLK_F10:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::ChangeWind), net::NetFlag::Reliable);
             break;
         case SDLK_KP_0:

@@ -54,7 +54,7 @@ namespace
     struct PerspectiveDebug final
     {
         float nearPlane = 0.1f;
-        float farPlane = 80.f;
+        float farPlane = 10.f;
         float fov = 40.f;
         float aspectRatio = 1.3f;
 
@@ -279,8 +279,9 @@ void FrustumState::createScene()
     m_entities[EntityID::CameraViz] = entity;
 
     //create a new mesh instance...
-    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINES));
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLES));
     material.blendMode = cro::Material::BlendMode::Alpha;
+    material.doubleSided = true;
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
@@ -445,13 +446,25 @@ void FrustumState::updateFrustumVis(glm::mat4 worldMat, const std::array<glm::ve
         Vert(glm::vec3(worldMat * corners[7]), c)
     };
 
-    static const std::vector<std::uint32_t> indices =
+    static const std::vector<std::uint32_t> lineIndices =
     {
         0,1,  1,2,  2,3,  3,0,
         4,5,  5,6,  6,7,  7,4,
         0,4,  1,5,  2,6,  3,7
     };
 
+    static const std::vector<std::uint32_t> triangleIndices =
+    {
+        0,1,2,  2,3,0,
+        4,5,6,  4,6,7,
+
+        1,5,6,  1,6,2,
+        0,3,7,  0,7,4,
+
+
+    };
+
+    auto* indices = meshData.primitiveType == GL_LINES ? &lineIndices : &triangleIndices;
 
     meshData.vertexCount = vertices.size();
     glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
@@ -459,9 +472,9 @@ void FrustumState::updateFrustumVis(glm::mat4 worldMat, const std::array<glm::ve
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     auto& submesh = meshData.indexData[0];
-    submesh.indexCount = static_cast<std::uint32_t>(indices.size());
+    submesh.indexCount = static_cast<std::uint32_t>(indices->size());
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices->data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
