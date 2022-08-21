@@ -71,22 +71,33 @@ private:
         {
             Cube,
             Camera,
-            CameraViz,
+            CameraViz01,
+            CameraViz02,
+            CameraViz03,
 
             Light,
-            LightViz,
-            LightDummy,
+
+            LightViz01,
+            LightViz02,
+            LightViz03,
+            LightDummy01,
+            LightDummy02,
+            LightDummy03,
 
             Count
         };
     };
     std::array<cro::Entity, EntityID::Count> m_entities;
 
+
     void addSystems();
     void loadAssets();
     void createScene();
     void createUI();
 
+    static constexpr std::int32_t CascadeCount = 3;
+    std::array<std::array<glm::vec4, 8u>, CascadeCount> calcSplits() const;
+    void calcCameraFrusta();
     void calcLightFrusta();
     void updateFrustumVis(glm::mat4, const std::array<glm::vec4, 8u>&, cro::Mesh::Data&, glm::vec4 c = glm::vec4(1.f));
     bool rotateEntity(cro::Entity, std::int32_t keyset, float);

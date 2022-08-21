@@ -45,6 +45,7 @@ source distribution.
 
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Maths.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -146,9 +147,7 @@ bool FrustumState::simulate(float dt)
 {
     if (rotateEntity(m_entities[EntityID::Cube], KeysetID::Cube, dt))
     {
-        auto worldMat = m_entities[EntityID::Camera].getComponent<cro::Transform>().getWorldTransform();
-        const auto& corners = m_entities[EntityID::Camera].getComponent<cro::Camera>().getFrustumCorners();
-        updateFrustumVis(worldMat, corners, m_entities[EntityID::CameraViz].getComponent<cro::Model>().getMeshData());
+        calcCameraFrusta();
     }
 
     if (rotateEntity(m_entities[EntityID::Light], KeysetID::Light, dt))
@@ -215,10 +214,13 @@ void FrustumState::createScene()
 
     if (md.loadFromFile("assets/batcat/models/arrow_yellow.cmt"))
     {
-        auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setScale(glm::vec3(0.5f));
-        md.createModel(entity);
-        m_entities[EntityID::LightDummy] = entity;
+        for (auto i = 0; i < CascadeCount; i++)
+        {
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setScale(glm::vec3(0.5f));
+            md.createModel(entity);
+            m_entities[EntityID::LightDummy01 + i] = entity;
+        }
     }
 
     /*if (md.loadFromFile("assets/bush/ground_plane.cmt"))
@@ -262,37 +264,37 @@ void FrustumState::createScene()
 
     //this entity draws the camera frustum. The points are updated in world
     //space so the entity has an identity transform
-    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINES));
     auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::VertexColour);
     auto materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
-    auto material = m_resources.materials.get(materialID);
 
 
+    for (auto i = 0; i < CascadeCount; ++i)
+    {
+        auto material = m_resources.materials.get(materialID);
+        auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINES));
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+        //just set any bounds as long as it's in view and isn't culled...
+        entity.getComponent<cro::Model>().getMeshData().boundingBox = {glm::vec3(-10.f, -10.f, -20.f), glm::vec3(10.f, 10.f, 20.f)};
+        entity.getComponent<cro::Model>().getMeshData().boundingSphere = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+        m_entities[EntityID::CameraViz01 + i] = entity;        
+        
+        
+        //create a new mesh instance...
+        meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLES));
+        material = m_resources.materials.get(materialID);
+        material.blendMode = cro::Material::BlendMode::Alpha;
+        material.doubleSided = true;
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+        entity.getComponent<cro::Model>().getMeshData().boundingBox = { glm::vec3(-10.f, -10.f, -20.f), glm::vec3(10.f, 10.f, 20.f) };
+        entity.getComponent<cro::Model>().getMeshData().boundingSphere = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+        m_entities[EntityID::LightViz01 + i] = entity;
+    }
 
-
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    //just set any bounds as long as it's in view and isn't culled...
-    entity.getComponent<cro::Model>().getMeshData().boundingBox = {glm::vec3(-10.f, -10.f, -20.f), glm::vec3(10.f, 10.f, 20.f)};
-    entity.getComponent<cro::Model>().getMeshData().boundingSphere = entity.getComponent<cro::Model>().getMeshData().boundingBox;
-    m_entities[EntityID::CameraViz] = entity;
-
-    //create a new mesh instance...
-    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLES));
-    material.blendMode = cro::Material::BlendMode::Alpha;
-    material.doubleSided = true;
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    entity.getComponent<cro::Model>().getMeshData().boundingBox = { glm::vec3(-10.f, -10.f, -20.f), glm::vec3(10.f, 10.f, 20.f) };
-    entity.getComponent<cro::Model>().getMeshData().boundingSphere = entity.getComponent<cro::Model>().getMeshData().boundingBox;
-    m_entities[EntityID::LightViz] = entity;
-
-
-    auto worldMat = camEnt.getComponent<cro::Transform>().getWorldTransform();
-    const auto& corners = camEnt.getComponent<cro::Camera>().getFrustumCorners();
-    updateFrustumVis(worldMat, corners, m_entities[EntityID::CameraViz].getComponent<cro::Model>().getMeshData());
+    calcCameraFrusta();
 
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -60.f * cro::Util::Const::degToRad);
@@ -311,10 +313,19 @@ void FrustumState::createUI()
         {
             if (ImGui::Begin("Window of happiness"))
             {
+                static bool hideLights = false;
+                if (ImGui::Button("Hide Lights"))
+                {
+                    hideLights = !hideLights;
+                    m_entities[EntityID::LightViz01].getComponent<cro::Model>().setHidden(hideLights);
+                    m_entities[EntityID::LightViz02].getComponent<cro::Model>().setHidden(hideLights);
+                    m_entities[EntityID::LightViz03].getComponent<cro::Model>().setHidden(hideLights);
+                }
+
                 ImGui::Image(m_cameraPreview.getTexture(), { 320.f, 240.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                 bool doUpdate = false;
-                if (ImGui::SliderFloat("Near Plane", &perspectiveDebug.nearPlane, 0.f, perspectiveDebug.farPlane -  0.1f))
+                if (ImGui::SliderFloat("Near Plane", &perspectiveDebug.nearPlane, 0.0001f, perspectiveDebug.farPlane -  0.1f))
                 {
                     doUpdate = true;
                 }
@@ -335,9 +346,7 @@ void FrustumState::createUI()
                 {
                     perspectiveDebug.update(m_entities[EntityID::Camera].getComponent<cro::Camera>());
 
-                    auto worldMat = m_entities[EntityID::Camera].getComponent<cro::Transform>().getWorldTransform();
-                    const auto& corners = m_entities[EntityID::Camera].getComponent<cro::Camera>().getFrustumCorners();
-                    updateFrustumVis(worldMat, corners, m_entities[EntityID::CameraViz].getComponent<cro::Model>().getMeshData());
+                    calcCameraFrusta();
                 }
 
                 ImGui::Text("WASDQE:\nRotate Camera");
@@ -360,65 +369,145 @@ void FrustumState::createUI()
     updateView(camEnt.getComponent<cro::Camera>());
 }
 
+std::array<std::array<glm::vec4, 8u>, FrustumState::CascadeCount> FrustumState::calcSplits() const
+{
+    //TODO we don't really need to recalc this every time...
+    const auto& cam = m_entities[EntityID::Camera].getComponent<cro::Camera>();
+    const auto& camCorners = cam.getFrustumCorners();
+    const float splitSize = (camCorners[0].z - camCorners[4].z) / CascadeCount;
+    
+    const float tanHalfFOVY = std::tan(cam.getFOV() / 2.f);
+    const float tanHalfFOVX = std::tan((cam.getFOV() * cam.getAspectRatio()) / 2.f);
+
+    std::array<std::array<glm::vec4, 8u>, FrustumState::CascadeCount> corners = {};
+
+    for (auto i = 0; i < CascadeCount; ++i)
+    {
+        const float splitNear = i * splitSize;
+        corners[i] = camCorners;
+
+        for (auto j = 0u; j < corners[i].size() / 2; ++j)
+        {
+            //near
+            corners[i][j].z -= splitNear;
+            corners[i][j].x = cro::Util::Maths::sgn(corners[i][j].x) * corners[i][j].z * tanHalfFOVX;
+            corners[i][j].y = cro::Util::Maths::sgn(corners[i][j].y) * corners[i][j].z * tanHalfFOVY;
+
+            //far
+            corners[i][j + 4].z = corners[i][j].z - splitSize;
+            corners[i][j + 4].x = cro::Util::Maths::sgn(corners[i][j + 4].x) * corners[i][j + 4].z * tanHalfFOVX;
+            corners[i][j + 4].y = cro::Util::Maths::sgn(corners[i][j + 4].y) * corners[i][j + 4].z * tanHalfFOVY;
+        }
+    }
+    return corners;
+}
+
+void FrustumState::calcCameraFrusta()
+{
+    auto worldMat = m_entities[EntityID::Camera].getComponent<cro::Transform>().getWorldTransform();
+    auto corners = calcSplits();
+
+    for (auto i = 0; i < CascadeCount; ++i)
+    {
+        updateFrustumVis(worldMat, corners[i], m_entities[EntityID::CameraViz01 + i].getComponent<cro::Model>().getMeshData(), glm::vec4(static_cast<float>(i) / CascadeCount, 1.f - (static_cast<float>(i) / CascadeCount), 0.5f, 1.f));
+    }
+}
+
 void FrustumState::calcLightFrusta()
 {
     //frustum corners in world coords
     auto worldMat = m_entities[EntityID::Camera].getComponent<cro::Transform>().getWorldTransform();
-    auto corners = m_entities[EntityID::Camera].getComponent<cro::Camera>().getFrustumCorners();
+    auto corners = calcSplits();
 
-    glm::vec3 centre = glm::vec3(0.f);
-
-    for (auto& c : corners)
+    static const std::array CascadeColours =
     {
-        c = worldMat * c;
-        centre += glm::vec3(c);
-    }
-    centre /= corners.size();
-
-    //position light source
-    auto light = m_gameScene.getSunlight();
-    auto lightDir = -light.getComponent<cro::Sunlight>().getDirection();
-
-    auto lightPos = centre + lightDir;
-
-    //just set this so we can visualise what's happening
-    m_entities[EntityID::LightDummy].getComponent<cro::Transform>().setPosition(lightPos);
-    m_entities[EntityID::LightDummy].getComponent<cro::Transform>().setRotation(light.getComponent<cro::Transform>().getRotation());
-
-    const auto lightView = glm::lookAt(lightPos, centre, cro::Transform::Y_AXIS);
-
-    //world coords to light space
-    glm::vec3 minPos(std::numeric_limits<float>::max());
-    glm::vec3 maxPos(std::numeric_limits<float>::lowest());
-
-    for (const auto& c : corners)
-    {
-        const auto p = lightView * c;
-        minPos.x = std::min(minPos.x, p.x);
-        minPos.y = std::min(minPos.y, p.y);
-        minPos.z = std::min(minPos.z, p.z);
-
-        maxPos.x = std::max(maxPos.x, p.x);
-        maxPos.y = std::max(maxPos.y, p.y);
-        maxPos.z = std::max(maxPos.z, p.z);
-    }
-
-    const auto lightProj = glm::ortho(minPos.x, maxPos.x, minPos.y, maxPos.y, -maxPos.z, -minPos.z);
-
-    std::array lightCorners =
-    {
-        //near
-        glm::vec4(maxPos.x, maxPos.y, -maxPos.z, 1.f),
-        glm::vec4(minPos.x, maxPos.y, -maxPos.z, 1.f),
-        glm::vec4(minPos.x, minPos.y, -maxPos.z, 1.f),
-        glm::vec4(maxPos.x, minPos.y, -maxPos.z, 1.f),
-        //far
-        glm::vec4(maxPos.x, maxPos.y, -minPos.z, 1.f),
-        glm::vec4(minPos.x, maxPos.y, -minPos.z, 1.f),
-        glm::vec4(minPos.x, minPos.y, -minPos.z, 1.f),
-        glm::vec4(maxPos.x, minPos.y, -minPos.z, 1.f)
+        glm::vec4(1.f, 0.f, 0.f, 0.6f),
+        glm::vec4(0.f, 1.f, 0.f, 0.6f),
+        glm::vec4(0.f, 0.f, 1.f, 0.6f)
     };
-    updateFrustumVis(glm::inverse(lightView), lightCorners, m_entities[EntityID::LightViz].getComponent<cro::Model>().getMeshData(), glm::vec4(1.f, 0.f, 0.f, 0.8f));
+
+    for (auto i = 0; i < CascadeCount; ++i)
+    {
+        glm::vec3 centre = glm::vec3(0.f);
+
+        for (auto& c : corners[i])
+        {
+            c = worldMat * c;
+            centre += glm::vec3(c);
+        }
+        centre /= corners[i].size();
+
+        //position light source
+        auto light = m_gameScene.getSunlight();
+        auto lightDir = -light.getComponent<cro::Sunlight>().getDirection();
+
+        auto lightPos = centre + lightDir;
+
+        //just set this so we can visualise what's happening
+        m_entities[EntityID::LightDummy01 + i].getComponent<cro::Transform>().setPosition(lightPos);
+        m_entities[EntityID::LightDummy01 + i].getComponent<cro::Transform>().setRotation(light.getComponent<cro::Transform>().getRotation());
+
+        const auto lightView = glm::lookAt(lightPos, centre, cro::Transform::Y_AXIS);
+
+
+        /*
+        This method appears incorrect because at certain
+        angles the projection is pushed in the wrong direction
+        and doesn't cover the frustum completely or at all!
+        */
+        //world coords to light space
+        glm::vec3 minPos(std::numeric_limits<float>::max());
+        glm::vec3 maxPos(std::numeric_limits<float>::lowest());
+
+        for (const auto& c : corners[i])
+        {
+            const auto p = lightView * c;
+            minPos.x = std::min(minPos.x, p.x);
+            minPos.y = std::min(minPos.y, p.y);
+            minPos.z = std::min(minPos.z, p.z);
+
+            maxPos.x = std::max(maxPos.x, p.x);
+            maxPos.y = std::max(maxPos.y, p.y);
+            maxPos.z = std::max(maxPos.z, p.z);
+        }
+
+        const auto lightProj = glm::ortho(minPos.x, maxPos.x, minPos.y, maxPos.y, -maxPos.z, -minPos.z);
+
+        std::array lightCorners =
+        {
+            //near
+            glm::vec4(maxPos.x, maxPos.y, -maxPos.z, 1.f),
+            glm::vec4(minPos.x, maxPos.y, -maxPos.z, 1.f),
+            glm::vec4(minPos.x, minPos.y, -maxPos.z, 1.f),
+            glm::vec4(maxPos.x, minPos.y, -maxPos.z, 1.f),
+            //far
+            glm::vec4(maxPos.x, maxPos.y, -minPos.z, 1.f),
+            glm::vec4(minPos.x, maxPos.y, -minPos.z, 1.f),
+            glm::vec4(minPos.x, minPos.y, -minPos.z, 1.f),
+            glm::vec4(maxPos.x, minPos.y, -minPos.z, 1.f)
+        };
+
+        //this is a bit more wasteful of texture space but ensures much better coverage
+        //we could optimise this a bit by only calculating when the frustu corners
+        //are updated - and even calculate the splits at this point too...
+        //float radius = (glm::length(corners[i][0] - corners[i][6]) / 2.f);// *1.1f;
+        //const auto lightProj = glm::ortho(-radius, radius, -radius, radius, -radius, radius);
+        //std::array lightCorners =
+        //{
+        //    glm::vec4(radius, radius, -radius, 1.f),
+        //    glm::vec4(-radius, radius, -radius, 1.f),
+        //    glm::vec4(-radius, -radius, -radius, 1.f),
+        //    glm::vec4(radius, -radius, -radius, 1.f),
+
+        //    glm::vec4(radius, radius, radius, 1.f),
+        //    glm::vec4(-radius, radius, radius, 1.f),
+        //    glm::vec4(-radius, -radius, radius, 1.f),
+        //    glm::vec4(radius, -radius, radius, 1.f),
+        //};
+
+
+        updateFrustumVis(glm::inverse(lightView), lightCorners, m_entities[EntityID::LightViz01 + i].getComponent<cro::Model>().getMeshData(), CascadeColours[i]);
+    }
 }
 
 void FrustumState::updateFrustumVis(glm::mat4 worldMat, const std::array<glm::vec4, 8u>& corners, cro::Mesh::Data& meshData, glm::vec4 c)
@@ -461,7 +550,8 @@ void FrustumState::updateFrustumVis(glm::mat4 worldMat, const std::array<glm::ve
         1,5,6,  1,6,2,
         0,3,7,  0,7,4,
 
-
+        4,5,1,  4,1,0,
+        7,6,2,  7,2,3
     };
 
     auto* indices = meshData.primitiveType == GL_LINES ? &lineIndices : &triangleIndices;
