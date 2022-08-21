@@ -266,8 +266,9 @@ namespace cro
         \param aspect The aspect ratio of width to height
         \param nearPlane Distance to near plane
         \param farPlane Distance to far plane
+        \param numSplits Number of splits to create if using cascaded shadow maps
         */
-        void setPerspective(float fov, float aspect, float nearPlane, float farPlane);
+        void setPerspective(float fov, float aspect, float nearPlane, float farPlane, std::size_t numSplits = 1);
 
         /*!
         \brief Sets the projection matrix to an orthographic projection
@@ -277,8 +278,9 @@ namespace cro
         \param top Top side
         \param nearPlane Distance to near plane
         \param farPlane Distance to far plane
+        \param numSplits Number of splits to create if using cascaded shadow maps
         */
-        void setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane);
+        void setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::size_t numSplits = 1);
 
         /*!
         \brief Returns true if set to an orthographic projection matrix
@@ -295,7 +297,7 @@ namespace cro
         /*!
         \brief Returns the 8 corners of the frustum bounds.
         The first 4 are the near plane, and second 4 are the far plane,
-        starting top right, wound ant-clockwise.
+        starting top right, wound anti-clockwise.
         As the points are in local camera space altering the z-depth
         of the returned values will change the near or far plane values.
         This is updated each time setPerspective() or setOrthographic() is called.
@@ -303,6 +305,16 @@ namespace cro
         with a transform matrix
         */
         const std::array<glm::vec4, 8u>& getFrustumCorners() const { return m_frustumCorners; }
+
+        /*
+        \brief Returns a vector of frustum corners arranged as a set of frusta
+        created by splitting the camera's main frustum.
+        This is used when rendering shadow map cascades, the number of which are specified
+        when calling setPerspective() or setOrthographic(). If a single split has been specified
+        then the returned value is the same as that of getFrustumCorners().
+        \see getFrustumCorners()
+        */
+        const std::vector<std::array<glm::vec4, 8u>>& getFrustumSplits() const { return m_frustumSplits; }
 
         /*!
         \brief Viewport.
@@ -503,7 +515,8 @@ namespace cro
         FrustumData m_frustumData;
 
         std::array<glm::vec4, 8u> m_frustumCorners;
-        void updateFrustumCorners();
+        std::vector<std::array<glm::vec4, 8u>> m_frustumSplits;
+        void updateFrustumCorners(std::size_t);
 
         friend class ShadowMapRenderer;
     };

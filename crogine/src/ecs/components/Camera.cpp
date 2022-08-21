@@ -126,7 +126,7 @@ const Camera::DrawList& Camera::getDrawList(std::uint32_t pass) const
     }
 }
 
-void Camera::setPerspective(float fov, float aspect, float nearPlane, float farPlane)
+void Camera::setPerspective(float fov, float aspect, float nearPlane, float farPlane, std::size_t numSplits)
 {
     m_projectionMatrix = glm::perspective(fov, aspect, nearPlane, farPlane);
     m_verticalFOV = fov;
@@ -143,10 +143,11 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
     m_frustumData.nearRight = aspect * nearPlane * fovTan;
     m_frustumData.nearTop = nearPlane * fovTan;
 
-    updateFrustumCorners();
+    CRO_ASSERT(numSplits > 0, "");
+    updateFrustumCorners(numSplits);
 }
 
-void Camera::setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane)
+void Camera::setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::size_t numSplits)
 {
     m_projectionMatrix = glm::ortho(left, right, bottom, top, nearPlane, farPlane);
     m_verticalFOV = -1.f;
@@ -177,6 +178,28 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
         glm::vec4(left, bottom, -farPlane, 1.f),
         glm::vec4(right, bottom, -farPlane, 1.f)
     };
+
+    CRO_ASSERT(numSplits > 0, "");
+    m_frustumSplits.resize(numSplits);
+
+    const float splitSize = (farPlane - nearPlane) / numSplits;
+    for (auto i = 0u; i < numSplits; ++i)
+    {
+        m_frustumSplits[i]=
+        {
+            //near
+            glm::vec4(right, top, -nearPlane - (splitSize * i), 1.f),
+            glm::vec4(left, top, -nearPlane - (splitSize * i), 1.f),
+            glm::vec4(left, bottom, -nearPlane - (splitSize * i), 1.f),
+            glm::vec4(right, bottom, -nearPlane - (splitSize * i), 1.f),
+
+            //far
+            glm::vec4(right, top, -nearPlane - (splitSize * (i + 1)), 1.f),
+            glm::vec4(left, top, -nearPlane - (splitSize * (i + 1)), 1.f),
+            glm::vec4(left, bottom, -nearPlane - (splitSize * (i + 1)), 1.f),
+            glm::vec4(right, bottom, -nearPlane - (splitSize * (i + 1)), 1.f)
+        };
+    }
 }
 
 void Camera::updateMatrices(const Transform& tx, float level)
@@ -248,7 +271,7 @@ glm::vec3 Camera::pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize) 
 }
 
 //private
-void Camera::updateFrustumCorners()
+void Camera::updateFrustumCorners(std::size_t numSplits)
 {
     float tanHalfFOVY = std::tan(m_verticalFOV / 2.f);
     float tanHalfFOVX = std::tan((m_verticalFOV * m_aspectRatio) / 2.f);
@@ -272,4 +295,33 @@ void Camera::updateFrustumCorners()
         glm::vec4(-xFar, -yFar, -m_farPlane, 1.f),
         glm::vec4(xFar, -yFar, -m_farPlane, 1.f)
     };
+
+    m_frustumSplits.resize(numSplits);
+
+    const float splitSize = (m_farPlane - m_nearPlane) / numSplits;
+    for (auto i = 0u; i < numSplits; ++i)
+    {
+        const float nearPlane = m_nearPlane + (splitSize * i);
+        const float farPlane = nearPlane + splitSize;
+
+        xNear = (nearPlane * tanHalfFOVX);
+        xFar = (farPlane * tanHalfFOVX);
+        yNear = (nearPlane * tanHalfFOVY);
+        yFar = (farPlane * tanHalfFOVY);
+
+        m_frustumSplits[i] = 
+        {
+            //near
+            glm::vec4(xNear, yNear, -nearPlane, 1.f),
+            glm::vec4(-xNear, yNear, -nearPlane, 1.f),
+            glm::vec4(-xNear, -yNear, -nearPlane, 1.f),
+            glm::vec4(xNear, -yNear, -nearPlane, 1.f),
+
+            //far
+            glm::vec4(xFar, yFar, -farPlane, 1.f),
+            glm::vec4(-xFar, yFar, -farPlane, 1.f),
+            glm::vec4(-xFar, -yFar, -farPlane, 1.f),
+            glm::vec4(xFar, -yFar, -farPlane, 1.f)
+        };
+    }
 }

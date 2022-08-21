@@ -61,7 +61,7 @@ namespace
 
         void update(cro::Camera& cam)
         {
-            cam.setPerspective(fov * cro::Util::Const::degToRad, aspectRatio, nearPlane, farPlane);
+            cam.setPerspective(fov * cro::Util::Const::degToRad, aspectRatio, nearPlane, farPlane, 3);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         }
     }perspectiveDebug;
@@ -275,9 +275,6 @@ void FrustumState::createScene()
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-        //just set any bounds as long as it's in view and isn't culled...
-        entity.getComponent<cro::Model>().getMeshData().boundingBox = {glm::vec3(-10.f, -10.f, -20.f), glm::vec3(10.f, 10.f, 20.f)};
-        entity.getComponent<cro::Model>().getMeshData().boundingSphere = entity.getComponent<cro::Model>().getMeshData().boundingBox;
         m_entities[EntityID::CameraViz01 + i] = entity;        
         
         
@@ -285,12 +282,10 @@ void FrustumState::createScene()
         meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLES));
         material = m_resources.materials.get(materialID);
         material.blendMode = cro::Material::BlendMode::Alpha;
-        material.doubleSided = true;
+        material.doubleSided = true; //because I'm too lazy to wind the vertices in the correct order.
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-        entity.getComponent<cro::Model>().getMeshData().boundingBox = { glm::vec3(-10.f, -10.f, -20.f), glm::vec3(10.f, 10.f, 20.f) };
-        entity.getComponent<cro::Model>().getMeshData().boundingSphere = entity.getComponent<cro::Model>().getMeshData().boundingBox;
         m_entities[EntityID::LightViz01 + i] = entity;
     }
 
@@ -372,6 +367,9 @@ void FrustumState::createUI()
 std::array<std::array<glm::vec4, 8u>, FrustumState::CascadeCount> FrustumState::calcSplits() const
 {
     //TODO we don't really need to recalc this every time...
+    //could we make this a compile time constant in  the camera?
+    //it could replace the getCorners() func because even split the
+    //base corners can be found from near first far last
     const auto& cam = m_entities[EntityID::Camera].getComponent<cro::Camera>();
     const auto& camCorners = cam.getFrustumCorners();
     const float splitSize = (camCorners[0].z - camCorners[4].z) / CascadeCount;
@@ -405,7 +403,7 @@ std::array<std::array<glm::vec4, 8u>, FrustumState::CascadeCount> FrustumState::
 void FrustumState::calcCameraFrusta()
 {
     auto worldMat = m_entities[EntityID::Camera].getComponent<cro::Transform>().getWorldTransform();
-    auto corners = calcSplits();
+    const auto& corners = m_entities[EntityID::Camera].getComponent<cro::Camera>().getFrustumSplits();
 
     for (auto i = 0; i < CascadeCount; ++i)
     {
@@ -417,13 +415,13 @@ void FrustumState::calcLightFrusta()
 {
     //frustum corners in world coords
     auto worldMat = m_entities[EntityID::Camera].getComponent<cro::Transform>().getWorldTransform();
-    auto corners = calcSplits();
+    auto corners = m_entities[EntityID::Camera].getComponent<cro::Camera>().getFrustumSplits();
 
     static const std::array CascadeColours =
     {
-        glm::vec4(1.f, 0.f, 0.f, 0.6f),
-        glm::vec4(0.f, 1.f, 0.f, 0.6f),
-        glm::vec4(0.f, 0.f, 1.f, 0.6f)
+        glm::vec4(1.f, 0.f, 0.f, 0.4f),
+        glm::vec4(0.f, 1.f, 0.f, 0.4f),
+        glm::vec4(0.f, 0.f, 1.f, 0.4f)
     };
 
     for (auto i = 0; i < CascadeCount; ++i)
@@ -450,11 +448,6 @@ void FrustumState::calcLightFrusta()
         const auto lightView = glm::lookAt(lightPos, centre, cro::Transform::Y_AXIS);
 
 
-        /*
-        This method appears incorrect because at certain
-        angles the projection is pushed in the wrong direction
-        and doesn't cover the frustum completely or at all!
-        */
         //world coords to light space
         glm::vec3 minPos(std::numeric_limits<float>::max());
         glm::vec3 maxPos(std::numeric_limits<float>::lowest());
@@ -470,26 +463,26 @@ void FrustumState::calcLightFrusta()
             maxPos.y = std::max(maxPos.y, p.y);
             maxPos.z = std::max(maxPos.z, p.z);
         }
-
-        const auto lightProj = glm::ortho(minPos.x, maxPos.x, minPos.y, maxPos.y, -maxPos.z, -minPos.z);
+        /*minPos -= 1.f;
+        maxPos += 1.f;*/ //this needs to be a variable based on the scene
+        const auto lightProj = glm::ortho(minPos.x, maxPos.x, minPos.y, maxPos.y, minPos.z, maxPos.z);
 
         std::array lightCorners =
         {
             //near
-            glm::vec4(maxPos.x, maxPos.y, -maxPos.z, 1.f),
-            glm::vec4(minPos.x, maxPos.y, -maxPos.z, 1.f),
-            glm::vec4(minPos.x, minPos.y, -maxPos.z, 1.f),
-            glm::vec4(maxPos.x, minPos.y, -maxPos.z, 1.f),
+            glm::vec4(maxPos.x, maxPos.y, minPos.z, 1.f),
+            glm::vec4(minPos.x, maxPos.y, minPos.z, 1.f),
+            glm::vec4(minPos.x, minPos.y, minPos.z, 1.f),
+            glm::vec4(maxPos.x, minPos.y, minPos.z, 1.f),
             //far
-            glm::vec4(maxPos.x, maxPos.y, -minPos.z, 1.f),
-            glm::vec4(minPos.x, maxPos.y, -minPos.z, 1.f),
-            glm::vec4(minPos.x, minPos.y, -minPos.z, 1.f),
-            glm::vec4(maxPos.x, minPos.y, -minPos.z, 1.f)
+            glm::vec4(maxPos.x, maxPos.y, maxPos.z, 1.f),
+            glm::vec4(minPos.x, maxPos.y, maxPos.z, 1.f),
+            glm::vec4(minPos.x, minPos.y, maxPos.z, 1.f),
+            glm::vec4(maxPos.x, minPos.y, maxPos.z, 1.f)
         };
 
-        //this is a bit more wasteful of texture space but ensures much better coverage
-        //we could optimise this a bit by only calculating when the frustu corners
-        //are updated - and even calculate the splits at this point too...
+        //this is a bit more wasteful of texture space but apparently
+        //is better for texel snapping
         //float radius = (glm::length(corners[i][0] - corners[i][6]) / 2.f);// *1.1f;
         //const auto lightProj = glm::ortho(-radius, radius, -radius, radius, -radius, radius);
         //std::array lightCorners =
@@ -566,6 +559,41 @@ void FrustumState::updateFrustumVis(glm::mat4 worldMat, const std::array<glm::ve
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh.ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh.indexCount * sizeof(std::uint32_t), indices->data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    //update the bounds so depth sorting works
+    meshData.boundingBox[0] = glm::vec3(std::numeric_limits<float>::max());
+    meshData.boundingBox[1] = glm::vec3(std::numeric_limits<float>::lowest());
+    for (const auto& vert : vertices)
+    {
+        //min point
+        if (meshData.boundingBox[0].x > vert.position.x)
+        {
+            meshData.boundingBox[0].x = vert.position.x;
+        }
+        if (meshData.boundingBox[0].y > vert.position.y)
+        {
+            meshData.boundingBox[0].y = vert.position.y;
+        }
+        if (meshData.boundingBox[0].z > vert.position.z)
+        {
+            meshData.boundingBox[0].z = vert.position.z;
+        }
+
+        //maxpoint
+        if (meshData.boundingBox[1].x < vert.position.x)
+        {
+            meshData.boundingBox[1].x = vert.position.x;
+        }
+        if (meshData.boundingBox[1].y < vert.position.y)
+        {
+            meshData.boundingBox[1].y = vert.position.y;
+        }
+        if (meshData.boundingBox[1].z < vert.position.z)
+        {
+            meshData.boundingBox[1].z = vert.position.z;
+        }
+    }
+    meshData.boundingSphere = meshData.boundingBox;
 }
 
 bool FrustumState::rotateEntity(cro::Entity entity, std::int32_t keysetID, float dt)

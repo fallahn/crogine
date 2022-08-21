@@ -105,7 +105,7 @@ Mesh::Data StaticMeshBuilder::build() const
 
         //boundingbox / sphere
         meshData.boundingBox[0] = glm::vec3(std::numeric_limits<float>::max());
-        meshData.boundingBox[1] = glm::vec3(std::numeric_limits<float>::min());
+        meshData.boundingBox[1] = glm::vec3(std::numeric_limits<float>::lowest());
         for (std::size_t i = 0; i < meshFile.vboData.size(); i += (meshData.vertexSize / sizeof(float)))
         {
             //min point
