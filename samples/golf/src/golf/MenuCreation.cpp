@@ -115,7 +115,14 @@ constexpr std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPosit
 
 void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
 {
-    auto directories = cro::FileSystem::listDirectories(rootDir);
+    auto root = rootDir;
+    if (!isUser)
+    {
+        //macOS shenanigans.
+        root = cro::FileSystem::getResourcePath() + root;
+    }
+
+    auto directories = cro::FileSystem::listDirectories(root);
 
     //at least be consistent across platforms
     std::sort(directories.begin(), directories.end(), [](const  std::string& a, const std::string& b) {return a < b; });
