@@ -62,6 +62,7 @@ namespace
         void update(cro::Camera& cam)
         {
             cam.setPerspective(fov * cro::Util::Const::degToRad, aspectRatio, nearPlane, farPlane, 3);
+            //cam.setOrthographic(-10.f ,10.f, -10.f, 10.f, nearPlane, farPlane, 3);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         }
     }perspectiveDebug;
