@@ -39,6 +39,7 @@ source distribution.
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
@@ -59,9 +60,11 @@ namespace
         float fov = 40.f;
         float aspectRatio = 1.3f;
 
+        float maxDistance = 10.f;
+
         void update(cro::Camera& cam)
         {
-            cam.setPerspective(fov * cro::Util::Const::degToRad, aspectRatio, nearPlane, farPlane, 3);
+            cam.setPerspective(fov * cro::Util::Const::degToRad, aspectRatio, nearPlane, farPlane, CascadeCount);
             //cam.setOrthographic(-10.f ,10.f, -10.f, 10.f, nearPlane, farPlane, 3);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         }
@@ -156,7 +159,7 @@ bool FrustumState::simulate(float dt)
         m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(m_entities[EntityID::Light].getComponent<cro::Transform>().getRotation());
     }
 
-    //do this all the time as if it were a system
+    //updates light projection display
     calcLightFrusta();
 
     m_gameScene.simulate(dt);
@@ -182,6 +185,7 @@ void FrustumState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
@@ -255,6 +259,7 @@ void FrustumState::createScene()
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = std::bind(&PerspectiveDebug::update, &perspectiveDebug, std::placeholders::_1);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(512, 512);
     perspectiveDebug.update(camEnt.getComponent<cro::Camera>());
     m_entities[EntityID::Camera] = camEnt;
 
@@ -337,6 +342,11 @@ void FrustumState::createUI()
                 {
                     doUpdate = true;
                 }
+                if (ImGui::SliderFloat("Max Dist", &perspectiveDebug.maxDistance, 1.f, 20.f))
+                {
+                    doUpdate = true;
+                    m_entities[EntityID::Camera].getComponent<cro::Camera>().setMaxShadowDistance(perspectiveDebug.maxDistance);
+                }
 
                 if (doUpdate)
                 {
@@ -378,16 +388,34 @@ void FrustumState::calcCameraFrusta()
 
 void FrustumState::calcLightFrusta()
 {
-    //frustum corners in world coords
-    auto worldMat = m_entities[EntityID::Camera].getComponent<cro::Transform>().getWorldTransform();
-    auto corners = m_entities[EntityID::Camera].getComponent<cro::Camera>().getFrustumSplits();
-
     static const std::array CascadeColours =
     {
         glm::vec4(1.f, 0.f, 0.f, 0.4f),
         glm::vec4(0.f, 1.f, 0.f, 0.4f),
         glm::vec4(0.f, 0.f, 1.f, 0.4f)
     };
+
+    //position light source
+    auto light = m_gameScene.getSunlight();
+    auto lightDir = -light.getComponent<cro::Sunlight>().getDirection();
+
+#ifdef CRO_DEBUG_
+    //this visualises the output of the shadow map system
+    const auto& cam = m_entities[EntityID::Camera].getComponent<cro::Camera>();
+    for (auto i = 0u; i < cam.lightCorners.size(); ++i)
+    {
+        m_entities[EntityID::LightDummy01 + i].getComponent<cro::Transform>().setPosition(cam.lightPositions[i]);
+        m_entities[EntityID::LightDummy01 + i].getComponent<cro::Transform>().setRotation(light.getComponent<cro::Transform>().getRotation());
+        updateFrustumVis(glm::inverse(cam.getShadowViewMatrix(i)), cam.lightCorners[i], m_entities[EntityID::LightViz01 + i].getComponent<cro::Model>().getMeshData(), CascadeColours[i]);
+    }
+    return;
+#endif
+
+
+
+    //frustum corners in world coords
+    auto worldMat = m_entities[EntityID::Camera].getComponent<cro::Transform>().getWorldTransform();
+    auto corners = m_entities[EntityID::Camera].getComponent<cro::Camera>().getFrustumSplits();
 
     for (auto i = 0; i < CascadeCount; ++i)
     {
@@ -399,10 +427,6 @@ void FrustumState::calcLightFrusta()
             centre += glm::vec3(c);
         }
         centre /= corners[i].size();
-
-        //position light source
-        auto light = m_gameScene.getSunlight();
-        auto lightDir = -light.getComponent<cro::Sunlight>().getDirection();
 
         auto lightPos = centre + lightDir;
 

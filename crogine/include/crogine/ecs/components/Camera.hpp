@@ -402,8 +402,24 @@ namespace cro
         directional light as calculated by the ShadowMapRenderer
         for this camera.
         */
-        glm::mat4 getShadowViewProjectionMatrix() const { return m_shadowViewProjectionMatrix; }
+        glm::mat4 getShadowViewProjectionMatrix() const { return m_shadowViewProjectionMatrices[0]; }
 
+        /*!
+        \brief Sets the maximum distance from this camera for
+        rendering shadows.
+        This is clamped to the camera's far plane distance. The
+        value must be greater than the current near plane.
+        \param distance The distance in world units from the camera
+        to which to clamp shadow rendering.
+        */
+        void setMaxShadowDistance(float distance);
+
+        /*!
+        \brief Returns the number of cascades this camera is currently
+        enabled for, based on the numSplits parameter passed when calling
+        setPerspective() or setOrthographic().
+        */
+        std::size_t getCascadeCount() const { return m_frustumSplits.size(); }
 
         /*!
         \brief Returns the vertical FOV in radians if the
@@ -475,9 +491,9 @@ namespace cro
         FloatRect getViewSize() const { return m_orthographicView; }
 
 #ifdef CRO_DEBUG_
-        //l,r,b,t,n,f
-        std::array<float, 6u> depthDebug = {};
-        glm::vec3 depthPosition = glm::vec3(0.f);
+        std::vector<std::array<glm::vec4, 8u>> lightCorners;
+        std::vector<glm::vec3> lightPositions;
+        glm::mat4 getShadowViewMatrix(std::size_t i) const { return m_shadowViewMatrices[i]; }
 #endif
 
 
@@ -498,18 +514,18 @@ namespace cro
         FloatRect m_orthographicView;
         FrustumData m_frustumData;
 
+
+        friend class ShadowMapRenderer;
+        friend class ModelRenderer;
+
         std::array<glm::vec4, 8u> m_frustumCorners;
         std::vector<std::array<glm::vec4, 8u>> m_frustumSplits;
         void updateFrustumCorners(std::size_t);
 
-
-        glm::mat4 m_shadowViewProjectionMatrix = glm::mat4(1.f);
-        glm::mat4 m_shadowViewMatrix = glm::mat4(1.f);
-        glm::mat4 m_shadowProjectionMatrix = glm::mat4(1.f);
-
-
-        friend class ShadowMapRenderer;
-        friend class ModelRenderer;
+        float m_maxShadowDistance;
+        std::vector<glm::mat4> m_shadowViewProjectionMatrices;
+        std::vector<glm::mat4> m_shadowViewMatrices;
+        std::vector<glm::mat4> m_shadowProjectionMatrices;
     };
 }
 

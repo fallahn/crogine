@@ -35,12 +35,13 @@ source distribution.
 using namespace cro;
 
 Camera::Camera() 
-    : viewport      (0.f, 0.f, 1.f, 1.f),
-    m_verticalFOV   (0.6f),
-    m_aspectRatio   (1.f),
-    m_nearPlane     (0.1f),
-    m_farPlane      (150.f),
-    m_orthographic  (false)
+    : viewport          (0.f, 0.f, 1.f, 1.f),
+    m_verticalFOV       (0.6f),
+    m_aspectRatio       (1.f),
+    m_nearPlane         (0.1f),
+    m_farPlane          (150.f),
+    m_orthographic      (false),
+    m_maxShadowDistance (std::numeric_limits<float>::max())
 {
     glm::vec2 windowSize(App::getWindow().getSize());
     m_aspectRatio = windowSize.x / windowSize.y;
@@ -52,6 +53,10 @@ Camera::Camera()
     m_passes[Pass::Reflection].m_cullFace = GL_FRONT;
 
     std::fill(m_frustumCorners.begin(), m_frustumCorners.end(), glm::vec4(0.f));
+
+    m_shadowProjectionMatrices.resize(1);
+    m_shadowViewMatrices.resize(1);
+    m_shadowViewProjectionMatrices.resize(1);
 }
 
 void Camera::setActivePass(std::uint32_t pass)
@@ -134,6 +139,7 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
     m_orthographic = false;
+    m_maxShadowDistance = std::min(farPlane, m_maxShadowDistance);
 
     m_orthographicView = { 0.f,0.f,0.f,0.f };
 
@@ -145,6 +151,10 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
 
     CRO_ASSERT(numSplits > 0, "");
     updateFrustumCorners(numSplits);
+
+    m_shadowProjectionMatrices.resize(numSplits);
+    m_shadowViewMatrices.resize(numSplits);
+    m_shadowViewProjectionMatrices.resize(numSplits);
 }
 
 void Camera::setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::size_t numSplits)
@@ -155,6 +165,7 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
     m_orthographic = true;
+    m_maxShadowDistance = std::min(farPlane, m_maxShadowDistance);
 
     m_orthographicView = { left, bottom, right - left, top - bottom };
 
@@ -182,7 +193,11 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
     CRO_ASSERT(numSplits > 0, "");
     m_frustumSplits.resize(numSplits);
 
-    const float splitSize = (farPlane - nearPlane) / numSplits;
+    m_shadowProjectionMatrices.resize(numSplits);
+    m_shadowViewMatrices.resize(numSplits);
+    m_shadowViewProjectionMatrices.resize(numSplits);
+
+    const float splitSize = (m_maxShadowDistance - nearPlane) / numSplits;
     for (auto i = 0u; i < numSplits; ++i)
     {
         m_frustumSplits[i]=
@@ -200,6 +215,14 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
             glm::vec4(right, bottom, -nearPlane - (splitSize * (i + 1)), 1.f)
         };
     }
+}
+
+void Camera::setMaxShadowDistance(float distance)
+{
+    m_maxShadowDistance = std::min(m_farPlane, std::max(m_nearPlane + 0.05f, distance));
+    updateFrustumCorners(m_frustumSplits.size());
+
+    //TODO update the frustum splits if this is an ortho camera.
 }
 
 void Camera::updateMatrices(const Transform& tx, float level)
@@ -298,7 +321,7 @@ void Camera::updateFrustumCorners(std::size_t numSplits)
 
     m_frustumSplits.resize(numSplits);
 
-    const float splitSize = (m_farPlane - m_nearPlane) / numSplits;
+    const float splitSize = (m_maxShadowDistance - m_nearPlane) / numSplits;
     for (auto i = 0u; i < numSplits; ++i)
     {
         const float nearPlane = m_nearPlane + (splitSize * i);

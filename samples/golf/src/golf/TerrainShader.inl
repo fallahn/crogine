@@ -433,7 +433,7 @@ static const std::string CelFragmentShader = R"(
             return 1.0;
         }
 
-        return (currDepth < depthSample) ? 1.0 : 1.0 - (0.3 * featherX * featherY);
+        return (currDepth < depthSample) ? 1.0 : 1.0 - (0.3);// * featherX * featherY);
     }
 
     const vec2 kernel[16] = vec2[](
@@ -481,7 +481,7 @@ static const std::string CelFragmentShader = R"(
 
 
         float amount = shadow / 9.0;
-        return 1.0 - (amount * featherX * featherY);
+        return 1.0 - (amount);// * featherX * featherY);
     }
 #endif
 
@@ -641,19 +641,19 @@ static const std::string CelFragmentShader = R"(
 #if defined (RX_SHADOWS)
         //FRAG_OUT.rgb *= shadowAmountSoft(v_lightWorldPosition);
         FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition);
-        /*if(v_lightWorldPosition.w > 0.0)
+        if(v_lightWorldPosition.w > 0.0)
         {
             vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
 
-            float featherX = smoothstep(0.0, 0.05, coords.x);
-            featherX *= (1.0 - smoothstep(0.95, 1.0, coords.x));
+            float featherX = 1.0;//smoothstep(0.0, 0.05, coords.x);
+            //featherX *= (1.0 - smoothstep(0.95, 1.0, coords.x));
 
-            float featherY = smoothstep(0.0, 0.05, coords.y);
-            featherY *= (1.0 - smoothstep(0.95, 1.0, coords.y));
+            float featherY = 1.0;// smoothstep(0.0, 0.05, coords.y);
+            //featherY *= (1.0 - smoothstep(0.95, 1.0, coords.y));
 
             if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
             FRAG_OUT.rgb += vec3(0.0,0.0,0.5 * featherX * featherY);
-        }*/
+        }
 #endif
 
 #if defined (ADD_NOISE)

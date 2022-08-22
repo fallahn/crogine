@@ -374,63 +374,63 @@ void BatcatState::createScene()
     auto debugEnt = m_scene.createEntity();
     debugEnt.addComponent<cro::Transform>();
     debugEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialID));
-    debugEnt.addComponent<cro::Callback>().active = true;
-    debugEnt.getComponent<cro::Callback>().function =
-        [&,ent](cro::Entity e, float)
-    {
-        const auto& cam = ent.getComponent<cro::Camera>();
-        //e.getComponent<cro::Transform>().setPosition(ent.getComponent<cro::Transform>().getWorldPosition());
-        e.getComponent<cro::Transform>().setPosition(cam.depthPosition);
-        e.getComponent<cro::Transform>().setRotation(m_scene.getSunlight().getComponent<cro::Transform>().getRotation());
+    //debugEnt.addComponent<cro::Callback>().active = true;
+    //debugEnt.getComponent<cro::Callback>().function =
+    //    [&,ent](cro::Entity e, float)
+    //{
+    //    const auto& cam = ent.getComponent<cro::Camera>();
+    //    //e.getComponent<cro::Transform>().setPosition(ent.getComponent<cro::Transform>().getWorldPosition());
+    //    e.getComponent<cro::Transform>().setPosition(cam.depthPosition);
+    //    e.getComponent<cro::Transform>().setRotation(m_scene.getSunlight().getComponent<cro::Transform>().getRotation());
 
-        std::vector<float> verts =
-        {
-            cam.depthDebug[0], cam.depthDebug[2], cam.depthDebug[4],
-            1.f,0.f,1.f,1.f,
+    //    std::vector<float> verts =
+    //    {
+    //        cam.depthDebug[0], cam.depthDebug[2], cam.depthDebug[4],
+    //        1.f,0.f,1.f,1.f,
 
-            cam.depthDebug[1], cam.depthDebug[2], cam.depthDebug[4],
-            1.f,0.f,1.f,1.f,
+    //        cam.depthDebug[1], cam.depthDebug[2], cam.depthDebug[4],
+    //        1.f,0.f,1.f,1.f,
 
-            cam.depthDebug[0], cam.depthDebug[3], cam.depthDebug[4],
-            1.f,0.f,1.f,1.f,
+    //        cam.depthDebug[0], cam.depthDebug[3], cam.depthDebug[4],
+    //        1.f,0.f,1.f,1.f,
 
-            cam.depthDebug[1], cam.depthDebug[3], cam.depthDebug[4],
-            1.f,0.f,1.f,1.f,
+    //        cam.depthDebug[1], cam.depthDebug[3], cam.depthDebug[4],
+    //        1.f,0.f,1.f,1.f,
 
-            cam.depthDebug[0], cam.depthDebug[2], -cam.depthDebug[5],
-            0.f,1.f,1.f,1.f,
+    //        cam.depthDebug[0], cam.depthDebug[2], -cam.depthDebug[5],
+    //        0.f,1.f,1.f,1.f,
 
-            cam.depthDebug[1], cam.depthDebug[2], -cam.depthDebug[5],
-            0.f,1.f,1.f,1.f,
+    //        cam.depthDebug[1], cam.depthDebug[2], -cam.depthDebug[5],
+    //        0.f,1.f,1.f,1.f,
 
-            cam.depthDebug[0], cam.depthDebug[3], -cam.depthDebug[5],
-            0.f,1.f,1.f,1.f,
+    //        cam.depthDebug[0], cam.depthDebug[3], -cam.depthDebug[5],
+    //        0.f,1.f,1.f,1.f,
 
-            cam.depthDebug[1], cam.depthDebug[3], -cam.depthDebug[5],
-            0.f,1.f,1.f,1.f,
-        };
+    //        cam.depthDebug[1], cam.depthDebug[3], -cam.depthDebug[5],
+    //        0.f,1.f,1.f,1.f,
+    //    };
 
-        std::vector<std::uint32_t> indices =
-        {
-            0,1, 1,3, 3,2, 2,0,
-            4,5, 5,7, 7,6, 6,4,
-            0,4, 1,5, 3,7, 2,6
-        };
+    //    std::vector<std::uint32_t> indices =
+    //    {
+    //        0,1, 1,3, 3,2, 2,0,
+    //        4,5, 5,7, 7,6, 6,4,
+    //        0,4, 1,5, 3,7, 2,6
+    //    };
 
-        auto& meshData = e.getComponent<cro::Model>().getMeshData();
-        glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
-        glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //    auto& meshData = e.getComponent<cro::Model>().getMeshData();
+    //    glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+    //    glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_DYNAMIC_DRAW);
+    //    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    //    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.indexData[0].ibo);
+    //    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW);
+    //    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        meshData.boundingBox[0] = { cam.depthDebug[0], cam.depthDebug[2], cam.depthDebug[4] };
-        meshData.boundingBox[1] = { cam.depthDebug[1], cam.depthDebug[3], -cam.depthDebug[5] };
-        meshData.boundingSphere.centre = meshData.boundingBox[0] + ((meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f);
-        meshData.boundingSphere.radius = glm::length(meshData.boundingSphere.centre);
-    };
+    //    meshData.boundingBox[0] = { cam.depthDebug[0], cam.depthDebug[2], cam.depthDebug[4] };
+    //    meshData.boundingBox[1] = { cam.depthDebug[1], cam.depthDebug[3], -cam.depthDebug[5] };
+    //    meshData.boundingSphere.centre = meshData.boundingBox[0] + ((meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f);
+    //    meshData.boundingSphere.radius = glm::length(meshData.boundingSphere.centre);
+    //};
 
     auto& meshData = debugEnt.getComponent<cro::Model>().getMeshData();
     meshData.vertexCount = 8;

@@ -57,8 +57,6 @@ namespace
 
 ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
     : System(mb, typeid(ShadowMapRenderer)),
-    m_maxDistance   (100.f),
-    m_cascadeCount  (3),
     m_interval      (1)
 {
     requireComponent<cro::Model>();
@@ -68,14 +66,14 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
 
 
 //public
-void ShadowMapRenderer::setMaxDistance(float distance)
+void ShadowMapRenderer::setMaxDistance(float)
 {
-    m_maxDistance = std::max(distance, 0.1f);
+    CRO_ASSERT(false, "Max shadow distance is set per-camera");
 }
 
 void ShadowMapRenderer::setNumCascades(std::int32_t count)
 {
-    m_cascadeCount = std::max(1, count);
+    CRO_ASSERT(false, "Cascade count is set by camera num splits");
 }
 
 void ShadowMapRenderer::process(float)
@@ -89,7 +87,6 @@ void ShadowMapRenderer::process(float)
         m_activeCameras.clear();
     }
 
-
     intervalCounter++;
 }
 
@@ -99,8 +96,6 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
     {
         return;
     }
-
-    glm::vec3 lightDir = getScene()->getSunlight().getComponent<Sunlight>().getDirection();
 
     //this gets called once for each Camera in the CameraSystem
     //from CameraSystem::process() - so we'll check here if
@@ -122,92 +117,152 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
         //only covers the first part of the frustum...
         //TODO implement the rest as cascaded shadows
-        float farPlane = std::min(camera.m_farPlane, m_maxDistance) / m_cascadeCount;
+        //float farPlane = std::min(camera.m_farPlane, m_maxDistance) / m_cascadeCount;
 
-        //calc a position for the directional light
-        //this is used for depth sorting the draw list
-        auto centre = camEnt.getComponent<cro::Transform>().getWorldPosition() + (camEnt.getComponent<cro::Transform>().getForwardVector() * (farPlane / 2.f));
-        auto lightPos = centre - (lightDir * ((camera.m_farPlane - camera.m_nearPlane) / 2.f));
+        ////calc a position for the directional light
+        ////this is used for depth sorting the draw list
+        //auto centre = camEnt.getComponent<cro::Transform>().getWorldPosition() + (camEnt.getComponent<cro::Transform>().getForwardVector() * (farPlane / 2.f));
+        //auto lightPos = centre - (lightDir * ((camera.m_farPlane - camera.m_nearPlane) / 2.f));
 
-        camera.m_shadowViewMatrix = glm::lookAt(lightPos, centre, cro::Transform::Y_AXIS);// glm::inverse(glm::toMat4(lightRotation));
+        //camera.m_shadowViewMatrix = glm::lookAt(lightPos, centre, cro::Transform::Y_AXIS);// glm::inverse(glm::toMat4(lightRotation));
 
-        //frustum in camera coords
-        float tanHalfFOVY = std::tan(camera.m_verticalFOV / 2.f);
-        float tanHalfFOVX = std::tan((camera.m_verticalFOV * camera.m_aspectRatio) / 2.f);
+        ////frustum in camera coords
+        //float tanHalfFOVY = std::tan(camera.m_verticalFOV / 2.f);
+        //float tanHalfFOVX = std::tan((camera.m_verticalFOV * camera.m_aspectRatio) / 2.f);
 
+        //
+        //static constexpr float Embiggenment = 1.2f;
+
+        //float xNear = (camera.m_nearPlane * tanHalfFOVX) * Embiggenment;
+        //float xFar = (farPlane * tanHalfFOVX)* Embiggenment;
+        //float yNear = (camera.m_nearPlane * tanHalfFOVY)* Embiggenment;
+        //float yFar = (farPlane * tanHalfFOVY)* Embiggenment;
+
+        //std::array frustumCorners =
+        //{
+        //    //near
+        //    glm::vec4(xNear, yNear, -camera.m_nearPlane, 1.f),
+        //    glm::vec4(-xNear, yNear, -camera.m_nearPlane, 1.f),
+        //    glm::vec4(xNear, -yNear, -camera.m_nearPlane, 1.f),
+        //    glm::vec4(-xNear, -yNear, -camera.m_nearPlane, 1.f),
+
+        //    //far
+        //    glm::vec4(xFar, yFar, -farPlane, 1.f),
+        //    glm::vec4(-xFar, yFar, -farPlane, 1.f),
+        //    glm::vec4(xFar, -yFar, -farPlane, 1.f),
+        //    glm::vec4(-xFar, -yFar, -farPlane, 1.f)
+        //};
+
+        //auto camTx = camEnt.getComponent<Transform>().getWorldTransform();
+        //std::array<glm::vec4, 8u> lightCorners = {};
+
+        //for (auto i = 0u; i < frustumCorners.size(); ++i)
+        //{
+        //    //convert frustum to world space
+        //    auto worldPoint = camTx * frustumCorners[i];
+
+        //    //convert to light space
+        //    lightCorners[i] = camera.m_shadowViewMatrix * worldPoint;
+        //}
+
+        //auto xExtremes = std::minmax_element(lightCorners.begin(), lightCorners.end(),
+        //    [](glm::vec3 l, glm::vec3 r) 
+        //    {
+        //        return l.x < r.x;
+        //    });
+
+        //auto yExtremes = std::minmax_element(lightCorners.begin(), lightCorners.end(),
+        //    [](glm::vec3 l, glm::vec3 r)
+        //    {
+        //        return l.y < r.y;
+        //    });
+
+        //auto zExtremes = std::minmax_element(lightCorners.begin(), lightCorners.end(),
+        //    [](glm::vec3 l, glm::vec3 r)
+        //    {
+        //        return l.z < r.z;
+        //    });
+
+        //float minX = xExtremes.first->x;
+        //float maxX = xExtremes.second->x;
+        //float minY = yExtremes.first->y;
+        //float maxY = yExtremes.second->y;
+        //float minZ = zExtremes.first->z;
+        //float maxZ = zExtremes.second->z;
+
+        ////convert to ortho projection
+        //camera.m_shadowProjectionMatrix = glm::ortho(minX, maxX, minY, maxY, -maxZ, -minZ);
+        //camera.m_shadowViewProjectionMatrix = camera.m_shadowProjectionMatrix * camera.m_shadowViewMatrix;
+
+
+        //store the results here to use in frustum culling
+        std::vector<glm::vec3> lightPositions;
+        std::vector<std::array<glm::vec4, 8u>> lightCorners;
         
-        static constexpr float Embiggenment = 1.2f;
+        auto worldMat = camEnt.getComponent<cro::Transform>().getWorldTransform();
+        auto corners = camera.getFrustumSplits();
+        glm::vec3 lightDir = -getScene()->getSunlight().getComponent<Sunlight>().getDirection();
 
-        float xNear = (camera.m_nearPlane * tanHalfFOVX) * Embiggenment;
-        float xFar = (farPlane * tanHalfFOVX)* Embiggenment;
-        float yNear = (camera.m_nearPlane * tanHalfFOVY)* Embiggenment;
-        float yFar = (farPlane * tanHalfFOVY)* Embiggenment;
-
-        std::array frustumCorners =
+        for (auto i = 0; i < corners.size(); ++i)
         {
-            //near
-            glm::vec4(xNear, yNear, -camera.m_nearPlane, 1.f),
-            glm::vec4(-xNear, yNear, -camera.m_nearPlane, 1.f),
-            glm::vec4(xNear, -yNear, -camera.m_nearPlane, 1.f),
-            glm::vec4(-xNear, -yNear, -camera.m_nearPlane, 1.f),
+            glm::vec3 centre = glm::vec3(0.f);
 
-            //far
-            glm::vec4(xFar, yFar, -farPlane, 1.f),
-            glm::vec4(-xFar, yFar, -farPlane, 1.f),
-            glm::vec4(xFar, -yFar, -farPlane, 1.f),
-            glm::vec4(-xFar, -yFar, -farPlane, 1.f)
-        };
+            for (auto& c : corners[i])
+            {
+                c = worldMat * c;
+                centre += glm::vec3(c);
+            }
+            centre /= corners[i].size();
 
-        auto camTx = camEnt.getComponent<Transform>().getWorldTransform();
-        std::array<glm::vec4, 8u> lightCorners = {};
+            //position light source
+            auto lightPos = centre + lightDir;
+            lightPositions.push_back(lightPos);
 
-        for (auto i = 0u; i < frustumCorners.size(); ++i)
-        {
-            //convert frustum to world space
-            auto worldPoint = camTx * frustumCorners[i];
+            const auto lightView = glm::lookAt(lightPos, centre, cro::Transform::Y_AXIS);
+            camera.m_shadowViewMatrices[i] = lightView;
 
-            //convert to light space
-            lightCorners[i] = camera.m_shadowViewMatrix * worldPoint;
+            //world coords to light space
+            glm::vec3 minPos(std::numeric_limits<float>::max());
+            glm::vec3 maxPos(std::numeric_limits<float>::lowest());
+
+            for (const auto& c : corners[i])
+            {
+                const auto p = lightView * c;
+                minPos.x = std::min(minPos.x, p.x);
+                minPos.y = std::min(minPos.y, p.y);
+                minPos.z = std::min(minPos.z, p.z);
+
+                maxPos.x = std::max(maxPos.x, p.x);
+                maxPos.y = std::max(maxPos.y, p.y);
+                maxPos.z = std::max(maxPos.z, p.z);
+            }
+            /*minPos -= 1.f;
+            maxPos += 1.f;*/ //this needs to be a variable based on the scene
+            const auto lightProj = glm::ortho(minPos.x, maxPos.x, minPos.y, maxPos.y, minPos.z, maxPos.z);
+            camera.m_shadowProjectionMatrices[i] = lightProj;
+            camera.m_shadowViewProjectionMatrices[i] = lightProj * lightView;
+
+            lightCorners.emplace_back() =
+            {
+                //near
+                glm::vec4(maxPos.x, maxPos.y, minPos.z, 1.f),
+                glm::vec4(minPos.x, maxPos.y, minPos.z, 1.f),
+                glm::vec4(minPos.x, minPos.y, minPos.z, 1.f),
+                glm::vec4(maxPos.x, minPos.y, minPos.z, 1.f),
+                //far
+                glm::vec4(maxPos.x, maxPos.y, maxPos.z, 1.f),
+                glm::vec4(minPos.x, maxPos.y, maxPos.z, 1.f),
+                glm::vec4(minPos.x, minPos.y, maxPos.z, 1.f),
+                glm::vec4(maxPos.x, minPos.y, maxPos.z, 1.f)
+            };
         }
 
-        auto xExtremes = std::minmax_element(lightCorners.begin(), lightCorners.end(),
-            [](glm::vec3 l, glm::vec3 r) 
-            {
-                return l.x < r.x;
-            });
 
-        auto yExtremes = std::minmax_element(lightCorners.begin(), lightCorners.end(),
-            [](glm::vec3 l, glm::vec3 r)
-            {
-                return l.y < r.y;
-            });
-
-        auto zExtremes = std::minmax_element(lightCorners.begin(), lightCorners.end(),
-            [](glm::vec3 l, glm::vec3 r)
-            {
-                return l.z < r.z;
-            });
-
-        float minX = xExtremes.first->x;
-        float maxX = xExtremes.second->x;
-        float minY = yExtremes.first->y;
-        float maxY = yExtremes.second->y;
-        float minZ = zExtremes.first->z;
-        float maxZ = zExtremes.second->z;
-
-        //convert to ortho projection
-        camera.m_shadowProjectionMatrix = glm::ortho(minX, maxX, minY, maxY, -maxZ, -minZ);
-        camera.m_shadowViewProjectionMatrix = camera.m_shadowProjectionMatrix * camera.m_shadowViewMatrix;
-
-#ifdef CRO_DEBUG_
-        camera.depthDebug = { minX, maxX, minY, maxY, -maxZ, -minZ };
-        camera.depthPosition = lightPos;
-#endif //CRO_DEBUG_
 
 
         //use depth frustum to cull entities
         Frustum frustum = {};
-        Spatial::updateFrustum(frustum, camera.m_shadowViewProjectionMatrix);
+        Spatial::updateFrustum(frustum, camera.m_shadowViewProjectionMatrices[0]);
 
         auto& entities = getEntities();
         for (auto& entity : entities)
@@ -230,7 +285,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             auto scale = tx.getScale();
             sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
-            float distance = glm::dot(lightDir, sphere.centre - lightPos);
+            float distance = glm::dot(lightDir, sphere.centre - lightPositions[0]);
             if (distance < -sphere.radius)
             {
                 //we're behind the frustum
@@ -261,6 +316,11 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             });
 
         DPRINT("Visible 3D shadow ents", std::to_string(drawList.size()));
+
+#ifdef CRO_DEBUG_
+        camera.lightCorners.swap(lightCorners);
+        camera.lightPositions.swap(lightPositions);
+#endif
     }
 }
 
@@ -298,7 +358,7 @@ void ShadowMapRenderer::render()
             //calc entity transform
             const auto& tx = e.getComponent<Transform>();
             glm::mat4 worldMat = tx.getWorldTransform();
-            glm::mat4 worldView = camera.m_shadowViewMatrix * worldMat;
+            glm::mat4 worldView = camera.m_shadowViewMatrices[0] * worldMat;
 
             //foreach submesh / material:
 
@@ -345,9 +405,9 @@ void ShadowMapRenderer::render()
                 }
 
                 glCheck(glUniformMatrix4fv(mat.uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
-                glCheck(glUniformMatrix4fv(mat.uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camera.m_shadowViewMatrix)));
+                glCheck(glUniformMatrix4fv(mat.uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camera.m_shadowViewMatrices[0])));
                 glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-                glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camera.m_shadowProjectionMatrix)));
+                glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camera.m_shadowProjectionMatrices[0])));
                 glCheck(glUniform3f(mat.uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
                 //glCheck(glUniformMatrix4fv(mat.uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camera.depthViewProjectionMatrix)));
 

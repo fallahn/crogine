@@ -568,7 +568,7 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
         }
             break;
         case Material::ShadowMapProjection:
-            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapProjection], 1, GL_FALSE, &camera.m_shadowViewProjectionMatrix[0][0]));
+            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapProjection], 1, GL_FALSE, &camera.m_shadowViewProjectionMatrices[0][0][0]));
             break;
         case Material::ShadowMapSampler:
             glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));

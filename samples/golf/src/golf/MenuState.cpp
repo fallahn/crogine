@@ -316,33 +316,33 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
 #ifdef CRO_DEBUG_
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("Debug"))
-    //        {
-    //            ImGui::Text("Course Index %u", m_sharedData.courseIndex);
-    //            /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
-    //            /*float x = static_cast<float>(AvatarThumbSize.x);
-    //            float y = static_cast<float>(AvatarThumbSize.y);
-    //            ImGui::Image(m_avatarThumbs[0].getTexture(), {x,y}, {0,1}, {1,0});
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_avatarThumbs[1].getTexture(), { x,y }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_avatarThumbs[2].getTexture(), { x,y }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
-    //            //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
-    //            //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Debug"))
+            {
+                //ImGui::Text("Course Index %u", m_sharedData.courseIndex);
+                /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
+                /*float x = static_cast<float>(AvatarThumbSize.x);
+                float y = static_cast<float>(AvatarThumbSize.y);
+                ImGui::Image(m_avatarThumbs[0].getTexture(), {x,y}, {0,1}, {1,0});
+                ImGui::SameLine();
+                ImGui::Image(m_avatarThumbs[1].getTexture(), { x,y }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_avatarThumbs[2].getTexture(), { x,y }, { 0,1 }, { 1,0 });
+                ImGui::SameLine();
+                ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
+                //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
+                //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
 
-    //            //ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //        }
-    //        ImGui::End();
-    //    });
+                ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();
+        });
 #endif
 }
 
@@ -1000,6 +1000,7 @@ void MenuState::createScene()
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     cam.shadowMapBuffer.create(2048, 2048);
+    cam.setMaxShadowDistance(20.f);
     updateView(cam);
 
     //camEnt.getComponent<cro::Transform>().setPosition({ -17.8273, 4.9, 25.0144 });

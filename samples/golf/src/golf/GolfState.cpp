@@ -136,8 +136,8 @@ namespace
 
     float godmode = 1.f;
 
-    constexpr float ShadowFarDistance = 50.f;
-    constexpr float ShadowNearDistance = 20.f;
+    constexpr float ShadowFarDistance = 150.f;// 50.f;
+    constexpr float ShadowNearDistance = 60.f;// 20.f;
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
     //use to move the flag as the player approaches
@@ -2703,8 +2703,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::SpriteAnimator>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(ShadowNearDistance);
-    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setRenderInterval(m_sharedData.hqShadows ? 2 : 3);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setRenderInterval(m_sharedData.hqShadows ? 2 : 3);
 #ifdef CRO_DEBUG_
     m_gameScene.addSystem<FpsCameraSystem>(mb);
 #endif
@@ -3175,7 +3174,7 @@ void GolfState::buildScene()
     cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     cam.reflectionBuffer.setSmooth(true);
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
-
+    cam.setMaxShadowDistance(ShadowNearDistance);
 
     //create an overhead camera
     auto setPerspective = [&](cro::Camera& cam)
@@ -4919,8 +4918,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         }
 
         //set just far enough the flag shows in the distance
-        m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(ShadowFarDistance);
-
+        m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(ShadowFarDistance);
 
 
         //update the position of the bystander camera
@@ -4989,7 +4987,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         m_activeAvatar->model.getComponent<cro::Model>().setHidden(true);
 
         //and use closer shadow mapping
-        m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(ShadowNearDistance);
+        m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(ShadowNearDistance);
     }
     setActiveCamera(CameraID::Player);
 
@@ -5428,8 +5426,8 @@ void GolfState::startFlyBy()
     //reset the zoom if not putting from tee
     m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().target = m_holeData[m_currentHole].puttFromTee ? PuttingZoom : 1.f;
     m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
+    m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(ShadowFarDistance);
 
-    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setMaxDistance(ShadowFarDistance);
 
     //static for lambda capture
     static constexpr float MoveSpeed = 50.f; //metres per sec
