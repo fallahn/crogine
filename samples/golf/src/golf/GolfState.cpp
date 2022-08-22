@@ -136,8 +136,9 @@ namespace
 
     float godmode = 1.f;
 
-    constexpr float ShadowFarDistance = 150.f;// 50.f;
-    constexpr float ShadowNearDistance = 60.f;// 20.f;
+    constexpr float ShadowFarDistance = 10.f;// 50.f;
+    constexpr float ShadowNearDistance = 10.f;// 20.f;
+    constexpr std::size_t CascadeCount = 1;
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
     //use to move the flag as the player approaches
@@ -256,16 +257,21 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //        ImGui::End();
     //    });
 
-    /*registerWindow([&]()
+    registerWindow([&]()
         {
             if (ImGui::Begin("buns"))
             {
-                ImGui::PlotLines("X Pos", ballDump[0].data(), ballDump[0].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
+                /*ImGui::PlotLines("X Pos", ballDump[0].data(), ballDump[0].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
                 ImGui::PlotLines("Y Pos", ballDump[1].data(), ballDump[1].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
-                ImGui::PlotLines("Z Pos", ballDump[2].data(), ballDump[2].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
+                ImGui::PlotLines("Z Pos", ballDump[2].data(), ballDump[2].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));*/
+                static float maxDist = ShadowNearDistance;
+                if (ImGui::SliderFloat("MaxDist", &maxDist, 1.f, 200.f))
+                {
+                    m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
+                }
             }
             ImGui::End();
-        });*/
+        });
 #endif
 }
 
@@ -3129,7 +3135,7 @@ void GolfState::buildScene()
 
         //fetch this explicitly so the transition cam also gets the correct zoom
         float zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().fov;
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad * zoom, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x), 3);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad * zoom, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x), CascadeCount);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -3157,7 +3163,7 @@ void GolfState::buildScene()
 
         auto fov = m_sharedData.fov * cro::Util::Const::degToRad * zoom.fov;
         cam.setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x));
-        m_cameras[CameraID::Transition].getComponent<cro::Camera>().setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x), 3);
+        m_cameras[CameraID::Transition].getComponent<cro::Camera>().setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x), CascadeCount);
     };
 
     m_cameras[CameraID::Player] = camEnt;
@@ -3181,7 +3187,7 @@ void GolfState::buildScene()
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, /*vpSize.x*/320.f);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, /*vpSize.x*/320.f, CascadeCount);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
@@ -3190,7 +3196,7 @@ void GolfState::buildScene()
         [&,camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f);
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f, CascadeCount);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
@@ -3216,7 +3222,7 @@ void GolfState::buildScene()
         [&,camEnt](cro::Camera& cam)
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f);
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f, CascadeCount);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
@@ -3244,7 +3250,7 @@ void GolfState::buildScene()
         auto zoomFOV = camEnt.getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>().fov;
 
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * zoomFOV * 0.7f, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f);
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * zoomFOV * 0.7f, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f, CascadeCount);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
@@ -3296,7 +3302,7 @@ void GolfState::buildScene()
         [&,camEnt](cro::Camera& cam)
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f, CascadeCount);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);

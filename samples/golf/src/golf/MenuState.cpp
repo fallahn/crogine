@@ -1005,7 +1005,7 @@ void MenuState::createScene()
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     cam.shadowMapBuffer.create(2048, 2048);
-    cam.setMaxShadowDistance(20.f);
+    cam.setMaxShadowDistance(32.f);
     updateView(cam);
 
     //camEnt.getComponent<cro::Transform>().setPosition({ -17.8273, 4.9, 25.0144 });

@@ -866,7 +866,7 @@ void TrophyState::buildTrophyScene()
     auto resizeCallback = [](cro::Camera& cam)
     {
         auto ratio = TrophyTextureSize.x / TrophyTextureSize.y;
-        cam.setPerspective(64.f * cro::Util::Const::degToRad, ratio, 0.1f, 2.f);
+        cam.setPerspective(64.f * cro::Util::Const::degToRad, ratio, 0.3f, 4.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     resizeCallback(m_trophyScene.getActiveCamera().getComponent<cro::Camera>());
