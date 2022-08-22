@@ -197,8 +197,12 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
         //store the results here to use in frustum culling
         std::vector<glm::vec3> lightPositions;
-        std::vector<std::array<glm::vec4, 8u>> lightCorners;
-        
+        std::vector<Box> frustums;
+#ifdef CRO_DEBUG_
+        camera.lightCorners.clear();
+#endif
+
+
         auto worldMat = camEnt.getComponent<cro::Transform>().getWorldTransform();
         auto corners = camera.getFrustumSplits();
         glm::vec3 lightDir = -getScene()->getSunlight().getComponent<Sunlight>().getDirection();
@@ -242,7 +246,9 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             camera.m_shadowProjectionMatrices[i] = lightProj;
             camera.m_shadowViewProjectionMatrices[i] = lightProj * lightView;
 
-            lightCorners.emplace_back() =
+            frustums.emplace_back(minPos, maxPos);
+#ifdef CRO_DEBUG_
+            camera.lightCorners.emplace_back() =
             {
                 //near
                 glm::vec4(maxPos.x, maxPos.y, minPos.z, 1.f),
@@ -255,15 +261,10 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                 glm::vec4(minPos.x, minPos.y, maxPos.z, 1.f),
                 glm::vec4(maxPos.x, minPos.y, maxPos.z, 1.f)
             };
+#endif
         }
 
-
-
-
-        //use depth frustum to cull entities
-        Frustum frustum = {};
-        Spatial::updateFrustum(frustum, camera.m_shadowViewProjectionMatrices[0]);
-
+        //use depth frusta to cull entities
         auto& entities = getEntities();
         for (auto& entity : entities)
         {
@@ -285,40 +286,36 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             auto scale = tx.getScale();
             sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
-            float distance = glm::dot(lightDir, sphere.centre - lightPositions[0]);
-            if (distance < -sphere.radius)
-            {
-                //we're behind the frustum
-                continue;
-            }
+            std::vector<std::pair<std::size_t, std::size_t>> drawListOffsets;
 
-            model.m_visible = true;
-            std::size_t i = 0;
-            while (model.m_visible&& i < frustum.size())
+            for (auto i = 0u; i < camera.getCascadeCount(); ++i)
             {
-                model.m_visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
-            }
+                float distance = glm::dot(-lightDir, sphere.centre - lightPositions[i]);
 
-            //needs fixing for ortho projection
-            //model.m_visible = cro::Util::Frustum::visible(camera.getFrustumData(), camera.shadowViewMatrix * tx.getWorldTransform(), model.getAABB());
+                //put sphere into lightspace and do an AABB test on the ortho projection
+                auto lightSphere = sphere;
+                lightSphere.centre = glm::vec3(camera.m_shadowViewMatrices[i] * glm::vec4(lightSphere.centre, 1.f));
+                model.m_visible = frustums[i].intersects(lightSphere);
 
-            if (model.m_visible)
-            {
-                drawList.push_back(std::make_pair(entity, distance));
+                if (model.m_visible)
+                {
+                    drawList.push_back({ entity, distance, i });
+                }
             }
         }
 
-        //sort back to front
+        //sort back to front - we want to sort these per-cascade
         std::sort(drawList.begin(), drawList.end(),
-            [](const std::pair<Entity, float>& a, const std::pair<Entity, float>& b)
+            [](const ShadowMapRenderer::Drawable& a, const ShadowMapRenderer::Drawable& b)
             {
-                return a > b;
+                return a.cascade == b.cascade ? 
+                    a.distance > b.distance : 
+                a.cascade >  b.cascade;
             });
 
         DPRINT("Visible 3D shadow ents", std::to_string(drawList.size()));
 
 #ifdef CRO_DEBUG_
-        camera.lightCorners.swap(lightCorners);
         camera.lightPositions.swap(lightPositions);
 #endif
     }
@@ -344,7 +341,7 @@ void ShadowMapRenderer::render()
         camera.shadowMapBuffer.clear(cro::Colour::White());
 #endif
 
-        for (const auto& [e, f] : m_drawLists[c])
+        for (const auto& [e, _0, _1] : m_drawLists[c])
         {
             const auto& model = e.getComponent<Model>();
             //skip this model if its flags don't pass

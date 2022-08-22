@@ -105,7 +105,14 @@ namespace cro
         std::uint32_t m_interval;
         
         std::vector<Entity> m_activeCameras;
-        std::vector<std::vector<std::pair<Entity, float>>> m_drawLists;
+
+        struct Drawable final
+        {
+            cro::Entity entity;
+            float distance = 0.f;
+            std::size_t cascade = 0;
+        };
+        std::vector<std::vector<Drawable>> m_drawLists;
 
         void render();
 
