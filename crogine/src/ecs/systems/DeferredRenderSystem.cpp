@@ -436,7 +436,7 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     glCheck(glUniform1i(m_pbrUniforms[PBRUniformIDs::ShadowMap], 7));
 
     auto invViewMatrix =  glm::inverse(pass.viewMatrix);
-    auto lightProjMatrix = cam.shadowViewProjectionMatrix * invViewMatrix;
+    auto lightProjMatrix = cam.getShadowViewProjectionMatrix() * invViewMatrix;
     glCheck(glUniformMatrix4fv(m_pbrUniforms[PBRUniformIDs::InverseViewMat], 1, GL_FALSE, &invViewMatrix[0][0]));
     glCheck(glUniformMatrix4fv(m_pbrUniforms[PBRUniformIDs::LightProjMat], 1, GL_FALSE, &lightProjMatrix[0][0]));
 

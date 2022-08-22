@@ -397,29 +397,13 @@ namespace cro
 #else
         RenderTexture shadowMapBuffer;
 #endif
-
         /*!
-        \brief View-projection matrix used when rendering the shadow map buffer.
-        This contains the view-projection matrix used by the ShadowMapRenderer
-        to render the depth buffer for the Scene's directional light. This is
-        automatically bound to any materials used by the ModelRenderer when
-        shadow casting is enabled. When rendering shadows for this camera with
-        any custom materials or render system this should be used with the
-        camera's shadowMapBuffer property.
+        \brief Returns the viewProjection matrix for the Scene's
+        directional light as calculated by the ShadowMapRenderer
+        for this camera.
         */
-        glm::mat4 shadowViewProjectionMatrix = glm::mat4(1.f);
+        glm::mat4 getShadowViewProjectionMatrix() const { return m_shadowViewProjectionMatrix; }
 
-        /*!
-        \brief View matrix used to render the shadow map buffer.
-        Automatically updated by the ShadowMapRenderer system
-        */
-        glm::mat4 shadowViewMatrix = glm::mat4(1.f);
-
-        /*!
-        \brief Projection matrix used to render the shadow map buffer
-        Automatically updated by the ShadowMapRenderer system
-        */
-        glm::mat4 shadowProjectionMatrix = glm::mat4(1.f);
 
         /*!
         \brief Returns the vertical FOV in radians if the
@@ -518,7 +502,14 @@ namespace cro
         std::vector<std::array<glm::vec4, 8u>> m_frustumSplits;
         void updateFrustumCorners(std::size_t);
 
+
+        glm::mat4 m_shadowViewProjectionMatrix = glm::mat4(1.f);
+        glm::mat4 m_shadowViewMatrix = glm::mat4(1.f);
+        glm::mat4 m_shadowProjectionMatrix = glm::mat4(1.f);
+
+
         friend class ShadowMapRenderer;
+        friend class ModelRenderer;
     };
 }
 

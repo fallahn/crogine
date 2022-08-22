@@ -129,7 +129,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         auto centre = camEnt.getComponent<cro::Transform>().getWorldPosition() + (camEnt.getComponent<cro::Transform>().getForwardVector() * (farPlane / 2.f));
         auto lightPos = centre - (lightDir * ((camera.m_farPlane - camera.m_nearPlane) / 2.f));
 
-        camera.shadowViewMatrix = glm::lookAt(lightPos, centre, cro::Transform::Y_AXIS);// glm::inverse(glm::toMat4(lightRotation));
+        camera.m_shadowViewMatrix = glm::lookAt(lightPos, centre, cro::Transform::Y_AXIS);// glm::inverse(glm::toMat4(lightRotation));
 
         //frustum in camera coords
         float tanHalfFOVY = std::tan(camera.m_verticalFOV / 2.f);
@@ -167,7 +167,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             auto worldPoint = camTx * frustumCorners[i];
 
             //convert to light space
-            lightCorners[i] = camera.shadowViewMatrix * worldPoint;
+            lightCorners[i] = camera.m_shadowViewMatrix * worldPoint;
         }
 
         auto xExtremes = std::minmax_element(lightCorners.begin(), lightCorners.end(),
@@ -196,8 +196,8 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         float maxZ = zExtremes.second->z;
 
         //convert to ortho projection
-        camera.shadowProjectionMatrix = glm::ortho(minX, maxX, minY, maxY, -maxZ, -minZ);
-        camera.shadowViewProjectionMatrix = camera.shadowProjectionMatrix * camera.shadowViewMatrix;
+        camera.m_shadowProjectionMatrix = glm::ortho(minX, maxX, minY, maxY, -maxZ, -minZ);
+        camera.m_shadowViewProjectionMatrix = camera.m_shadowProjectionMatrix * camera.m_shadowViewMatrix;
 
 #ifdef CRO_DEBUG_
         camera.depthDebug = { minX, maxX, minY, maxY, -maxZ, -minZ };
@@ -207,7 +207,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
         //use depth frustum to cull entities
         Frustum frustum = {};
-        Spatial::updateFrustum(frustum, camera.shadowViewProjectionMatrix);
+        Spatial::updateFrustum(frustum, camera.m_shadowViewProjectionMatrix);
 
         auto& entities = getEntities();
         for (auto& entity : entities)
@@ -298,7 +298,7 @@ void ShadowMapRenderer::render()
             //calc entity transform
             const auto& tx = e.getComponent<Transform>();
             glm::mat4 worldMat = tx.getWorldTransform();
-            glm::mat4 worldView = camera.shadowViewMatrix * worldMat;
+            glm::mat4 worldView = camera.m_shadowViewMatrix * worldMat;
 
             //foreach submesh / material:
 
@@ -345,9 +345,9 @@ void ShadowMapRenderer::render()
                 }
 
                 glCheck(glUniformMatrix4fv(mat.uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
-                glCheck(glUniformMatrix4fv(mat.uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camera.shadowViewMatrix)));
+                glCheck(glUniformMatrix4fv(mat.uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camera.m_shadowViewMatrix)));
                 glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-                glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camera.shadowProjectionMatrix)));
+                glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camera.m_shadowProjectionMatrix)));
                 glCheck(glUniform3f(mat.uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
                 //glCheck(glUniformMatrix4fv(mat.uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camera.depthViewProjectionMatrix)));
 

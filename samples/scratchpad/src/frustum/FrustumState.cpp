@@ -365,42 +365,6 @@ void FrustumState::createUI()
     updateView(camEnt.getComponent<cro::Camera>());
 }
 
-std::array<std::array<glm::vec4, 8u>, FrustumState::CascadeCount> FrustumState::calcSplits() const
-{
-    //TODO we don't really need to recalc this every time...
-    //could we make this a compile time constant in  the camera?
-    //it could replace the getCorners() func because even split the
-    //base corners can be found from near first far last
-    const auto& cam = m_entities[EntityID::Camera].getComponent<cro::Camera>();
-    const auto& camCorners = cam.getFrustumCorners();
-    const float splitSize = (camCorners[0].z - camCorners[4].z) / CascadeCount;
-    
-    const float tanHalfFOVY = std::tan(cam.getFOV() / 2.f);
-    const float tanHalfFOVX = std::tan((cam.getFOV() * cam.getAspectRatio()) / 2.f);
-
-    std::array<std::array<glm::vec4, 8u>, FrustumState::CascadeCount> corners = {};
-
-    for (auto i = 0; i < CascadeCount; ++i)
-    {
-        const float splitNear = i * splitSize;
-        corners[i] = camCorners;
-
-        for (auto j = 0u; j < corners[i].size() / 2; ++j)
-        {
-            //near
-            corners[i][j].z -= splitNear;
-            corners[i][j].x = cro::Util::Maths::sgn(corners[i][j].x) * corners[i][j].z * tanHalfFOVX;
-            corners[i][j].y = cro::Util::Maths::sgn(corners[i][j].y) * corners[i][j].z * tanHalfFOVY;
-
-            //far
-            corners[i][j + 4].z = corners[i][j].z - splitSize;
-            corners[i][j + 4].x = cro::Util::Maths::sgn(corners[i][j + 4].x) * corners[i][j + 4].z * tanHalfFOVX;
-            corners[i][j + 4].y = cro::Util::Maths::sgn(corners[i][j + 4].y) * corners[i][j + 4].z * tanHalfFOVY;
-        }
-    }
-    return corners;
-}
-
 void FrustumState::calcCameraFrusta()
 {
     auto worldMat = m_entities[EntityID::Camera].getComponent<cro::Transform>().getWorldTransform();
